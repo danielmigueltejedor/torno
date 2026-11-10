@@ -68,7 +68,6 @@ pub fn canonical(text: &str) -> Result<String, String> {
 
 /// Fixed tables whose dimensions describe a standard or an algorithm, rather than a library.
 const FIXED_ARRAYS: &[(&str, &str)] = &[
-    ("assets/icons/app/shared/source/app_icon.rs", "FACES"), // Fixed five-face application mark geometry.
     ("crates/doc/src/component_color.rs", "PALETTE"),        // Fixed 24-step hue-wheel algorithm.
     ("crates/doc/src/eval.rs", "ISO_COARSE"),                // ISO metric coarse diameter/pitch pairs.
     ("crates/doc/src/format.rs", "JSON_STEPS"),              // Frozen historical migrations; additions use format/pending.
