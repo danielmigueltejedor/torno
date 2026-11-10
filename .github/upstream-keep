@@ -1,0 +1,11 @@
+# Files this project owns. When the weekly upstream sync finds that upstream also changed
+# one of them, this project's version is kept. One path pattern per line.
+README.md
+assets/icons/app/shared/source/app_icon.rs
+assets/icons/app/shared/source/torno-portrait-512.rgba
+assets/icons/app/linux/exports/**
+assets/icons/app/windows/exports/**
+assets/icons/app/macos/exports/icon.icns
+docs/upstream.md
+docs/upstream-readme.md
+docs/nodalia/**
