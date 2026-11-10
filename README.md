@@ -6,7 +6,7 @@
     </picture>
   </a>
   <br><br>
-  <img src="https://raw.githubusercontent.com/danielmigueltejedor/torno/main/docs/nodalia/torno-icon.png" width="176" height="176" alt="Torno">
+  <img src="https://raw.githubusercontent.com/danielmigueltejedor/torno/main/docs/nodalia/torno-icon.png" width="160" alt="Torno">
   <h1>Torno</h1>
   <p><strong>A parametric 3D CAD application for the Nodalia suite, built on the SolidCraft engine.</strong></p>
 
