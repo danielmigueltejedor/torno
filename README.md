@@ -1,4 +1,11 @@
 <div align="center">
+  <a href="https://getnodalia.com">
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/danielmigueltejedor/nodalia-web/main/assets/brand/nodalia-wordmark-white.svg">
+      <img src="https://raw.githubusercontent.com/danielmigueltejedor/nodalia-web/main/assets/brand/nodalia-wordmark-black.svg" width="150" alt="Nodalia">
+    </picture>
+  </a>
+  <br><br>
   <img src="https://raw.githubusercontent.com/danielmigueltejedor/torno/main/docs/nodalia/torno-icon.png" width="176" height="176" alt="Torno">
   <h1>Torno</h1>
   <p><strong>A parametric 3D CAD application for the Nodalia suite, built on the SolidCraft engine.</strong></p>
