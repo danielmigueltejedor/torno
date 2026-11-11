@@ -44,11 +44,17 @@ the current UI set or preview card. Keep any future `.vectorcraft`, `.ai` or oth
 native work and linked inputs under that resource's `source/work/`, with an
 attribution row; retain the editable document alongside its exports.
 
-Regenerate all exports of the shared Windows/Linux/FreeBSD mark together:
+Regenerate the Windows exports of the shared mark:
 
 ```sh
 cargo xtask app-icons
 ```
+
+The Linux/FreeBSD hicolor images sit on the Nodalix app grid (a 224 px tile in a 256 px canvas,
+16 px margin, soft shadow). They are made from the scalable SVG that `tools/nodalia-app-icon.py`
+writes in [nodalix-icon-theme](https://github.com/danielmigueltejedor/nodalix-icon-theme), so
+`cargo xtask app-icons` no longer touches them; rerun that tool and render the PNG sizes from its
+SVG when the artwork changes.
 
 For macOS, use Xcode with Icon Composer support:
 
