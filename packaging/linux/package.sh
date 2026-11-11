@@ -119,6 +119,7 @@ if has appimage; then
   install -Dm755 "$HERE/AppRun" "$APPDIR/AppRun"
   cp "$ROOT/assets/platforms/linux/$APP_ID.desktop" "$APPDIR/$APP_ID.desktop"
   cp "$WORK/icons/hicolor/256x256/apps/$APP_ID.png" "$APPDIR/$APP_ID.png"
+  cp "$WORK/icons/hicolor/256x256/apps/$APP_ID.png" "$APPDIR/$ICON_NAME.png"
   ln -s "$APP_ID.png" "$APPDIR/.DirIcon"
 
   TOOL="${APPIMAGETOOL:-$(command -v appimagetool || true)}"

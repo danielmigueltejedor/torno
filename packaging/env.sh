@@ -42,6 +42,9 @@ export CARGO_TARGET_DIR="${CARGO_TARGET_DIR:-$ROOT/target}"
 # the move to Tangency Labs) and ai.storyteller.solvecraft (before 0.8); the Flatpak repository
 # rebases both to this one (packaging/flatpak-site.sh, docs/compatibility.md).
 APP_ID=io.tangencylabs.solidcraft
+# The .desktop's Icon=: the Nodalia name, so an icon theme can tell Torno from the Craft app
+# that shares the app ID. The icons are installed under both names.
+ICON_NAME=dev.danielmiguelt.Torno
 export APP_ID
 
 # Emit a GitHub Actions warning (plain stderr outside Actions).
@@ -64,6 +67,7 @@ make_icons() {
   for s in 16 24 32 48 64 128 256 512; do
     mkdir -p "$out/hicolor/${s}x${s}/apps"
     cp "$ROOT/assets/icons/app/linux/exports/hicolor/${s}x${s}/apps/$APP_ID.png" "$out/hicolor/${s}x${s}/apps/$APP_ID.png" || return
+    cp "$out/hicolor/${s}x${s}/apps/$APP_ID.png" "$out/hicolor/${s}x${s}/apps/$ICON_NAME.png" || return
   done
   cp "$ROOT/assets/icons/app/windows/exports/solidcraft.ico" "$out/solidcraft.ico"
 }
