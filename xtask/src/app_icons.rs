@@ -9,12 +9,9 @@ mod windows_ico;
 pub fn run(root: &Path) -> Result<(), String> {
     let stage = root.join("target/resources/app-icons");
     std::fs::create_dir_all(&stage).map_err(|e| e.to_string())?;
-    let mut exports = Vec::new();
-    for size in [16, 24, 32, 48, 64, 128, 256, 512] {
-        let png = stage.join(format!("{size}.png"));
-        draw(&png, size)?;
-        exports.push((png, format!("linux/exports/hicolor/{size}x{size}/apps/io.tangencylabs.solidcraft.png")));
-    }
+    let mut exports: Vec<(std::path::PathBuf, String)> = Vec::new();
+    // The Linux hicolor exports are not drawn here: they sit on the Nodalix app grid (224/256
+    // tile, 16 px margin, soft shadow), made by tools/nodalia-app-icon.py in nodalix-icon-theme.
     let installer = stage.join("solidcraft.ico");
     draw(&installer, 256)?;
     exports.push((installer, "windows/exports/solidcraft.ico".into()));
