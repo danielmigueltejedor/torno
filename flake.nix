@@ -146,6 +146,8 @@
                 icon=$out/share/icons/hicolor/''${size}x''${size}/apps/io.tangencylabs.solidcraft.png
                 mkdir -p "$(dirname "$icon")"
                 cp assets/icons/app/linux/exports/hicolor/''${size}x''${size}/apps/io.tangencylabs.solidcraft.png "$icon" >/dev/null
+                # The .desktop's Icon= is the Nodalia name, dev.danielmiguelt.Torno.
+                cp "$icon" "$(dirname "$icon")/dev.danielmiguelt.Torno.png"
               done
             ''}
           '';
