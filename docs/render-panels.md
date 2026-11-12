@@ -4,7 +4,7 @@ Tracking issue: #6281. Part of [the Render workspace UX roadmap](render-workspac
 
 The old "Render studio" panel (eleven pages, a setup header and a pinned footer) is removed by the end of the Render workspace transition. Every control moves to a panel attached to the thing it edits. A control has one home. A *shortcut* is a promotion of that control to a first-class item (a stage bar chip, a handle in the view, a menu entry); it reads and writes the setting its home owns through the same command, so the two cannot disagree.
 
-Every one of the 546 labels the old panel used and every `render.*` and `appearance.*` command has a home below or is listed under Removed. The panel designs are on the SolidCraft UX Layouts board, artboards `Render_Q0_Plan` to `Render_Q13_Dialogs`.
+Every one of the 546 labels the old panel used and every `render.*` and `appearance.*` command has a home below or is listed under Removed. The panel designs are on the Torno UX Layouts board, artboards `Render_Q0_Plan` to `Render_Q13_Dialogs`.
 
 ## Rules
 

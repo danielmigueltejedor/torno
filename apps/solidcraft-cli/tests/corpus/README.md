@@ -1,6 +1,6 @@
 # Design file corpus
 
-Designs saved by older SolidCraft builds. `tests/design_corpus.rs` opens each one with the
+Designs saved by older Torno builds. `tests/design_corpus.rs` opens each one with the
 current build and checks that it is upgraded to the current file format, that it evaluates
 (a feature may fail only by asking for a reference it lost to be picked again; what it rebuilds
 to is today's), and that damaged and hostile variants of it never panic. The `.expected.json`

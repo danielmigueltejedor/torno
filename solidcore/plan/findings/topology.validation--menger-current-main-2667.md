@@ -21,7 +21,7 @@ body's geometry-owner keys. The standalone coincidence call uses the same
 arguments as `check_brep`: body tolerance, first pair, report level zero.
 
 This is not the original author's unavailable direct-library harness, and is not
-a SolidCraft end-to-end timing. In particular, independent copies have different
+a Torno end-to-end timing. In particular, independent copies have different
 cache histories from repeatedly checking the live result. The standalone
 coincidence duration is not a measured nested share of the Level2 call and must
 not be subtracted from it as an exact phase breakdown.

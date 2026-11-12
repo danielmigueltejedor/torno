@@ -82,7 +82,7 @@ measured optical accuracy.
 
 ## Licensing and validation
 
-All recipe values are original authoring by SolidCraft contributors under
+All recipe values are original authoring by Torno contributors under
 MIT OR Apache-2.0, recorded in `ATTRIBUTION.md`. They contain no external material
 library or measured optical dataset.
 

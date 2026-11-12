@@ -1,6 +1,6 @@
 # nlib.srf_offset: extrusion recognition and sliver-span conditioning (issue #471)
 
-Reproduced the SolidCraft shell/3576 geometry using the pinned C++ reference:
+Reproduced the Torno shell/3576 geometry using the pinned C++ reference:
 `SmApiCreateTaperExtrude` of the centered 120x80 rectangle, height 40, draft 5 degrees,
 then r4 on all four sloping edges (`SmFilletExecutive`, circular/constant radius,
 default tolerances), and `SmApiShellBrepFull` with distance -2 and the top removed.

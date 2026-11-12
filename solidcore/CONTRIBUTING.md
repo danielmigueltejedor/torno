@@ -9,7 +9,7 @@ case, replacing the code they supersede. This page is the short version;
 
 ## Before you start
 
-- **Fix what has been reported.** solidcore replaced SMLib as SolidCraft's kernel in 0.40, and
+- **Fix what has been reported.** solidcore replaced SMLib as Torno's kernel in 0.40, and
   the switch came with bugs: not everything works yet. Take an open reported issue: `urgent`
   first (a red goldens job on main comes before everything), then `help wanted`. A defect you find yourself in code
   no user reaches, an unrequested improvement or a speed trick: file it as an issue with a real
@@ -48,7 +48,7 @@ case, replacing the code they supersede. This page is the short version;
 
 ## The new construction replaces the old
 
-- **The most correct solution, not SMLib's.** SMLib and the SolidCraft fork are references to
+- **The most correct solution, not SMLib's.** SMLib and the Torno fork are references to
   consult (inputs, expected values, known constructions), never targets to match. Prove a result
   with closed forms, geometric checks and invariants. Code ported unchanged keeps their results
   bit for bit; code written or changed here sets its own baseline.
@@ -80,7 +80,7 @@ output changed, any case added or missing, and any case that breaks.
 
 A new case for a kernel operation goes to the corpus in
 [crates/solidcore/tests/kernel_cases/](crates/solidcore/tests/kernel_cases/README.md#adding-a-case)
-(exported from SolidCraft or written by hand), not to SolidCraft's rig.
+(exported from Torno or written by hand), not to Torno's rig.
 
 The fillet and chamfer cases are shown in the site's case gallery
 ([docs/generic-blend.md §7](docs/generic-blend.md#7-case-gallery)), each with its render and its

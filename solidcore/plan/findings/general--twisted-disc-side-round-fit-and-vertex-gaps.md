@@ -6,7 +6,7 @@ Unit: the generic blend (hub #2243); `blend::fillet_exact`, the fillet trace's s
 Inputs: the twisted slotted disc of solidcraft#11848 rebuilt from the issue's script (2 slots,
 radius 30, height 15, 30 degree twist; #2649's `tests/issue_2648_twisted_disc_top_round.rs`
 builder), its 4 twisted side edges rounded 2 mm, then its 12 top outline edges rounded.
-SolidCraft's fix list (`tests/kernel_cases/fixes.json`). Rust only (the fixes are not in
+Torno's fix list (`tests/kernel_cases/fixes.json`). Rust only (the fixes are not in
 the pinned C++).
 
 ## 1. Two of the four side rounds are not 2 mm rounds of their walls

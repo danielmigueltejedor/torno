@@ -7,16 +7,16 @@ Protocol and the agents that speak it, how the chat is built, and what's still o
 
 ## Goal
 
-A chat panel inside SolidCraft that drives a coding agent **the user already has and is already
-signed in to** (Claude Code, Codex, Antigravity, …). SolidCraft holds no API keys and no
-accounts: the agent runs as a child process under the user's own login, and SolidCraft gives
+A chat panel inside Torno that drives a coding agent **the user already has and is already
+signed in to** (Claude Code, Codex, Antigravity, …). Torno holds no API keys and no
+accounts: the agent runs as a child process under the user's own login, and Torno gives
 it one thing, its MCP server bridged to the open window, so the agent models on the design the
 user is looking at.
 
 ## The protocol
 
 [ACP](https://agentclientprotocol.com) is JSON-RPC 2.0 over the agent's stdin/stdout, one
-message per line, protocol version `1`. The editor (here SolidCraft) is the *client*; the agent
+message per line, protocol version `1`. The editor (here Torno) is the *client*; the agent
 is the *server*, started as a subprocess. Zed introduced it to embed Claude Code and Codex;
 the Rust SDK (`agent-client-protocol`, Apache-2.0) and the schema crate
 (`agent-client-protocol-schema`, Apache-2.0) are the reference.
@@ -26,7 +26,7 @@ What the prototype uses:
 | Direction | Message | Use |
 |---|---|---|
 | → agent | `initialize {protocolVersion: 1, clientCapabilities, clientInfo}` | We declare no file system and no terminal (`fs.readTextFile/writeTextFile: false`, `terminal: false`), and terminal login (`auth.terminal: true`, plus the older `_meta["terminal-auth"]`). The reply carries `agentInfo` and `authMethods`. |
-| → agent | `session/new {cwd, mcpServers}` | `mcpServers` holds one stdio server: `solidcraft-cli mcp --connect 127.0.0.1:PORT`. `cwd` is the open design's folder (else SolidCraft's own `agent` folder). The system note goes in the standard `systemPrompt` field when the agent offers `sessionCapabilities.systemPrompt`, in `_meta.antigravity.systemPrompt.append` when Antigravity offers that, and always in `_meta.systemPrompt.append` for the Claude adapter. An agent with none of these doesn't get it. |
+| → agent | `session/new {cwd, mcpServers}` | `mcpServers` holds one stdio server: `solidcraft-cli mcp --connect 127.0.0.1:PORT`. `cwd` is the open design's folder (else Torno's own `agent` folder). The system note goes in the standard `systemPrompt` field when the agent offers `sessionCapabilities.systemPrompt`, in `_meta.antigravity.systemPrompt.append` when Antigravity offers that, and always in `_meta.systemPrompt.append` for the Claude adapter. An agent with none of these doesn't get it. |
 | → agent | `session/set_config_option {sessionId, configId, value}` | Set an advertised select option, including a model, reasoning effort or mode. The complete returned `configOptions` snapshot confirms the state; rejection leaves the previous confirmed snapshot intact. |
 | → agent | `session/prompt {sessionId, prompt: [content]}` | One text block. The reply comes at the end of the turn with `stopReason` (`end_turn`, `cancelled`, `refusal`, …). |
 | → agent | `session/cancel {sessionId}` (notification) | Cancel button. Open permission prompts are answered `cancelled` first, as the spec asks. |
@@ -40,7 +40,7 @@ Errors: an agent that is not signed in answers `session/new` (Codex) or the firs
 `session/prompt` (Claude) with JSON-RPC error `-32000 "Authentication required"`.
 
 Current ACP agents, including OpenCode V2, can return ordered `configOptions` in the session
-response instead of legacy model/mode lists. SolidCraft prefers these options, preserves arbitrary
+response instead of legacy model/mode lists. Torno prefers these options, preserves arbitrary
 IDs and optional categories, and supports flat or grouped select choices. Only one configuration
 change waits for acknowledgement at a time; an unsolicited snapshot does not acknowledge it.
 New chats invalidate outstanding configuration requests, and updates from older sessions are
@@ -52,7 +52,7 @@ and [OpenCode V2 ACP reference](https://opencode.ai/v2/docs/cli/acp).
 
 All checked on 2026-10-14 with the packages installed into a user prefix
 (`npm i -g --prefix ~/…`). Licences are from each package's own metadata; nothing is bundled
-with SolidCraft, the user installs the agent.
+with Torno, the user installs the agent.
 
 | Agent | How it speaks ACP | Package / licence | Version probe | Login |
 |---|---|---|---|---|
@@ -71,7 +71,7 @@ the picker instead of the hard-coded table.
 
 ### The auth story
 
-- **SolidCraft never sees a credential.** It doesn't pass API keys, doesn't store tokens and
+- **Torno never sees a credential.** It doesn't pass API keys, doesn't store tokens and
   doesn't open login pages by itself. Each agent keeps its own login where its CLI always does
   (Claude Code: `~/.claude` or the keychain; Codex: `~/.codex`; Gemini and Antigravity: `~/.gemini`). A user
   who already uses the agent in a terminal is already signed in, and the chat simply works.
@@ -103,7 +103,7 @@ Code: `crates/ui-egui/src/agent_chat/`.
 |---|---|
 | `backend.rs` | The `ChatBackend` trait and its `Event`s: the only thing the panel talks to. |
 | `acp.rs`, `acp_client.rs` | The protocol messages, and `AcpBackend`, the first backend. |
-| `api_client.rs` | `ApiBackend`: an OpenAI-compatible or Anthropic-compatible endpoint, with SolidCraft running the tool loop. |
+| `api_client.rs` | `ApiBackend`: an OpenAI-compatible or Anthropic-compatible endpoint, with Torno running the tool loop. |
 | `agents.rs` | The agents (found and added), permission modes, "always allow" answers. |
 | `settings.rs` | Preferences → AI and the Add agent dialog. |
 | `process.rs` | The agent as a child process in a process group of its own; stopping it ends the group. |
@@ -163,7 +163,7 @@ Requests from that endpoint don't go to the app directly. `pump_tools` passes ea
 - **Permission modes** (Preferences → AI, global with a per-agent override): *Ask every time*
   turns every change into a question too; *Auto-allow model edits* (default) is the list above;
   *Allow everything* runs what would ask (never what is refused). "Always allow" on a card
-  remembers the command per agent. The agent's own ACP permission questions about SolidCraft's
+  remembers the command per agent. The agent's own ACP permission questions about Torno's
   tools are answered "allow once" by the client (the gate decides), and others follow the mode
   and the remembered answers; every automatic answer leaves an *Auto-allowed* note.
 - **Per-turn limit:** 24 requests that run commands (a batch counts once; reads don't count),
@@ -224,7 +224,7 @@ behavior.
 ### The agent's own tools
 
 ACP lets the client offer a file system and a terminal; the chat offers neither, and starts the
-agent in an empty working folder of SolidCraft's own (`<data>/agent-chat/work`), not the
+agent in an empty working folder of Torno's own (`<data>/agent-chat/work`), not the
 design's folder. The Claude Code adapter has shell, file and web tools of its own anyway: the
 session asks it to turn them off (`_meta.claudeCode.options.disallowedTools`) and not to offer
 "bypass permissions". Other agents' own permission requests appear in the panel with their
@@ -237,7 +237,7 @@ Stop, Close-and-Stop, turning the preference off, the agent chat being dropped a
 end it the same way: its stdin closes (ACP agents end at end of input), then after a grace period
 the group gets TERM, and KILL after another. Quitting waits for this (at most about three
 seconds). `process.rs`'s tests start a fake agent that leaves helpers behind, once polite and
-once ignoring both end of input and TERM, and check that none survive. If SolidCraft itself is
+once ignoring both end of input and TERM, and check that none survive. If Torno itself is
 killed, the agent sees its stdin close and ends with its helpers.
 
 ### Discovery

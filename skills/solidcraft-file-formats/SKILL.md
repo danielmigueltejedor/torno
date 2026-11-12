@@ -1,6 +1,6 @@
 ---
 name: solidcraft-file-formats
-description: "Use when a SolidCraft change saves something new in a design (a field, a feature type, a kind of name) or changes what older designs mean, and when touching STEP, IGES, 3MF, STL, OBJ, DXF or URDF import and export."
+description: "Use when a Torno change saves something new in a design (a field, a feature type, a kind of name) or changes what older designs mean, and when touching STEP, IGES, 3MF, STL, OBJ, DXF or URDF import and export."
 ---
 
 # Design file format, import and export
@@ -26,4 +26,4 @@ Drawings follow the same rules with their own numbers, from 1: a drawing-format 
 ## Export
 - STEP, 3MF, STL, OBJ and URDF go through `file.export` and `file.save_mesh`; the MCP `export` tool calls them. URDF: `docs/urdf.md`. 3MF face tags: `docs/formats/3mf-face-tags.md`.
 - Mesh and design readers and writers live in `crates/io/src/`. Write files through `crates/io/src/safe_write.rs`.
-- Reference tests for exports never take their expected values from SolidCraft's own output (`skills/solidcraft-tests/SKILL.md`).
+- Reference tests for exports never take their expected values from Torno's own output (`skills/solidcraft-tests/SKILL.md`).

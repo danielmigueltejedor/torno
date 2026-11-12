@@ -4,7 +4,7 @@
 - **Location:** `source/SMLib/src/NL_Math.cpp:3617` `N_InitRealMatrix` (sets `n`, `m`, `RM` and `bw`, not `mtp`); read by `N_RealMatrixIsNULL` (`:4707`, through `N_GetRealMatrixData`), which every `N_CheckMemRealMatrix` starts with.
 - **What happens:** A matrix initialised to NULL has an indeterminate `NL_MATRIXTYPE`, and the null test loads it. The value does not decide the result (only `n`, `m`, `RM` and `bw` do), but loading an indeterminate enum is undefined behaviour.
 - **Trigger:** a fillet that joins a tangent chain: `SmBSplineCurve::CreateByJoining` -> `DegreeElevate` -> `N_BezGetDegreeElevationMatrix` (UBSan reports the load of an indeterminate `NL_MATRIXTYPE`; tangency-labs/solidcore#370).
-- **How found:** UBSan run of the SolidCraft C API (tangency-labs/smlib `capi/`).
+- **How found:** UBSan run of the Torno C API (tangency-labs/smlib `capi/`).
 - **Confirmed:** yes (UBSan, in the fork's C API tests).
 - **Severity:** UB (indeterminate load); no observable effect in the reference build.
 - **Fix:** tangency-labs/smlib a05e288 sets it to `NL_MT_FULL`, the type the next `N_SetRealMatrix` would give it anyway.

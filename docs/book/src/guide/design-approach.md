@@ -1,7 +1,7 @@
 # How a design is built
 
-SolidCraft is a parametric, history-based modeller. You don't shape geometry directly: you
-describe the steps that make it, and SolidCraft computes the result from those steps. Change a
+Torno is a parametric, history-based modeller. You don't shape geometry directly: you
+describe the steps that make it, and Torno computes the result from those steps. Change a
 step or a value and everything after it is computed again. This page explains that idea and the
 usual ways of working with it. The pages after it cover each tool in detail; the
 [glossary](../reference/glossary.md) defines most of the terms used here.
@@ -99,9 +99,9 @@ are not supported there yet).
 
 ## Terms if you come from another CAD program
 
-Other programs use other words for the same ideas. SolidCraft uses one term for each:
+Other programs use other words for the same ideas. Torno uses one term for each:
 
-| SolidCraft | You may know it as |
+| Torno | You may know it as |
 |---|---|
 | timeline (shown as the History strip) | history, feature tree |
 | rollback marker | rollback bar, end-of-part marker |

@@ -2,8 +2,8 @@ Updates: plan/findings/general--status-audit-483.md
 
 ## `fillet_corner_statuses` and `fillet_edge_curve_domain_statuses` now follow the fork (#2009 group B)
 
-Both flags returned the error of a call SMLib ignores. The SolidCraft fork of SMLib
-(tangency-labs/smlib 66b02de) fails softly at these sites instead, so SolidCraft held
+Both flags returned the error of a call SMLib ignores. The Torno fork of SMLib
+(tangency-labs/smlib 66b02de) fails softly at these sites instead, so Torno held
 the flags off. Neither was turned on by a caller (no fix is shipped), so they change
 meaning under the same names:
 

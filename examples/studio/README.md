@@ -1,4 +1,4 @@
-# Original SolidCraft studio scenes
+# Original Torno studio scenes
 
 These are editable command recipes, not imported models or triangle meshes.
 Every part is authored here from sketches, extrusions, primitive solids, boolean

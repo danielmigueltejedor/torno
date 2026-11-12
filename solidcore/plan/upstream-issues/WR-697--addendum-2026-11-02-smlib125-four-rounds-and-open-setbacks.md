@@ -2,7 +2,7 @@ Updates: WR-697, WR-616
 
 #### WR-697 / WR-616 (update, 2026-11-02). Corners of four or more rounds are the Ball or the Setback (`fillet_blend_corner`, smlib#125)
 
-- **Source:** the SolidCraft fork's tangency-labs/smlib#125, merged into `replay/1.0.1` at
+- **Source:** the Torno fork's tangency-labs/smlib#125, merged into `replay/1.0.1` at
   `18e96f1`. This is a port of its SMLib commits, not solidcore-native work. It runs under
   the existing opt-in `Kernel::fixes.fillet_blend_corner`, with no new flag and no new
   record id. The fork's capi commits (`fc29fdb`, `cb2a478`, `96e58a1`) and the capi parts
@@ -78,9 +78,9 @@ Updates: WR-697, WR-616
   Setback does not build is ignored by the corner's topology, with no error. solidcore keeps
   those branches with `fillet_blend_corner` too (solidcore#2365): the Setback does not yet
   build every corner they build (three equal rounds at a box corner whose vertex is an
-  `AddSetBackVertex`, a corner beside a curved face, a concave notch), and SolidCraft's
+  `AddSetBackVertex`, a corner beside a curved face, a concave notch), and Torno's
   setback and G2 corners set back through `AddSetBackVertex` and `SetSetBackDist` built
-  there before this port. Deleting them refused seven of SolidCraft's rig cases that built,
+  there before this port. Deleting them refused seven of Torno's rig cases that built,
   so the old result is kept by default, unchanged. A setback asked at a corner that builds
   none is refused in the kernel (`WR-697--addendum-2026-11-02-setback-asked-not-built-refused.md`).
 - **Checked against the fork:** a driver built on the fork's SMLib and SM_API at `18e96f1`
@@ -100,4 +100,4 @@ Updates: WR-697, WR-616
   fork's capi cases `setback_open_g1_box_corner_hole` and `setback_open_concave_notch_hole`
   (counts, free edges, P/X/Q of each spring) plus a mixed-convexity notch and a curved-edge
   corner, with the flag on and off; `crates/solidcore/tests/issue_2365_nxn_setback_corners.rs`
-  (SolidCraft's seven set-back NxN corners, at main's values).
+  (Torno's seven set-back NxN corners, at main's values).

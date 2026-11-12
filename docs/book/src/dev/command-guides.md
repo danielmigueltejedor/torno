@@ -43,7 +43,7 @@ to the entry's resource table. Explain what the reader learns from each link;
 include author and licence information. Links are reviewed, not automatically
 collected from the web. A resource need not cover the whole command.
 
-Use original SolidCraft examples or openly licensed resources with permission
+Use original Torno examples or openly licensed resources with permission
 to share. Do not use designs, screenshots, help text or artwork extracted from
 commercial CAD products, or GPL/LGPL/AGPL code. Prefer small public-safe examples
 and remove private designs, paths and account information from evidence.
@@ -56,7 +56,7 @@ out of Git. Existing examples demonstrate both inline pictures and resource link
 ## Preview and review
 
 Run `cargo xtask book` with mdBook installed, inspect the command entry and its
-links, and check the example in SolidCraft. Confirm the required selection,
+links, and check the example in Torno. Confirm the required selection,
 units, defaults and limitations against the implementation. Show reviewers an
 actual before/after screenshot of the rendered entry. Repository quality gates
 still apply before a commit.

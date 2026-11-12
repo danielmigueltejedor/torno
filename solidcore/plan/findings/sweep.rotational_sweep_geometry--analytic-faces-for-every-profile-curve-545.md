@@ -1,6 +1,6 @@
 # sweep.rotational_sweep_geometry: analytic faces for every profile curve of a revolution, issue #545 (2026-10-24)
 
-SolidCraft change (tangency-labs/smlib 0b143f7; that commit is not public, so the port
+Torno change (tangency-labs/smlib 0b143f7; that commit is not public, so the port
 follows the issue's description). Upstream `WR-448` (`plan/upstream-issues/WR-448--createrotationalsweep-analytic-faces-only-for-one-curve.md`).
 
 - `sweep::analytic_revolution` gives a line or circular arc in one half-plane through the

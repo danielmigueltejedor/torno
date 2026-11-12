@@ -44,7 +44,7 @@ Probe: Rust, the runner's operands (`create_plane`, `create_planar_circle`, `boo
 | off, off (= C++) | 2 faces, 9 edges, 7 vertices; Level 2: no failures | 3.523640e-5, 5.744804e-5: the expected pieces, to 1.3e-7 relative |
 | on, off | the same | the same |
 | off, on | 2 faces, 7 edges, 6 vertices; Level 2: no failures | 4.773347e-5, 6.994508e-5: the whole disk and the whole rectangle |
-| on, on (SolidCraft's preset) | the same as off, on | the same as off, on |
+| on, on (Torno's preset) | the same as off, on | the same as off, on |
 
 All four results are open sheets (not manifold solids), as a 2D exclusive-or should be. With WR-306 on, each face is larger by the same 1.2497e-5, the overlap: the operands come back uncut and the shared overlap is removed from neither. The result still passes the Level-2 check, so nothing flags the wrong answer.
 
@@ -52,4 +52,4 @@ With WR-306 on, the intersection is lost, which is a breakage. WR-214 has no eff
 
 ## Status
 
-SolidCraft's preset turns both flags on. For it, tess0033 and tess0095 improve (measured with both on). more0033 (measured with both on) and closed curves shorter than 0.02 (the circle, measured with WR-306 alone) break under WR-306. Both breakages come from WR-306, which stays bit-for-bit equal to the fork's 03e7bf1 (asked on #960). WR-214 needs no change for these cases.
+Torno's preset turns both flags on. For it, tess0033 and tess0095 improve (measured with both on). more0033 (measured with both on) and closed curves shorter than 0.02 (the circle, measured with WR-306 alone) break under WR-306. Both breakages come from WR-306, which stays bit-for-bit equal to the fork's 03e7bf1 (asked on #960). WR-214 needs no change for these cases.

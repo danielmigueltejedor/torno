@@ -1,6 +1,6 @@
 ---
 name: solidcraft-ui
-description: "Use when adding or changing a SolidCraft dialog, panel, menu, overlay, canvas, camera input, slider, icon or colour in crates/ui-egui. Covers the single UI container, the UI kit, navigation::handle, theme tokens, command icons and UI scenarios."
+description: "Use when adding or changing a Torno dialog, panel, menu, overlay, canvas, camera input, slider, icon or colour in crates/ui-egui. Covers the single UI container, the UI kit, navigation::handle, theme tokens, command icons and UI scenarios."
 ---
 
 # Dialogs and UI

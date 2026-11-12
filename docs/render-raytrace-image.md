@@ -109,7 +109,7 @@ request. No cap, assertion, tolerance, ignore or golden-baseline change is impli
 
 The stage-specific descriptions below record the original direct-image scope,
 not a current pass/fail report. This opt-in slice of #1368 follows the phased
-render design in #620 and connects SolidCraft's original RT1 triangle/BVH core
+render design in #620 and connects Torno's original RT1 triangle/BVH core
 to immutable product captures and the existing image-job host. The
 `raytrace-cpu` Cargo feature stays off by default.
 

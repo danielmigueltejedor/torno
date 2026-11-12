@@ -1,6 +1,6 @@
 # Mutation testing
 
-SolidCraft will move from truck to solidcore (#1597). The tests that have to catch regressions
+Torno will move from truck to solidcore (#1597). The tests that have to catch regressions
 across that switch are the ones that don't depend on the kernel: the reference tests
 ([docs/oracle.md](oracle.md)) and the engine's command tests. The reference for what the kernel
 builds is the kernel-cases ladder (`tests/kernel-cases/ladder/`,

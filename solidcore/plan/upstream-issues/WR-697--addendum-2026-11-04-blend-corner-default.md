@@ -28,7 +28,7 @@ old path, and no preference does: a saved design rebuilds with the blend corner.
 - **The default kernel** is the blend corner with every other fix off. Its rounds' sections are
   the polynomial arcs within 0.05% of the radius (WR-708), so a Mitre turn's exact plane section
   meets them only to that accuracy; the closed forms hold with the companion fixes
-  (`fillet_exact_arc_sections`, `fillet_exact_round_classes`), as SolidCraft runs. Tests of other
+  (`fillet_exact_arc_sections`, `fillet_exact_round_classes`), as Torno runs. Tests of other
   fixes whose cases go through a corner run under every fix where their expected values are the
   closed forms (`issue_1060_offset_mitred_rounded_box_top`, `issue_416_fillet_seam`,
   `wr603_trace_from_tangent_point`, `wr642_mitred_concave_face_corners`).
@@ -36,6 +36,6 @@ old path, and no preference does: a saved design rebuilds with the blend corner.
   keep the flag-on half; tests that asserted the old corners' results on the default kernel (the
   pinned refusals, volumes and marks the blend corner changes) are removed with the behaviour
   they pinned. The setback tests that set a setback on a three-round corner with
-  `set_corner_setback` alone mark the vertex with `add_set_back_vertex` first, as SolidCraft
+  `set_corner_setback` alone mark the vertex with `add_set_back_vertex` first, as Torno
   does, so the corner is the N x N one whose setback path is kept (#2365); their values are
   unchanged.

@@ -4,7 +4,7 @@
 - **Location:** `source/SMLib/src/SmFilletRemoval.cpp`, `SmBrep::DeleteFilletFace` and `SmFilletRemoval::CollectFilletTopology` (def. `:124` ff.): only a four-sided fillet, two tangent sides and two ends, is taken.
 - **What happens:** a round all the way round a boss's foot or rim has no ends. Its rails are closed edges with one vertex each, and its surface's seam is an edge between those vertices. `CollectFilletTopology` refuses it, and the defeature `SmApiRemoveFillet` falls back on (`sm_DefeatureFillets`) does not take it either.
 - **Trigger:** a 60 x 40 x 10 plate with a boss r 10, 10 high, at (30, 20); an r 2 round at the boss's foot (or its rim). The port's test (`crates/solidcore/tests/fork_52bfef0_ring_fillet_removal.rs`): `delete_fillet_face` of the foot round fails with the opt-in off.
-- **How found:** SolidCraft (the fork, tangency-labs/smlib 52bfef0), #1060 step 3.
+- **How found:** Torno (the fork, tangency-labs/smlib 52bfef0), #1060 step 3.
 - **Confirmed:** no. The pinned C++ refuses the face (the four-sided collection), as the port does with the opt-in off; the fork's commit is the evidence for the removal.
 - **Fix (fork):** tangency-labs/smlib 52bfef0 adds `SmRingFilletRemoval`, which `DeleteFilletFace` uses for a face `IsRing` accepts: two closed tangent manifold edges and at most one edge whose only face is the fillet.
   - The sharp edge is the global intersection of the two tangent faces' surfaces within their natural domains: of the closed curves, the nearest within six rail chords of every rail sample. It runs as rail 0 and starts where it crosses a tangent face's seam.

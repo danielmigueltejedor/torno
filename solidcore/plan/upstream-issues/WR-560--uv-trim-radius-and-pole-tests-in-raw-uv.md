@@ -6,7 +6,7 @@
   - **Test 13.** A r 4 circle's trim on a plane spanning 200 x 3 over [0,1]^2 is an ellipse 67 times as long as it is wide, of radius 0.0003 at its ends against its own tolerance 0.00048. This test is live only when the minimum radius is read first; see WR-382.
   - **Test 15.** A r 0.002 hole's trim on a 3 m plate has control points 6e-7 apart in (u, v), under the 3D tolerance `SM_ZONE_TOL_3D/10`. On the plate they are 0.002 apart.
 - **Trigger:** `AssertValid` / the B-rep check on a body with such trims: a plate with a rod along its edge, a 1 mm hole through a wave-topped block, or a 0.002 hole in a 3000 x 1000 plate (tangency-labs/solidcore#891 item 2, #1524).
-- **How found:** SolidCraft's checks on SMLib (#891, #1524).
+- **How found:** Torno's checks on SMLib (#891, #1524).
 - **Confirmed:** by the fork's C++ tests (`capi/tests/sweeps.cpp`, tangency-labs/smlib b4f8c57 and 54ca3e0). The Rust port reports both by default (unit tests below).
 - **Fix:** tangency-labs/smlib@b4f8c57 and 54ca3e0 (`sm_TrimMetric`, `sm_MappedTrim`). A trim of a face is mapped by `(u, v) -> (a u + b v, c v)`, the Cholesky factor of its surface's first fundamental form. The form is taken at the trim's middle, or at the centre of the surface's natural domain when the middle is a singular point. This map is exact on a plane.
   - **Test 13** runs on the mapped trim with its tolerance `(size / dSizeT) / 10000` and spacing `size / max(20, dSizeT)`. A mapped trim that cannot be sized fails test 13.

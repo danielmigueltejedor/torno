@@ -4,7 +4,7 @@
 
 ![SELENE native studio render](exports/SELENE-studio-4k.png)
 
-The selected [3840 x 2400 PNG](exports/SELENE-studio-4k.png) is a completed native SolidCraft GPU-path render of the latest functional master, not a Design screenshot, a generated illustration, a painted geometry replacement or an upscaled preview. The exact request, original resource hashes, editable source and executable identities are retained in [studio-hero.json](scenes/studio-hero.json).
+The selected [3840 x 2400 PNG](exports/SELENE-studio-4k.png) is a completed native Torno GPU-path render of the latest functional master, not a Design screenshot, a generated illustration, a painted geometry replacement or an upscaled preview. The exact request, original resource hashes, editable source and executable identities are retained in [studio-hero.json](scenes/studio-hero.json).
 
 | Property | Verified value |
 |---|---|
@@ -65,7 +65,7 @@ The enhanced native master is the editable authority. Its ten named camera and r
 
 ## Reusable Design previews
 
-The package ships three previews generated directly by SolidCraft from the final neutral master: a whole-rover overview, the Raspberry Pi assembly and an exposed elbow bearing. They use native Design shading. They are intended for the model's README and showcase preparation; they are not photographs or path-traced optical renders. No raster image generator or painted replacement geometry is involved.
+The package ships three previews generated directly by Torno from the final neutral master: a whole-rover overview, the Raspberry Pi assembly and an exposed elbow bearing. They use native Design shading. They are intended for the model's README and showcase preparation; they are not photographs or path-traced optical renders. No raster image generator or painted replacement geometry is involved.
 
 | Preview | Resource | Purpose |
 |---|---|---|

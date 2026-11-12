@@ -26,7 +26,7 @@ edge splits there), and the Boolean adds more.
 - Correctness: none known. Nothing in the B-rep reaches these records, and every query
   walks the B-rep's lists and links.
 - Memory: the arenas grow with every operation that orphans records and never shrink, so
-  a long session (SolidCraft keeps bodies across many operations) holds dead records
+  a long session (Torno keeps bodies across many operations) holds dead records
   for the life of each `Brep`.
 - Tooling: anything that iterates an arena directly (rather than the B-rep's lists) sees
   them; `integrity::check` now walks only reachable records for this reason.

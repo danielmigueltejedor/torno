@@ -5,7 +5,7 @@ Every platform and package. The links point at the latest release.
 - **Windows:** download and run the [installer][windows-msi].
   Also for [ARM64][windows-arm64-msi] and [32-bit][windows-x86-msi] PCs, or as a
   [portable zip][windows-portable] that runs without installing.
-- **macOS:** open the [disk image][macos-dmg] and drag SolidCraft into Applications
+- **macOS:** open the [disk image][macos-dmg] and drag Torno into Applications
   (Apple silicon and Intel).
 - **Linux:** download the [AppImage][linux-appimage], allow it to run as a program and open it.
   Or install the [.deb][linux-deb] (Ubuntu, Debian, Mint) or [.rpm][linux-rpm] (Fedora,
@@ -31,9 +31,9 @@ and the disk image carry the notarization ticket), so they open normally.
 The Windows downloads aren't signed yet. If SmartScreen warns you, choose **More info**, then
 **Run anyway**.
 
-**On SolidCraft 0.11 to 0.14?** Its **Update now** can't install 0.15.0 or later, because the
+**On Torno 0.11 to 0.14?** Its **Update now** can't install 0.15.0 or later, because the
 releases moved to a new address. Download the new version once from the links above; after that,
-updating from inside SolidCraft works again ([details](https://docs.solidcraft.io/guide/updates.html#updating-from-011-to-014)).
+updating from inside Torno works again ([details](https://docs.solidcraft.io/guide/updates.html#updating-from-011-to-014)).
 
 Older versions, checksums and other formats are on the [releases page](https://github.com/tangency-labs/solidcraft/releases).
 Install details, upgrading from earlier builds and building from source are in

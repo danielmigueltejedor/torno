@@ -2,4 +2,4 @@
 
 Updates: plan/findings/general--flag-reachability-wr503-short-step-not-reproduced.md
 
-WR-503 is the port's own fix for a SolidCraft oracle case (design 80); the fork has no commit or capi test for it, so there is nothing to port from the fork.
+WR-503 is the port's own fix for a Torno oracle case (design 80); the fork has no commit or capi test for it, so there is nothing to port from the fork.

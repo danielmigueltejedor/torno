@@ -22,7 +22,7 @@ cargo run --release -p solidcraft -- --sample   # opens with a sample part
 
 ### The start page
 
-SolidCraft opens on the start page; the house at the top left brings it back.
+Torno opens on the start page; the house at the top left brings it back.
 
 <img class="dark-ui" src="../media/getting-started/start.png" alt="The start page, numbered 1 to 6">
 <img class="light-ui" src="../media/getting-started/start.light.png" alt="The start page, numbered 1 to 6">
@@ -43,12 +43,12 @@ From there, [A tour of the window](ui-tour.md) shows what's where, and
 Open the release `.dmg` and drag `SolidCraft.app` onto Applications.
 
 The release `.dmg` is signed with a Developer ID and notarized by Apple, and the app and the disk
-image carry the notarization ticket, so macOS opens SolidCraft normally, even offline.
+image carry the notarization ticket, so macOS opens Torno normally, even offline.
 
 A copy you build yourself, or one from a fork that has no signing keys, is signed ad hoc and not
-notarized, so macOS blocks its first launch with "SolidCraft can't be opened, because Apple can't
+notarized, so macOS blocks its first launch with "Torno can't be opened, because Apple can't
 verify if the app is vulnerable". Open **System Settings › Privacy & Security**, scroll down to the
-message about SolidCraft, click **Open Anyway** and confirm: the app opens normally from then on.
+message about Torno, click **Open Anyway** and confirm: the app opens normally from then on.
 From a terminal, remove the quarantine flag instead:
 
 ```sh
@@ -64,19 +64,19 @@ The first time you open the AppImage it adds a menu entry and icons under `~/.lo
 (`applications/io.tangencylabs.solidcraft.desktop`, `icons/hicolor`), so the desktop shows the
 right name and icon. It adds nothing if [appimaged](https://github.com/probonopd/go-appimage)
 already made an entry for the file, or if a launcher such as Gear Lever or AppImageLauncher
-started it (and removes the entry SolidCraft added before). To
+started it (and removes the entry Torno added before). To
 turn it off for good, create an empty file `~/.local/share/solidcraft/no-desktop-integration`, or
 start the AppImage with `SOLIDCRAFT_NO_DESKTOP_INTEGRATION=1`.
 
 If the AppImage doesn't start and prints a FUSE message followed by `execv error: No such file
 or directory`, AppImageLauncher 2.x is intercepting it: it can't start AppImages built on the
-static runtime, as SolidCraft's is. Update AppImageLauncher to 3.0 (so far only published as
+static runtime, as Torno's is. Update AppImageLauncher to 3.0 (so far only published as
 betas; 3.0.0-beta-3 or newer works), or remove it.
 
 ### Linux Flatpak
 
 Install Flatpak using your distribution's package manager. For an installation that receives
-updates, add Flathub for the required Freedesktop runtime and the SolidCraft application feed
+updates, add Flathub for the required Freedesktop runtime and the Torno application feed
 to the same user installation:
 
 ```sh
@@ -86,13 +86,13 @@ flatpak install --user solidcraft io.tangencylabs.solidcraft
 flatpak run io.tangencylabs.solidcraft
 ```
 
-A SolidCraft remote added before the project moved to `docs.solidcraft.io` (from
+A Torno remote added before the project moved to `docs.solidcraft.io` (from
 `bherbruck.github.io`) no longer finds updates. Point it at the new address, then update:
 `flatpak remote-modify --user --url=https://docs.solidcraft.io/flatpak/repo/ solidcraft` and
 `flatpak update --user`.
 
 Earlier releases used the application IDs `ai.storyteller.solidcraft` and, up to 0.7,
-`ai.storyteller.solvecraft`. If you installed one of those from the SolidCraft remote,
+`ai.storyteller.solvecraft`. If you installed one of those from the Torno remote,
 `flatpak update --user` reports it as end-of-life and offers to replace it with
 `io.tangencylabs.solidcraft`; accept, and your settings and autosaves move with it. If you
 installed a `.flatpak` bundle, install the new bundle, launch it once (it copies your settings),
@@ -124,7 +124,7 @@ doesn't update automatically.
 
 ## Web
 
-The same app runs in the browser: [open SolidCraft on the web](../app/) (`?sample` opens the sample
+The same app runs in the browser: [open Torno on the web](../app/) (`?sample` opens the sample
 part, `?webgl` forces WebGL2 where WebGPU is missing or misbehaves; the browser remembers it until
 `?webgpu`, and an app installed from Chrome or Edge starts with it too). Designs are saved in the
 browser's private file storage, which needs HTTPS or localhost.
@@ -142,9 +142,9 @@ launch gets the latest published build (the browser downloads it once when it ch
 when the network doesn't answer within a few seconds, or when a new build can't be downloaded
 whole, the kept copy starts (and the download carries on for the next launch).
 
-Browsers that can install web apps add **Install app…** to the File menu: it installs SolidCraft
+Browsers that can install web apps add **Install app…** to the File menu: it installs Torno
 as an app with its own window and launcher icon, working offline like the page. In Chrome, Edge
-and other Chromium browsers it shows the browser's install prompt, and once SolidCraft is
+and other Chromium browsers it shows the browser's install prompt, and once Torno is
 installed the item is gone. Safari has no such prompt, so the item shows its steps instead:
 Share › Add to Home Screen on iPhone and iPad, File › Add to Dock on a Mac (Safari 17 or later).
 
@@ -175,7 +175,7 @@ For example, expose a reverse-proxy service in Compose, routing `/` to
 `/?open=/dutchman/jobs/abc/part.sc` without a separate origin or CORS setup.
 Paths must start with one `/`; protocol-relative paths (`//`), backslashes, control
 characters, and decoded `..` segments are refused. Redirects must end at HTTPS or
-the page's own origin. Embed mode and **Open in SolidCraft** preserve the path.
+the page's own origin. Embed mode and **Open in Torno** preserve the path.
 
 Add `embed` to show the viewport, timeline, browser tree, and joint controls without
 the ribbon, file menus, or start page:
@@ -186,7 +186,7 @@ the ribbon, file menus, or start page:
 ```
 
 Embedded designs do not save designs, preferences, or recovery copies to browser
-storage and do not ask before unloading. **Open in SolidCraft** opens the same link
+storage and do not ask before unloading. **Open in Torno** opens the same link
 in the full app in a new tab. `?embed` without `open` keeps the normal app layout.
 
 Use `embed=editor` instead for a page that keeps the designs itself and has people model in
@@ -412,12 +412,12 @@ and Z is up.
 
 ## Name and compatibility
 
-SolidCraft was renamed from an earlier working name. Since 0.5.0 everything uses the new
+Torno was renamed from an earlier working name. Since 0.5.0 everything uses the new
 name: the `solidcraft` and `solidcraft-cli` programs, `.solidcraft` designs (`.sc` since then), `SOLIDCRAFT_*`
 environment variables, settings folders and the `solidcraft` MCP server. Upgrading keeps
 working: designs, settings, recovery files, environment variables and CLI/MCP setups from
 earlier builds carry over. Every compatibility shim is listed in the
 [compatibility notes](https://github.com/tangency-labs/solidcraft/blob/main/docs/compatibility.md).
 
-Use the SolidCraft documentation and web-app URLs. GitHub redirects links to the renamed
+Use the Torno documentation and web-app URLs. GitHub redirects links to the renamed
 repository; old-name Pages and Flatpak URLs are not maintained as permanent aliases.

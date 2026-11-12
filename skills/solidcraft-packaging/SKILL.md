@@ -1,6 +1,6 @@
 ---
 name: solidcraft-packaging
-description: "Use when preparing or shipping a SolidCraft release, changing installers or packages (AppImage, MSI, dmg, Flatpak, Snap, WinGet, Nix, FreeBSD, web), release asset names, signing or the Pages deployment."
+description: "Use when preparing or shipping a Torno release, changing installers or packages (AppImage, MSI, dmg, Flatpak, Snap, WinGet, Nix, FreeBSD, web), release asset names, signing or the Pages deployment."
 ---
 
 # Packaging and releases

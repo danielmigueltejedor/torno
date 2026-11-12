@@ -1,6 +1,6 @@
 ---
 name: solidcraft-agent-tools
-description: "Use when running SolidCraft to see a change working, driving it through the control channel or CLI, or adding or changing an MCP tool, control method or bundled agent skill."
+description: "Use when running Torno to see a change working, driving it through the control channel or CLI, or adding or changing an MCP tool, control method or bundled agent skill."
 ---
 
 # Running the app, the control channel and MCP tools

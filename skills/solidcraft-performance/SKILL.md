@@ -1,6 +1,6 @@
 ---
 name: solidcraft-performance
-description: "Use when a SolidCraft change is slow, blocks the window, runs long work, or must build for the browser. Covers keeping the window thread free, measuring a speed-up, the wasm build and what may be JavaScript or Python."
+description: "Use when a Torno change is slow, blocks the window, runs long work, or must build for the browser. Covers keeping the window thread free, measuring a speed-up, the wasm build and what may be JavaScript or Python."
 ---
 
 # Performance, threads and wasm

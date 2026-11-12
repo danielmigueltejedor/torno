@@ -5,7 +5,7 @@
 This page describes the blend that is replacing SMLib's fillet code step by step: what it builds,
 how, why it is built that way, what is merged, and what is open. It is written for a reader who
 knows blending surfaces and is new to this code. Numbers in brackets are references (end of page).
-This is solidcore's design page for the blend. The construction began in the SolidCraft fork of
+This is solidcore's design page for the blend. The construction began in the Torno fork of
 SMLib, whose construction ended on 2026-11-02 (v1.1.0-alpha); solidcore is based on SMLib and
 carries the blend forward on its own path (§9). Every issue named here is a solidcore issue; each
 links back to where its work started.
@@ -532,7 +532,7 @@ certificate), `fillet_solver` (the trace and the §3.3 checks), `fillet_overflow
 | [#2404](https://github.com/tangency-labs/solidcore/issues/2404) | building near a refusal's size bound fails |
 | [#2405](https://github.com/tangency-labs/solidcore/issues/2405) | follow-ups: refitted frames, exact plane∩cylinder/torus edges, pcurves, untested paths |
 | [#2406](https://github.com/tangency-labs/solidcore/issues/2406) | a rail that rolls over a tangent edge before a smooth-vertex End |
-| [#2388](https://github.com/tangency-labs/solidcore/issues/2388) | the definition kept through SolidCraft's record: a reopened or split round is solved on S |
+| [#2388](https://github.com/tangency-labs/solidcore/issues/2388) | the definition kept through Torno's record: a reopened or split round is solved on S |
 
 ## 7. Case gallery
 
@@ -567,7 +567,7 @@ nothing about any case.
 
 ## 9. Where it comes from, and how cases are reported
 
-**Origin.** The blend was designed and first built in the SolidCraft fork of SMLib (2026-10 to
+**Origin.** The blend was designed and first built in the Torno fork of SMLib (2026-10 to
 2026-11-02, v1.1.0-alpha), where its constructions replaced SMLib's fillet code. solidcore is based on
 SMLib and continues from there on its own path: new construction is designed on its solidcore issue
 and lands here. A step brought over from the fork unchanged keeps the fork's results bit for bit;

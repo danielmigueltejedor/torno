@@ -7,8 +7,8 @@
   - The sheet then isn't split, so its piece past the bottom stays, and nothing is imprinted on the bottom face.
   - The flood from the blended edge crosses the bottom edge and takes the bottom face off with the wall and the top's outer ring. The stitch leaves the sheet's edge open (one lamina edge), and the trim refuses: "a blend past its faces does not sew into the body along its creases and rails" (`SM_FILERR_BAD_MERGE`, status 1001).
   - It fails for r 2.0001 to 2.013 and builds at r 2 and r 2.02 and up. At r 2.00005 to 2.00007 a second limit also applies: the crease lies within the tolerance of the sheet's own rail too, so the sheet isn't split even once the crease is kept, and the rail sits 5e-5 to 7e-5 from the edge it should sew to.
-- **Trigger:** a convex blend past its faces (WR-631's cliff overflow, trimmed per WR-695) whose crease on a face beyond the cliff runs within tolerance of one of that face's edges. SolidCraft's #190 disc rounded 2.001 is the case found.
-- **How found:** porting SolidCraft's refusal cases to the difftest runner (#2273, #2325). SolidCraft's own "refused, fit 2" comes from its earlier kernel, which had no overflow.
+- **Trigger:** a convex blend past its faces (WR-631's cliff overflow, trimmed per WR-695) whose crease on a face beyond the cliff runs within tolerance of one of that face's edges. Torno's #190 disc rounded 2.001 is the case found.
+- **How found:** porting Torno's refusal cases to the difftest runner (#2273, #2325). Torno's own "refused, fit 2" comes from its earlier kernel, which had no overflow.
 - **Confirmed:**
   - The pinned C++ (3fd5b95) has no overflow trim, so it can't reach this.
   - A local build of the fork at 5e8c9c1 refuses r 2.001 with the same message.

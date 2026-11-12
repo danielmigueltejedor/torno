@@ -3,7 +3,7 @@
 `nurbs.b_spline_surface_n_lib_p2` (`TrimWithDomain`), reached from `SmFace::ShrinkGeometry`
 when `SmFilletExecutive::DoFilleting` shrinks the new fillet faces.
 
-Inputs: SolidCraft rig case shell/3576 (tangency-labs/solidcraft, branch `kernel-smlib`):
+Inputs: Torno rig case shell/3576 (tangency-labs/solidcraft, branch `kernel-smlib`):
 `SmApiCreateTaperExtrude` of the 120x80 rectangle centred on the origin, height 40, draft
 5 degrees, both caps; then `SmFilletExecutive` (circular sections, constant radius 4,
 `SetFilletParameters(..., -1, -1, -1, -1, 1, 1.0)`, `DoFillet`) on the four sloping

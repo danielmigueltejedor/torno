@@ -3,7 +3,7 @@
 - The Rust port reproduces WR-74 by default (the seven ssi-corpus cases are
   `INCOMPLETE` for C++ and the port alike, at parity). The opt-in
   `Kernel::fixes.ssi_tangent_contact_points` (`UpstreamFixes`, off by default) ports the
-  SolidCraft fork's search for isolated tangential contact points
+  Torno fork's search for isolated tangential contact points
   (tangency-labs/smlib@c26edbc): the leaf pairs `SmAdvSurfaceIntersector::FindInteriorCurves`
   drops (normals within 5 degrees at the seed, no local intersection, normals within 2
   degrees at the solution) seed a Newton solve of `S1 = S2` with parallel normals (4x4,

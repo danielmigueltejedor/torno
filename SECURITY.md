@@ -2,7 +2,7 @@
 
 ## Supported versions
 
-SolidCraft is young and moves quickly, so only the latest release gets security fixes. Please
+Torno is young and moves quickly, so only the latest release gets security fixes. Please
 update to the [latest release](https://github.com/tangency-labs/solidcraft/releases/latest) before
 reporting, and check whether the problem is still on `main`.
 
@@ -31,7 +31,7 @@ access to your computer or your account. For example:
 
 - opening a design, STEP, STL or 3MF file from someone else runs code, or reads or overwrites files
   it shouldn't
-- a website or another computer can reach or control SolidCraft
+- a website or another computer can reach or control Torno
 - an agent gets past a prompt that promised to ask you first
 - the web app reaches beyond the page's own storage
 - a release package or an update can be tampered with

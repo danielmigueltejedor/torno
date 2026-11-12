@@ -1,9 +1,9 @@
 ---
 name: solidcraft-contributing
-description: Use when someone wants to contribute code or documentation to SolidCraft, from setting up a fork and choosing an issue through submitting a pull request and responding to review.
+description: Use when someone wants to contribute code or documentation to Torno, from setting up a fork and choosing an issue through submitting a pull request and responding to review.
 ---
 
-# Contribute to SolidCraft
+# Contribute to Torno
 
 Read [CONTRIBUTING.md](../../CONTRIBUTING.md), [AGENTS.md](../../AGENTS.md) (the router
 to the other skills), the [contributor book page](../../docs/book/src/dev/contributing.md),

@@ -1,6 +1,6 @@
 ---
 name: solidcraft-commands
-description: "Use when adding or changing a SolidCraft command or any user-visible behaviour, or when deciding which crate code belongs in. Covers CommandSpec, command ids, programmatic calls vs dialogs, crate layering and the generated feature list."
+description: "Use when adding or changing a Torno command or any user-visible behaviour, or when deciding which crate code belongs in. Covers CommandSpec, command ids, programmatic calls vs dialogs, crate layering and the generated feature list."
 ---
 
 # Adding a command

@@ -71,8 +71,8 @@ The rational blend classification is already documented in `generic-blend.md`
 
 Nearly equal positive and negative power terms amplify coefficient-rounding error
 in the residual weight; the local Bernstein construction avoids that expansion.
-[Editable VectorCraft source](blend.fillet_exact--2508-nodal-bernstein/cancellation-mechanism.vectorcraft),
-drawn with VectorCraft 0.22.0 and exported as SVG with live Helvetica text
+[Editable Pluma source](blend.fillet_exact--2508-nodal-bernstein/cancellation-mechanism.vectorcraft),
+drawn with Pluma 0.22.0 and exported as SVG with live Helvetica text
 (`outlineText: false`) after inspecting its rendered preview.
 
 ## Evidence and reproduction

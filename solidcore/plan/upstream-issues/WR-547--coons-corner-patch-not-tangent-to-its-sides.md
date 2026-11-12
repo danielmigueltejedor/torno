@@ -6,8 +6,8 @@
   - 15.6 degrees off a bar's round at r 2;
   - 14.7 degrees in an L-shaped box's notch;
   - up to 38 degrees off a side face near a collapsed side.
-- **Trigger:** SolidCraft rig case fillets/1207 (a bar's top-edge round meeting a boss's base round), and an L-shaped box's notch corner (a concave and a convex round), at r 2 and 5.
-- **How found:** SolidCraft. The fork's fix is tangency-labs/smlib@cae8618 ("a Coons corner patch is tangent to its sides' surfaces"), which is not merged upstream.
+- **Trigger:** Torno rig case fillets/1207 (a bar's top-edge round meeting a boss's base round), and an L-shaped box's notch corner (a concave and a convex round), at r 2 and 5.
+- **How found:** Torno. The fork's fix is tangency-labs/smlib@cae8618 ("a Coons corner patch is tangent to its sides' surfaces"), which is not merged upstream.
 - **Confirmed:** no C++ run was made here. The Rust port follows the pinned C++ (`3fd5b95`).
 - **Rust port:** behaves as upstream by default. With `Kernel::fixes.corner_blend_coons_patch_tangent_to_sides`, the four-sided `CreateCornerBlend` (not bilinear) calls `make_coons_patch_tangent_to_sides` (the fork's `sm_MakeCoonsPatchTangentToSides`):
   - A non-rational patch whose sides read more than `SM_CONTINUITY_ANGLE` off their surfaces is copied.

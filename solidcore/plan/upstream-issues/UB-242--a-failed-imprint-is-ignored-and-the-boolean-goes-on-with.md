@@ -4,7 +4,7 @@
 - **Location:** `source/SMLib/src/SmTopologyIntersector.cpp:1233` `IntersectInsertRelate` (def. `:1092`): the status of `ImprintIntersections` only reaches `SE_MSG` and is overwritten by `SetRelationships` (`:1264`); `source/SMLib/src/SmMerge.cpp:394` `PiecewiseMerge` (def. `:341`) ignores the status of its first `IntersectInsertRelate`.
 - **What happens:** A failed imprint leaves both B-reps partly edited and inconsistent (vertex uses already freed by `MakeEdgeInFaceWithVU`), and the boolean goes on to bound, classify and merge them.
 - **Trigger:** the shell of a box with a wall thicker than the box (ASan heap-use-after-free reads in `SmFace::CalculateBoundingBox`; tangency-labs/solidcore#372).
-- **How found:** ASan run of the SolidCraft C API (tangency-labs/smlib `capi/`).
+- **How found:** ASan run of the Torno C API (tangency-labs/smlib `capi/`).
 - **Confirmed:** yes (ASan, in the fork's C API tests); not reproduced in the solidcore difftest.
 - **Severity:** crash/UB (use-after-free).
 - **Fix:** tangency-labs/smlib af8db37: `IntersectInsertRelate` deletes the proto topology manager and returns the imprint's error, and `PiecewiseMerge` returns the error of its first `IntersectInsertRelate` (`SER`); the callers already propagate it.

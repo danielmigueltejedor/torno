@@ -11,5 +11,5 @@
   undefined behaviour, hang or nondeterminism), so it follows the opt-in rule.
 - **Test:** `crates/solidcore/tests/issue_711_overlapping_holes.rs`,
   `issue_711_second_overlapping_hole_cuts`, now sets the field.
-- **Callers** that relied on the Boolean's previous behaviour (e.g. SolidCraft's
+- **Callers** that relied on the Boolean's previous behaviour (e.g. Torno's
   FAIL-3665 cases) must set the field.

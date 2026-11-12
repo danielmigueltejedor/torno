@@ -4,7 +4,7 @@
 - **Location:** `source/SMLib/src/SmBrep.cpp`, `SmBrep::LocalOperation` (with `SmOffsetGeometryCreation::FaceuseOffset` for the new surfaces): the faces around the moved ones are extended or trimmed to meet them, a blend face among them too.
 - **What happens:** moving a boss wall off its foot round (`smlib_offset_faces`, the wall out by 1) keeps the round at the old radius and builds a step on it. The result is 27725.72 with 10 faces, the round still ending at r 10 under a wall at r 11.
 - **Trigger:** tangency-labs/solidcraft#3468 (rig case shell/3468): a 60 x 40 x 10 plate with a boss r 10, 10 high, at (30, 20), an r 2 round at the boss's foot, the boss wall offset +1.
-- **How found:** SolidCraft (the fork, tangency-labs/smlib a96ce9f), #1060 step 4.
+- **How found:** Torno (the fork, tangency-labs/smlib a96ce9f), #1060 step 4.
 - **Confirmed:** no. The pinned C++ has no face move whose blends follow; the fork's commit is the evidence.
 - **Fix (fork):** tangency-labs/smlib a96ce9f (with 607d617 and 758829c) adds `SmOffsetFacesExecutive`, which the fork's capi `smlib_offset_faces` runs. Its rule, an owner decision: a blend tangent to a moved face follows it and stays tangent at its own size, so the body is blend(move(unblend(body))).
   1. It collects the blends beside a moved face across a tangent manifold edge that `SmFace::IdentifyFillet` recognises with that edge as a rail. Their kind is recovered exactly: a circular section at constant radius or at constant chord. Anything else is refused (`SM_OFR_UNSUPPORTED`).

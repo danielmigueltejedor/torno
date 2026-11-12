@@ -1,11 +1,11 @@
-SolidCraft is open-source parametric 3D CAD in Rust: sketch, constrain, extrude, and change a
+Torno is open-source parametric 3D CAD in Rust: sketch, constrain, extrude, and change a
 parameter to watch the timeline rebuild. [Documentation](https://docs.solidcraft.io/)
 · [try it in the browser](https://solidcraft.io/app) ·
 [contributing](https://github.com/bherbruck/solidcraft/blob/main/CONTRIBUTING.md) ·
 [issues](https://github.com/bherbruck/solidcraft/issues). AI agents can model with it over MCP:
 `solidcraft-cli mcp` ([how](https://docs.solidcraft.io/guide/mcp.html)).
 
-**What's new** in SolidCraft {version} is listed below, and the
+**What's new** in Torno {version} is listed below, and the
 [ROADMAP](https://github.com/bherbruck/solidcraft/blob/main/ROADMAP.md#known-limitations) lists
 the known limitations. Designs from every earlier version open in this one.
 
@@ -14,14 +14,14 @@ and `ai.storyteller.solvecraft` up to 0.7): `flatpak update` offers to replace t
 `.deb`, `.rpm` and AppImage remove the old menu entry, and settings stay. On macOS the bundle ID
 changed too, so macOS asks once more for the permissions it had granted.
 
-**Upgrading from 0.5 or earlier.** 0.6 renamed SolveCraft to SolidCraft and made the zip
+**Upgrading from 0.5 or earlier.** 0.6 renamed SolveCraft and made the zip
 container the default save format. `.solvecraft` designs, old settings folders and
 `SOLVECRAFT_*` variables are still picked up, and `solvecraft-cli` still forwards to
 `solidcraft-cli`. Want plain JSON? Use **File ▸ Save As JSON…** or `--save design.json`. On
 macOS, replace `SolveCraft.app` with `SolidCraft.app`. Details:
 [compatibility notes](https://github.com/bherbruck/solidcraft/blob/main/docs/compatibility.md).
 
-Documentation, the browser app and the Flatpak feed use the SolidCraft project Pages URLs.
+Documentation, the browser app and the Flatpak feed use the Torno project Pages URLs.
 
 **Which file?**
 - **Windows:** `SolidCraft-{version}-windows-x64.exe` runs as is. Or install the `.msi`, or unzip the
@@ -38,7 +38,7 @@ Documentation, the browser app and the Flatpak feed use the SolidCraft project P
   are the same packages under fixed names, for download links that always fetch the latest release.
 
 For Flatpak feed installation and updates, add Flathub for the required runtime before
-installing SolidCraft; keep both remotes in the same user installation:
+installing Torno; keep both remotes in the same user installation:
 
 ```sh
 flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
