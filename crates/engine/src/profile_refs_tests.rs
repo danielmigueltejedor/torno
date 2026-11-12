@@ -2,7 +2,7 @@
 //! them, so a face sketch whose projected outline is rebuilt still extrudes the same region.
 
 use serde_json::{Value, json};
-use solidcraft_geom::MeshGeom;
+use torno_geom::MeshGeom;
 
 use crate::Session;
 
@@ -46,7 +46,7 @@ fn bodies(s: &Session) -> Vec<(String, f64)> {
         .state()
         .bodies
         .iter()
-        .map(|b| (b.name.clone(), b.body.mesh(&solidcraft_kernel::MeshTolerance::chord(1e-2)).unwrap().measure().volume))
+        .map(|b| (b.name.clone(), b.body.mesh(&torno_kernel::MeshTolerance::chord(1e-2)).unwrap().measure().volume))
         .collect()
 }
 
@@ -54,8 +54,8 @@ fn bodies(s: &Session) -> Vec<(String, f64)> {
 fn a_port_picked_by_index_stays_a_cut_after_a_width_change() {
     let mut s = enclosure();
     let f = s.doc.features.last().unwrap();
-    let solidcraft_doc::FeatureKind::Extrude { profiles, .. } = &f.kind else { panic!("{:?}", f.kind) };
-    assert!(matches!(profiles, solidcraft_doc::ProfileSel::Curves { .. }), "stored by curves: {profiles:?}");
+    let torno_doc::FeatureKind::Extrude { profiles, .. } = &f.kind else { panic!("{:?}", f.kind) };
+    assert!(matches!(profiles, torno_doc::ProfileSel::Curves { .. }), "stored by curves: {profiles:?}");
     let before = bodies(&s);
     assert_eq!(before.len(), 1, "{before:?}");
     run(&mut s, "parameters.change", json!({"name": "width", "expression": "100 mm"}));
@@ -71,7 +71,7 @@ fn a_port_picked_by_index_stays_a_cut_after_a_width_change() {
     let mesh = world.body("Enclosure").unwrap().mesh();
     assert!(!mesh.contains(solidcore_record::Vec3::new(49., 0., 12.)));
     assert!(mesh.contains(solidcore_record::Vec3::new(49., 0., 20.)));
-    let reopened = Session::new(solidcraft_doc::Document::from_json(&s.doc.to_json()).unwrap());
+    let reopened = Session::new(torno_doc::Document::from_json(&s.doc.to_json()).unwrap());
     assert!(reopened.model.result(id).unwrap().error.is_none());
     let world = reopened.world_state().unwrap();
     let mesh = world.body("Enclosure").unwrap().mesh();
@@ -94,7 +94,7 @@ fn a_lost_profile_is_an_error_not_another_pick() {
     // Delete the picked circle: the extrude fails with a message instead of taking the square.
     let sk = s.doc.find_feature("S").unwrap().id;
     let picked = match &s.doc.features.last().unwrap().kind {
-        solidcraft_doc::FeatureKind::Extrude { profiles: solidcraft_doc::ProfileSel::Curves { loops }, .. } => loops[0].clone(),
+        torno_doc::FeatureKind::Extrude { profiles: torno_doc::ProfileSel::Curves { loops }, .. } => loops[0].clone(),
         k => panic!("{k:?}"),
     };
     run(&mut s, "sketch.edit", json!({"sketch": sk}));

@@ -4,7 +4,7 @@
 //! infeasible; an edit the continuation cannot reach, solved in steps; and the solve without
 //! continuation when nothing it could help with changed.
 use solidcore_record::Vec2;
-use solidcraft_geom::prelude::*;
+use torno_geom::prelude::*;
 
 use crate::construct::switch;
 use crate::model::{ConstraintKind, Sketch};

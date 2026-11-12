@@ -5,8 +5,8 @@ use schemars::{JsonSchema, Schema, SchemaGenerator, json_schema};
 use serde::de::Error as _;
 use serde::{Deserialize, Deserializer};
 use serde_json::Value;
-use solidcraft_geom::fill::{MAX_CROWN, MIN_CROWN};
-use solidcraft_kernel::{Construction, Continuity, MAX_EDGE_PICKS};
+use torno_geom::fill::{MAX_CROWN, MIN_CROWN};
+use torno_kernel::{Construction, Continuity, MAX_EDGE_PICKS};
 
 use super::check::whole;
 use super::types::{FeatureCommon, Point3, feature_common};

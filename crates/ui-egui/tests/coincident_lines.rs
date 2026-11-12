@@ -3,9 +3,9 @@
 mod support;
 
 use serde_json::json;
-use solidcraft_engine::geom::prelude::*;
-use solidcraft_engine::sketch::ConstraintKind;
-use solidcraft_ui_egui::scenario::Harness;
+use torno_engine::geom::prelude::*;
+use torno_engine::sketch::ConstraintKind;
+use torno_ui_egui::scenario::Harness;
 
 fn setup() -> Harness {
     support::sketch_lines(&[[[10, 10], [30, 10]], [[35, 15], [35, 40]]], Some(false))

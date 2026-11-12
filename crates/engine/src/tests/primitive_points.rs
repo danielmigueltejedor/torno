@@ -9,7 +9,7 @@ use crate::*;
 
 fn bbox(s: &Session, body: &str) -> ([f64; 3], [f64; 3]) {
     let b = s.model.state().body(body).map(|b| b.body.clone()).unwrap();
-    let m = solidcraft_kernel::measure(&b).unwrap();
+    let m = torno_kernel::measure(&b).unwrap();
     ([m.bbox.min.x, m.bbox.min.y, m.bbox.min.z], [m.bbox.max.x, m.bbox.max.y, m.bbox.max.z])
 }
 
@@ -31,7 +31,7 @@ fn cylinder_base_expressions_follow_parameters() {
     // And it survives a save and reopen.
     let text = s.doc.to_json();
     assert!(text.contains("basin_width/2"), "{text}");
-    let s2 = Session::new(solidcraft_doc::Document::from_json(&text).unwrap());
+    let s2 = Session::new(torno_doc::Document::from_json(&text).unwrap());
     let (lo, _) = bbox(&s2, "Pin");
     assert!(near(lo, [25.0, 5.0, -2.0]), "{lo:?}");
 }
@@ -133,8 +133,8 @@ fn cone_area(r: f64, top: f64, h: f64) -> f64 {
     std::f64::consts::PI * (r * r + top * top + (r + top) * (h * h + (r - top) * (r - top)).sqrt())
 }
 
-fn measured(s: &Session, body: &str) -> solidcraft_kernel::BodyMeasure {
-    solidcraft_kernel::measure(&s.model.state().body(body).map(|b| b.body.clone()).unwrap()).unwrap()
+fn measured(s: &Session, body: &str) -> torno_kernel::BodyMeasure {
+    torno_kernel::measure(&s.model.state().body(body).map(|b| b.body.clone()).unwrap()).unwrap()
 }
 
 fn rel(a: f64, b: f64) -> f64 {
@@ -208,7 +208,7 @@ fn cone_joins_cuts_and_intersects_like_the_other_primitives() {
         run(&mut s, "solid.cone", json!({"radius": 6, "top_radius": 2, "height": 10, "operation": operation, "targets": ["Block"]}));
         let state = s.model.state();
         assert_eq!(state.bodies.len(), 1, "{operation}: {:?}", state.bodies.iter().map(|b| &b.name).collect::<Vec<_>>());
-        let got = solidcraft_kernel::measure(&state.bodies[0].body).unwrap().volume;
+        let got = torno_kernel::measure(&state.bodies[0].body).unwrap().volume;
         assert!(rel(got, want) < 2e-3, "{operation}: {got} vs {want}");
     }
     // A new body leaves the block alone.
@@ -283,7 +283,7 @@ fn cone_saves_reopens_and_edits() {
     let v: Value = serde_json::from_str(&text).unwrap();
     let f = &v["features"][0];
     assert_eq!((&f["type"], &f["top_radius"], &f["axis"]), (&json!("cone"), &json!("tip"), &json!([0.0, 1.0, 0.0])), "{f}");
-    let mut s2 = Session::new(solidcraft_doc::Document::from_json(&text).unwrap());
+    let mut s2 = Session::new(torno_doc::Document::from_json(&text).unwrap());
     assert!(rel(measured(&s2, "N").volume, cone_volume(8.0, 3.0, 12.0)) < 2e-3);
     assert_eq!(bbox(&s2, "N"), bbox(&s, "N"));
     // Edit Feature: a full cone, taller, cutting nothing (it is the only body: a new body).
@@ -301,7 +301,7 @@ fn cone_saves_reopens_and_edits() {
     run(&mut s2, "edit.undo", json!({}));
     assert!(rel(measured(&s2, "N").volume, cone_volume(8.0, 0.0, 20.0)) < 2e-3);
     // The parameter still drives it after the round trip.
-    let mut s3 = Session::new(solidcraft_doc::Document::from_json(&text).unwrap());
+    let mut s3 = Session::new(torno_doc::Document::from_json(&text).unwrap());
     run(&mut s3, "parameters.change", json!({"name": "tip", "expression": "5 mm"}));
     assert!(rel(measured(&s3, "N").volume, cone_volume(8.0, 5.0, 12.0)) < 2e-3);
 }

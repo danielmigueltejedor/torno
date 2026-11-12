@@ -95,7 +95,7 @@ pub(super) fn rows(app: &mut SolveApp, ui: &mut egui::Ui, component: u64, path: 
     let scope = if path.is_empty() { format!("c{component}") } else { occurrence_key(path) };
     // The history opens by default; the Features folder stays closed until opened.
     let (key, label) =
-        if compact { (format!("{scope}/history"), solidcraft_ui_text::tr("ui.history_title")) } else { (format!("{scope}/features"), "Features") };
+        if compact { (format!("{scope}/history"), torno_ui_text::tr("ui.history_title")) } else { (format!("{scope}/features"), "Features") };
     let open = is_open(app, &key, compact);
     // Folded, it carries the worst mark of what it holds. A row scrolled out of view paints
     // nothing, so its mark is not worked out: in a long tree of placements of a part with a long
@@ -408,7 +408,7 @@ fn marker_row(app: &SolveApp, ui: &mut egui::Ui, depth: usize) -> egui::Response
     if response.hovered() || response.dragged() {
         ui.ctx().set_cursor_icon(egui::CursorIcon::Grab);
     }
-    response.backing_on_hover_text(solidcraft_ui_text::tr("ui.history_marker_tip"))
+    response.backing_on_hover_text(torno_ui_text::tr("ui.history_marker_tip"))
 }
 
 /// Dragging the marker shows where it lands; letting go rolls the history there, through the
@@ -420,7 +420,7 @@ fn drag_marker(app: &mut SolveApp, ui: &egui::Ui, resp: &egui::Response, slots: 
     let Some(y) = ui.ctx().pointer_latest_pos().map(|p| p.y) else { return };
     let Some(&(slot_y, position)) = slots.iter().min_by(|a, b| (a.0 - y).abs().total_cmp(&(b.0 - y).abs())) else { return };
     if resp.dragged() && position != marker {
-        let accent = solidcraft_theme::TabAccent::current(ui.ctx()).color;
+        let accent = torno_theme::TabAccent::current(ui.ctx()).color;
         ui.painter().hline(resp.rect.left() + 4.0..=resp.rect.right() - 4.0, slot_y, Stroke::new(2.0, accent));
     }
     if resp.drag_stopped()
@@ -492,7 +492,7 @@ mod tests {
     fn feature_rows(h: &mut Harness, cache: &str) -> Vec<String> {
         h.app.tree.model = match cache {
             "current" => Some(model::Model::new(&h.app.session)),
-            "stale" => Some(model::Model::new(&solidcraft_engine::Session::default())),
+            "stale" => Some(model::Model::new(&torno_engine::Session::default())),
             _ => None,
         };
         h.app.tree.expanded.insert("c0/features".into());
@@ -682,7 +682,7 @@ mod tests {
     fn find_in_timeline(app: &mut SolveApp, feature: u64, body: &str) {
         let state = app.session.world_state().unwrap();
         let model_body = state.body(body).unwrap();
-        let names = solidcraft_engine::doc::naming::face_names(model_body);
+        let names = torno_engine::doc::naming::face_names(model_body);
         let index = names.iter().position(|name| name.starts_with(&format!("F{feature}:"))).unwrap();
         app.session.selection = vec![Sel::Face { body: body.into(), index, point: solidcore_record::Vec3::ZERO }];
         let item = crate::context_menu::items(app, &Target::Viewport).into_iter().find(|item| item.id == "ui.findTimeline").unwrap();
@@ -731,7 +731,7 @@ mod tests {
         h.app.run("component.activate", json!({"component":0})).unwrap();
         let world_body = h.app.session.occurrence_bodies(&path, false).unwrap()[0].clone();
         let saved = h.app.session.doc.to_json();
-        h.app.session = solidcraft_engine::Session::new(solidcraft_engine::doc::Document::from_json(&saved).unwrap());
+        h.app.session = torno_engine::Session::new(torno_engine::doc::Document::from_json(&saved).unwrap());
         h.app.tree.collapsed.insert("c0".into());
         h.app.tree.collapsed.insert(occurrence_key(&path));
         h.app.preferences.timeline_left_browser_collapsed = true;
@@ -1010,8 +1010,8 @@ mod tests {
             }
         }
         let stamp = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos();
-        let source = Source(std::env::temp_dir().join(format!("solidcraft-browser-import-{}-{stamp}.solidcraft", std::process::id())));
-        let mut saved = SolveApp::new(solidcraft_engine::Session::default(), crate::Services::default());
+        let source = Source(std::env::temp_dir().join(format!("torno-browser-import-{}-{stamp}.solidcraft", std::process::id())));
+        let mut saved = SolveApp::new(torno_engine::Session::default(), crate::Services::default());
         saved.run("solid.box", json!({"length":10,"width":10,"height":10,"body_name":"Imported"})).unwrap();
         saved.run("file.save", json!({"path":source.0.to_string_lossy()})).unwrap();
         let mut h = Harness::new();
@@ -1325,7 +1325,7 @@ mod tests {
         h.app.run("sketch.rectangle.two_point", json!({"p0":[0,0],"p1":[10,10]})).unwrap();
         h.app.run("sketch.finish", json!({})).unwrap();
         h.app.run("solid.extrude", json!({"sketch":"Two","profiles":[0],"distance":5,"name":"Low","body_name":"A"})).unwrap();
-        let shown = |h: &Harness| solidcraft_engine::view::sketch_shown(&h.app.session, two);
+        let shown = |h: &Harness| torno_engine::view::sketch_shown(&h.app.session, two);
         h.frames(2);
         assert!(!shown(&h), "a used sketch is hidden");
         h.step(&json!({"click": {"handle": "fold:Low"}})).unwrap();

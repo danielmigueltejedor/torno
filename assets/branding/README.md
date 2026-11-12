@@ -1,7 +1,7 @@
 # Torno brand kit
 
 Logo files for stickers, shirts, the web and social posts. Everything in `logo/` is drawn
-from the app icon (`assets/icons/app/macos/source/SolidCraft.icon/Assets/03-solid-blue-cutout.svg`),
+from the app icon (`assets/icons/app/macos/source/Torno.icon/Assets/03-solid-blue-cutout.svg`),
 which is also the last frame of the loading animation (`assets/styles/web/loading-logo.svg`).
 The SVGs are plain paths: no scripts, fonts, animation or external links, so any printer can use them.
 
@@ -9,12 +9,12 @@ The SVGs are plain paths: no scripts, fonts, animation or external links, so any
 
 | File | Use it for |
 |---|---|
-| `logo/solidcraft-mark.svg` | The mark in full colour. First choice for stickers, print and the web. |
-| `logo/solidcraft-mark-mono-black.svg` | One-colour print on light material: screen-printed shirts, stamps, engraving, vinyl. |
-| `logo/solidcraft-mark-mono-white.svg` | One-colour print on dark material, such as a white print on a dark shirt. |
-| `logo/solidcraft-mark-512.png`, `-1024.png`, `-2048.png` | Transparent square PNGs for places that don't take SVG: avatars, social posts, slides, print shops that ask for a bitmap (send the 2048). |
-| `logo/solidcraft-wordmark.svg` | The name on its own, outlined to paths. |
-| `logo/solidcraft-lockup-horizontal.svg` | Mark and name side by side: headers, banners, shirt fronts, wide stickers. |
+| `logo/torno-mark.svg` | The mark in full colour. First choice for stickers, print and the web. |
+| `logo/torno-mark-mono-black.svg` | One-colour print on light material: screen-printed shirts, stamps, engraving, vinyl. |
+| `logo/torno-mark-mono-white.svg` | One-colour print on dark material, such as a white print on a dark shirt. |
+| `logo/torno-mark-512.png`, `-1024.png`, `-2048.png` | Transparent square PNGs for places that don't take SVG: avatars, social posts, slides, print shops that ask for a bitmap (send the 2048). |
+| `logo/torno-wordmark.svg` | The name on its own, outlined to paths. |
+| `logo/torno-lockup-horizontal.svg` | Mark and name side by side: headers, banners, shirt fronts, wide stickers. |
 | `web/source/og.png` | The existing link preview card for the docs site. |
 
 The gaps between the faces are part of the logo. In the colour and one-colour files they are

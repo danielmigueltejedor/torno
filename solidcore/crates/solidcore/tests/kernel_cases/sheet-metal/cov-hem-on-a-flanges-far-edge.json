@@ -53,6 +53,6 @@
   "ungraded": [],
   "what": "sheet.hem on the far edge of a 20 mm edge flange (its outer face's edge), 8 long: the hem turns in over the flange's inner face",
   "why_not": [
-    "body \"Body1\" is no kernel operation's output nor an operand: SolidCraft built it or changed the kernel's record"
+    "body \"Body1\" is no kernel operation's output nor an operand: Torno built it or changed the kernel's record"
   ]
 }

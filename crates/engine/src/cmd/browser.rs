@@ -11,7 +11,7 @@ use std::collections::BTreeMap;
 
 use serde_json::{Value, json};
 
-use solidcraft_doc::{BrowserEntry, FeatureKind, MAX_GROUP_NESTING};
+use torno_doc::{BrowserEntry, FeatureKind, MAX_GROUP_NESTING};
 
 use super::CommandSpec;
 use super::features::{add_feature, check_expr};
@@ -236,7 +236,7 @@ fn optional_group(s: &Session, p: &Value, key: &str, cmd: &str) -> Result<Option
 }
 
 /// The list a group's contents (or the folder's top level, `None`) are ordered by.
-fn holder_list<'a>(d: &'a mut solidcraft_doc::Document, component: u64, folder: &str, holder: Option<u64>) -> Option<&'a mut Vec<BrowserEntry>> {
+fn holder_list<'a>(d: &'a mut torno_doc::Document, component: u64, folder: &str, holder: Option<u64>) -> Option<&'a mut Vec<BrowserEntry>> {
     match holder {
         Some(g) => d.browser_groups.iter_mut().find(|x| x.id == g).map(|g| &mut g.items),
         None => Some(d.browser_order.entry(format!("{component}/{folder}")).or_default()),
@@ -245,7 +245,7 @@ fn holder_list<'a>(d: &'a mut solidcraft_doc::Document, component: u64, folder: 
 
 /// Name every group under `holder` in its list, where they are drawn, so a position among them
 /// can be found.
-fn settle(d: &mut solidcraft_doc::Document, component: u64, folder: &str, holder: Option<u64>) {
+fn settle(d: &mut torno_doc::Document, component: u64, folder: &str, holder: Option<u64>) {
     let all = d.ordered_entries(component, folder, holder);
     if let Some(list) = holder_list(d, component, folder, holder) {
         *list = all;
@@ -253,7 +253,7 @@ fn settle(d: &mut solidcraft_doc::Document, component: u64, folder: &str, holder
 }
 
 /// Take entries out of every list of a component's folder: its groups' and the top level's.
-fn take_out(d: &mut solidcraft_doc::Document, component: u64, folder: &str, gone: &[BrowserEntry]) {
+fn take_out(d: &mut torno_doc::Document, component: u64, folder: &str, gone: &[BrowserEntry]) {
     for g in d.browser_groups.iter_mut().filter(|g| g.component == component && g.folder == folder) {
         g.items.retain(|e| !gone.contains(e));
     }
@@ -304,7 +304,7 @@ fn group(s: &mut Session, p: &Value) -> Result<Value> {
     let gone: Vec<BrowserEntry> = items.iter().map(|k| BrowserEntry::item(k)).collect();
     take_out(d, component, &folder, &gone);
     let items = gone;
-    d.browser_groups.push(solidcraft_doc::BrowserGroup { id, name: name.clone(), component, folder, parent, items });
+    d.browser_groups.push(torno_doc::BrowserGroup { id, name: name.clone(), component, folder, parent, items });
     reply(cmd, BrowserGroupMade { group: id, name, parent, param_warnings: Vec::new() })
 }
 
@@ -459,12 +459,12 @@ fn is_construction(k: &FeatureKind) -> bool {
 /// (#6967). Among the exact matches the order is the one there always was: a feature (by id
 /// or by name), then a body, then a joint. With no exact match the name is compared without
 /// regard to case, as it always was: a feature first, then an origin item.
-fn shown_item(s: &Session, world: &solidcraft_doc::ModelState, key: &str) -> Option<Shown> {
+fn shown_item(s: &Session, world: &torno_doc::ModelState, key: &str) -> Option<Shown> {
     shown_item_exact(s, world, key).or_else(|| shown_item_ignore_case(s, world, key))
 }
 
 /// The item a key names exactly: a feature, a body or a joint whose name is the key itself.
-fn shown_item_exact(s: &Session, world: &solidcraft_doc::ModelState, key: &str) -> Option<Shown> {
+fn shown_item_exact(s: &Session, world: &torno_doc::ModelState, key: &str) -> Option<Shown> {
     // A feature is found by id or by name, as `find_feature` does, but the name must be the
     // key itself here.
     let feature = match key.parse::<u64>() {
@@ -482,7 +482,7 @@ fn shown_item_exact(s: &Session, world: &solidcraft_doc::ModelState, key: &str) 
 
 /// The item a key names when nothing matches it exactly: the name is compared without regard to
 /// case, as it always was.
-fn shown_item_ignore_case(s: &Session, world: &solidcraft_doc::ModelState, key: &str) -> Option<Shown> {
+fn shown_item_ignore_case(s: &Session, world: &torno_doc::ModelState, key: &str) -> Option<Shown> {
     if let Some(shown) = s.doc.find_feature(key).and_then(|f| shown_feature(world, f, key)) {
         return Some(shown);
     }
@@ -492,7 +492,7 @@ fn shown_item_ignore_case(s: &Session, world: &solidcraft_doc::ModelState, key: 
 /// The item a feature is: a sketch, or construction geometry by name. A feature that is neither
 /// (an extrude, a fillet) is not an item of its own, and the key goes on to the next kind. A
 /// sketch that shares its name with a body is the body's (#7206).
-fn shown_feature(world: &solidcraft_doc::ModelState, f: &solidcraft_doc::Feature, key: &str) -> Option<Shown> {
+fn shown_feature(world: &torno_doc::ModelState, f: &torno_doc::Feature, key: &str) -> Option<Shown> {
     if matches!(f.kind, FeatureKind::Sketch { .. }) {
         // A sketch and a body with exactly the same name, a sketch named after the body it
         // makes (#7206): the name is the body's. The browser names a sketch by its id and a
@@ -585,7 +585,7 @@ fn folders_holding(s: &Session, world: &[String]) -> std::collections::BTreeSet<
         return keys;
     }
     let st = s.model.state();
-    let names = solidcraft_doc::WorldNames::new(&s.doc, &st);
+    let names = torno_doc::WorldNames::new(&s.doc, &st);
     // Each body's component, found once rather than once per placement.
     let owned: Vec<(u64, &str)> = s.doc.model_body_components(&st).into_iter().zip(st.bodies.iter().map(|b| b.name.as_str())).collect();
     for (component, path, _) in s.doc.placements() {
@@ -596,8 +596,8 @@ fn folders_holding(s: &Session, world: &[String]) -> std::collections::BTreeSet<
             }
             keys.insert(format!("{scope}/bodies"));
             for g in s.doc.browser_groups.iter().filter(|g| g.component == component && g.folder == "bodies" && g.has_item(b)) {
-                for id in std::iter::successors(Some(g.id), |id| s.doc.browser_group(*id).and_then(|g| g.parent))
-                    .take(solidcraft_doc::MAX_GROUP_NESTING + 1)
+                for id in
+                    std::iter::successors(Some(g.id), |id| s.doc.browser_group(*id).and_then(|g| g.parent)).take(torno_doc::MAX_GROUP_NESTING + 1)
                 {
                     keys.insert(format!("{scope}/g{id}"));
                 }
@@ -1068,7 +1068,7 @@ fn document_units(s: &mut Session, p: &Value) -> Result<Value> {
             .doc
             .params
             .iter()
-            .filter(|p| !p.model && p.unit.is_empty() && solidcraft_doc::expr::is_literal(&p.expr) && p.expr.trim().parse::<f64>().is_ok())
+            .filter(|p| !p.model && p.unit.is_empty() && torno_doc::expr::is_literal(&p.expr) && p.expr.trim().parse::<f64>().is_ok())
             .map(|p| (p.name.clone(), p.expr.trim().to_string()))
             .collect();
         for (name, e) in bare {
@@ -1094,17 +1094,17 @@ fn document_units(s: &mut Session, p: &Value) -> Result<Value> {
 }
 
 /// A camera `view.save` keeps, as the handler reads it (and `ViewCamera`, its contract type): a
-/// [`solidcraft_doc::NamedView`] of finite numbers with a positive distance, or the message the
+/// [`torno_doc::NamedView`] of finite numbers with a positive distance, or the message the
 /// handler refuses it with.
-pub(crate) fn saved_view_form(c: &Value) -> std::result::Result<solidcraft_doc::NamedView, String> {
-    let v: solidcraft_doc::NamedView = serde_json::from_value(c.clone()).map_err(|e| format!("bad camera: {e}"))?;
+pub(crate) fn saved_view_form(c: &Value) -> std::result::Result<torno_doc::NamedView, String> {
+    let v: torno_doc::NamedView = serde_json::from_value(c.clone()).map_err(|e| format!("bad camera: {e}"))?;
     let ok = [v.target.x, v.target.y, v.target.z, v.yaw, v.pitch, v.distance, v.fov].iter().all(|x| x.is_finite()) && v.distance > 0.0;
     if ok { Ok(v) } else { Err("the camera must be finite with a positive distance".into()) }
 }
 
 /// The camera `view.apply` turns to for a `camera` it is given, as the handler reads it (and
 /// `ApplyCamera`, its contract type), or the message the handler refuses it with.
-pub(crate) fn applied_camera_form(c: &Value) -> std::result::Result<solidcraft_viewport::Camera, String> {
+pub(crate) fn applied_camera_form(c: &Value) -> std::result::Result<torno_viewport::Camera, String> {
     if c.get("up").is_some() {
         return Err("camera `up` is not supported: the up axis comes from the design settings".into());
     }
@@ -1112,12 +1112,12 @@ pub(crate) fn applied_camera_form(c: &Value) -> std::result::Result<solidcraft_v
         Some(value) => value.as_f64().filter(|r| r.is_finite()).ok_or("camera `roll` must be a finite number in radians")?,
         None => 0.0,
     };
-    let v: solidcraft_doc::NamedView = serde_json::from_value(c.clone()).map_err(|e| format!("bad camera: {e}"))?;
+    let v: torno_doc::NamedView = serde_json::from_value(c.clone()).map_err(|e| format!("bad camera: {e}"))?;
     // Past a pole the same view has other angles; the orbit would snap it back (#6032).
     if !(v.pitch.abs() <= std::f64::consts::FRAC_PI_2 + 1e-9) {
         return Err("camera `pitch` must be within ±π/2 radians (±90°)".into());
     }
-    let cam = solidcraft_viewport::Camera { roll: roll.clamp(-std::f64::consts::PI, std::f64::consts::PI), ..camera_of(&v) };
+    let cam = torno_viewport::Camera { roll: roll.clamp(-std::f64::consts::PI, std::f64::consts::PI), ..camera_of(&v) };
     if !usable_camera(&cam) {
         return Err("the camera must be finite with a positive distance".into());
     }
@@ -1126,7 +1126,7 @@ pub(crate) fn applied_camera_form(c: &Value) -> std::result::Result<solidcraft_v
 
 /// A camera the viewport can be put at: finite, with a positive distance and a field of view of
 /// at least 0.
-fn usable_camera(cam: &solidcraft_viewport::Camera) -> bool {
+fn usable_camera(cam: &torno_viewport::Camera) -> bool {
     cam.is_valid() && cam.fov.is_finite() && cam.fov >= 0.0
 }
 
@@ -1157,11 +1157,11 @@ fn view_apply(s: &mut Session, p: &Value) -> Result<Value> {
         (None, None) => return Err(bad(cmd, "`view` (a name) or `camera` is required")),
         (None, Some(c)) => applied_camera_form(c).map_err(|e| bad(cmd, e))?,
         // Standard view names come first, as in the browser's Named Views folder.
-        (Some(name), None) => match solidcraft_viewport::StandardView::parse(name) {
+        (Some(name), None) => match torno_viewport::StandardView::parse(name) {
             Some(sv) => {
                 let mut c = crate::view::home_camera(s)?;
                 c.set_view(sv);
-                c.fit(&solidcraft_render::view_bounds(&crate::view::bounds(s)?));
+                c.fit(&torno_render::view_bounds(&crate::view::bounds(s)?));
                 c
             }
             None => s.doc.named_views.iter().find(|v| v.name == name).map(camera_of).ok_or_else(|| bad(cmd, format!("no named view `{name}`")))?,
@@ -1175,8 +1175,8 @@ fn view_apply(s: &mut Session, p: &Value) -> Result<Value> {
 }
 
 /// The orbit camera of a named view (Z up, no roll).
-fn camera_of(v: &solidcraft_doc::NamedView) -> solidcraft_viewport::Camera {
-    solidcraft_viewport::Camera { target: v.target, yaw: v.yaw, pitch: v.pitch, distance: v.distance, fov: v.fov, ..Default::default() }
+fn camera_of(v: &torno_doc::NamedView) -> torno_viewport::Camera {
+    torno_viewport::Camera { target: v.target, yaw: v.yaw, pitch: v.pitch, distance: v.distance, fov: v.fov, ..Default::default() }
 }
 
 fn view_index(s: &Session, p: &Value, cmd: &str) -> Result<usize> {
@@ -1236,14 +1236,14 @@ fn replace_body_name(v: &mut Value, old: &str, new: &str, names_body: bool, dept
 pub(super) fn member_pins(s: &Session, fid: u64) -> Option<BTreeMap<String, String>> {
     let f = s.doc.feature(fid)?;
     let result = s.model.result(fid)?;
-    let lines = solidcraft_doc::frame::member_line_ids(&result.state, &f.kind).ok()?;
+    let lines = torno_doc::frame::member_line_ids(&result.state, &f.kind).ok()?;
     let made: Vec<String> = result.state.bodies.iter().filter(|b| b.feature == fid).map(|b| b.name.clone()).collect();
     (lines.len() == made.len()).then(|| lines.into_iter().zip(made).collect())
 }
 
 /// Whether the `i`-th new body of `f` is numbered by the body counter (`BodyN`): it has no stored
 /// name of its own and is not numbered after the feature's first name (`Ribs (4)`).
-pub(crate) fn counted(f: &solidcraft_doc::Feature, i: usize) -> bool {
+pub(crate) fn counted(f: &torno_doc::Feature, i: usize) -> bool {
     let first = f.body_names.first().is_some_and(|n| !n.trim().is_empty());
     f.body_names.get(i).is_none_or(|n| n.trim().is_empty()) && (f.shell_piece_order || i < f.body_names.len() || !first)
 }
@@ -1252,8 +1252,8 @@ pub(crate) fn counted(f: &solidcraft_doc::Feature, i: usize) -> bool {
 /// to repair fails it, with why, and the command changes nothing); the reply is what that
 /// evaluation changed, face by face.
 fn repair_body(s: &mut Session, p: &Value) -> Result<Value> {
-    use solidcraft_doc::expr::Kind;
-    use solidcraft_kernel::{Continuity, SurfaceKind};
+    use torno_doc::expr::Kind;
+    use torno_kernel::{Continuity, SurfaceKind};
     let cmd = "body.repair";
     let name = str_(p, "body").filter(|b| !b.trim().is_empty()).ok_or_else(|| bad(cmd, "`body` must name the part to repair"))?;
     // A placed copy's name means the body it shows (#9740); the repair goes on that body.
@@ -1275,7 +1275,7 @@ fn repair_body(s: &mut Session, p: &Value) -> Result<Value> {
         .and_then(|r| r.repair.clone())
         .ok_or_else(|| crate::EngineError::Other(format!("{cmd}: the feature kept no report of the repair")))?;
     let repaired = s.model.state().body(&name).map(|b| b.body.clone());
-    let volume = repaired.filter(|_| report.closed).and_then(|b| solidcraft_kernel::measure(&b).ok()).map(|m| m.volume);
+    let volume = repaired.filter(|_| report.closed).and_then(|b| torno_kernel::measure(&b).ok()).map(|m| m.volume);
     let surface = |k: SurfaceKind| format!("{k:?}").to_lowercase();
     let face = |face: usize, k: SurfaceKind, why: &str| RepairFace { face, surface: surface(k), why: why.to_string() };
     let done = RepairDone {
@@ -1425,7 +1425,7 @@ fn rename_body(s: &mut Session, p: &Value) -> Result<Value> {
             *b = name.to_string();
         }
         if let FeatureKind::Sketch { plane, .. } = &mut f.kind {
-            solidcraft_doc::sheet::rename_plane_sheet_body(plane, &old, name);
+            torno_doc::sheet::rename_plane_sheet_body(plane, &old, name);
         }
         if let FeatureKind::Sketch { plane, sketch } = &mut f.kind
             && let Some(anchor) = super::sketch::face::anchor_mut(plane)
@@ -1435,7 +1435,7 @@ fn rename_body(s: &mut Session, p: &Value) -> Result<Value> {
             let bodies = std::collections::BTreeMap::from([(old.clone(), name.to_string())]);
             anchor.remap_target(&ids, &bodies)?;
             for link in &mut sketch.links {
-                if link.auto_face && matches!(&link.source,solidcraft_sketch::LinkSource::Face {body,..} if *body==old) {
+                if link.auto_face && matches!(&link.source,torno_sketch::LinkSource::Face {body,..} if *body==old) {
                     link.face_name = Some(anchor.target.name.clone());
                 }
             }
@@ -1487,7 +1487,7 @@ fn redefine_sketch(s: &mut Session, p: &Value) -> Result<Value> {
     let index = s.doc.feature_index(id).ok_or_else(|| bad(cmd, "sketch disappeared"))?;
     let author_path = super::sketch::author_path_for_rebind(s, feature, p, cmd)?;
     let frame = super::sketch::plane_frame(p, cmd)?;
-    let placement = solidcraft_doc::EmbossFace::component_frame(&s.placed_document(), component, &author_path)?;
+    let placement = torno_doc::EmbossFace::component_frame(&s.placed_document(), component, &author_path)?;
     let marker = s.doc.marker;
     let mut baseline = s.scratch();
     baseline.doc_mut().marker = Some(index + 1);
@@ -1542,7 +1542,7 @@ fn redefine_sketch(s: &mut Session, p: &Value) -> Result<Value> {
             .filter(|link| {
                 link.auto_face
                     && link.face_name.as_ref() == Some(&anchor.target.name)
-                    && matches!(&link.source,solidcraft_sketch::LinkSource::Face {body,..} if *body==anchor.target.body)
+                    && matches!(&link.source,torno_sketch::LinkSource::Face {body,..} if *body==anchor.target.body)
             })
             .map(|link| link.id.clone())
             .collect();
@@ -1566,7 +1566,7 @@ fn redefine_sketch(s: &mut Session, p: &Value) -> Result<Value> {
     let attachment = s.doc.feature(id).and_then(|feature| match &feature.kind {
         FeatureKind::Sketch { plane, .. } => Some(if super::sketch::face::anchor(plane).is_some() {
             RedefineAttachment::ExactFace
-        } else if solidcraft_doc::sheet::plane_sheet_face(plane).is_some() {
+        } else if torno_doc::sheet::plane_sheet_face(plane).is_some() {
             RedefineAttachment::SheetFace
         } else {
             RedefineAttachment::Fixed
@@ -1660,7 +1660,7 @@ mod tests {
         assert_eq!(v["changed_bodies"], json!(["Box"]));
         assert!(!open(&s));
         // Saved and opened again, the feature repairs the part again.
-        let cold = Session::new(solidcraft_doc::Document::from_json(&s.doc.to_json()).unwrap());
+        let cold = Session::new(torno_doc::Document::from_json(&s.doc.to_json()).unwrap());
         assert!(cold.model.state().body("Box").is_some_and(|b| !b.body.is_surface()));
         run(&mut s, "edit.undo", json!({}));
         assert!(open(&s));
@@ -2018,9 +2018,9 @@ mod tests {
         let mut reopened = Session::default();
         run(&mut reopened, "doc.open", json!({"path": saved.to_string_lossy()}));
         assert_eq!(sorted(names(&reopened)), ["A", "B", "B2", "Cutter"], "the rename must not move to member A on rebuild");
-        // `solidcraft-cli eval` of the saved file rebuilds it from its features alone, with no
+        // `torno-cli eval` of the saved file rebuilds it from its features alone, with no
         // saved model to take the names from (#10438).
-        let rebuilt = Session::new(solidcraft_doc::Document::from_json(&s.doc.to_json()).unwrap());
+        let rebuilt = Session::new(torno_doc::Document::from_json(&s.doc.to_json()).unwrap());
         assert_eq!(sorted(names(&rebuilt)), ["A", "B", "B2", "Cutter"], "a rebuild from the features alone keeps the rename too");
         let _ = std::fs::remove_dir_all(&dir);
     }
@@ -2284,9 +2284,8 @@ mod tests {
         }
         assert_eq!(s.doc.features.len(), 54);
         let meshes = |s: &Session| s.model.state().bodies.iter().map(|b| b.mesh()).collect::<Vec<_>>();
-        let looks = |s: &Session| {
-            s.model.state().bodies.iter().map(|b| (b.name.clone(), (*solidcraft_doc::naming::face_names(b)).clone())).collect::<Vec<_>>()
-        };
+        let looks =
+            |s: &Session| s.model.state().bodies.iter().map(|b| (b.name.clone(), (*torno_doc::naming::face_names(b)).clone())).collect::<Vec<_>>();
         let shown = meshes(&s);
         let before = looks(&s);
         let measurements = run(&mut s, "inspect.measure", json!({}))["total"].clone();
@@ -2318,7 +2317,7 @@ mod tests {
         run(&mut s, "body.rename", json!({"body": "Block", "name": "Bracket"}));
         // An outside edit can include a rename and a geometry change together. It must not
         // take the rename shortcut merely because the later Move's body reference matches.
-        let solidcraft_doc::FeatureKind::Box { height, .. } = &mut s.doc_mut().features[0].kind else { panic!("expected the box") };
+        let torno_doc::FeatureKind::Box { height, .. } = &mut s.doc_mut().features[0].kind else { panic!("expected the box") };
         *height = "20".into();
         s.model = model;
         s.evaluations = 0;
@@ -2344,10 +2343,10 @@ mod tests {
         let label = kind("Label").to_string();
         assert!(label.contains(&format!("\"{body}\"")) && !label.contains("\"Lid\""), "{label}");
         let moved = s.doc.features.iter().find_map(|f| match &f.kind {
-            solidcraft_doc::FeatureKind::Move { bodies, .. } => Some(bodies.clone()),
+            torno_doc::FeatureKind::Move { bodies, .. } => Some(bodies.clone()),
             _ => None,
         });
-        assert_eq!(moved, Some(vec![solidcraft_doc::BodyName::from("Lid")]), "the move follows the rename");
+        assert_eq!(moved, Some(vec![torno_doc::BodyName::from("Lid")]), "the move follows the rename");
         assert!(s.model.results.iter().all(|r| r.error.is_none()));
     }
 
@@ -2476,7 +2475,7 @@ mod tests {
     /// camera past a pole or a NaN behind.
     #[test]
     fn applying_a_camera_by_view_angles_reads_back_and_refuses_hostile_pitch() {
-        use solidcraft_viewport::ViewAngles;
+        use torno_viewport::ViewAngles;
         let mut s = Session::default();
         for (view, (yaw, pitch)) in
             [("front", (0.0, 0.0)), ("left", (90.0, 0.0)), ("right", (-90.0, 0.0)), ("back", (180.0, 0.0)), ("top", (0.0, 90.0))]
@@ -2486,7 +2485,7 @@ mod tests {
             assert!((a.yaw - yaw).abs() < 1e-3 && (a.pitch - pitch).abs() < 1e-3 && a.roll == 0.0, "{view}: {a:?}");
         }
         let typed = ViewAngles { yaw: -30.0, pitch: 15.0, roll: 5.0 };
-        let cam = solidcraft_viewport::Camera::default().with_view_angles(typed).expect("finite angles");
+        let cam = torno_viewport::Camera::default().with_view_angles(typed).expect("finite angles");
         let p = json!({"camera": {"target": [0, 0, 0], "yaw": cam.yaw, "pitch": cam.pitch, "roll": cam.roll, "distance": 80}});
         run(&mut s, "view.apply", p);
         let a = s.camera.expect("the typed camera").view_angles();
@@ -2516,7 +2515,7 @@ mod tests {
         run(&mut s, "view.save", json!({"camera": cam, "name": "Detail"}));
         run(&mut s, "view.rename", json!({"view": "Named View1", "name": "Overview"}));
         assert!(s.execute("view.rename", &json!({"view": "Overview", "name": "Detail"})).is_err());
-        let back: solidcraft_doc::Document = serde_json::from_str(&serde_json::to_string(&*s.doc).unwrap()).unwrap();
+        let back: torno_doc::Document = serde_json::from_str(&serde_json::to_string(&*s.doc).unwrap()).unwrap();
         assert_eq!(back.named_views.len(), 2);
         assert_eq!(back.named_views[0].target.z, 3.0);
         run(&mut s, "view.delete", json!({"view": "Detail"}));
@@ -2648,7 +2647,7 @@ mod tests {
         assert!(!crate::view::sketch_shown(&s, wall), "the contour flange used its sketch");
         let d = run(&mut s, "document.inspect", json!({}));
         assert!(d["sketches"].as_array().unwrap().iter().all(|x| x["visible"] == false), "{d}");
-        assert_eq!(s.doc.features.iter().filter(|f| matches!(f.kind, solidcraft_doc::FeatureKind::SheetContour { .. })).count(), 1);
+        assert_eq!(s.doc.features.iter().filter(|f| matches!(f.kind, torno_doc::FeatureKind::SheetContour { .. })).count(), 1);
         // Shown on their own, or while their flange is edited, they are drawn again.
         s.feature_edit_sketch = Some(base);
         assert!(crate::view::sketch_shown(&s, base));
@@ -2707,7 +2706,7 @@ mod tests {
         run(&mut s, "construct.plane.offset", json!({"base": "XY", "offset": 5, "name": "Floor"}));
         let body = s.model.state().bodies[0].name.clone();
         let drain_name = s.doc.feature(drain).unwrap().name.clone();
-        let cam = solidcraft_viewport::Camera::default();
+        let cam = torno_viewport::Camera::default();
         let lines = |s: &Session| crate::view::scene(s, &cam).unwrap().lines.len();
         let shown = |s: &mut Session| {
             let d = run(s, "document.inspect", json!({}));
@@ -2802,7 +2801,7 @@ mod tests {
         let mut s = Session::default();
         run(&mut s, "solid.box", json!({"length": 10, "width": 10, "height": 10, "body_name": "Box"}));
         s.mark_saved();
-        let cam = solidcraft_viewport::Camera::default();
+        let cam = torno_viewport::Camera::default();
         let drawn = |s: &Session| crate::view::scene(s, &cam).unwrap().meshes.len();
         assert!(drawn(&s) > 0, "the box is drawn");
         assert!(!s.is_dirty());
@@ -2896,7 +2895,7 @@ mod tests {
         let params = json!({"folder": "bodies"});
         let first = run(&mut s, "browser.group", params.clone())["group"].as_u64().unwrap();
         run(&mut s, "browser.ungroup", json!({"group": first}));
-        let doc = solidcraft_doc::Document::from_json(&s.doc.to_json()).unwrap();
+        let doc = torno_doc::Document::from_json(&s.doc.to_json()).unwrap();
         *s.doc_mut() = doc;
         let second = run(&mut s, "browser.group", params)["group"].as_u64().unwrap();
         assert!(second > first, "deleted group {first} was reused as {second}");
@@ -2927,7 +2926,7 @@ mod tests {
         assert_eq!(s.visibility.locked_bodies, vec!["Locked".to_string()]);
         // Saved and opened again, the design brings all of it back, with nothing to save.
         let text = s.design().to_json();
-        let opened = Session::new(solidcraft_doc::Document::from_json(&text).unwrap());
+        let opened = Session::new(torno_doc::Document::from_json(&text).unwrap());
         assert_eq!(opened.visibility, s.visibility);
         assert!(!opened.is_dirty());
         assert!(!crate::view::sketch_shown(&opened, sketch));
@@ -2936,7 +2935,7 @@ mod tests {
         run(&mut s, "browser.visibility", json!({"folder": "sketches", "visible": true}));
         assert_eq!((s.visibility.origin_hidden, s.visibility.hidden_folders.is_empty()), (Some(false), true));
         // A design that never touched the Origin's eye leaves it to the app.
-        let plain = solidcraft_doc::Document::from_json(&Session::default().design().to_json()).unwrap();
+        let plain = torno_doc::Document::from_json(&Session::default().design().to_json()).unwrap();
         assert!(plain.visibility.is_empty() && plain.visibility.origin_hidden.is_none());
     }
 
@@ -2957,7 +2956,7 @@ mod tests {
         run(&mut s, "browser.move", json!({"folder": "bodies", "items": [b.clone()]}));
         assert_eq!(s.doc.browser_groups[0].items, vec!["Bolt".into()]);
         run(&mut s, "browser.order", json!({"folder": "bodies", "order": [b.clone(), "Bolt"]}));
-        let saved: solidcraft_doc::Document = serde_json::from_str(&serde_json::to_string(&*s.doc).unwrap()).unwrap();
+        let saved: torno_doc::Document = serde_json::from_str(&serde_json::to_string(&*s.doc).unwrap()).unwrap();
         assert_eq!(saved.browser_groups, s.doc.browser_groups);
         assert_eq!(saved.browser_order["0/bodies"], vec![b.into(), "Bolt".into()]);
         run(&mut s, "browser.ungroup", json!({"group": g}));
@@ -3015,7 +3014,7 @@ mod tests {
 
         // Saved with the design.
         run(&mut s, "browser.visibility", json!({"tree_folders": [key, "o:4/sketches"], "visible": false}));
-        let v: solidcraft_doc::Visibility = serde_json::from_value(serde_json::to_value(&s.visibility).unwrap()).unwrap();
+        let v: torno_doc::Visibility = serde_json::from_value(serde_json::to_value(&s.visibility).unwrap()).unwrap();
         assert_eq!(v.hidden_folders, vec![key.clone(), "o:4/sketches".to_string()]);
         // Showing every body also shows the folders and groups that hold bodies.
         run(&mut s, "browser.visibility", json!({"folder": "bodies", "visible": true}));
@@ -3183,7 +3182,7 @@ mod tests {
         assert!(e.to_string().contains("component"), "{e}");
     }
 
-    use solidcraft_doc::{BrowserEntry, MAX_GROUP_NESTING};
+    use torno_doc::{BrowserEntry, MAX_GROUP_NESTING};
 
     fn three_bodies(s: &mut Session) {
         for (i, name) in ["A", "B", "C"].into_iter().enumerate() {
@@ -3196,7 +3195,7 @@ mod tests {
         run(s, "browser.group", p)["group"].as_u64().unwrap()
     }
 
-    fn state(s: &Session) -> (Vec<solidcraft_doc::BrowserGroup>, std::collections::BTreeMap<String, Vec<BrowserEntry>>) {
+    fn state(s: &Session) -> (Vec<torno_doc::BrowserGroup>, std::collections::BTreeMap<String, Vec<BrowserEntry>>) {
         (s.doc.browser_groups.clone(), s.doc.browser_order.clone())
     }
 

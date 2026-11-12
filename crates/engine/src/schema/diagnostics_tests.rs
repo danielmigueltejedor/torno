@@ -32,7 +32,7 @@ fn strict_keeps_todays_errors() {
     ]);
 }
 
-/// The crash test runs only with SOLIDCRAFT_CRASH_TEST set, so its mode is checked here: the
+/// The crash test runs only with TORNO_CRASH_TEST set, so its mode is checked here: the
 /// schema lists the five modes (one `const` each, with what it breaks), the type reads them,
 /// and anything else gets the handler's message.
 #[test]
@@ -72,7 +72,7 @@ fn write_report(id: &str) {
         "system": {"os": "windows", "arch": "x86_64", "environment": ""}, "session": {"uptime_s": 60},
         "message": "an internal error", "location": "here.rs:1", "thread": "main", "backtrace": ["f (here.rs:1)"],
         "command": {"command": "solid.box", "params": {}}, "base": "new", "recent_commands": [],
-        "files": {"design": "design.sc", "replay": "replay.json"}, "reproduce": format!("solidcraft-cli crashes replay {id}"), "notes": [],
+        "files": {"design": "design.sc", "replay": "replay.json"}, "reproduce": format!("torno-cli crashes replay {id}"), "notes": [],
         "startup_phase": "running"
     });
     for (name, text) in [("report.json", report.to_string()), ("design.sc", "{}".into()), ("replay.json", "[]".into())] {
@@ -138,7 +138,7 @@ fn diagnostics_profile_reports_commands_features_and_the_kernel() {
     let one = s.execute("diagnostics.profile", &json!({"top": 1})).unwrap();
     assert_eq!(one["rows"].as_array().map(Vec::len), Some(1));
     // A trace file, then stop and forget.
-    let dir = std::env::temp_dir().join(format!("solidcraft-profile-trace-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("torno-profile-trace-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
     let path = dir.join("trace.json").to_string_lossy().to_string();
     let since_trace = std::time::Instant::now();
@@ -161,7 +161,7 @@ fn diagnostics_profile_reports_commands_features_and_the_kernel() {
 /// is the user's: it stays when another design is started and when everything is computed again.
 #[test]
 fn validation_defaults_to_each_feature_and_round_trips_through_the_command() {
-    use solidcraft_kernel::Validation;
+    use torno_kernel::Validation;
     let mut s = Session::default();
     assert_eq!(s.validation(), Validation::EachFeature);
     assert_eq!(s.execute("diagnostics.validation", &json!({})).unwrap(), json!({"mode": "each_feature", "previous": "each_feature"}));
@@ -185,7 +185,7 @@ fn validation_defaults_to_each_feature_and_round_trips_through_the_command() {
 /// SMLib); the same features without the last round build under every mode, to the same volume.
 #[test]
 fn a_body_the_check_refuses_still_fails_its_feature_once_per_feature() {
-    use solidcraft_kernel::Validation;
+    use torno_kernel::Validation;
     let build = |mode: Validation, last: bool| {
         let mut s = Session::default();
         s.set_validation(mode);

@@ -144,7 +144,7 @@
     "chamfer_sides"
   ],
   "ungraded": [
-    "continuity: SolidCraft computes it"
+    "continuity: Torno computes it"
   ],
   "what": "a 220 x 11 two-distance chamfer along the bottom edge of a 23 mm plate 100 wide whose sides run straight for 85 mm and then taper to 61.4 at 222.5: it builds, the chamfer plane running on past the straight sides into the tapered ones, which it trims",
   "why_not": []

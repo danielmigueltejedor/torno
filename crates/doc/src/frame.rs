@@ -1,7 +1,7 @@
 //! Frames: the profile library structural members are made of (#4003).
 //!
 //! A profile is a closed cross-section, an outline and its holes, built in code from a few
-//! dimensions ([`Profile`]). Every built-in profile is SolidCraft's own parametric definition:
+//! dimensions ([`Profile`]). Every built-in profile is Torno's own parametric definition:
 //! no vendor's or standard's size table is shipped. A dimension left out takes a default worked
 //! out from the others, so `{"kind": "rect_tube", "width": 40, "height": 40, "wall": 3}` is a
 //! complete profile. Any other section (a vendor's extrusion, say) comes from a sketch.
@@ -13,8 +13,8 @@
 //! of the profile's bounding box at the origin. The outline runs counter-clockwise and holes
 //! clockwise, as [`Region2`] expects.
 
-use solidcraft_geom::prelude::*;
 use std::collections::BTreeMap;
+use torno_geom::prelude::*;
 
 use serde::{Deserialize, Serialize};
 use solidcore_record::{Loop2, Region2, Seg2, Vec2, Vec3};
@@ -263,7 +263,7 @@ impl crate::walk::Walk for ProfileSpec {
 pub use crate::eval::frame_member::{member_line_ids, member_names};
 
 /// Where a frame member's cross-section comes from.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, solidcraft_derive::Walk)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, torno_derive::Walk)]
 #[serde(tag = "source", rename_all = "snake_case")]
 pub enum MemberProfile {
     /// A built-in profile, from its dimensions.

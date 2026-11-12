@@ -1,6 +1,6 @@
 use crate::{FaceSource, extrude, transform_matrix};
 use solidcore_record::{Loop2, Plane, Region2, Seg2, Vec2, Vec3};
-use solidcraft_geom::prelude::*;
+use torno_geom::prelude::*;
 
 fn assert_exact_planes(body: &crate::Body) {
     let mesh = body.mesh(&crate::MeshTolerance::chord(0.001)).unwrap();

@@ -47,13 +47,13 @@
 //! edges that end at a bend or a cut edge, loops of bends, two faces that meet along more than
 //! one edge, a wall on part of an edge of a face other than the fixed one.
 
-use solidcraft_geom::prelude::*;
 use std::collections::BTreeMap;
 use std::f64::consts::{FRAC_PI_2, PI, TAU};
+use torno_geom::prelude::*;
 
 use solidcore_record::{Loop2, Plane, Region2, Seg2, Vec2, Vec3};
-use solidcraft_geom::{Mesh, Ring, UnitVec3};
-use solidcraft_kernel::{Body, FaceSurface, face_surface};
+use torno_geom::{Mesh, Ring, UnitVec3};
+use torno_kernel::{Body, FaceSurface, face_surface};
 
 use super::{FlatWork, ReliefOverride, RuleValues, SheetBody, SheetFlange, base_flange, polys_cross, signed_area, snap};
 use crate::{DocError, ModelBody, Result, apply_point, mat_inverse};

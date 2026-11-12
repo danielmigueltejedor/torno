@@ -6,8 +6,8 @@
 //! pull request); a listed test that did not run (a pull request tests only the packages it
 //! touches) is neither. The list has the kernel rig's format (`kernel_cases::known_failing`):
 //! one test a line, `<test> <why it fails today>`, sorted, with `<test>` nextest's
-//! `<binary id>::<test name>` (`solidcraft-kernel::tests::...`, or
-//! `solidcraft-cli::action_matrix::action_matrix_sample` for an integration test binary).
+//! `<binary id>::<test name>` (`torno-kernel::tests::...`, or
+//! `torno-cli::action_matrix::action_matrix_sample` for an integration test binary).
 
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
@@ -182,22 +182,22 @@ mod tests {
     /// failure, an error, a skipped case and a pass on a retry.
     const REPORT: &str = r#"<?xml version="1.0" encoding="UTF-8"?>
 <testsuites name="nextest-run" tests="6" failures="1" errors="1">
-    <testsuite name="solidcraft-kernel" tests="4" failures="1" errors="1">
-        <testcase name="tests::passes" classname="solidcraft-kernel" time="0.1"/>
-        <testcase name="tests::fails" classname="solidcraft-kernel" time="0.2">
+    <testsuite name="torno-kernel" tests="4" failures="1" errors="1">
+        <testcase name="tests::passes" classname="torno-kernel" time="0.1"/>
+        <testcase name="tests::fails" classname="torno-kernel" time="0.2">
             <failure message="thread &apos;tests::fails&apos; panicked" type="test failure with exit code 101">panicked: 1 vs 2</failure>
             <system-out>running 1 test</system-out>
         </testcase>
-        <testcase name="tests::times_out" classname="solidcraft-kernel" time="60.0">
+        <testcase name="tests::times_out" classname="torno-kernel" time="60.0">
             <error message="timed out" type="test timeout"/>
         </testcase>
-        <testcase name="tests::skipped" classname="solidcraft-kernel"><skipped/></testcase>
+        <testcase name="tests::skipped" classname="torno-kernel"><skipped/></testcase>
     </testsuite>
-    <testsuite name="solidcraft-cli::action_matrix" tests="2">
-        <testcase name="action_matrix_sample" classname="solidcraft-cli::action_matrix" time="300.0">
+    <testsuite name="torno-cli::action_matrix" tests="2">
+        <testcase name="action_matrix_sample" classname="torno-cli::action_matrix" time="300.0">
             <flakyFailure message="first try failed" type="test failure"/>
         </testcase>
-        <testcase name="a_&lt;b&gt;_case" classname="solidcraft-cli::action_matrix" time="0.1"/>
+        <testcase name="a_&lt;b&gt;_case" classname="torno-cli::action_matrix" time="0.1"/>
     </testsuite>
 </testsuites>
 "#;
@@ -210,11 +210,11 @@ mod tests {
     fn a_junit_report_gives_each_test_that_ran_with_whether_it_failed() {
         let got: Vec<(String, bool)> = junit_outcomes(REPORT).unwrap();
         let want = [
-            ("solidcraft-kernel::tests::passes", false),
-            ("solidcraft-kernel::tests::fails", true),
-            ("solidcraft-kernel::tests::times_out", true),
-            ("solidcraft-cli::action_matrix::action_matrix_sample", false),
-            ("solidcraft-cli::action_matrix::a_<b>_case", false),
+            ("torno-kernel::tests::passes", false),
+            ("torno-kernel::tests::fails", true),
+            ("torno-kernel::tests::times_out", true),
+            ("torno-cli::action_matrix::action_matrix_sample", false),
+            ("torno-cli::action_matrix::a_<b>_case", false),
         ];
         assert_eq!(got, want.map(|(t, f)| (t.to_string(), f)));
         assert!(junit_outcomes("<testsuites><testcase name=\"x\"/></testsuites>").unwrap_err().contains("outside a testsuite"));
@@ -225,20 +225,20 @@ mod tests {
     #[test]
     fn the_gate_passes_listed_failures_and_fails_on_a_new_failure_or_a_fixed_test() {
         let list = "# today\n\
-            solidcraft-kernel::tests::fails SMLib status 1001\n\
-            solidcraft-kernel::tests::not_run_here volume 1e-4 off (#2422)\n\
-            solidcraft-kernel::tests::times_out SMLib hangs on the corner\n";
+            torno-kernel::tests::fails SMLib status 1001\n\
+            torno-kernel::tests::not_run_here volume 1e-4 off (#2422)\n\
+            torno-kernel::tests::times_out SMLib hangs on the corner\n";
         let ok = grade(list, &outcomes(REPORT)).unwrap();
         assert_eq!(ok, "known-failing: 5 ran, 3 pass, 2 known failing, 1 listed did not run here; no regression");
 
         let fixed = REPORT.replace("<error message=\"timed out\" type=\"test timeout\"/>", "");
         let err = grade(list, &outcomes(&fixed)).unwrap_err();
-        assert!(err.contains("FIXED, remove it from the known-failing list: solidcraft-kernel::tests::times_out"), "{err}");
+        assert!(err.contains("FIXED, remove it from the known-failing list: torno-kernel::tests::times_out"), "{err}");
         assert!(err.starts_with("known-failing: 5 ran, 4 pass, 1 known failing"), "{err}");
 
-        let shorter = list.replace("solidcraft-kernel::tests::fails SMLib status 1001\n", "");
+        let shorter = list.replace("torno-kernel::tests::fails SMLib status 1001\n", "");
         let err = grade(&shorter, &outcomes(REPORT)).unwrap_err();
-        assert!(err.contains("REGRESSION, failed and not on the known-failing list: solidcraft-kernel::tests::fails"), "{err}");
+        assert!(err.contains("REGRESSION, failed and not on the known-failing list: torno-kernel::tests::fails"), "{err}");
         assert!(!err.contains("FIXED"), "{err}");
     }
 
@@ -253,10 +253,10 @@ mod tests {
             for r in reports {
                 add(&mut all, r).unwrap();
             }
-            assert_eq!(all.get("solidcraft-kernel::tests::fails"), Some(&true));
-            assert_eq!(all.get("solidcraft-kernel::tests::passes"), Some(&false));
+            assert_eq!(all.get("torno-kernel::tests::fails"), Some(&true));
+            assert_eq!(all.get("torno-kernel::tests::passes"), Some(&false));
         }
-        assert_eq!(outcomes(&passed).get("solidcraft-kernel::tests::fails"), Some(&false));
+        assert_eq!(outcomes(&passed).get("torno-kernel::tests::fails"), Some(&false));
     }
 
     #[test]

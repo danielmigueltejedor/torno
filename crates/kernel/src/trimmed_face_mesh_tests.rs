@@ -1,10 +1,10 @@
 //! Tessellation of trimmed loft faces after a boolean: no triangle may leave the face.
 
-use solidcraft_geom::prelude::*;
 use std::f64::consts::FRAC_PI_2;
+use torno_geom::prelude::*;
 
 use solidcore_record::{Loop2, Plane, Seg2, Vec2, Vec3};
-use solidcraft_geom::brep::eval::SurfaceEval;
+use torno_geom::brep::eval::SurfaceEval;
 
 use crate::*;
 
@@ -43,7 +43,7 @@ fn tube() -> Body {
 }
 
 /// Each face's mesh area, and how far its triangles' centroids lie off its surface at most.
-fn per_face(body: &Body, mesh: &solidcraft_geom::Mesh) -> Vec<(f64, f64)> {
+fn per_face(body: &Body, mesh: &torno_geom::Mesh) -> Vec<(f64, f64)> {
     let faces: Vec<SurfaceEval> = body.record().faces.iter().map(|f| SurfaceEval::new(&f.surface).unwrap()).collect();
     let mut out = vec![(0.0, 0.0f64); faces.len()];
     for (t, &f) in mesh.triangles.iter().zip(&mesh.tri_face) {

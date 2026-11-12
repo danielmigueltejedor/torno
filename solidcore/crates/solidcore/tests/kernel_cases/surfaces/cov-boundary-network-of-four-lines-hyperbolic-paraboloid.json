@@ -56,6 +56,6 @@
   "ungraded": [],
   "what": "a curve network of four straight lines in two directions, corners (0,0,0), (20,0,0), (20,20,0), (0,20,10): the Coons patch, a hyperbolic paraboloid",
   "why_not": [
-    "body \"Saddle\" is no kernel operation's output nor an operand: SolidCraft built it or changed the kernel's record"
+    "body \"Saddle\" is no kernel operation's output nor an operand: Torno built it or changed the kernel's record"
   ]
 }

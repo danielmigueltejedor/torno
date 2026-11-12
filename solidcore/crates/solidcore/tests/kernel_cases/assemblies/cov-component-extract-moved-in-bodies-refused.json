@@ -33,6 +33,6 @@
   "ungraded": [],
   "what": "component.extract of a component whose body was moved in from the root",
   "why_not": [
-    "the failure is SolidCraft's, not a kernel operation's: step 8 (component.extract): invalid parameters for `component.extract`: BodyTransfer2 moves bodies into or out of Arm"
+    "the failure is Torno's, not a kernel operation's: step 8 (component.extract): invalid parameters for `component.extract`: BodyTransfer2 moves bodies into or out of Arm"
   ]
 }

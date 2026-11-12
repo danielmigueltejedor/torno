@@ -5,7 +5,7 @@
 use schemars::{JsonSchema, Schema, SchemaGenerator, json_schema};
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
-use solidcraft_io::catalog::{Catalog, FORMAT, Provenance, V1_FORMAT};
+use torno_io::catalog::{Catalog, FORMAT, Provenance, V1_FORMAT};
 
 /// Read a local library file and check it, without changing the design.
 #[derive(Debug, Deserialize, JsonSchema)]

@@ -1,5 +1,5 @@
 name: Bug report
-description: Something in SolidCraft does the wrong thing
+description: Something in Torno does the wrong thing
 labels: [bug]
 body:
   - type: markdown
@@ -19,8 +19,8 @@ body:
     attributes:
       label: Steps to reproduce
       description: |
-        What you clicked or typed, in order. For a problem on a particular design, `solidcraft-cli script design.sc --out repro.json` turns its history into a script that `solidcraft-cli eval repro.json` replays; attach it, trimmed to the failing step if you can.
-        Using an AI agent with SolidCraft's MCP server? The `solidcraft-reporting` skill in [`skills/`](https://github.com/tangency-labs/solidcraft/tree/main/skills) has it reproduce the problem in a fresh design and write these steps for you.
+        What you clicked or typed, in order. For a problem on a particular design, `torno-cli script design.sc --out repro.json` turns its history into a script that `torno-cli eval repro.json` replays; attach it, trimmed to the failing step if you can.
+        Using an AI agent with Torno's MCP server? The `torno-reporting` skill in [`skills/`](https://github.com/tangency-labs/solidcraft/tree/main/skills) has it reproduce the problem in a fresh design and write these steps for you.
       placeholder: |
         1. Sketch a circle on the XY plane
         2. Extrude it 10 mm
@@ -30,7 +30,7 @@ body:
   - type: input
     id: version
     attributes:
-      label: SolidCraft version and OS
+      label: Torno version and OS
       description: Help → About shows the version.
       placeholder: 0.15.0, Windows 11
     validations:

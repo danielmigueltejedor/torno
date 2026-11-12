@@ -63,6 +63,6 @@
   "ungraded": [],
   "what": "the same STEP cone with a VERTEX_LOOP at the apex: the mesh stopped 30 mm short of the apex",
   "why_not": [
-    "body \"cone_point_vertex\" is no kernel operation's output nor an operand: SolidCraft built it or changed the kernel's record"
+    "body \"cone_point_vertex\" is no kernel operation's output nor an operand: Torno built it or changed the kernel's record"
   ]
 }

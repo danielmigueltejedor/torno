@@ -270,7 +270,7 @@ fn a_box_is_two_triangles_a_face() {
     }
 }
 
-/// SolidCraft's coil from SMLib, its lower half: the counts the bake-off recorded for
+/// Torno's coil from SMLib, its lower half: the counts the bake-off recorded for
 /// `793-coil-split-by-a-plane-across-its-axis` at the display and export tolerances, plus what
 /// shaping adds (18 triangles on its flat cut face, and at display 10 on its curved faces).
 #[test]
@@ -470,7 +470,7 @@ mod refusals {
     /// naming the loop, and the rest of the body is meshed. The loop was left out, and the face
     /// meshed without it.
     #[test]
-    #[ignore = "SolidCraft's mesher fills a face past a loop with no nodes; refusing it, as solidcore-tess did, is still to come"]
+    #[ignore = "Torno's mesher fills a face past a loop with no nodes; refusing it, as solidcore-tess did, is still to come"]
     fn a_face_with_a_loop_of_fewer_than_two_nodes_is_refused_naming_the_loop() {
         let mut b = fixture("box_10x6x4");
         b.faces[4].loops.push(Loop::Edges { edges: Vec::new() });

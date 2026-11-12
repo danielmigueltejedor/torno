@@ -12,15 +12,15 @@ use std::f64::consts::PI;
 
 use solidcore_record::Vec3;
 use solidcore_record::brep::{Curve, Loop};
-use solidcraft_geom::prelude::*;
-use solidcraft_geom::{Mesh, UnitVec3};
-use solidcraft_kernel::{Body, FaceSurface};
+use torno_geom::prelude::*;
+use torno_geom::{Mesh, UnitVec3};
+use torno_kernel::{Body, FaceSurface};
 
 /// The area of the patch of faces `patch` of `body`, worked out on the surface behind
 /// them: a flat patch, a cylinder's band, or a sphere. `None` where the surface does not
 /// give one, and the caller keeps the measure of the mesh.
 pub(crate) fn patch_area(body: &Body, mesh: &Mesh, patch: &[usize]) -> Option<f64> {
-    match solidcraft_kernel::face_surface(body, *patch.first()?)? {
+    match torno_kernel::face_surface(body, *patch.first()?)? {
         FaceSurface::Plane { normal, point } => flat_patch(body, patch, normal, point),
         FaceSurface::Cylinder { origin, axis, radius } => cylinder_band(body, mesh, patch, origin, axis, radius),
         FaceSurface::Sphere { radius, .. } => sphere(body, patch, radius),
@@ -70,7 +70,7 @@ fn flat_patch(body: &Body, patch: &[usize], normal: UnitVec3, point: Vec3) -> Op
     let frame = PlaneFrame::new(normal, point)?;
     let mut total = 0.0;
     for &face in patch {
-        match solidcraft_kernel::face_surface(body, face)? {
+        match torno_kernel::face_surface(body, face)? {
             FaceSurface::Plane { normal: n, point: p }
                 if n.vec().dot(frame.normal).abs() >= 1.0 - 1e-9 && (p - point).dot(frame.normal).abs() <= tol => {}
             _ => return None,
@@ -118,7 +118,7 @@ fn edge_sweep(body: &Body, edge: usize, forward: bool, frame: &PlaneFrame, tol: 
         let ((ax, ay), (bx, by)) = (frame.point(a), frame.point(b));
         0.5 * (ax * by - bx * ay)
     };
-    if let Some(c) = solidcraft_kernel::edge_circle(body, edge) {
+    if let Some(c) = torno_kernel::edge_circle(body, edge) {
         let along = c.axis.vec().dot(frame.normal);
         if along.abs() < 1.0 - 1e-9 || (c.center - frame.origin).dot(frame.normal).abs() > tol {
             return None;
@@ -130,7 +130,7 @@ fn edge_sweep(body: &Body, edge: usize, forward: bool, frame: &PlaneFrame, tol: 
     }
     let e = body.record().edges.get(edge)?;
     if matches!(e.curve, Curve::Line { .. }) {
-        let c = solidcraft_geom::brep::eval::CurveEval::new(e.parameters()).ok()?;
+        let c = torno_geom::brep::eval::CurveEval::new(e.parameters()).ok()?;
         let [t0, t1] = e.interval;
         let (a, b) = (c.point(t0)?, c.point(t1)?);
         let off = |p: Vec3| (p - frame.origin).dot(frame.normal).abs() > tol.max(e.tolerance);
@@ -139,7 +139,7 @@ fn edge_sweep(body: &Body, edge: usize, forward: bool, frame: &PlaneFrame, tol: 
         }
         return Some(if forward { triangle(a, b) } else { triangle(b, a) });
     }
-    let c = solidcraft_geom::brep::eval::CurveEval::new(e.parameters()).ok()?;
+    let c = torno_geom::brep::eval::CurveEval::new(e.parameters()).ok()?;
     let [t0, t1] = e.interval;
     let h = (t1 - t0) / SWEEP_PANELS as f64;
     let mut swept = 0.0;
@@ -251,7 +251,7 @@ fn straight_along(body: &Body, edge: usize, axis: UnitVec3) -> bool {
     if !matches!(e.curve, Curve::Line { .. }) {
         return false;
     }
-    let Ok(c) = solidcraft_geom::brep::eval::CurveEval::new(e.parameters()) else { return false };
+    let Ok(c) = torno_geom::brep::eval::CurveEval::new(e.parameters()) else { return false };
     let [t0, t1] = e.interval;
     let (Some(a), Some(b)) = (c.point(t0), c.point(t1)) else { return false };
     (b - a).normalized().is_some_and(|d| d.dot(axis.vec()).abs() >= 1.0 - 1e-9)
@@ -266,7 +266,7 @@ fn cylinder_band(body: &Body, mesh: &Mesh, patch: &[usize], origin: Vec3, axis: 
     let tol = radius * 1e-6;
     // The whole patch lies on one cylinder.
     for f in patch {
-        match solidcraft_kernel::face_surface(body, *f)? {
+        match torno_kernel::face_surface(body, *f)? {
             FaceSurface::Cylinder { origin: o, axis: a, radius: r } => {
                 if (r - radius).abs() > tol || o.dist(origin) > tol || a.vec().dot(axis.vec()).abs() < 1.0 - 1e-9 {
                     return None;
@@ -281,7 +281,7 @@ fn cylinder_band(body: &Body, mesh: &Mesh, patch: &[usize], origin: Vec3, axis: 
         // An edge that is not a circle but a straight line along the axis (a seam, a straight
         // cut along the band) leaves the turn of the band to its rims alone. Any other edge
         // (the saddle rim of a bore through the wall) cuts the band: not ours to measure.
-        let Some(circle) = solidcraft_kernel::edge_circle(body, edge) else {
+        let Some(circle) = torno_kernel::edge_circle(body, edge) else {
             if straight_along(body, edge, axis) {
                 continue;
             }
@@ -325,7 +325,7 @@ fn sphere(body: &Body, patch: &[usize], radius: f64) -> Option<f64> {
     }
     // The whole patch lies on one sphere.
     for f in patch {
-        match solidcraft_kernel::face_surface(body, *f)? {
+        match torno_kernel::face_surface(body, *f)? {
             FaceSurface::Sphere { radius: r, .. } if (r - radius).abs() <= radius * 1e-6 => {}
             _ => return None,
         }
@@ -335,7 +335,7 @@ fn sphere(body: &Body, patch: &[usize], radius: f64) -> Option<f64> {
     // the sphere, whose area this does not work out: the measure of the mesh stands in
     // for it.
     for f in 0..body.record().faces.len() {
-        match solidcraft_kernel::face_surface(body, f)? {
+        match torno_kernel::face_surface(body, f)? {
             FaceSurface::Sphere { radius: r, .. } if (r - radius).abs() <= radius * 1e-6 => {}
             _ => return None,
         }

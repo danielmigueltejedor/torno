@@ -32,6 +32,6 @@
   "ungraded": [],
   "what": "match on a closed solid: refused, a match rebuilds a surface",
   "why_not": [
-    "the failure is SolidCraft's, not a kernel operation's: step 6 (surface.match): invalid input: match rebuilds a surface body: this one is closed"
+    "the failure is Torno's, not a kernel operation's: step 6 (surface.match): invalid input: match rebuilds a surface body: this one is closed"
   ]
 }

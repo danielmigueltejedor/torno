@@ -13,8 +13,8 @@
 use egui::{Pos2, Rect, pos2, vec2};
 use serde_json::json;
 use solidcore_record::Vec3;
-use solidcraft_engine::geom::prelude::*;
-use solidcraft_viewport::Camera;
+use torno_engine::geom::prelude::*;
+use torno_viewport::Camera;
 
 use crate::SolveApp;
 use crate::prefs::{OrbitAround, pivot_under};
@@ -1052,7 +1052,7 @@ pub(crate) fn device(app: &mut SolveApp, rect: Rect, caps: NavCaps) {
     }
     let sketch_turns = app.preferences.space_mouse_sketch_orbit;
     let sketch_view_is_initial = !sketch_turns
-        && solidcraft_engine::view::open_sketch_plane(&app.session).ok().flatten().is_some_and(|plane| {
+        && torno_engine::view::open_sketch_plane(&app.session).ok().flatten().is_some_and(|plane| {
             let normal = plane.normal();
             let mut initial = app.cam.looking_from(normal);
             if normal.z.abs() > 0.999 {
@@ -1405,7 +1405,7 @@ fn orbit_camera(app: &mut SolveApp, dx: f64, dy: f64) {
 
 #[cfg(test)]
 mod tests {
-    use solidcraft_engine::geom::prelude::*;
+    use torno_engine::geom::prelude::*;
 
     #[test]
     fn panel_wheel_consumes_only_axes_that_move_and_clamps_to_their_limits() {
@@ -1659,7 +1659,7 @@ mod tests {
     fn touchpad_free_orbit_setting_reaches_the_shared_command() {
         use super::*;
         for caps in [NavCaps::MODEL, NavCaps::RENDER, NavCaps { orbit: false, pick: false }] {
-            for up in [solidcraft_viewport::UpAxis::Y, solidcraft_viewport::UpAxis::Z] {
+            for up in [torno_viewport::UpAxis::Y, torno_viewport::UpAxis::Z] {
                 for free in [false, true] {
                     let ctx = egui::Context::default();
                     let mut app = crate::SolveApp::new(Default::default(), crate::Services::default());
@@ -1694,7 +1694,7 @@ mod tests {
     #[test]
     fn touchpad_free_orbit_keeps_the_rigid_pivot_in_both_projections() {
         use super::*;
-        for up in [solidcraft_viewport::UpAxis::Y, solidcraft_viewport::UpAxis::Z] {
+        for up in [torno_viewport::UpAxis::Y, torno_viewport::UpAxis::Z] {
             for fov in [0.0, 0.6] {
                 for around in [OrbitAround::Origin, OrbitAround::Cursor] {
                     let ctx = egui::Context::default();
@@ -1758,7 +1758,7 @@ mod tests {
     #[test]
     fn every_standard_direction_preserves_its_nearby_quarter_orientation() {
         use super::*;
-        use solidcraft_viewport::UpAxis;
+        use torno_viewport::UpAxis;
         for up in [UpAxis::Z, UpAxis::Y] {
             for fov in [0.0, 0.6] {
                 for direction in snap_directions() {
@@ -1787,7 +1787,7 @@ mod tests {
     #[test]
     fn free_orbit_shift_snaps_direction_and_quarter_turn_roll() {
         use super::*;
-        use solidcraft_viewport::UpAxis;
+        use torno_viewport::UpAxis;
         let rect = Rect::from_min_size(Pos2::ZERO, vec2(800.0, 600.0));
         for up in [UpAxis::Z, UpAxis::Y] {
             for fov in [0.0, 0.6] {
@@ -1817,7 +1817,7 @@ mod tests {
     #[test]
     fn free_orbit_shift_keeps_the_pivot_and_resumes_the_unsnapped_drag() {
         use super::*;
-        use solidcraft_viewport::UpAxis;
+        use torno_viewport::UpAxis;
         let rect = Rect::from_min_size(Pos2::ZERO, vec2(800.0, 600.0));
         for up in [UpAxis::Z, UpAxis::Y] {
             for fov in [0.0, 0.6] {
@@ -1899,7 +1899,7 @@ mod tests {
     #[test]
     fn free_orbit_upright_turns_about_the_vertical_axis_past_the_pole() {
         use super::*;
-        for up in [solidcraft_viewport::UpAxis::Z, solidcraft_viewport::UpAxis::Y] {
+        for up in [torno_viewport::UpAxis::Z, torno_viewport::UpAxis::Y] {
             let mut h = crate::scenario::Harness::new();
             h.app.preferences.free_orbit = true;
             h.app.preferences.free_orbit_upright = true;
@@ -1941,14 +1941,14 @@ mod tests {
     #[test]
     fn solidworks_mouse_orbit_passes_the_pole_and_shift_snaps() {
         use serde_json::json;
-        for up in [solidcraft_viewport::UpAxis::Z, solidcraft_viewport::UpAxis::Y] {
+        for up in [torno_viewport::UpAxis::Z, torno_viewport::UpAxis::Y] {
             for button in ["middle", "right"] {
                 let mut h = crate::scenario::Harness::new();
                 h.app.home.open = false;
                 h.app.preferences.nav = "solidworks".into();
                 h.app.preferences.free_orbit = true;
                 h.app.ui.up_axis = up;
-                h.app.cam = solidcraft_viewport::Camera { yaw: 0.0, pitch: 1.4, up, ..Default::default() };
+                h.app.cam = torno_viewport::Camera { yaw: 0.0, pitch: 1.4, up, ..Default::default() };
                 let before = h.app.cam;
                 h.call("ui.drag", json!({"x0":800,"y0":400,"x1":800,"y1":480,"button":button,"steps":40}));
                 assert!((h.app.cam.back().dot(before.back()) - 0.64_f64.cos()).abs() < 1e-6, "{up:?} {button}: {:?}", h.app.cam);
@@ -2090,7 +2090,7 @@ mod tests {
             "cam.rotate_in_view(",
         ];
         let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"));
-        let dirs = [root.join("src"), root.join("../../apps/solidcraft/src"), root.join("../../apps/solidcraft-web/src")];
+        let dirs = [root.join("src"), root.join("../../apps/torno/src"), root.join("../../apps/torno-web/src")];
         // The kit's wheel.rs scrolls strips (a horizontal wheel over a hovered scroll area), not cameras.
         let allowed = ["navigation.rs", "wheel.rs"];
         let mut offenders = Vec::new();
@@ -2152,7 +2152,7 @@ mod tests {
                 for perspective in [false, true] {
                     for reverse in [false, true] {
                         for dy in [-80.0, 80.0] {
-                            let mut app = crate::SolveApp::new(solidcraft_engine::Session::default(), crate::Services::default());
+                            let mut app = crate::SolveApp::new(torno_engine::Session::default(), crate::Services::default());
                             crate::prefs::set(&mut app, &json!({"nav":preset, "zoom_reverse":reverse, "zoom_stop_at_model":false})).unwrap();
                             app.ui.perspective = perspective;
                             app.cam.fov = if perspective { 45.0_f64.to_radians() } else { 0.0 };
@@ -2210,7 +2210,7 @@ mod tests {
         for caps in [super::NavCaps::MODEL, super::NavCaps::RENDER, super::NavCaps { orbit: false, pick: false }] {
             for speed in [None, Some(0.25), Some(1.0), Some(4.0)] {
                 for reverse in [false, true] {
-                    let mut app = crate::SolveApp::new(solidcraft_engine::Session::default(), crate::Services::default());
+                    let mut app = crate::SolveApp::new(torno_engine::Session::default(), crate::Services::default());
                     crate::prefs::set(&mut app, &json!({"smooth_wheel_zoom":false, "zoom_to_cursor":false, "zoom_reverse":reverse})).unwrap();
                     if let Some(speed) = speed {
                         crate::prefs::set(&mut app, &json!({"wheel_zoom_speed":speed})).unwrap();
@@ -2249,7 +2249,7 @@ mod tests {
     #[test]
     fn wheel_zoom_speed_persists_defaults_and_rejects_invalid_values() {
         use serde_json::json;
-        let mut app = crate::SolveApp::new(solidcraft_engine::Session::default(), crate::Services::default());
+        let mut app = crate::SolveApp::new(torno_engine::Session::default(), crate::Services::default());
         let old = crate::prefs::lenient(&json!({"zoom_reverse":true}));
         assert_eq!(serde_json::to_value(old).unwrap()["wheel_zoom_speed"], 1.0);
         crate::prefs::control(&mut app, &json!({"open":"Navigation", "wheel_zoom_speed":2.5, "button":"apply"})).unwrap();
@@ -2272,7 +2272,7 @@ mod tests {
         use crate::space_mouse::{DeviceMotion, Motion};
         let mut distances = Vec::new();
         for speed in [0.25, 1.0, 4.0] {
-            let mut app = crate::SolveApp::new(solidcraft_engine::Session::default(), crate::Services::default());
+            let mut app = crate::SolveApp::new(torno_engine::Session::default(), crate::Services::default());
             crate::prefs::set(&mut app, &serde_json::json!({"wheel_zoom_speed":speed})).unwrap();
             let before = app.cam.distance;
             app.viewport.device_motion = Some(DeviceMotion { motion: Motion { translation: [0.0, 1.0, 0.0], rotation: [0.0; 3] }, seconds: 0.05 });
@@ -2291,7 +2291,7 @@ mod tests {
         use crate::prefs::OrbitAround;
         for fov in [0.0, 0.6] {
             for around in [OrbitAround::Cursor, OrbitAround::Origin, OrbitAround::ViewCentre] {
-                let mut s = solidcraft_engine::Session::default();
+                let mut s = torno_engine::Session::default();
                 s.execute("solid.box", &serde_json::json!({"length":40,"width":30,"height":20})).unwrap();
                 let mut app = crate::SolveApp::new(s, crate::Services::default());
                 app.preferences.orbit_around = around;
@@ -2359,7 +2359,7 @@ mod tests {
         use egui::{Event, Modifiers, PointerButton, pos2, vec2};
         let flat = super::NavCaps { orbit: false, pick: false };
         for preset in crate::prefs::NAV_PRESETS.iter().map(|p| p.id) {
-            let mut s = solidcraft_engine::Session::default();
+            let mut s = torno_engine::Session::default();
             s.execute("solid.box", &serde_json::json!({"length":40,"width":30,"height":20})).unwrap();
             let mut app = crate::SolveApp::new(s, crate::Services::default());
             app.preferences.nav = preset.into();
@@ -2444,7 +2444,7 @@ mod tests {
     #[test]
     fn native_ctrl_wheel_pinch_zooms_the_view() {
         use egui::{Event, Modifiers, MouseWheelUnit, TouchPhase, pos2, vec2};
-        let mut s = solidcraft_engine::Session::default();
+        let mut s = torno_engine::Session::default();
         s.execute("solid.box", &serde_json::json!({"length":40,"width":30,"height":20})).unwrap();
         let mut app = crate::SolveApp::new(s, crate::Services::default());
         let ctx = crate::fonts::test_context();
@@ -2485,7 +2485,7 @@ mod tests {
         );
         assert!(app.cam.distance < before.distance, "a positive Ctrl+wheel pinch zooms in: {} -> {}", before.distance, app.cam.distance);
         // Pinch uses egui's zoom speed; the unmodified wheel still uses the wheel path.
-        let mut s = solidcraft_engine::Session::default();
+        let mut s = torno_engine::Session::default();
         s.execute("solid.box", &serde_json::json!({"length":40,"width":30,"height":20})).unwrap();
         let mut plain = crate::SolveApp::new(s, crate::Services::default());
         frame(&mut plain, vec![Event::PointerMoved(at)]);
@@ -2600,7 +2600,7 @@ mod tests {
         let every_axis = DeviceMotion { motion: Motion { translation: [1.0, 1.0, 1.0], rotation: [1.0, 1.0, 1.0] }, seconds: 0.05 };
         let flat = super::NavCaps { orbit: false, pick: false };
         for (caps, turns) in [(flat, false), (super::NavCaps::MODEL, true), (super::NavCaps::RENDER, true)] {
-            let mut s = solidcraft_engine::Session::default();
+            let mut s = torno_engine::Session::default();
             s.execute("solid.box", &serde_json::json!({"length":40,"width":30,"height":20})).unwrap();
             let mut app = crate::SolveApp::new(s, crate::Services::default());
             let ctx = crate::fonts::test_context();
@@ -2653,7 +2653,7 @@ mod tests {
     fn an_orbit_drag_at_the_edge_moves_the_cursor_across_and_keeps_turning() {
         use crate::prefs::NavButton;
         use egui::{Event, Modifiers, PointerButton, ViewportCommand, pos2, vec2};
-        let mut s = solidcraft_engine::Session::default();
+        let mut s = torno_engine::Session::default();
         s.execute("solid.box", &serde_json::json!({"length":40,"width":30,"height":20})).unwrap();
         let mut app = crate::SolveApp::new(s, crate::Services::default());
         let (button, mods) = [(PointerButton::Secondary, NavButton::Right), (PointerButton::Middle, NavButton::Middle)]
@@ -2732,17 +2732,17 @@ mod tests {
         let orbit = BridgeMotion { orbit: [30.0, 20.0], ..Default::default() };
         let page = egui::Rect::from_min_size(egui::Pos2::ZERO, egui::vec2(800.0, 600.0));
         let flat = super::NavCaps { orbit: false, pick: false };
-        let mut sketching = solidcraft_engine::Session::default();
+        let mut sketching = torno_engine::Session::default();
         sketching.execute("sketch.create", &serde_json::json!({"plane": "XY"})).unwrap();
         for (session, caps, turns) in [
-            (solidcraft_engine::Session::default(), super::NavCaps::MODEL, true),
-            (solidcraft_engine::Session::default(), flat, false),
+            (torno_engine::Session::default(), super::NavCaps::MODEL, true),
+            (torno_engine::Session::default(), flat, false),
             (sketching, super::NavCaps::MODEL, false),
         ] {
             let mut app = crate::SolveApp::new(session, crate::Services::default());
             if app.session.active_sketch.is_some() {
                 // Square to the sketch, as a sketch opens.
-                app.cam = solidcraft_viewport::Camera { yaw: 0.0, pitch: std::f64::consts::FRAC_PI_2, ..Default::default() };
+                app.cam = torno_viewport::Camera { yaw: 0.0, pitch: std::f64::consts::FRAC_PI_2, ..Default::default() };
             }
             let before = app.cam;
             app.viewport.bridge_motion = Some(orbit);
@@ -2952,8 +2952,8 @@ mod tests {
     #[test]
     fn the_3d_mouse_turns_a_sketch_only_after_the_view_is_tilted() {
         use crate::space_mouse::{DeviceMotion, Motion};
-        use solidcraft_viewport::Camera;
-        let mut s = solidcraft_engine::Session::default();
+        use torno_viewport::Camera;
+        let mut s = torno_engine::Session::default();
         s.execute("sketch.create", &serde_json::json!({"plane": "XY"})).unwrap();
         let mut app = crate::SolveApp::new(s, crate::Services::default());
         assert!(app.session.active_sketch.is_some());
@@ -2989,8 +2989,8 @@ mod tests {
     #[test]
     fn the_3d_mouse_turns_a_square_on_sketch_when_the_preference_allows_it() {
         use crate::space_mouse::{BridgeMotion, DeviceMotion, Motion};
-        use solidcraft_viewport::Camera;
-        let mut s = solidcraft_engine::Session::default();
+        use torno_viewport::Camera;
+        let mut s = torno_engine::Session::default();
         s.execute("sketch.create", &serde_json::json!({"plane": "XY"})).unwrap();
         let mut app = crate::SolveApp::new(s, crate::Services::default());
         assert!(!app.preferences.space_mouse_sketch_orbit, "off by default");
@@ -3028,7 +3028,7 @@ mod tests {
 mod view_key_tests {
     use crate::scenario::Harness;
     use serde_json::json;
-    use solidcraft_engine::geom::prelude::*;
+    use torno_engine::geom::prelude::*;
 
     fn turned(h: &mut Harness, key: serde_json::Value) -> (f64, f64) {
         let before = h.app.cam;
@@ -3230,7 +3230,7 @@ mod view_key_tests {
     /// do; the keys are ordinary shortcuts, so one can be moved to another command and back.
     #[test]
     fn ctrl_digits_turn_to_the_standard_views_and_can_be_rebound() {
-        use solidcraft_viewport::StandardView;
+        use torno_viewport::StandardView;
         let mut h = Harness::new();
         h.app.preferences.look_at_anim = false;
         h.app.run("solid.box", json!({"length": 10, "width": 10, "height": 10})).unwrap();

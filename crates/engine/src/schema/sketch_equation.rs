@@ -70,13 +70,13 @@ impl JsonSchema for Tolerance {
 
 /// What the curve's variable is in its formulas.
 #[derive(Clone, Copy, Debug, PartialEq)]
-pub struct VariableUnitParam(pub solidcraft_sketch::VariableUnit);
+pub struct VariableUnitParam(pub torno_sketch::VariableUnit);
 
 impl<'de> Deserialize<'de> for VariableUnitParam {
     fn deserialize<D: Deserializer<'de>>(d: D) -> Result<Self, D::Error> {
         Value::deserialize(d)?
             .as_str()
-            .and_then(solidcraft_sketch::VariableUnit::parse)
+            .and_then(torno_sketch::VariableUnit::parse)
             .map(VariableUnitParam)
             .ok_or_else(|| D::Error::custom("must be \"number\" or \"range\""))
     }

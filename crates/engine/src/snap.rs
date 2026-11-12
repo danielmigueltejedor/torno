@@ -14,10 +14,10 @@
 use serde::Serialize;
 use solidcore_record::Vec3;
 use solidcore_record::brep::{Brep, Curve, Loop};
-use solidcraft_geom::UnitVec3;
-use solidcraft_geom::brep::eval::CurveEval;
-use solidcraft_geom::prelude::*;
-use solidcraft_kernel::{Body, EdgeCircle};
+use torno_geom::UnitVec3;
+use torno_geom::brep::eval::CurveEval;
+use torno_geom::prelude::*;
+use torno_kernel::{Body, EdgeCircle};
 
 use crate::cmd::Shape;
 use crate::{Sel, Session};
@@ -235,11 +235,11 @@ fn face_points(s: &Session, sel: &Sel) -> Vec<Found> {
     let verts: Vec<Vec3> = tris.iter().flat_map(|t| t.iter().copied()).collect();
     let on = SnapSource { face: Some(*point), ..SnapSource::default() };
     let tagged = |points: Vec<(Vec3, SnapKind)>| -> Vec<Found> { points.into_iter().map(|(at, kind)| (at, kind, on.clone())).collect() };
-    match solidcraft_kernel::face_surface(&b.body, *index) {
-        Some(solidcraft_kernel::FaceSurface::Sphere { center, .. } | solidcraft_kernel::FaceSurface::Torus { center, .. }) => {
+    match torno_kernel::face_surface(&b.body, *index) {
+        Some(torno_kernel::FaceSurface::Sphere { center, .. } | torno_kernel::FaceSurface::Torus { center, .. }) => {
             return tagged(vec![(center, SnapKind::Centre)]);
         }
-        Some(solidcraft_kernel::FaceSurface::Cone { apex, axis, .. }) => return ends_out(axis_ends(apex, axis, &verts), axis, &on),
+        Some(torno_kernel::FaceSurface::Cone { apex, axis, .. }) => return ends_out(axis_ends(apex, axis, &verts), axis, &on),
         _ => {}
     }
     match shape {
@@ -268,7 +268,7 @@ fn outline_points(body: &Body, face: usize) -> Vec<(Vec3, SnapKind, Vec3)> {
         let Loop::Edges { edges } = l else { continue };
         let edges = &edges[..edges.len().min(left)];
         left -= edges.len();
-        let circles: Vec<Option<EdgeCircle>> = edges.iter().map(|oe| solidcraft_kernel::edge_circle(body, oe.edge as usize)).collect();
+        let circles: Vec<Option<EdgeCircle>> = edges.iter().map(|oe| torno_kernel::edge_circle(body, oe.edge as usize)).collect();
         for (i, oe) in edges.iter().enumerate() {
             let Some(e) = record.edges.get(oe.edge as usize) else { continue };
             let Some(c) = CurveEval::new(e.parameters()).ok() else { continue };

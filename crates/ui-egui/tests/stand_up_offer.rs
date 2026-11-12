@@ -5,9 +5,9 @@
 //! with `stand_up:stand`, `stand_up:never` and its close (×), `toast:stand_up:close` (also published
 //! as `stand_up:dismiss`, the Close button's handle, #7971); Preferences picks the dialog or nothing.
 use serde_json::json;
-use solidcraft_engine::geom::prelude::*;
-use solidcraft_ui_egui::prefs::StandUpUnknown;
-use solidcraft_ui_egui::scenario::Harness;
+use torno_engine::geom::prelude::*;
+use torno_ui_egui::prefs::StandUpUnknown;
+use torno_ui_egui::scenario::Harness;
 
 /// A harness with a 10 × 40 × 5 mm box (Y up) just opened from STEP, from a program not known to
 /// save Y up, with Preferences set to ask in the dialog: the dialog is up.
@@ -46,9 +46,9 @@ fn opened_boxes(size: [f64; 3], corners: &[[f64; 3]], programs: &str, prepare: i
         src.app.run("solid.box", json!({"length": length, "width": width, "height": height, "corner": corner, "operation": "new_body"})).unwrap();
     }
     src.app.run("file.export", json!({"path": path})).unwrap();
-    // Another program's file: SolidCraft's own exports already have Z up (#5150).
+    // Another program's file: Torno's own exports already have Z up (#5150).
     let text = std::fs::read_to_string(&path).unwrap();
-    std::fs::write(&path, text.replace("'SolidCraft','SolidCraft'", programs)).unwrap();
+    std::fs::write(&path, text.replace("'Torno','Torno'", programs)).unwrap();
     let mut h = Harness::new();
     prepare(&mut h);
     h.app.open_path_async(&path);
@@ -57,7 +57,7 @@ fn opened_boxes(size: [f64; 3], corners: &[[f64; 3]], programs: &str, prepare: i
 }
 
 fn height(h: &Harness) -> f64 {
-    let b = solidcraft_engine::view::bounds(&h.app.session).unwrap();
+    let b = torno_engine::view::bounds(&h.app.session).unwrap();
     b.max.z - b.min.z
 }
 
@@ -132,8 +132,8 @@ fn stand_it_up_from_a_solidworks_offer_turns_once_and_undo_restores() {
 }
 
 #[test]
-fn a_solidcraft_header_is_left_alone() {
-    let h = opened_from("'SolidCraft','SolidCraft'", |_| {});
+fn a_torno_header_is_left_alone() {
+    let h = opened_from("'Torno','Torno'", |_| {});
     assert!(h.app.stand_up.is_none(), "no offer");
     assert!(!h.app.status_undo);
     assert!((height(&h) - 5.0).abs() < 1e-6, "not turned: {}", height(&h));
@@ -156,26 +156,26 @@ fn turn_up_axis_in_the_component_menu_turns_and_undo_restores() {
     h.frames(3);
     let occurrence = h.app.session.doc.occurrences.iter().map(|o| o.id).max().expect("the import's occurrence");
     h.app.run("occurrence.ground", json!({"occurrence": occurrence, "grounded": false})).unwrap();
-    let items = solidcraft_ui_egui::context_menu::items(&h.app, &solidcraft_ui_egui::context_menu::Target::Occurrence { path: vec![occurrence] });
+    let items = torno_ui_egui::context_menu::items(&h.app, &torno_ui_egui::context_menu::Target::Occurrence { path: vec![occurrence] });
     let placement = items.iter().find(|i| i.label == "Placement").expect("the Placement flyout is in the menu");
     let turn = placement.children.iter().find(|i| i.id == "ui.turnUpAxis").expect("Turn Up Axis is in the Placement flyout");
     let labels: Vec<_> = turn.children.iter().map(|c| c.label.as_str()).collect();
     assert_eq!(labels, ["Y up \u{2192} Z up", "Z up \u{2192} Y up"]);
     let at = egui::pos2(10.0, 10.0);
-    solidcraft_ui_egui::context_menu::run_item(&mut h.app, &turn.children[0], at);
+    torno_ui_egui::context_menu::run_item(&mut h.app, &turn.children[0], at);
     assert!((height(&h) - 40.0).abs() < 1e-6, "Y up to Z up: {}", height(&h));
     h.app.run("edit.undo", json!({})).unwrap();
     assert!((height(&h) - 5.0).abs() < 1e-6, "undone: {}", height(&h));
-    solidcraft_ui_egui::context_menu::run_item(&mut h.app, &turn.children[1], at);
+    torno_ui_egui::context_menu::run_item(&mut h.app, &turn.children[1], at);
     assert!((height(&h) - 40.0).abs() < 1e-6, "Z up to Y up: {}", height(&h));
 }
 
 #[test]
 fn old_preferences_files_still_load() {
     // A file saved while "Stand up automatically" existed: the retired key is ignored.
-    let old: solidcraft_ui_egui::prefs::Prefs = serde_json::from_str(r#"{"offer_stand_up": false, "auto_stand_up": true, "up_axis": "z"}"#).unwrap();
+    let old: torno_ui_egui::prefs::Prefs = serde_json::from_str(r#"{"offer_stand_up": false, "auto_stand_up": true, "up_axis": "z"}"#).unwrap();
     assert!(!old.offer_stand_up, "the saved choice is kept");
-    let empty: solidcraft_ui_egui::prefs::Prefs = serde_json::from_str("{}").unwrap();
+    let empty: torno_ui_egui::prefs::Prefs = serde_json::from_str("{}").unwrap();
     assert!(empty.offer_stand_up);
 }
 
@@ -184,11 +184,11 @@ type V3 = solidcore_record::Vec3;
 /// A stood-up SolidWorks file (its component still the active one), a sketch started by
 /// `start`, a rectangle far from the part at x 200..220, y 0..10 on it, extruded 15 mm: the
 /// sketch's world normal, the direction the view turned to look from, and the new body's bounds.
-fn sketched_and_extruded(start: impl FnOnce(&mut Harness)) -> (V3, V3, solidcraft_engine::geom::Aabb3) {
+fn sketched_and_extruded(start: impl FnOnce(&mut Harness)) -> (V3, V3, torno_engine::geom::Aabb3) {
     let mut h = opened_from("'SolidWorks 2021','SolidWorks 2021'", |h| h.app.preferences.look_at_anim = false);
     // Stand it up through the offer when one is waiting (a SolidWorks file is offered, not turned silently).
     if h.app.stand_up.is_some() {
-        solidcraft_ui_egui::stand_up::stand_up(&mut h.app).unwrap();
+        torno_ui_egui::stand_up::stand_up(&mut h.app).unwrap();
         h.frames(2);
     }
     assert!((height(&h) - 40.0).abs() < 1e-6, "stood up: {}", height(&h));
@@ -217,7 +217,7 @@ fn a_sketch_on_the_xy_plane_shown_after_standing_up_extrudes_up() {
     // stays flat, the view looks down on it and the extrude goes up, though the stood-up
     // component's own XY is now upright.
     let (normal, back, b) = sketched_and_extruded(|h| {
-        solidcraft_ui_egui::dialogs::start_sketch(&mut h.app, &solidcraft_engine::Sel::Plane { name: "XY".into() }).unwrap();
+        torno_ui_egui::dialogs::start_sketch(&mut h.app, &torno_engine::Sel::Plane { name: "XY".into() }).unwrap();
     });
     assert!(near(normal, [0.0, 0.0, 1.0]), "faces up: {normal:?}");
     assert!((back.z - 1.0).abs() < 1e-3, "looks down on it: {back:?}");
@@ -230,7 +230,7 @@ fn a_sketch_on_the_stood_up_components_own_xy_is_turned_once() {
     // sketch, the view and the extrude all follow it, the stand-up applied once.
     let (normal, back, b) = sketched_and_extruded(|h| {
         h.app.run("sketch.create", json!({"plane": "XY"})).unwrap();
-        solidcraft_ui_egui::dialogs::look_at_sketch(&mut h.app);
+        torno_ui_egui::dialogs::look_at_sketch(&mut h.app);
     });
     assert!(near(normal, [0.0, -1.0, 0.0]), "faces -Y: {normal:?}");
     assert!((back.y + 1.0).abs() < 1e-3, "looks at it from -Y: {back:?}");
@@ -300,7 +300,7 @@ fn an_unclear_file_from_an_unknown_exporter_still_gets_the_note() {
 
 #[test]
 fn which_way_is_up_weighs_flat_area_then_the_box() {
-    use solidcraft_ui_egui::stand_up::{Upright, upright};
+    use torno_ui_egui::stand_up::{Upright, upright};
     assert_eq!(upright(1600.0, 400.0, [40.0, 10.0, 40.0]), Upright::Z, "a broad base facing down Z");
     assert_eq!(upright(400.0, 1600.0, [40.0, 40.0, 10.0]), Upright::Y, "broad faces across Y");
     // Close areas: the box decides; the thin axis is up.
@@ -348,7 +348,7 @@ fn the_note_closes_on_dismiss_and_by_itself() {
     h.frames(30);
     assert!(h.app.stand_up.is_some(), "half a second on, still up");
     // As if it had been up for the whole time without the pointer on it.
-    h.app.stand_up_note_since = Some(since - solidcraft_ui_egui::stand_up::NOTE_SECONDS);
+    h.app.stand_up_note_since = Some(since - torno_ui_egui::stand_up::NOTE_SECONDS);
     h.frames(2);
     assert!(h.app.stand_up.is_none(), "gone by itself");
     assert!(!painted(&h, "Did this part open the wrong way up?"));
@@ -378,7 +378,7 @@ fn the_unknown_programs_preference_picks_the_dialog_or_nothing() {
     assert_eq!(r["ok"], json!(false), "refused: {r}");
     assert_eq!(h.app.preferences.stand_up_unknown, StandUpUnknown::Ask);
     // The default is the note, and preferences saved before the choice existed read as it.
-    let old: solidcraft_ui_egui::prefs::Prefs = serde_json::from_str(r#"{"offer_stand_up": true}"#).unwrap();
+    let old: torno_ui_egui::prefs::Prefs = serde_json::from_str(r#"{"offer_stand_up": true}"#).unwrap();
     assert_eq!(old.stand_up_unknown, StandUpUnknown::Note);
 }
 

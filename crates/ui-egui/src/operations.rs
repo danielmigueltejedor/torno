@@ -8,16 +8,16 @@
 //! behind it, a feature dialog's OK computing, the history's commands and a delete's check
 //! computing off the window thread, an agent's command, a save, the bodies of an opened design
 //! being meshed), so nothing has to be registered or forgotten. Work reports its progress, and
-//! learns it was cancelled, through [`solidcraft_engine::doc::progress::Progress`]: the timeline's
+//! learns it was cancelled, through [`torno_engine::doc::progress::Progress`]: the timeline's
 //! evaluation reports each feature it reaches, and long work inside one reports its steps through
-//! the kernel's watch ([`solidcraft_engine::kernel::watch::Watch`]); each stops at its next check
+//! the kernel's watch ([`torno_engine::kernel::watch::Watch`]); each stops at its next check
 //! once cancelled. Cancel from the control channel with `ui.operations` ([`control`]).
 
 use egui::{Align2, Color32, FontId, Rect, Sense, Stroke, pos2, vec2};
 use serde_json::{Value, json};
 
 use crate::SolveApp;
-use solidcraft_theme::Tokens;
+use torno_theme::Tokens;
 
 /// How long a finished operation takes to fade out (ms).
 pub const FADE_MS: f64 = 400.0;
@@ -93,13 +93,13 @@ impl Row {
     /// The text over the bar: the step it is on of how many (`3 / 12`), queued or cancelling.
     pub fn status(&self) -> Option<String> {
         if self.cancelled {
-            return Some(solidcraft_ui_text::tr("operations.stopped").to_string());
+            return Some(torno_ui_text::tr("operations.stopped").to_string());
         }
         if self.cancelling {
-            return Some(solidcraft_ui_text::tr("operations.cancelling").to_string());
+            return Some(torno_ui_text::tr("operations.cancelling").to_string());
         }
         if self.queued {
-            return Some(solidcraft_ui_text::tr("operations.queued").to_string());
+            return Some(torno_ui_text::tr("operations.queued").to_string());
         }
         let (done, total) = self.steps.filter(|(_, total)| *total > 1)?;
         Some(format!("{} / {total}", (done + 1).min(total)))
@@ -113,7 +113,7 @@ pub fn serial() -> u64 {
 }
 
 fn command_name(id: &str) -> String {
-    solidcraft_ui_text::tr_label(crate::command_label(id)).to_string()
+    torno_ui_text::tr_label(crate::command_label(id)).to_string()
 }
 
 /// The operations under way, oldest first.
@@ -121,7 +121,7 @@ pub fn current(app: &SolveApp) -> Vec<Row> {
     let mut rows = Vec::new();
     // The bodies of a design just opened, meshed for the view.
     if let Some((done, total)) = crate::open_meshing::progress(app) {
-        rows.push(Row { steps: Some((done, total)), ..Row::new("meshing".into(), solidcraft_ui_text::tr("operations.meshing").to_string()) });
+        rows.push(Row { steps: Some((done, total)), ..Row::new("meshing".into(), torno_ui_text::tr("operations.meshing").to_string()) });
     }
     if let Some(saving) = &app.saving {
         let command = saving.command();
@@ -145,7 +145,7 @@ pub fn current(app: &SolveApp) -> Vec<Row> {
             Some(command) => Some(command),
             None => job.cmds.first().map(|(id, _)| id.as_str()),
         };
-        let label = command.map_or_else(|| solidcraft_ui_text::tr("operations.feature").to_string(), command_name);
+        let label = command.map_or_else(|| torno_ui_text::tr("operations.feature").to_string(), command_name);
         rows.push(Row { steps: evaluation_steps(&job.progress), cancel: Some(Cancel::Apply), ..Row::new("apply".into(), label) });
     }
     if let Some(edit) = &app.pending_feature_edit {
@@ -153,7 +153,7 @@ pub fn current(app: &SolveApp) -> Vec<Row> {
         rows.push(Row {
             cancelling,
             cancel: Some(Cancel::FeatureEdit),
-            ..Row::new("feature_edit".into(), solidcraft_ui_text::tr("operations.feature_edit").to_string())
+            ..Row::new("feature_edit".into(), torno_ui_text::tr("operations.feature_edit").to_string())
         });
     }
     if let Some(check) = &app.delete_check {
@@ -181,7 +181,7 @@ pub fn current(app: &SolveApp) -> Vec<Row> {
 
 /// How far a watched evaluation is: the long work inside one feature while there is some, else
 /// the features evaluated of the timeline's.
-fn evaluation_steps(progress: &solidcraft_engine::doc::progress::Progress) -> Option<(usize, usize)> {
+fn evaluation_steps(progress: &torno_engine::doc::progress::Progress) -> Option<(usize, usize)> {
     if let Some((_, done, total)) = progress.work().filter(|(_, done, total)| done < total) {
         return Some((done, total));
     }
@@ -193,7 +193,7 @@ fn evaluation_steps(progress: &solidcraft_engine::doc::progress::Progress) -> Op
 /// and nothing of it is applied; operations queued behind it go on.
 pub fn cancel(app: &mut SolveApp, key: &str) -> Result<(), String> {
     let row = current(app).into_iter().find(|r| r.key == key).ok_or_else(|| format!("no operation `{key}` is under way"))?;
-    let Some(how) = row.cancel else { return Err(solidcraft_ui_text::format("operations.cannot_cancel", &[("name", &row.label)])) };
+    let Some(how) = row.cancel else { return Err(torno_ui_text::format("operations.cannot_cancel", &[("name", &row.label)])) };
     if row.cancelling {
         return Ok(());
     }
@@ -224,7 +224,7 @@ pub fn cancel(app: &mut SolveApp, key: &str) -> Result<(), String> {
         Cancel::Agent => app.stop_agent_command(),
     }
     app.operations.cancelled.push(row.key.clone());
-    app.set_status(solidcraft_ui_text::format("operations.cancelled", &[("name", &row.label)]), false);
+    app.set_status(torno_ui_text::format("operations.cancelled", &[("name", &row.label)]), false);
     Ok(())
 }
 
@@ -355,16 +355,16 @@ pub(crate) fn show(app: &mut SolveApp, ui: &egui::Ui, view: Rect) {
 /// One row in `r`: name, bar with its step, and the X. True when the X was clicked.
 fn paint_row(ui: &egui::Ui, painter: &egui::Painter, t: &Tokens, row: &Row, alpha: f32, r: Rect) -> bool {
     let fade = |c: Color32| c.gamma_multiply(alpha);
-    let accent = if row.agent { solidcraft_look::pointer::agent() } else { t.form_primary };
+    let accent = if row.agent { torno_look::pointer::agent() } else { t.form_primary };
     crate::scenario::publish_rect(&format!("operations:row:{}", row.key), r);
     // The X on the right.
     let x = Rect::from_center_size(pos2(r.right() - ROW * 0.5, r.center().y), vec2(ROW - 6.0, ROW - 6.0));
     let response =
         ui.interact(x, egui::Id::unique(("sc_operation_cancel", &row.key)), if row.cancellable() { Sense::click() } else { Sense::hover() });
     let response = response.on_hover_text(if row.cancellable() {
-        solidcraft_ui_text::format("operations.cancel", &[("name", &row.label)])
+        torno_ui_text::format("operations.cancel", &[("name", &row.label)])
     } else {
-        solidcraft_ui_text::format("operations.cannot_cancel", &[("name", &row.label)])
+        torno_ui_text::format("operations.cannot_cancel", &[("name", &row.label)])
     });
     if row.cancellable() && response.hovered() {
         painter.rect_filled(x, t.radius_sm, fade(t.hover));
@@ -460,7 +460,7 @@ mod tests {
         panel.cancelled.push("b".into());
         panel.update(Vec::new(), 310.0 + FADE_MS);
         let (b, _) = panel.rows(310.0 + FADE_MS).next().unwrap();
-        assert_eq!((b.steps, b.cancelled, b.status()), (Some((3, 9)), true, Some(solidcraft_ui_text::tr("operations.stopped").to_string())));
+        assert_eq!((b.steps, b.cancelled, b.status()), (Some((3, 9)), true, Some(torno_ui_text::tr("operations.stopped").to_string())));
         panel.update(Vec::new(), 400.0 + 2.0 * FADE_MS);
         assert!(panel.is_empty() && panel.cancelled.is_empty());
         // One that comes back while fading is running again.

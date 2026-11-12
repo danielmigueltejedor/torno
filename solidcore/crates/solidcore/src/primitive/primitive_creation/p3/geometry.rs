@@ -10,14 +10,14 @@
 //! outputs are explicit. Scaling sampling is bounded to 1,000,000 points; no
 //! recursion. Null/non-B-spline profiles are skipped, as the upstream cast does.
 //! **A planar path's frame starts on the plane's normal** (opt-in
-//! `Kernel::fixes.sweep_frame_on_planar_path_normal`, WR-407; SolidCraft change,
+//! `Kernel::fixes.sweep_frame_on_planar_path_normal`, WR-407; Torno change,
 //! tangency-labs/smlib 1b6f5fa, tangency-labs/solidcore#434; see
 //! [`prepare_curve_sweep`]).
 //! **The profile can be swept where it lies** (`SweepOptions::profile_at_path_start`,
-//! the SolidCraft fork's `bProfileAtPathStart`, tangency-labs/smlib 2dd71a0, WR-522,
+//! the Torno fork's `bProfileAtPathStart`, tangency-labs/smlib 2dd71a0, WR-522,
 //! #1450; off by default): the path's start is the profile's reference point.
 //! **Statuses pass on** (opt-in `Kernel::fixes.sweep_statuses_pass_on`, WR-662;
-//! SolidCraft change, tangency-labs/smlib c8f6a31): the statuses upstream drops here
+//! Torno change, tangency-labs/smlib c8f6a31): the statuses upstream drops here
 //! are returned instead (`SER`). The path's unused normal is not computed.
 
 use crate::curve::curve::p1::GlobalPointSolveOptions;
@@ -216,7 +216,7 @@ pub fn prepare_curve_sweep(
     ignore_status(passed_on(path.transform(&path_to_origin, None), p)?)?;
     let mut reference = Vec3::ZERO;
     if options.profile_at_path_start {
-        // SolidCraft fork (tangency-labs/smlib 2dd71a0, WR-522, #1450): the profile moves
+        // Torno fork (tangency-labs/smlib 2dd71a0, WR-522, #1450): the profile moves
         // with the path's start, so it keeps its place relative to the path.
         reference = start;
     } else if options.move_profile_center_to_path {
@@ -269,7 +269,7 @@ pub fn prepare_curve_sweep(
         from_x = x;
         from_y = y;
     }
-    // SolidCraft change, tangency-labs/smlib 1b6f5fa (tangency-labs/solidcore#434): the path
+    // Torno change, tangency-labs/smlib 1b6f5fa (tangency-labs/solidcore#434): the path
     // is turned so that this frame becomes the global one, and the sweep (`N_CreateSweepScale`,
     // `Z0` = global z) carries the profile on a frame that starts there and is computed from
     // point to point along the path. Along a planar path the plane's normal is the one

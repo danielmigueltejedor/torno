@@ -1,4 +1,4 @@
-//! WR-599 (the SolidCraft fork's tangency-labs/smlib@16bf1cb): the test-peg part, a bar
+//! WR-599 (the Torno fork's tangency-labs/smlib@16bf1cb): the test-peg part, a bar
 //! 40 x 16 x 10 with a half-round end of radius 8 and a cylinder r 8 x 10 standing on its
 //! top about the half-round's axis, joined. The cylinder's wall is one full-turn face; the
 //! bar's half-round wall lies on the same cylinder across that face's seam (the seam at

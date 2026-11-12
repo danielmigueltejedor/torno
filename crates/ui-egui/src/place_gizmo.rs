@@ -39,9 +39,9 @@ use look::{
     footprint, ring,
 };
 use solidcore_record::Vec3;
-use solidcraft_engine::doc::expr::Kind as ValueKind;
-use solidcraft_engine::geom::prelude::*;
-use solidcraft_engine::{Sel, Session};
+use torno_engine::doc::expr::Kind as ValueKind;
+use torno_engine::geom::prelude::*;
+use torno_engine::{Sel, Session};
 
 use crate::SolveApp;
 use crate::dialogs::Dialog;
@@ -49,7 +49,7 @@ pub(crate) use crate::dialogs::vec3_of;
 use crate::motion;
 pub(crate) use crate::selection::point_value as pt;
 use crate::viewport::{Hit, Proj};
-use solidcraft_theme::Tokens;
+use torno_theme::Tokens;
 
 /// One tool's use of the handles.
 ///
@@ -497,7 +497,7 @@ pub(crate) fn show(app: &mut SolveApp, ui: &mut egui::Ui, painter: &egui::Painte
             && !dragging
             && let Some(r) = r
         {
-            r.clone().backing_on_hover_text(solidcraft_ui_text::tr_label(sp.move_tip));
+            r.clone().backing_on_hover_text(torno_ui_text::tr_label(sp.move_tip));
         }
         // A held place steps back as a handle not in use does: there, but offering no move.
         let style = CrossStyle {
@@ -594,7 +594,7 @@ pub(crate) fn show(app: &mut SolveApp, ui: &mut egui::Ui, painter: &egui::Painte
         compass(painter, &on, &dirs, style.active);
     }
     if hovered && !dragging {
-        r.clone().backing_on_hover_text(solidcraft_ui_text::tr_label(turn.tip));
+        r.clone().backing_on_hover_text(torno_ui_text::tr_label(turn.tip));
     }
     if hovered || dragging {
         ui.ctx().set_cursor_icon(if dragging { egui::CursorIcon::Grabbing } else { egui::CursorIcon::Grab });

@@ -1,8 +1,8 @@
-# solidcraft-viewport-egui
+# torno-viewport-egui
 
-The shared viewport renderer in an egui window: `solidcraft-viewport-gpu`'s pipelines drawn in
+The shared viewport renderer in an egui window: `torno-viewport-gpu`'s pipelines drawn in
 egui-wgpu paint callbacks, on the host's device and render pass, over a background the host paints
-first. Its workspace dependency is `solidcraft-viewport-gpu`.
+first. Its workspace dependency is `torno-viewport-gpu`.
 
 The host passes what is its own: whether bodies may be built on the GPU and whether they must be
 built on the CPU, the background's colours, and how to report a GPU error no error scope caught.

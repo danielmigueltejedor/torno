@@ -8,8 +8,8 @@
 
 use serde_json::Value;
 use solidcore_record::Vec3;
-use solidcraft_doc::construct::{AxisDef, GeoRef, PointDef};
-use solidcraft_doc::{FeatureKind, PlaneRef};
+use torno_doc::construct::{AxisDef, GeoRef, PointDef};
+use torno_doc::{FeatureKind, PlaneRef};
 
 use super::CommandSpec;
 use super::features::{add_feature, check_expr, plane_param, sketch_id};
@@ -166,12 +166,12 @@ pub(crate) fn is_model_axis(v: &Value) -> bool {
 }
 
 /// An axis on an edge or round face of the model (`{edge: [x,y,z]}` or `{face: [x,y,z]}`, the
-/// point on it), with the line it gives now (`solidcraft_doc::construct::model_axis`); `None`
+/// point on it), with the line it gives now (`torno_doc::construct::model_axis`); `None`
 /// for any other form of `axis`.
 pub(super) fn model_axis_param(s: &Session, v: Option<&Value>, cmd: &str) -> Result<Option<(GeoRef, Vec3, Vec3)>> {
     let Some(v) = v.filter(|v| is_model_axis(v)) else { return Ok(None) };
     let g = geo(s, Some(v), cmd, "axis")?;
-    let (o, d) = solidcraft_doc::construct::model_axis(&*s.world_state()?, &g).map_err(|e| bad(cmd, format!("`axis`: {e}")))?;
+    let (o, d) = torno_doc::construct::model_axis(&*s.world_state()?, &g).map_err(|e| bad(cmd, format!("`axis`: {e}")))?;
     Ok(Some((g, o, d)))
 }
 
@@ -287,9 +287,9 @@ pub(super) fn geo(s: &Session, v: Option<&Value>, cmd: &str, what: &str) -> Resu
     Ok(g)
 }
 
-fn t_param(s: &Session, p: &Value, cmd: &str) -> Result<solidcraft_doc::Expr> {
+fn t_param(s: &Session, p: &Value, cmd: &str) -> Result<torno_doc::Expr> {
     let t = if p.get("t").is_some() { req_expr(cmd, p, "t")? } else { "0.5".into() };
-    check_expr(s, &t, solidcraft_doc::expr::Kind::Unitless, cmd, "t")?;
+    check_expr(s, &t, torno_doc::expr::Kind::Unitless, cmd, "t")?;
     Ok(t)
 }
 
@@ -416,7 +416,7 @@ fn plane_tangent(s: &mut Session, p: &Value) -> Result<Value> {
         Some(_) if reference.is_none() => return Err(bad(cmd, "`angle` turns the plane from a `reference`: give one")),
         Some(_) => {
             let angle = req_expr(cmd, p, "angle")?;
-            check_expr(s, &angle, solidcraft_doc::expr::Kind::Angle, cmd, "angle")?;
+            check_expr(s, &angle, torno_doc::expr::Kind::Angle, cmd, "angle")?;
             Some(angle)
         }
         None => None,

@@ -32,6 +32,6 @@
   "ungraded": [],
   "what": "an offset asked to fit within 20 mm: refused, the tolerance is 0.000001 to 10 mm",
   "why_not": [
-    "the failure is SolidCraft's, not a kernel operation's: step 2 (surface.offset): invalid input: the offset tolerance must be 0.000001…10 mm"
+    "the failure is Torno's, not a kernel operation's: step 2 (surface.offset): invalid input: the offset tolerance must be 0.000001…10 mm"
   ]
 }

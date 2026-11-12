@@ -6,7 +6,7 @@
 
 use egui::{Pos2, Sense, Stroke, Vec2 as Screen, vec2};
 use solidcore_record::{Plane, Vec2};
-use solidcraft_engine::geom::prelude::*;
+use torno_engine::geom::prelude::*;
 
 use crate::SolveApp;
 use crate::dialogs::Kind;
@@ -143,7 +143,7 @@ fn frame_of(app: &SolveApp, d: &crate::dialogs::Dialog) -> Option<Frame> {
     Some(Frame { x: pivot.x + dx, y: pivot.y + dy, scale, angle: turned, natural: (size[0], size[1]), pivot, middle })
 }
 
-use solidcraft_engine::doc::expr::Kind as ValueKind;
+use torno_engine::doc::expr::Kind as ValueKind;
 
 /// Write a frame back into the window's fields.
 fn store(k: &mut Mod, f: &Frame) {
@@ -207,7 +207,7 @@ pub fn show(app: &mut SolveApp, ui: &mut egui::Ui, proj: &Proj) {
     let Some((lines, _, _)) = picked_box(app, d) else { return };
     let Some(frame) = frame_of(app, d) else { return };
     let Some(plane) = app.session.active_sketch.and_then(|id| crate::canvas::profile_plane(app, id)) else { return };
-    let t = solidcraft_theme::Tokens::get();
+    let t = torno_theme::Tokens::get();
     let painter = ui.painter().clone();
     let stroke = Stroke::new(1.5, t.accent);
     // The picks where OK would leave them.

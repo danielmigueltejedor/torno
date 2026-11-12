@@ -16,10 +16,10 @@ use crate::ui_kit::BackingTooltipExt as _;
 use std::cell::Cell;
 
 use serde_json::{Value, json};
-use solidcraft_engine::Sel;
+use torno_engine::Sel;
 
 use crate::SolveApp;
-use solidcraft_theme::Tokens;
+use torno_theme::Tokens;
 
 thread_local! {
     /// The drawing line type (0 normal, 1 construction, 2 centerline) and the sketch it is for.
@@ -43,13 +43,13 @@ pub const TOGGLES: [(&str, &str); 10] = [
 
 /// Does the sketch hold any geometry of its own: a drawn curve or a 3D curve? Projected curves
 /// and the origin are held in place and do not count.
-pub fn has_geometry(sketch: &solidcraft_engine::sketch::Sketch) -> bool {
+pub fn has_geometry(sketch: &torno_engine::sketch::Sketch) -> bool {
     !sketch.curves.is_empty() || !sketch.wires.is_empty()
 }
 
 /// Nothing the user added: no curve, 3D curve, constraint or dimension, pattern, projection,
 /// text or offset, and no point but the fixed origin.
-pub fn is_blank(sketch: &solidcraft_engine::sketch::Sketch) -> bool {
+pub fn is_blank(sketch: &torno_engine::sketch::Sketch) -> bool {
     !has_geometry(sketch)
         && sketch.constraints.is_empty()
         && sketch.patterns.is_empty()
@@ -110,11 +110,11 @@ pub fn toggle_construction(app: &mut SolveApp) {
 
 /// Curves a drawing command just made take the drawing line type.
 pub fn apply_mode(app: &mut SolveApp, id: &str, result: &Value) {
-    if solidcraft_engine::cmd::construction_line_mode(id).is_some() {
+    if torno_engine::cmd::construction_line_mode(id).is_some() {
         return;
     }
     let m = mode(app);
-    if m == 0 || !solidcraft_engine::find_command(id).is_some_and(|c| c.tab == "SKETCH" && c.panel == "CREATE") {
+    if m == 0 || !torno_engine::find_command(id).is_some_and(|c| c.tab == "SKETCH" && c.panel == "CREATE") {
         return;
     }
     // Drawing reports its curves as `curves`; Project and the other link commands report them per
@@ -138,7 +138,7 @@ pub fn apply_mode(app: &mut SolveApp, id: &str, result: &Value) {
                 ss.sketch
                     .curve_index(c)
                     .and_then(|i| ss.sketch.curves.get(i))
-                    .is_some_and(|c| matches!(c.kind, solidcraft_engine::sketch::CurveKind::Line { .. }))
+                    .is_some_and(|c| matches!(c.kind, torno_engine::sketch::CurveKind::Line { .. }))
             })
             .cloned()
             .collect()
@@ -208,7 +208,7 @@ pub fn set_linetype(app: &mut SolveApp, kind: u8) {
                 ss.sketch
                     .curve_index(id)
                     .and_then(|i| ss.sketch.curves.get(i))
-                    .is_some_and(|c| matches!(c.kind, solidcraft_engine::sketch::CurveKind::Line { .. }))
+                    .is_some_and(|c| matches!(c.kind, torno_engine::sketch::CurveKind::Line { .. }))
             })
             .cloned()
             .collect()
@@ -320,7 +320,7 @@ fn section_alias(name: &str, title: &str) {
 /// Count the sketch's independent input coordinates and radii before constraints. The solver
 /// stores remaining DOF but no total: fixed/projected inputs are constants, not free variables.
 /// Arc endpoints already supply their radii through coordinates, as in the solver's layout.
-fn unconstrained_total(sketch: &solidcraft_engine::sketch::Sketch) -> usize {
+fn unconstrained_total(sketch: &torno_engine::sketch::Sketch) -> usize {
     let coordinates = sketch.points.iter().filter(|p| !p.fixed && p.link.is_none()).count().saturating_mul(2);
     let radii = sketch
         .curves
@@ -328,7 +328,7 @@ fn unconstrained_total(sketch: &solidcraft_engine::sketch::Sketch) -> usize {
         .filter(|c| {
             !c.fixed
                 && c.link.is_none()
-                && matches!(c.kind, solidcraft_engine::sketch::CurveKind::Circle { .. } | solidcraft_engine::sketch::CurveKind::Ellipse { .. })
+                && matches!(c.kind, torno_engine::sketch::CurveKind::Circle { .. } | torno_engine::sketch::CurveKind::Ellipse { .. })
         })
         .count();
     coordinates.saturating_add(radii)
@@ -347,7 +347,7 @@ fn constrained_fraction(remaining: usize, total: usize, solved: bool) -> f32 {
 /// Draw the sketch options card, retaining the command paths used by the original palette.
 pub fn show(app: &mut SolveApp, ctx: &egui::Context) {
     app.viewport.palette_rect = None;
-    let _language = solidcraft_ui_text::scope(&app.preferences.language);
+    let _language = torno_ui_text::scope(&app.preferences.language);
     if !visible(app, ctx) {
         return;
     }
@@ -437,7 +437,7 @@ pub fn show(app: &mut SolveApp, ctx: &egui::Context) {
                 let status = if !solved || !geometry || remaining == 0 {
                     crate::i18n::tr_dyn(&dof_text(remaining, solved, geometry))
                 } else {
-                    solidcraft_ui_text::format(
+                    torno_ui_text::format(
                         if remaining == 1 { "sketch.dof_left_one" } else { "sketch.dof_left" },
                         &[("count", &remaining.to_string())],
                     )
@@ -462,14 +462,14 @@ pub fn show(app: &mut SolveApp, ctx: &egui::Context) {
                 ui.ctx().data_mut(|d| d.insert_temp(header_height, header.rect.height()));
             }
             crate::ui_kit::Part::Body => {
-                let t = solidcraft_theme::Tokens::get();
+                let t = torno_theme::Tokens::get();
                 if open_ends > 0 {
-                    let text = solidcraft_ui_text::format("sketch.open_ends", &[("count", &open_ends.to_string())]);
+                    let text = torno_ui_text::format("sketch.open_ends", &[("count", &open_ends.to_string())]);
                     ui.label(egui::RichText::new(text).size(t.font_small).color(t.warning)).backing_on_hover_text(app.tr("ui.open_ends_tip"));
                 }
                 if untied_ends > 0 {
                     ui.horizontal(|ui| {
-                        let text = solidcraft_ui_text::format("sketch.untied_ends", &[("count", &untied_ends.to_string())]);
+                        let text = torno_ui_text::format("sketch.untied_ends", &[("count", &untied_ends.to_string())]);
                         ui.label(egui::RichText::new(text).size(t.font_small).color(t.warning)).backing_on_hover_text(app.tr("ui.untied_ends_tip"));
                         let button = crate::ui_kit::button(ui, app.tr("ui.tie_ends"), crate::ui_kit::Button::Normal)
                             .backing_on_hover_text(app.tr("ui.tie_ends_tip"));
@@ -483,7 +483,7 @@ pub fn show(app: &mut SolveApp, ctx: &egui::Context) {
                         let choices: Vec<_> = family
                             .commands
                             .iter()
-                            .filter_map(|id| solidcraft_engine::find_command(id))
+                            .filter_map(|id| torno_engine::find_command(id))
                             .map(|spec| crate::ui_kit::ToolChoice {
                                 key: spec.id,
                                 icon: spec.icon,
@@ -504,9 +504,9 @@ pub fn show(app: &mut SolveApp, ctx: &egui::Context) {
                     let segments = LINE_TYPES.map(|(key, icon, name)| {
                         let name = app.tr_label(name);
                         let tip = if has_curves {
-                            solidcraft_ui_text::format("sketch.make_selection", &[("linetype", name)])
+                            torno_ui_text::format("sketch.make_selection", &[("linetype", name)])
                         } else {
-                            solidcraft_ui_text::format("sketch.draw_curves", &[("linetype", name)])
+                            torno_ui_text::format("sketch.draw_curves", &[("linetype", name)])
                         };
                         crate::ui_kit::IconSegment { key, icon, tip }
                     });
@@ -739,7 +739,7 @@ mod tests {
     /// construction; normal leaves both as they are. One undo takes the projection away whole.
     #[test]
     fn project_gives_its_curves_the_drawing_line_type() {
-        let flags = |c: &solidcraft_engine::sketch::Curve| (c.construction, c.centerline, c.infinite);
+        let flags = |c: &torno_engine::sketch::Curve| (c.construction, c.centerline, c.infinite);
         for (m, line, circle) in [
             (0, (false, false, false), (false, false, false)),
             (1, (true, false, false), (true, false, false)),
@@ -763,7 +763,7 @@ mod tests {
                 sketch
                     .curves
                     .iter()
-                    .find(|c| matches!(c.kind, solidcraft_engine::sketch::CurveKind::Line { .. }) == line)
+                    .find(|c| matches!(c.kind, torno_engine::sketch::CurveKind::Line { .. }) == line)
                     .map(flags)
                     .unwrap_or_else(|| panic!("mode {m}: a projected {}", if line { "line" } else { "circle" }))
             };
@@ -1051,7 +1051,7 @@ mod tests {
             .iter()
             .copied()
             .filter(|id| {
-                let label = solidcraft_engine::find_command(id).unwrap().label;
+                let label = torno_engine::find_command(id).unwrap().label;
                 tree.nodes.iter().any(|(_, n)| n.label() == Some(label) && n.toggled() == Some(egui::accesskit::Toggled::True))
             })
             .collect()

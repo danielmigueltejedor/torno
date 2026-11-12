@@ -80,6 +80,6 @@
   "ungraded": [],
   "what": "a join of two revolved rings that touch only along a circle (r 20.5 at z 4: the corner of one ring on the corner of the other): the app hung in the boolean",
   "why_not": [
-    "body \"RingB\" is no kernel operation's output nor an operand: SolidCraft built it or changed the kernel's record"
+    "body \"RingB\" is no kernel operation's output nor an operand: Torno built it or changed the kernel's record"
   ]
 }

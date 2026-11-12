@@ -15,7 +15,7 @@ use schemars::{JsonSchema, Schema, SchemaGenerator, json_schema};
 use serde::de::Error as _;
 use serde::{Deserialize, Deserializer, Serialize};
 use serde_json::{Map, Value};
-use solidcraft_doc::config::{MAX_COLUMNS, MAX_RULES};
+use torno_doc::config::{MAX_COLUMNS, MAX_RULES};
 
 use super::check::whole;
 use crate::params::{self, MAX_STRING_LIST, json_brief};

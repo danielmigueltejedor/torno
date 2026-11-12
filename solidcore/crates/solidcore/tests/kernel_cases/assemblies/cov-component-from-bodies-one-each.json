@@ -232,7 +232,7 @@
     "extrude"
   ],
   "ungraded": [
-    "results: SolidCraft computes it"
+    "results: Torno computes it"
   ],
   "what": "component.from_bodies on two root bodies",
   "why_not": []

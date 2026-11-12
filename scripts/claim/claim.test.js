@@ -59,14 +59,14 @@ const pr = (number, login = 'other', state = 'open', extra = {}) => ({
   event: 'cross-referenced',
   source: { issue: {
     number, state, pull_request: {}, user: { login },
-    title: 'Work (#7)', body: '', repository: { full_name: 'bherbruck/solidcraft' },
+    title: 'Work (#7)', body: '', repository: { full_name: 'getnodalia/torno' },
     ...extra,
   } },
 });
 
 function ctx(body, { assignees = [], labels = [], user = 'alice', extra = {} } = {}) {
   return {
-    repo: { owner: 'bherbruck', repo: 'solidcraft' },
+    repo: { owner: 'bherbruck', repo: 'torno' },
     payload: {
       issue: {
         number: 7,
@@ -237,7 +237,7 @@ const issue = (number, assignees = ['bob']) => ({
   assignees: assignees.map((login) => ({ login })),
   labels: [{ name: 'in progress' }],
 });
-const repo = { owner: 'bherbruck', repo: 'solidcraft' };
+const repo = { owner: 'bherbruck', repo: 'torno' };
 
 test('sweep releases a claim older than 72 h with no PR', async () => {
   const { github, calls } = fake({ issues: [issue(7)], timeline: [labeled(ago(80 * H))] });
@@ -366,7 +366,7 @@ test('a PR in another repository cannot reserve a local issue with the same numb
     byNumber: { 7: openIssue(7) },
     timeline: [pr(42, 'bob', 'open', {
       repository: { full_name: 'someone/other-project' },
-      body: 'Fixes #7. Related: bherbruck/solidcraft#7.',
+      body: 'Fixes #7. Related: getnodalia/torno#7.',
     })],
   });
   assert.deepEqual(await claim.handlePull({ github, context: pullCtx(50, 'Thing (#7)') }), [7]);

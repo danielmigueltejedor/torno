@@ -4,8 +4,8 @@
 
 use serde_json::{Value, json};
 use solidcore_record::{Vec2, Vec3};
-use solidcraft_geom::prelude::*;
-use solidcraft_sketch::{Link, LinkSource, Shape};
+use torno_geom::prelude::*;
+use torno_sketch::{Link, LinkSource, Shape};
 
 use crate::Session;
 
@@ -102,7 +102,7 @@ fn a_projected_edge_stays_that_edge_when_the_body_changes_size() {
         assert!(!link(&s).lost, "width {width}");
     }
     // Saved and opened again.
-    let opened = Session::new(solidcraft_doc::Document::from_json(&s.doc.to_json()).unwrap());
+    let opened = Session::new(torno_doc::Document::from_json(&s.doc.to_json()).unwrap());
     assert_eq!(stored(&opened).edge_name.as_deref(), Some(name.as_str()));
     assert_line(&opened, 400.0, (0.0, 50.0), "opened");
     // Undo and redo of the change.
@@ -123,7 +123,7 @@ fn a_projected_edge_stays_that_edge_when_the_body_changes_size() {
 /// What sketch `Top` asks to be picked again, when it fails for a reference it lost.
 fn reselect(s: &Session) -> Option<String> {
     let r = s.model.result(s.doc.find_feature("Top").unwrap().id).unwrap();
-    r.error.as_deref().and_then(solidcraft_doc::reselect_parts).filter(|(feature, _)| *feature == "Top").map(|(_, reference)| reference.to_string())
+    r.error.as_deref().and_then(torno_doc::reselect_parts).filter(|(feature, _)| *feature == "Top").map(|(_, reference)| reference.to_string())
 }
 
 /// A slot cut through the plate from x = 80 to 120, y = 20 to 30 leaves the picked edge in two
@@ -261,8 +261,8 @@ fn an_edge_link_saved_without_a_name_is_found_as_before_and_named_by_the_next_ed
     let removed = links.flatten().filter_map(|l| l.as_object_mut()?.remove("edge_name")).count();
     assert_eq!(removed, 1, "the one projected edge");
     saved["format"] = json!("solidcraft/16");
-    let mut s = Session::new(solidcraft_doc::Document::from_json(&saved.to_string()).unwrap());
-    assert_eq!(s.doc.format, solidcraft_doc::format::format_string(solidcraft_doc::format::FORMAT), "upgraded on opening");
+    let mut s = Session::new(torno_doc::Document::from_json(&saved.to_string()).unwrap());
+    assert_eq!(s.doc.format, torno_doc::format::format_string(torno_doc::format::FORMAT), "upgraded on opening");
     assert_eq!(stored(&s).edge_name, None);
     assert_eq!(trouble(&s), "");
     assert_line(&s, 100.0, (0.0, 50.0), "opened");
@@ -331,7 +331,7 @@ fn a_line_is_constrained_collinear_with_an_edge_of_a_mirrored_body() {
         assert!(!link(&s).lost, "width {width}");
         on_edge(&s, -width, &format!("width {width}"));
     }
-    let opened = Session::new(solidcraft_doc::Document::from_json(&s.doc.to_json()).unwrap());
+    let opened = Session::new(torno_doc::Document::from_json(&s.doc.to_json()).unwrap());
     assert_eq!(link(&opened).edge_name.as_deref(), Some(name.as_str()));
     on_edge(&opened, -60.0, "opened");
     // A vertex of the copy: the line's end goes onto its corner (-60, 50, 20).

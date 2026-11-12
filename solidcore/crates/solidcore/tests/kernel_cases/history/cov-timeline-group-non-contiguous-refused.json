@@ -44,6 +44,6 @@
   "ungraded": [],
   "what": "timeline.group of two features with others between them",
   "why_not": [
-    "the failure is SolidCraft's, not a kernel operation's: step 7 (timeline.group): invalid parameters for `timeline.group`: timeline folder `Split` must contain one contiguous run of features"
+    "the failure is Torno's, not a kernel operation's: step 7 (timeline.group): invalid parameters for `timeline.group`: timeline folder `Split` must contain one contiguous run of features"
   ]
 }

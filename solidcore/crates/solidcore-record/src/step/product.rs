@@ -25,13 +25,13 @@
 //! every level is read once, and only its expansion grows with its uses. Nothing is
 //! pre-allocated from a count in the file, and every error is a message, never a panic.
 //!
-//! Origin: the data walk of SolidCraft's `crates/kernel/src/step_in/mod.rs` at `a5b71ca2` (MIT
+//! Origin: the data walk of Torno's `crates/kernel/src/step_in/mod.rs` at `a5b71ca2` (MIT
 //! OR Apache-2.0): `representation`, `Reader::index`, `find_colour`, `find_transparency`,
 //! `placement_matrix` (its reading), `mapped_targets`, `occurrence_name`, `product_name`,
 //! `occurrence_matrix` (its reading), `node` (its walk), `part_name`, and the root rule of
 //! `StepReading::with_workers`.
 //!
-//! Deviations from SolidCraft, none with a geometric computation in its place:
+//! Deviations from Torno, none with a geometric computation in its place:
 //! - Placements are data ([`Frame`]), not matrices: `frame_matrix`, `mat_mul`, `linear_det`,
 //!   `placement_inverse` and the operator's determinant check are the kernel's (slice 6); an
 //!   operator's scale is refused here only when it is zero or not a number (was: also a singular

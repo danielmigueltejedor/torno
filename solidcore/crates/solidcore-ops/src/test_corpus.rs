@@ -92,7 +92,7 @@ pub(crate) fn raw_counts(e: &Value) -> [usize; 3] {
     ["faces", "edges", "vertices"].map(|k| c[k].as_u64().unwrap() as usize)
 }
 
-/// The rig's fix set (the corpus's `fixes.json`), as SolidCraft's rig ran.
+/// The rig's fix set (the corpus's `fixes.json`), as Torno's rig ran.
 pub(crate) fn rig_fixes() {
     let text = std::fs::read_to_string(corpus().join("fixes.json")).unwrap();
     let names: Vec<String> = serde_json::from_str(&text).unwrap();

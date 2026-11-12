@@ -145,7 +145,7 @@
     "blend_dropping"
   ],
   "ungraded": [
-    "continuity: SolidCraft computes it"
+    "continuity: Torno computes it"
   ],
   "what": "the long top edge of a block as wide as the cylinder it is joined to, rounded r2 alone (Tangent chain off): it ends where it runs on tangentially into the concave arc at the wall",
   "why_not": []

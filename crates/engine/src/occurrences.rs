@@ -1,6 +1,6 @@
 //! Exact placement identity and session view/authoring state.
 use crate::{EngineError, Result, Sel, Session, Visibility};
-use solidcraft_doc::{FeatureKind, IDENTITY, Mat, PlaneRef, mat_mul};
+use torno_doc::{FeatureKind, IDENTITY, Mat, PlaneRef, mat_mul};
 
 #[derive(Clone, Debug)]
 pub struct OccurrenceBody {
@@ -183,8 +183,8 @@ pub(crate) mod visibility_work {
 /// moves. The document and model are kept alive with the answers, so neither a new document nor
 /// a later allocation at the same address can reuse them.
 pub(crate) struct OccurrenceBodiesCache {
-    doc: std::sync::Arc<solidcraft_doc::Document>,
-    model: std::sync::Arc<solidcraft_doc::ModelState>,
+    doc: std::sync::Arc<torno_doc::Document>,
+    model: std::sync::Arc<torno_doc::ModelState>,
     pending_moves: std::collections::BTreeMap<u64, Mat>,
     pub(crate) bodies: std::collections::HashMap<(Vec<u64>, bool), std::sync::Arc<[String]>>,
 }
@@ -199,8 +199,8 @@ const OCCURRENCE_BODIES_CACHED: usize = 256;
 /// design (#7502). Pending moves change a placement's matrices but never its component or its
 /// bodies' names, so the index is keyed on the document and model alone.
 pub(crate) struct PlacementIndex {
-    doc: std::sync::Arc<solidcraft_doc::Document>,
-    state: std::sync::Arc<solidcraft_doc::ModelState>,
+    doc: std::sync::Arc<torno_doc::Document>,
+    state: std::sync::Arc<torno_doc::ModelState>,
     /// The index into `doc.occurrences` of each (parent component, occurrence id).
     by_parent_id: std::collections::HashMap<(u64, u64), usize>,
     /// The occurrence ids of each parent component's children, in document order.
@@ -214,10 +214,10 @@ pub(crate) struct PlacementIndex {
 }
 
 /// How many placement paths [`PlacementIndex`] names before it stops remembering more.
-const PLACEMENT_PATHS_CACHED: usize = solidcraft_doc::MAX_PLACEMENTS;
+const PLACEMENT_PATHS_CACHED: usize = torno_doc::MAX_PLACEMENTS;
 
 impl PlacementIndex {
-    fn new(doc: &std::sync::Arc<solidcraft_doc::Document>, state: &std::sync::Arc<solidcraft_doc::ModelState>) -> PlacementIndex {
+    fn new(doc: &std::sync::Arc<torno_doc::Document>, state: &std::sync::Arc<torno_doc::ModelState>) -> PlacementIndex {
         let mut by_parent_id = std::collections::HashMap::with_capacity(doc.occurrences.len());
         let mut children: std::collections::HashMap<u64, Vec<u64>> = std::collections::HashMap::new();
         for (i, o) in doc.occurrences.iter().enumerate() {
@@ -239,7 +239,7 @@ impl PlacementIndex {
         }
     }
 
-    fn matches(&self, session: &Session, model: &std::sync::Arc<solidcraft_doc::ModelState>) -> bool {
+    fn matches(&self, session: &Session, model: &std::sync::Arc<torno_doc::ModelState>) -> bool {
         std::sync::Arc::ptr_eq(&self.doc, &session.doc) && std::sync::Arc::ptr_eq(&self.state, model)
     }
 
@@ -248,7 +248,7 @@ impl PlacementIndex {
         if let Some(bodies) = self.placed.get(path) {
             return bodies.clone();
         }
-        let names = solidcraft_doc::WorldNames::new(&self.doc, &self.state);
+        let names = torno_doc::WorldNames::new(&self.doc, &self.state);
         let empty = Vec::new();
         let bodies: std::sync::Arc<[OccurrenceBody]> = self
             .bodies
@@ -265,7 +265,7 @@ impl PlacementIndex {
 }
 
 impl OccurrenceBodiesCache {
-    fn matches(&self, session: &Session, model: &std::sync::Arc<solidcraft_doc::ModelState>) -> bool {
+    fn matches(&self, session: &Session, model: &std::sync::Arc<torno_doc::ModelState>) -> bool {
         std::sync::Arc::ptr_eq(&self.doc, &session.doc) && std::sync::Arc::ptr_eq(&self.model, model) && self.pending_moves == session.pending_moves
     }
 }
@@ -284,12 +284,7 @@ impl Session {
     /// name, so Delete hits the body the user actually selected, never one that later takes
     /// the old name). Undo history restores visibility separately. Never parse display labels:
     /// ambiguous labels and names containing slashes use the document's canonical naming.
-    pub(crate) fn remap_hidden_bodies(
-        &mut self,
-        previous: &solidcraft_doc::Document,
-        state: &solidcraft_doc::ModelState,
-        rename: Option<(&str, &str)>,
-    ) {
+    pub(crate) fn remap_hidden_bodies(&mut self, previous: &torno_doc::Document, state: &torno_doc::ModelState, rename: Option<(&str, &str)>) {
         let selected: std::collections::BTreeSet<&str> = self.selection.iter().filter_map(|s| s.body_name()).collect();
         if self.visibility.hidden_bodies.is_empty() && selected.is_empty() {
             return;
@@ -312,7 +307,7 @@ impl Session {
         let hidden: std::collections::BTreeSet<_> = self.visibility.hidden_bodies.iter().map(String::as_str).collect();
         let mut names = std::collections::BTreeMap::new();
         let mut destinations = std::collections::BTreeSet::new();
-        let (before, after) = (solidcraft_doc::WorldNames::new(previous, state), solidcraft_doc::WorldNames::new(&self.doc, &renamed));
+        let (before, after) = (torno_doc::WorldNames::new(previous, state), torno_doc::WorldNames::new(&self.doc, &renamed));
         for (component, path, _) in previous.placements() {
             for body in state.bodies.iter().filter(|body| previous.model_body_component(body) == component) {
                 let old = before.name(&body.name, component, &path);
@@ -350,7 +345,7 @@ impl Session {
 
     /// Visibility keeps construction names, while undo history keeps feature ids. Follow the
     /// same axis or point into the new document on rename, undo and redo (#4419).
-    pub(crate) fn follow_axis_point_renames(&mut self, previous: &solidcraft_doc::Document) {
+    pub(crate) fn follow_axis_point_renames(&mut self, previous: &torno_doc::Document) {
         if self.visibility.hidden_origin.is_empty() {
             return;
         }
@@ -369,7 +364,7 @@ impl Session {
     }
 
     /// Document with uncaptured occurrence positions applied, without changing saved geometry.
-    pub fn placed_document(&self) -> std::borrow::Cow<'_, solidcraft_doc::Document> {
+    pub fn placed_document(&self) -> std::borrow::Cow<'_, torno_doc::Document> {
         if self.pending_moves.is_empty() {
             return std::borrow::Cow::Borrowed(&self.doc);
         }
@@ -395,7 +390,7 @@ impl Session {
     /// The document with the design's own uncaptured moves applied ([`Session::uncaptured_moves`]):
     /// [`Session::placed_document`] without the exploded view, for what reports the design's
     /// placements or works a new placement out from them.
-    pub fn design_document(&self) -> std::borrow::Cow<'_, solidcraft_doc::Document> {
+    pub fn design_document(&self) -> std::borrow::Cow<'_, torno_doc::Document> {
         let moves = self.uncaptured_moves();
         if moves.is_empty() {
             return std::borrow::Cow::Borrowed(&self.doc);
@@ -512,7 +507,7 @@ impl Session {
         }
         let leaf = self.doc.occurrences.iter().find(|o| Some(&o.id) == path.last()).ok_or_else(|| invalid("occurrence path has no leaf"))?;
         let state = self.model.state();
-        let names = solidcraft_doc::WorldNames::new(&self.doc, &state);
+        let names = torno_doc::WorldNames::new(&self.doc, &state);
         let bodies = state
             .bodies
             .iter()
@@ -822,7 +817,7 @@ impl Session {
                     && g.has_item(item)
                     // A hidden group hides the groups inside it.
                     && std::iter::successors(Some(g.id), |id| self.doc.browser_group(*id).and_then(|g| g.parent))
-                        .take(solidcraft_doc::MAX_GROUP_NESTING + 1)
+                        .take(torno_doc::MAX_GROUP_NESTING + 1)
                         .any(|id| self.folder_hidden(&format!("{scope}/g{id}")))
             })
     }
@@ -905,7 +900,7 @@ impl Session {
     fn bodies_hidden_by_parents(&self) -> std::collections::BTreeSet<String> {
         let st = self.model.state();
         let mut out = std::collections::BTreeSet::new();
-        let names = solidcraft_doc::WorldNames::new(&self.doc, &st);
+        let names = torno_doc::WorldNames::new(&self.doc, &st);
         for (component, path, _) in self.doc.placements() {
             let placement_hidden = !path.is_empty() && !self.occurrence_visible(&path);
             let scope = Self::folder_scope(&path);

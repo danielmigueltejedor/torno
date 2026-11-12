@@ -1,28 +1,28 @@
 use solidcore_record::Vec3;
-use solidcraft_geom::prelude::*;
-use solidcraft_geom::tess::EvaluateMesh as _;
-use solidcraft_kernel::{Body, BoolOp};
+use torno_geom::prelude::*;
+use torno_geom::tess::EvaluateMesh as _;
+use torno_kernel::{Body, BoolOp};
 
 use solidcore_tess::EvalSurface;
 use solidcore_tess::TessPlan;
-use solidcraft_viewport_gpu::{GpuError, PackedPlans, SHADER, TessGpu, VERTEX_STRIDE, open_headless};
+use torno_viewport_gpu::{GpuError, PackedPlans, SHADER, TessGpu, VERTEX_STRIDE, open_headless};
 
 /// The adapter policy this crate's GPU tests run under: the host's, from its environment.
-pub(crate) fn policy() -> solidcraft_viewport_gpu::select::Policy {
+pub(crate) fn policy() -> torno_viewport_gpu::select::Policy {
     crate::env::policy().unwrap_or_else(|e| panic!("{e}"))
 }
 
 /// The kernel's plan; the GPU evaluates it in solidcore-tess's form, made by the model.
-type GeomPlan = solidcraft_geom::tess::TessPlan;
+type GeomPlan = torno_geom::tess::TessPlan;
 
-/// `plan` as the model hands it to the GPU ([`solidcraft_engine::doc::gpu_plan`]).
+/// `plan` as the model hands it to the GPU ([`torno_engine::doc::gpu_plan`]).
 fn gpu_form(plan: &GeomPlan) -> TessPlan {
-    solidcraft_engine::doc::gpu_plan::gpu_plan(plan)
+    torno_engine::doc::gpu_plan::gpu_plan(plan)
 }
 
 /// The GPU, or `None` with a note when the machine has no adapter (CI runners without a GPU).
 /// A device that cannot build the pipeline fails the test: that is a shader the device rejects
-/// (as D3D12's FXC once did), not a missing GPU. `SOLIDCRAFT_REQUIRE_GPU=1` (the Windows CI job,
+/// (as D3D12's FXC once did), not a missing GPU. `TORNO_REQUIRE_GPU=1` (the Windows CI job,
 /// on the WARP software adapter) fails without an adapter too.
 fn gpu() -> Option<TessGpu> {
     match TessGpu::headless(crate::tests::policy()) {
@@ -31,7 +31,7 @@ fn gpu() -> Option<TessGpu> {
             Some(g)
         }
         Err(e @ GpuError::Pipeline(_)) => panic!("{e}"),
-        Err(e) if std::env::var_os("SOLIDCRAFT_REQUIRE_GPU").is_some() => panic!("a GPU is required here: {e}"),
+        Err(e) if std::env::var_os("TORNO_REQUIRE_GPU").is_some() => panic!("a GPU is required here: {e}"),
         Err(e) => {
             eprintln!("skipping the GPU comparison: {e}");
             None
@@ -58,7 +58,7 @@ fn a_pipeline_the_device_rejects_is_an_error_not_a_crash() {
     let (adapter, device, queue) = match open_headless(crate::tests::policy()) {
         Ok(d) => d,
         Err(e) => {
-            assert!(std::env::var_os("SOLIDCRAFT_REQUIRE_GPU").is_none(), "a GPU is required here: {e}");
+            assert!(std::env::var_os("TORNO_REQUIRE_GPU").is_none(), "a GPU is required here: {e}");
             eprintln!("skipping: {e}");
             return;
         }
@@ -73,8 +73,8 @@ fn a_pipeline_the_device_rejects_is_an_error_not_a_crash() {
     assert!(matches!(TessGpu::with_shader(name.clone(), device.clone(), queue.clone(), "fn main( {"), Err(GpuError::Pipeline(_))));
     // The same device then builds the real pipeline and evaluates on it.
     let gpu = ok(TessGpu::new(name, device, queue));
-    let body = ok(solidcraft_kernel::torus(Vec3::ZERO, 6.0, 1.5));
-    let plan = ok(body.mesh_plan(&solidcraft_kernel::MeshTolerance::chord(0.01)));
+    let body = ok(torno_kernel::torus(Vec3::ZERO, 6.0, 1.5));
+    let plan = ok(body.mesh_plan(&torno_kernel::MeshTolerance::chord(0.01)));
     assert_eq!(ok(gpu.evaluate(&gpu_form(&plan))).positions.len(), plan.evaluate_mesh().positions.len());
 }
 
@@ -86,7 +86,7 @@ fn a_pipeline_the_device_rejects_is_an_error_not_a_crash() {
 /// the CPU evaluates the GPU evaluates too.
 #[test]
 fn the_shader_takes_every_degree_the_cpu_evaluator_does() {
-    let slots = format!("const W: u32 = {}u;", solidcraft_geom::bspline::MAX_SPLINE_DEGREE + 1);
+    let slots = format!("const W: u32 = {}u;", torno_geom::bspline::MAX_SPLINE_DEGREE + 1);
     assert!(SHADER.contains(&slots), "tess.wgsl must declare `{slots}`");
 }
 
@@ -190,19 +190,19 @@ fn ok<T, E: std::fmt::Debug>(r: std::result::Result<T, E>) -> T {
 }
 
 fn bodies() -> Vec<(&'static str, Body)> {
-    let bx = ok(solidcraft_kernel::box_solid(Vec3::ZERO, Vec3::new(10.0, 10.0, 4.0)));
-    let pin = ok(solidcraft_kernel::cylinder(Vec3::new(5.0, 5.0, -1.0), Vec3::Z, 2.0, 6.0));
-    let cross = ok(solidcraft_kernel::cylinder(Vec3::new(5.0, -1.0, 2.0), Vec3::Y, 1.0, 12.0));
-    let cut = |a: &Body, b: &Body| ok(solidcraft_kernel::boolean(a, b, BoolOp::Cut)).unwrap_or_else(|| a.clone());
+    let bx = ok(torno_kernel::box_solid(Vec3::ZERO, Vec3::new(10.0, 10.0, 4.0)));
+    let pin = ok(torno_kernel::cylinder(Vec3::new(5.0, 5.0, -1.0), Vec3::Z, 2.0, 6.0));
+    let cross = ok(torno_kernel::cylinder(Vec3::new(5.0, -1.0, 2.0), Vec3::Y, 1.0, 12.0));
+    let cut = |a: &Body, b: &Body| ok(torno_kernel::boolean(a, b, BoolOp::Cut)).unwrap_or_else(|| a.clone());
     let edges = [Vec3::new(5.0, 0.0, 4.0), Vec3::new(10.0, 5.0, 4.0), Vec3::new(5.0, 10.0, 4.0), Vec3::new(0.0, 5.0, 4.0)];
     vec![
         ("box with a hole", cut(&bx, &pin)),
         ("cross hole", cut(&pin, &cross)),
-        ("torus", ok(solidcraft_kernel::torus(Vec3::ZERO, 6.0, 1.5))),
-        ("fillets", ok(solidcraft_kernel::fillet(&bx, &edges, 1.5))),
+        ("torus", ok(torno_kernel::torus(Vec3::ZERO, 6.0, 1.5))),
+        ("fillets", ok(torno_kernel::fillet(&bx, &edges, 1.5))),
         (
             "mirrored",
-            ok(solidcraft_kernel::transform_matrix(&pin, [[-1.0, 0.0, 0.0, 0.0], [0.0, 1.0, 0.0, 0.0], [0.0, 0.0, 1.0, 0.0], [3.0, 0.0, 1.0, 1.0]])),
+            ok(torno_kernel::transform_matrix(&pin, [[-1.0, 0.0, 0.0, 0.0], [0.0, 1.0, 0.0, 0.0], [0.0, 0.0, 1.0, 0.0], [3.0, 0.0, 1.0, 1.0]])),
         ),
     ]
 }
@@ -211,7 +211,7 @@ fn bodies() -> Vec<(&'static str, Body)> {
 fn gpu_evaluation_matches_the_cpu() {
     let Some(gpu) = gpu() else { return };
     for (name, body) in bodies() {
-        let plan = ok(body.mesh_plan(&solidcraft_kernel::MeshTolerance::chord(0.01)));
+        let plan = ok(body.mesh_plan(&torno_kernel::MeshTolerance::chord(0.01)));
         let cpu = plan.evaluate_mesh();
         let got = ok(gpu.evaluate(&gpu_form(&plan)));
         assert_eq!(got.triangles, cpu.triangles, "{name}");
@@ -241,7 +241,7 @@ fn gpu_evaluation_matches_the_cpu() {
 fn a_resident_mesh_matches_the_cpu() {
     let Some(gpu) = gpu() else { return };
     for (name, body) in bodies() {
-        let plan = ok(body.mesh_plan(&solidcraft_kernel::MeshTolerance { chord: 0.01, angle: Some(std::f64::consts::PI / 9.0) }));
+        let plan = ok(body.mesh_plan(&torno_kernel::MeshTolerance { chord: 0.01, angle: Some(std::f64::consts::PI / 9.0) }));
         let cpu = plan.evaluate_mesh();
         let mesh = ok(gpu.prepare(&gpu_form(&plan)));
         assert_eq!(mesh.vertex_count as usize, cpu.positions.len(), "{name}");
@@ -284,7 +284,7 @@ fn a_scene_in_one_dispatch_matches_each_body_on_the_cpu() {
     let Some(gpu) = gpu() else { return };
     let plans: Vec<GeomPlan> = bodies()
         .iter()
-        .map(|(_, b)| ok(b.mesh_plan(&solidcraft_kernel::MeshTolerance { chord: 0.01, angle: Some(std::f64::consts::PI / 9.0) })))
+        .map(|(_, b)| ok(b.mesh_plan(&torno_kernel::MeshTolerance { chord: 0.01, angle: Some(std::f64::consts::PI / 9.0) })))
         .collect();
     let gpu_plans: Vec<TessPlan> = plans.iter().map(gpu_form).collect();
     let refs: Vec<&TessPlan> = gpu_plans.iter().collect();
@@ -319,7 +319,7 @@ fn a_scene_in_one_dispatch_matches_each_body_on_the_cpu() {
 }
 
 /// Display meshing of a 400-hole plate (#303's benchmark): reference mesher, plan, CPU and GPU
-/// evaluation. `cargo test --release -p solidcraft-gpu bench_plate -- --ignored --nocapture`.
+/// evaluation. `cargo test --release -p torno-gpu bench_plate -- --ignored --nocapture`.
 #[test]
 #[ignore]
 fn bench_plate() {
@@ -338,7 +338,7 @@ fn bench_plate() {
             Loop2 { segs: vec![Seg2::Arc { center: c, radius: 3.0, start: 0.0, sweep: -std::f64::consts::TAU }] }
         })
         .collect();
-    let plate = ok(solidcraft_kernel::extrude(&Plane::XY, &[Region2 { outer: rect(200.0), holes }], 0.0, 5.0)).remove(0);
+    let plate = ok(torno_kernel::extrude(&Plane::XY, &[Region2 { outer: rect(200.0), holes }], 0.0, 5.0)).remove(0);
     let gpu = gpu();
     let ms = |t: std::time::Instant| t.elapsed().as_secs_f64() * 1e3;
     let median = |mut v: Vec<f64>| {
@@ -352,11 +352,11 @@ fn bench_plate() {
         let (mut nr, mut np) = (0, 0);
         for _ in 0..5 {
             let t = std::time::Instant::now();
-            let m = ok(plate.mesh(&solidcraft_kernel::MeshTolerance::chord(tol)));
+            let m = ok(plate.mesh(&torno_kernel::MeshTolerance::chord(tol)));
             r.push(ms(t));
             nr = m.triangles.len();
             let t = std::time::Instant::now();
-            let plan = ok(plate.mesh_plan(&solidcraft_kernel::MeshTolerance::chord(tol)));
+            let plan = ok(plate.mesh_plan(&torno_kernel::MeshTolerance::chord(tol)));
             p.push(ms(t));
             let t = std::time::Instant::now();
             let m = plan.evaluate_mesh();
@@ -376,7 +376,7 @@ fn bench_plate() {
 /// Plans that use every packed field: a plane face with a pinned node, a flipped rational NURBS
 /// face closed along u, and a revolved face with its parameters swapped under a mirroring transform.
 fn synthetic_plans() -> Vec<GeomPlan> {
-    use solidcraft_geom::tess::{EvalCurve, EvalSurface, FacePlan, to_kernel};
+    use torno_geom::tess::{EvalCurve, EvalSurface, FacePlan, to_kernel};
     let plane = EvalSurface::Plane {
         origin: to_kernel(Vec3::new(1.0, 2.0, 3.0)),
         du: to_kernel(Vec3::new(0.5, 0.0, 0.0)),
@@ -454,7 +454,7 @@ fn packed_digest(plans: &[&TessPlan]) -> u64 {
 /// x86-64 and arm64, so real bodies are only required to pack, and to pack the same way twice.
 #[test]
 fn plans_pack_to_the_same_bytes() {
-    let tol = solidcraft_kernel::MeshTolerance::chord(0.05);
+    let tol = torno_kernel::MeshTolerance::chord(0.05);
     let real: Vec<TessPlan> = bodies().into_iter().map(|(_, b)| gpu_form(&ok(b.mesh_plan(&tol)))).collect();
     for plan in &real {
         assert_eq!(packed_digest(&[plan]), packed_digest(&[plan]), "packing a plan twice gives the same bytes");

@@ -111,9 +111,9 @@ fn variant_schema(_: &mut SchemaGenerator) -> Schema {
 #[serde(default, deny_unknown_fields)]
 pub struct CpuQuality {
     #[schemars(schema_with = "budget_schema")]
-    pub minimum_budget: solidcraft_render::job::CpuBudget,
+    pub minimum_budget: torno_render::job::CpuBudget,
     #[schemars(schema_with = "adaptive_schema")]
-    pub adaptive: Option<solidcraft_render::job::adaptive::AdaptiveSampling>,
+    pub adaptive: Option<torno_render::job::adaptive::AdaptiveSampling>,
 }
 fn budget_schema(_: &mut SchemaGenerator) -> Schema {
     json_schema!({"type":"string","enum":["compact","studio","workstation"]})
@@ -156,7 +156,7 @@ pub struct CpuQualityPlan {
 pub struct CpuQualityOptions {
     pub progressive: CpuProgressive,
     #[schemars(schema_with = "budget_schema")]
-    pub budget: solidcraft_render::job::CpuBudget,
+    pub budget: torno_render::job::CpuBudget,
 }
 #[derive(Serialize, JsonSchema)]
 pub struct CpuProgressive {
@@ -166,9 +166,9 @@ pub struct CpuProgressive {
 #[derive(Serialize, JsonSchema)]
 pub struct CpuQualityContext {
     #[schemars(schema_with = "budget_schema")]
-    pub minimum_budget: solidcraft_render::job::CpuBudget,
+    pub minimum_budget: torno_render::job::CpuBudget,
     #[schemars(schema_with = "adaptive_schema")]
-    pub adaptive: Option<solidcraft_render::job::adaptive::AdaptiveSampling>,
+    pub adaptive: Option<torno_render::job::adaptive::AdaptiveSampling>,
 }
 
 /// What `render.preset.resolve` and `render.preset.apply` return: the fitted studio.

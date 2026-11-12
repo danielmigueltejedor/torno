@@ -1,5 +1,5 @@
 //! Whether a NURBS surface or curve lies on a sphere, certified on its control points: the
-//! certificate a ball patch's net and loop are read with (#2357; the SolidCraft fork's
+//! certificate a ball patch's net and loop are read with (#2357; the Torno fork's
 //! `SmBallPatch::IsOnSphere`, efb8007, whose tolerance this does not keep).
 //!
 //! A rational B-spline with homogeneous control points `(H, W)` lies on the sphere of centre

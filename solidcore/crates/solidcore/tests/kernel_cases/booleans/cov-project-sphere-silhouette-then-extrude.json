@@ -77,6 +77,6 @@
   "ungraded": [],
   "what": "a sphere's silhouette projected onto a plane below it and extruded: the outline is its equator circle, exactly",
   "why_not": [
-    "body \"Body1\" is no kernel operation's output nor an operand: SolidCraft built it or changed the kernel's record"
+    "body \"Body1\" is no kernel operation's output nor an operand: Torno built it or changed the kernel's record"
   ]
 }

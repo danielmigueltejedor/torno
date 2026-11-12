@@ -4,7 +4,7 @@ use crate::{icons, type_face::RichTextExt as _};
 use egui::{Color32, FontId, Rect, Response, Sense, Stroke, Ui, pos2, vec2};
 use serde::Serialize;
 use serde_json::Value;
-use solidcraft_theme::Tokens;
+use torno_theme::Tokens;
 
 /// One menu entry: a command id (run with `params` when given, else started like a toolbar
 /// click) or a `ui.*` action. `-` is a separator, `#…` a section heading.
@@ -306,7 +306,7 @@ impl Menu {
         let t = Tokens::get();
         let (r, _) = ui.allocate_exact_size(vec2(ui.available_width(), t.space_24), Sense::hover());
         let mut job = egui::text::LayoutJob::simple_singleline(
-            solidcraft_ui_text::tr_label(label).to_uppercase(),
+            torno_ui_text::tr_label(label).to_uppercase(),
             crate::type_face::semibold(t.font_small),
             t.form_dim,
         );
@@ -402,8 +402,7 @@ impl<'a> MenuItem<'a> {
         // Areas first measure intrinsic content. Filling their provisional available
         // width would make a flipped submenu cover its parent and consume the opening click.
         let width = if ui.is_sizing_pass() {
-            let label =
-                ui.painter().layout_no_wrap(solidcraft_ui_text::tr_label(self.label).to_string(), FontId::proportional(t.font_label), t.form_ink);
+            let label = ui.painter().layout_no_wrap(torno_ui_text::tr_label(self.label).to_string(), FontId::proportional(t.font_label), t.form_ink);
             let shortcut = ui.painter().layout_no_wrap(self.shortcut.to_string(), FontId::monospace(t.font_small), t.form_dim);
             let trailing = if self.submenu { t.space_16 } else { 0.0 };
             (t.control_height + t.space_2 + label.size().x + shortcut.size().x + t.space_24 + trailing).min(ui.available_width())
@@ -459,7 +458,7 @@ impl<'a> MenuItem<'a> {
                 icons::paint_icon(&painter, icon, self.icon, 1.0);
             }
         }
-        let label = solidcraft_ui_text::tr_label(self.label);
+        let label = torno_ui_text::tr_label(self.label);
         let mut right = r.right() - t.space_8 - trailing;
         if self.submenu {
             let c = pos2(right - t.space_4, r.center().y);
@@ -470,7 +469,7 @@ impl<'a> MenuItem<'a> {
             right -= t.space_16;
         }
         if !self.shortcut.is_empty() {
-            let key = painter.layout_no_wrap(solidcraft_ui_text::tr_label(self.shortcut).to_string(), FontId::monospace(t.font_small), dim);
+            let key = painter.layout_no_wrap(torno_ui_text::tr_label(self.shortcut).to_string(), FontId::monospace(t.font_small), dim);
             painter.galley(pos2(right - key.size().x, r.center().y - key.size().y / 2.0), key.clone(), dim);
             right -= key.size().x + t.space_8;
         }
@@ -481,7 +480,7 @@ impl<'a> MenuItem<'a> {
         let galley = painter.layout_job(job);
         painter.galley(pos2(left, r.center().y - galley.size().y / 2.0), galley, ink);
         response.widget_info(|| egui::WidgetInfo::labeled(egui::Role::Button, enabled, label));
-        solidcraft_ui_registry::publish_target(&format!("menu:{}", self.id), r);
+        torno_ui_registry::publish_target(&format!("menu:{}", self.id), r);
         if enabled && response.hovered() {
             ui.ctx().set_cursor_icon(egui::CursorIcon::PointingHand);
         }
@@ -533,7 +532,7 @@ pub struct WorkspaceStyle {
     pub slug: &'static str,
     pub description: &'static str,
     pub tabs: Option<&'static str>,
-    pub ramp: Option<solidcraft_theme::AccentRamp>,
+    pub ramp: Option<torno_theme::AccentRamp>,
 }
 
 /// The host's workspace menu: its entries, how each is shown (an entry without a style is not
@@ -553,8 +552,8 @@ pub fn workspace_menu(ui: &mut egui::Ui, menu: &WorkspaceMenu<'_>, key_row: Opti
         ui.spacing_mut().item_spacing.y = 0.0;
         ui.add_space(t.space_4);
         ui.label(
-            egui::RichText::new(solidcraft_ui_text::tr("ui.ribbon_workspace").to_uppercase())
-                .size(solidcraft_theme::Tokens::get().font_small)
+            egui::RichText::new(torno_ui_text::tr("ui.ribbon_workspace").to_uppercase())
+                .size(torno_theme::Tokens::get().font_small)
                 .semibold()
                 .color(t.text_dim),
         );
@@ -566,7 +565,7 @@ pub fn workspace_menu(ui: &mut egui::Ui, menu: &WorkspaceMenu<'_>, key_row: Opti
                 let current = item.shortcut == "current";
                 let (accent, soft) = match ramp.filter(|_| !planned) {
                     Some(ramp) => {
-                        let accent = solidcraft_theme::TabAccent::for_ramp(&t, ramp);
+                        let accent = torno_theme::TabAccent::for_ramp(&t, ramp);
                         (accent.color, accent.soft)
                     }
                     None => {
@@ -579,7 +578,7 @@ pub fn workspace_menu(ui: &mut egui::Ui, menu: &WorkspaceMenu<'_>, key_row: Opti
                     if item.enabled { Sense::click() } else { Sense::hover() },
                 );
                 for handle in [format!("menu:{}", item.id), format!("workspace:menu:{slug}")] {
-                    solidcraft_ui_registry::publish_target(&handle, r);
+                    torno_ui_registry::publish_target(&handle, r);
                 }
                 if current || (item.enabled && (resp.hovered() || key_row == Some(k))) {
                     ui.painter().rect_filled(r, t.control_radius.saturating_sub(1), soft);
@@ -598,18 +597,17 @@ pub fn workspace_menu(ui: &mut egui::Ui, menu: &WorkspaceMenu<'_>, key_row: Opti
                     icons::paint_icon(ui.painter(), tile.shrink(t.space_6 + 1.0), &item.icon, if item.enabled { 1.0 } else { 0.35 });
                 }
                 let text = if item.enabled { t.text } else { t.text_dim };
-                let name = solidcraft_ui_text::tr_label(&item.label);
+                let name = torno_ui_text::tr_label(&item.label);
                 let x = r.left() + 74.0;
                 let y = r.top() + 17.0;
-                let galley =
-                    egui::WidgetText::from(egui::RichText::new(name).semibold().size(solidcraft_theme::Tokens::get().font_heading).color(text))
-                        .into_galley(ui, Some(egui::TextWrapMode::Extend), f32::INFINITY, egui::TextStyle::Button);
+                let galley = egui::WidgetText::from(egui::RichText::new(name).semibold().size(torno_theme::Tokens::get().font_heading).color(text))
+                    .into_galley(ui, Some(egui::TextWrapMode::Extend), f32::INFINITY, egui::TextStyle::Button);
                 let badge_x = x + galley.size().x + 9.0;
                 let origin = pos2(x, y - galley.size().y / 2.0);
                 let ppp = ui.ctx().pixels_per_point().max(0.5);
                 let origin = pos2((origin.x * ppp).round() / ppp, (origin.y * ppp).round() / ppp);
                 ui.painter().galley(origin, galley, text);
-                let badge = solidcraft_ui_text::tr(if planned {
+                let badge = torno_ui_text::tr(if planned {
                     "ui.workspace_planned"
                 } else if current {
                     "ui.workspace_current"
@@ -618,29 +616,25 @@ pub fn workspace_menu(ui: &mut egui::Ui, menu: &WorkspaceMenu<'_>, key_row: Opti
                 });
                 let badge = ui.painter().layout_no_wrap(
                     badge.to_string(),
-                    FontId::proportional(solidcraft_theme::Tokens::get().font_small),
+                    FontId::proportional(torno_theme::Tokens::get().font_small),
                     if current { t.on_accent } else { accent },
                 );
                 let badge_rect = Rect::from_min_size(pos2(badge_x, y - 8.0), badge.size() + vec2(t.space_12, t.space_3));
                 ui.painter().rect_filled(badge_rect, t.radius_lg, if current { accent } else { soft });
                 ui.painter().galley(badge_rect.min + vec2(t.space_6, t.space_3 / 2.0), badge, accent);
                 let line = |content: String, y: f32| {
-                    let mut job =
-                        egui::text::LayoutJob::simple_singleline(content, FontId::proportional(solidcraft_theme::Tokens::get().font_body), text);
+                    let mut job = egui::text::LayoutJob::simple_singleline(content, FontId::proportional(torno_theme::Tokens::get().font_body), text);
                     job.wrap.max_width = r.right() - x - 6.0;
                     job.wrap.max_rows = 1;
                     job.wrap.break_anywhere = false;
                     let galley = ui.painter().layout_job(job);
                     ui.painter().galley(pos2(x, y), galley, text);
                 };
-                line(solidcraft_ui_text::tr(description).to_string(), r.top() + 29.0);
+                line(torno_ui_text::tr(description).to_string(), r.top() + 29.0);
                 if let Some(tabs) = tabs {
                     // Translate each tab even when this composed message falls back to English.
-                    let labels = solidcraft_ui_text::tr(tabs)
-                        .split('·')
-                        .map(|label| solidcraft_ui_text::tr_label(label.trim()))
-                        .collect::<Vec<_>>()
-                        .join(" · ");
+                    let labels =
+                        torno_ui_text::tr(tabs).split('·').map(|label| torno_ui_text::tr_label(label.trim())).collect::<Vec<_>>().join(" · ");
                     line(labels, r.top() + 47.0);
                 }
                 resp.widget_info(|| egui::WidgetInfo::labeled(egui::Role::Button, item.enabled, name));
@@ -652,7 +646,7 @@ pub fn workspace_menu(ui: &mut egui::Ui, menu: &WorkspaceMenu<'_>, key_row: Opti
         ui.add_space(t.space_6);
         ui.separator();
         ui.add_space(t.space_6);
-        ui.add(egui::Label::new(egui::RichText::new(menu.footer).size(solidcraft_theme::Tokens::get().font_small).color(t.text_dim)).wrap());
+        ui.add(egui::Label::new(egui::RichText::new(menu.footer).size(torno_theme::Tokens::get().font_small).color(t.text_dim)).wrap());
         ui.add_space(t.space_4);
     });
     picked
@@ -668,7 +662,7 @@ pub fn rename_menu(ui: &mut Ui, value: &mut String, focused: &mut bool) -> Optio
             let id = egui::Id::unique("sc_rename_text");
             let response = ui.add(super::fields::text_input(egui::TextEdit::singleline(value).id(id)).desired_width(ui.available_width()));
             t.input_bevel(ui, &response);
-            solidcraft_ui_registry::publish_target("rename:name", response.rect);
+            torno_ui_registry::publish_target("rename:name", response.rect);
             if !*focused {
                 if let Some(mut state) = egui::TextEdit::load_state(ui.ctx(), id) {
                     state.cursor.set_char_range(Some(egui::text::CCursorRange::two(

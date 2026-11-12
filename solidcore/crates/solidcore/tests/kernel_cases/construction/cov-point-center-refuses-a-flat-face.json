@@ -32,6 +32,6 @@
   "ungraded": [],
   "what": "the centre of a flat face",
   "why_not": [
-    "the failure is SolidCraft's, not a kernel operation's: step 2 (construct.point.center): the face is not a sphere or torus"
+    "the failure is Torno's, not a kernel operation's: step 2 (construct.point.center): the face is not a sphere or torus"
   ]
 }

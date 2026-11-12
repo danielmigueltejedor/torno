@@ -32,6 +32,6 @@
   "ungraded": [],
   "what": "the centre of mass of a body that is not there",
   "why_not": [
-    "the failure is SolidCraft's, not a kernel operation's: step 2 (inspect.center_of_mass): invalid parameters for `inspect.center_of_mass`: no such bodies"
+    "the failure is Torno's, not a kernel operation's: step 2 (inspect.center_of_mass): invalid parameters for `inspect.center_of_mass`: no such bodies"
   ]
 }

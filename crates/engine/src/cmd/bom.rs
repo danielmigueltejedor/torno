@@ -1,7 +1,7 @@
 //! Part properties and the bill of materials. `component.metadata` and
 //! `component.metadata.set` read and change a component definition's part number, description,
 //! revision and free properties (shared by every occurrence, saved with the component; the keys
-//! and their checks are `solidcraft_doc::metadata`'s `KEYS`, the rows a component takes);
+//! and their checks are `torno_doc::metadata`'s `KEYS`, the rows a component takes);
 //! `assembly.bom` counts the placed components of the design, or of one component, and lists
 //! them as rows, optionally written to a CSV or JSON file. With `group_children`, a part with a
 //! part number keeps the parts placed inside it (a bolt's washers and nut) in its own row.
@@ -14,8 +14,8 @@
 use std::collections::{BTreeMap, HashSet};
 
 use serde_json::{Value, json};
-use solidcraft_doc::BomType;
-use solidcraft_doc::metadata::{BOM_KEYS, BOM_TYPE, DESCRIPTION, MAX_KEYS, Owner, PART_NUMBER, REVISION, check_text, key_list};
+use torno_doc::BomType;
+use torno_doc::metadata::{BOM_KEYS, BOM_TYPE, DESCRIPTION, MAX_KEYS, Owner, PART_NUMBER, REVISION, check_text, key_list};
 
 use super::CommandSpec;
 use crate::params::{bad, str_};
@@ -48,7 +48,7 @@ pub static COMMANDS: &[CommandSpec] = &[
         .params(
             "component: id or name (not the root: use document.metadata.set); part_number?, description?, revision?: text (empty or null \
          removes); bom_type?: normal|phantom|reference|purchased|inseparable (empty or null: normal); values?: {key: value} \
-         (SolidCraft's keys, as document.metadata's properties lists them, bom_type, or a reverse-DNS key holding an object); \
+         (Torno's keys, as document.metadata's properties lists them, bom_type, or a reverse-DNS key holding an object); \
          properties?: {name: text, …} (free properties; empty or null removes). All or nothing, one undo step → component, \
          metadata, properties, changed: [keys]",
         ),
@@ -130,7 +130,7 @@ fn property(name: &str, value: &Value, cmd: &str) -> Result<Option<String>> {
         Value::Bool(b) => b.to_string(),
         _ => return Err(bad(cmd, format!("property `{shown}` takes text"))),
     };
-    // The same text rule as SolidCraft's keys.
+    // The same text rule as Torno's keys.
     check_text(&format!("property `{shown}`"), &text).map_err(|e| bad(cmd, e.to_string()))?;
     Ok(Some(text))
 }
@@ -424,7 +424,7 @@ fn rows(s: &Session, ix: &Index, counts: &BTreeMap<u64, u64>, group: Group, kits
 /// The bill of materials as CSV: fixed columns, every field quoted, and a field a spreadsheet
 /// would run as a formula written as text.
 fn csv(rows: &[Value]) -> String {
-    let quote = solidcraft_doc::csv::quoted;
+    let quote = torno_doc::csv::quoted;
     let mut out = ["item", "part_number", "description", "revision", "count", "definition"].map(quote).join(",");
     out.push('\n');
     let lines = rows.iter().flat_map(|r| std::iter::once(r).chain(r["children"].as_array().into_iter().flatten()));
@@ -527,7 +527,7 @@ fn bom(s: &mut Session, p: &Value) -> Result<Value> {
             "json" => serde_json::to_string_pretty(&json!({"rows": rows, "total_occurrences": total})).map_err(|e| bad(cmd, e.to_string()))?,
             other => return Err(bad(cmd, format!("unknown format `{other}` (csv or json)"))),
         };
-        solidcraft_io::vfs::write(path, text.as_bytes()).map_err(|e| EngineError::Other(format!("{path}: {e}")))?;
+        torno_io::vfs::write(path, text.as_bytes()).map_err(|e| EngineError::Other(format!("{path}: {e}")))?;
         out.path = Some(path.to_string());
         out.format = Some(format);
     }

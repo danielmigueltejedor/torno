@@ -4,12 +4,12 @@
 //! A round origin's end is kept by the name of the face across the rim at that end, so it is the
 //! same end after the design changes; an x reference keeps the origin's turn about its axis.
 
-use solidcraft_geom::prelude::*;
 use std::collections::{BTreeMap, BTreeSet};
+use torno_geom::prelude::*;
 
 use solidcore_record::{Loop2, Plane, Vec2, Vec3};
-use solidcraft_geom::{Mesh, Ring};
-use solidcraft_kernel::CylinderFace;
+use torno_geom::{Mesh, Ring};
+use torno_kernel::CylinderFace;
 
 use super::{Snap, XRef, component_bodies};
 use crate::history_names::Match;
@@ -69,7 +69,7 @@ impl NamedFace<'_> {
 
     /// The face as a cylinder, in the body's own coordinates (`None`: not a cylinder).
     fn own_cylinder(&self) -> Option<CylinderFace> {
-        solidcraft_kernel::cylinder_face(&self.body.body, &self.body.mesh(), self.face)
+        torno_kernel::cylinder_face(&self.body.body, &self.body.mesh(), self.face)
     }
 
     /// The face as a cylinder, in the component's coordinates.
@@ -207,7 +207,7 @@ fn nearer_end(c: &CylinderFace, pick: Vec3) -> (f64, f64) {
 fn end_by_pick(nf: &NamedFace, own: &CylinderFace) -> (f64, f64) {
     let pick = nf.local(nf.point);
     let [start, end] = ends(own);
-    match solidcraft_kernel::cylinder_face_at(&nf.body.body, pick).filter(|k| k.axis.dot(own.axis).abs() > 0.5) {
+    match torno_kernel::cylinder_face_at(&nf.body.body, pick).filter(|k| k.axis.dot(own.axis).abs() > 0.5) {
         Some(k) => {
             let s = (pick - k.axis_point).dot(k.axis);
             let out = if (s - k.start).abs() <= (k.end - s).abs() { -k.axis } else { k.axis };
@@ -309,10 +309,10 @@ pub fn face_name_at(doc: &Document, st: &ModelState, component: u64, pick: Vec3,
             continue;
         }
         for (f, d) in near.into_iter().filter(|(_, d)| *d <= nearest + tol) {
-            let (off, cylinder) = match solidcraft_kernel::face_surface(&b.body, f) {
-                Some(solidcraft_kernel::FaceSurface::Plane { normal, point }) => (d.min((p - point).dot(normal).abs()), false),
-                Some(solidcraft_kernel::FaceSurface::Cylinder { .. }) => {
-                    (solidcraft_kernel::cylinder_face(&b.body, &mesh, f).map_or(d, |c| d.min(c.off(p))), true)
+            let (off, cylinder) = match torno_kernel::face_surface(&b.body, f) {
+                Some(torno_kernel::FaceSurface::Plane { normal, point }) => (d.min((p - point).dot(normal).abs()), false),
+                Some(torno_kernel::FaceSurface::Cylinder { .. }) => {
+                    (torno_kernel::cylinder_face(&b.body, &mesh, f).map_or(d, |c| d.min(c.off(p))), true)
                 }
                 _ => (d, false),
             };
@@ -340,7 +340,7 @@ pub fn round_end_at(doc: &Document, st: &ModelState, component: u64, centre: Vec
         let mesh = b.mesh();
         let tol = (b.body.size() * 1e-3).max(1e-3);
         for f in 0..b.body.face_count() {
-            let Some(c) = solidcraft_kernel::cylinder_face(&b.body, &mesh, f) else { continue };
+            let Some(c) = torno_kernel::cylinder_face(&b.body, &mesh, f) else { continue };
             let v = p - c.axis_point;
             let along = v.dot(c.axis);
             for (at, _) in ends(&c) {

@@ -70,7 +70,7 @@ the selected body (or the last body of the active component).
   them unless the edit changes `body_name`.
 
 Every built-in profile is Torno's own parametric definition, built in code
-(`solidcraft_doc::frame`). Torno ships no vendor's or standard's size table: you give the
+(`torno_doc::frame`). Torno ships no vendor's or standard's size table: you give the
 dimensions of the stock you buy. Any other section, a vendor's aluminium extrusion for example, comes
 from a sketch: draw it or insert the vendor's DXF.
 

@@ -1,8 +1,8 @@
 //! Partial planar contact must sew a solid without displacing or inventing material.
 use crate::*;
 use solidcore_record::Vec3;
-use solidcraft_geom::prelude::*;
 use std::f64::consts::PI;
+use torno_geom::prelude::*;
 
 #[test]
 fn split_contact_arc_crossing_one_edge_twice_preserves_the_body() {

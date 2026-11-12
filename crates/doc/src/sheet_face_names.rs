@@ -6,7 +6,7 @@
 //! say what each face is and stay with it when sizes change or other flanges come and go.
 
 use solidcore_record::{Plane, Vec2, Vec3};
-use solidcraft_geom::prelude::*;
+use torno_geom::prelude::*;
 
 use super::SheetBody;
 use crate::{ModelBody, ModelState, apply_point, mat_inverse};

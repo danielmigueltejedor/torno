@@ -5,8 +5,8 @@ pub(crate) mod batch_payload;
 
 use crate::{Result, Session, cmd::PreparedCapture};
 use serde_json::{Value, json};
-use solidcraft_render::job::CancelToken;
 use std::{collections::BTreeMap, sync::Arc};
+use torno_render::job::CancelToken;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Kind {
@@ -49,7 +49,7 @@ fn prepare_with_metadata(
     kind: Kind,
     params: Value,
     cancel: CancelToken,
-    retained: Option<&solidcraft_render::job::RetainedMetadata>,
+    retained: Option<&torno_render::job::RetainedMetadata>,
 ) -> Result<Prepared> {
     cancel.check().map_err(crate::render_jobs::job_error)?;
     let params = if params.is_null() { Value::Object(Default::default()) } else { params };
@@ -80,15 +80,15 @@ fn validate_command_id(session: &Session, id: &str, params: &Value) -> Result<()
     session.check_command(spec, params)
 }
 
-fn submission(capture: &PreparedCapture) -> Result<&solidcraft_render::job::PreparedSubmission> {
+fn submission(capture: &PreparedCapture) -> Result<&torno_render::job::PreparedSubmission> {
     capture.submission.as_ref().ok_or_else(|| crate::EngineError::Other("prepared render was already consumed".into()))
 }
 
-fn same_moves(a: &BTreeMap<u64, solidcraft_doc::Mat>, b: &BTreeMap<u64, solidcraft_doc::Mat>) -> bool {
+fn same_moves(a: &BTreeMap<u64, torno_doc::Mat>, b: &BTreeMap<u64, torno_doc::Mat>) -> bool {
     a.len() == b.len()
         && a.iter().zip(b).all(|((ka, a), (kb, b))| ka == kb && a.iter().flatten().zip(b.iter().flatten()).all(|(a, b)| a.to_bits() == b.to_bits()))
 }
-fn camera_bits(camera: Option<solidcraft_viewport::Camera>) -> Option<(solidcraft_viewport::UpAxis, [u64; 8])> {
+fn camera_bits(camera: Option<torno_viewport::Camera>) -> Option<(torno_viewport::UpAxis, [u64; 8])> {
     camera.map(|camera| {
         (
             camera.up,

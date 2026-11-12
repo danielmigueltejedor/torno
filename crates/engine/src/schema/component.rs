@@ -8,7 +8,7 @@ use serde::de::Error as _;
 use serde::{Deserialize, Deserializer, Serialize};
 use serde_json::{Value, json};
 use solidcore_record::Vec3;
-use solidcraft_doc::Occurrence;
+use torno_doc::Occurrence;
 
 use super::check::{located, whole};
 use super::component_link::{ComponentRef, component_key, require};
@@ -19,7 +19,7 @@ use crate::params;
 /// tab of its own, with the rest of the assembly drawn faded around it as the placement `path`
 /// puts it; `component.finish_edit` goes back. It fails when the component is not linked, the
 /// assembly has no file yet, something is open or running in it, or the linked file is missing,
-/// on a network location not allowed yet or open in another SolidCraft. Asked while the
+/// on a network location not allowed yet or open in another Torno. Asked while the
 /// assembly's agent is in its turn, the part opens once the turn ends (`queued`). Outside the
 /// window it only checks the component and the placement.
 #[derive(Debug, Deserialize, JsonSchema)]
@@ -1352,7 +1352,7 @@ impl JsonSchema for MatrixTolerance {
 /// drag passes it, in the layout of a placement's `transform` (4 columns of 4 numbers): finite,
 /// affine (the fourth number of the first three columns is 0, of the last 1) and invertible.
 #[derive(Clone, Debug, PartialEq)]
-pub struct BaseTransform(pub solidcraft_doc::Mat);
+pub struct BaseTransform(pub torno_doc::Mat);
 
 impl<'de> Deserialize<'de> for BaseTransform {
     fn deserialize<D: Deserializer<'de>>(d: D) -> Result<Self, D::Error> {

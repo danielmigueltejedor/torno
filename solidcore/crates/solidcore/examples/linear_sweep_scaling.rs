@@ -2,7 +2,7 @@
 //! side-face count. The profile is a regular N-gon of line segments, or (`holes`) a square
 //! outline with N/4 square holes; both make one body of about N side faces.
 //! Run: `cargo run --release -p solidcore --example linear_sweep_scaling -- [holes] [all] 250 1000 4000`
-//! (`all`: every `UpstreamFixes` flag on, as SolidCraft runs).
+//! (`all`: every `UpstreamFixes` flag on, as Torno runs).
 use solidcore::curve::curve::Curve;
 use solidcore::kernel::{Kernel, KernelOptions, UpstreamFixes};
 use solidcore::primitive::api_curves::create_line_segment;

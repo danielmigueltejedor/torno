@@ -47,7 +47,7 @@ fn smlib_validity(body: &Body) -> Option<SmlibCheck> {
             return Some(if e.contains("not supported yet") { SmlibCheck::NotSupported(e) } else { SmlibCheck::Invalid(e) });
         }
     };
-    Some(match b.check(solidcraft_smlib::CheckLevel::All) {
+    Some(match b.check(torno_smlib::CheckLevel::All) {
         Ok(r) if r.is_valid() => SmlibCheck::Valid,
         Ok(r) => SmlibCheck::Invalid(format!("SMLib check: {r}")),
         Err(e) => SmlibCheck::Invalid(format!("SMLib check: {e}")),
@@ -55,8 +55,8 @@ fn smlib_validity(body: &Body) -> Option<SmlibCheck> {
 }
 
 /// Where every kernel call that fails from now on leaves its inputs for replay
-/// (`solidcraft_smlib::set_dump_dir`: the call and its B-reps, which `Brep::read` reads back);
+/// (`torno_smlib::set_dump_dir`: the call and its B-reps, which `Brep::read` reads back);
 /// `None` stops it.
 pub fn smlib_dump_dir(dir: Option<&std::path::Path>) {
-    solidcraft_smlib::set_dump_dir(dir);
+    torno_smlib::set_dump_dir(dir);
 }

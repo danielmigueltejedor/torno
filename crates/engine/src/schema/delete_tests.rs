@@ -186,7 +186,7 @@ fn png() -> String {
     b.extend(400u32.to_be_bytes());
     b.extend(200u32.to_be_bytes());
     b.extend([8, 6, 0, 0, 0, 0, 0, 0, 0]);
-    solidcraft_doc::canvas::base64_encode(&b)
+    torno_doc::canvas::base64_encode(&b)
 }
 
 /// Every form of the command, in warn without warnings: the reply matches the output schema and
@@ -226,7 +226,7 @@ fn replies_match_the_output_schema() {
     check(&r);
     assert!(s.doc.canvases.is_empty());
     // A point cloud, by id.
-    let dir = std::env::temp_dir().join(format!("solidcraft-delete-schema-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("torno-delete-schema-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
     let path = dir.join("two.xyz");
     std::fs::write(&path, "0 0 0\n1 0 0\n").unwrap();

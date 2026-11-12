@@ -3,15 +3,15 @@
 //! joint values and a point's path with their velocities and accelerations; `motion.interference`
 //! answers the pairs of parts that pass through each other along the way.
 
-use solidcraft_geom::prelude::*;
 use std::collections::BTreeMap;
+use torno_geom::prelude::*;
 
 use serde_json::{Map, Value, json};
 use solidcore_record::Vec3;
-use solidcraft_doc::joints;
-use solidcraft_doc::motion::MotionStudy;
-use solidcraft_doc::{Document, Mat, apply_point, mat_mul};
-use solidcraft_geom::Aabb3;
+use torno_doc::joints;
+use torno_doc::motion::MotionStudy;
+use torno_doc::{Document, Mat, apply_point, mat_mul};
+use torno_geom::Aabb3;
 
 use super::contact_sweep::{ContactGeometry, Member};
 use super::{drive_with_contact, joint_id, keyed, occurrences, path_world, study_index, traced_point, values_at};
@@ -315,7 +315,7 @@ impl Collision {
 fn shared_volume(s: &Session, doc: &Document, a: u64, b: u64, booleans: &mut usize) -> std::result::Result<f64, String> {
     let st = s.model.state();
     // The bodies under each (and not under the other), with their world frames and boxes.
-    let mut sides: [Vec<(Mat, Aabb3, &solidcraft_doc::ModelBody)>; 2] = Default::default();
+    let mut sides: [Vec<(Mat, Aabb3, &torno_doc::ModelBody)>; 2] = Default::default();
     for (comp, path, m) in doc.placements() {
         // A body belongs to the innermost of the two on its path, as contact sets pair them.
         let side = match path.iter().rev().find(|o| **o == a || **o == b) {
@@ -348,11 +348,11 @@ fn shared_volume(s: &Session, doc: &Document, a: u64, b: u64, booleans: &mut usi
             *booleans = booleans.checked_sub(1).ok_or_else(|| format!("the check's {MAX_BOOLEANS} body intersections ran out"))?;
             let failed = |e: &dyn std::fmt::Display| format!("the intersection of {} and {} could not be made ({e})", ba.name, bb.name);
             let (pa, pb) = (
-                solidcraft_kernel::transform_matrix(&ba.body, *fa).map_err(|e| failed(&e))?,
-                solidcraft_kernel::transform_matrix(&bb.body, *fb).map_err(|e| failed(&e))?,
+                torno_kernel::transform_matrix(&ba.body, *fa).map_err(|e| failed(&e))?,
+                torno_kernel::transform_matrix(&bb.body, *fb).map_err(|e| failed(&e))?,
             );
-            if let Some(shared) = solidcraft_kernel::boolean(&pa, &pb, solidcraft_kernel::BoolOp::Intersect).map_err(|e| failed(&e))? {
-                total += solidcraft_kernel::measure(&shared).map_err(|e| failed(&e))?.volume;
+            if let Some(shared) = torno_kernel::boolean(&pa, &pb, torno_kernel::BoolOp::Intersect).map_err(|e| failed(&e))? {
+                total += torno_kernel::measure(&shared).map_err(|e| failed(&e))?.volume;
             }
         }
     }

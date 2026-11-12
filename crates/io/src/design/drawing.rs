@@ -14,8 +14,8 @@ use std::io::{Cursor, Read, Seek};
 
 use serde::Deserialize;
 use serde_json::{Value, json};
-use solidcraft_doc::drawing::{Drawing, MAX_DRAWING_BYTES};
-use solidcraft_doc::format::DRAWING;
+use torno_doc::drawing::{Drawing, MAX_DRAWING_BYTES};
+use torno_doc::format::DRAWING;
 
 use super::{PackageReader, PackageWriter, VERSION, invalid, is_design_container};
 use crate::{IoError, MAX_DESIGN_BYTES, Result};
@@ -25,7 +25,7 @@ const DRAWING_PART: &str = "drawing.json";
 /// What a drawing's `container.json` says it holds.
 const DRAWING_CONTENT: &str = "drawing";
 
-/// What a SolidCraft file holds.
+/// What a Torno file holds.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum FileKind {
     Design,
@@ -57,7 +57,7 @@ pub(super) fn container_kind<R: Read + Seek>(reader: &mut PackageReader<R>) -> R
         Some(Value::String(content)) if content == DRAWING_CONTENT => Ok(FileKind::Drawing),
         // A later kind of content that still holds a design opens as one.
         Some(_) if reader.has_part("document.json") => Ok(FileKind::Design),
-        Some(other) => Err(invalid(format!("it holds {other}, which this version doesn't know: update SolidCraft to open it"))),
+        Some(other) => Err(invalid(format!("it holds {other}, which this version doesn't know: update Torno to open it"))),
     }
 }
 
@@ -80,7 +80,7 @@ pub fn read_drawing(bytes: &[u8]) -> Result<Drawing> {
         return read_container(Cursor::new(bytes));
     }
     if file_kind(bytes)? == FileKind::Design {
-        return Err(IoError::Invalid("this file is a SolidCraft design, not a drawing: open it as a design".into()));
+        return Err(IoError::Invalid("this file is a Torno design, not a drawing: open it as a design".into()));
     }
     let text = std::str::from_utf8(bytes).map_err(|_| IoError::Invalid("drawing file is not UTF-8 JSON".into()))?;
     Ok(Drawing::from_json(text)?)
@@ -100,7 +100,7 @@ pub fn read_drawing_file(path: &str) -> Result<Drawing> {
 fn read_container<R: Read + Seek>(source: R) -> Result<Drawing> {
     let mut reader = PackageReader::new(source)?;
     if container_kind(&mut reader)? == FileKind::Design {
-        return Err(IoError::Invalid("this file is a SolidCraft design, not a drawing: open it as a design".into()));
+        return Err(IoError::Invalid("this file is a Torno design, not a drawing: open it as a design".into()));
     }
     if reader.has_part("document.json") {
         return Err(invalid("a drawing container also holds a design's document.json"));

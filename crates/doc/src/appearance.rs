@@ -3,8 +3,8 @@
 //! a component's over the physical material's look; a body with none of these keeps the colour
 //! it was imported with.
 
-use solidcraft_geom::prelude::*;
 use std::collections::{BTreeMap, BTreeSet};
+use torno_geom::prelude::*;
 
 use serde::{Deserialize, Serialize};
 use solidcore_record::Vec3;
@@ -51,7 +51,7 @@ impl Look {
     pub fn custom(color: [u8; 3], opacity: f64) -> Look {
         Look { name: "Custom".into(), color, opacity: opacity.clamp(0.0, 1.0), pbr: None }
     }
-    pub fn opaque_surface(&self) -> crate::Result<Option<solidcraft_viewport::surface::OpaqueSurface>> {
+    pub fn opaque_surface(&self) -> crate::Result<Option<torno_viewport::surface::OpaqueSurface>> {
         if self.pbr.is_some() && self.opacity != 1.0 {
             return Err(crate::DocError::Invalid("opaque PBR requires opacity 1".into()));
         }
@@ -527,14 +527,10 @@ mod tests {
     }
 
     fn imported_box() -> crate::ModelBody {
-        let body = solidcraft_kernel::box_solid(Vec3::ZERO, Vec3::new(10., 10., 10.)).unwrap();
-        let faces = body
-            .faces(0.01)
-            .unwrap()
-            .iter()
-            .map(|face| solidcraft_kernel::FacePaint { face: face.index, color: [1., 0., 0.], opacity: 0.5 })
-            .collect();
-        crate::ModelBody::new("Imported".into(), body.with_paint(Some(solidcraft_kernel::Paint { opacity: 1., faces })), 1)
+        let body = torno_kernel::box_solid(Vec3::ZERO, Vec3::new(10., 10., 10.)).unwrap();
+        let faces =
+            body.faces(0.01).unwrap().iter().map(|face| torno_kernel::FacePaint { face: face.index, color: [1., 0., 0.], opacity: 0.5 }).collect();
+        crate::ModelBody::new("Imported".into(), body.with_paint(Some(torno_kernel::Paint { opacity: 1., faces })), 1)
     }
 
     fn check_imported_appearance_precedence(body: &crate::ModelBody) {
@@ -610,7 +606,7 @@ mod tests {
         doc.components.push(crate::Component { id: 1, name: "Part".into(), ..Default::default() });
         doc.body_components.insert("B".into(), 1);
         let mut state = crate::ModelState::default();
-        state.bodies.push(crate::ModelBody::new("B".into(), solidcraft_kernel::box_solid(Vec3::ZERO, Vec3::new(10., 10., 10.)).unwrap(), 1));
+        state.bodies.push(crate::ModelBody::new("B".into(), torno_kernel::box_solid(Vec3::ZERO, Vec3::new(10., 10., 10.)).unwrap(), 1));
         (doc, state)
     }
 

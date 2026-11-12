@@ -11,8 +11,8 @@
 
 use serde::{Deserialize, Serialize};
 use solidcore_record::Vec2;
-use solidcraft_geom::Ring;
-use solidcraft_geom::prelude::*;
+use torno_geom::Ring;
+use torno_geom::prelude::*;
 
 use crate::fonts::{FontData, font_data_styled};
 use crate::link::{LinkGeom, LinkKind, LinkSource, MAX_LINK_ENTITIES};

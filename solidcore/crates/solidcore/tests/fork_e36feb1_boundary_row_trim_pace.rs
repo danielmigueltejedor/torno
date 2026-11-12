@@ -4,7 +4,7 @@
 //! u knot) at u = 0.08. Edge 0 runs along the patch's v = 0 row, creased with it at
 //! u = 0.08, on its own parameter (its control points at s^0.8 of the way along each line
 //! for their Greville values s), and starts 0.05 mm past the patch's u = 0 side, on the
-//! row's extension. The sheet is given without UV trims (as SolidCraft hands SMLib a
+//! row's extension. The sheet is given without UV trims (as Torno hands SMLib a
 //! face: `data/fork_wr543_boundary_row_sheet.smd`, written by the fork's
 //! `smlib_brep_import` of the test's flat arrays, read here without its trims), and
 //! `GetOrCreateUVTrimCurve` makes them.
@@ -39,7 +39,7 @@ use solidcore::{EntityRef, Kernel};
 
 const SHEET: &[u8] = include_bytes!("data/fork_wr543_boundary_row_sheet.smd");
 
-/// SolidCraft's topology identities (type code, entity index).
+/// Torno's topology identities (type code, entity index).
 fn key_of(e: EntityRef) -> ObjectRef {
     let (type_code, kind, i) = match e {
         EntityRef::Brep(x) => (16011, 0u64, x.index()),

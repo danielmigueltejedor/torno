@@ -4,7 +4,7 @@ use crate::{DocError, Document, FeatureKind, ModelState, Result};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use solidcore_record::Vec3;
-use solidcraft_geom::prelude::*;
+use torno_geom::prelude::*;
 
 pub(crate) fn shell_plane_family(planes: impl IntoIterator<Item = Option<solidcore_record::Plane>>) -> bool {
     let mut planes = planes.into_iter();
@@ -114,7 +114,7 @@ impl Document {
             (FaceCertificate::ExtrudeCap { sketch, .. }, FeatureKind::Extrude { sketch: current, extent, operation: crate::Operation::NewBody | crate::Operation::Join, .. }) => sketch == current && extent.taper.is_none(),
             (FaceCertificate::ExtrudeSide { sketch, curve }, FeatureKind::Extrude { sketch: current, extent, operation: crate::Operation::NewBody | crate::Operation::Join, .. }) => {
                 sketch == current && extent.taper.is_none()
-                    && self.feature(*sketch).is_some_and(|feature| matches!(&feature.kind, FeatureKind::Sketch { sketch, .. } if sketch.curves.iter().any(|candidate| candidate.id == *curve && !candidate.construction && matches!(candidate.kind, solidcraft_sketch::CurveKind::Line { .. } | solidcraft_sketch::CurveKind::Circle { .. } | solidcraft_sketch::CurveKind::Arc { .. }))))
+                    && self.feature(*sketch).is_some_and(|feature| matches!(&feature.kind, FeatureKind::Sketch { sketch, .. } if sketch.curves.iter().any(|candidate| candidate.id == *curve && !candidate.construction && matches!(candidate.kind, torno_sketch::CurveKind::Line { .. } | torno_sketch::CurveKind::Circle { .. } | torno_sketch::CurveKind::Arc { .. }))))
             }
             (FaceCertificate::Imported { .. }, FeatureKind::Import { .. }) => true,
             _ => false,
@@ -149,7 +149,7 @@ impl Document {
                 }
                 (super::FaceCertificate::ExtrudeSide { sketch, curve }, FeatureKind::Extrude { sketch: producer_sketch, extent, operation: crate::Operation::NewBody | crate::Operation::Join, .. }) => {
                     sketch == producer_sketch && extent.taper.is_none() && role == format!("side:{curve}")
-                        && self.feature(*sketch).is_some_and(|feature| matches!(&feature.kind, FeatureKind::Sketch { sketch, .. } if sketch.curves.iter().any(|candidate| candidate.id == *curve && !candidate.construction && matches!(candidate.kind, solidcraft_sketch::CurveKind::Line { .. } | solidcraft_sketch::CurveKind::Circle { .. } | solidcraft_sketch::CurveKind::Arc { .. }))))
+                        && self.feature(*sketch).is_some_and(|feature| matches!(&feature.kind, FeatureKind::Sketch { sketch, .. } if sketch.curves.iter().any(|candidate| candidate.id == *curve && !candidate.construction && matches!(candidate.kind, torno_sketch::CurveKind::Line { .. } | torno_sketch::CurveKind::Circle { .. } | torno_sketch::CurveKind::Arc { .. }))))
                 }
                 // A linked design's face is named after its name there (`link:…`, see lineage::link_role).
                 (super::FaceCertificate::Imported { .. }, FeatureKind::Import { .. }) => {
@@ -219,7 +219,7 @@ impl Document {
         }
         if let Some(super::FaceCertificate::ShellPlanar { source_producer, source, inner }) = &target.certificate {
             let indices: Vec<_> = body.body.face_sources().into_iter().flatten().enumerate().filter_map(|(index, current)| {
-                matches!(current, Some(solidcraft_kernel::FaceSource::ShellPlanar { producer: Some(producer), source: current_source, inner: current_inner, .. }) if *producer == target.origin_feature && inner == current_inner && super::flat_source_matches(source, current_source, *source_producer)).then_some(index)
+                matches!(current, Some(torno_kernel::FaceSource::ShellPlanar { producer: Some(producer), source: current_source, inner: current_inner, .. }) if *producer == target.origin_feature && inner == current_inner && super::flat_source_matches(source, current_source, *source_producer)).then_some(index)
             }).collect();
             // A shell can split one original support into several pieces. All pieces
             // must retain the same canonical frame, not merely lie on a common plane.
@@ -242,15 +242,15 @@ impl Document {
                     let matched = match (&target.certificate, source) {
                         (
                             Some(super::FaceCertificate::Box { axis, high }),
-                            Some(solidcraft_kernel::FaceSource::Box { producer: Some(producer), axis: current_axis, high: current_high, .. }),
+                            Some(torno_kernel::FaceSource::Box { producer: Some(producer), axis: current_axis, high: current_high, .. }),
                         ) => *producer == target.origin_feature && axis == current_axis && high == current_high,
                         (
                             Some(super::FaceCertificate::CylinderCap { high }),
-                            Some(solidcraft_kernel::FaceSource::CylinderCap { producer, high: current_high, .. }),
+                            Some(torno_kernel::FaceSource::CylinderCap { producer, high: current_high, .. }),
                         ) => *producer == target.origin_feature && high == current_high,
                         (
                             Some(super::FaceCertificate::ExtrudeCap { sketch, high, outer, holes }),
-                            Some(solidcraft_kernel::FaceSource::CertifiedExtrudeCap {
+                            Some(torno_kernel::FaceSource::CertifiedExtrudeCap {
                                 producer,
                                 sketch: current_sketch,
                                 high: current_high,
@@ -276,7 +276,7 @@ impl Document {
             return self.certified_pieces(body, indices, target.origin_feature);
         }
         if let Some(super::FaceCertificate::ExtrudeSide { sketch, curve }) = &target.certificate {
-            let side = |index: usize, exact: bool| matches!(body.body.face_sources().and_then(|sources| sources.get(index)), Some(Some(solidcraft_kernel::FaceSource::CertifiedExtrudeSide { producer, sketch: current_sketch, curve: current_curve, .. })) if *producer == target.origin_feature && current_sketch == sketch && (!exact || current_curve == curve));
+            let side = |index: usize, exact: bool| matches!(body.body.face_sources().and_then(|sources| sources.get(index)), Some(Some(torno_kernel::FaceSource::CertifiedExtrudeSide { producer, sketch: current_sketch, curve: current_curve, .. })) if *producer == target.origin_feature && current_sketch == sketch && (!exact || current_curve == curve));
             let count = body.body.face_sources().map_or(0, |sources| sources.len());
             let mut indices: Vec<_> = (0..count).filter(|index| side(*index, true)).collect();
             // A side drawn in collinear pieces is one face over all of them (#1788): a certificate
@@ -297,7 +297,7 @@ impl Document {
         }
         if let Some(super::FaceCertificate::Imported { payload_sha256, item, face }) = &target.certificate {
             let indices: Vec<_> = body.body.face_sources().into_iter().flatten().enumerate().filter_map(|(index, source)| {
-                matches!(source, Some(solidcraft_kernel::FaceSource::Imported { item: current_item, face: current_face, payload_sha256: Some(digest), producer: Some(producer) }) if current_item == item && current_face == face && digest == payload_sha256 && *producer == target.origin_feature).then_some(index)
+                matches!(source, Some(torno_kernel::FaceSource::Imported { item: current_item, face: current_face, payload_sha256: Some(digest), producer: Some(producer) }) if current_item == item && current_face == face && digest == payload_sha256 && *producer == target.origin_feature).then_some(index)
             }).collect();
             if indices.is_empty() {
                 // A linked design's face is named after its name in that design (`link:…`, see
@@ -316,7 +316,7 @@ impl Document {
                             crate::naming::strip_piece(name) == target.name
                                 && matches!(
                                     body.body.face_sources().and_then(|sources| sources.get(*index)),
-                                    Some(Some(solidcraft_kernel::FaceSource::Imported { producer: Some(producer), .. })) if *producer == target.origin_feature
+                                    Some(Some(torno_kernel::FaceSource::Imported { producer: Some(producer), .. })) if *producer == target.origin_feature
                                 )
                         })
                         .map(|(index, _)| index)

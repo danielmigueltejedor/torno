@@ -24,7 +24,7 @@ use solidcore::surface::surface::Surface;
 use solidcore::topology::{brep::p3::new_brep, edge, vertex, Brep, EdgeId, FaceId};
 use solidcore::{EntityRef, Kernel};
 
-/// The first application attribute id SolidCraft uses.
+/// The first application attribute id Torno uses.
 const BASE_ID: u64 = 10007;
 
 /// Origin `(kind, index)` encoded in the attribute id: kind 0 face, 1 edge.

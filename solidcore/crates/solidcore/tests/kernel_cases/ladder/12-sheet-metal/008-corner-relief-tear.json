@@ -65,6 +65,6 @@
   "ungraded": [],
   "what": "003's tray with torn corners: the bends run to the corner and each end is cut straight, in the flat, to where its panel's end starts",
   "why_not": [
-    "body \"Body1\" is no kernel operation's output nor an operand: SolidCraft built it or changed the kernel's record"
+    "body \"Body1\" is no kernel operation's output nor an operand: Torno built it or changed the kernel's record"
   ]
 }

@@ -51,7 +51,7 @@
 //!   the deletion: every caller receives the face.
 //! - **A folded continuation is not covered** (opt-in
 //!   `Kernel::fixes.cover_refuses_folded_continuation`, WR-407; off by default, which
-//!   merges as upstream does). SolidCraft change, tangency-labs/smlib 1b6f5fa (`SmSurface::CoverCoincidentSurface`, before its
+//!   merges as upstream does). Torno change, tangency-labs/smlib 1b6f5fa (`SmSurface::CoverCoincidentSurface`, before its
 //!   `AdjustSTEPUVDomain`): when a B-spline-based surface would be extended past its
 //!   natural domain, its normal may neither vanish nor turn back between neighbouring
 //!   samples of a 21 x 21 grid over the domain the merge uses; otherwise the cover fails
@@ -1230,7 +1230,7 @@ impl Surface {
         let dom_u = other_dom.u_interval();
         let dom_v = other_dom.v_interval();
 
-        // SolidCraft fork, tangency-labs/smlib@16bf1cb (WR-599): a surface whose domain
+        // Torno fork, tangency-labs/smlib@16bf1cb (WR-599): a surface whose domain
         // already closes on itself in a direction (a cylinder's full turn, the face on it
         // wrapping all the way round) covers a face that straddles its seam: that face's
         // points lie on it on both sides of the seam, and the face merged into it is the
@@ -1413,7 +1413,7 @@ impl Surface {
             );
         }
 
-        // SolidCraft change, tangency-labs/smlib 1b6f5fa (tangency-labs/solidcore#434): a
+        // Torno change, tangency-labs/smlib 1b6f5fa (tangency-labs/solidcore#434): a
         // B-spline surface covers past its natural domain by continuing its end spans, and
         // that continuation need not be one sheet: the straight lines of a swept planar
         // sector run on through the sector's centre and turn back over it, and a curved end
@@ -2133,7 +2133,7 @@ mod tests {
         Ok((covered, this.step_uv_domain().u_interval().max()))
     }
 
-    /// With `fixes.cover_refuses_folded_continuation` (WR-407, #434; SolidCraft change,
+    /// With `fixes.cover_refuses_folded_continuation` (WR-407, #434; Torno change,
     /// tangency-labs/smlib 1b6f5fa) the cover across the fold fails and changes nothing.
     #[test]
     fn issue_434_cover_refuses_a_continuation_that_folds() -> Result<()> {

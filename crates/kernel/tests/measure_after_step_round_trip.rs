@@ -5,7 +5,7 @@
 //! its last quarter was off the form: the tube measured 14 % over.
 
 use solidcore_record::Vec3;
-use solidcraft_kernel::{BoolOp, boolean, cylinder, measure_mass, step_export, step_import};
+use torno_kernel::{BoolOp, boolean, cylinder, measure_mass, step_export, step_import};
 
 #[test]
 fn a_tube_measures_the_same_after_a_step_round_trip() {

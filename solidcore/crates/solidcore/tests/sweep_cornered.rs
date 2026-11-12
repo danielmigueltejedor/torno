@@ -1,4 +1,4 @@
-//! tangency-labs/solidcore#3191 (solidcraft#13639): a sweep along a path with corners, built
+//! tangency-labs/solidcore#3191 (torno#13639): a sweep along a path with corners, built
 //! piece by piece, its pieces meeting at the corners' mitres ([`cornered_sweep`]), held to
 //! closed forms. Each path starts along `z` from
 //! the origin, so a profile drawn in the `xy` plane is the section at its start; its first

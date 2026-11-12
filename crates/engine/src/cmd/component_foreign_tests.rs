@@ -1,8 +1,8 @@
 #![allow(clippy::unwrap_used)]
 use crate::{ForeignCopy, Session};
 use serde_json::{Value, json};
-use solidcraft_geom::prelude::*;
 use std::sync::Arc;
+use torno_geom::prelude::*;
 
 fn run(s: &mut Session, cmd: &str, p: Value) -> Value {
     s.execute(cmd, &p).unwrap()
@@ -59,12 +59,12 @@ fn a_component_from_another_design_pastes_with_its_history() {
     let is = s.world_state().unwrap().body("Cube").unwrap().mesh().bounds();
     assert!(was.min.dist(is.min) < 1e-6 && was.max.dist(is.max) < 1e-6, "{was:?} vs {is:?}");
     // Its history is its own: changing it here leaves the original as it was.
-    let copy = s.doc.features.iter().find(|f| matches!(f.kind, solidcraft_doc::FeatureKind::Box { .. })).unwrap();
+    let copy = s.doc.features.iter().find(|f| matches!(f.kind, torno_doc::FeatureKind::Box { .. })).unwrap();
     let parameter = copy.param_names[0].clone();
     run(&mut s, "parameters.change", json!({"name": parameter, "expression": "3 mm"}));
     assert!((volume(&mut s, new) - 24.0).abs() < 1e-6);
     assert!((volume(&mut source, assembly) - 16.0).abs() < 1e-6);
-    let reopened = solidcraft_doc::Document::from_json(&s.doc.to_json()).unwrap();
+    let reopened = torno_doc::Document::from_json(&s.doc.to_json()).unwrap();
     assert_eq!(reopened.occurrences.iter().filter(|o| o.parent == new).count(), 2);
     run(&mut s, "edit.undo", json!({}));
     run(&mut s, "edit.undo", json!({}));

@@ -456,7 +456,7 @@ evidence description, and clear the fixture before checking real capabilities.
 
 | Launch | What listens |
 |---|---|
-| `solidcraft --control PORT`, or `SOLIDCRAFT_CONTROL_PORT=PORT` | exactly `127.0.0.1:PORT` (the flag wins over the variable), whatever the setting |
+| `torno --control PORT`, or `TORNO_CONTROL_PORT=PORT` | exactly `127.0.0.1:PORT` (the flag wins over the variable), whatever the setting |
 | neither, and Preferences > Assistant > Agents through MCP > "Let AI agents connect" on (the default) | the setting's port: the default **27878**, or the next free one up to 27893 when it is taken (a second window, another program); any other port exactly, or nothing when it is taken (the panel says so) |
 | neither, and the setting off | nothing |
 
@@ -471,7 +471,7 @@ Each app that opens its channel writes the port to a discovery file beside the t
 `control/current.port` (same folders and permissions as below), and removes it at exit if no later
 app has replaced it: it names another port, or another app now holds that port's token file (two
 Flatpak windows, each with its own loopback, can listen on the same port number). It holds only
-the port, never the token. `solidcraft-cli mcp` with no
+the port, never the token. `torno-cli mcp` with no
 arguments reads it, checks that something listens there and bridges to that app; with no app
 running, or with `--headless`, it runs a session of its own. `--connect HOST:PORT` and the
 other arguments still decide first. With several windows open, the most recently started one is
@@ -491,26 +491,26 @@ launch and writes it, as one line of hex, to a file only the user can read:
 
 | System | Token file |
 |---|---|
-| Linux | `$XDG_DATA_HOME/solidcraft/control/PORT.token` (`~/.local/share/solidcraft/control/PORT.token`) |
-| macOS | `~/Library/Application Support/SolidCraft/control/PORT.token` |
-| Windows | `%LOCALAPPDATA%\SolidCraft\control\PORT.token` |
+| Linux | `$XDG_DATA_HOME/torno/control/PORT.token` (`~/.local/share/torno/control/PORT.token`) |
+| macOS | `~/Library/Application Support/Torno/control/PORT.token` |
+| Windows | `%LOCALAPPDATA%\Torno\control\PORT.token` |
 
 On Unix the folder is `0700` and the file `0600`; on Windows the file's inherited permissions are
-replaced by a single entry for the user. `SOLIDCRAFT_CONTROL_DIR` moves the folder. If Windows
+replaced by a single entry for the user. `TORNO_CONTROL_DIR` moves the folder. If Windows
 doesn't finish restricting the file within five seconds, the default folder (private to the user)
 keeps it, but a custom folder gets no token file, and clients then need
-`SOLIDCRAFT_CONTROL_TOKEN`. The file is
+`TORNO_CONTROL_TOKEN`. The file is
 removed when the app exits, unless another launch has written its own token there since, and the
 next launch writes a new token. The token file's path is
 printed to stderr at start-up. Beside it, `<port>.pid` holds the app's process id (and, on Linux,
 its start time).
 
 An app that is force-quit can't remove its files, so a later client may send that launch's token.
-When the app refuses it, `solidcraft-cli mcp` names the token file it read and when it was
+When the app refuses it, `torno-cli mcp` names the token file it read and when it was
 written, and says the file is stale when the process in `<port>.pid` has exited. Delete the file
 or restart Torno. On Windows, an app or client started from inside an MSIX-packaged app (and
 the tools it launches) has its AppData redirected: it writes and reads
-`%LOCALAPPDATA%\Packages\<package>\LocalCache\Local\SolidCraft\control\` before the folder above.
+`%LOCALAPPDATA%\Packages\<package>\LocalCache\Local\Torno\control\` before the folder above.
 
 The first request on a connection must carry the token as a top-level `"token"` member
 (`{"id": 1, "method": "ui.inspect", "params": {}, "token": "…"}`); later requests on the same
@@ -520,15 +520,15 @@ anything. Tokens are compared in constant time. A connection that hasn't sent th
 within five seconds is closed without a reply, and blank lines don't extend the time. So connect
 when you have something to send; once authenticated, a connection may stay idle.
 
-`solidcraft-cli mcp --connect 127.0.0.1:PORT` reads the token file for that port by itself
-(`--token T` or `SOLIDCRAFT_CONTROL_TOKEN` give one explicitly). For a test harness, or a
+`torno-cli mcp --connect 127.0.0.1:PORT` reads the token file for that port by itself
+(`--token T` or `TORNO_CONTROL_TOKEN` give one explicitly). For a test harness, or a
 sandboxed package whose data folder the client can't see, start the app with
-`SOLIDCRAFT_CONTROL_TOKEN` set to at least 32 hex characters (for example
+`TORNO_CONTROL_TOKEN` set to at least 32 hex characters (for example
 `openssl rand -hex 32`) and the app uses that token instead of making one; the file is still
 written. A one-line client in Python:
 
 ```python
-token = (Path.home() / ".local/share/solidcraft/control/7878.token").read_text().strip()
+token = (Path.home() / ".local/share/torno/control/7878.token").read_text().strip()
 sock.sendall((json.dumps({"id": 1, "method": "ui.inspect", "params": {}, "token": token}) + "\n").encode())
 ```
 
@@ -628,7 +628,7 @@ reply without `param_check` as unchecked. The bridged MCP server asks once per c
 
 The selection alone is the engine command `selection.get` (run it with `engine.execute`; read-only, no undo step, headless too): `{count, items}`, each item as `select.set` takes it (`type`, `body`, `index`, `point`, `id`, `sketch`, `path`…) with `kind` and, unless `detail: false`, what it resolves to: a face's persistent `name`, `surface` (`plane` with `normal`, `cylinder` with `origin`, `axis` and `radius`, `cone`, `sphere`, `torus`, or `other`) and `area_mm2`; an edge's persistent `name`, `curve` (`line`, `circle`, `arc`, `other`), `length_mm`, `start`, `end` and, when round, `center`, `axis` and `radius`; a body's `volume_mm3`, `feature` and `visible`; a body item's `component` and `occurrence_path` in an assembly; a sketch item's `sketch` (its id, so the item can go back to `select.set`), `sketch_name` and `entity` (a line's `sketch_midpoint` gives `midpoint` and its `position`). `ui.selection` (below) reports the window's view of it with the open dialog's inputs and the hovered item.
 
-Commands never open dialogs when run this way. `solidcraft-cli commands` prints the same registry.
+Commands never open dialogs when run this way. `torno-cli commands` prints the same registry.
 
 `document.export`, `document.import` and `document.saved` are control methods, not commands: they
 act on the app's open design rather than on an engine session, and they are not among the methods
@@ -835,7 +835,7 @@ no box selection.
 | `ui.key` | `key` (egui key name, `Enter`, `Escape`…), `cmd?`, `ctrl?`, `shift?`, `alt?`, `pressed?` | By default, press and release, then release modifiers. With `pressed: true` or `false`, send only that edge; modifiers remain as given. `cmd` retains the legacy primary-modifier alias unless `ctrl` is explicit: `cmd:true, ctrl:false` sends physical Command, and both true sends Control+Command. `ui.move` can change modifiers between edges. |
 | `ui.text` | `text` | typed text |
 | `ui.screenshot` | `path?` | PNG of the window (needs a presented frame: a minimised or fully covered window answers at once with `hidden: true` and an error; use `ui.render`) |
-| `ui.render` | `path`, `width?`, `height?`, `grid?`, `axes?` | Render of the model with the current camera (no window needed), drawn on the app's GPU device with the viewport's pipelines (the reply's `renderer`: `gpu`, or `gpu-software` on a software adapter), in the window's theme (light or dark; `solidcraft-cli snapshot` keeps the light colours); cut by the section the viewport shows (`inspect.section`, an open Section Analysis dialog's preview, a sketch's Slice), with the cut face capped. The ground grid and the origin's axes are drawn as the window shows them (`ui.set` `showGrid` and `showOrigin`, `hiddenOrigin`); `grid` and `axes` (booleans) say otherwise for this render |
+| `ui.render` | `path`, `width?`, `height?`, `grid?`, `axes?` | Render of the model with the current camera (no window needed), drawn on the app's GPU device with the viewport's pipelines (the reply's `renderer`: `gpu`, or `gpu-software` on a software adapter), in the window's theme (light or dark; `torno-cli snapshot` keeps the light colours); cut by the section the viewport shows (`inspect.section`, an open Section Analysis dialog's preview, a sketch's Slice), with the cut face capped. The ground grid and the origin's axes are drawn as the window shows them (`ui.set` `showGrid` and `showOrigin`, `hiddenOrigin`); `grid` and `axes` (booleans) say otherwise for this render |
 | `ui.confirm` | `accept?`: bool | answers the Delete confirmation (shown when a delete takes other features with it or makes some fail); without `accept`, what it lists |
 | `ui.messages` | `clear?`: `true` (empty the list), `open?`: bool (show or hide the Messages window) | every status message of this run, oldest first (the last 200; a message repeated in a row is one entry with a `count`): `messages` `[{text, error, at, count}]` (`at` in ms since the Unix epoch), and whether the window is `open` (#2763) |
 | `ui.documents` | `action?`: `new`, `switch`, `close`, `close_all`, `close_others`, `move`, `quit`; `index?`; `from?`, `to?` (move); `save_indices?`: array of tab indices to tick in the grouped save prompt; `save_row?`, `discard_row?`: tab index to save or discard and close in that prompt; `force?` (close without asking); `answer?`: `save`, `dont_save`, `cancel` (answers "save changes?"); `open_elsewhere?`: `read_only`, `anyway`, `cancel` (answers "open elsewhere" for the first Open waiting); `changed_on_disk?`: `save_copy`, `overwrite`, `cancel` (answers "changed on disk" before a Save) | the open designs (tabs): names, unsaved flags, the active one, a pending "save changes?" prompt, `save_prompt` (null or rows with `index`, `name`, `path` (null if never saved), `selected`), whether a quit is asking, whether the active design is `read_only`, the Opens waiting for "open elsewhere" (`open_elsewhere`) and a waiting "changed on disk" (`changed_on_disk`) |
@@ -843,7 +843,7 @@ no box selection.
 | `ui.file` | `path`; `insert?`: bool | starts an interactive background Open or Insert; poll `ui.inspect.file_busy` for completion; the window stays responsive |
 | `ui.home` | `open?`: bool; `sample?`: index | the start page: show or hide it, open a built-in sample (once built); returns `open` and the recent designs |
 | `ui.shortcut` | `command`, `key?`, `slot?`, `replace?` | a command's keys (`key`: the first, shown in menus; `keys`: all), or rebinds it: `key` becomes its only key, or with `slot` replaces its key there (one past the last adds a key, `""` there removes that key); `""` without `slot` clears them; key names are case-insensitive and modifiers are normalized (`shift+ctrl+t` becomes `Ctrl+Shift+T`); unknown and reserved keys are refused; a key another command uses is refused unless `replace` |
-| `ui.help` | `item?`: `about`, `updates` (checks for updates and shows the result), `shortcuts` (read only), `report` (opens a report draft for review), `crashes` (the Crash Reports window), `docs` (the documentation in the browser), `messages` (the Messages window), `install_cli` (macOS: links `solidcraft-cli` into `/usr/local/bin`); another item is an error | the version, commit, build date and diagnostic text |
+| `ui.help` | `item?`: `about`, `updates` (checks for updates and shows the result), `shortcuts` (read only), `report` (opens a report draft for review), `crashes` (the Crash Reports window), `docs` (the documentation in the browser), `messages` (the Messages window), `install_cli` (macOS: links `torno-cli` into `/usr/local/bin`); another item is an error | the version, commit, build date and diagnostic text |
 | `ui.prefs` | any of the [`ui.prefs` settings](#uiprefs-settings) below; also `open`, `button` and `stand_up` (listed there) | sets preferences (kept between runs), returns them all plus `dialog` (the open page or null), `apply_enabled` (whether the dialog's Apply has a change to keep), `dark`, `viewport_dark` (whether the 3D view is dark), `stand_up_offer` (the offered bodies, or null), `stand_up_note` (whether that offer is the note), `theme_followed`, `theme_follow_error`, `theme_option_defs`, `theme_option_values` and `theme_option_notices` |
 | `ui.capture` | `action?`: `capture`, `revert`, `cancel` | answers the Capture Position question (asked when a command starts or the design is saved while components were moved without capturing); without `action`, what waits |
 | `ui.window` | `action`: minimize, maximize, restore, toggle, close | what the title bar's caption buttons do (on Windows and Linux the application bar is the title bar); close asks about unsaved designs first |
@@ -966,7 +966,7 @@ One setting per line, sorted by name. A change that adds a setting adds its own 
 - `placement_handles` (default false: handles on the preview of a Rest, Boss, Snap Fit, Box, Cylinder, Cone, Sphere, Torus or Coil that move it across the model and turn it where it can turn)
 - `print_face_highlight` (0…1, default 0.2: how strongly a print face is tinted and outlined in the view, #8429; 0 draws no highlight)
 - `quick_measure` (default false: the selection's length, area or distance in the view's bottom right corner, the rect `measure:quick`; #7000)
-- `render_legacy_memory_admission` (Graphics, default false): Use previous render memory checks. True skips native available-RAM/cgroup fit refusals for future CPU/GPU admissions; shared/host software limits, device limits, checked allocation and all held reservations remain enforced. It is a machine preference, not saved image quality. The CLI equivalent is `solidcraft-cli render --legacy-memory-admission`.
+- `render_legacy_memory_admission` (Graphics, default false): Use previous render memory checks. True skips native available-RAM/cgroup fit refusals for future CPU/GPU admissions; shared/host software limits, device limits, checked allocation and all held reservations remain enforced. It is a machine preference, not saved image quality. The CLI equivalent is `torno-cli render --legacy-memory-admission`.
 - `ribbon_menus_follow_hover` (default false). Click a ribbon panel label to open its menu. Hover another panel label to switch, or move outside the ribbon and open menu to close it.
 - `ribbon_reveal` (default false: hovering a result in Search commands switches the ribbon to the command's tab and marks its button, or opens the panel drop-down that holds it on its row, handle `ribbon:reveal`; leaving the results goes back to the tab before; a command started from the search blinks there, and a running command from a drop-down marks its panel label, `ribbon:running_section:<TAB>:<SECTION>`, #7287)
 - `right_drag_orbits` (default true; false: a right drag the mouse preset would orbit leaves the camera alone, #6492)
@@ -1008,7 +1008,7 @@ One setting per line, sorted by name. A change that adds a setting adds its own 
 - `view_confirm_corner` (default false: while a dialog or a sketch is open, a check and a cross at the view's top right, handles `view:confirm:ok` and `view:confirm:cancel`, do what the dialog's OK and Cancel do, or Finish Sketch and Cancel Sketch; the axis view or cube moves down below them, #6709)
 - `viewport_theme` (`theme` (default: the theme's own), `light`, `dark`: the 3D view in the Light or Dark theme's colours whatever the window uses, #4146)
 - `wheel_zoom_speed` (0.25 to 4, default 1: how far each wheel step zooms; the 3D mouse keeps its own speed)
-- `window_system` (Linux: `auto` (default: XWayland whenever there is an X display, native Wayland on niri), `wayland`, `x11`; saved in `graphics.json`, applies at the next start; `SOLIDCRAFT_WAYLAND` overrides it)
+- `window_system` (Linux: `auto` (default: XWayland whenever there is an X display, native Wayland on niri), `wayland`, `x11`; saved in `graphics.json`, applies at the next start; `TORNO_WAYLAND` overrides it)
 - `zoom_reverse`
 - `zoom_stop_at_model` (default false: the 3D mouse and navigation bridge stop zoom at the surface in the middle of the view; drag-zoom holds its press point; independent of `zoom_to_cursor`)
 - `zoom_to_cursor`
@@ -1038,7 +1038,7 @@ definitions include `reason`; standard options currently have `available: false`
 defaults and values of inactive children. `theme_option_notices` contains `{id, kind}` entries,
 where `kind` is `unknown_option`, `wrong_type`, `unknown_choice`, `non_finite` or `out_of_range`.
 Without an active theme file these fields are `[]`, `{}` and `[]`. Portable input
-and output schema types live in `solidcraft_engine::schema::ui_prefs` (`PrefsParams`, `PrefsReply`).
+and output schema types live in `torno_engine::schema::ui_prefs` (`PrefsParams`, `PrefsReply`).
 
 Other `ui.prefs` parameters:
 
@@ -1095,7 +1095,7 @@ document edits, undo steps or a success-log entry per movement.
 
 ## MCP
 
-`solidcraft-cli mcp --connect 127.0.0.1:PORT` bridges an MCP client (an AI agent) to this
+`torno-cli mcp --connect 127.0.0.1:PORT` bridges an MCP client (an AI agent) to this
 channel; see [mcp.md](mcp.md).
 
 ## Example

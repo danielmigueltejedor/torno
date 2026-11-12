@@ -7,18 +7,18 @@ mod placed_mesh;
 #[path = "placement_reuse.rs"]
 mod placement_reuse;
 
-use solidcraft_geom::prelude::*;
 use std::collections::BTreeMap;
 use std::hash::{Hash, Hasher};
 use std::sync::{Arc, OnceLock};
+use torno_geom::prelude::*;
 
 use serde::{Deserialize, Serialize};
 use solidcore_record::brep::part::Contact;
 use solidcore_record::{Plane, Region2, Vec2, Vec3};
-use solidcraft_geom::tess::TessPlan;
-use solidcraft_geom::{Mesh, UnitVec3, regions_apart};
-use solidcraft_kernel::{self as kernel, Body, BoolOp};
-use solidcraft_sketch::{CurveKind, Profile, SolveReport, find_profiles};
+use torno_geom::tess::TessPlan;
+use torno_geom::{Mesh, UnitVec3, regions_apart};
+use torno_kernel::{self as kernel, Body, BoolOp};
+use torno_sketch::{CurveKind, Profile, SolveReport, find_profiles};
 
 use crate::expr::{self, Kind, Value};
 use crate::lineage::Traced;
@@ -83,7 +83,7 @@ pub struct ModelBody {
     source_key: u64,
     /// [`Body::outline_bounds`] of `body` (with the body it was measured on), worked out once
     /// and shared by clones.
-    outline: Arc<OnceLock<(Body, solidcraft_geom::Aabb3)>>,
+    outline: Arc<OnceLock<(Body, torno_geom::Aabb3)>>,
     /// [`kernel::measure`] of `body` (with the body it was measured on), worked out once and
     /// shared by clones: inspecting a design again measures only the bodies that changed.
     measured: Arc<OnceLock<(Body, kernel::Result<kernel::BodyMeasure>)>>,
@@ -161,7 +161,7 @@ impl ModelBody {
     }
 
     /// A box around the body without meshing it ([`Body::outline_bounds`]), worked out once.
-    pub fn outline_bounds(&self) -> solidcraft_geom::Aabb3 {
+    pub fn outline_bounds(&self) -> torno_geom::Aabb3 {
         match self.outline.get_or_init(|| (self.body.clone(), self.body.outline_bounds())) {
             (measured, b) if measured.same(&self.body) => *b,
             // The body was replaced in this cell's holder since: measure it again.
@@ -310,7 +310,7 @@ impl ModelBody {
 
     /// The box of [`ModelBody::mesh`] without making a placement's moved copy: the shared mesh's
     /// points, moved.
-    pub fn mesh_bounds(&self) -> solidcraft_geom::Aabb3 {
+    pub fn mesh_bounds(&self) -> torno_geom::Aabb3 {
         if let Some(mesh) = self.cached_mesh() {
             return mesh.bounds();
         }
@@ -318,7 +318,7 @@ impl ModelBody {
         if crate::is_identity(&m) {
             return mesh.bounds();
         }
-        mesh.positions.iter().fold(solidcraft_geom::Aabb3::EMPTY, |mut b, p| {
+        mesh.positions.iter().fold(torno_geom::Aabb3::EMPTY, |mut b, p| {
             b.add(crate::apply_point(&m, *p));
             b
         })
@@ -378,7 +378,7 @@ impl ModelBody {
         }
         let plan = match self
             .body
-            .mesh_plan(&solidcraft_kernel::MeshTolerance { chord: q.refined_chord(self.body.size(), k), angle: Some(q.refined_angle(k)) })
+            .mesh_plan(&torno_kernel::MeshTolerance { chord: q.refined_chord(self.body.size(), k), angle: Some(q.refined_angle(k)) })
         {
             Ok(plan) => plan,
             Err(e) => {
@@ -434,11 +434,11 @@ pub struct SolvedSketch {
     pub feature: u64,
     pub name: String,
     pub plane: Plane,
-    pub sketch: solidcraft_sketch::Sketch,
+    pub sketch: torno_sketch::Sketch,
     pub report: SolveReport,
     pub profiles: Vec<Profile>,
     /// Open and untied ends of its profile curves (where a profile can fail).
-    pub ends: solidcraft_sketch::EndReport,
+    pub ends: torno_sketch::EndReport,
 }
 
 /// A constant fillet of `edges`; with [`FilletFit::Reduce`](crate::FilletFit::Reduce), a radius too
@@ -577,7 +577,7 @@ fn split_piece_of(name: &str) -> Option<&str> {
 
 /// The warning of a sketch whose profile search was cut short (#6896).
 fn profiles_cut_short_note() -> String {
-    format!("some profiles may be missing: a group of touching curves is cut into more than {} pieces", solidcraft_sketch::MAX_PROFILE_EDGES)
+    format!("some profiles may be missing: a group of touching curves is cut into more than {} pieces", torno_sketch::MAX_PROFILE_EDGES)
 }
 
 /// Add `note` to a feature's warning.
@@ -1332,7 +1332,7 @@ const QUANTUM: f64 = 1e-6;
 
 /// Put what a solve writes into a sketch on the [`QUANTUM`] grid: positions, radii and the
 /// measured values of driven dimensions.
-fn quantize(sk: &mut solidcraft_sketch::Sketch) {
+fn quantize(sk: &mut torno_sketch::Sketch) {
     let q = |v: f64| (v / QUANTUM).round() * QUANTUM;
     for p in &mut sk.points {
         p.pos = Vec2::new(q(p.pos.x), q(p.pos.y));
@@ -1350,8 +1350,8 @@ fn quantize(sk: &mut solidcraft_sketch::Sketch) {
 }
 
 /// The stored solve as a cache key: on the [`QUANTUM`] grid, without the editor state
-/// (see [`solidcraft_sketch::Sketch::clear_id_counters`]).
-fn fingerprint_sketch(sk: &mut solidcraft_sketch::Sketch) {
+/// (see [`torno_sketch::Sketch::clear_id_counters`]).
+fn fingerprint_sketch(sk: &mut torno_sketch::Sketch) {
     quantize(sk);
     sk.clear_id_counters();
 }
@@ -1435,7 +1435,7 @@ fn feature_json(f: &Feature, steps: &ImportDigests) -> String {
 /// constraints' values. Nothing else: what evaluation derives for its own copy (an offset's
 /// upgraded topology, refreshed links) stays out of the stored sketch. A `solved` that does not
 /// match `stored` entity for entity is not adopted.
-fn adopt_solution(stored: &mut solidcraft_sketch::Sketch, solved: &solidcraft_sketch::Sketch) -> bool {
+fn adopt_solution(stored: &mut torno_sketch::Sketch, solved: &torno_sketch::Sketch) -> bool {
     if stored.patterns != solved.patterns {
         // Rebuild authored copies without storing topology derived from links or offsets.
         let mut updated = stored.clone();
@@ -1760,13 +1760,13 @@ impl PlacementReads {
     /// are read through the reader's whole placement).
     fn sketch(&mut self, doc: &Document, id: u64) {
         self.components.insert(doc.feature(id).map(|f| f.component).unwrap_or(0));
-        if doc.sketch(id).is_ok_and(|sk| sk.wires.iter().any(|w| w.space == solidcraft_sketch::WireSpace::World)) {
+        if doc.sketch(id).is_ok_and(|sk| sk.wires.iter().any(|w| w.space == torno_sketch::WireSpace::World)) {
             self.components.insert(0);
         }
     }
 
-    fn link(&mut self, doc: &Document, st: Option<&ModelState>, source: &solidcraft_sketch::LinkSource) {
-        use solidcraft_sketch::LinkSource as L;
+    fn link(&mut self, doc: &Document, st: Option<&ModelState>, source: &torno_sketch::LinkSource) {
+        use torno_sketch::LinkSource as L;
         match source {
             L::Edge { body, .. } | L::Face { body, .. } | L::Body { body } | L::Vertex { body, .. } | L::Iso { body, .. } | L::Spun { body, .. } => {
                 self.body(doc, st, body)
@@ -2321,7 +2321,7 @@ impl Model {
     /// recomputed; the next [`Model::evaluate`] recomputes from the sketch on. Returns `false`,
     /// changing nothing, when the sketch has no evaluated result or a feature before it is
     /// already stale (only a full evaluation brings that up to date).
-    pub fn show_live_sketch(&mut self, feature: u64, sketch: solidcraft_sketch::Sketch, report: SolveReport) -> bool {
+    pub fn show_live_sketch(&mut self, feature: u64, sketch: torno_sketch::Sketch, report: SolveReport) -> bool {
         let Some(i) = self.results.iter().position(|r| r.id == feature) else { return false };
         if self.results.iter().take(i).any(|r| r.stale) {
             return false;
@@ -2334,7 +2334,7 @@ impl Model {
             name: last.name.clone(),
             plane: last.plane,
             profiles: find_profiles(&sketch),
-            ends: solidcraft_sketch::loose_ends(&sketch),
+            ends: torno_sketch::loose_ends(&sketch),
             sketch,
             report,
         });
@@ -2472,7 +2472,7 @@ impl Model {
         // sketch and every feature after it fail, the results end in the state they ended in
         // before, which would keep showing the sketch as it was before the edit.
         self.held = None;
-        let _span = solidcraft_profile::span("doc", "evaluate");
+        let _span = torno_profile::span("doc", "evaluate");
         self.placement_inputs = None;
         self.fingerprinted = None;
         self.placement_local = true;
@@ -2726,7 +2726,7 @@ impl Model {
                 }
                 recomputed += 1;
                 // Each feature computed is a profiler span named after its kind.
-                let _feature_span = solidcraft_profile::span("feature", f.kind.type_name());
+                let _feature_span = torno_profile::span("feature", f.kind.type_name());
                 let before = state.clone();
                 let t0 = now();
                 let mut next = (*state).clone();
@@ -3224,7 +3224,7 @@ fn refuse_loft_holes(r: &Region2) -> Result<()> {
 /// far each offset curve runs on (or is trimmed), whether the corner cuts in, or why the rule
 /// refuses it. A dialog offers the other rules where the chosen one is a poor fit.
 pub fn draft_corner_options(ss: &SolvedSketch, sel: &ProfileSel, distance: f64, taper: f64) -> Result<Vec<kernel::CornerReport>> {
-    let regions = solidcraft_sketch::merge_regions(&select_profiles(ss, sel)?);
+    let regions = torno_sketch::merge_regions(&select_profiles(ss, sel)?);
     let mut out = Vec::new();
     for r in &regions {
         out.extend(kernel::draft_corners(r, distance, taper)?);
@@ -3264,9 +3264,9 @@ pub fn select_profiles(ss: &SolvedSketch, sel: &ProfileSel) -> Result<Vec<Region
         // edges) only counts when the drawn curves alone make no profile. Text is drawn, and
         // its letters keep their counters as holes (the counters are not filled in).
         ProfileSel::All => {
-            let drawn = solidcraft_sketch::find_drawn_profiles(&ss.sketch);
+            let drawn = torno_sketch::find_drawn_profiles(&ss.sketch);
             let chosen = if drawn.is_empty() { ps.clone() } else { drawn };
-            solidcraft_sketch::without_text_counters(&ss.sketch, chosen).into_iter().map(|p| p.region).collect()
+            torno_sketch::without_text_counters(&ss.sketch, chosen).into_iter().map(|p| p.region).collect()
         }
         ProfileSel::Indices { indices } => {
             // A design file may list a profile more than once; it is still one profile.
@@ -3294,7 +3294,7 @@ pub fn select_profiles(ss: &SolvedSketch, sel: &ProfileSel) -> Result<Vec<Region
             let mut v = Vec::new();
             for p in points {
                 // Innermost profile containing the point.
-                let found = solidcraft_sketch::profile_at_point(ps, *p).and_then(|i| ps.get(i));
+                let found = torno_sketch::profile_at_point(ps, *p).and_then(|i| ps.get(i));
                 v.push(found.ok_or_else(|| DocError::Unknown(format!("profile at {:?} in {}", [p.x, p.y], ss.name)))?.region.clone());
             }
             v
@@ -3307,12 +3307,12 @@ pub fn select_profiles(ss: &SolvedSketch, sel: &ProfileSel) -> Result<Vec<Region
 }
 
 /// The error for a profile picked by curves that no longer names exactly one profile.
-pub fn curve_pick_error(e: solidcraft_sketch::CurvePick, ids: &[String], sketch: &str) -> DocError {
+pub fn curve_pick_error(e: torno_sketch::CurvePick, ids: &[String], sketch: &str) -> DocError {
     match e {
-        solidcraft_sketch::CurvePick::Missing => DocError::Invalid(format!(
+        torno_sketch::CurvePick::Missing => DocError::Invalid(format!(
             "no profile of {sketch} is bounded by exactly the curves {ids:?} (a curve was deleted, or another curve now cuts the region)"
         )),
-        solidcraft_sketch::CurvePick::Ambiguous(n) => DocError::Invalid(format!(
+        torno_sketch::CurvePick::Ambiguous(n) => DocError::Invalid(format!(
             "{n} profiles of {sketch} are bounded by exactly the curves {ids:?}; add a curve that tells them apart, or pick by index or point"
         )),
     }
@@ -3763,7 +3763,7 @@ fn empty_boolean_targets(doc: &Document, state: &ModelState, f: &Feature, tools:
         if bounds.is_empty() || !bounds.min.is_finite() || !bounds.max.is_finite() {
             continue;
         }
-        let mut placed = solidcraft_geom::Aabb3::EMPTY;
+        let mut placed = torno_geom::Aabb3::EMPTY;
         for x in [bounds.min.x, bounds.max.x] {
             for y in [bounds.min.y, bounds.max.y] {
                 for z in [bounds.min.z, bounds.max.z] {
@@ -3841,7 +3841,7 @@ fn apply_traced_with(
         // A cut that cannot reach a sheet leaves it as it is (#10226): a sheet whose box lies
         // clear of every tool's, in its own frame, needs no boolean to show it. An intersect
         // removes the sheets it misses, and checks each one as before.
-        let mut reach: Option<Vec<Option<solidcraft_geom::Aabb3>>> = None;
+        let mut reach: Option<Vec<Option<torno_geom::Aabb3>>> = None;
         for &i in &target_idx {
             if let Some(mb) = state.bodies.get(i).filter(|b| state.sheets.iter().any(|s| s.body == b.name)) {
                 let m = tool_frame(&mb.name);
@@ -3886,7 +3886,7 @@ fn apply_traced_with(
             // boolean: in a design of many bodies that was most of a hole's time (#10225). A body
             // whose exact box lies clear of every tool's is left as it is. A body shown in another
             // frame, and a mesh body, are cut as before; an intersect removes the bodies it misses.
-            let reach: Option<Vec<Option<solidcraft_geom::Aabb3>>> =
+            let reach: Option<Vec<Option<torno_geom::Aabb3>>> =
                 (op == Operation::Cut && !tools.iter().any(|t| t.body.is_mesh())).then(|| tools.iter().map(|t| more::exact_box(&t.body)).collect());
             for &ti in &target_idx {
                 let Some(mut acc) = state.bodies.get(ti).map(|b| Some(b.traced())) else { continue };
@@ -4279,7 +4279,7 @@ fn body_at(st: &ModelState, body: &Option<crate::BodyName>, points: &[Vec3]) -> 
 
 /// Whether the whole line through `p` along `dir` (both ways) meets the box (slab test). A zero
 /// component of `dir` keeps the line in its slab only when `p` is already within it.
-fn line_meets_box(p: Vec3, dir: Vec3, b: &solidcraft_geom::Aabb3) -> bool {
+fn line_meets_box(p: Vec3, dir: Vec3, b: &torno_geom::Aabb3) -> bool {
     if b.is_empty() {
         return false;
     }
@@ -4489,7 +4489,7 @@ fn picked_bodies(st: &ModelState, body: &Option<crate::BodyName>, pts: &[Vec3]) 
 /// References for edges picked at `pts` on the bodies a blend would go on (the state before it).
 pub fn edge_refs(st: &ModelState, body: &Option<crate::BodyName>, pts: &[Vec3]) -> Vec<EdgeRef> {
     let Some(on) = picked_bodies(st, body, pts) else { return Vec::new() };
-    let mut seen: BTreeMap<usize, Option<(Vec<kernel::EdgeInfo>, solidcraft_geom::Aabb3)>> = BTreeMap::new();
+    let mut seen: BTreeMap<usize, Option<(Vec<kernel::EdgeInfo>, torno_geom::Aabb3)>> = BTreeMap::new();
     let mut out = Vec::with_capacity(pts.len());
     for (p, ti) in pts.iter().zip(on) {
         let found = seen.entry(ti).or_insert_with(|| {
@@ -4566,7 +4566,7 @@ fn resolve_edges(b: &Body, pts: &[Vec3], refs: &[EdgeRef], warning: &mut Option<
     let edges = b.edges((size * 1e-3).max(1e-3))?;
     let tight = (size * 2e-3).max(1e-3);
     let dist = |p: Vec3, e: &kernel::EdgeInfo| e.points.windows(2).map(|w| p.dist_to_segment(w[0], w[1])).fold(f64::INFINITY, f64::min);
-    let now = b.mesh(&solidcraft_kernel::MeshTolerance::chord((size * 1e-2).max(1e-2))).map(|m| m.bounds()).ok();
+    let now = b.mesh(&torno_kernel::MeshTolerance::chord((size * 1e-2).max(1e-2))).map(|m| m.bounds()).ok();
     let (mut out, mut moved, mut lost) = (Vec::new(), 0, 0);
     for (i, p) in pts.iter().enumerate() {
         let on = edges.iter().any(|e| dist(*p, e) <= tight);
@@ -6020,7 +6020,7 @@ pub(crate) fn thin_regions(vals: &BTreeMap<String, Value>, ss: &SolvedSketch, th
             Ok(ss.sketch.exact_segs(ci).unwrap_or_else(|| ss.sketch.segs(ci)))
         })
         .collect::<Result<Vec<_>>>()?;
-    solidcraft_sketch::thin_wall_regions(&curves, inside, outside).map_err(|e| DocError::Invalid(format!("thin wall: {e}")))
+    torno_sketch::thin_wall_regions(&curves, inside, outside).map_err(|e| DocError::Invalid(format!("thin wall: {e}")))
 }
 
 /// How far apart (mm) profiles must stay for their extruded tools to be cut as one.
@@ -6048,7 +6048,7 @@ fn feature_tools_with_constructor(
             )?;
             let regions = match thin {
                 Some(thin) => thin_regions(vals, &ss, thin)?,
-                None => solidcraft_sketch::merge_regions(&select_profiles(&ss, profiles)?),
+                None => torno_sketch::merge_regions(&select_profiles(&ss, profiles)?),
             };
             // A thin wall's sides are named by the curves they run beside.
             let thin_roles = match thin {
@@ -6281,7 +6281,7 @@ fn feature_tools_with_constructor(
                 st.sketch(sketch.0).ok_or_else(|| DocError::Unknown(format!("sketch {sketch} (it must come earlier in the timeline)")))?,
                 f,
             )?;
-            let regions = solidcraft_sketch::merge_regions(&select_profiles(&ss, profiles)?);
+            let regions = torno_sketch::merge_regions(&select_profiles(&ss, profiles)?);
             let (o, d) = revolve_axis(
                 Some(doc),
                 f.component,
@@ -6407,7 +6407,7 @@ fn feature_tools_with_constructor(
             let [a, b] = &sections[..] else { return Err(DocError::Invalid("not supported yet: a point section in a loft of more than two".into())) };
             let (prof, pt) = if a.point.is_some() { (b, a) } else { (a, b) };
             let ss = st.sketch(prof.sketch.0).ok_or_else(|| DocError::Unknown(format!("sketch {}", prof.sketch)))?;
-            let regions = solidcraft_sketch::merge_regions(&select_profiles(ss, &prof.profiles)?);
+            let regions = torno_sketch::merge_regions(&select_profiles(ss, &prof.profiles)?);
             let [r] = &regions[..] else { return Err(DocError::Invalid("each loft section must be one profile".into())) };
             refuse_loft_holes(r)?;
             let ps = st.sketch(pt.sketch.0).ok_or_else(|| DocError::Unknown(format!("sketch {}", pt.sketch)))?;
@@ -6492,7 +6492,7 @@ fn feature_tools_with_constructor(
                 let ss = st
                     .sketch(sec.sketch.0)
                     .ok_or_else(|| DocError::Unknown(format!("sketch {} (it must come earlier in the timeline)", sec.sketch)))?;
-                let regions = solidcraft_sketch::merge_regions(&select_profiles(ss, &sec.profiles)?);
+                let regions = torno_sketch::merge_regions(&select_profiles(ss, &sec.profiles)?);
                 let [r] = &regions[..] else { return Err(DocError::Invalid("each loft section must be one profile".into())) };
                 secs.push((ss.plane, r.clone()));
                 sketches.push(ss);
@@ -6530,7 +6530,7 @@ fn feature_tools_with_constructor(
             };
             let mapped = path_in_frame(doc, ps, f.component)?;
             let ps = mapped.as_ref();
-            let regions = solidcraft_sketch::merge_regions(&select_profiles(ss, profiles)?);
+            let regions = torno_sketch::merge_regions(&select_profiles(ss, profiles)?);
             let start = regions.first().map(|r| ss.plane.to_world(r.centroid())).unwrap_or_default();
             let tool = |r: &Region2, body: Body| crate::lineage::ProfileRoles::swept(Some(ss), Some(r)).tool(body, None);
             let points = path_points(ps, path, start)?;
@@ -6681,7 +6681,7 @@ fn pipe_region(vals: &BTreeMap<String, Value>, r: f64, wall: &Option<crate::Expr
     Ok(Region2 { outer: solidcore_record::Loop2::circle(Vec2::ZERO, r), holes })
 }
 
-pub fn map_wire(wire: &mut solidcraft_sketch::Wire, matrix: &Mat) {
+pub fn map_wire(wire: &mut torno_sketch::Wire, matrix: &Mat) {
     wire.map(|p| crate::apply_point(matrix, p), |v| crate::apply_vector(matrix, v));
 }
 
@@ -6740,7 +6740,7 @@ fn path_in_frame<'a>(doc: &Document, sketch: &'a SolvedSketch, consumer: u64) ->
     )
     .ok_or_else(|| DocError::Invalid("path sketch frame is invalid".into()))?;
     for wire in &mut mapped.sketch.wires {
-        let matrix = if wire.space == solidcraft_sketch::WireSpace::Component { &relative } else { &inverse };
+        let matrix = if wire.space == torno_sketch::WireSpace::Component { &relative } else { &inverse };
         map_wire(wire, matrix);
     }
     Ok(Cow::Owned(mapped))
@@ -6749,7 +6749,7 @@ fn path_in_frame<'a>(doc: &Document, sketch: &'a SolvedSketch, consumer: u64) ->
 /// A path that uses 3D sketch curves (wires), as one chain of pieces from the end nearest
 /// `start` (no start: the first curve runs toward the second): each drawn 3D spline as its fit
 /// points (the kernel has its exact curve), each curve held exactly (a planar sketch curve, a
-/// linked curve with [`solidcraft_sketch::Wire::exact`]) as its path segments, and a linked
+/// linked curve with [`torno_sketch::Wire::exact`]) as its path segments, and a linked
 /// curve known only as points as those points. `None` when the path is all planar curves.
 fn path_points(ps: &SolvedSketch, ids: &[String], start: Vec3) -> Result<Option<kernel::PointPath>> {
     if !ids.iter().any(|id| ps.sketch.wire_index(id).is_some()) {
@@ -6764,12 +6764,12 @@ fn path_points(ps: &SolvedSketch, ids: &[String], start: Vec3) -> Result<Option<
             pieces.push(match ps.sketch.wires.get(wi) {
                 // A drawn 3D arc is its circle, from its start counter-clockwise about its normal
                 // (its three fit points define it; a spline through them is not the arc).
-                Some(solidcraft_sketch::Wire { arc: Some(arc), .. }) => {
+                Some(torno_sketch::Wire { arc: Some(arc), .. }) => {
                     let x = (arc.start - arc.center).normalized().ok_or_else(|| DocError::Invalid("a 3D arc of no radius".into()))?;
                     let y = arc.normal.cross(x);
                     let frame = solidcore_record::brep::Frame { origin: arc.center.into(), x_axis: x.into(), y_axis: y.into() };
                     let circle = solidcore_record::brep::Curve::Circle { frame, radius: arc.radius };
-                    kernel::PathPiece::Segs(kernel::curve_path(&circle, [0.0, solidcraft_sketch::arc_sweep(arc)])?)
+                    kernel::PathPiece::Segs(kernel::curve_path(&circle, [0.0, torno_sketch::arc_sweep(arc)])?)
                 }
                 Some(w) if w.fit.len() >= 3 => kernel::PathPiece::Spline { fit: w.fit.clone(), reversed: false },
                 Some(w) if !w.exact.is_empty() => {
@@ -7437,7 +7437,7 @@ fn round_face_axes(body: &Body, max: usize) -> Vec<(Vec3, Vec3)> {
 }
 
 /// The stretch of the line `o + t d` inside `b`, as the range of `t`; `None` when it misses.
-fn line_in_box(b: &solidcraft_geom::Aabb3, o: Vec3, d: Vec3) -> Option<(f64, f64)> {
+fn line_in_box(b: &torno_geom::Aabb3, o: Vec3, d: Vec3) -> Option<(f64, f64)> {
     let (mut lo, mut hi) = (f64::NEG_INFINITY, f64::INFINITY);
     for (o, d, min, max) in [(o.x, d.x, b.min.x, b.max.x), (o.y, d.y, b.min.y, b.max.y), (o.z, d.z, b.min.z, b.max.z)] {
         if d.abs() < 1e-12 {
@@ -8022,7 +8022,7 @@ fn trim_to_body(tools: Vec<Traced>, target: &ModelBody, dist_to_start: impl Fn(V
         for (lump, lineage) in lumps.into_iter().zip(lineages) {
             let tol = (lump.size() * 1e-4).max(1e-6);
             let touches = lump
-                .mesh(&solidcraft_kernel::MeshTolerance::chord((lump.size() * 1e-2).max(1e-2)))
+                .mesh(&torno_kernel::MeshTolerance::chord((lump.size() * 1e-2).max(1e-2)))
                 .map(|m| m.positions.iter().any(|q| dist_to_start(*q) < tol))
                 .unwrap_or(false);
             if touches {
@@ -8179,7 +8179,7 @@ fn face_plane(st: &ModelState, picked: &Plane, at: Vec3, name: Option<&str>) -> 
     let mut best: Option<(f64, f64)> = None; // (distance from `at`, plane offset along n)
     for b in &st.bodies {
         let tol = (b.body.size() * 1e-3).max(1e-3);
-        let (Ok(faces), Ok(mesh)) = (b.body.faces(tol), b.body.mesh(&solidcraft_kernel::MeshTolerance::chord(tol))) else { continue };
+        let (Ok(faces), Ok(mesh)) = (b.body.faces(tol), b.body.mesh(&torno_kernel::MeshTolerance::chord(tol))) else { continue };
         for f in faces {
             let Some(fnrm) = f.plane_normal else { continue };
             if fnrm.dot(n) < 1.0 - 1e-6 {
@@ -9083,7 +9083,7 @@ fn eval_feature(
         FeatureKind::FrameMember { .. } => frame_member::evaluate(doc, vals, f, st),
         FeatureKind::BoundingSolid { bodies, margin } => {
             let m = val(vals, margin, Kind::Length)?;
-            let mut bb = solidcraft_geom::Aabb3::EMPTY;
+            let mut bb = torno_geom::Aabb3::EMPTY;
             for b in st.bodies.iter().filter(|b| bodies.is_empty() || bodies.iter().any(|t| *t == b.name)) {
                 bb = bb.union(&b.mesh().bounds());
             }
@@ -9203,7 +9203,7 @@ fn eval_sketch(
     vals: &BTreeMap<String, Value>,
     f: &Feature,
     plane: &PlaneRef,
-    sketch: &solidcraft_sketch::Sketch,
+    sketch: &torno_sketch::Sketch,
     st: &mut ModelState,
     warning: &mut Option<String>,
     lost_names: crate::project::LostNames,
@@ -9268,12 +9268,12 @@ fn eval_sketch(
     sk.validate_periodic_splines()?;
     // A group of touching curves too large to search whole says so, rather than
     // leaving profiles out silently (#6896).
-    let search = solidcraft_sketch::find_profiles_checked(&sk);
+    let search = torno_sketch::find_profiles_checked(&sk);
     if search.incomplete {
         append_warning(warning, profiles_cut_short_note());
     }
     let profiles = search.profiles;
-    let ends = solidcraft_sketch::loose_ends(&sk);
+    let ends = torno_sketch::loose_ends(&sk);
     st.sketches.retain(|s| s.feature != f.id);
     st.sketches.push(Arc::new(SolvedSketch { feature: f.id, name: f.name.clone(), plane, sketch: sk, report, profiles, ends }));
     Ok(())
@@ -9631,7 +9631,7 @@ pub fn state_in_frame_at<'a>(doc: &Document, st: &'a ModelState, comp: u64, fram
         .collect();
     let sketch_m: Vec<Mat> = st.sketches.iter().map(|s| rel(comp_of_feature(s.feature), None)).collect();
     let world_wires_need_mapping = !crate::is_identity(&inv)
-        && st.sketches.iter().any(|sketch| sketch.sketch.wires.iter().any(|wire| wire.space == solidcraft_sketch::WireSpace::World));
+        && st.sketches.iter().any(|sketch| sketch.sketch.wires.iter().any(|wire| wire.space == torno_sketch::WireSpace::World));
     if body_m.iter().chain(&sketch_m).all(crate::is_identity) && !world_wires_need_mapping {
         return Ok(Cow::Borrowed(st));
     }
@@ -9644,7 +9644,7 @@ pub fn state_in_frame_at<'a>(doc: &Document, st: &'a ModelState, comp: u64, fram
     }
     for (s, m) in out.sketches.iter_mut().zip(&sketch_m) {
         // Only a sketch the frame moves is copied.
-        let maps_wire = |w: &solidcraft_sketch::Wire| !crate::is_identity(if w.space == solidcraft_sketch::WireSpace::Component { m } else { &inv });
+        let maps_wire = |w: &torno_sketch::Wire| !crate::is_identity(if w.space == torno_sketch::WireSpace::Component { m } else { &inv });
         if crate::is_identity(m) && !s.sketch.wires.iter().any(maps_wire) {
             continue;
         }
@@ -9653,7 +9653,7 @@ pub fn state_in_frame_at<'a>(doc: &Document, st: &'a ModelState, comp: u64, fram
             s.plane = placed_plane(m, &s.plane)?;
         }
         for wire in &mut s.sketch.wires {
-            let matrix = if wire.space == solidcraft_sketch::WireSpace::Component { m } else { &inv };
+            let matrix = if wire.space == torno_sketch::WireSpace::Component { m } else { &inv };
             map_wire(wire, matrix);
         }
     }
@@ -9976,7 +9976,7 @@ pub fn world_state_reusing(doc: &Document, st: &ModelState, placed_before: &mut 
                 let mut s2 = SolvedSketch::clone(s);
                 s2.plane = placed_plane(&m, &s.plane)?;
                 for wire in &mut s2.sketch.wires {
-                    if wire.space == solidcraft_sketch::WireSpace::Component {
+                    if wire.space == torno_sketch::WireSpace::Component {
                         map_wire(wire, &m);
                     }
                 }

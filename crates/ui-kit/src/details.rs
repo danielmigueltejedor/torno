@@ -2,7 +2,7 @@
 use crate::BackingTooltipExt as _;
 use crate::type_face::RichTextExt as _;
 use egui::{RichText, Ui};
-use solidcraft_theme::Tokens;
+use torno_theme::Tokens;
 
 pub const FIELD_FOCUS: &str = "details_field_focus";
 pub const CONTROL_FOCUS: &str = "details_control_focus";
@@ -202,7 +202,7 @@ pub fn setting(ui: &mut Ui, field: &DetailSetting, focus: bool) -> Option<Detail
                 }
             };
             if let Some(response) = response {
-                solidcraft_ui_registry::publish_target(&format!("details:field:{}", field.id), response.rect);
+                torno_ui_registry::publish_target(&format!("details:field:{}", field.id), response.rect);
                 // Visibility reads Context::will_discard. Never re-enter Context while
                 // holding its data write lock.
                 let visible = ui.is_visible() && ui.is_enabled() && ui.is_rect_visible(response.rect);
@@ -236,7 +236,7 @@ pub fn setting(ui: &mut Ui, field: &DetailSetting, focus: bool) -> Option<Detail
         && ![[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]].contains(vector)
     {
         let response = ui.add(egui::Label::new(RichText::new(current).monospace()).wrap()).backing_on_hover_text(current);
-        solidcraft_ui_registry::publish_target(&format!("details:current:{}", field.id), response.rect);
+        torno_ui_registry::publish_target(&format!("details:current:{}", field.id), response.rect);
     }
     changed.then(|| DetailEvent::Change(field.id.clone(), value))
 }
@@ -258,7 +258,7 @@ pub fn details(ui: &mut Ui, id: &str, description: &Details, max_height: f32, fo
         if let Some(caption) = &description.caption {
             let response = ui.add(egui::Label::new(RichText::new(caption).size(t.font_label).color(t.text_dim)).wrap());
             caption_height = response.rect.height() + t.space_8;
-            solidcraft_ui_registry::publish_rect("details:caption", response.rect);
+            torno_ui_registry::publish_rect("details:caption", response.rect);
         }
         let footer_height = if description.actions.is_empty() { 0.0 } else { t.control_height + t.space_16 };
         let body = egui::ScrollArea::vertical()
@@ -268,7 +268,7 @@ pub fn details(ui: &mut Ui, id: &str, description: &Details, max_height: f32, fo
             .auto_shrink([false, true])
             .show(ui, |ui| {
                 if !description.settings.is_empty() {
-                    heading(ui, solidcraft_ui_text::tr("ui.details_settings"));
+                    heading(ui, torno_ui_text::tr("ui.details_settings"));
                     super::settings_form(ui, t.form_label_width, |ui| {
                         for field in &description.settings {
                             ui.push_id(&field.id, |ui| {
@@ -280,7 +280,7 @@ pub fn details(ui: &mut Ui, id: &str, description: &Details, max_height: f32, fo
                     });
                 }
                 if !description.key.is_empty() {
-                    heading(ui, solidcraft_ui_text::tr("ui.details_key"));
+                    heading(ui, torno_ui_text::tr("ui.details_key"));
                     for row in &description.key {
                         ui.horizontal(|ui| {
                             patterned_swatch(ui, row.colour, row.pattern, row.pattern_colour);
@@ -316,12 +316,10 @@ pub fn details(ui: &mut Ui, id: &str, description: &Details, max_height: f32, fo
                                     if row.target {
                                         let (rect, _) = ui.allocate_exact_size(egui::vec2(t.control_height, t.control_height), egui::Sense::hover());
                                         let response = ui
-                                            .push_id(&row.id, |ui| {
-                                                super::icon_button_at(ui, rect, "fit", solidcraft_ui_text::tr("ui.details_target"))
-                                            })
+                                            .push_id(&row.id, |ui| super::icon_button_at(ui, rect, "fit", torno_ui_text::tr("ui.details_target")))
                                             .inner;
                                         remember_control(ui, response.id);
-                                        solidcraft_ui_registry::publish_target(&format!("details:target:{}", row.id), response.rect);
+                                        torno_ui_registry::publish_target(&format!("details:target:{}", row.id), response.rect);
                                         if response.clicked() {
                                             events.push(DetailEvent::Target(row.id.clone()));
                                         }
@@ -330,21 +328,21 @@ pub fn details(ui: &mut Ui, id: &str, description: &Details, max_height: f32, fo
                             });
                         }
                     });
-                    solidcraft_ui_registry::publish_count(
+                    torno_ui_registry::publish_count(
                         "details:findings_visible",
                         if expanded { description.findings.len() } else { description.findings.len().min(6) } as f64,
                     );
                     if !expanded && description.findings.len() > 6 {
-                        let text = solidcraft_ui_text::format("ui.details_show_all", &[("count", &description.findings.len().to_string())]);
+                        let text = torno_ui_text::format("ui.details_show_all", &[("count", &description.findings.len().to_string())]);
                         let response = super::button(ui, text, super::Button::Ghost);
                         remember_control(ui, response.id);
-                        solidcraft_ui_registry::publish_target("details:show_all", response.rect);
+                        torno_ui_registry::publish_target("details:show_all", response.rect);
                         if response.clicked() {
                             ui.data_mut(|data| data.insert_temp(expanded_id, true));
                         }
                     }
                 } else if !description.readout.is_empty() {
-                    heading(ui, solidcraft_ui_text::tr("ui.details_readout"));
+                    heading(ui, torno_ui_text::tr("ui.details_readout"));
                     let expanded_id = ui.make_persistent_id((id, "all_readout"));
                     let expanded = ui.data(|data| data.get_temp::<bool>(expanded_id)).unwrap_or(false);
                     let columns = [super::Column::new("", 1.0).flex(), super::Column::new("", 1.0).flex()];
@@ -360,35 +358,35 @@ pub fn details(ui: &mut Ui, id: &str, description: &Details, max_height: f32, fo
                             });
                         }
                     });
-                    solidcraft_ui_registry::publish_count(
+                    torno_ui_registry::publish_count(
                         "details:readout_visible",
                         if expanded { description.readout.len() } else { description.readout.len().min(6) } as f64,
                     );
                     if !expanded && description.readout.len() > 6 {
-                        let text = solidcraft_ui_text::format("ui.details_show_all", &[("count", &description.readout.len().to_string())]);
+                        let text = torno_ui_text::format("ui.details_show_all", &[("count", &description.readout.len().to_string())]);
                         let response = super::button(ui, text, super::Button::Ghost);
                         remember_control(ui, response.id);
-                        solidcraft_ui_registry::publish_target("details:show_all", response.rect);
+                        torno_ui_registry::publish_target("details:show_all", response.rect);
                         if response.clicked() {
                             ui.data_mut(|data| data.insert_temp(expanded_id, true));
                         }
                     }
                 }
             });
-        solidcraft_ui_registry::publish_rect("details:body", body.inner_rect);
+        torno_ui_registry::publish_rect("details:body", body.inner_rect);
         if !description.actions.is_empty() {
             super::divider(ui, "details_actions");
             let actions = ui.horizontal(|ui| {
                 for (id, label) in description.actions.iter().take(2) {
                     let response = super::text_button(ui, label, true);
                     remember_control(ui, response.id);
-                    solidcraft_ui_registry::publish_target(&format!("details:action:{id}"), response.rect);
+                    torno_ui_registry::publish_target(&format!("details:action:{id}"), response.rect);
                     if response.clicked() {
                         events.push(DetailEvent::Action(id.clone()));
                     }
                 }
             });
-            solidcraft_ui_registry::publish_rect("details:actions", actions.response.rect);
+            torno_ui_registry::publish_rect("details:actions", actions.response.rect);
         }
     });
     events

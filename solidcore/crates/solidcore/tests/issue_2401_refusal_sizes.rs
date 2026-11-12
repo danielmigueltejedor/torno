@@ -40,7 +40,7 @@ use solidcore::topology::brep::validation::{check_brep, CheckLevel};
 use solidcore::topology::{edge, EdgeId};
 use solidcore::{Brep, Kernel, SolidError};
 
-/// SolidCraft's set of fixes.
+/// Torno's set of fixes.
 fn kernel() -> Kernel {
     Kernel {
         fixes: UpstreamFixes::all(),
@@ -259,7 +259,7 @@ fn chamfers_taking_a_rectangular_top_name_its_depth_and_build_there() {
 // ---- a collapsed offset ---------------------------------------------------------------
 
 /// The fork's `arc_wall_plate`: a 41 1/6 x 21 plate and the corner a circle of radius 21
-/// leaves, 10 high, then its top front edge rounded R2 (SolidCraft's pick).
+/// leaves, 10 high, then its top front edge rounded R2 (Torno's pick).
 fn arc_wall_plate_rounded(k: &mut Kernel) -> Brep {
     let w = 41.0 + 1.0 / 6.0;
     let corner_box = create_box(k, Point3::new(w, -21.0, 0.0), 21.0, 21.0, 10.0).unwrap();

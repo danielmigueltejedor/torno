@@ -1,7 +1,7 @@
 use std::path::{Path, PathBuf};
 
 use serde_json::{Value, json};
-use solidcraft_doc::DesignLink;
+use torno_doc::DesignLink;
 
 use super::{
     BreakLinkParams, BreakLinkResult, CopiesParams, CopiesResult, ExtractParams, ExtractResult, InsertDesignParams, InsertDesignResult, LinksParams,
@@ -150,7 +150,7 @@ fn the_check_names_what_is_wrong_with_a_key() {
 }
 
 fn folder(name: &str) -> PathBuf {
-    let dir = std::env::temp_dir().join(format!("solidcraft-link-schema-{name}-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("torno-link-schema-{name}-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&dir);
     std::fs::create_dir_all(&dir).unwrap_or_else(|e| panic!("{e}"));
     dir

@@ -1,7 +1,7 @@
 # Publishes the vendored SolidCore kernel's `solidcore` crate to crates.io when a tag
 # "solidcore-v<version>" is pushed, e.g. `git tag solidcore-v0.0.1 && git push origin solidcore-v0.0.1`.
 # SolidCore's own release workflow (solidcore/.github/workflows/release.yml), run from solidcore/:
-# GitHub does not run a subfolder's workflows. SolidCraft's releases use no tag trigger, so the
+# GitHub does not run a subfolder's workflows. Torno's releases use no tag trigger, so the
 # solidcore- prefix keeps the two apart.
 # Needs the repository secret CRATES_IO_TOKEN (crates.io token, scope publish-update), in the
 # crates-io environment.
@@ -16,6 +16,8 @@ permissions:
 
 jobs:
   publish:
+    # Pushes to upstream's SolidCore repository or registry: only upstream holds the access.
+    if: github.repository == 'tangency-labs/solidcraft'
     runs-on: ubuntu-latest
     environment: crates-io
     defaults:

@@ -3,8 +3,8 @@
 
 use serde_json::{Value, json};
 use solidcore_record::Vec2;
-use solidcraft_geom::prelude::*;
-use solidcraft_sketch::Shape;
+use torno_geom::prelude::*;
+use torno_sketch::Shape;
 
 use crate::Session;
 
@@ -19,7 +19,7 @@ fn ids(v: &Value) -> Vec<String> {
     v.as_array().map(|a| a.iter().filter_map(|x| x.as_str().map(str::to_string)).collect()).unwrap_or_default()
 }
 
-fn sketch(s: &Session) -> solidcraft_sketch::Sketch {
+fn sketch(s: &Session) -> torno_sketch::Sketch {
     let id = s.active_sketch.unwrap();
     s.model.state().sketch(id).unwrap().sketch.clone()
 }

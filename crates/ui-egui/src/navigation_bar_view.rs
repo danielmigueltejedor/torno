@@ -7,7 +7,7 @@ use crate::ui_kit::{self, NavigationEdge, NavigationKind};
 use crate::{SolveApp, viewport::NavMode};
 use egui::{Rect, vec2};
 use serde_json::json;
-use solidcraft_theme::Tokens;
+use torno_theme::Tokens;
 
 /// What the current canvas lets the camera do: a flat sheet page or a finished render cannot
 /// orbit or pick, the Render workspace has its own caps, and the model has the full set.
@@ -46,8 +46,8 @@ pub(crate) fn measured(app: &SolveApp, ctx: &egui::Context, content: Rect) -> Ba
     let preferred = bar.rect.center();
     let place = |bar: &BarLayout| {
         region.place_footprint(
-            solidcraft_engine::panels::Size { width: bar.rect.width(), height: bar.rect.height() },
-            solidcraft_engine::panels::Point { x: preferred.x, y: preferred.y },
+            torno_engine::panels::Size { width: bar.rect.width(), height: bar.rect.height() },
+            torno_engine::panels::Point { x: preferred.x, y: preferred.y },
             t.space_4,
         )
     };
@@ -143,7 +143,7 @@ fn tip(app: &SolveApp, slot: &Slot, hidden: Option<&str>, key: bool) -> String {
     if let Some(hidden) = hidden {
         app.tr(hidden).to_owned()
     } else if slot.id == "visual_style" {
-        solidcraft_ui_text::format("navbar.value_tip", &[("name", app.tr(slot.label)), ("value", current_style(app))])
+        torno_ui_text::format("navbar.value_tip", &[("name", app.tr(slot.label)), ("value", current_style(app))])
     } else if slot.id == "projection" && projection_locked(app) {
         app.tr("nav.perspective.sketch").to_owned()
     } else if slot.id == "zoom" && key {
@@ -380,7 +380,7 @@ fn display_menu(app: &SolveApp) -> Menu {
         ("auto_ortho_faces", "Perspective while orbiting, ortho on faces", app.ui.auto_ortho_faces),
         ("tool_cursor", "Show tool at cursor", app.ui.tool_cursor),
     ] {
-        entries.push(MenuEntry::Row(row(id, solidcraft_ui_text::tr_label(label), "select", &format!("view:{id}"), on)));
+        entries.push(MenuEntry::Row(row(id, torno_ui_text::tr_label(label), "select", &format!("view:{id}"), on)));
     }
     // The View angles readout under the orientation gizmo (#6032).
     let mut angles = row("view_angles", app.tr("ui.view_angles"), "select", "view:view_angles", app.preferences.show_view_angles);
@@ -469,8 +469,8 @@ mod tests {
             if let (egui::Shape::Rect(live), egui::Shape::Rect(preview)) = (&live.shape, &preview.shape)
                 && live.fill != preview.fill
             {
-                assert_eq!(live.fill, solidcraft_theme::Tokens::get().dialog_body.gamma_multiply(0.97));
-                assert_eq!(preview.fill, solidcraft_theme::Tokens::get().dialog_body);
+                assert_eq!(live.fill, torno_theme::Tokens::get().dialog_body.gamma_multiply(0.97));
+                assert_eq!(preview.fill, torno_theme::Tokens::get().dialog_body);
                 let mut opaque = live.clone();
                 opaque.fill = preview.fill;
                 assert_eq!(&opaque, preview, "only the board's opaque editing surface differs");
@@ -549,8 +549,8 @@ mod tests {
         h.app.ui.show_timeline = false;
         h.call("ui.prefs", json!({"navigation_bar":{"slots":["display","fit","home"]}}));
         h.settle();
-        let on_bar = solidcraft_ui_registry::handle_at("nav:slot:display").expect("the View slot is on the bar");
-        assert_eq!(solidcraft_ui_registry::handle_at("nav:view"), Some(on_bar));
+        let on_bar = torno_ui_registry::handle_at("nav:slot:display").expect("the View slot is on the bar");
+        assert_eq!(torno_ui_registry::handle_at("nav:view"), Some(on_bar));
         // Many slots before it in a narrow view fold the View slot into More.
         h.call(
             "ui.prefs",
@@ -558,10 +558,10 @@ mod tests {
         );
         h.call("ui.resize", json!({"width":300,"height":600}));
         h.settle();
-        assert!(solidcraft_ui_registry::handle_at("nav:slot:display").is_none() && solidcraft_ui_registry::handle_at("nav:view").is_none(), "folded");
+        assert!(torno_ui_registry::handle_at("nav:slot:display").is_none() && torno_ui_registry::handle_at("nav:view").is_none(), "folded");
         h.step(&json!({"click":{"handle":"nav:more"}})).unwrap();
-        let in_more = solidcraft_ui_registry::handle_at("nav:slot:display").expect("More lists the View slot");
-        assert_eq!(solidcraft_ui_registry::handle_at("nav:view"), Some(in_more));
+        let in_more = torno_ui_registry::handle_at("nav:slot:display").expect("More lists the View slot");
+        assert_eq!(torno_ui_registry::handle_at("nav:view"), Some(in_more));
     }
 
     #[test]
@@ -569,7 +569,7 @@ mod tests {
         crate::i18n::install();
         for slot in CATALOGUE {
             for language in ["en", "ja", "zh"] {
-                let description = solidcraft_ui_text::Locale::for_language(language).text(slot.description);
+                let description = torno_ui_text::Locale::for_language(language).text(slot.description);
                 assert!(!description.trim().is_empty() && description != slot.description, "{language}: {} needs a description", slot.id);
                 assert!(description.ends_with(['.', '。']), "{language}: {} must be a sentence", slot.id);
                 let lower = description.to_lowercase();

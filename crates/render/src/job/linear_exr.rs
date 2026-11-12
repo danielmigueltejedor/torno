@@ -32,11 +32,11 @@ fn attribute(out: &mut Vec<u8>, name: &[u8], kind: &[u8], value: &[u8]) -> Resul
 }
 
 pub(super) fn header(width: u32, height: u32) -> Result<Vec<u8>> {
-    header_for(width, height, b"SolidCraft native GPU path")
+    header_for(width, height, b"Torno native GPU path")
 }
 #[cfg(feature = "raytrace-cpu")]
 pub(super) fn cpu_header(width: u32, height: u32) -> Result<Vec<u8>> {
-    header_for(width, height, b"SolidCraft native CPU raytrace")
+    header_for(width, height, b"Torno native CPU raytrace")
 }
 /// Accept only this writer's exact native profiles, never external EXR metadata.
 pub(super) fn native_header(bytes: &[u8], width: u32, height: u32) -> Result<Vec<u8>> {

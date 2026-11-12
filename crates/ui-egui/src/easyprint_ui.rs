@@ -73,10 +73,10 @@ pub fn request(app: &mut SolveApp, params: Value) {
 }
 
 fn go(app: &mut SolveApp, mut params: Value) {
-    let _language = solidcraft_ui_text::scope(&app.preferences.language);
+    let _language = torno_ui_text::scope(&app.preferences.language);
     params["consent"] = json!(true);
     if app.run("file.open_in_easyprint", params).is_ok() {
-        app.set_status(solidcraft_ui_text::tr("ui.easyprint_uploading"), false);
+        app.set_status(torno_ui_text::tr("ui.easyprint_uploading"), false);
     }
 }
 
@@ -90,7 +90,7 @@ pub fn tick(app: &mut SolveApp, ctx: &egui::Context) {
         return;
     };
     app.easyprint.busy.store(false, Ordering::SeqCst);
-    let _language = solidcraft_ui_text::scope(&app.preferences.language);
+    let _language = torno_ui_text::scope(&app.preferences.language);
     match answer {
         Ok(url) => {
             #[cfg(test)]
@@ -98,21 +98,21 @@ pub fn tick(app: &mut SolveApp, ctx: &egui::Context) {
                 app.easyprint.opened = Some(url.clone());
             }
             ctx.open_url(egui::OpenUrl::new_tab(url));
-            app.set_status(solidcraft_ui_text::tr("ui.easyprint_opened"), false);
+            app.set_status(torno_ui_text::tr("ui.easyprint_opened"), false);
         }
-        Err(e) => app.set_status(solidcraft_ui_text::format("ui.easyprint_failed", &[("error", &e)]), true),
+        Err(e) => app.set_status(torno_ui_text::format("ui.easyprint_failed", &[("error", &e)]), true),
     }
 }
 
 /// The question: what is uploaded where, for how long.
 pub fn show(app: &mut SolveApp, ctx: &egui::Context) {
     let Some(params) = app.easyprint.ask.clone() else { return };
-    let _language = solidcraft_ui_text::scope(&app.preferences.language);
+    let _language = torno_ui_text::scope(&app.preferences.language);
     let (closed, action) =
-        ui_kit::Confirm::new(egui::Id::unique("sc_easyprint_confirm"), "mesh_export", solidcraft_ui_text::tr_label("Open with EasyPrint"))
+        ui_kit::Confirm::new(egui::Id::unique("sc_easyprint_confirm"), "mesh_export", torno_ui_text::tr_label("Open with EasyPrint"))
             .actions("Upload", "Cancel", None)
             .show(ctx, true, |ui| {
-                ui_kit::text(ui, solidcraft_ui_text::tr("ui.easyprint_consent"), ui_kit::Text::Report("easyprint_consent", false));
+                ui_kit::text(ui, torno_ui_text::tr("ui.easyprint_consent"), ui_kit::Text::Report("easyprint_consent", false));
             });
     match action {
         ui_kit::Action::Ok => {
@@ -140,7 +140,7 @@ mod tests {
     fn harness(answer: Answer) -> (Harness, Names) {
         let mut h = Harness::new();
         h.app.run("solid.box", json!({"length": 2, "width": 3, "height": 4})).unwrap();
-        h.app.run("select.set", json!({"items": [solidcraft_engine::Sel::Body { name: "Body1".into() }]})).unwrap();
+        h.app.run("select.set", json!({"items": [torno_engine::Sel::Body { name: "Body1".into() }]})).unwrap();
         let names = Names::default();
         let log = names.clone();
         h.app.services.easyprint_upload = Some(Arc::new(move |name, _bytes, done| {
@@ -228,7 +228,7 @@ mod tests {
         h.frames(2);
         let Some(crate::dialogs::Kind::SaveMesh(k)) = h.app.dialog.as_ref().map(|d| &d.kind) else { panic!("no dialog") };
         let input = crate::selection::SelInput {
-            items: vec![solidcraft_engine::Sel::Body { name: "Body1".into() }],
+            items: vec![torno_engine::Sel::Body { name: "Body1".into() }],
             ..crate::selection::SelInput::new("Bodies", crate::selection::BODIES, true)
         };
         let (id, p) = crate::dialogs_save_mesh::commands(k, &[input]).unwrap().remove(0);

@@ -30,8 +30,8 @@ The interface is built from components that another front end could use as they 
 
 - **takes plain data**: labels, icons, entries, values and the host's prefix for its names. It reads no app state;
 - **returns what the user chose**: an action, a row, a button. The host runs it as a command. A component that must record several requests in a frame returns them as a list for the host to run after drawing, in order;
-- **draws with the shared theme**: every colour, size and space from `solidcraft_theme::Tokens`; text through `solidcraft_ui_text`; every outer window or popup through `ui_kit::Container` (`cargo xtask ui-containers`);
-- **publishes its handles** into `solidcraft_ui_registry` under the host's prefix, so the control channel, the scenarios and the tests find it. Torno's names stay byte-identical when a piece becomes a component;
+- **draws with the shared theme**: every colour, size and space from `torno_theme::Tokens`; text through `torno_ui_text`; every outer window or popup through `ui_kit::Container` (`cargo xtask ui-containers`);
+- **publishes its handles** into `torno_ui_registry` under the host's prefix, so the control channel, the scenarios and the tests find it. Torno's names stay byte-identical when a piece becomes a component;
 - **is tested on plain data**, without the app. The host's own tests still pass unchanged.
 
 A piece moves into a shared crate once it depends only on what a shared crate may: the viewport crates, the theme, the text catalogs, the control channel and the UI kit (`ui-kit`, with its components) have. What a component draws from Torno is Torno's: its look (icon set, glyphs, interface faces and built-in themes) is the shared `look` crate, which Torno and any other host install from; its tab table and messages stay in `ui-egui`, which installs them or passes them in. When a piece becomes a component, before/after screenshots of Torno show no differing pixels.

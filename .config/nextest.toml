@@ -9,18 +9,18 @@
 # Keep this list in sync with docs/book/src/dev/testing.md and CONTRIBUTING.md.
 default-filter = """
 not (
-    (package(solidcraft-engine) & (
+    (package(torno-engine) & (
         test(=tests::hostile_params_never_panic)
         | test(/^tests::robustness::/)
         | test(=pattern_suppress_tests::enclosure_arc_extinction_keeps_a_real_sharp_inner_lip_after_resize_and_reopen)
         | test(=pattern_suppress_tests::enclosure_datums_follow_wall_height_and_board_depth_with_material_proofs)
         | test(=cmd::plastic::tests::enclosure_snap_fit_follows_resized_front_wall)
     ))
-    | (package(solidcraft-kernel) & test(=tests::boolean_identity_on_tangent_primitives))
-    | (package(solidcraft-kernel) & test(=tspline::tests::hostile_tsplines_never_panic))
-    | (package(solidcraft-kernel) & binary(boolean_props))
-    | (package(solidcraft-engine) & binary(atomic_commands))
-    | (package(solidcraft-ui-egui) & binary(scenarios) & test(=acceptance_sensor_enclosure))
+    | (package(torno-kernel) & test(=tests::boolean_identity_on_tangent_primitives))
+    | (package(torno-kernel) & test(=tspline::tests::hostile_tsplines_never_panic))
+    | (package(torno-kernel) & binary(boolean_props))
+    | (package(torno-engine) & binary(atomic_commands))
+    | (package(torno-ui-egui) & binary(scenarios) & test(=acceptance_sensor_enclosure))
 )
 """
 fail-fast = false
@@ -36,7 +36,7 @@ path = "junit.xml"
 # Bound the whole test process, including Vulkan host initialization and teardown.
 # Cold runs can warm multiple pipelines before the first image starts rendering.
 [[profile.ci.overrides]]
-filter = "package(=solidcraft-ui-egui) & test(=render_workspace::tests::progressive_image_controls_route_to_the_registered_host)"
+filter = "package(=torno-ui-egui) & test(=render_workspace::tests::progressive_image_controls_route_to_the_registered_host)"
 slow-timeout = { period = "60s", terminate-after = 20 }
 
 # The action matrix sample runs its designs in parallel workers (ACTION_MATRIX_JOBS, set to match in
@@ -53,7 +53,7 @@ priority = 100
 # first; a test over ~100 s belongs here (the medians of 24 full runs added the last ones, #14362).
 [[profile.ci.overrides]]
 filter = """
-(package(solidcraft-engine) & (
+(package(torno-engine) & (
     test(/^tests::robustness::/)
     | test(=tests::hostile_params_never_panic)
     | test(=cmd::clearance::tests::distances_are_exact_on_edges_and_curved_faces)
@@ -68,8 +68,8 @@ filter = """
     | test(=thread_tests::a_multi_start_thread_takes_the_volume_of_one_start)
     | test(=thread_tests::a_thread_reaches_a_flat_shoulder_at_every_angle_and_leaves_it_whole)
 ))
-| (package(solidcraft-engine) & (binary(atomic_commands) | binary(step_export_regressions)))
-| (package(solidcraft-kernel) & (
+| (package(torno-engine) & (binary(atomic_commands) | binary(step_export_regressions)))
+| (package(torno-kernel) & (
     test(=curveblend::tests::rolling_ball_turns_about_a_rounded_corner_of_its_radius)
     | test(=tests::fillet_tabbed_plate_outer_loop_and_partial_selection_after_hole)
     | test(=tspline::tests::hostile_tsplines_never_panic)
@@ -83,8 +83,8 @@ filter = """
     | test(=corner_g2::tests::a_long_setback_keeps_the_g2_patch_inside_the_box)
     | test(=blend_corner::tests::issue1557_connected_rounds_keep_their_radii)
 ))
-| (package(solidcraft-cli) & binary(naming_corpus) & test(=corpus_designs_name_alike_every_build_and_fail_where_a_reference_is_gone))
-| (package(solidcraft-ui-egui) & (
+| (package(torno-cli) & binary(naming_corpus) & test(=corpus_designs_name_alike_every_build_and_fail_where_a_reference_is_gone))
+| (package(torno-ui-egui) & (
     test(=render_workspace::tests::progressive_image_controls_route_to_the_registered_host)
     | test(=preselect_tests::variable_fillet_round_trip)
     | test(=dialogs::dense::tests::a_saved_smooth_patch_reopens_with_its_setback)
@@ -101,7 +101,7 @@ priority = 99
 max-threads = 1
 
 [[profile.ci.overrides]]
-filter = "package(=solidcraft-gpu) & test(/^path::/)"
+filter = "package(=torno-gpu) & test(/^path::/)"
 test-group = "gpu-path"
 
 # Full local validation opts into its own scheduling policy. Keep GitHub CI's
@@ -115,12 +115,12 @@ threads-required = "num-cpus"
 priority = 100
 
 [[profile.local-ci.overrides]]
-filter = "package(solidcraft-kernel) & test(=tspline::tests::hostile_tsplines_never_panic)"
+filter = "package(torno-kernel) & test(=tspline::tests::hostile_tsplines_never_panic)"
 priority = 99
 
 [[profile.local-ci.overrides]]
 filter = """
-(package(solidcraft-engine) & (
+(package(torno-engine) & (
     test(/^tests::robustness::/)
     | test(=tests::hostile_params_never_panic)
     | test(=cmd::clearance::tests::distances_are_exact_on_edges_and_curved_faces)
@@ -130,8 +130,8 @@ filter = """
     | test(=cmd::sheet::tests::perforated_sheet_takes_a_thousand_round_holes)
     | test(=boolean_regression_tests::joined_loft_frames_plan_their_display_at_every_quality)
 ))
-| (package(solidcraft-engine) & (binary(atomic_commands) | binary(step_export_regressions)))
-| (package(solidcraft-kernel) & (
+| (package(torno-engine) & (binary(atomic_commands) | binary(step_export_regressions)))
+| (package(torno-kernel) & (
     test(=curveblend::tests::rolling_ball_turns_about_a_rounded_corner_of_its_radius)
     | test(=tests::fillet_tabbed_plate_outer_loop_and_partial_selection_after_hole)
     | test(=tspline::tests::hostile_tsplines_never_panic)
@@ -149,7 +149,7 @@ max-threads = 1
 platform = "cfg(windows)"
 # Viewport tests also open real devices when their names do not contain "gpu".
 filter = """
-package(solidcraft-gpu) | package(solidcraft) | (package(solidcraft-ui-egui) & (
+package(torno-gpu) | package(torno) | (package(torno-ui-egui) & (
     test(/(offscreen|gpu)/)
     | test(/^viewport::tests::/)
     | test(=render_workspace::tests::progressive_image_controls_route_to_the_registered_host)

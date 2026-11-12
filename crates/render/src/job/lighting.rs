@@ -3,7 +3,7 @@
 use super::{DirectionalLightOptions, ErrorCode, JobError, Result};
 use serde::{Deserialize, Serialize};
 use solidcore_record::Vec3;
-use solidcraft_geom::prelude::*;
+use torno_geom::prelude::*;
 
 pub const MAX_AREA_LIGHTS: usize = 4;
 

@@ -1,6 +1,6 @@
 //! World-frame metadata at a timeline body ownership boundary.
 use solidcore_record::Plane;
-use solidcraft_geom::prelude::*;
+use torno_geom::prelude::*;
 
 use crate::{DocError, Mat, ModelState, Result, apply_point, apply_vector};
 

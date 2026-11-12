@@ -12,7 +12,7 @@
 //! functions and derivatives), §4.5 (derivatives of a rational surface). [`uv`] finds the
 //! parameters of a point on an evaluator surface.
 
-// SolidCraft's plan evaluator, moved here from its geom crate as it is (RFC 0003, item 1.1), so
+// Torno's plan evaluator, moved here from its geom crate as it is (RFC 0003, item 1.1), so
 // it stays the same text as its history; where it overlaps the rest of `solidcore::eval`, the two
 // are unified in a later step. Its slice indexing is checked access;
 // the rest of the kernel's lints come with that step.

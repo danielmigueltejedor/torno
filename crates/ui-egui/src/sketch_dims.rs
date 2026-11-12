@@ -9,14 +9,14 @@ use crate::ui_kit::{Container, Surface};
 use egui::{Pos2, vec2};
 use serde_json::{Value, json};
 use solidcore_record::Vec2;
-use solidcraft_engine::doc::Document;
-use solidcraft_engine::doc::expr::{Kind as ValueKind, definition};
-use solidcraft_engine::geom::prelude::*;
+use torno_engine::doc::Document;
+use torno_engine::doc::expr::{Kind as ValueKind, definition};
+use torno_engine::geom::prelude::*;
 
 use crate::SolveApp;
 use crate::tools::Tool;
 use crate::viewport::Proj;
-use solidcraft_theme::Tokens;
+use torno_theme::Tokens;
 
 /// What an untyped construction line Length box shows: the line stays infinite.
 const INFINITE: &str = "\u{221e}";
@@ -80,14 +80,14 @@ fn locked(app: &SolveApp, t: &Tool, label: &str) -> Option<f64> {
 
 /// A box value's size. `name = expression` is the right-hand side's: the size the parameter
 /// `name` will hold once the shape is placed.
-fn eval(doc: &Document, text: &str, kind: ValueKind) -> solidcraft_engine::doc::Result<f64> {
+fn eval(doc: &Document, text: &str, kind: ValueKind) -> torno_engine::doc::Result<f64> {
     crate::length_input::eval(doc, definition(text).map_or(text, |(_, rhs)| rhs), kind)
 }
 
 /// Whether a box becomes one of the shape's dimensions. A rounded rectangle's radius is its own
 /// parameter (sent with the shape); sides and rho are counts and shape factors.
 fn is_dimension(t: &Tool, label: &str) -> bool {
-    if solidcraft_engine::cmd::construction_line_mode(t.cmd).is_some() {
+    if torno_engine::cmd::construction_line_mode(t.cmd).is_some() {
         return matches!(
             (t.cmd, label),
             ("sketch.construction_line.angle", "Angle")
@@ -206,7 +206,7 @@ pub fn placed(app: &SolveApp, t: &Tool, p: &(Vec2, Option<String>)) -> (Vec2, Op
 
 /// The Length box of a construction line tool, which is empty for an infinite line.
 fn construction_length(t: &Tool, b: &DimBox) -> bool {
-    b.label == "Length" && solidcraft_engine::cmd::construction_line_mode(t.cmd).is_some()
+    b.label == "Length" && torno_engine::cmd::construction_line_mode(t.cmd).is_some()
 }
 
 /// The id of the `i`th value box of the tool being drawn.
@@ -237,9 +237,9 @@ fn on_curve_axis(app: &SolveApp, t: &Tool, p: &(Vec2, Option<String>)) -> Option
     let shape = sk.shape(sk.curve_index(curve)?)?;
     let dir = Vec2::from_angle(ang);
     let horizontal = dir.y.abs() < dir.x.abs();
-    let axis = solidcraft_engine::sketch::Shape::Line { a, b: a + dir };
+    let axis = torno_engine::sketch::Shape::Line { a, b: a + dir };
     let tol = 1e-9 * (1.0 + v.len());
-    let q = solidcraft_engine::sketch::intersections(&axis, &shape)
+    let q = torno_engine::sketch::intersections(&axis, &shape)
         .into_iter()
         // Exactly on the axis, so the command infers the horizontal/vertical constraint.
         .map(|q| if horizontal { Vec2::new(q.x, a.y) } else { Vec2::new(a.x, q.y) })
@@ -426,7 +426,7 @@ fn reference_line(app: &SolveApp, id: &str) -> Option<(Vec2, Vec2)> {
     let state = crate::open_meshing::session_world(&app.session);
     let sketch = &state.sketch(app.session.active_sketch?)?.sketch;
     let index = sketch.curve_index(id)?;
-    let solidcraft_engine::sketch::CurveKind::Line { a, b } = sketch.curves.get(index)?.kind else { return None };
+    let torno_engine::sketch::CurveKind::Line { a, b } = sketch.curves.get(index)?.kind else { return None };
     Some((sketch.point(a)?, sketch.point(b)?))
 }
 
@@ -496,7 +496,7 @@ pub fn sync(t: &mut Tool) {
             t.dim_history.clear();
         }
         let before = std::mem::replace(&mut t.dims, want);
-        let construction = solidcraft_engine::cmd::construction_line_mode(t.cmd).is_some();
+        let construction = torno_engine::cmd::construction_line_mode(t.cmd).is_some();
         if construction && (t.pts.len() == t.dims_stage.saturating_add(1) || before.iter().any(|b| b.locked)) {
             // A length or offset typed before the start click is still that value after it.
             for b in &mut t.dims {
@@ -699,7 +699,7 @@ fn boxes(app: &SolveApp, ui: &mut egui::Ui, proj: &Proj, t: &mut Tool) -> Option
     let mut any_focused = false;
     let view = app.viewport.layout.as_ref().map(|l| l.drawable).filter(|r| r.is_finite() && r.is_positive());
     let field_frame = Container::popup_frame(ui.style()).inner_margin(egui::Margin::symmetric(tk.space_3 as i8, 1));
-    let construction = solidcraft_engine::cmd::construction_line_mode(t.cmd).is_some();
+    let construction = torno_engine::cmd::construction_line_mode(t.cmd).is_some();
     for (b, (v, _)) in t.dims.iter_mut().zip(&lv) {
         if !b.locked {
             // A construction line's untyped length is infinite, whatever the pointer does.

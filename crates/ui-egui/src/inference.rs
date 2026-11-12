@@ -4,17 +4,17 @@
 //! the centre of a circle or arc). A dashed guide and a label show it; placing the point adds
 //! the matching constraint.
 
-use solidcraft_engine::geom::prelude::*;
 use std::cell::RefCell;
+use torno_engine::geom::prelude::*;
 
 use egui::Stroke;
 use serde_json::json;
 use solidcore_record::Vec2;
-use solidcraft_engine::sketch::{CurveKind, Sketch};
+use torno_engine::sketch::{CurveKind, Sketch};
 
 use crate::SolveApp;
 use crate::viewport::Proj;
-use solidcraft_theme::Tokens;
+use torno_theme::Tokens;
 
 #[derive(Clone, Debug, PartialEq)]
 pub enum Kind {
@@ -278,7 +278,7 @@ pub(crate) enum TrackRef {
 #[derive(Default)]
 pub(crate) struct Tracking {
     sketch: Option<u64>,
-    document: std::sync::Weak<solidcraft_engine::doc::Document>,
+    document: std::sync::Weak<torno_engine::doc::Document>,
     anchor: Option<TrackRef>,
     previous: Option<TrackRef>,
     pub(crate) guide: Option<(Vec2, Vec2)>,
@@ -287,7 +287,7 @@ pub(crate) struct Tracking {
 
 impl Tracking {
     fn reference(sk: &Sketch, index: usize) -> Option<Vec2> {
-        if !solidcraft_engine::view::sketch_curve_visible(sk, index) {
+        if !torno_engine::view::sketch_curve_visible(sk, index) {
             return None;
         }
         match sk.curves.get(index)?.kind {
@@ -300,11 +300,11 @@ impl Tracking {
     /// The sketch points a guide may start from: shown points other than the origin (the sketch
     /// axes already run through it) that are free or belong to at least one shown curve.
     fn point_references(sk: &Sketch) -> Vec<bool> {
-        let visible = solidcraft_engine::view::SketchPointVisibility::new(sk);
+        let visible = torno_engine::view::SketchPointVisibility::new(sk);
         let mut used = vec![false; sk.points.len()];
         let mut shown = vec![false; sk.points.len()];
         for (index, curve) in sk.curves.iter().enumerate() {
-            let on = solidcraft_engine::view::sketch_curve_visible(sk, index);
+            let on = torno_engine::view::sketch_curve_visible(sk, index);
             for p in curve.kind.point_ids() {
                 if let Some(u) = used.get_mut(p) {
                     *u = true;
@@ -760,7 +760,9 @@ mod tests {
         assert!(a.dist(Vec2::new(k, k)) < 1e-6, "{a:?}");
         assert!(((b - a).x + (b - a).y).abs() < 1e-6 && b.x > a.x + 10.0, "along the tangent: {a:?} {b:?}");
         assert!(
-            sk.constraints.iter().any(|c| matches!(c.kind, solidcraft_engine::sketch::ConstraintKind::Tangent { a: x, b: y } if (x, y) == (arc, line) || (x, y) == (line, arc))),
+            sk.constraints.iter().any(
+                |c| matches!(c.kind, torno_engine::sketch::ConstraintKind::Tangent { a: x, b: y } if (x, y) == (arc, line) || (x, y) == (line, arc))
+            ),
             "{:?}",
             sk.constraints
         );

@@ -10,7 +10,7 @@ use crate::timeline::{
     TimelineKind, clipboard_buttons, delete_after_marker_button, delete_button, delete_features, message_button, selected_feature_ids,
 };
 use crate::{SolveApp, icons};
-use solidcraft_theme::Tokens;
+use torno_theme::Tokens;
 
 mod plan;
 
@@ -364,7 +364,7 @@ fn timeline_transport(app: &mut SolveApp, ui: &mut egui::Ui, names: bool) {
             ui,
             fold,
             !app.preferences.timeline_collapsed,
-            solidcraft_ui_text::tr(if app.preferences.timeline_collapsed { "ui.expand" } else { "ui.collapse" }),
+            torno_ui_text::tr(if app.preferences.timeline_collapsed { "ui.expand" } else { "ui.collapse" }),
         );
         crate::scenario::publish_handle("history:collapse", fold.center());
         if response.clicked() {
@@ -384,7 +384,7 @@ fn timeline_transport(app: &mut SolveApp, ui: &mut egui::Ui, names: bool) {
             controls = &crate::ui_kit::HistoryTransport::ALL;
         }
         let controls_width = crate::ui_kit::history_controls_width(controls.len());
-        let title = solidcraft_ui_text::tr("ui.history_title");
+        let title = torno_ui_text::tr("ui.history_title");
         let galley = ui.painter().layout_no_wrap(title.to_owned(), crate::ui_kit::type_face::semibold(t.font_heading), t.text);
         let text_left = handle.right() + t.space_8;
         let text_right = controls_right - controls_width - t.space_8;
@@ -484,7 +484,7 @@ pub(crate) fn dock_drag(app: &mut SolveApp, ui: &egui::Ui, drag: &egui::Response
             painter.rect(zone, t.radius_lg, t.accent.gamma_multiply(0.18), Stroke::new(t.space_2, t.accent), egui::StrokeKind::Inside);
             crate::scenario::publish_rect("history:dock_preview", zone);
             crate::scenario::publish_rect(&format!("history:dock:{}", target.id()), zone);
-            let label = solidcraft_ui_text::tr(match target {
+            let label = torno_ui_text::tr(match target {
                 Dock::Bottom => "ui.timeline_bottom",
                 Dock::Left => "ui.timeline_left_sidebar",
                 Dock::UnderBrowser => "ui.history_below_browser",
@@ -503,7 +503,7 @@ fn nearest_vertical_slot(slots: &[VerticalSlot], y: f32) -> Option<VerticalSlot>
     slots.iter().min_by(|a, b| (a.y - y).abs().total_cmp(&(b.y - y).abs())).copied()
 }
 
-fn valid_folder_target(items: &DragItems, groups: &[solidcraft_engine::doc::TimelineGroup], target: u64) -> bool {
+fn valid_folder_target(items: &DragItems, groups: &[torno_engine::doc::TimelineGroup], target: u64) -> bool {
     !items.groups.iter().any(|source| *source == target || group_is_descendant(groups, target, *source))
 }
 
@@ -514,7 +514,7 @@ fn vertical_drop_group(
     pointer: egui::Pos2,
     slot: VerticalSlot,
     folder_drop_zones: &[(Rect, u64)],
-    groups: &[solidcraft_engine::doc::TimelineGroup],
+    groups: &[torno_engine::doc::TimelineGroup],
     panel_left: f32,
     drag_x: f32,
     source_group: Option<u64>,
@@ -558,11 +558,11 @@ fn vertical_drop_group(
     target
 }
 
-fn drop_level_anchor(panel_left: f32, group: Option<u64>, groups: &[solidcraft_engine::doc::TimelineGroup]) -> f32 {
+fn drop_level_anchor(panel_left: f32, group: Option<u64>, groups: &[torno_engine::doc::TimelineGroup]) -> f32 {
     panel_left + DROP_LEVEL_ANCHOR + group.map(|id| (group_depth(groups, id) + 1) as f32 * FOLDER_INDENT).unwrap_or(0.0)
 }
 
-fn vertical_drop_bar_left(panel_left: f32, target: Option<u64>, groups: &[solidcraft_engine::doc::TimelineGroup]) -> f32 {
+fn vertical_drop_bar_left(panel_left: f32, target: Option<u64>, groups: &[torno_engine::doc::TimelineGroup]) -> f32 {
     target.map(|group| panel_left + DROP_BAR_INSET + (group_depth(groups, group) + 1) as f32 * FOLDER_INDENT).unwrap_or(panel_left + DROP_BAR_INSET)
 }
 
@@ -580,11 +580,11 @@ fn vertical_marker(app: &mut SolveApp, ui: &mut egui::Ui, drag: &mut Option<Drag
     if response.hovered() {
         ui.ctx().set_cursor_icon(egui::CursorIcon::Grab);
     }
-    response.backing_on_hover_text(solidcraft_ui_text::tr("ui.history_marker_tip"));
+    response.backing_on_hover_text(torno_ui_text::tr("ui.history_marker_tip"));
     rect.center().y
 }
 
-pub(crate) fn group_for(groups: &[solidcraft_engine::doc::TimelineGroup], feature: u64) -> Option<u64> {
+pub(crate) fn group_for(groups: &[torno_engine::doc::TimelineGroup], feature: u64) -> Option<u64> {
     groups.iter().find(|group| group.features.contains(&feature)).map(|group| group.id)
 }
 
@@ -725,7 +725,7 @@ fn select_item(app: &mut SolveApp, ui: &egui::Ui, item: TimelineItem, order: &[T
     }
 }
 
-fn selection_actions(app: &mut SolveApp, ui: &mut egui::Ui, groups: &[solidcraft_engine::doc::TimelineGroup], feature_menu: bool) {
+fn selection_actions(app: &mut SolveApp, ui: &mut egui::Ui, groups: &[torno_engine::doc::TimelineGroup], feature_menu: bool) {
     let features = selected_feature_ids(app);
     let selected_groups = app.tree.picked_timeline_groups.clone();
     let has_selection = !features.is_empty() || !selected_groups.is_empty();
@@ -758,7 +758,7 @@ fn selection_actions(app: &mut SolveApp, ui: &mut egui::Ui, groups: &[solidcraft
             ui.separator();
         }
         if crate::ui_kit::menu::button(ui, "Delete Selected Folders", "delete")
-            .backing_on_hover_text(solidcraft_ui_text::tr("timeline.delete_folders_tip"))
+            .backing_on_hover_text(torno_ui_text::tr("timeline.delete_folders_tip"))
             .clicked()
         {
             let ids = app.tree.picked_timeline_groups.clone();
@@ -776,14 +776,14 @@ fn selection_actions(app: &mut SolveApp, ui: &mut egui::Ui, groups: &[solidcraft
             && joints.iter().all(|id| app.session.doc.assembly.joints.iter().any(|joint| joint.id == *id && joint.suppressed));
         let label = if all_suppressed { "Unsuppress Selected Folders" } else { "Suppress Selected Folders" };
         if crate::ui_kit::menu::button_enabled(ui, label, "suppress", has_contents)
-            .backing_on_hover_text(solidcraft_ui_text::tr("timeline.suppress_folders_tip"))
+            .backing_on_hover_text(torno_ui_text::tr("timeline.suppress_folders_tip"))
             .clicked()
         {
             let _ = app.run_heavy("timeline.suppress", json!({"groups": selected_groups, "suppressed": !all_suppressed}));
             ui.close();
         }
         if crate::ui_kit::menu::button(ui, "Delete Folders and Features…", "delete")
-            .backing_on_hover_text(solidcraft_ui_text::tr("timeline.delete_folders_with_features_tip"))
+            .backing_on_hover_text(torno_ui_text::tr("timeline.delete_folders_with_features_tip"))
             .clicked()
         {
             crate::timeline::delete_folders(app, selected_groups.clone(), contents);
@@ -853,7 +853,7 @@ fn folder_joints(app: &SolveApp, roots: &[u64]) -> Vec<u64> {
         .collect()
 }
 
-fn group_is_descendant(groups: &[solidcraft_engine::doc::TimelineGroup], group: u64, ancestor: u64) -> bool {
+fn group_is_descendant(groups: &[torno_engine::doc::TimelineGroup], group: u64, ancestor: u64) -> bool {
     let mut current = groups.iter().find(|candidate| candidate.id == group).and_then(|candidate| candidate.parent);
     let mut steps = 0usize;
     while let Some(id) = current {
@@ -870,7 +870,7 @@ fn group_is_descendant(groups: &[solidcraft_engine::doc::TimelineGroup], group: 
 }
 
 /// A parent sorts immediately before its descendants, including folders with only joints.
-fn group_path(groups: &[solidcraft_engine::doc::TimelineGroup], id: u64) -> Vec<u64> {
+fn group_path(groups: &[torno_engine::doc::TimelineGroup], id: u64) -> Vec<u64> {
     let mut path = Vec::new();
     let mut current = Some(id);
     for _ in 0..groups.len() {
@@ -882,7 +882,7 @@ fn group_path(groups: &[solidcraft_engine::doc::TimelineGroup], id: u64) -> Vec<
     path
 }
 
-fn group_depth(groups: &[solidcraft_engine::doc::TimelineGroup], id: u64) -> usize {
+fn group_depth(groups: &[torno_engine::doc::TimelineGroup], id: u64) -> usize {
     let mut depth = 0;
     let mut current = groups.iter().find(|group| group.id == id).and_then(|group| group.parent);
     while let Some(parent) = current {
@@ -895,7 +895,7 @@ fn group_depth(groups: &[solidcraft_engine::doc::TimelineGroup], id: u64) -> usi
     depth
 }
 
-fn group_is_open(app: &SolveApp, groups: &[solidcraft_engine::doc::TimelineGroup], id: u64) -> bool {
+fn group_is_open(app: &SolveApp, groups: &[torno_engine::doc::TimelineGroup], id: u64) -> bool {
     let mut current = Some(id);
     let mut steps = 0usize;
     while let Some(group_id) = current {
@@ -913,7 +913,7 @@ fn group_is_open(app: &SolveApp, groups: &[solidcraft_engine::doc::TimelineGroup
 
 /// The reference the cached [`RowPlan`] is tested against.
 #[cfg(test)]
-fn group_ancestors_are_open(app: &SolveApp, groups: &[solidcraft_engine::doc::TimelineGroup], id: u64) -> bool {
+fn group_ancestors_are_open(app: &SolveApp, groups: &[torno_engine::doc::TimelineGroup], id: u64) -> bool {
     let mut current = groups.iter().find(|group| group.id == id).and_then(|group| group.parent);
     let mut steps = 0usize;
     while let Some(group_id) = current {
@@ -932,7 +932,7 @@ fn group_ancestors_are_open(app: &SolveApp, groups: &[solidcraft_engine::doc::Ti
 /// The reference the cached [`RowPlan`] is tested against.
 #[cfg(test)]
 fn group_first_feature(
-    groups: &[solidcraft_engine::doc::TimelineGroup],
+    groups: &[torno_engine::doc::TimelineGroup],
     features: &[(u64, String, &'static str, bool, &'static str, TimelineKind)],
     id: u64,
 ) -> Option<usize> {
@@ -945,7 +945,7 @@ fn group_first_feature(
 /// The reference the cached [`RowPlan`] is tested against.
 #[cfg(test)]
 fn group_last_feature(
-    groups: &[solidcraft_engine::doc::TimelineGroup],
+    groups: &[torno_engine::doc::TimelineGroup],
     features: &[(u64, String, &'static str, bool, &'static str, TimelineKind)],
     id: u64,
 ) -> Option<usize> {
@@ -958,7 +958,7 @@ fn group_last_feature(
 /// A folder with only joints shares its nearest feature-bearing ancestor's position.
 #[cfg(test)]
 fn group_position(
-    groups: &[solidcraft_engine::doc::TimelineGroup],
+    groups: &[torno_engine::doc::TimelineGroup],
     features: &[(u64, String, &'static str, bool, &'static str, TimelineKind)],
     id: u64,
 ) -> Option<usize> {
@@ -984,7 +984,7 @@ pub(crate) fn nests(app: &SolveApp) -> bool {
 fn drawn_rows(app: &SolveApp, nest: bool) -> HistoryRows {
     let doc = &app.session.doc;
     if !nest {
-        let sketch = |feature: &solidcraft_engine::doc::Feature| matches!(feature.kind, solidcraft_engine::doc::FeatureKind::Sketch { .. });
+        let sketch = |feature: &torno_engine::doc::Feature| matches!(feature.kind, torno_engine::doc::FeatureKind::Sketch { .. });
         return HistoryRows::in_order(doc.features.iter().map(|feature| (feature.id, sketch(feature))));
     }
     let features: Vec<HistoryFeature> = doc.features.iter().map(HistoryFeature::of).collect();
@@ -1001,7 +1001,7 @@ pub(crate) fn sketches_key(feature: u64) -> String {
 fn visible_order(
     app: &SolveApp,
     features: &[(u64, String, &'static str, bool, &'static str, TimelineKind)],
-    groups: &[solidcraft_engine::doc::TimelineGroup],
+    groups: &[torno_engine::doc::TimelineGroup],
     rows: &HistoryRows,
 ) -> Vec<TimelineItem> {
     let mut order = Vec::new();
@@ -1038,7 +1038,7 @@ fn visible_order(
 fn timeline_group_name(
     app: &mut SolveApp,
     ui: &mut egui::Ui,
-    group: &solidcraft_engine::doc::TimelineGroup,
+    group: &torno_engine::doc::TimelineGroup,
     rect: Rect,
     offset: f32,
     names: bool,
@@ -1055,7 +1055,7 @@ fn timeline_group_name(
             pos2(rect.left() + 40.0 + offset, rect.center().y),
             egui::Align2::LEFT_CENTER,
             &group.name,
-            egui::FontId::proportional(solidcraft_theme::Tokens::get().font_body),
+            egui::FontId::proportional(torno_theme::Tokens::get().font_body),
             if faint { t.text.gamma_multiply(0.42) } else { t.text },
         );
         return false;
@@ -1093,7 +1093,7 @@ fn vertical_group_row(
     app: &mut SolveApp,
     names: bool,
     ui: &mut egui::Ui,
-    group: &solidcraft_engine::doc::TimelineGroup,
+    group: &torno_engine::doc::TimelineGroup,
     table: &RowPlan,
     contents: &[u64],
     joints: &[u64],
@@ -1122,7 +1122,7 @@ fn vertical_group_row(
         ui.painter().rect_filled(
             rect,
             t.radius_sm.saturating_sub(1),
-            if selected { solidcraft_theme::TabAccent::current(ui.ctx()).soft } else { t.hover },
+            if selected { torno_theme::TabAccent::current(ui.ctx()).soft } else { t.hover },
         );
     }
     let offset = if names { depth as f32 * 14.0 } else { 0.0 };
@@ -1191,12 +1191,7 @@ fn vertical_group_row(
     open
 }
 
-fn folder_joint_rows(
-    app: &mut SolveApp,
-    ui: &mut egui::Ui,
-    group: &solidcraft_engine::doc::TimelineGroup,
-    groups: &[solidcraft_engine::doc::TimelineGroup],
-) {
+fn folder_joint_rows(app: &mut SolveApp, ui: &mut egui::Ui, group: &torno_engine::doc::TimelineGroup, groups: &[torno_engine::doc::TimelineGroup]) {
     if !group.joints.is_empty() && group_is_open(app, groups, group.id) {
         ui.scope_builder(egui::UiBuilder::new().id_salt(("folder_joints", group.id)), |ui| {
             ui.spacing_mut().item_spacing.x = 0.0;
@@ -1287,7 +1282,7 @@ pub(crate) fn vertical_features(app: &mut SolveApp, ui: &mut egui::Ui, names: bo
             .selection
             .iter()
             .filter_map(|selection| match selection {
-                solidcraft_engine::Sel::Feature { id } => Some(*id),
+                torno_engine::Sel::Feature { id } => Some(*id),
                 _ => None,
             })
             .collect(),
@@ -1420,7 +1415,7 @@ pub(crate) fn vertical_features(app: &mut SolveApp, ui: &mut egui::Ui, names: bo
                 ui.painter(),
                 Rect::from_min_max(pos2(left, slot.y), pos2(ui.max_rect().right() - 5.0, slot.y)),
                 true,
-                if matches!(active, Drag::Marker) { solidcraft_theme::TabAccent::current(ui.ctx()).color } else { t.sketch_accent },
+                if matches!(active, Drag::Marker) { torno_theme::TabAccent::current(ui.ctx()).color } else { t.sketch_accent },
             );
         }
     }
@@ -1638,14 +1633,14 @@ fn feature_row_body(
             .get(index)
             .and_then(|f| f.kind.expressions().first().map(ToString::to_string))
             .unwrap_or_else(|| elapsed.map_or_else(String::new, |ms| format!("{ms:.1} ms")));
-        let kind = solidcraft_ui_text::tr_label(ty.strip_suffix("Feature").unwrap_or(ty));
+        let kind = torno_ui_text::tr_label(ty.strip_suffix("Feature").unwrap_or(ty));
         let mut tip = format!("{name} · {kind} · {summary}");
         if let Some(status) = &status {
             tip.push_str(&format!("\n{status}"));
         }
         // Greyed out says only "not shown": say why (#8100).
         if rolled {
-            tip.push_str(&format!("\n{}", solidcraft_ui_text::tr("timeline.feature_rolled_back")));
+            tip.push_str(&format!("\n{}", torno_ui_text::tr("timeline.feature_rolled_back")));
         }
         if let Some(state) = sketch_state {
             tip.push_str(&format!("\n{}", state.text()));
@@ -1653,7 +1648,7 @@ fn feature_row_body(
         crate::ui_kit::text(ui, &tip, crate::ui_kit::Text::Value("history", false));
         // A value row is one line: where the sketch is listed gets a row of its own.
         if let Some(host) = listed_under.filter(|_| reference) {
-            let listed = solidcraft_ui_text::format("ui.history_sketch_listed_under", &[("feature", host)]);
+            let listed = torno_ui_text::format("ui.history_sketch_listed_under", &[("feature", host)]);
             crate::ui_kit::text(ui, &listed, crate::ui_kit::Text::Value("history_listed_under", false));
         }
     });
@@ -1723,7 +1718,7 @@ mod tests {
         h.app.run("timeline.group", json!({"name": "My folder"})).unwrap();
         h.frames(4);
         h.step(&json!({"click": {"handle": "timeline-folder:My folder"}, "button": "right"})).unwrap();
-        let label = solidcraft_ui_text::Locale::for_language("ja").label("Delete Selected Folders");
+        let label = torno_ui_text::Locale::for_language("ja").label("Delete Selected Folders");
         let [x, y] = h.widget(label).unwrap();
         h.call("ui.move", json!({"x": x, "y": y}));
         h.frames(90);
@@ -1958,9 +1953,9 @@ mod tests {
 
     #[test]
     fn transport_to_first_item_gap_is_at_most_twelve_points() {
-        let previous = solidcraft_theme::is_dark();
+        let previous = torno_theme::is_dark();
         for dark in [false, true] {
-            solidcraft_theme::set_dark(dark);
+            torno_theme::set_dark(dark);
             for mode in [crate::ui_kit::LayoutMode::Floating, crate::ui_kit::LayoutMode::Docked] {
                 for names in [false, true] {
                     let mut h = Harness::new();
@@ -1976,7 +1971,7 @@ mod tests {
                             h.app.run("select.set", json!({"items":[{"type":"feature","id":id}]})).unwrap();
                         }
                         h.settle();
-                        assert_eq!(solidcraft_theme::is_dark(), dark);
+                        assert_eq!(torno_theme::is_dark(), dark);
                         let transport = crate::scenario::rect_of("history:transport").unwrap();
                         let first = crate::scenario::rect_of("history:feature:First").unwrap();
                         let gap = first.top() - transport.bottom();
@@ -1985,7 +1980,7 @@ mod tests {
                 }
             }
         }
-        solidcraft_theme::set_dark(previous);
+        torno_theme::set_dark(previous);
     }
 
     #[test]
@@ -2257,7 +2252,7 @@ mod tests {
         harness.frames(4);
         assert!(handle_at("timeline:Base").is_some(), "Find in Timeline must open the folders holding the feature");
         let base = harness.app.session.doc.find_feature("Base").unwrap().id;
-        assert_eq!(harness.app.session.selection, vec![solidcraft_engine::Sel::Feature { id: base }]);
+        assert_eq!(harness.app.session.selection, vec![torno_engine::Sel::Feature { id: base }]);
     }
 
     /// The handle `name` drawn inside the vertical history (the browser publishes the same names).
@@ -2310,7 +2305,7 @@ mod tests {
         let other = in_history("row:Other").unwrap();
         h.call("ui.click", json!({"x": other.x, "y": other.y}));
         h.frames(2);
-        assert_eq!(h.app.session.selection, vec![solidcraft_engine::Sel::Body { name: "Other".into() }]);
+        assert_eq!(h.app.session.selection, vec![torno_engine::Sel::Body { name: "Other".into() }]);
 
         // Neither the marker nor a feature drops among these rows.
         let order = |h: &Harness| h.app.session.doc.features.iter().map(|f| f.name.clone()).collect::<Vec<_>>();
@@ -2434,7 +2429,7 @@ mod tests {
             .session
             .selection
             .iter()
-            .any(|selection| matches!(selection, solidcraft_engine::Sel::Feature { id } if harness.app.session.doc.feature(*id).is_some_and(|feature| feature.name == "Loose"))));
+            .any(|selection| matches!(selection, torno_engine::Sel::Feature { id } if harness.app.session.doc.feature(*id).is_some_and(|feature| feature.name == "Loose"))));
         harness.step(&json!({"drag": [{"handle": "timeline:Loose"}, {"handle": "timeline-folder:Destination"}]})).unwrap();
         let source = harness.app.session.doc.timeline_groups.iter().find(|entry| entry.id == group).unwrap();
         let target = harness.app.session.doc.timeline_groups.iter().find(|entry| entry.id == destination).unwrap();
@@ -2449,10 +2444,10 @@ mod tests {
         let at_end = VerticalSlot { y: 60.0, position: 2, group: None, indent_group: Some(3) };
         let folder_rect = Rect::from_min_max(pos2(0.0, 0.0), pos2(200.0, 20.0));
         let groups = vec![
-            solidcraft_engine::doc::TimelineGroup { id: 1, name: "Outer".into(), parent: None, features: vec![], joints: vec![] },
-            solidcraft_engine::doc::TimelineGroup { id: 2, name: "Middle".into(), parent: Some(1), features: vec![], joints: vec![] },
-            solidcraft_engine::doc::TimelineGroup { id: 3, name: "Inner".into(), parent: Some(2), features: vec![], joints: vec![] },
-            solidcraft_engine::doc::TimelineGroup { id: 7, name: "Target".into(), parent: None, features: vec![], joints: vec![] },
+            torno_engine::doc::TimelineGroup { id: 1, name: "Outer".into(), parent: None, features: vec![], joints: vec![] },
+            torno_engine::doc::TimelineGroup { id: 2, name: "Middle".into(), parent: Some(1), features: vec![], joints: vec![] },
+            torno_engine::doc::TimelineGroup { id: 3, name: "Inner".into(), parent: Some(2), features: vec![], joints: vec![] },
+            torno_engine::doc::TimelineGroup { id: 7, name: "Target".into(), parent: None, features: vec![], joints: vec![] },
         ];
 
         assert_eq!(
@@ -3061,7 +3056,7 @@ mod tests {
         assert!(row_y("timeline:Copy") < row_y(reference));
 
         h.step(&json!({"click": {"handle": reference}})).unwrap();
-        assert_eq!(h.app.session.selection, vec![solidcraft_engine::Sel::Feature { id: profile }], "the reference row selects the sketch");
+        assert_eq!(h.app.session.selection, vec![torno_engine::Sel::Feature { id: profile }], "the reference row selects the sketch");
         h.app.run("select.clear", json!({})).unwrap();
         // Hovering it lights up the same sketch: in the 3D view, and in its row under Block.
         h.step(&json!({"move": {"handle": reference}})).unwrap();
@@ -3109,7 +3104,7 @@ mod tests {
         h.settle();
         h.step(&json!({"click": {"handle": "timeline-sketches-fold:Block"}})).unwrap();
         h.step(&json!({"click": {"handle": "timeline:Profile"}})).unwrap();
-        assert_eq!(h.app.session.selection, vec![solidcraft_engine::Sel::Feature { id: profile }], "the row under the feature is the sketch");
+        assert_eq!(h.app.session.selection, vec![torno_engine::Sel::Feature { id: profile }], "the row under the feature is the sketch");
         h.step(&json!({"click": {"handle": "timeline:Profile"}, "button": "right"})).unwrap();
         h.step(&json!({"widget": "Edit Feature"})).unwrap();
         h.settle();
@@ -3190,7 +3185,7 @@ mod tests {
         h.step(&json!({"click": {"handle": "dialog:Object Type:Features"}})).unwrap();
         h.step(&json!({"click": {"handle": "timeline:Block"}})).unwrap();
         let picked = h.app.dialog.as_ref().map(|dialog| dialog.inputs[0].items.clone());
-        assert_eq!(picked, Some(vec![solidcraft_engine::Sel::Feature { id: block }]), "the feature row's click goes to the dialog");
+        assert_eq!(picked, Some(vec![torno_engine::Sel::Feature { id: block }]), "the feature row's click goes to the dialog");
         // Wait out the double-click time: a double click edits.
         h.frames(30);
         h.step(&json!({"click": {"handle": "timeline:Profile"}})).unwrap();
@@ -3210,7 +3205,7 @@ mod tests {
         crate::context_menu::run_item(&mut h.app, &item, pos2(0.0, 0.0));
         h.settle();
         assert!(row_y("timeline:Block") < row_y("timeline:Profile"), "Find in Timeline opens the feature's fold");
-        assert_eq!(h.app.session.selection, vec![solidcraft_engine::Sel::Feature { id: profile }]);
+        assert_eq!(h.app.session.selection, vec![torno_engine::Sel::Feature { id: profile }]);
     }
 
     #[test]
@@ -3240,7 +3235,7 @@ mod tests {
     /// have to place as the per-frame searches did.
     fn tangled_folders(h: &mut Harness) {
         let ids: Vec<u64> = h.app.session.doc.features.iter().map(|feature| feature.id).collect();
-        let group = |id: u64, name: &str, parent: Option<u64>, features: Vec<u64>, joints: Vec<u64>| solidcraft_engine::doc::TimelineGroup {
+        let group = |id: u64, name: &str, parent: Option<u64>, features: Vec<u64>, joints: Vec<u64>| torno_engine::doc::TimelineGroup {
             id,
             name: name.into(),
             parent,
@@ -3286,7 +3281,7 @@ mod tests {
                 .collect();
             assert_eq!(table.joints[at], joints, "{}", group.name);
         }
-        let index_of = |group: &solidcraft_engine::doc::TimelineGroup| groups.iter().position(|candidate| std::ptr::eq(candidate, group)).unwrap();
+        let index_of = |group: &torno_engine::doc::TimelineGroup| groups.iter().position(|candidate| std::ptr::eq(candidate, group)).unwrap();
         for index in 0..n {
             let mut at_index: Vec<_> = groups.iter().filter(|group| group_position(groups, features, group.id) == Some(index)).collect();
             at_index.sort_by_key(|group| group_path(groups, group.id));
@@ -3384,9 +3379,9 @@ mod tests {
         check(&mut h, "sketches in order");
         // Another design in the same window.
         let other = h.app.session.doc.clone();
-        h.app.session = solidcraft_engine::Session::new(solidcraft_engine::doc::Document::default());
+        h.app.session = torno_engine::Session::new(torno_engine::doc::Document::default());
         check(&mut h, "new design");
-        h.app.session = solidcraft_engine::Session::new((*other).clone());
+        h.app.session = torno_engine::Session::new((*other).clone());
         check(&mut h, "the first design again");
     }
 
@@ -3457,14 +3452,14 @@ mod tests {
     }
 
     /// Frame time of the vertical History alone on a large design (P5 measurement, run by hand):
-    /// `SOLIDCRAFT_HISTORY_BENCH=<design> cargo test --release -p solidcraft-ui-egui --lib
+    /// `TORNO_HISTORY_BENCH=<design> cargo test --release -p torno-ui-egui --lib
     /// bench_history_panel -- --ignored --nocapture`. Prints one JSON line per case. The folders
     /// cases add 120 folders of 20 features (every fourth nested in the one before).
     #[test]
-    #[ignore = "timing, run by hand with SOLIDCRAFT_HISTORY_BENCH"]
+    #[ignore = "timing, run by hand with TORNO_HISTORY_BENCH"]
     fn bench_history_panel_frames() {
-        let Some(path) = std::env::var_os("SOLIDCRAFT_HISTORY_BENCH") else { return };
-        let frames: usize = std::env::var("SOLIDCRAFT_HISTORY_BENCH_FRAMES").ok().and_then(|n| n.parse().ok()).unwrap_or(40);
+        let Some(path) = std::env::var_os("TORNO_HISTORY_BENCH") else { return };
+        let frames: usize = std::env::var("TORNO_HISTORY_BENCH_FRAMES").ok().and_then(|n| n.parse().ok()).unwrap_or(40);
         let mut h = Harness::new();
         h.app.home.open = false;
         h.app.preferences.timeline_left = true;
@@ -3499,8 +3494,8 @@ mod tests {
         let middle = h.app.session.doc.features[features / 2].id;
         let middle_name = h.app.session.doc.features[features / 2].name.clone();
         let moves = |y0: f32, i: usize| vec![egui::Event::PointerMoved(egui::pos2(150.0, y0 + (i % 7) as f32 * 3.0))];
-        // SOLIDCRAFT_HISTORY_BENCH_CASES: "plain", "folders" or both (the default).
-        let cases = std::env::var("SOLIDCRAFT_HISTORY_BENCH_CASES").unwrap_or_default();
+        // TORNO_HISTORY_BENCH_CASES: "plain", "folders" or both (the default).
+        let cases = std::env::var("TORNO_HISTORY_BENCH_CASES").unwrap_or_default();
         for folders in [false, true] {
             if !cases.is_empty() && cases != if folders { "folders" } else { "plain" } {
                 continue;
@@ -3515,7 +3510,7 @@ mod tests {
                     let id = next;
                     next += 1;
                     let parent = if k % 4 == 3 { previous } else { None };
-                    doc.timeline_groups.push(solidcraft_engine::doc::TimelineGroup {
+                    doc.timeline_groups.push(torno_engine::doc::TimelineGroup {
                         id,
                         name: format!("Folder {k}"),
                         parent,

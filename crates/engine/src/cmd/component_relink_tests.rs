@@ -9,7 +9,7 @@ fn run(s: &mut Session, command: &str, params: Value) -> Value {
 }
 
 fn folder(case: &str) -> PathBuf {
-    let dir = std::env::temp_dir().join(format!("solidcraft-relink-{case}-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("torno-relink-{case}-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
     dir
 }
@@ -28,10 +28,10 @@ fn properties_part(path: &Path, material: &str, density: Option<f64>, color: [u8
     let mut s = Session::default();
     run(&mut s, "solid.box", json!({"length": 10, "width": 10, "height": 10, "body_name": "Cube"}));
     if let Some(density) = density {
-        s.doc_mut().user_materials.push(solidcraft_doc::UserMaterial { name: material.into(), density, appearance: None, physical_card: None });
+        s.doc_mut().user_materials.push(torno_doc::UserMaterial { name: material.into(), density, appearance: None, physical_card: None });
     }
     run(&mut s, "material.assign", json!({"bodies": ["Cube"], "material": material}));
-    s.doc_mut().appearances.bodies.insert("Cube".into(), solidcraft_doc::appearance::Look::custom(color, 0.4));
+    s.doc_mut().appearances.bodies.insert("Cube".into(), torno_doc::appearance::Look::custom(color, 0.4));
     run(&mut s, "file.save", json!({"path": path}));
     s
 }
@@ -77,7 +77,7 @@ fn linked_design_properties_follow_source_only_edits_and_keep_local_overrides() 
     let mut s = Session::default();
     let c = run(&mut s, "component.insert_design", json!({"path": file}))["component"].as_u64().unwrap();
     run(&mut part, "material.assign", json!({"bodies": ["Cube"], "material": "Aluminum"}));
-    part.doc_mut().appearances.bodies.insert("Cube".into(), solidcraft_doc::appearance::Look::custom([80, 90, 100], 0.4));
+    part.doc_mut().appearances.bodies.insert("Cube".into(), torno_doc::appearance::Look::custom([80, 90, 100], 0.4));
     run(&mut part, "file.save", json!({}));
     assert_eq!(run(&mut s, "component.update_links", json!({}))["updated"].as_array().unwrap().len(), 1);
     assert_link_properties(&mut s, c, "Aluminum", 2.7, [80, 90, 100]);
@@ -86,11 +86,11 @@ fn linked_design_properties_follow_source_only_edits_and_keep_local_overrides() 
     run(&mut s, "edit.redo", json!({}));
     assert_link_properties(&mut s, c, "Aluminum", 2.7, [80, 90, 100]);
     run(&mut s, "material.assign", json!({"bodies": ["Cube"], "material": "Brass"}));
-    s.doc_mut().appearances.bodies.insert("Cube".into(), solidcraft_doc::appearance::Look::custom([1, 2, 3], 0.4));
+    s.doc_mut().appearances.bodies.insert("Cube".into(), torno_doc::appearance::Look::custom([1, 2, 3], 0.4));
     run(&mut part, "material.assign", json!({"bodies": ["Cube"], "material": "Steel"}));
     run(&mut part, "file.save", json!({}));
     run(&mut s, "component.update_links", json!({}));
-    assert_link_properties(&mut s, c, "Brass", solidcraft_doc::material_density("Brass").unwrap(), [1, 2, 3]);
+    assert_link_properties(&mut s, c, "Brass", torno_doc::material_density("Brass").unwrap(), [1, 2, 3]);
     let _ = std::fs::remove_dir_all(dir);
 }
 
@@ -100,12 +100,7 @@ fn linked_design_properties_do_not_replace_conflicting_custom_materials() {
     let file = dir.join("source.solidcraft");
     properties_part(&file, "Custom alloy", Some(4.2), [12, 34, 56]);
     let mut s = Session::default();
-    s.doc_mut().user_materials.push(solidcraft_doc::UserMaterial {
-        name: "Custom alloy".into(),
-        density: 9.0,
-        appearance: None,
-        physical_card: None,
-    });
+    s.doc_mut().user_materials.push(torno_doc::UserMaterial { name: "Custom alloy".into(), density: 9.0, appearance: None, physical_card: None });
     let c = run(&mut s, "component.insert_design", json!({"path": file}))["component"].as_u64().unwrap();
     let p = run(&mut s, "component.properties", json!({"component": c}));
     let assigned = p["bodies"][0]["material"].as_str().unwrap();
@@ -122,12 +117,7 @@ fn linked_design_properties_keep_distinct_names_for_equal_material_properties() 
     let file = dir.join("source.solidcraft");
     properties_part(&file, "Source alloy", Some(4.2), [12, 34, 56]);
     let mut s = Session::default();
-    s.doc_mut().user_materials.push(solidcraft_doc::UserMaterial {
-        name: "Different alloy".into(),
-        density: 4.2,
-        appearance: None,
-        physical_card: None,
-    });
+    s.doc_mut().user_materials.push(torno_doc::UserMaterial { name: "Different alloy".into(), density: 4.2, appearance: None, physical_card: None });
     let c = run(&mut s, "component.insert_design", json!({"path": file}))["component"].as_u64().unwrap();
     assert_link_properties(&mut s, c, "Source alloy", 4.2, [12, 34, 56]);
     let count = s.doc.user_materials.len();
@@ -279,12 +269,12 @@ fn linked_design_properties_update_density_without_geometry_and_keep_edited_card
 #[test]
 fn linked_design_properties_keep_opaque_pbr_and_face_color_after_reload() {
     use solidcore_record::Vec3;
-    use solidcraft_doc::appearance::{FaceLook, Look};
+    use torno_doc::appearance::{FaceLook, Look};
     let dir = folder("properties-optics");
     let file = dir.join("source.solidcraft");
     let mut part = properties_part(&file, "Steel", None, [12, 34, 56]);
     let mut look = Look::custom([12, 34, 56], 1.0);
-    look.pbr = Some(solidcraft_doc::pbr_appearance::PbrParameters::new(0.8, 0.23, 1.5).unwrap());
+    look.pbr = Some(torno_doc::pbr_appearance::PbrParameters::new(0.8, 0.23, 1.5).unwrap());
     part.doc_mut().appearances.bodies.insert("Cube".into(), look.clone());
     let top = Vec3::new(5.0, 5.0, 10.0);
     part.doc_mut().appearances.faces.push(FaceLook {
@@ -304,7 +294,7 @@ fn linked_design_properties_keep_opaque_pbr_and_face_color_after_reload() {
         let state = s.model.state();
         let body = state.bodies.iter().find(|b| b.component == c).unwrap();
         assert_eq!(s.doc.model_body_look(body), Some(look.clone()));
-        let face = solidcraft_doc::appearance::face_index_at(body, top).unwrap();
+        let face = torno_doc::appearance::face_index_at(body, top).unwrap();
         let face_looks = s.doc.face_colors(body);
         let face_look = &face_looks.iter().find(|(f, _)| *f == face).unwrap().1;
         assert_eq!(face_look.color, [190, 20, 30]);
@@ -322,7 +312,7 @@ fn linked_design_properties_keep_opaque_pbr_and_face_color_after_reload() {
 #[test]
 fn linked_face_overrides_update_independently_and_preserve_local_edits_and_removals() {
     use solidcore_record::Vec3;
-    use solidcraft_doc::appearance::{FaceLook, Look};
+    use torno_doc::appearance::{FaceLook, Look};
     let dir = folder("properties-faces");
     let file = dir.join("source.solidcraft");
     let mut part = properties_part(&file, "Steel", None, [12, 34, 56]);
@@ -344,7 +334,7 @@ fn linked_face_overrides_update_independently_and_preserve_local_edits_and_remov
     let color = |s: &Session, point| {
         let state = s.model.state();
         let body = state.bodies.iter().find(|b| b.component == c).unwrap();
-        let index = solidcraft_doc::appearance::face_index_at(body, point).unwrap();
+        let index = torno_doc::appearance::face_index_at(body, point).unwrap();
         s.doc.face_colors(body).into_iter().find(|(face, _)| *face == index).map(|(_, look)| look.color)
     };
     assert_eq!(color(&s, top), Some([190, 20, 30]));
@@ -409,7 +399,7 @@ fn linked_properties_update_every_component_and_session_sharing_a_cached_source(
 
 #[test]
 fn linked_face_removal_without_a_body_look_does_not_reveal_baked_source_paint() {
-    use solidcraft_doc::appearance::{FaceLook, Look};
+    use torno_doc::appearance::{FaceLook, Look};
     let dir = folder("properties-unpainted-body");
     let file = dir.join("source.solidcraft");
     let mut part = properties_part(&file, "Steel", None, [12, 34, 56]);
@@ -438,7 +428,7 @@ fn linked_face_removal_without_a_body_look_does_not_reveal_baked_source_paint() 
 
 #[test]
 fn unchanged_linked_face_overrides_do_not_reorder_assignments_or_report_updates() {
-    use solidcraft_doc::appearance::{FaceLook, Look};
+    use torno_doc::appearance::{FaceLook, Look};
     let dir = folder("properties-face-cache");
     let file = dir.join("source.solidcraft");
     let mut part = properties_part(&file, "Steel", None, [12, 34, 56]);
@@ -505,9 +495,9 @@ fn linked_design_properties_repair_old_links_without_overwriting_assignments() {
     assert_link_properties(&mut s, c, "Steel", 7.85, [12, 34, 56]);
     s.doc_mut().links.get_mut(&c).unwrap().inherited.clear();
     run(&mut s, "material.assign", json!({"bodies": ["Cube"], "material": "Brass"}));
-    s.doc_mut().appearances.bodies.insert("Cube".into(), solidcraft_doc::appearance::Look::custom([1, 2, 3], 0.4));
+    s.doc_mut().appearances.bodies.insert("Cube".into(), torno_doc::appearance::Look::custom([1, 2, 3], 0.4));
     run(&mut s, "component.update_links", json!({}));
-    assert_link_properties(&mut s, c, "Brass", solidcraft_doc::material_density("Brass").unwrap(), [1, 2, 3]);
+    assert_link_properties(&mut s, c, "Brass", torno_doc::material_density("Brass").unwrap(), [1, 2, 3]);
     let _ = std::fs::remove_dir_all(dir);
 }
 
@@ -602,7 +592,7 @@ fn relink_takes_a_json_design_as_insert_design_does() {
     let (container, plain) = (dir.join("source.sc"), dir.join("source.json"));
     part(&container, 30);
     part(&plain, 45);
-    assert!(!solidcraft_io::is_design_container(&std::fs::read(&plain).unwrap()), "file.save writes a .json design as plain JSON");
+    assert!(!torno_io::is_design_container(&std::fs::read(&plain).unwrap()), "file.save writes a .json design as plain JSON");
     let mut s = Session::default();
     let component = run(&mut s, "component.insert_design", json!({"path": container}))["component"].as_u64().unwrap();
     let to_json = run(&mut s, "component.relink", json!({"component": component, "path": plain}));
@@ -645,8 +635,7 @@ fn relink_keeps_joint_definitions_and_reports_solver_diagnostics() {
     // A deliberately lost named face exercises the ordinary solver diagnostics, without
     // requiring relink to guess which face of a different design was intended.
     let joint = s.doc_mut().assembly.joints.first_mut().unwrap();
-    joint.b.snap =
-        solidcraft_doc::joints::Snap::FaceCenter { pick: solidcore_record::Vec3::ZERO, face: Some("no-such-linked-face".to_string()), x: None };
+    joint.b.snap = torno_doc::joints::Snap::FaceCenter { pick: solidcore_record::Vec3::ZERO, face: Some("no-such-linked-face".to_string()), x: None };
     s.refresh();
     let result = run(&mut s, "component.relink", json!({"component": component, "path": replacement}));
     assert!(result["joint_errors"].as_array().unwrap().iter().any(|e| e["name"] == "Seat"));
@@ -727,7 +716,7 @@ fn relink_of_one_placement_moves_its_joints_to_the_same_faces() {
     let (index, face) = {
         let state = s.model.state();
         let body = state.bodies.iter().find(|b| b.component == component).unwrap();
-        let names = solidcraft_doc::naming::face_names(body);
+        let names = torno_doc::naming::face_names(body);
         (names.len() - 1, names[names.len() - 1].clone())
     };
     run(
@@ -743,7 +732,7 @@ fn relink_of_one_placement_moves_its_joints_to_the_same_faces() {
     let names = {
         let state = s.model.state();
         let body = state.bodies.iter().find(|b| b.component == linked).unwrap();
-        solidcraft_doc::naming::face_names(body).to_vec()
+        torno_doc::naming::face_names(body).to_vec()
     };
     let moved = s.doc.assembly.joints[0].b.snap.face_names().into_iter().next().cloned().unwrap();
     assert_ne!(moved, face);

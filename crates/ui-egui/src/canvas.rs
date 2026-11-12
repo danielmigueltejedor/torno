@@ -9,15 +9,15 @@ use crate::ui_kit::BackingTooltipExt as _;
 use crate::ui_kit::{Container, Surface};
 use egui::{Color32, Pos2, Stroke, vec2};
 use solidcore_record::{Vec2, Vec3};
-use solidcraft_engine::Sel;
-use solidcraft_engine::doc::expr::Kind as ValueKind;
-use solidcraft_engine::geom::Mesh;
-use solidcraft_engine::geom::prelude::*;
+use torno_engine::Sel;
+use torno_engine::doc::expr::Kind as ValueKind;
+use torno_engine::geom::Mesh;
+use torno_engine::geom::prelude::*;
 
 use crate::SolveApp;
 use crate::dialogs::{Dialog, Kind};
 use crate::viewport::{Proj, projected_polygon};
-use solidcraft_theme::Tokens;
+use torno_theme::Tokens;
 
 /// Where the dialog's geometry is: a base point and, for values that can be dragged, the
 /// direction a growing value points.
@@ -41,7 +41,7 @@ pub fn anchor(app: &SolveApp, d: &Dialog) -> Option<(Vec3, Option<Vec3>)> {
                     })
                     .map(|p| p.region.clone())
                     .collect();
-                let regions = solidcraft_engine::sketch::merge_regions(&regions);
+                let regions = torno_engine::sketch::merge_regions(&regions);
                 let points: Vec<_> = regions.iter().flat_map(|r| r.outer.polyline(1e-2)).collect();
                 points.iter().fold(solidcore_record::Vec2::default(), |sum, p| sum + *p) * (1.0 / points.len().max(1) as f64)
             } else {
@@ -81,9 +81,8 @@ pub fn anchor(app: &SolveApp, d: &Dialog) -> Option<(Vec3, Option<Vec3>)> {
         // made, as a body sits at the middle of its box.
         Sel::Feature { id } => (crate::viewport::feature_bounds(app, *id)?.center(), None),
         Sel::Plane { name } => {
-            let pl = solidcore_record::Plane::named(name).or_else(|| {
-                solidcraft_engine::view::construction_planes(&app.session).into_iter().find(|(_, n, _)| n == name).map(|(_, _, pl)| pl)
-            })?;
+            let pl = solidcore_record::Plane::named(name)
+                .or_else(|| torno_engine::view::construction_planes(&app.session).into_iter().find(|(_, n, _)| n == name).map(|(_, _, pl)| pl))?;
             (pl.origin, Some(pl.normal()))
         }
         _ => return None,
@@ -98,7 +97,7 @@ pub fn anchor(app: &SolveApp, d: &Dialog) -> Option<(Vec3, Option<Vec3>)> {
         }
         // A hole on a curved face drills against the face's normal where it was picked.
         Kind::Hole { .. } if matches!(first, Sel::Face { .. }) => {
-            (at, normal.or_else(|| solidcraft_engine::doc::hole_direction_at(&st, at, &[]).map(|d| -d)))
+            (at, normal.or_else(|| torno_engine::doc::hole_direction_at(&st, at, &[]).map(|d| -d)))
         }
         // Holes at sketch points go into the part the sketch touches (or away, flipped): the
         // arrow shows which way.
@@ -116,11 +115,11 @@ pub fn anchor(app: &SolveApp, d: &Dialog) -> Option<(Vec3, Option<Vec3>)> {
                 }
             }
             let flip = d.extra.get("flip").and_then(serde_json::Value::as_bool).unwrap_or(false);
-            let dir = by_sketch.first().and_then(|(sk, ids)| solidcraft_engine::doc::sketch_hole_direction(&st, *sk, ids, flip));
+            let dir = by_sketch.first().and_then(|(sk, ids)| torno_engine::doc::sketch_hole_direction(&st, *sk, ids, flip));
             (at, normal.or(dir.map(|d| -d)))
         }
         // A curved face offsets along its outward normal where it was picked.
-        Kind::OffsetFaces { .. } => (at, normal.or_else(|| solidcraft_engine::doc::hole_direction_at(&st, at, &[]).map(|d| -d))),
+        Kind::OffsetFaces { .. } => (at, normal.or_else(|| torno_engine::doc::hole_direction_at(&st, at, &[]).map(|d| -d))),
         Kind::Section { .. } | Kind::OffsetPlane { .. } => (at, normal),
         // Fillet radii and chamfer distances grow the way `blend_grow_dir` gives (into the body
         // on an outside edge, into the open corner on an inside one); shell thickness grows into
@@ -199,9 +198,9 @@ pub(crate) fn profile_plane(app: &SolveApp, sketch: u64) -> Option<solidcore_rec
     let plane = state.sketch(sketch)?.plane;
     let frame = crate::dialogs::feature_frame(&app.session, component);
     solidcore_record::Plane::new(
-        solidcraft_engine::doc::apply_point(&frame, plane.origin),
-        solidcraft_engine::doc::apply_vector(&frame, plane.x),
-        solidcraft_engine::doc::apply_vector(&frame, plane.y),
+        torno_engine::doc::apply_point(&frame, plane.origin),
+        torno_engine::doc::apply_vector(&frame, plane.x),
+        torno_engine::doc::apply_vector(&frame, plane.y),
     )
 }
 
@@ -209,7 +208,7 @@ fn reference_height(app: &SolveApp, d: &Dialog, label: &str, plane: &solidcore_r
     let point = crate::dialogs::object_point(&d.inputs, label)?;
     let p = point.as_array()?;
     let p = Vec3::new(p.first()?.as_f64()?, p.get(1)?.as_f64()?, p.get(2)?.as_f64()?);
-    Some(solidcraft_engine::doc::object_height(&crate::open_meshing::session_world(&app.session), plane, centre, p))
+    Some(torno_engine::doc::object_height(&crate::open_meshing::session_world(&app.session), plane, centre, p))
 }
 
 /// The two faces at an edge, near `p`: for each, the normal and centroid of its triangle nearest
@@ -522,16 +521,16 @@ pub(crate) fn along(proj: &Proj, pos: Pos2, base: Vec3, dir: Vec3) -> Option<f64
 }
 
 /// Snapped drag write: Length decimals, but enough places for `step` (#9035).
-pub(crate) fn format_len_drag(doc: &solidcraft_engine::doc::Document, v: f64, step: f64, decimals: u8) -> String {
+pub(crate) fn format_len_drag(doc: &torno_engine::doc::Document, v: f64, step: f64, decimals: u8) -> String {
     crate::length_input::model_drag(doc, v, step, decimals)
 }
 
-pub(crate) fn format_len(doc: &solidcraft_engine::doc::Document, v: f64) -> String {
+pub(crate) fn format_len(doc: &torno_engine::doc::Document, v: f64) -> String {
     crate::length_input::model(doc, v)
 }
 
 /// Where a sketch point picked as "<sketch id>:<point id>" (or a bare id of the active sketch) is.
-fn sketch_point_at(app: &SolveApp, st: &solidcraft_engine::doc::ModelState, id: &str) -> Option<Vec3> {
+fn sketch_point_at(app: &SolveApp, st: &torno_engine::doc::ModelState, id: &str) -> Option<Vec3> {
     let (sketch, point) = match id.split_once(':') {
         Some((sketch, point)) => (sketch.parse().ok()?, point),
         None => (app.session.active_sketch?, id),
@@ -567,7 +566,7 @@ fn draw(app: &SolveApp, ui: &mut egui::Ui, painter: &egui::Painter, proj: &Proj,
                 .and_then(serde_json::Value::as_array)
                 .map(|a| a.iter().filter_map(|v| v.as_str().map(str::to_owned)).collect())
                 .unwrap_or_default();
-            solidcraft_engine::doc::through_all_distance(&state, &plane, &targets).ok()
+            torno_engine::doc::through_all_distance(&state, &plane, &targets).ok()
         })
     } else {
         None
@@ -588,8 +587,8 @@ fn draw(app: &SolveApp, ui: &mut egui::Ui, painter: &egui::Painter, proj: &Proj,
         d.extra
             .get("convention")
             .cloned()
-            .and_then(|v| serde_json::from_value::<solidcraft_engine::doc::ExtrudeConvention>(v).ok())
-            .unwrap_or(solidcraft_engine::doc::ExtrudeConvention::TotalDistance)
+            .and_then(|v| serde_json::from_value::<torno_engine::doc::ExtrudeConvention>(v).ok())
+            .unwrap_or(torno_engine::doc::ExtrudeConvention::TotalDistance)
             .symmetric_half_distance(1.0)
     } else {
         1.0
@@ -1030,9 +1029,7 @@ fn value_box_full(
         let frame = Container::popup_frame(ui.style()).inner_margin(egui::Margin::symmetric(6, 3));
         Container::show_backing(ui, frame, |ui| {
             ui.horizontal(|ui| {
-                ui.label(
-                    egui::RichText::new(solidcraft_ui_text::tr_label(label)).color(t.text_dim).size(solidcraft_theme::Tokens::get().font_caption),
-                );
+                ui.label(egui::RichText::new(torno_ui_text::tr_label(label)).color(t.text_dim).size(torno_theme::Tokens::get().font_caption));
                 let r = crate::ui_kit::canvas_value_field(ui, id, value, keep_tab);
                 crate::params_dialog::complete(ui, &r, value);
                 if select_all {
@@ -1043,7 +1040,7 @@ fn value_box_full(
                     st.store(ui.ctx(), id);
                 }
                 if let Some(note) = note {
-                    ui.label(egui::RichText::new(note).color(t.text_dim).size(solidcraft_theme::Tokens::get().font_caption));
+                    ui.label(egui::RichText::new(note).color(t.text_dim).size(torno_theme::Tokens::get().font_caption));
                 }
                 field = Some(r.rect);
             });
@@ -1126,7 +1123,7 @@ fn box_size(ui: &egui::Ui, area: egui::Id, label: &str, note: Option<&str>) -> e
     let t = Tokens::get();
     let font = egui::FontId::proportional(t.font_caption);
     let width = |text: String| ui.painter().layout_no_wrap(text, font.clone(), t.text_dim).size().x;
-    let mut w = width(solidcraft_ui_text::tr_label(label).to_string()) + t.space_24 * 3.0;
+    let mut w = width(torno_ui_text::tr_label(label).to_string()) + t.space_24 * 3.0;
     let mut parts = 1;
     if let Some(note) = note {
         w += width(note.to_string());
@@ -1157,7 +1154,7 @@ fn to_segment(p: Pos2, a: Pos2, b: Pos2) -> f32 {
 /// above a placement marker drawn at the base instead of through it.
 #[allow(clippy::too_many_arguments)]
 fn drag_arrow(
-    doc: &solidcraft_engine::doc::Document,
+    doc: &torno_engine::doc::Document,
     ui: &mut egui::Ui,
     painter: &egui::Painter,
     proj: &Proj,
@@ -1193,7 +1190,7 @@ struct ArrowLine {
 /// and the stop it took this frame.
 #[allow(clippy::too_many_arguments)]
 fn drag_arrow_to(
-    doc: &solidcraft_engine::doc::Document,
+    doc: &torno_engine::doc::Document,
     ui: &mut egui::Ui,
     painter: &egui::Painter,
     proj: &Proj,
@@ -1283,7 +1280,7 @@ fn drag_arrow_to(
 /// would put the same radius on every other edge. Whether the handles are shown.
 fn radius_spline_handles(app: &SolveApp, ui: &mut egui::Ui, painter: &egui::Painter, proj: &Proj, d: &mut Dialog) -> bool {
     use serde_json::{Value, json};
-    use solidcraft_engine::doc::kernel::RadiusSpline;
+    use torno_engine::doc::kernel::RadiusSpline;
     enum Edit {
         /// Control index, radius mm, free (Alt) drag, snap step used when not free.
         Set(usize, f64, bool, f64),
@@ -1320,7 +1317,7 @@ fn radius_spline_handles(app: &SolveApp, ui: &mut egui::Ui, painter: &egui::Pain
         let Some(radii) = std::iter::once(radius.as_str()).chain(exprs.iter().map(String::as_str)).map(eval).collect::<Option<Vec<f64>>>() else {
             return false;
         };
-        let spline = solidcraft_engine::doc::FilletStyle::spline(&knots, radii);
+        let spline = torno_engine::doc::FilletStyle::spline(&knots, radii);
         let swap = d.extra.get("swap_ends").and_then(Value::as_bool).unwrap_or(false);
         let start = if swap { b0 } else { a0 };
         // Each edge runs from its end nearest the start, as the fillet builds it.
@@ -1585,8 +1582,7 @@ fn measure_line(
         painter.circle(s, 3.5, t.manipulator, Stroke::new(1.0, Color32::WHITE));
     }
     let mid = sa + (sb - sa) * 0.5;
-    let galley =
-        painter.layout_no_wrap(crate::prefs::show_mm(app, d, 1), egui::FontId::proportional(solidcraft_theme::Tokens::get().font_label), t.text);
+    let galley = painter.layout_no_wrap(crate::prefs::show_mm(app, d, 1), egui::FontId::proportional(torno_theme::Tokens::get().font_label), t.text);
     let own = egui::Rect::from_min_size(mid + vec2(10.0, -14.0), galley.size() + vec2(10.0, 6.0));
     let rect = moved_label(proj, own, labels.offset(0));
     pick_numbers(painter, sa, sb, rect);
@@ -1685,7 +1681,7 @@ fn measure_components(
             (total.center(), vec2(20.0, 20.0))
         };
         let text = format!("{}: {}", axis.to_uppercase(), crate::prefs::show_mm(app, distance, 1));
-        let galley = painter.layout_no_wrap(text, egui::FontId::proportional(solidcraft_theme::Tokens::get().font_label), t.text);
+        let galley = painter.layout_no_wrap(text, egui::FontId::proportional(torno_theme::Tokens::get().font_label), t.text);
         let size = galley.size() + vec2(10.0, 6.0);
         let bounds = proj.rect.shrink(4.0);
         let clamp = |rect: egui::Rect| {
@@ -1833,7 +1829,7 @@ pub(crate) fn revolve_axis(app: &SolveApp, d: &Dialog) -> Option<(Vec3, Vec3)> {
                 "Y" => Vec3::Y,
                 _ => Vec3::Z,
             };
-            return Some((solidcraft_engine::doc::apply_point(&frame, Vec3::ZERO), solidcraft_engine::doc::apply_vector(&frame, dir)));
+            return Some((torno_engine::doc::apply_point(&frame, Vec3::ZERO), torno_engine::doc::apply_vector(&frame, dir)));
         }
         if let Sel::Axis { name } = selected
             && matches!(name.as_str(), "x" | "y")
@@ -1866,7 +1862,7 @@ fn draw_revolve(
     focus: bool,
 ) {
     let to_mode = d.inputs.iter().any(|input| input.label == "To Object");
-    let extent = revolve_display_extent(app, d, axis).unwrap_or(solidcraft_engine::doc::RevolveExtent {
+    let extent = revolve_display_extent(app, d, axis).unwrap_or(torno_engine::doc::RevolveExtent {
         start: 0.0,
         sweep: f64::NAN,
         rotation_axis: axis.1,
@@ -1883,8 +1879,8 @@ fn draw_revolve(
             let e1 = (base - centre) / radius;
             let e2 = extent.rotation_axis.cross(e1);
             let handed = match revolve_convention(d) {
-                solidcraft_engine::doc::RevolveConvention::LegacyAxisStart => -direction.dot(extent.rotation_axis),
-                solidcraft_engine::doc::RevolveConvention::SketchNormal => 1.0,
+                torno_engine::doc::RevolveConvention::LegacyAxisStart => -direction.dot(extent.rotation_axis),
+                torno_engine::doc::RevolveConvention::SketchNormal => 1.0,
             };
             let at = |angle: f64| centre + (e1 * angle.cos() + e2 * angle.sin()) * radius;
             let points: Vec<_> = (0..=48).filter_map(|i| proj.to_screen(at(extent.display_start + extent.sweep * i as f64 / 48.0))).collect();
@@ -1985,24 +1981,23 @@ fn draw_revolve(
                 } else {
                     "Choose target".into()
                 };
-                ui.label(text)
-                    .backing_on_hover_text(solidcraft_ui_text::tr_label("Determined by To Object. Choose Angle to edit the angular extent."));
+                ui.label(text).backing_on_hover_text(torno_ui_text::tr_label("Determined by To Object. Choose Angle to edit the angular extent."));
             });
         });
     } else if let Kind::Revolve { angle, .. } = &mut d.kind {
         let dragging = *angle != angle_before;
-        value_box(ui, solidcraft_ui_text::tr_label("Angle"), angle, box_at, focus || dragging, box_place(app, proj));
+        value_box(ui, torno_ui_text::tr_label("Angle"), angle, box_at, focus || dragging, box_place(app, proj));
     }
 }
 
-fn revolve_convention(d: &Dialog) -> solidcraft_engine::doc::RevolveConvention {
+fn revolve_convention(d: &Dialog) -> torno_engine::doc::RevolveConvention {
     d.extra
         .get("convention")
         .and_then(|value| serde_json::from_value(value.clone()).ok())
-        .unwrap_or(solidcraft_engine::doc::RevolveConvention::SketchNormal)
+        .unwrap_or(torno_engine::doc::RevolveConvention::SketchNormal)
 }
 
-fn revolve_display_extent(app: &SolveApp, d: &Dialog, axis: (Vec3, Vec3)) -> Option<solidcraft_engine::doc::RevolveExtent> {
+fn revolve_display_extent(app: &SolveApp, d: &Dialog, axis: (Vec3, Vec3)) -> Option<torno_engine::doc::RevolveExtent> {
     let Sel::Profile { sketch, .. } = d.inputs.first()?.items.first()? else { return None };
     let state = crate::open_meshing::session_world(&app.session);
     let ss = state.sketch(*sketch)?;
@@ -2016,7 +2011,7 @@ fn revolve_display_extent(app: &SolveApp, d: &Dialog, axis: (Vec3, Vec3)) -> Opt
             _ => None,
         })
         .collect();
-    let regions = solidcraft_engine::sketch::merge_regions(&regions);
+    let regions = torno_engine::sketch::merge_regions(&regions);
     let plane = profile_plane(app, *sketch)?;
     let to_mode = d.inputs.iter().any(|input| input.label == "To Object");
     let to = if to_mode {
@@ -2040,7 +2035,7 @@ fn revolve_display_extent(app: &SolveApp, d: &Dialog, axis: (Vec3, Vec3)) -> Opt
     };
     // The solid refuses 0° and a sweep past a full turn, and the dialog says so. The handle
     // still uses that boundary, so the grab point stays and the angle can be dragged back.
-    solidcraft_engine::doc::revolve_extent_for_handle(
+    torno_engine::doc::revolve_extent_for_handle(
         &state,
         &plane,
         &regions,
@@ -2220,7 +2215,7 @@ mod tests {
         let mut worst = f32::NEG_INFINITY;
         for n in [Vec3::X, Vec3::Y, Vec3::Z] {
             for dir in crate::viewport::orbit_directions() {
-                let cam = solidcraft_viewport::Camera::default().looking_from(dir);
+                let cam = torno_viewport::Camera::default().looking_from(dir);
                 let proj = Proj { cam, vp: cam.view_proj(4.0 / 3.0, 100.0), rect };
                 let h = cam.half_height() * 0.25;
                 let (Some(q), Some(c), Some(side)) =
@@ -2243,14 +2238,14 @@ mod tests {
         assert_eq!(snap_step(40.0), 1.0);
         assert_eq!(snap_step(100.0), 2.0);
         assert_eq!(snap_step(4.0), 0.1);
-        assert_eq!(format_len(&solidcraft_engine::doc::Document::default(), 12.0), "12 mm");
-        assert_eq!(format_len(&solidcraft_engine::doc::Document::default(), -2.5), "-2.5 mm");
-        assert_eq!(format_len(&solidcraft_engine::doc::Document::default(), -0.0001), "-0.0001 mm");
+        assert_eq!(format_len(&torno_engine::doc::Document::default(), 12.0), "12 mm");
+        assert_eq!(format_len(&torno_engine::doc::Document::default(), -2.5), "-2.5 mm");
+        assert_eq!(format_len(&torno_engine::doc::Document::default(), -0.0001), "-0.0001 mm");
         // Snapped drag residue and Length decimals (#9035, #9036).
         let noisy = (1.2_f64 / 0.2).round() * 0.2;
         assert_ne!(format!("{noisy}"), "1.2");
-        assert_eq!(format_len_drag(&solidcraft_engine::doc::Document::default(), noisy, 0.2, 2), "1.20 mm");
-        assert_eq!(format_len_drag(&solidcraft_engine::doc::Document::default(), noisy, 0.2, 1), "1.2 mm");
+        assert_eq!(format_len_drag(&torno_engine::doc::Document::default(), noisy, 0.2, 2), "1.20 mm");
+        assert_eq!(format_len_drag(&torno_engine::doc::Document::default(), noisy, 0.2, 1), "1.2 mm");
     }
 
     /// #6608: a canvas value box never covers the command window: it moves out of it.
@@ -2367,7 +2362,7 @@ mod tests {
 mod taper_limit_tests {
     use super::{taper_limits, taper_radii};
     use solidcore_record::{Loop2, Region2, Vec2};
-    use solidcraft_engine::geom::prelude::*;
+    use torno_engine::geom::prelude::*;
 
     /// #1602: a drag stops just short of the taper that closes the profile, either way.
     #[test]

@@ -2,7 +2,7 @@
 //! its top (z = 27.5) or at its face y = 20. The plate's arc side is a cylinder r 10 about z;
 //! the hole, r 5 along x at y = z = 12.5, opens through it. Inset by 2 the arc becomes r 8
 //! and the hole r 7, axes 2.5 apart, so the hole's tube passes out through the arc's offset.
-//! SolidCraft's `smlib_shell` (the fork's C++) reports 1001 on its plate. Pinned SMLib
+//! Torno's `smlib_shell` (the fork's C++) reports 1001 on its plate. Pinned SMLib
 //! 1.0.1 shells this reconstruction open at the top and fails it open at y = 20 with
 //! `SM_ERR` (1001), through `SmApiShellBrepFull` and through a bare `ShellBrep` (the
 //! historical `offset.offset_executive_p2` cases
@@ -211,7 +211,7 @@ fn issue1528_plate_file_top_face_index() {
     }
 }
 
-/// `SmApiShellBrepFull(brep, -2, TRUE, TRUE, create_offset_solid, top)` as SolidCraft's
+/// `SmApiShellBrepFull(brep, -2, TRUE, TRUE, create_offset_solid, top)` as Torno's
 /// `smlib_shell` calls it (its third flag `TRUE`), under `fixes`.
 /// The face left open: the top `z = 27.5` (the difftest case's) or the side `y = 20`, the
 /// plane the arc meets tangentially at `(0, 20)`, which the issue's tangent-gap bridge

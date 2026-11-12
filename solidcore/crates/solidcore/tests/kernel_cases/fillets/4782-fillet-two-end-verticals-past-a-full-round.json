@@ -176,7 +176,7 @@
     "blend_dropping"
   ],
   "ungraded": [
-    "refusal \"the largest radius that fits is 7.5 mm\": SolidCraft's wording of the kernel's error"
+    "refusal \"the largest radius that fits is 7.5 mm\": Torno's wording of the kernel's error"
   ],
   "what": "both vertical edges of a 15 mm wide box end rounded r10, past the full round (7.5): refused naming the largest radius that fits, 7.5",
   "why_not": []

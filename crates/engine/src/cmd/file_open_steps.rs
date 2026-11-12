@@ -8,7 +8,7 @@
 use std::sync::Arc;
 
 use serde_json::Value;
-use solidcraft_doc::{Document, FeatureKind, Model, Visibility};
+use torno_doc::{Document, FeatureKind, Model, Visibility};
 
 use super::{opened_design, read_design};
 use crate::params::bool_;
@@ -18,7 +18,7 @@ use crate::{Result, Session};
 pub struct OpenSteps {
     path: String,
     read_only: bool,
-    disk: Option<solidcraft_io::design_lock::FileStamp>,
+    disk: Option<torno_io::design_lock::FileStamp>,
     /// The design as the session will hold it, its history marker moved to `next` meanwhile.
     doc: Arc<Document>,
     /// The history marker the design was saved with.
@@ -36,11 +36,11 @@ impl OpenSteps {
     /// Read the design file `doc.open` would open with parameters `p`, without evaluating it.
     /// `None` when `p` names a file `doc.open` reads in another way (a CAD, mesh or drawing file,
     /// or a point cloud), or asks for something only those take: run `doc.open` for it.
-    pub fn start(p: &Value, validation: solidcraft_kernel::Validation) -> Result<Option<OpenSteps>> {
+    pub fn start(p: &Value, validation: torno_kernel::Validation) -> Result<Option<OpenSteps>> {
         let Some(path) = p.get("path").and_then(Value::as_str) else { return Ok(None) };
-        let other = solidcraft_io::is_step_path(path)
-            || solidcraft_io::is_mesh_path(path)
-            || solidcraft_io::is_point_cloud_path(path)
+        let other = torno_io::is_step_path(path)
+            || torno_io::is_mesh_path(path)
+            || torno_io::is_point_cloud_path(path)
             || super::super::drawing_import_command(path).is_some()
             || ["names", "up"].iter().any(|k| p.get(k).is_some_and(|v| !v.is_null()));
         if other || path.trim().is_empty() || path.len() >= 4096 {
@@ -48,11 +48,11 @@ impl OpenSteps {
         }
         let read_only = bool_(p, "read_only").unwrap_or(false);
         // Stamped before it is read, as `doc.open` does.
-        let disk = solidcraft_io::design_lock::stamp(path);
+        let disk = torno_io::design_lock::stamp(path);
         let (mut doc, saved) = read_design(&mut Session::default(), path)?;
         super::super::component_link::resolve_design_links(&mut doc, Some(path));
         // What `Session::opened` does before it evaluates.
-        solidcraft_io::vfs::install_checks();
+        torno_io::vfs::install_checks();
         let visibility = std::mem::take(&mut doc.visibility);
         let doc = Arc::new(doc);
         let marker = doc.marker;
@@ -131,7 +131,7 @@ impl OpenSteps {
 }
 
 /// A model with no results yet, checking its features under `validation`.
-fn under(validation: solidcraft_kernel::Validation) -> Model {
+fn under(validation: torno_kernel::Validation) -> Model {
     let mut model = Model::default();
     model.set_validation(validation);
     model

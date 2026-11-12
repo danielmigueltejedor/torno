@@ -1,14 +1,14 @@
 //! Per-document, transient render ownership. Captured scenes remain immutable when CAD edits
 //! continue; callers get the captured revision and must never present it as a newer scene.
 
-use solidcraft_render::{
-    ExecutorDescriptor,
-    job::{CpuHost, ErrorCode, HostKind, Integrator, JobError, JobHandle, JobId, JobStatus, Phase, RenderFrame},
-};
 use std::collections::VecDeque;
 use std::sync::{
     Arc,
     atomic::{AtomicU64, Ordering},
+};
+use torno_render::{
+    ExecutorDescriptor,
+    job::{CpuHost, ErrorCode, HostKind, Integrator, JobError, JobHandle, JobId, JobStatus, Phase, RenderFrame},
 };
 
 static NEXT_OWNER: AtomicU64 = AtomicU64::new(1);
@@ -40,7 +40,7 @@ struct LiveJob {
 /// Transient completed-image metadata. Neither pixels nor selection enter a design or undo.
 #[derive(Clone, Debug, serde::Serialize)]
 pub struct RetainedResult {
-    pub frame: solidcraft_render::job::FrameInfo,
+    pub frame: torno_render::job::FrameInfo,
     pub shot: Option<String>,
     pub seconds: f64,
     pub stale: bool,
@@ -53,7 +53,7 @@ struct Completed {
 
 pub(crate) struct BatchShot {
     pub name: String,
-    pub camera: solidcraft_viewport::Camera,
+    pub camera: torno_viewport::Camera,
     pub request: Arc<serde_json::Value>,
 }
 
@@ -88,7 +88,7 @@ pub(crate) struct Jobs {
     live: Vec<LiveJob>,
     history: VecDeque<JobStatus>,
     completed: VecDeque<Completed>,
-    selected: Option<solidcraft_render::job::JobId>,
+    selected: Option<torno_render::job::JobId>,
     waiting: VecDeque<BatchShot>,
     pub(crate) batch_job: Option<JobId>,
     pub(crate) batch_error: Option<String>,
@@ -149,12 +149,9 @@ impl Jobs {
         !self.completed.is_empty() || self.live.iter().any(|job| job.handle.frame().ok().flatten().is_some())
     }
 
-    pub(crate) fn host_for(&self, executor: &solidcraft_render::ExecutorId) -> Option<&CpuHost> {
+    pub(crate) fn host_for(&self, executor: &torno_render::ExecutorId) -> Option<&CpuHost> {
         if executor.as_str() == "cpu-raytrace" {
-            return self
-                .host
-                .as_ref()
-                .filter(|host| host.descriptor_for(solidcraft_render::job::Integrator::Raytrace).is_ok_and(|d| &d.id == executor));
+            return self.host.as_ref().filter(|host| host.descriptor_for(torno_render::job::Integrator::Raytrace).is_ok_and(|d| &d.id == executor));
         }
         if self.descriptor.as_ref().is_some_and(|d| &d.id == executor) {
             return self.host.as_ref();
@@ -205,7 +202,7 @@ impl Jobs {
     pub(crate) fn start_prepared(
         &mut self,
         revision: u64,
-        prepared: solidcraft_render::job::PreparedSubmission,
+        prepared: torno_render::job::PreparedSubmission,
         replace: bool,
         shot: Option<String>,
     ) -> Result<JobStatus, JobError> {
@@ -215,7 +212,7 @@ impl Jobs {
     pub(crate) fn try_start_prepared(
         &mut self,
         revision: u64,
-        slot: &mut Option<solidcraft_render::job::PreparedSubmission>,
+        slot: &mut Option<torno_render::job::PreparedSubmission>,
         replace: bool,
         shot: Option<String>,
     ) -> Result<JobStatus, JobError> {
@@ -224,7 +221,7 @@ impl Jobs {
     pub(crate) fn try_start_prepared_inner(
         &mut self,
         revision: u64,
-        slot: &mut Option<solidcraft_render::job::PreparedSubmission>,
+        slot: &mut Option<torno_render::job::PreparedSubmission>,
         replace: bool,
         shot: Option<String>,
         ticket: Option<crate::render_preparation::batch::Ticket>,
@@ -300,11 +297,7 @@ impl Jobs {
         Ok(status)
     }
 
-    pub(crate) fn regrade(
-        &mut self,
-        source_id: JobId,
-        presentation: solidcraft_render::job::presentation::Presentation,
-    ) -> Result<JobStatus, JobError> {
+    pub(crate) fn regrade(&mut self, source_id: JobId, presentation: torno_render::job::presentation::Presentation) -> Result<JobStatus, JobError> {
         if self.batch_job.is_some() || self.native_batch.is_some() {
             return Err(JobError::new(ErrorCode::QueueFull, "cancel the shot queue before regrading"));
         }
@@ -392,7 +385,7 @@ impl Jobs {
         self.history.iter().find(|s| s.job == id).cloned().ok_or_else(|| JobError::new(ErrorCode::UnknownJob, "render job is no longer retained"))
     }
 
-    pub(crate) fn pin(&mut self, id: Option<JobId>) -> Result<Option<solidcraft_render::job::FrameInfo>, JobError> {
+    pub(crate) fn pin(&mut self, id: Option<JobId>) -> Result<Option<torno_render::job::FrameInfo>, JobError> {
         self.collect()?;
         let Some(id) = id else {
             self.selected = None;
@@ -588,7 +581,7 @@ impl crate::Session {
 
     /// Capture the UI draft's label alongside an unnamed active request, never in the design.
     pub fn label_render_job(&mut self, id: JobId, shot: &str) -> crate::Result<()> {
-        solidcraft_doc::render_settings::RenderSettings::validate_name(shot).map_err(|error| crate::EngineError::Other(error.to_string()))?;
+        torno_doc::render_settings::RenderSettings::validate_name(shot).map_err(|error| crate::EngineError::Other(error.to_string()))?;
         let job = self
             .render_jobs
             .live
@@ -640,15 +633,15 @@ impl crate::Session {
         if let Some(raytrace) = cpu_raytrace_descriptor(host.as_ref()) {
             backend.executors.push(raytrace);
         }
-        solidcraft_render::resolve_request(
+        torno_render::resolve_request(
             &[backend],
-            &solidcraft_render::RenderRequest {
+            &torno_render::RenderRequest {
                 backend: None,
-                mode: solidcraft_render::RenderMode::Preview,
-                operation: solidcraft_render::RenderOperation::Image,
+                mode: torno_render::RenderMode::Preview,
+                operation: torno_render::RenderOperation::Image,
                 width: 1,
                 height: 1,
-                format: Some(solidcraft_render::RenderFormat::Png),
+                format: Some(torno_render::RenderFormat::Png),
                 features: Vec::new(),
                 policy: Default::default(),
             },
@@ -664,7 +657,7 @@ impl crate::Session {
 
     /// Add an executor without replacing CPU jobs or their ownership. Applications share
     /// this host across document sessions; descriptor IDs must be unique in the registry.
-    pub fn register_render_job_host(&mut self, host: solidcraft_render::job::ImageHost) -> crate::Result<()> {
+    pub fn register_render_job_host(&mut self, host: torno_render::job::ImageHost) -> crate::Result<()> {
         let descriptor = host.descriptor().map_err(job_error)?;
         if descriptor.id.as_str() == "cpu-raytrace" {
             return Err(crate::EngineError::Other("cpu-raytrace is reserved for the native CPU raytrace integrator".into()));
@@ -672,20 +665,20 @@ impl crate::Session {
         if self.render_jobs.additional.iter().any(|(old, _)| old.same_host(&host)) {
             return Ok(());
         }
-        if descriptor.profiles.iter().any(|p| p.operation != solidcraft_render::RenderOperation::Image) {
+        if descriptor.profiles.iter().any(|p| p.operation != torno_render::RenderOperation::Image) {
             return Err(crate::EngineError::Other("image host must only register image profiles".into()));
         }
         let mut registry = self.render_backend();
         registry.executors.push(descriptor.clone());
-        solidcraft_render::resolve_request(
+        torno_render::resolve_request(
             &[registry],
-            &solidcraft_render::RenderRequest {
+            &torno_render::RenderRequest {
                 backend: None,
-                mode: solidcraft_render::RenderMode::Preview,
-                operation: solidcraft_render::RenderOperation::Image,
+                mode: torno_render::RenderMode::Preview,
+                operation: torno_render::RenderOperation::Image,
                 width: 1,
                 height: 1,
-                format: Some(solidcraft_render::RenderFormat::Png),
+                format: Some(torno_render::RenderFormat::Png),
                 features: Vec::new(),
                 policy: Default::default(),
             },
@@ -757,7 +750,7 @@ mod displayed_result_tests {
     #[cfg(not(target_arch = "wasm32"))]
     fn first_native_plan(s: &mut crate::Session) -> (crate::render_preparation::batch::Plan, JobId) {
         use crate::render_preparation::batch;
-        use solidcraft_render::job::CancelToken;
+        use torno_render::job::CancelToken;
         let mut params = Some(json!({}));
         let claim = batch::claim(s, &mut params, &mut None, CancelToken::default()).unwrap();
         let (ready, receiver) = std::sync::mpsc::sync_channel(1);
@@ -780,7 +773,7 @@ mod displayed_result_tests {
     #[test]
     fn native_next_discard_uses_cached_status_but_hostile_missing_status_fails_only_its_exact_ticket() {
         use crate::render_preparation::batch;
-        use solidcraft_render::job::CancelToken;
+        use torno_render::job::CancelToken;
         for hostile_missing_status in [false, true] {
             let mut s = crate::Session::default();
             let host = CpuHost::cooperative();
@@ -948,7 +941,7 @@ mod displayed_result_tests {
     #[test]
     fn native_queue_status_and_next_claim_keep_eight_results_and_terminal_live_backing_until_explicit_collection() {
         use crate::render_preparation::batch;
-        use solidcraft_render::job::CancelToken;
+        use torno_render::job::CancelToken;
         for cancelled in [false, true] {
             let mut s = crate::Session::default();
             let host = CpuHost::cooperative();

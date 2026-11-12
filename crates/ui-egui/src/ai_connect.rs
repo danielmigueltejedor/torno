@@ -1,7 +1,7 @@
-//! Makes SolidCraft available to the AI apps on this computer without a step from the user: at
-//! start-up, off the window thread, the `solidcraft` entry is added to each installed client
-//! (`solidcraft_engine::agent_setup`), and a status message names the clients that got it for the
-//! first time. The preference "Make SolidCraft available to AI apps on this computer" turns it
+//! Makes Torno available to the AI apps on this computer without a step from the user: at
+//! start-up, off the window thread, the `torno` entry is added to each installed client
+//! (`torno_engine::agent_setup`), and a status message names the clients that got it for the
+//! first time. The preference "Make Torno available to AI apps on this computer" turns it
 //! off, which takes the entries out again. Best effort: nothing here can fail the launch.
 
 use crate::SolveApp;
@@ -24,7 +24,7 @@ pub fn begin(app: &mut SolveApp) {
 
 /// The clients already announced, so a client is named once however often its entry is made again.
 fn announced_file() -> Option<std::path::PathBuf> {
-    solidcraft_engine::recovery::data_dir().map(|d| d.join("ai-apps-connected.json"))
+    torno_engine::recovery::data_dir().map(|d| d.join("ai-apps-connected.json"))
 }
 
 fn read_announced(path: &std::path::Path) -> Vec<String> {
@@ -58,7 +58,7 @@ pub fn client_name(id: &str) -> &str {
 
 #[cfg(not(target_arch = "wasm32"))]
 fn spawn(remove: bool) -> Option<std::sync::mpsc::Receiver<Vec<&'static str>>> {
-    use solidcraft_engine::agent_setup as setup;
+    use torno_engine::agent_setup as setup;
     let cli = crate::agent_chat::find_cli()?;
     let cli = setup::plain_path(&cli.canonicalize().unwrap_or(cli));
     let (tx, rx) = std::sync::mpsc::channel();
@@ -118,7 +118,7 @@ pub fn tick(app: &mut SolveApp) {
             }
             let _ = std::fs::write(&file, serde_json::to_string(&all).unwrap_or_default());
             let names = fresh.iter().map(|c| client_name(c)).collect::<Vec<_>>().join(", ");
-            app.set_status(solidcraft_ui_text::format("ai.connected_toast", &[("clients", &names)]), false);
+            app.set_status(torno_ui_text::format("ai.connected_toast", &[("clients", &names)]), false);
         }
         Err(std::sync::mpsc::TryRecvError::Empty) => {}
         Err(std::sync::mpsc::TryRecvError::Disconnected) => app.ai_connect.job = None,

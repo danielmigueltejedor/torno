@@ -4,7 +4,7 @@ use std::cell::RefCell;
 use std::collections::{BTreeMap, VecDeque};
 use std::rc::Rc;
 
-use solidcraft_engine::panels::*;
+use torno_engine::panels::*;
 
 use super::*;
 
@@ -233,7 +233,7 @@ pub struct FakeAppPanelServices {
     pub local: FakeLocalServices,
 }
 impl AppPanelServices for FakeAppPanelServices {
-    fn refresh_read_only(&mut self, _session: &solidcraft_engine::Session) -> PanelResult<()> {
+    fn refresh_read_only(&mut self, _session: &torno_engine::Session) -> PanelResult<()> {
         Ok(())
     }
     fn services(&mut self) -> ContentServices<'_> {

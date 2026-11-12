@@ -218,13 +218,13 @@ fn creation_schemas_and_the_key_check_agree() {
         let c = crate::cmd::find_command(id).unwrap_or_else(|| panic!("{id}"));
         assert!(c.contract.is_some() && c.output.is_some(), "{id}");
     }
-    assert_eq!(solidcraft_sketch::MAX_SPLINE_POINTS, 500, "the handler's message and the type's say 500");
+    assert_eq!(torno_sketch::MAX_SPLINE_POINTS, 500, "the handler's message and the type's say 500");
 }
 
 /// The calls the handlers refuse before they look at a sketch: strict gives their messages.
 #[test]
 fn strict_keeps_todays_errors_before_the_sketch() {
-    let long = "x".repeat(solidcraft_sketch::MAX_TEXT_CHARS + 1);
+    let long = "x".repeat(torno_sketch::MAX_TEXT_CHARS + 1);
     let at = json!([0, 0]);
     assert_strict_keeps_todays_errors(&[
         ("sketch.line.midpoint", json!({})),

@@ -2,8 +2,8 @@
 //! A wall swept along a spiral has a flat top and bottom that are B-spline faces: a join of two
 //! such walls, whose tops and bottoms coincide.
 
-use solidcraft_geom::prelude::*;
 use std::f64::consts::TAU;
+use torno_geom::prelude::*;
 
 use solidcore_record::{Loop2, Plane, Region2, Vec2, Vec3};
 

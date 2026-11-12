@@ -3,9 +3,9 @@
 //! graph, CSV/JSON import and export, expression evaluation and autocomplete.
 
 use serde_json::{Value, json};
-use solidcraft_doc::FeatureKind;
-use solidcraft_doc::expr::{self, Kind};
-use solidcraft_sketch::{Analysis, ConstraintKind, CurveKind, Hold, Sketch, solve_with};
+use torno_doc::FeatureKind;
+use torno_doc::expr::{self, Kind};
+use torno_sketch::{Analysis, ConstraintKind, CurveKind, Hold, Sketch, solve_with};
 
 use super::{CommandSpec, sketch_store};
 use crate::params::{bad, bool_, str_};
@@ -152,7 +152,7 @@ pub(super) fn known(s: &Session, name: &str) -> bool {
 
 /// Whether `name` is (or, with this unit, becomes) a text parameter, whose expression is text.
 fn is_text(s: &Session, name: &str, unit: Option<&str>) -> bool {
-    s.doc.text_param(name).is_some() || unit.is_some_and(solidcraft_doc::text_params::is_text_unit)
+    s.doc.text_param(name).is_some() || unit.is_some_and(torno_doc::text_params::is_text_unit)
 }
 
 fn change_param(s: &mut Session, p: &Value) -> Result<Value> {
@@ -285,7 +285,7 @@ fn construction_offset_hold(sk: &Sketch, kind: &ConstraintKind) -> Vec<usize> {
 /// as it did before, including when that dimension holds nothing. An earlier dimension that only
 /// mentions `name` in its expression is skipped when it holds no points, so it cannot hide that
 /// direct dimension. A construction offset is the expression match that does hold its reference.
-fn held_for_parameter(sketch: &Sketch, doc: &solidcraft_doc::Document, name: &str) -> Option<Vec<usize>> {
+fn held_for_parameter(sketch: &Sketch, doc: &torno_doc::Document, name: &str) -> Option<Vec<usize>> {
     let mut offset = None;
     for c in sketch.constraints.iter().filter(|c| !c.driven) {
         let Some(param) = c.param.as_deref() else { continue };
@@ -417,7 +417,7 @@ fn list(s: &mut Session, p: &Value) -> Result<Value> {
         (_, Some(f)) => f.to_ascii_lowercase(),
         _ => "all".to_string(),
     };
-    let mut rows: Vec<solidcraft_doc::ParamRow> = s
+    let mut rows: Vec<torno_doc::ParamRow> = s
         .doc
         .param_rows()
         .into_iter()
@@ -430,7 +430,7 @@ fn list(s: &mut Session, p: &Value) -> Result<Value> {
         .collect();
     // Favourites first; otherwise the table order (user, sketch, feature).
     rows.sort_by_key(|r| !r.favorite);
-    let cycles = solidcraft_doc::cycles(&s.doc.all_param_exprs());
+    let cycles = torno_doc::cycles(&s.doc.all_param_exprs());
     let count = rows.len();
     let parameters = rows.into_iter().map(ParameterRow::from).collect();
     reply(cmd, ParamListResult { parameters, count, cycles: cycles.into_iter().collect(), param_warnings: Vec::new() })
@@ -448,7 +448,7 @@ fn add(s: &mut Session, p: &Value) -> Result<Value> {
     }
     let (vals, _) = s.doc.param_values();
     let value = match s.doc.text_param(&name) {
-        Some(t) => AddedValue::Text { unit: solidcraft_doc::text_params::TEXT_UNIT.into(), text: t.text.clone(), value: None },
+        Some(t) => AddedValue::Text { unit: torno_doc::text_params::TEXT_UNIT.into(), text: t.text.clone(), value: None },
         None => AddedValue::Number {
             unit: s.doc.param(&name).map(|x| x.unit.clone()),
             value: vals.get(&name).map(|v| expr::round_reported(expr::reported_value(*v))),
@@ -533,7 +533,7 @@ fn graph(s: &mut Session, _p: &Value) -> Result<Value> {
     let (_, errs) = s.doc.param_values();
     let nodes: Vec<String> = s.doc.param_defs().into_iter().map(|d| d.name).collect();
     let edges: Vec<[String; 2]> = s.doc.param_graph().into_iter().map(|(a, b)| [a, b]).collect();
-    let cycles = solidcraft_doc::cycles(&s.doc.all_param_exprs());
+    let cycles = torno_doc::cycles(&s.doc.all_param_exprs());
     reply(cmd, ParamGraphResult { nodes, edges, cycles: cycles.into_iter().collect(), errors: errs, param_warnings: Vec::new() })
 }
 
@@ -561,7 +561,7 @@ fn export(s: &mut Session, p: &Value) -> Result<Value> {
         other => return Err(bad(cmd, format!("unknown format `{other}` (csv or json)"))),
     };
     if let Some(path) = path {
-        solidcraft_io::vfs::write(path, text.as_bytes()).map_err(|e| EngineError::Other(format!("{path}: {e}")))?;
+        torno_io::vfs::write(path, text.as_bytes()).map_err(|e| EngineError::Other(format!("{path}: {e}")))?;
     }
     reply(cmd, ParamExportResult { format, path: path.map(str::to_string), text, param_warnings: Vec::new() })
 }
@@ -573,9 +573,7 @@ fn import(s: &mut Session, p: &Value) -> Result<Value> {
     let cmd = "parameters.import";
     let text = match (str_(p, "text"), str_(p, "path")) {
         (Some(t), _) => t.to_string(),
-        (None, Some(path)) => {
-            solidcraft_io::vfs::read_to_string(path, MAX_PARAMETER_BYTES).map_err(|e| EngineError::Other(format!("{path}: {e}")))?
-        }
+        (None, Some(path)) => torno_io::vfs::read_to_string(path, MAX_PARAMETER_BYTES).map_err(|e| EngineError::Other(format!("{path}: {e}")))?,
         _ => return Err(bad(cmd, "give `text` or `path`")),
     };
     let solved = s.solved_sketches();
@@ -589,8 +587,8 @@ fn evaluate(s: &mut Session, p: &Value) -> Result<Value> {
     let e = expr_arg(p, "expression").ok_or_else(|| bad(cmd, "`expression` must be text or a number"))?;
     let unit = str_(p, "unit");
     // A text parameter's expression is its text.
-    if unit.is_some_and(solidcraft_doc::text_params::is_text_unit) {
-        let body = ExprEvaluatedBody::Text { ok: true, kind: "text".into(), text: solidcraft_doc::text_params::unquote(&e), references: Vec::new() };
+    if unit.is_some_and(torno_doc::text_params::is_text_unit) {
+        let body = ExprEvaluatedBody::Text { ok: true, kind: "text".into(), text: torno_doc::text_params::unquote(&e), references: Vec::new() };
         return reply(cmd, ExprEvaluated { body, param_warnings: Vec::new() });
     }
     if let Some(u) = unit
@@ -611,10 +609,10 @@ fn evaluate(s: &mut Session, p: &Value) -> Result<Value> {
     let doc_len = expr::unit_info(s.doc.units.trim()).filter(|(k, _)| *k == Kind::Length).map(|(_, s)| s).unwrap_or(1.0);
     let defaults = expr::Defaults::for_unit(unit.unwrap_or(""), doc_len);
     let refs = expr::references(&e);
-    let lookup = |n: &str| vals.get(n).copied().ok_or_else(|| solidcraft_doc::DocError::Expr(format!("unknown parameter `{n}`")));
+    let lookup = |n: &str| vals.get(n).copied().ok_or_else(|| torno_doc::DocError::Expr(format!("unknown parameter `{n}`")));
     let r = expr::eval_with_defaults(&e, &lookup, defaults).and_then(|v| match kind {
         Some(k) => v.to_kind_in(k, defaults).map(|x| (x, k)),
-        None => v.kind().map(|k| (v.v, k)).ok_or_else(|| solidcraft_doc::DocError::Expr(format!("the result is {}", v.describe()))),
+        None => v.kind().map(|k| (v.v, k)).ok_or_else(|| torno_doc::DocError::Expr(format!("the result is {}", v.describe()))),
     });
     // `name = expression` is worth its expression, and names what it would define (#4071).
     let defines = expr::definition(&e).map(|(n, _)| n);
@@ -661,9 +659,9 @@ fn complete(s: &mut Session, p: &Value) -> Result<Value> {
     // `tooth_outward_flange_diameter`, #11978); functions, constants and units match from the
     // start.
     let contains = |n: &str| word.is_empty() || n.to_ascii_lowercase().contains(&lower);
-    let within = |n: &str| contains(n) || solidcraft_doc::name_words_match(n, &word);
+    let within = |n: &str| contains(n) || torno_doc::name_words_match(n, &word);
     let mut out: Vec<Completion> = Vec::new();
-    let mut rows: Vec<solidcraft_doc::ParamRow> = s.doc.param_rows().into_iter().filter(|r| within(&r.name)).collect();
+    let mut rows: Vec<torno_doc::ParamRow> = s.doc.param_rows().into_iter().filter(|r| within(&r.name)).collect();
     // Names that start with the word, then names that contain it, then names matched only by
     // the starts of their words; within each, favourites, then user parameters, then the others.
     rows.sort_by_key(|r| (!starts(&r.name), !contains(&r.name), !r.favorite, r.source != "user"));

@@ -32,6 +32,6 @@
   "ungraded": [],
   "what": "parameters.change that makes two parameters depend on each other",
   "why_not": [
-    "the failure is SolidCraft's, not a kernel operation's: step 4 (parameters.change): expression: circular reference: A → B → A"
+    "the failure is Torno's, not a kernel operation's: step 4 (parameters.change): expression: circular reference: A → B → A"
   ]
 }

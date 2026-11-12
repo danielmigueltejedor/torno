@@ -10,7 +10,7 @@
 use crate::BackingTooltipExt as _;
 use crate::type_face::RichTextExt as _;
 use egui::{Color32, FontId, Pos2, Rect, Sense, Stroke, pos2, vec2};
-use solidcraft_theme::{TabAccent, Tokens};
+use torno_theme::{TabAccent, Tokens};
 
 /// How a panel is drawn on a toolbar that may be too narrow for every button.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -171,7 +171,7 @@ pub fn button_lines(painter: &egui::Painter, label: &str, width: f32) -> Vec<Str
     let mut lines = label_lines(painter, label, width);
     // Right-to-left labels come in display order (see `bidi`): a line reads from its right end,
     // so a shortened line loses characters on the left, where the ellipsis then goes.
-    let rtl = solidcraft_ui_text::bidi::has_rtl(label);
+    let rtl = torno_ui_text::bidi::has_rtl(label);
     for line in &mut lines {
         if label_width(painter, line) > width {
             while !line.is_empty() {
@@ -194,9 +194,9 @@ pub fn button_lines(painter: &egui::Painter, label: &str, width: f32) -> Vec<Str
 pub fn label_width(painter: &egui::Painter, text: &str) -> f32 {
     let mut job = egui::text::LayoutJob::simple(
         text.to_owned(),
-        FontId::proportional(solidcraft_theme::Tokens::get().font_body),
+        FontId::proportional(torno_theme::Tokens::get().font_body),
         // Measured only: the colour plays no part in the width.
-        solidcraft_theme::Tokens::get().text,
+        torno_theme::Tokens::get().text,
         f32::INFINITY,
     );
     job.halign = egui::Align::Center;
@@ -258,7 +258,7 @@ pub fn label_lines(painter: &egui::Painter, label: &str, width: f32) -> Vec<Stri
     let measure = |text: &str| label_width(painter, text);
     let normalized = label.split_whitespace().collect::<Vec<_>>().join(" ");
     let label = normalized.as_str();
-    if solidcraft_ui_text::bidi::has_rtl(label) {
+    if torno_ui_text::bidi::has_rtl(label) {
         // Display-order right-to-left text reads from its end: the first line takes the words
         // at the end of the string, the second line the words before them.
         let breaks = label.char_indices().filter(|(_, c)| c.is_whitespace() || *c == '/').map(|(at, c)| at + c.len_utf8());
@@ -307,7 +307,7 @@ pub fn button_galley(painter: &egui::Painter, label: &str, width: f32, color: Co
 pub fn button_galley_weight(painter: &egui::Painter, label: &str, width: f32, color: Color32, selected: bool) -> std::sync::Arc<egui::Galley> {
     let lines = button_lines(painter, label, width);
     // Explicit newlines only: egui must never split an oversized word.
-    let size = solidcraft_theme::Tokens::get().font_body;
+    let size = torno_theme::Tokens::get().font_body;
     let mut job = egui::text::LayoutJob::simple(
         lines.join("\n"),
         if selected { crate::type_face::semibold(size) } else { FontId::proportional(size) },
@@ -579,7 +579,7 @@ pub fn galley_at(ui: &egui::Ui, at: Pos2, galley: std::sync::Arc<egui::Galley>, 
 
 /// The colour a command's icon means, for a pressed gallery cell on the default accent.
 fn icon_accent(icon: &str) -> Color32 {
-    crate::icons::primary(icon, solidcraft_theme::is_dark(), solidcraft_theme::vision())
+    crate::icons::primary(icon, torno_theme::is_dark(), torno_theme::vision())
 }
 
 fn handle(prefix: &str, key: &str) -> String {
@@ -621,9 +621,9 @@ pub fn show(ui: &mut egui::Ui, row: &Row, rect: Rect, more_rows: &mut dyn FnMut(
     let mut plans = fit(sizes.get(..normal).unwrap_or_default(), right - 4.0 - px - exit_width - exit_gap);
     let exit_right = plans.iter().any(|p| p.fit == Fit::More);
     plans.extend(exit_plan);
-    solidcraft_ui_registry::publish_count(h.collapsed_count, plans.iter().filter(|p| p.fit == Fit::Collapsed).count() as f64);
-    solidcraft_ui_registry::publish_count(h.more_count, plans.iter().filter(|p| p.fit == Fit::More).count() as f64);
-    solidcraft_ui_registry::publish_count(
+    torno_ui_registry::publish_count(h.collapsed_count, plans.iter().filter(|p| p.fit == Fit::Collapsed).count() as f64);
+    torno_ui_registry::publish_count(h.more_count, plans.iter().filter(|p| p.fit == Fit::More).count() as f64);
+    torno_ui_registry::publish_count(
         h.trimmed_count,
         plans.iter().zip(&sizes).filter(|(p, s)| p.fit == Fit::Buttons && p.shown < s.buttons.len()).count() as f64,
     );
@@ -669,7 +669,7 @@ pub fn show(ui: &mut egui::Ui, row: &Row, rect: Rect, more_rows: &mut dyn FnMut(
         if collapsed {
             // One button: the group's icon over a caret; it opens the group's menu.
             let br = Rect::from_center_size(free.center(), vec2((width - 8.0).max(0.0), button_height));
-            solidcraft_ui_registry::publish_handle(&handle(h.collapsed, group.key), br.center());
+            torno_ui_registry::publish_handle(&handle(h.collapsed, group.key), br.center());
             if fresp.hovered() && group.enabled {
                 painter.rect_filled(br, t.radius_sm, t.hover);
             }
@@ -696,11 +696,11 @@ pub fn show(ui: &mut egui::Ui, row: &Row, rect: Rect, more_rows: &mut dyn FnMut(
             }
             let resp = ui.interact(br, ui.scope_id().with(("cmd", b.id)), Sense::click_and_drag());
             for prefix in h.button {
-                solidcraft_ui_registry::publish_handle(&handle(prefix, b.id), br.center());
+                torno_ui_registry::publish_handle(&handle(prefix, b.id), br.center());
             }
-            solidcraft_ui_registry::publish_rect(&handle(h.button_rect, b.id), whole);
+            torno_ui_registry::publish_rect(&handle(h.button_rect, b.id), whole);
             if b.run != b.id {
-                solidcraft_ui_registry::publish_handle(&handle(h.button_rect, b.run), br.center());
+                torno_ui_registry::publish_handle(&handle(h.button_rect, b.run), br.center());
             }
             if resp.secondary_clicked() {
                 out.actions.push(Action::Menu { id: b.id.to_string(), at: resp.interact_pointer_pos().unwrap_or(br.left_bottom()) });
@@ -726,7 +726,7 @@ pub fn show(ui: &mut egui::Ui, row: &Row, rect: Rect, more_rows: &mut dyn FnMut(
             }
             if let Some(r) = row.reveal.filter(|r| r.id == b.id || r.id == b.run || (b.split.is_some() && b.covers.contains(&r.id))) {
                 paint_reveal(&painter, whole, &accent, r.strength, true);
-                solidcraft_ui_registry::publish_rect(h.reveal, whole);
+                torno_ui_registry::publish_rect(h.reveal, whole);
             }
             let side = if exit { 30.0 } else { 26.0 };
             let icon_rect =
@@ -756,7 +756,7 @@ pub fn show(ui: &mut egui::Ui, row: &Row, rect: Rect, more_rows: &mut dyn FnMut(
                     Rect::from_min_max(pos2(br.right(), whole.top()), whole.right_bottom())
                 };
                 let arrow = ui.interact(ar, split_id, Sense::click());
-                solidcraft_ui_registry::publish_handle(&handle(h.split, s.key), ar.center());
+                torno_ui_registry::publish_handle(&handle(h.split, s.key), ar.center());
                 if arrow.hovered() {
                     painter.rect_filled(ar, t.radius_sm, t.hover);
                 }
@@ -807,7 +807,7 @@ pub fn show(ui: &mut egui::Ui, row: &Row, rect: Rect, more_rows: &mut dyn FnMut(
                 painter.rect(cell, t.radius_sm, fill, Stroke::new(1.0, stroke), egui::StrokeKind::Inside);
                 if let Some(r) = row.reveal.filter(|r| r.id == c.id) {
                     paint_reveal(&painter, cell, &accent, r.strength, true);
-                    solidcraft_ui_registry::publish_rect(h.reveal, cell);
+                    torno_ui_registry::publish_rect(h.reveal, cell);
                 }
                 crate::icons::paint_icon(
                     &painter,
@@ -816,7 +816,7 @@ pub fn show(ui: &mut egui::Ui, row: &Row, rect: Rect, more_rows: &mut dyn FnMut(
                     if c.enabled { 1.0 } else { 0.35 },
                 );
                 for prefix in h.cell {
-                    solidcraft_ui_registry::publish_target(&handle(prefix, c.id), cell);
+                    torno_ui_registry::publish_target(&handle(prefix, c.id), cell);
                 }
                 resp.widget_info(|| egui::WidgetInfo::labeled(egui::Role::Button, c.enabled, c.name));
                 if resp.secondary_clicked() {
@@ -837,8 +837,8 @@ pub fn show(ui: &mut egui::Ui, row: &Row, rect: Rect, more_rows: &mut dyn FnMut(
             vec2((width - 2.0 * CARD_INSET).max(0.0), SECTION_HEIGHT),
         );
         let lresp = ui.interact(lr, ui.scope_id().with(("panel", group.key)), Sense::click());
-        solidcraft_ui_registry::publish_handle(&handle(h.section, group.key), lr.center());
-        solidcraft_ui_registry::publish_target(&handle(h.section_target, group.key), lr);
+        torno_ui_registry::publish_handle(&handle(h.section, group.key), lr.center());
+        torno_ui_registry::publish_target(&handle(h.section_target, group.key), lr);
         // The commands this group has only in its menu (not drawn as a button or cell).
         let drawn_ids: Vec<&str> = group
             .buttons
@@ -854,13 +854,13 @@ pub fn show(ui: &mut egui::Ui, row: &Row, rect: Rect, more_rows: &mut dyn FnMut(
         if hidden_running && !group.open {
             // Its command runs from the menu: the label shows it like a pressed button.
             painter.rect(lr, t.radius_sm, accent.soft, Stroke::new(1.0, accent.color), egui::StrokeKind::Inside);
-            solidcraft_ui_registry::publish_rect(&handle(h.running, group.key), lr);
+            torno_ui_registry::publish_rect(&handle(h.running, group.key), lr);
         } else if group.open || hot {
             painter.rect_filled(lr, t.radius_sm, if group.open { accent.soft } else { t.hover });
         }
         if let Some(r) = hidden_reveal.filter(|r| !r.preview) {
             paint_reveal(&painter, lr, &accent, r.strength, true);
-            solidcraft_ui_registry::publish_rect(h.reveal, lr);
+            torno_ui_registry::publish_rect(h.reveal, lr);
         }
         let open = group.open || hidden_running;
         let font = if open || hot { crate::type_face::semibold(t.font_caption) } else { FontId::proportional(t.font_caption) };
@@ -874,7 +874,7 @@ pub fn show(ui: &mut egui::Ui, row: &Row, rect: Rect, more_rows: &mut dyn FnMut(
             out.actions.push(Action::Section { group: gi });
         }
         let group_rect = Rect::from_min_max(pos2(px, top + 2.0), pos2(px + width, rect.bottom()));
-        solidcraft_ui_registry::publish_rect(&handle(h.group, group.key), group_rect);
+        torno_ui_registry::publish_rect(&handle(h.group, group.key), group_rect);
         // Dropped on the group's free space (all of a collapsed group): the command goes to its
         // end. Labels, gaps and margins append; buttons keep their insert-before target. The
         // current layer counts, so a menu covering the group is no drop target.
@@ -926,7 +926,7 @@ pub fn show(ui: &mut egui::Ui, row: &Row, rect: Rect, more_rows: &mut dyn FnMut(
                                 crate::command_menu_button(ui, r.id, r.label, r.icon, r.shortcut, r.enabled)
                             };
                             let response = if let Some(hint) = r.hint { response.backing_on_hover_text(hint) } else { response };
-                            solidcraft_ui_registry::publish_handle(&handle(h.more_row, r.id), response.rect.center());
+                            torno_ui_registry::publish_handle(&handle(h.more_row, r.id), response.rect.center());
                             if response.clicked() {
                                 actions.push(Action::Run { id: r.id.to_string(), rect: response.rect, place: Place::More });
                                 ui.close();
@@ -935,7 +935,7 @@ pub fn show(ui: &mut egui::Ui, row: &Row, rect: Rect, more_rows: &mut dyn FnMut(
                     });
                 }
             });
-            solidcraft_ui_registry::publish_target(h.more, response.response.rect);
+            torno_ui_registry::publish_target(h.more, response.response.rect);
             response.response.backing_on_hover_text(row.more_tip);
         });
     }
@@ -1077,7 +1077,7 @@ pub fn tabs(ui: &mut egui::Ui, row_data: &Tabs, row: Rect) -> TabsOut {
     for (b, width) in row_data.buttons.iter().zip(button_widths) {
         let rect = Rect::from_min_size(pos2(x, row.top() + inset), vec2(width, search.height()));
         let response = crate::button_at(ui, b.id, rect, b.label, crate::Button::Enabled(b.ready.is_ok()));
-        solidcraft_ui_registry::publish_target(&handle(h.action, b.id), response.rect);
+        torno_ui_registry::publish_target(&handle(h.action, b.id), response.rect);
         if response.clicked() {
             actions.push(TabAction::Run { id: b.id.to_string() });
         }
@@ -1121,10 +1121,10 @@ pub fn tabs(ui: &mut egui::Ui, row_data: &Tabs, row: Rect) -> TabsOut {
                     ui.painter().rect(tr, corner, style.fill, Stroke::new(1.0, style.outline), egui::StrokeKind::Inside);
                     text(ui, tr.center(), tab.label, t.font_button, style.ink, active || tab.contextual);
                     if ui.clip_rect().contains(tr.center()) {
-                        solidcraft_ui_registry::publish_target(&handle(h.tab, tab.id), tr);
-                        solidcraft_ui_registry::publish_rect(&handle(h.tab_rect, tab.id), tr);
+                        torno_ui_registry::publish_target(&handle(h.tab, tab.id), tr);
+                        torno_ui_registry::publish_rect(&handle(h.tab_rect, tab.id), tr);
                         for alias in tab.aliases {
-                            solidcraft_ui_registry::publish_handle(&handle(h.tab, alias), tr.center());
+                            torno_ui_registry::publish_handle(&handle(h.tab, alias), tr.center());
                         }
                     }
                     if response.clicked() {
@@ -1142,7 +1142,7 @@ pub fn tabs(ui: &mut egui::Ui, row_data: &Tabs, row: Rect) -> TabsOut {
                     }
                     let response = crate::quiet_icon_button_at(ui, pr, "plus", tip);
                     if ui.clip_rect().contains(pr.center()) {
-                        solidcraft_ui_registry::publish_target(h.add, pr);
+                        torno_ui_registry::publish_target(h.add, pr);
                     }
                     if response.clicked() {
                         // A click leaves no keyboard focus here, as on the tabs, so single-key
@@ -1352,7 +1352,7 @@ pub fn menu_row(ui: &mut egui::Ui, entry: &MenuEntry, width: f32, revealed: Opti
         None => egui::WidgetInfo::labeled(egui::Role::Button, ui.is_enabled() && entry.enabled, entry.label),
     });
     for prefix in style.entry {
-        solidcraft_ui_registry::publish_handle(&handle(prefix, entry.id), rect.center());
+        torno_ui_registry::publish_handle(&handle(prefix, entry.id), rect.center());
     }
     let hot = entry.enabled && (pointer_on || resp.has_focus());
     let mut row = crate::MenuItem::new(entry.id, entry.label, entry.icon);
@@ -1363,13 +1363,13 @@ pub fn menu_row(ui: &mut egui::Ui, entry: &MenuEntry, width: f32, revealed: Opti
     row.paint(ui, rect, &resp, 26.0);
     if let Some(strength) = revealed {
         paint_reveal(ui.painter(), rect, &style.accent, strength, false);
-        solidcraft_ui_registry::publish_rect(style.reveal, rect);
+        torno_ui_registry::publish_rect(style.reveal, rect);
         if !ui.clip_rect().contains_rect(rect) {
             ui.scroll_to_rect(rect, None);
         }
     }
     if hot {
-        solidcraft_ui_registry::publish_handle(&handle(style.hot, entry.id), rect.center());
+        torno_ui_registry::publish_handle(&handle(style.hot, entry.id), rect.center());
     }
     let p = ui.painter();
     if pointer_on || resp.has_focus() {
@@ -1377,7 +1377,7 @@ pub fn menu_row(ui: &mut egui::Ui, entry: &MenuEntry, width: f32, revealed: Opti
             p.rect_filled(pr, t.radius_sm.saturating_sub(1), t.border.gamma_multiply(0.6));
         }
         crate::icons::glyphs::pin_icon(p, pr, entry.pinned, if entry.pinned { t.accent } else { t.text_dim });
-        solidcraft_ui_registry::publish_handle(&handle(style.pin, entry.id), pr.center());
+        torno_ui_registry::publish_handle(&handle(style.pin, entry.id), pr.center());
     }
     let tip = if entry.pinned { style.unpin_tip } else { style.pin_tip };
     // The menu's rect from the last pass: tips sit beside it, never over its rows (#10481).
@@ -1729,7 +1729,7 @@ pub fn grid_cell(ui: &mut egui::Ui, entry: &MenuEntry, rect: Rect, style: &MenuS
         resp.widget_info(|| egui::WidgetInfo::labeled(egui::Role::Button, ui.is_enabled() && entry.enabled, entry.label));
     }
     for prefix in style.entry {
-        solidcraft_ui_registry::publish_handle(&handle(prefix, entry.id), rect.center());
+        torno_ui_registry::publish_handle(&handle(prefix, entry.id), rect.center());
     }
     let pointer_on = (resp.hovered() || pin_hovered) && !dragging;
     let hot = entry.enabled && (pointer_on || resp.has_focus());
@@ -1738,7 +1738,7 @@ pub fn grid_cell(ui: &mut egui::Ui, entry: &MenuEntry, rect: Rect, style: &MenuS
     let mut neutral = Vec::new();
     if hot {
         neutral.push(egui::Shape::rect_filled(cell, t.control_radius, t.accent_soft));
-        solidcraft_ui_registry::publish_handle(&handle(style.hot, entry.id), rect.center());
+        torno_ui_registry::publish_handle(&handle(style.hot, entry.id), rect.center());
     }
     if resp.has_focus() && !entry.app_paints {
         neutral.push(egui::Shape::rect_stroke(cell, t.control_radius, Stroke::new(1.0, t.accent), egui::StrokeKind::Inside));
@@ -1767,7 +1767,7 @@ pub fn grid_cell(ui: &mut egui::Ui, entry: &MenuEntry, rect: Rect, style: &MenuS
         crate::icons::glyphs::pin_icon(&painter, pr.shrink(2.5), entry.pinned, if entry.pinned { t.accent } else { t.text_dim });
     }
     if let Some(pin) = pin {
-        solidcraft_ui_registry::publish_handle(&handle(style.pin, entry.id), pr.center());
+        torno_ui_registry::publish_handle(&handle(style.pin, entry.id), pr.center());
         let tip = if entry.pinned { style.unpin_tip } else { style.pin_tip };
         if pin.backing_on_hover_text(tip).clicked() {
             return (Some(MenuAction::TogglePin), GridCell { index: 0, rect, response: resp, deferred });
@@ -1851,7 +1851,7 @@ fn drag_ghost(ui: &egui::Ui, icon: &str, at: Pos2, removing: bool, handles: &Han
         p.circle_filled(x.center(), 7.0, t.toolbar);
         crate::icons::glyphs::cross(&p, x, s);
     }
-    solidcraft_ui_registry::publish_handle(if removing { handles.drag_remove } else { handles.drag }, at);
+    torno_ui_registry::publish_handle(if removing { handles.drag_remove } else { handles.drag }, at);
 }
 
 /// A button or grid icon the app paints itself after every command of the pass has run, so a
@@ -1913,7 +1913,7 @@ pub fn paint_deferred(ui: &egui::Ui, items: Vec<(Deferred, DeferredLook)>, names
         };
         let background = if look.selected {
             count += 1;
-            solidcraft_ui_registry::publish_target(&format!("{namespace}:pressed:{}", look.id), paint.rect);
+            torno_ui_registry::publish_target(&format!("{namespace}:pressed:{}", look.id), paint.rect);
             crate::persistent_button_shape(ui, &paint.response, paint.rect)
         } else if paint.response.has_focus() && look.focus_ring {
             egui::Shape::Vec(vec![neutral, crate::native_button_focus(ui, &paint.response, paint.rect)])
@@ -1922,7 +1922,7 @@ pub fn paint_deferred(ui: &egui::Ui, items: Vec<(Deferred, DeferredLook)>, names
         };
         paint.painter.set(paint.background, background);
         if paint.response.has_focus() {
-            solidcraft_ui_registry::publish_target(&format!("{namespace}:focus:{}", look.id), paint.rect);
+            torno_ui_registry::publish_target(&format!("{namespace}:focus:{}", look.id), paint.rect);
         }
         if let Some(label) = &look.label {
             let galley = button_galley_weight(&paint.painter, label, paint.rect.width() - BUTTON_LABEL_PADDING, ink, look.selected);
@@ -1937,7 +1937,7 @@ pub fn paint_deferred(ui: &egui::Ui, items: Vec<(Deferred, DeferredLook)>, names
             }
         });
     }
-    solidcraft_ui_registry::publish_count(&format!("{namespace}:pressed"), count as f64);
+    torno_ui_registry::publish_count(&format!("{namespace}:pressed"), count as f64);
 }
 
 #[cfg(test)]

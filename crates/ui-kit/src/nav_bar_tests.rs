@@ -74,7 +74,7 @@ impl Rig {
     }
 
     fn frame(&self, events: Vec<Event>) -> Option<NavAction> {
-        solidcraft_ui_registry::clear_handles();
+        torno_ui_registry::clear_handles();
         let mut action = None;
         crate::test_support::raw_frame(
             &self.ctx,
@@ -100,12 +100,12 @@ impl Rig {
     }
 
     fn click_target(&self, name: &str) -> Option<NavAction> {
-        let at = solidcraft_ui_registry::rect_of(name).expect("the target is drawn").center();
+        let at = torno_ui_registry::rect_of(name).expect("the target is drawn").center();
         self.click(at)
     }
 
     fn drawn(&self, name: &str) -> bool {
-        solidcraft_ui_registry::rect_of(name).is_some()
+        torno_ui_registry::rect_of(name).is_some()
     }
 }
 
@@ -114,7 +114,7 @@ fn a_slot_or_a_row_of_its_menu_is_returned_and_a_closing_menu_closes() {
     let rig = Rig::new();
     assert_eq!(rig.click(pos2(113.0, 317.0)), Some(NavAction::Slot("fit".into())), "an action slot is returned, not run");
     assert_eq!(rig.click(pos2(147.0, 317.0)), None, "a menu slot opens its menu");
-    assert_eq!(solidcraft_ui_registry::handle_at("test:styles"), Some(pos2(147.0, 317.0)), "a slot's alias names it too");
+    assert_eq!(torno_ui_registry::handle_at("test:styles"), Some(pos2(147.0, 317.0)), "a slot's alias names it too");
     assert_eq!(rig.click_target("test:wire"), Some(NavAction::Item { menu: "styles".into(), item: "wire".into() }));
     assert!(!rig.drawn("test:wire"), "a pick closes a menu that asks for it");
 }
@@ -147,7 +147,7 @@ fn the_context_menus_return_customise_hide_reset_and_remove_with_the_slot_index(
     assert_eq!(rig.click_target("nav:context:remove"), Some(NavAction::Context(ContextItem::Remove(1))), "removes the slot at its stored index");
     rig.click_target("nav:more");
     rig.frame(vec![Event::PointerMoved(pos2(0.0, 0.0))]);
-    let folded = solidcraft_ui_registry::rect_of("nav:slot:view").expect("More is open").center();
+    let folded = torno_ui_registry::rect_of("nav:slot:view").expect("More is open").center();
     rig.click_with(folded, PointerButton::Secondary);
     assert_eq!(rig.click_target("nav:context:remove"), Some(NavAction::Context(ContextItem::Remove(3))), "a folded slot too");
 }

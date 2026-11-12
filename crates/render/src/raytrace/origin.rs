@@ -7,7 +7,7 @@ use super::{
 };
 use crate::job::{self, CancelToken, DielectricBoundary, DielectricOptions};
 use solidcore_record::Vec3;
-use solidcraft_geom::prelude::*;
+use torno_geom::prelude::*;
 fn invalid(message: &str) -> job::JobError {
     job::JobError::new(job::ErrorCode::InvalidScene, message)
 }

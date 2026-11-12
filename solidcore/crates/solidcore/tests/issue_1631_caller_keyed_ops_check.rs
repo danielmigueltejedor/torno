@@ -40,7 +40,7 @@ use solidcore::topology::edge::NotifyEnv;
 use solidcore::topology::{edge, vertex, Brep, BrepId, EdgeId, NamingScheme};
 use solidcore::{EntityRef, Kernel};
 
-/// Each copy names its objects in its own key domain (as SolidCraft's copies do).
+/// Each copy names its objects in its own key domain (as Torno's copies do).
 fn named(e: EntityRef, domain: u64) -> ObjectRef {
     let r = topology_ref(0, e);
     ObjectRef {

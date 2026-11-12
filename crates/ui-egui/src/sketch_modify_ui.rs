@@ -29,11 +29,11 @@
 use egui::Pos2;
 use serde_json::{Map, Value, json};
 use solidcore_record::{Vec2, Vec3};
-use solidcraft_engine::Sel;
-use solidcraft_engine::doc::Document;
-use solidcraft_engine::doc::expr::Kind as ValueKind;
-use solidcraft_engine::geom::prelude::*;
-use solidcraft_engine::sketch::{PatternAlignment, VariableUnit};
+use torno_engine::Sel;
+use torno_engine::doc::Document;
+use torno_engine::doc::expr::Kind as ValueKind;
+use torno_engine::geom::prelude::*;
+use torno_engine::sketch::{PatternAlignment, VariableUnit};
 
 use crate::SolveApp;
 use crate::dialogs::{CHAMFER_TYPES, Dialog, Kind};
@@ -334,7 +334,7 @@ pub(crate) fn selected_equation(app: &SolveApp) -> Option<String> {
 
 /// What a click on `hit` picks in a sketch modify window: what the active input takes
 /// ([`candidate`]), else what the Entities list takes ([`entities_candidate`]).
-pub(crate) fn pick_candidate(d: &Dialog, session: &solidcraft_engine::Session, hit: &Hit) -> Option<Sel> {
+pub(crate) fn pick_candidate(d: &Dialog, session: &torno_engine::Session, hit: &Hit) -> Option<Sel> {
     candidate(d, session, hit).or_else(|| entities_candidate(d, session, hit))
 }
 
@@ -343,7 +343,7 @@ pub(crate) fn pick_candidate(d: &Dialog, session: &solidcraft_engine::Session, h
 /// a curve, point or region the active input refuses there, so one clicked after the window
 /// moved on to the mirror line, centre or direction joins the others instead of being dropped
 /// without a word (#11700).
-fn entities_candidate(d: &Dialog, session: &solidcraft_engine::Session, hit: &Hit) -> Option<Sel> {
+fn entities_candidate(d: &Dialog, session: &torno_engine::Session, hit: &Hit) -> Option<Sel> {
     let active = session.active_sketch?;
     let shared = matches!(
         &d.kind,
@@ -364,14 +364,14 @@ fn entities_candidate(d: &Dialog, session: &solidcraft_engine::Session, hit: &Hi
 
 /// Whether a click on `hit` goes to the Entities list rather than the active input (see
 /// [`entities_candidate`]).
-pub(crate) fn picks_entity(d: &Dialog, session: &solidcraft_engine::Session, hit: &Hit) -> bool {
+pub(crate) fn picks_entity(d: &Dialog, session: &torno_engine::Session, hit: &Hit) -> bool {
     candidate(d, session, hit).is_none() && entities_candidate(d, session, hit).is_some()
 }
 
 /// What the active input of a sketch modify window takes. Sketch modify inputs accept only the
 /// sketch being edited. Origin axes remain valid rectangular-pattern directions, while Hole
 /// continues using its separate POINTS mask.
-pub fn candidate(d: &Dialog, session: &solidcraft_engine::Session, hit: &Hit) -> Option<Sel> {
+pub fn candidate(d: &Dialog, session: &torno_engine::Session, hit: &Hit) -> Option<Sel> {
     let active = session.active_sketch?;
     match hit {
         Hit::SketchCurve { sketch, .. } | Hit::SketchPoint { sketch, .. } | Hit::Profile { sketch, .. } if *sketch != active => None,
@@ -391,7 +391,7 @@ pub fn candidate(d: &Dialog, session: &solidcraft_engine::Session, hit: &Hit) ->
 /// Reopen the same pattern window with its stored parameters. OK reaches the same engine
 /// command with the pattern id, so previews and programmatic edits share the implementation.
 pub fn edit_pattern(app: &mut SolveApp, id: &str) -> bool {
-    use solidcraft_engine::sketch::SketchPatternKind;
+    use torno_engine::sketch::SketchPatternKind;
     let Some(sid) = app.session.active_sketch else { return false };
     let state = crate::open_meshing::session_world(&app.session);
     let Some(sk) = state.sketch(sid).map(|s| &s.sketch) else { return false };
@@ -504,7 +504,7 @@ pub fn double_click_entities(app: &mut SolveApp) -> bool {
 }
 
 /// Place a circular pattern centre in empty sketch space without creating a document point.
-pub fn pick_position(d: &mut Dialog, session: &solidcraft_engine::Session, point: Vec3) -> bool {
+pub fn pick_position(d: &mut Dialog, session: &torno_engine::Session, point: Vec3) -> bool {
     if !matches!(d.kind, Kind::SketchModify(Mod::PatternCirc { .. })) || d.active != 1 {
         return false;
     }
@@ -557,11 +557,8 @@ fn copies_left(doc: &Document, other: &str) -> i64 {
 
 fn icons(ui: &mut egui::Ui, label: &str, labels: &[&'static str], icons: &[&'static str], selected: &mut usize) {
     ui_kit::row(ui, label, |ui| {
-        let choices: Vec<_> = labels
-            .iter()
-            .zip(icons)
-            .map(|(key, icon)| ui_kit::IconSegment { key, icon, tip: solidcraft_ui_text::tr_label(key).to_string() })
-            .collect();
+        let choices: Vec<_> =
+            labels.iter().zip(icons).map(|(key, icon)| ui_kit::IconSegment { key, icon, tip: torno_ui_text::tr_label(key).to_string() }).collect();
         ui_kit::segmented_icons(ui, selected, &choices, &[]);
     });
 }
@@ -578,7 +575,7 @@ fn alignment(ui: &mut egui::Ui, label: &str, alignment: &mut PatternAlignment, r
 fn pattern_hint(ui: &mut egui::Ui) {
     ui_kit::text(
         ui,
-        solidcraft_ui_text::tr_label("Counts include the original. Center balances copies; Flip chooses the extra side for even totals."),
+        torno_ui_text::tr_label("Counts include the original. Center balances copies; Flip chooses the extra side for even totals."),
         ui_kit::Text::Note("pattern"),
     );
 }
@@ -653,7 +650,7 @@ pub fn rows(ui: &mut egui::Ui, k: &mut Mod, doc: &Document) -> bool {
         }
         Mod::Divide { count } => {
             enter |= quantity(ui, doc, "Segments", count, 2, DIVIDE_MAX);
-            ui_kit::text(ui, solidcraft_ui_text::tr("sketch.divide_hint"), ui_kit::Text::Note("divide"));
+            ui_kit::text(ui, torno_ui_text::tr("sketch.divide_hint"), ui_kit::Text::Note("divide"));
         }
         Mod::Equation { form, x, y, start, end, tolerance, range_unit } => {
             ui_kit::choice_row(ui, "Form", "equation_form", form, &EQUATION_FORMS);
@@ -666,9 +663,9 @@ pub fn rows(ui: &mut egui::Ui, k: &mut Mod, doc: &Document) -> bool {
             enter |= number(ui, "Start", start);
             enter |= number(ui, "End", end);
             enter |= number(ui, "Tolerance", tolerance);
-            ui_kit::checkbox_grid(ui, &mut [(solidcraft_ui_text::tr("ui.equation_variable_unit"), range_unit)], 1);
+            ui_kit::checkbox_grid(ui, &mut [(torno_ui_text::tr("ui.equation_variable_unit"), range_unit)], 1);
             let note = if *range_unit { "ui.equation_note_range" } else { "ui.equation_note" };
-            ui_kit::text(ui, solidcraft_ui_text::tr(note), ui_kit::Text::Note("equation"));
+            ui_kit::text(ui, torno_ui_text::tr(note), ui_kit::Text::Note("equation"));
         }
         Mod::Corner { chamfer, ctype, size, distance2, angle, flip } => {
             if *chamfer {
@@ -776,7 +773,7 @@ fn items(inputs: &[SelInput], i: usize) -> &[Sel] {
 
 /// A local point id. Qualified ids supplied by scripts or older selections are also accepted;
 /// commands check that their sketch prefix identifies the sketch being edited.
-pub(crate) fn point_id<'a>(session: &solidcraft_engine::Session, sel: &'a Sel) -> Option<&'a str> {
+pub(crate) fn point_id<'a>(session: &torno_engine::Session, sel: &'a Sel) -> Option<&'a str> {
     let Sel::SketchPoint { id } = sel else { return None };
     let Some((owner, point)) = id.split_once(':') else { return Some(id) };
     let active = session.active_sketch?;
@@ -791,7 +788,7 @@ pub(crate) fn point_id<'a>(session: &solidcraft_engine::Session, sel: &'a Sel) -
 
 /// The curves and lone points picked in input `i`, as the engine's `entities` list. A profile
 /// pick expands to every curve of its boundary and its holes (#8390).
-pub(crate) fn entity_ids(session: &solidcraft_engine::Session, inputs: &[SelInput], i: usize) -> Vec<String> {
+pub(crate) fn entity_ids(session: &torno_engine::Session, inputs: &[SelInput], i: usize) -> Vec<String> {
     let mut out = Vec::new();
     for x in items(inputs, i) {
         match x {
@@ -949,7 +946,7 @@ fn total_angle(app: &SolveApp, label: &str, text: &str) -> Result<f64, String> {
 
 /// The bare sketch point id of a single point pick, as a command's `center` or `base` reads it.
 /// `point_id` above takes one `Sel`; this one takes the first pick of an input.
-fn picked_point(session: &solidcraft_engine::Session, inputs: &[SelInput], i: usize) -> Option<String> {
+fn picked_point(session: &torno_engine::Session, inputs: &[SelInput], i: usize) -> Option<String> {
     items(inputs, i).first().and_then(|sel| point_id(session, sel)).map(str::to_string)
 }
 
@@ -1004,7 +1001,7 @@ pub fn commands(app: &SolveApp, k: &Mod, inputs: &[SelInput], extra: &Map<String
                 if *mode == TWO_SIDES {
                     let d2 = signed_length(app, "Distance 2", distance2, false)?;
                     // The other way is the value negated; a definition keeps its name (#4071).
-                    let negated = match solidcraft_engine::doc::expr::definition(distance2) {
+                    let negated = match torno_engine::doc::expr::definition(distance2) {
                         Some((name, rhs)) => format!("{name} = -({rhs})"),
                         None => format!("-({})", distance2.trim()),
                     };

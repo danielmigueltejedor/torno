@@ -1,7 +1,7 @@
 //! Opt-in search for isolated tangential contact points inside both surfaces
 //! (`Kernel::fixes.ssi_tangent_contact_points`, WR-74, tangency-labs/solidcore#394).
 //!
-//! Not upstream: the SolidCraft fork's change to `SmAdvSurfaceIntersector.cpp`
+//! Not upstream: the Torno fork's change to `SmAdvSurfaceIntersector.cpp`
 //! (tangency-labs/smlib@c26edbc). `FindInteriorCurves` only traces crossing curves:
 //! a leaf pair whose normals are within 5 degrees at the seed, whose local
 //! intersection finds nothing, or whose normals are within 2 degrees at the solution
@@ -20,7 +20,7 @@
 //! normals agree to `1e-4` rad and the point is not on a curve found already. Poles
 //! (collapsed domain edges), where the system degenerates, are tested directly.
 //!
-//! | Rust                              | SolidCraft fork (`SmAdvSurfaceIntersector.cpp`) |
+//! | Rust                              | Torno fork (`SmAdvSurfaceIntersector.cpp`) |
 //! |-----------------------------------|--------------------------------------------------|
 //! | [`find_tangent_contact_points`]   | `sm_FindTangentContactPoints` (static)           |
 //! | `TpEval`, `tp_evaluate` (private) | `SmTpEval`, `tp_Evaluate`                        |

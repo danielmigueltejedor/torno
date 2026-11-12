@@ -13,8 +13,8 @@
 //! a drag moves that hole only (onto a face with other holes too) and a click takes that one out.
 
 use solidcore_record::Vec3;
-use solidcraft_engine::Sel;
-use solidcraft_engine::geom::prelude::*;
+use torno_engine::Sel;
+use torno_engine::geom::prelude::*;
 
 use super::{Freedom, Place, PlaceSource, Spec, circle, face_pick, len, vec3_of};
 use crate::SolveApp;

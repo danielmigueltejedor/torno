@@ -1,4 +1,4 @@
-//! WR-385 (the SolidCraft fork's tangency-labs/smlib@5df5b27, a cherry-pick of f06b48a), the
+//! WR-385 (the Torno fork's tangency-labs/smlib@5df5b27, a cherry-pick of f06b48a), the
 //! fork's own capi `check.cpp` case: a ring r 10 / r 9, each circle drawn as 256 arcs, extruded
 //! 3. `StitchAndOrient` turns the hole's walls over (`SwapUV`). Upstream rebuilt each
 //! `SmCylinder`'s analytic form from its swapped NURB, whose radii read back differ by rounding

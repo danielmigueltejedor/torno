@@ -5,7 +5,7 @@
 //! - A token that never fires leaves every result bit for bit as without one (the
 //!   volume, every vertex and the faces' points).
 //! - A token fired before the call turns it into `Err(Cancelled)`, never `Ok`.
-//! - A token fired from another thread while the swept bar of #1476 (SolidCraft's
+//! - A token fired from another thread while the swept bar of #1476 (Torno's
 //!   shell/566) is shelled turns the call into `Err(Cancelled)` soon after the cancel.
 //!
 //! Expected values: the uncancelled results are compared with themselves (no token
@@ -222,7 +222,7 @@ fn a_token_fired_before_the_call_cancels_offset_shell_and_sweep() {
 }
 
 /// Every opt-in fix but `geometric_g2_continuity` (as `fork_ea59e9c_section_orders`'s
-/// SolidCraft kernel): with them the shell takes #1476's slow path (two 38 000-sample
+/// Torno kernel): with them the shell takes #1476's slow path (two 38 000-sample
 /// curve offsets, over 4 min in a debug build).
 fn every_fix_but_g2() -> solidcore::kernel::UpstreamFixes {
     let mut f = solidcore::kernel::UpstreamFixes::default();

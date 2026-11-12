@@ -125,7 +125,7 @@
     "stitch"
   ],
   "ungraded": [
-    "continuity: SolidCraft computes it"
+    "continuity: Torno computes it"
   ],
   "what": "a window 240 deg round the saddle-shaped inner wall of a torus (R20, r8) between z = -3 and 3, its cut faces taken off, patched g1 and stitched",
   "why_not": []

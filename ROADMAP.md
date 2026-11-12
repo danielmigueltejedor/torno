@@ -7,7 +7,7 @@ tables, limitations, measurements) is in [docs/roadmap-detail.md](docs/roadmap-d
 
 Torno is open-source parametric 3D CAD written in Rust. You sketch, constrain, extrude, and
 change a parameter to watch the timeline rebuild. It runs as a desktop app and in the browser
-([try it](https://solidcraft.io/app)), and it has a command-line tool and an MCP server so that
+([try it](https://getnodalia.github.io/torno/app)), and it has a command-line tool and an MCP server so that
 scripts and AI agents can drive the same commands you use.
 
 ## Works today
@@ -25,7 +25,7 @@ scripts and AI agents can drive the same commands you use.
 - Autosave and crash recovery, and the browser build of the same app.
 
 The full list of commands is in [docs/features.md](docs/features.md). Release notes for each
-version are on the [releases page](https://github.com/tangency-labs/solidcraft/releases).
+version are on the [releases page](https://github.com/getnodalia/torno/releases).
 
 ## In progress now
 
@@ -78,7 +78,7 @@ permanently.
 - Issues: <https://github.com/tangency-labs/solidcraft/issues> (area labels such as
   `area:kernel`, `area:sketch` and `area:ui` group them)
 - Discord: <https://discord.gg/FtU4NQNVDH>
-- Releases: <https://github.com/tangency-labs/solidcraft/releases>
+- Releases: <https://github.com/getnodalia/torno/releases>
 - Contributing: [CONTRIBUTING.md](CONTRIBUTING.md)
 Status as of **2026-10-14**. Torno supports parametric modelling (sketch →
 features → parametric timeline) as an open, pure-Rust, agent-drivable application.
@@ -145,7 +145,7 @@ PCB / Package, Render, Animation, Simulation, Manufacture/CAM, Drawings.
 | M11 | 2D drawings | deferred | — |
 | M12 | Release: cross-platform packages, verification and deliberate publication implemented; original current-UI demo refreshed. Trusted distribution signing and broader performance work remain | in progress | 16 |
 | M14 | Configurations: a table of rows (parameter expressions and feature suppressions per row) switched with config.activate (undoable, all or nothing), kept through parameter renames and feature deletes (config.configure, config.table, config.column/row/activate). Per-row body materials and appearances (library looks, custom colour/opacity and clearing overrides), undoable activation and save/reopen: done. Ordered typed configuration rules, atomic validation and structured rule editing: done. Component appearance and certified semantic face style columns, atomic preview/apply and independent-copy remapping: done. Exact constructed sketch-side and immutable imported-face lineage now preserve legacy names and reject retargeting. Left: ambiguous shifted/two-sided caps | in progress | 4 |
-| M13 | Never lose work: atomic saves (temporary file, flush, rename; a crash at any moment leaves the old file or the new one) with the replaced version kept as `<file>.bak`; autosave of unsaved changes to the recovery folder every 5 minutes (preference) and after big operations, only when something changed; "Recover unsaved design?" on the next launch (`doc.recovery_list`, `doc.recover`, `doc.recovery_discard`); a kill-mid-save test (process killed while saving a 0.5 MB design 25 times). File format: `"format": "solidcraft/12"`, older formats upgraded step by step (`doc::format`), newer ones refused with a message, out-of-range numbers and broken placements refused; a corpus of designs saved by M0, components-era, joints-era and current builds (apps/solidcraft-cli/tests/corpus) that must open and evaluate as saved; damaged and hostile variants (truncation, bit flips, hostile values, removed keys, repeated features, deep nesting) never panic | done | 6 |
+| M13 | Never lose work: atomic saves (temporary file, flush, rename; a crash at any moment leaves the old file or the new one) with the replaced version kept as `<file>.bak`; autosave of unsaved changes to the recovery folder every 5 minutes (preference) and after big operations, only when something changed; "Recover unsaved design?" on the next launch (`doc.recovery_list`, `doc.recover`, `doc.recovery_discard`); a kill-mid-save test (process killed while saving a 0.5 MB design 25 times). File format: `"format": "solidcraft/12"`, older formats upgraded step by step (`doc::format`), newer ones refused with a message, out-of-range numbers and broken placements refused; a corpus of designs saved by M0, components-era, joints-era and current builds (apps/torno-cli/tests/corpus) that must open and evaluate as saved; damaged and hostile variants (truncation, bit flips, hostile values, removed keys, repeated features, deep nesting) never panic | done | 6 |
 | M15 | Frames and weldments (#4003): structural members along 2D and 3D sketch lines, butt and mitre corners, trim to faces and bodies, end caps, gussets, cosmetic welds and a cut list. Done: the profile library (`frame.profile.list`, `frame.profile.properties`, `frame.profile.insert`): bar, round bar, rectangular and round tube, angle, channel and I-beam, each Torno's own parametric definition with exact fillet arcs and exact section properties (area, centroid, second moments), tested against hand-computed values; members (`frame.member`): one body per straight line of a 2D or 3D frame sketch, following parameter edits, with a built-in profile (its dimensions parameter expressions) or a profile sketch (its drawn material by alternating nested loops), anchor, angle and mirror; each member's name kept with its line. Left: corners, trims, end caps, gussets, welds, cut list, FRAME tab and dialogs | in progress | 60 |
 
 M6 navigation preferences include **Touchpad**: Shift + pointer movement pans, Alt/Option +
@@ -362,7 +362,7 @@ completed drawings publish atomically. The browser still exports synchronously.
 - Crash reports: every panic (in a command, in the kernel, anywhere else) and every unclean
   exit (abort, stack overflow, kill: found at the next start through a locked per-run command
   journal) leaves a local report with the backtrace, version and commit, the command and the
-  design that reproduce it (`solidcraft-cli crashes replay <id>`). Repeats are counted, not
+  design that reproduce it (`torno-cli crashes replay <id>`). Repeats are counted, not
   rewritten; at most 20 reports, 50 MB and 90 days. The app shows them after a crash (Help >
   Crash Reports…) with a reviewed issue draft; agents read them through
   `diagnostics.crash_reports`, the MCP `crash_reports` tool or the CLI. Nothing is sent
@@ -375,7 +375,7 @@ completed drawings publish atomically. The browser still exports synchronously.
   the agent's whole process group ends with the panel or the app. Docks left or right,
   minimises to a strip. Grok Build discovery includes `~/.grok/bin` and reuses the user's
   Grok login. See [agent chat](docs/agent-chat.md).
-- Command scripts from designs (#886): `timeline.export_script` (CLI `solidcraft-cli script`)
+- Command scripts from designs (#886): `timeline.export_script` (CLI `torno-cli script`)
   writes a design's history as a script that `eval` and `run` replay into the same design —
   user parameters, units, sheet metal and plastic rules and materials as their own commands,
   then each feature through `timeline.add` with its ids, names and dimension parameters kept,
@@ -418,7 +418,7 @@ completed drawings publish atomically. The browser still exports synchronously.
   Straight extrusion feedback caches existing face/profile triangles and updates the display
   directly, including a newly opened STEP's single identity component placement; other
   extents, moved or repeated components and curved sketch profiles keep the Engine preview.
-- The extrusion fixes retain tracked Boolean history and the current `solidcraft` packages.
+- The extrusion fixes retain tracked Boolean history and the current `torno` packages.
   Confirmation and tool previews use main's shared background calculation. Main's collapsed
   blend-wall refusal and its tests are retained, including smaller valid radii and mirrored parts.
 - Axis view and navigation controls stay anchored to the viewport when feature dialogs or

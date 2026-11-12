@@ -1,6 +1,6 @@
 //! Prepare the original and rollback models when transferring a sketch's history marker.
 
-use solidcraft_engine::Session;
+use torno_engine::Session;
 
 use crate::SolveApp;
 
@@ -76,17 +76,20 @@ impl SolveApp {
             .session
             .occurrence_placement(&path)
             .ok()
-            .and_then(|placed| solidcraft_engine::doc::mat_inverse(&placed.world))
-            .map_or(point, |to_model| solidcraft_engine::doc::apply_point(&to_model, point));
+            .and_then(|placed| torno_engine::doc::mat_inverse(&placed.world))
+            .map_or(point, |to_model| torno_engine::doc::apply_point(&to_model, point));
         let Some(feature) =
             crate::dialogs::blend_feature(&self.session, body, index).or_else(|| crate::dialogs::feature_of_face(&self.session, body, index, at))
         else {
             return false;
         };
         // An imported body has no editor of its own: nothing to open.
-        if self.session.doc.feature(feature).is_none_or(|f| {
-            matches!(f.kind, solidcraft_engine::doc::FeatureKind::Import { .. } | solidcraft_engine::doc::FeatureKind::MeshImport { .. })
-        }) {
+        if self
+            .session
+            .doc
+            .feature(feature)
+            .is_none_or(|f| matches!(f.kind, torno_engine::doc::FeatureKind::Import { .. } | torno_engine::doc::FeatureKind::MeshImport { .. }))
+        {
             return false;
         }
         self.edit_feature_at(feature, Some(point));
@@ -96,7 +99,7 @@ impl SolveApp {
     pub(crate) fn prepare_feature_edit(&mut self, feature: u64, index: usize, marker: Option<usize>) {
         let source = self.session.scratch();
         let mut original = source.scratch();
-        let quality = solidcraft_engine::doc::display_quality::DisplayQuality::parse(&self.preferences.display_quality).unwrap_or_default();
+        let quality = torno_engine::doc::display_quality::DisplayQuality::parse(&self.preferences.display_quality).unwrap_or_default();
         let compute = move || {
             let params = marker.map(|position| serde_json::json!({"position": position})).unwrap_or_else(|| serde_json::json!({}));
             original.execute("timeline.roll_to", &params).map_err(|error| error.to_string())?;

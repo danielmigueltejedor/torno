@@ -145,7 +145,7 @@ Standalone translated panels enter the same scope. Measure rendered text to size
 widgets; UTF-8 byte lengths do not describe their displayed width.
 
 The desktop host tries system CJK fonts across Windows, macOS and Linux, the Flatpak host font
-folders (`/run/host/fonts`, `/run/host/user-fonts`), the folders listed in `SOLIDCRAFT_FONT_DIRS`
+folders (`/run/host/fonts`, `/run/host/user-fonts`), the folders listed in `TORNO_FONT_DIRS`
 and an optional `CRAFT_FONTS_DIR` font pack, and skips files that cannot be parsed. Chinese uses its own fallback
 chain after the general CJK font: many Japanese CJK fonts (Hiragino Gothic, Meiryo, Yu Gothic)
 match the CJK font search but lack simplified characters, so a second fallback found by the
@@ -153,7 +153,7 @@ Chinese font-name list (`PingFang`, `Microsoft YaHei`, `Noto Sans CJK SC`, …) 
 glyph. No fonts are redistributed in native desktop distribution packages; native builds rely
 entirely on existing operating system fonts or craft-fonts.
 
-In the browser, `solidcraft-web` ships self-hosted script fonts (SIL OFL 1.1) in the web distribution
+In the browser, `torno-web` ships self-hosted script fonts (SIL OFL 1.1) in the web distribution
 artifacts only, loaded asynchronously from the same origin without contacting any external CDNs or
 third-party servers:
 

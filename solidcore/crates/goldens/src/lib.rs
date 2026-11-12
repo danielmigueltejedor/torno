@@ -28,10 +28,10 @@ pub(crate) mod own_reader;
 pub mod plan;
 pub mod rng;
 pub mod runner;
-pub mod solidcraft;
 pub mod soundness;
 pub mod ssi;
 pub mod step;
+pub mod torno;
 pub mod util;
 
 pub use case::{Case, CaseContext, CaseSource};

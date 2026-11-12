@@ -1,6 +1,6 @@
 # Sketch tool panel review
 
-Inventory before the port, checked against `solidcraft-cli commands`, `dialogs::Kind`,
+Inventory before the port, checked against `torno-cli commands`, `dialogs::Kind`,
 the sketch tool dispatchers, and all sketch sources' window/area helpers.
 Control requests below are JSON lines sent to an already running app. Add the launch
 token to the first request on each connection and use distinct request IDs.
@@ -176,30 +176,30 @@ open their inline canvas editor, deliberately outside this panel port.
 ## Validation
 
 Every Cargo command uses
-`CARGO_TARGET_DIR=/Users/dane/GitHub/solidcraft-dialogs/target CARGO_INCREMENTAL=0`.
+`CARGO_TARGET_DIR=/Users/dane/GitHub/torno-dialogs/target CARGO_INCREMENTAL=0`.
 Commands run sequentially, without `nice`, temporary targets, standalone test
 binaries, a native app launch, screenshots or process-management commands.
 
 | Check | Result | Evidence |
 | --- | --- | --- |
-| `cargo run -p solidcraft-cli -- commands` | Passed; registry used for inventory | `/private/tmp/solidcraft-sketch-commands.json` (subsequent CLI registry capture) |
-| `cargo test -p solidcraft-ui-egui --lib sketch_ --no-fail-fast` | 228 passed | `/private/tmp/solidcraft-sketch-tests.log` |
-| `cargo test -p solidcraft-ui-egui --lib dialogs --no-fail-fast` | 191 passed | `/private/tmp/solidcraft-dialog-tests.log` |
-| `cargo test -p solidcraft-ui-egui --lib browser --no-fail-fast` | 39 passed | `/private/tmp/solidcraft-browser-check.log` |
-| `cargo test -p solidcraft-ui-egui --lib frame::tests --no-fail-fast` | 3 passed, including exact title-drag displacement | `/private/tmp/solidcraft-frame-tests-check.log` |
-| `cargo test -p solidcraft-ui-egui --lib apply_off_thread_tests --no-fail-fast` | 4 passed | `/private/tmp/solidcraft-apply_off_thread_tests-final-check.log` |
-| `cargo test -p solidcraft-ui-egui --lib sketch_attachment_ui_tests --no-fail-fast` | 8 passed | `/private/tmp/solidcraft-sketch_attachment_ui_tests-final-check.log` |
-| `cargo test -p solidcraft-ui-egui --lib ui_kit --no-fail-fast` | 22 passed, including gallery, new field interactions and panel guard | `/private/tmp/solidcraft-ui_kit-final-check.log` |
-| `cargo test -p solidcraft-ui-egui --lib font_literals_tests --no-fail-fast` | 2 passed | `/private/tmp/solidcraft-font_literals_tests-final-check.log` |
-| `cargo test -p solidcraft-ui-egui --lib colour_tokens_tests --no-fail-fast` | 5 passed | `/private/tmp/solidcraft-colour_tokens_tests-final-check.log` |
-| `cargo test -p solidcraft-ui-egui --lib i18n --no-fail-fast` | 33 passed | `/private/tmp/solidcraft-i18n-final-check.log` |
-| `cargo test -p solidcraft-ui-egui --lib shell --no-fail-fast` | 16 passed | `/private/tmp/solidcraft-shell-final-check.log` |
+| `cargo run -p torno-cli -- commands` | Passed; registry used for inventory | `/private/tmp/torno-sketch-commands.json` (subsequent CLI registry capture) |
+| `cargo test -p torno-ui-egui --lib sketch_ --no-fail-fast` | 228 passed | `/private/tmp/torno-sketch-tests.log` |
+| `cargo test -p torno-ui-egui --lib dialogs --no-fail-fast` | 191 passed | `/private/tmp/torno-dialog-tests.log` |
+| `cargo test -p torno-ui-egui --lib browser --no-fail-fast` | 39 passed | `/private/tmp/torno-browser-check.log` |
+| `cargo test -p torno-ui-egui --lib frame::tests --no-fail-fast` | 3 passed, including exact title-drag displacement | `/private/tmp/torno-frame-tests-check.log` |
+| `cargo test -p torno-ui-egui --lib apply_off_thread_tests --no-fail-fast` | 4 passed | `/private/tmp/torno-apply_off_thread_tests-final-check.log` |
+| `cargo test -p torno-ui-egui --lib sketch_attachment_ui_tests --no-fail-fast` | 8 passed | `/private/tmp/torno-sketch_attachment_ui_tests-final-check.log` |
+| `cargo test -p torno-ui-egui --lib ui_kit --no-fail-fast` | 22 passed, including gallery, new field interactions and panel guard | `/private/tmp/torno-ui_kit-final-check.log` |
+| `cargo test -p torno-ui-egui --lib font_literals_tests --no-fail-fast` | 2 passed | `/private/tmp/torno-font_literals_tests-final-check.log` |
+| `cargo test -p torno-ui-egui --lib colour_tokens_tests --no-fail-fast` | 5 passed | `/private/tmp/torno-colour_tokens_tests-final-check.log` |
+| `cargo test -p torno-ui-egui --lib i18n --no-fail-fast` | 33 passed | `/private/tmp/torno-i18n-final-check.log` |
+| `cargo test -p torno-ui-egui --lib shell --no-fail-fast` | 16 passed | `/private/tmp/torno-shell-final-check.log` |
 | `cargo fmt` | Passed | No output; subsequent `git diff --check` passed |
-| `cargo clippy -p solidcraft-ui-egui --all-targets -- -D warnings` | Passed | `/private/tmp/solidcraft-clippy.log` |
-| `cargo check -p solidcraft-ui-egui --target wasm32-unknown-unknown` | Passed | `/private/tmp/solidcraft-wasm.log` |
-| `cargo xtask assets` | Passed; 387 files attributed | `/private/tmp/solidcraft-assets.log` |
-| `cargo xtask layers` | Passed; 16 crates, no violations | `/private/tmp/solidcraft-layers.log` |
-| `cargo test -p solidcraft-ui-egui --lib` (one full run) | 1252 passed, the 8 reported baseline failures, 1 already-ignored test; **no additional failures** | `/private/tmp/solidcraft-ui-lib-tests.log` |
+| `cargo clippy -p torno-ui-egui --all-targets -- -D warnings` | Passed | `/private/tmp/torno-clippy.log` |
+| `cargo check -p torno-ui-egui --target wasm32-unknown-unknown` | Passed | `/private/tmp/torno-wasm.log` |
+| `cargo xtask assets` | Passed; 387 files attributed | `/private/tmp/torno-assets.log` |
+| `cargo xtask layers` | Passed; 16 crates, no violations | `/private/tmp/torno-layers.log` |
+| `cargo test -p torno-ui-egui --lib` (one full run) | 1252 passed, the 8 reported baseline failures, 1 already-ignored test; **no additional failures** | `/private/tmp/torno-ui-lib-tests.log` |
 
 The full-library command returned 101 solely for the eight baseline failures
 identified in the task. No additional failing tests were found. No test was newly

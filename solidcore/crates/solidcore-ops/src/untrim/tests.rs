@@ -1,4 +1,4 @@
-//! Untrim against closed forms (moved from SolidCraft's untrim tests), on the corpus's bodies:
+//! Untrim against closed forms (moved from Torno's untrim tests), on the corpus's bodies:
 //! a 20 x 20 sheet with a round hole r 4 (`cov-untrim-sheet-hole-in-place`), the block
 //! 20 x 20 x 10 with that hole through it (`cov-untrim-solid-top-face-copied-out`, its record face
 //! 0 the top z = 10) and a quarter cylinder r 10, 20 high, with a window

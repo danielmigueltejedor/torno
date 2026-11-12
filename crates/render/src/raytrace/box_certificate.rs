@@ -3,9 +3,9 @@
 use super::{Bounds, Result, TraceError, Triangle, WorkBudget};
 use crate::job::CancelToken;
 use solidcore_record::Vec3;
-use solidcraft_geom::Mesh;
-use solidcraft_geom::prelude::*;
 use std::{cmp::Ordering, mem::size_of};
+use torno_geom::Mesh;
+use torno_geom::prelude::*;
 
 type Edge = ([u64; 3], [u64; 3]);
 

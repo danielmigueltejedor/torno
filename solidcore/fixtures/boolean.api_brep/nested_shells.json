@@ -2,7 +2,7 @@
   "cases": [
     {
       "name": "nested_sphere_difference",
-      "upstream_ref": "SolidCraft 451 (fixtures/solidcraft/451-hollow-shell-cut.json)",
+      "upstream_ref": "Torno 451 (fixtures/torno/451-hollow-shell-cut.json)",
       "inputs": {
         "api": "difference",
         "a": {
@@ -27,7 +27,7 @@
     },
     {
       "name": "nested_sphere_offset_difference",
-      "upstream_ref": "SolidCraft 451 (fixtures/solidcraft/451-hollow-shell-cut.json)",
+      "upstream_ref": "Torno 451 (fixtures/torno/451-hollow-shell-cut.json)",
       "inputs": {
         "api": "difference",
         "a": {
@@ -52,7 +52,7 @@
     },
     {
       "name": "nested_sphere_union",
-      "upstream_ref": "SolidCraft 451 (fixtures/solidcraft/451-hollow-shell-cut.json)",
+      "upstream_ref": "Torno 451 (fixtures/torno/451-hollow-shell-cut.json)",
       "inputs": {
         "api": "union",
         "a": {
@@ -77,7 +77,7 @@
     },
     {
       "name": "nested_sphere_intersection",
-      "upstream_ref": "SolidCraft 451 (fixtures/solidcraft/451-hollow-shell-cut.json)",
+      "upstream_ref": "Torno 451 (fixtures/torno/451-hollow-shell-cut.json)",
       "inputs": {
         "api": "intersection",
         "a": {
@@ -102,7 +102,7 @@
     },
     {
       "name": "box_in_sphere_difference",
-      "upstream_ref": "SolidCraft 451 (fixtures/solidcraft/451-hollow-shell-cut.json)",
+      "upstream_ref": "Torno 451 (fixtures/torno/451-hollow-shell-cut.json)",
       "inputs": {
         "api": "difference",
         "a": {
@@ -131,7 +131,7 @@
     },
     {
       "name": "sphere_in_box_difference",
-      "upstream_ref": "SolidCraft 451 (fixtures/solidcraft/451-hollow-shell-cut.json)",
+      "upstream_ref": "Torno 451 (fixtures/torno/451-hollow-shell-cut.json)",
       "inputs": {
         "api": "difference",
         "a": {
@@ -160,7 +160,7 @@
     },
     {
       "name": "block_crossing_hollow_minus_sphere_shell",
-      "upstream_ref": "SolidCraft 451 (fixtures/solidcraft/451-hollow-shell-cut.json)",
+      "upstream_ref": "Torno 451 (fixtures/torno/451-hollow-shell-cut.json)",
       "inputs": {
         "api": "difference",
         "a": {
@@ -202,7 +202,7 @@
     },
     {
       "name": "block_in_hollow_minus_sphere_shell",
-      "upstream_ref": "SolidCraft 451 (fixtures/solidcraft/451-hollow-shell-cut.json)",
+      "upstream_ref": "Torno 451 (fixtures/torno/451-hollow-shell-cut.json)",
       "inputs": {
         "api": "difference",
         "a": {
@@ -244,7 +244,7 @@
     },
     {
       "name": "block_crossing_hollow_union_sphere_shell",
-      "upstream_ref": "SolidCraft 451 (fixtures/solidcraft/451-hollow-shell-cut.json)",
+      "upstream_ref": "Torno 451 (fixtures/torno/451-hollow-shell-cut.json)",
       "inputs": {
         "api": "union",
         "a": {

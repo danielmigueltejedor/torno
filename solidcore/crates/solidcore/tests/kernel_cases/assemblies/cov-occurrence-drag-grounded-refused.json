@@ -33,6 +33,6 @@
   "ungraded": [],
   "what": "occurrence.drag of the grounded base",
   "why_not": [
-    "the failure is SolidCraft's, not a kernel operation's: step 8 (occurrence.drag): invalid parameters for `occurrence.drag`: Base:1 is grounded"
+    "the failure is Torno's, not a kernel operation's: step 8 (occurrence.drag): invalid parameters for `occurrence.drag`: Base:1 is grounded"
   ]
 }

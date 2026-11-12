@@ -1,7 +1,7 @@
 //! Recover the egui chrome after the display wakes from sleep (#8749).
 //!
 //! On Linux (Wayland + NVIDIA especially) the window can stay black after wake: the device is not
-//! reported lost, so SolidCraft does not restart, but GPU-backed egui textures (font atlas, icons)
+//! reported lost, so Torno does not restart, but GPU-backed egui textures (font atlas, icons)
 //! are stale. The viewport often comes back on scroll or a tab change because it rebuilds its own
 //! meshes; the ribbon and panels stay blank until those textures are uploaded again.
 //!

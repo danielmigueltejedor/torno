@@ -1986,7 +1986,7 @@ impl FilletBrep {
             }
             self.fillet_vertexuse_mut(vu1)?.set_tsect_pnt(&tsect1);
 
-            // SolidCraft change (the fork's 63c7962): a side edge
+            // Torno change (the fork's 63c7962): a side edge
             // split only by a seam ending on it (a cylinder's seam on its rim) continues
             // across that vertex: the rail that runs past the edge's far end ends on the next
             // edge, between the same two faces. Its end is looked for there, from that vertex

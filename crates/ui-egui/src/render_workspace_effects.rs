@@ -2,7 +2,7 @@
 //! Output presentation edits patch the saved job; legacy master controls retain their draft.
 use super::{ImageMethod, materials, setups, studio};
 use crate::{SolveApp, ui_kit};
-use solidcraft_engine::render::job::looks::{LookKind, LookLayer};
+use torno_engine::render::job::looks::{LookKind, LookLayer};
 
 #[derive(Clone, Debug, Default)]
 pub(super) struct View {
@@ -86,7 +86,7 @@ fn presentation_editor(app: &mut SolveApp, ui: &mut egui::Ui) {
     let presentation_before = super::ribbon::presentation(app);
     let title = app.tr("render.children.tone").to_string();
     ui_kit::section(ui, "render_effects_tone", &title, true, |ui| {
-        let mut selected = usize::from(app.render_workspace.view.studio.tone_map == solidcraft_engine::render::job::ToneMap::AcesFitted);
+        let mut selected = usize::from(app.render_workspace.view.studio.tone_map == torno_engine::render::job::ToneMap::AcesFitted);
         let response = ui.scope(|ui| {
             ui_kit::row(ui, app.tr("render.studio_tone_map"), |ui| {
                 if ui_kit::segmented(
@@ -95,11 +95,8 @@ fn presentation_editor(app: &mut SolveApp, ui: &mut egui::Ui) {
                     &["Reinhard", "ACES fitted"],
                     ui_kit::Segments { compact: true, targets: &["render:tone:reinhard", "render:tone:aces"], ..Default::default() },
                 ) {
-                    app.render_workspace.view.studio.tone_map = if selected == 0 {
-                        solidcraft_engine::render::job::ToneMap::Reinhard
-                    } else {
-                        solidcraft_engine::render::job::ToneMap::AcesFitted
-                    };
+                    app.render_workspace.view.studio.tone_map =
+                        if selected == 0 { torno_engine::render::job::ToneMap::Reinhard } else { torno_engine::render::job::ToneMap::AcesFitted };
                 }
             });
         });
@@ -205,7 +202,7 @@ fn presentation_editor(app: &mut SolveApp, ui: &mut egui::Ui) {
         slider(app, ui, "render.post_contrast", &mut finish.contrast, 0.25..=4.0, 0.01, "");
         slider(app, ui, "render.post_saturation", &mut finish.saturation, 0.0..=2.0, 0.01, "");
         slider(app, ui, "render.post_vignette", &mut finish.vignette, 0.0..=1.0, 0.01, "");
-        let mut bloom = finish.bloom.unwrap_or(solidcraft_engine::render::job::bloom::Bloom { strength: 0.15, ..Default::default() });
+        let mut bloom = finish.bloom.unwrap_or(torno_engine::render::job::bloom::Bloom { strength: 0.15, ..Default::default() });
         let mut enabled = finish.bloom.is_some();
         let response = ui_kit::checkbox(ui, app.tr("render.children.bloom"), &mut enabled);
         crate::scenario::publish_target("render:bloom-enable", response.rect);

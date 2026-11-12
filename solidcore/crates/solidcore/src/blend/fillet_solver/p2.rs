@@ -74,7 +74,7 @@
 //!   the fork's tangency-labs/smlib@856b54e), a side edge whose faces meet tangentially at the
 //!   filleted edge's vertex (a tangent seam) still runs on past both ends.
 //! - **Exact round classes (WR-669, #2085).** For `fixes.fillet_exact_round_classes`, the
-//!   SolidCraft fork's (tangency-labs/smlib@7ac037e) class builders: the line spine's is the
+//!   Torno fork's (tangency-labs/smlib@7ac037e) class builders: the line spine's is the
 //!   cylinder body without its generator and `IsLine` gates; the circle spine's the torus
 //!   body without its generator and `IsArc` gates, its frame from the class axis (no `IsArc`
 //!   start angle: the span from the start section) and no blend-curve section; the point
@@ -770,7 +770,7 @@ impl FilletSolver {
     }
 
     /// `CalcLineSpineFilletGeom(crBlend, rTsectPnts, pFilletGeom)` (not upstream: the
-    /// SolidCraft fork's tangency-labs/smlib@7ac037e, opt-in
+    /// Torno fork's tangency-labs/smlib@7ac037e, opt-in
     /// `Kernel::fixes.fillet_exact_round_classes`, WR-669): the cylinder of a round whose
     /// spine `blend` classifies as a line, built as [`FilletSolver::calc_cylinder_fillet_geom`]
     /// without its generator and `IsLine` gates.
@@ -1207,7 +1207,7 @@ impl FilletSolver {
     }
 
     /// `CalcCircleSpineFilletGeom(crBlend, rTsectPnts, pFilletGeom)` (not upstream: the
-    /// SolidCraft fork's tangency-labs/smlib@7ac037e, opt-in
+    /// Torno fork's tangency-labs/smlib@7ac037e, opt-in
     /// `Kernel::fixes.fillet_exact_round_classes`, WR-669): the section of a round whose
     /// spine `blend` classifies as a circle turned about the faces' common axis (the
     /// class's), built as [`FilletSolver::calc_torus_fillet_geom`] without its generator
@@ -3453,7 +3453,7 @@ mod tests {
         )
     }
 
-    /// WR-643 (the SolidCraft fork's tangency-labs/smlib@7224896): with
+    /// WR-643 (the Torno fork's tangency-labs/smlib@7224896): with
     /// `fillet_run_on_past_far_end_only`, the side edge runs on past its far end only,
     /// never behind the filleted edge's vertex (where the fork's knife-edge round took the
     /// ball's mirror image); without it, past both ends (WR-610), as does a side edge that

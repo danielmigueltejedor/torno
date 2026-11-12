@@ -4,8 +4,8 @@ use crate::sketch_modify_ui::{Mod, candidate};
 use crate::viewport::Hit;
 use serde_json::{Value, json};
 use solidcore_record::Vec3;
-use solidcraft_engine::Sel;
-use solidcraft_engine::geom::prelude::*;
+use torno_engine::Sel;
+use torno_engine::geom::prelude::*;
 
 fn step(h: &mut Harness, value: Value) {
     h.step(&value).unwrap();
@@ -115,7 +115,7 @@ fn sketch_dialog_offset_precise_distance_flip_and_editable_dimension() {
     let state = h.app.session.world_state().unwrap();
     let sk = &state.sketch(1).unwrap().sketch;
     assert_eq!(sk.offsets[0].distance, -3.0);
-    assert!(sk.constraints.iter().any(|c| matches!(c.kind, solidcraft_engine::sketch::ConstraintKind::OffsetDistance { .. })));
+    assert!(sk.constraints.iter().any(|c| matches!(c.kind, torno_engine::sketch::ConstraintKind::OffsetDistance { .. })));
 }
 
 #[test]
@@ -217,7 +217,7 @@ fn sketch_modify_previews_use_the_active_occurrences_world_placement() {
         .run("occurrence.move", json!({"occurrence":part["occurrence"],"translate":[100,30,20],"axis":[0,0,1],"angle":"35 deg","capture":false}))
         .unwrap();
     let original = h.app.session.doc.to_json();
-    let colors = crate::preview::Colors::from_tokens(&solidcraft_theme::Tokens::get());
+    let colors = crate::preview::Colors::from_tokens(&torno_theme::Tokens::get());
     for (command, params) in [
         ("sketch.mirror", json!({"entities":["l1"],"line":"l2"})),
         ("sketch.pattern.rectangular", json!({"entities":["l1"],"count":3,"spacing":10})),
@@ -485,7 +485,7 @@ fn lining_up_fixture(points: &[(&str, Value)]) -> Harness {
 /// The active sketch's point at `at`, and the points level (`Horizontal`) or plumb (`Vertical`)
 /// constraints tie it to.
 fn point_and_alignments(h: &Harness, at: [f64; 2]) -> Option<(String, Vec<(&'static str, String)>)> {
-    use solidcraft_engine::sketch::ConstraintKind::{HorizontalPoints, VerticalPoints};
+    use torno_engine::sketch::ConstraintKind::{HorizontalPoints, VerticalPoints};
     let st = crate::open_meshing::session_world(&h.app.session);
     let sk = &st.sketch(h.app.session.active_sketch?)?.sketch;
     let at = solidcore_record::Vec2::new(at[0], at[1]);
@@ -555,7 +555,7 @@ fn a_rectangle_corner_lines_up_with_two_points_at_once_and_keeps_both() {
 /// preference off, the guide only places the point, as before.
 #[test]
 fn a_point_on_a_midpoint_guide_stays_lined_up_with_the_midpoint() {
-    use solidcraft_engine::sketch::ConstraintKind::{Midpoint, VerticalPoints};
+    use torno_engine::sketch::ConstraintKind::{Midpoint, VerticalPoints};
     for aligning in [true, false] {
         let mut h = lining_up_fixture(&[("sketch.line", json!({"points":[[10.37,5.21],[30.37,5.21]],"infer":false}))]);
         h.app.preferences.sketch_align_points = aligning;
@@ -606,10 +606,7 @@ fn a_horizontal_line_ends_plumb_with_a_point_above_and_keeps_both() {
     assert_eq!(tied, [("Vertical", above)]);
     let st = crate::open_meshing::session_world(&h.app.session);
     let sk = &st.sketch(h.app.session.active_sketch.unwrap()).unwrap().sketch;
-    assert!(
-        sk.constraints.iter().any(|c| matches!(c.kind, solidcraft_engine::sketch::ConstraintKind::Horizontal { .. })),
-        "the line stays horizontal"
-    );
+    assert!(sk.constraints.iter().any(|c| matches!(c.kind, torno_engine::sketch::ConstraintKind::Horizontal { .. })), "the line stays horizontal");
 }
 
 /// #7114: a point placed near a visible grid intersection lands on that intersection. The
@@ -623,7 +620,7 @@ fn a_point_near_a_visible_grid_intersection_snaps_to_it_7114() {
     h.settle();
     h.step(&json!({"start":"sketch.point"})).unwrap();
     // The drawn grid's own spacing, and a crossing of its lines.
-    let minor = solidcraft_engine::view::grid_step(h.app.cam.half_height()).0;
+    let minor = torno_engine::view::grid_step(h.app.cam.half_height()).0;
     let at = Vec2::new(minor * 4.0, minor * 4.0);
     // A little off that crossing: on the hidden finer lattice the point would land beside it,
     // on the grid the user can see it lands on it.

@@ -186,7 +186,7 @@
     "blend_dropping"
   ],
   "ungraded": [
-    "continuity: SolidCraft computes it"
+    "continuity: Torno computes it"
   ],
   "what": "a ball R10 cut flat at z = 4: its rim rounded r2",
   "why_not": []

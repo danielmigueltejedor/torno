@@ -1,7 +1,7 @@
 //! #2385 (WR-717): a cliff overflow's crease that runs along an edge of the face it crosses,
 //! within the trim's tolerance, is that edge (`fixes.fillet_overflow_crease_along_edge`).
 //!
-//! A disc 13 in radius and 2 high (SolidCraft #190's) has its top edge rounded r a little
+//! A disc 13 in radius and 2 high (Torno #190's) has its top edge rounded r a little
 //! past its height. The round's section is the circle of radius r about (13 - r, 2 - r) in
 //! (rho, z): its rail runs down the wall's continuation to z = 2 - r, and it crosses the
 //! bottom face's plane at rho = 13 - r + sqrt(4r - 4), a gap g = r - sqrt(4r - 4) (about

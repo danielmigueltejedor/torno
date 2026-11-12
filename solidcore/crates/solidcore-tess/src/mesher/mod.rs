@@ -1,4 +1,4 @@
-//! SolidCraft's mesher: each face of a schema 4 record ([`brep::Brep`]) triangulated in its own
+//! Torno's mesher: each face of a schema 4 record ([`brep::Brep`]) triangulated in its own
 //! parameters, with every edge sampled once so neighbouring faces share their boundary points
 //! exactly, handed over as a [`TessPlan`] for the CPU or GPU evaluator. A boundary node's
 //! parameters on each face come from that face's exact pcurve of the edge, at the node's curve
@@ -23,7 +23,7 @@
 //!    meshed; there is no other mesher to fall back to. A face whose pcurves do not lie on its edges is an error naming the face and
 //!    the edge, as is a body none of whose faces can be planned.
 
-// SolidCraft's mesher, moved here as it is (RFC 0003, item 1.1) so it stays the same text as its
+// Torno's mesher, moved here as it is (RFC 0003, item 1.1) so it stays the same text as its
 // history. Its slice indexing is checked access, and a panic in planning is not caught (planning
 // returns its failures as errors); the rest of solidcore's lints come in the next step of the item.
 #![allow(

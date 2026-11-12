@@ -1,6 +1,6 @@
 //! WR-580 (tangency-labs/solidcore#1519; the fork's tangency-labs/smlib@81cd61a): the seat
 //! and top tubes of a bicycle frame (r 16; the top tube from (-150, 0, 820) to
-//! (600, 0, 860), the seat tube from (0, 0, 300) to (-150, 0, 820)) as SolidCraft's bench
+//! (600, 0, 860), the seat tube from (0, 0, 300) to (-150, 0, 820)) as Torno's bench
 //! builds them: each axis rounded to 1e-6, its base and height to 1e-3, the circle started
 //! 0.6131 rad round from its frame's x (Z x axis, or X for an axis within 0.9 of Z). The
 //! top tube's wall cut by the seat's end plane runs within tolerance of the seat's end

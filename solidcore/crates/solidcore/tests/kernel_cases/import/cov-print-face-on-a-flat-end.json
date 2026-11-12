@@ -98,7 +98,7 @@
     "extrude"
   ],
   "ungraded": [
-    "results: SolidCraft computes it"
+    "results: Torno computes it"
   ],
   "what": "a cylinder's flat end marked as the face a slicer export lays it on",
   "why_not": []

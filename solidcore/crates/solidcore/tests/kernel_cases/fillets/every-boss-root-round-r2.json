@@ -156,7 +156,7 @@
     "blend_dropping"
   ],
   "ungraded": [
-    "continuity: SolidCraft computes it"
+    "continuity: Torno computes it"
   ],
   "what": "the root circle of a cylindrical boss on a plate rounded r2 (a concave torus)",
   "why_not": []

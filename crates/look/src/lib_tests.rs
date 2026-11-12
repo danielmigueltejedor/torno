@@ -1,7 +1,7 @@
-//! What installing SolidCraft's look gives the kit.
+//! What installing Torno's look gives the kit.
 use super::*;
-use solidcraft_theme::{AccentRamp, TabStyle, TabTable};
-use solidcraft_ui_kit::{icons as kit_icons, theme_files, type_face};
+use torno_theme::{AccentRamp, TabStyle, TabTable};
+use torno_ui_kit::{icons as kit_icons, theme_files, type_face};
 
 /// The host's tab table, which is not the look's: it has none of the tabs the built-in themes
 /// key per-tab surfaces by (Onyx's `tabs`), and every built-in loads under it.
@@ -12,16 +12,16 @@ const TABS: TabTable = TabTable::new(&[
 ]);
 
 #[test]
-fn install_gives_the_kit_solidcrafts_icons_glyphs_fonts_and_themes() {
-    solidcraft_theme::install_tabs(TABS);
+fn install_gives_the_kit_tornos_icons_glyphs_fonts_and_themes() {
+    torno_theme::install_tabs(TABS);
     let ctx = egui::Context::default();
     install(&ctx);
     install(&ctx);
-    // The icon set is SolidCraft's, the same static set, and draws its artwork.
+    // The icon set is Torno's, the same static set, and draws its artwork.
     assert!(std::ptr::eq(kit_icons::installed(), &icons::SET));
     assert!(!kit_icons::resolve("extrude").placeholder);
     assert_eq!(kit_icons::installed().master_ids(), icons::SET.master_ids());
-    // The glyphs are SolidCraft's: the compass ends have its pointer target.
+    // The glyphs are Torno's: the compass ends have its pointer target.
     assert_eq!(kit_icons::glyphs::axis_radius(), compass::AXIS_RADIUS);
     // The built-in themes are every shipped file, each read.
     assert!(!themes::BUILTIN.is_empty());
@@ -40,11 +40,11 @@ fn install_gives_the_kit_solidcrafts_icons_glyphs_fonts_and_themes() {
     assert_eq!(heading, type_face::semibold(1.0).family);
 }
 
-/// Under a host whose tab table has none of SolidCraft's tabs, every built-in theme loads, Onyx
-/// without the per-tab surfaces it keys by SolidCraft's tab names.
+/// Under a host whose tab table has none of Torno's tabs, every built-in theme loads, Onyx
+/// without the per-tab surfaces it keys by Torno's tab names.
 #[test]
 fn every_builtin_theme_loads_under_a_host_with_other_tabs() {
-    solidcraft_theme::install_tabs(TABS);
+    torno_theme::install_tabs(TABS);
     // The look's icon set, which the built-ins' icon palettes are read against.
     install_tables();
     let read = theme_files::read_builtin(themes::BUILTIN).unwrap_or_else(|e| panic!("the built-in themes read: {e}"));

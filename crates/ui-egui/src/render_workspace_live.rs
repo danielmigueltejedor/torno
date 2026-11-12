@@ -9,7 +9,7 @@ use std::sync::{
 
 use egui::{Context, Rect, TextureHandle, emath::GuiRounding as _};
 use serde_json::{Value, json};
-use solidcraft_engine::{
+use torno_engine::{
     Session,
     doc::Document,
     render::job::{CpuProgressiveOptions, JobHandle, JobId, Phase},
@@ -26,8 +26,8 @@ const EDIT_DELAY_SECONDS: f64 = 0.2;
 struct Identity {
     document: Weak<Document>,
     revision: u64,
-    model: Weak<solidcraft_engine::doc::ModelState>,
-    moves: std::collections::BTreeMap<u64, solidcraft_engine::doc::Mat>,
+    model: Weak<torno_engine::doc::ModelState>,
+    moves: std::collections::BTreeMap<u64, torno_engine::doc::Mat>,
     visibility: u64,
     shot: String,
     request: Value,
@@ -63,8 +63,8 @@ struct Picture {
     sequence: u32,
     samples: u32,
     complete: bool,
-    adaptive: Option<solidcraft_engine::render::job::adaptive::AdaptivePreview>,
-    executor: solidcraft_engine::render::ExecutorId,
+    adaptive: Option<torno_engine::render::job::adaptive::AdaptivePreview>,
+    executor: torno_engine::render::ExecutorId,
     /// Captured alongside this texture from the same validated immutable frame.
     scene_generation: u64,
     size: [u32; 2],
@@ -127,7 +127,7 @@ impl State {
         let answer = match pending.receiver.try_recv() {
             Ok(answer) => answer,
             Err(mpsc::TryRecvError::Empty) => return,
-            Err(mpsc::TryRecvError::Disconnected) => Err(solidcraft_ui_text::tr("render.live.worker_stopped").into()),
+            Err(mpsc::TryRecvError::Disconnected) => Err(torno_ui_text::tr("render.live.worker_stopped").into()),
         };
         let generation = pending.generation;
         let cancelled = pending.cancelled.load(Ordering::Acquire);
@@ -153,24 +153,24 @@ impl State {
         let result = (|| -> Result<Option<Picture>, String> {
             let status = job.handle.status().map_err(|e| e.to_string())?;
             if status.job != job.handle.id() || status.scene_generation != job.revision {
-                return Err(solidcraft_ui_text::tr("render.error_provisional_identity").into());
+                return Err(torno_ui_text::tr("render.error_provisional_identity").into());
             }
             if let Some(error) = &status.error {
                 return Err(error.to_string());
             }
             let limits = if status.resolved.executor.as_str() == "gpu-path" {
-                solidcraft_engine::render::job::GPU_PATH_LIMITS
+                torno_engine::render::job::GPU_PATH_LIMITS
             } else {
                 super::captured_image_limits(&status.request)
             };
             let current = self.picture.as_ref().filter(|picture| picture.generation == job.generation && picture.job == job.handle.id());
-            let load = |info: &solidcraft_engine::render::job::FrameInfo, png: &[u8], sequence, samples, complete, adaptive| {
+            let load = |info: &torno_engine::render::job::FrameInfo, png: &[u8], sequence, samples, complete, adaptive| {
                 if info.job != job.handle.id()
                     || info.scene_generation != job.revision
                     || info.executor != status.resolved.executor
                     || (info.width, info.height) != (status.request.width, status.request.height)
                 {
-                    return Err(solidcraft_ui_text::tr("render.error_provisional_identity").to_string());
+                    return Err(torno_ui_text::tr("render.error_provisional_identity").to_string());
                 }
                 let image = super::decode_render_image(png, info.width, info.height, limits, ctx.input(|i| i.max_texture_side))?;
                 Ok(Picture {
@@ -203,7 +203,7 @@ impl State {
                     || preview.info.samples_per_pixel >= job.target
                     || preview.info.adaptive != adaptive
                 {
-                    return Err(solidcraft_ui_text::tr("render.error_provisional_identity").into());
+                    return Err(torno_ui_text::tr("render.error_provisional_identity").into());
                 }
                 return load(&preview.info.frame, preview.png(), preview.info.frame_sequence, preview.info.samples_per_pixel, false, adaptive)
                     .map(Some);
@@ -212,7 +212,7 @@ impl State {
                 return Err(reason.into());
             }
             if matches!(status.progress.phase, Phase::Cancelled | Phase::Failed) {
-                return Err(solidcraft_ui_text::tr("render.live.stopped").into());
+                return Err(torno_ui_text::tr("render.live.stopped").into());
             }
             Ok(None)
         })();
@@ -349,15 +349,15 @@ fn capture(app: &SolveApp, identity: &Identity, generation: u64) -> Result<Pendi
     let request = identity.request.clone();
     let revision = identity.revision;
     let target = target(&request);
-    let scope = solidcraft_engine::io::vfs::current_scope();
+    let scope = torno_engine::io::vfs::current_scope();
     let cancelled = Arc::new(AtomicBool::new(false));
     let stop = cancelled.clone();
     let (sender, receiver) = mpsc::channel();
-    solidcraft_engine::kernel::kernel_thread("render-live-capture")
+    torno_engine::kernel::kernel_thread("render-live-capture")
         .spawn(move || {
-            let result = solidcraft_engine::io::vfs::scoped(scope, || {
+            let result = torno_engine::io::vfs::scoped(scope, || {
                 if stop.load(Ordering::Acquire) {
-                    return Err(solidcraft_ui_text::tr("render.live.stopped").to_string());
+                    return Err(torno_ui_text::tr("render.live.stopped").to_string());
                 }
                 let reply = owner.execute("render.start", &request).map_err(|e| e.to_string())?;
                 let id = serde_json::from_value(reply["job"].clone()).map_err(|e| format!("{e}"))?;
@@ -593,7 +593,7 @@ pub(super) fn source_text(app: &SolveApp, executor: &str, current: bool) -> Stri
         "gpu-path" => app.tr("render.method_gpu"),
         _ => executor,
     };
-    solidcraft_ui_text::format(if current { "render.live.source_current" } else { "render.live.source_outdated" }, &[("method", method)])
+    torno_ui_text::format(if current { "render.live.source_current" } else { "render.live.source_outdated" }, &[("method", method)])
 }
 
 pub(crate) fn controls(app: &mut SolveApp, ui: &mut egui::Ui) {
@@ -609,11 +609,11 @@ pub(crate) fn controls(app: &mut SolveApp, ui: &mut egui::Ui) {
         })
         .to_string()
     } else if let Some(error) = &state.error {
-        solidcraft_ui_text::format("render.live.refused", &[("reason", error)])
+        torno_ui_text::format("render.live.refused", &[("reason", error)])
     } else if let Some(picture) = &state.picture {
         if picture.generation == state.generation && !state.suspended {
             if let Some(adaptive) = picture.adaptive {
-                solidcraft_ui_text::format(
+                torno_ui_text::format(
                     "render.live.adaptive",
                     &[
                         ("width", &picture.size[0].to_string()),
@@ -623,7 +623,7 @@ pub(crate) fn controls(app: &mut SolveApp, ui: &mut egui::Ui) {
                 )
             } else {
                 let target = state.running.as_ref().map_or(picture.samples, |job| job.target);
-                solidcraft_ui_text::format(
+                torno_ui_text::format(
                     "render.live.samples",
                     &[
                         ("current", &picture.samples.to_string()),
@@ -646,7 +646,7 @@ pub(crate) fn controls(app: &mut SolveApp, ui: &mut egui::Ui) {
     if response.clicked() {
         let _ = app.run("view.render_live", json!({"paused":!paused}));
     }
-    let max_width = ui.available_width().min(solidcraft_theme::Tokens::get().control_height * 10.0);
+    let max_width = ui.available_width().min(torno_theme::Tokens::get().control_height * 10.0);
     let mut help = format!("{status}\n\n{}", app.tr("render.live.quality_help"));
     if app.render_workspace.live.picture.as_ref().is_some_and(|picture| picture.adaptive.is_some()) {
         help.push_str("\n\n");

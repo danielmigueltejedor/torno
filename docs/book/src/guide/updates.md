@@ -33,9 +33,9 @@ Where Torno can replace itself safely, the window also has **Update now**:
 
 | Installed as | Update now does |
 |---|---|
-| AppImage | Downloads the new AppImage next to the old one, verifies it, renames it over the old file and offers **Restart now**; a file named like a release (`solidcraft-<version>-linux-<arch>.AppImage`) takes the new release's name, so tools such as Gearlever keep finding its update data, and any other name is kept |
+| AppImage | Downloads the new AppImage next to the old one, verifies it, renames it over the old file and offers **Restart now**; a file named like a release (`torno-<version>-linux-<arch>.AppImage`) takes the new release's name, so tools such as Gearlever keep finding its update data, and any other name is kept |
 | Windows installer (`.msi`) | **Install (closes Torno)**: downloads and verifies the `.msi`, closes Torno (asking about unsaved designs first) and starts the installer |
-| Windows portable `.zip` or `.exe` | Downloads and verifies the package, swaps in the new `solidcraft.exe` (and `solidcraft-cli.exe`) and offers **Restart now**; the old file is removed at the next start |
+| Windows portable `.zip` or `.exe` | Downloads and verifies the package, swaps in the new `torno.exe` (and `torno-cli.exe`) and offers **Restart now**; the old file is removed at the next start |
 | macOS | **Download and open**: downloads and verifies the `.dmg` and opens it; quit Torno, then drag the new Torno to Applications to replace the old copy (macOS won't replace an app that is running) |
 | Flatpak, Snap, `.deb`, `.rpm`, `.tar.gz` | Nothing: your package manager updates these (the window shows the command), or you unpack the new archive |
 
@@ -70,14 +70,14 @@ affected.
 One HTTPS request each time Torno starts, and once a day while it stays open:
 
 ```text
-GET https://api.github.com/repos/tangency-labs/solidcraft/releases/latest
-User-Agent: SolidCraft-update-check
+GET https://api.github.com/repos/getnodalia/torno/releases/latest
+User-Agent: Torno-update-check
 Accept: application/vnd.github+json
 X-GitHub-Api-Version: 2022-11-28
 ```
 
 **Update now** then downloads `SHA256SUMS.txt` (and its signature) and the one package from the
-release's own `github.com/tangency-labs/solidcraft/releases/download/…` links, with the same
+release's own `github.com/getnodalia/torno/releases/download/…` links, with the same
 User-Agent. That's all: no version number, no machine or user identifier, no usage data, no cookies. GitHub
 sees the request like any other visit to the API (your IP address, the time); see
 [GitHub's privacy statement](https://docs.github.com/site-policy/privacy-policies/github-general-privacy-statement).
@@ -88,7 +88,7 @@ Torno compares the answer with its own version on your computer.
 - GitHub's rate limit for anonymous requests (60 an hour per address) is respected: when GitHub
   says to wait, Torno waits that long, Check now and the check at start included.
 - Turning off **Check for updates automatically** stops the checks; only **Check now** asks.
-- Setting the environment variable `SOLIDCRAFT_UPDATE_CHECK=0` turns all checks off, for
+- Setting the environment variable `TORNO_UPDATE_CHECK=0` turns all checks off, for
   example on managed machines.
 
 Builds you compile yourself, the Flatpak and the browser app never check, and Preferences shows
@@ -101,7 +101,7 @@ saved version opens instead, and the download continues for the next reload.
 When a launcher such as the ArtCraft Launcher installed Torno, it also updates it. Torno
 notices this in two ways:
 
-- the environment variable `SOLIDCRAFT_MANAGED_BY` is set; its value is the launcher's name, for
+- the environment variable `TORNO_MANAGED_BY` is set; its value is the launcher's name, for
   example `ArtCraft Launcher`, and
 - the ArtCraft Launcher's `installed.json` (in its per-user data folder, read-only) lists this
   Torno: its recorded path is this executable, this AppImage or `.app`, or the folder this
@@ -111,7 +111,7 @@ Torno then still checks for a newer release, and the pill and **Check now** work
 the window says **Update available: update Torno in ArtCraft Launcher** and offers only
 **Skip this version** and **Remind me later**. There is no **Update now**, **Download** or
 AppImage replacement, so the launcher's record of what is installed stays right. Without the
-variable or a record, nothing changes. Setting `SOLIDCRAFT_UPDATE_CHECK=0` still turns the checks
+variable or a record, nothing changes. Setting `TORNO_UPDATE_CHECK=0` still turns the checks
 off.
 
 ## Which file Download gets
@@ -121,17 +121,17 @@ and Torno picks the one matching how it was installed:
 
 | Installed as | Detected by | Download | How to update |
 |---|---|---|---|
-| AppImage | `APPIMAGE` is set | `solidcraft-linux-<arch>.AppImage` | Replace the old AppImage with the new one |
-| Flatpak | `FLATPAK_ID` is set | doesn't check (see below) | `flatpak update io.tangencylabs.solidcraft` |
-| Snap from the Snap Store | `SNAP` is set | release page | `sudo snap refresh solidcraft` (snapd also refreshes by itself) |
-| Snap from a downloaded file | `SNAP_REVISION` starts with `x` | `solidcraft-linux-<arch>.snap` | `sudo snap install --dangerous ./solidcraft-linux-<arch>.snap` |
-| `.deb` | under `/usr`, dpkg knows `solidcraft` | `solidcraft-linux-<arch>.deb` | `sudo apt install ./solidcraft-linux-<arch>.deb` |
-| `.rpm` | under `/usr`, an rpm database exists | `solidcraft-linux-<arch>.rpm` | `sudo dnf install ./solidcraft-linux-<arch>.rpm` |
-| `.tar.gz` | anywhere else on Linux | `solidcraft-<version>-linux-<arch>.tar.gz` | Unpack over the old copy |
-| Windows installer | under Program Files, or in the folder the installer recorded | `solidcraft-windows-<arch>.msi` | Run the installer |
-| Windows portable | `solidcraft-cli.exe` beside it | `solidcraft-windows-<arch>-portable.zip` | Unzip over the old copy |
-| Windows `.exe` | anywhere else on Windows | `SolidCraft-<version>-windows-x64.exe` | Replace the old `.exe` |
-| macOS | inside `SolidCraft.app` | `solidcraft-macos-universal.dmg` | Quit Torno, then drag the new app to Applications |
+| AppImage | `APPIMAGE` is set | `torno-linux-<arch>.AppImage` | Replace the old AppImage with the new one |
+| Flatpak | `FLATPAK_ID` is set | doesn't check (see below) | `flatpak update dev.danielmiguelt.Torno` |
+| Snap from the Snap Store | `SNAP` is set | release page | `sudo snap refresh torno` (snapd also refreshes by itself) |
+| Snap from a downloaded file | `SNAP_REVISION` starts with `x` | `torno-linux-<arch>.snap` | `sudo snap install --dangerous ./torno-linux-<arch>.snap` |
+| `.deb` | under `/usr`, dpkg knows `torno` | `torno-linux-<arch>.deb` | `sudo apt install ./torno-linux-<arch>.deb` |
+| `.rpm` | under `/usr`, an rpm database exists | `torno-linux-<arch>.rpm` | `sudo dnf install ./torno-linux-<arch>.rpm` |
+| `.tar.gz` | anywhere else on Linux | `torno-<version>-linux-<arch>.tar.gz` | Unpack over the old copy |
+| Windows installer | under Program Files, or in the folder the installer recorded | `torno-windows-<arch>.msi` | Run the installer |
+| Windows portable | `torno-cli.exe` beside it | `torno-windows-<arch>-portable.zip` | Unzip over the old copy |
+| Windows `.exe` | anywhere else on Windows | `Torno-<version>-windows-x64.exe` | Replace the old `.exe` |
+| macOS | inside `Torno.app` | `torno-macos-universal.dmg` | Quit Torno, then drag the new app to Applications |
 
 The window shows the command for Snap, `.deb` and `.rpm` installations, with a Copy button. The
 Flatpak has no network permission and Flatpak itself (or your software center) offers its

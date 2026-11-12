@@ -49,19 +49,19 @@ impl Report {
 
 /// The registry flags. CI splits the check so the fast repository job never builds the app:
 /// that job passes `--no-registry` (catalog coverage only), and the job that already built
-/// `solidcraft-cli` passes `--cli <binary>` (everything, command labels included). With neither
+/// `torno-cli` passes `--cli <binary>` (everything, command labels included). With neither
 /// the registry is read through `cargo run`, as before. A registry that cannot be read still
 /// fails the check; only an explicit `--no-registry` skips it.
 pub fn run(root: &Path, args: &[&str]) -> Result<(), String> {
     let cli = match args.iter().position(|a| *a == "--cli") {
-        Some(i) => Some(args.get(i + 1).ok_or("--cli needs the path of a built solidcraft-cli")?.to_string()),
+        Some(i) => Some(args.get(i + 1).ok_or("--cli needs the path of a built torno-cli")?.to_string()),
         None => None,
     };
     if args.contains(&"--no-registry") {
         if cli.is_some() || args.contains(&"--add-missing") {
             return Err("--no-registry cannot be combined with --cli or --add-missing".into());
         }
-        println!("i18n: catalog coverage only; command labels are checked where solidcraft-cli is built (--cli)");
+        println!("i18n: catalog coverage only; command labels are checked where torno-cli is built (--cli)");
         return run_with_registry(root, args, || Ok(Vec::new()));
     }
     run_with_registry(root, args, || registry(cli.as_deref()))
@@ -164,7 +164,7 @@ fn read(root: &Path, locale: &str) -> Result<Map<String, Value>, String> {
 
 /// Command labels the English catalog cannot translate, mapped to the commands that use them.
 ///
-/// The registry is read through `solidcraft-cli commands` so the report comes from the real
+/// The registry is read through `torno-cli commands` so the report comes from the real
 /// command table, never from a copy of it.
 fn labels_needing_translation(known: &[&str], commands: Vec<Value>) -> BTreeMap<String, Vec<String>> {
     let mut out: BTreeMap<String, Vec<String>> = BTreeMap::new();
@@ -192,13 +192,13 @@ fn registry(cli: Option<&str>) -> Result<Vec<Value>, String> {
         }
         None => {
             let mut c = crate::cargo();
-            c.args(["run", "-q", "--release", "-p", "solidcraft-cli", "--", "commands"]);
+            c.args(["run", "-q", "--release", "-p", "torno-cli", "--", "commands"]);
             c
         }
     };
-    let out = command.output().map_err(|e| format!("solidcraft-cli: {e}"))?;
+    let out = command.output().map_err(|e| format!("torno-cli: {e}"))?;
     if !out.status.success() {
-        return Err(format!("solidcraft-cli commands failed:\n{}", String::from_utf8_lossy(&out.stderr)));
+        return Err(format!("torno-cli commands failed:\n{}", String::from_utf8_lossy(&out.stderr)));
     }
     serde_json::from_slice(&out.stdout).map_err(|e| format!("commands JSON: {e}"))
 }
@@ -263,7 +263,7 @@ mod tests {
     fn catalog_root() -> std::path::PathBuf {
         use std::sync::atomic::{AtomicUsize, Ordering};
         static NEXT: AtomicUsize = AtomicUsize::new(0);
-        let root = std::env::temp_dir().join(format!("solidcraft-i18n-{}-{}", std::process::id(), NEXT.fetch_add(1, Ordering::Relaxed)));
+        let root = std::env::temp_dir().join(format!("torno-i18n-{}-{}", std::process::id(), NEXT.fetch_add(1, Ordering::Relaxed)));
         std::fs::create_dir_all(root.join(DIR)).unwrap();
         std::fs::write(root.join(DIR).join("en.json"), "{\"cmd.known\":\"Known\"}\n").unwrap();
         root
@@ -275,8 +275,8 @@ mod tests {
         let english = root.join(DIR).join("en.json");
         let before = std::fs::read(&english).unwrap();
         let errors = [
-            format!("solidcraft-cli: {}", std::io::Error::from(std::io::ErrorKind::NotFound)),
-            "solidcraft-cli commands failed:\ncompiler failed".to_owned(),
+            format!("torno-cli: {}", std::io::Error::from(std::io::ErrorKind::NotFound)),
+            "torno-cli commands failed:\ncompiler failed".to_owned(),
             format!("commands JSON: {}", serde_json::from_slice::<Vec<Value>>(b"not JSON").unwrap_err()),
         ];
         for mode in [None, Some("--check"), Some("--add-missing")] {
@@ -341,7 +341,7 @@ mod tests {
     #[test]
     fn an_unreadable_cli_fails_the_check() {
         let root = catalog_root();
-        let error = run(&root, &["--check", "--cli", "/nonexistent/solidcraft-cli"]).unwrap_err();
-        assert!(error.starts_with("solidcraft-cli:"), "{error}");
+        let error = run(&root, &["--check", "--cli", "/nonexistent/torno-cli"]).unwrap_err();
+        assert!(error.starts_with("torno-cli:"), "{error}");
     }
 }

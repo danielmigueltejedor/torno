@@ -1,6 +1,6 @@
 # surface.cone_p3 — parallel-cylinder line tested at its bottom end (WR-259, root cause of FAIL-3665)
 
-`fixtures/solidcraft/3665-column-in-channel.json` failed in all four cases at the cut of
+`fixtures/torno/3665-column-in-channel.json` failed in all four cases at the cut of
 the r 3.04 cylinder centred at (0, 20) (`boolean::merge::p2::make_faceuse` or
 `topology::brep::p6`, status 1001), and so does the C++ reference (FAIL-3665).
 

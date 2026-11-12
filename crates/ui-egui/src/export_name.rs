@@ -3,8 +3,8 @@
 //! `{project}`, `{part_number}`, `{revision}` and the other Design Properties for their values.
 //! An empty template keeps the name each export offered before the preference existed.
 
-use solidcraft_engine::doc::Metadata;
-use solidcraft_engine::doc::metadata::{Owner, keys};
+use torno_engine::doc::Metadata;
+use torno_engine::doc::metadata::{Owner, keys};
 
 /// Placeholder name for the design's name.
 const DESIGN: &str = "design";
@@ -115,7 +115,7 @@ pub(crate) fn placeholder_list() -> String {
     let own = [(DESIGN, "prefs.export_name.design"), (BODY, "prefs.export_name.body")];
     own.into_iter()
         .chain(keys(Owner::Design).map(|k| (k.name, k.label)))
-        .map(|(name, label)| format!("{{{name}}}  {}", solidcraft_ui_text::tr(label)))
+        .map(|(name, label)| format!("{{{name}}}  {}", torno_ui_text::tr(label)))
         .collect::<Vec<_>>()
         .join("\n")
 }
@@ -221,7 +221,7 @@ mod tests {
     #[test]
     fn the_help_lists_every_placeholder_once() {
         crate::i18n::install();
-        let _language = solidcraft_ui_text::scope("en");
+        let _language = torno_ui_text::scope("en");
         let list = placeholder_list();
         let names: Vec<&str> = list.lines().filter_map(|l| l.split_once("  ").map(|(n, _)| n)).collect();
         assert_eq!(

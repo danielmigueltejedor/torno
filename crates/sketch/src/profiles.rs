@@ -7,13 +7,13 @@
 //! the innermost loop containing it, so a circle inside a rectangle gives two profiles: the
 //! rectangle with a hole, and the disc.
 
-use solidcraft_geom::prelude::*;
 use std::f64::consts::TAU;
 use std::sync::{Arc, OnceLock};
+use torno_geom::prelude::*;
 
 use serde::{Deserialize, Serialize};
 use solidcore_record::{Loop2, MAX_BEZIER_DEGREE, Region2, Seg2, Vec2};
-use solidcraft_geom::{Aabb2, Ring};
+use torno_geom::{Aabb2, Ring};
 
 use crate::model::{CurveKind, Sketch};
 use crate::shape::{Shape, intersections_within};
@@ -613,8 +613,8 @@ struct Grid {
 }
 
 impl Grid {
-    fn new(boxes: &[solidcraft_geom::Aabb2]) -> Grid {
-        let all = boxes.iter().fold(solidcraft_geom::Aabb2::EMPTY, |a, b| a.union(b));
+    fn new(boxes: &[torno_geom::Aabb2]) -> Grid {
+        let all = boxes.iter().fold(torno_geom::Aabb2::EMPTY, |a, b| a.union(b));
         let (lo, hi) = (all.min, all.max);
         if !(lo.is_finite() && hi.is_finite()) {
             return Grid { lo: Vec2::ZERO, size: 1.0 };
@@ -628,7 +628,7 @@ impl Grid {
     }
     /// Cells a box covers; None for boxes spanning too many (they are checked against all),
     /// including infinite or huge boxes whose cell span does not fit in an `i64`.
-    fn cells(&self, b: &solidcraft_geom::Aabb2) -> Option<Vec<(i64, i64)>> {
+    fn cells(&self, b: &torno_geom::Aabb2) -> Option<Vec<(i64, i64)>> {
         if !(b.min.is_finite() && b.max.is_finite()) {
             return None;
         }
@@ -693,7 +693,7 @@ pub fn without_text_counters(sk: &Sketch, profiles: Vec<Profile>) -> Vec<Profile
     }
     // Outer polylines and their boxes, once.
     let polys: Vec<Ring<Vec2>> = profiles.iter().map(|p| p.region.outer.polyline(1e-3)).collect();
-    let boxes: Vec<solidcraft_geom::Aabb2> = polys.iter().map(|pl| pl.bounds()).collect();
+    let boxes: Vec<torno_geom::Aabb2> = polys.iter().map(|pl| pl.bounds()).collect();
     let areas: Vec<f64> = profiles.iter().map(|p| p.region.outer.signed_area().abs()).collect();
     let keep: Vec<bool> = (0..profiles.len())
         .map(|i| {
@@ -790,7 +790,7 @@ struct IslandLoop {
     /// Place in the order a search over the whole sketch finds loops: (0, circle curve, 0) for a
     /// whole circle, (1, curve of the first edge, first half-edge) for a traced face.
     key: (u8, usize, usize),
-    bounds: solidcraft_geom::Aabb2,
+    bounds: torno_geom::Aabb2,
     area: f64,
 }
 
@@ -820,7 +820,7 @@ const ISLAND_PAIR_BUDGET: usize = 4_000_000;
 /// of another group. Every box holds everything the search derives from its curve (the end
 /// points, and the sampled points of free-form segments, which lie in their control polygon).
 fn islands(sk: &Sketch, curves: &[usize]) -> Vec<Vec<usize>> {
-    let mut boxes: Vec<(usize, solidcraft_geom::Aabb2)> = Vec::new();
+    let mut boxes: Vec<(usize, torno_geom::Aabb2)> = Vec::new();
     for (k, &ci) in curves.iter().enumerate() {
         for b in piece_boxes(sk, ci) {
             if !(b.min.is_finite() && b.max.is_finite()) {
@@ -866,10 +866,10 @@ fn islands(sk: &Sketch, curves: &[usize]) -> Vec<Vec<usize>> {
 
 /// Boxes covering a profile curve: its end points, and each of its pieces (lines and arcs in a
 /// few parts, so a long diagonal line or a large circle around other curves does not cover them).
-fn piece_boxes(sk: &Sketch, ci: usize) -> Vec<solidcraft_geom::Aabb2> {
+fn piece_boxes(sk: &Sketch, ci: usize) -> Vec<torno_geom::Aabb2> {
     let Some(c) = sk.curves.get(ci) else { return Vec::new() };
     let mut out = Vec::new();
-    let point_box = |p: Vec2| solidcraft_geom::Aabb2 { min: p, max: p };
+    let point_box = |p: Vec2| torno_geom::Aabb2 { min: p, max: p };
     if let Some((a, b)) = c.kind.ends() {
         out.extend([a, b].into_iter().filter_map(|i| sk.point(i)).map(point_box));
     }
@@ -898,10 +898,10 @@ fn piece_boxes(sk: &Sketch, ci: usize) -> Vec<solidcraft_geom::Aabb2> {
 }
 
 /// Boxes covering a segment and everything the search samples from it.
-fn seg_boxes(s: &Seg2, out: &mut Vec<solidcraft_geom::Aabb2>) {
+fn seg_boxes(s: &Seg2, out: &mut Vec<torno_geom::Aabb2>) {
     const PARTS: usize = 16;
     let hull = |pts: &[Vec2]| {
-        pts.iter().fold(solidcraft_geom::Aabb2::EMPTY, |mut b, p| {
+        pts.iter().fold(torno_geom::Aabb2::EMPTY, |mut b, p| {
             b.add(*p);
             b
         })
@@ -1182,14 +1182,14 @@ fn island_loops(sk: &Sketch, curves: &[usize], max_edges: usize) -> Island {
         }
     }
     // Bounding boxes, and a uniform grid over them: only shapes sharing a cell can meet.
-    let boxes: Vec<solidcraft_geom::Aabb2> = shapes
+    let boxes: Vec<torno_geom::Aabb2> = shapes
         .iter()
         .map(|(_, sh)| match *sh {
             Shape::Line { a, b } => {
-                solidcraft_geom::Aabb2 { min: Vec2::new(a.x.min(b.x), a.y.min(b.y)), max: Vec2::new(a.x.max(b.x), a.y.max(b.y)) }.inflated(tol)
+                torno_geom::Aabb2 { min: Vec2::new(a.x.min(b.x), a.y.min(b.y)), max: Vec2::new(a.x.max(b.x), a.y.max(b.y)) }.inflated(tol)
             }
             Shape::Round { c, r, .. } => {
-                solidcraft_geom::Aabb2 { min: Vec2::new(c.x - r - tol, c.y - r - tol), max: Vec2::new(c.x + r + tol, c.y + r + tol) }
+                torno_geom::Aabb2 { min: Vec2::new(c.x - r - tol, c.y - r - tol), max: Vec2::new(c.x + r + tol, c.y + r + tol) }
             }
         })
         .collect();
@@ -1321,7 +1321,7 @@ fn island_loops(sk: &Sketch, curves: &[usize], max_edges: usize) -> Island {
                     // Every end within reach, whatever the grid's cell size (so an island's
                     // smaller grid finds the same ends as the whole sketch's).
                     let near_ends = || {
-                        let reach = solidcraft_geom::Aabb2 { min: p, max: p }.inflated(tol * 100.0);
+                        let reach = torno_geom::Aabb2 { min: p, max: p }.inflated(tol * 100.0);
                         let cand: Vec<usize> = match grid.cells(&reach) {
                             Some(cs) => cs.iter().flat_map(|c| end_cells.get(c).map(Vec::as_slice).unwrap_or(&[])).copied().collect(),
                             None => all_ends.clone(),
@@ -1699,7 +1699,7 @@ fn assemble(sk: &Sketch, islands: &[Arc<Island>]) -> Vec<Profile> {
     // Nesting: parent = smallest containing loop from another component. Bounding boxes rule
     // out most pairs before the point-in-loop test.
     let areas: Vec<f64> = all.iter().map(|(_, l)| l.area).collect();
-    let boxes: Vec<solidcraft_geom::Aabb2> = all.iter().map(|(_, l)| l.bounds).collect();
+    let boxes: Vec<torno_geom::Aabb2> = all.iter().map(|(_, l)| l.bounds).collect();
     let inside_box = |j: usize, p: Vec2| boxes.get(j).is_some_and(|b| b.contains(p));
     let mut parent_of: Vec<Option<usize>> = vec![None; loops.len()];
     for (i, (li, _, ci, _)) in loops.iter().enumerate() {
@@ -2177,10 +2177,10 @@ mod whole_boundary_tests {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use solidcraft_geom::Aabb2;
+    use torno_geom::Aabb2;
 
     /// An infinite or huge box spans more cells than an `i64` holds; it is checked against all
-    /// shapes instead of wrapping the count and filling memory (solidcraft#5020).
+    /// shapes instead of wrapping the count and filling memory (torno#5020).
     #[test]
     fn grid_cells_refuse_infinite_and_huge_boxes() {
         let small = Aabb2 { min: Vec2::new(0.0, 0.0), max: Vec2::new(10.0, 10.0) };

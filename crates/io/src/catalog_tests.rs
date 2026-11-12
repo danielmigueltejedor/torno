@@ -1,6 +1,6 @@
 use super::*;
 use serde_json::{Value, json};
-use solidcraft_doc::{pbr_appearance::PbrParameters, physical_material::ValidatedCard};
+use torno_doc::{pbr_appearance::PbrParameters, physical_material::ValidatedCard};
 
 fn catalog() -> Catalog {
     let entry = Entry::new(
@@ -130,7 +130,7 @@ fn design_export_deduplicates_exact_looks_and_keeps_physical_properties_distinct
 
 #[test]
 fn scalar_export_refuses_pbr_in_every_design_owned_appearance_location() {
-    use solidcraft_doc::{appearance::FaceLook, pbr_appearance::PbrParameters};
+    use torno_doc::{appearance::FaceLook, pbr_appearance::PbrParameters};
     let mut look = LibraryLook { name: "Original PBR specimen".into(), color: [180, 120, 70], opacity: 1.0, pbr: None }.to_look();
     look.pbr = Some(PbrParameters::new(1.0, 0.3, 1.5).unwrap());
     for location in 0..4 {
@@ -253,7 +253,7 @@ fn pinned_v1_bytes_revisions_and_scalar_material_canonical_fields_are_preserved(
     };
     let provenance = Provenance {
         license: "MIT OR Apache-2.0".into(),
-        author: Some("SolidCraft contributors".into()),
+        author: Some("Torno contributors".into()),
         source_url: Some("https://example.invalid/original".into()),
     };
     let entry = Entry::new("user.test", Definition::Material(material), provenance).unwrap();

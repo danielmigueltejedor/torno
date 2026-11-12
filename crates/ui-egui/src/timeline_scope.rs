@@ -19,7 +19,7 @@ use std::collections::{HashMap, HashSet};
 use egui::{Painter, Rect, Sense, pos2, vec2};
 
 use crate::SolveApp;
-use solidcraft_theme::Tokens;
+use torno_theme::Tokens;
 
 /// A step's name is cut at this width (its tooltip has it whole).
 const STEP_MAX: f32 = 120.0;
@@ -240,7 +240,7 @@ fn components_toggle(app: &mut SolveApp, ui: &mut egui::Ui, p: &Painter, x: f32,
 
 fn step_name(app: &SolveApp, step: Step) -> String {
     match step {
-        Step::All => solidcraft_ui_text::tr_label("All components").to_string(),
+        Step::All => torno_ui_text::tr_label("All components").to_string(),
         Step::More(_) => "\u{2026}".to_string(),
         Step::Component(c) => crate::timeline_fold::name(app, c),
     }
@@ -310,11 +310,11 @@ fn step_key(step: Step) -> (u8, u64) {
 
 fn step_tip(app: &SolveApp, step: Step, current: bool) -> String {
     match step {
-        Step::All if current && focus(app).is_none() => solidcraft_ui_text::tr("ui.history_scope_pick").to_string(),
-        Step::All if current => solidcraft_ui_text::tr("ui.history_scope_all_shown").to_string(),
-        Step::All => solidcraft_ui_text::tr("ui.history_scope_all").to_string(),
+        Step::All if current && focus(app).is_none() => torno_ui_text::tr("ui.history_scope_pick").to_string(),
+        Step::All if current => torno_ui_text::tr("ui.history_scope_all_shown").to_string(),
+        Step::All => torno_ui_text::tr("ui.history_scope_all").to_string(),
         Step::More(c) => path_to(app, c).iter().map(|c| crate::timeline_fold::name(app, *c)).collect::<Vec<_>>().join(" \u{203a} "),
-        Step::Component(c) if current => solidcraft_ui_text::format("ui.history_scope_shown", &[("name", &crate::timeline_fold::name(app, c))]),
-        Step::Component(c) => solidcraft_ui_text::format("ui.history_scope_show", &[("name", &crate::timeline_fold::name(app, c))]),
+        Step::Component(c) if current => torno_ui_text::format("ui.history_scope_shown", &[("name", &crate::timeline_fold::name(app, c))]),
+        Step::Component(c) => torno_ui_text::format("ui.history_scope_show", &[("name", &crate::timeline_fold::name(app, c))]),
     }
 }

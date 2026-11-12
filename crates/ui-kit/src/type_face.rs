@@ -114,7 +114,7 @@ pub const HEBREW_FALLBACK: &str = "hebrew_fallback";
 
 /// Name of the Arabic fallback entry in [`egui::FontDefinitions`]: first of the fallbacks for an
 /// Arabic UI, last otherwise. It stays after the Latin interface font, which keeps drawing spaces,
-/// digits and Latin text, so each Arabic word is one shaped run (see [`solidcraft_ui_text::bidi`]).
+/// digits and Latin text, so each Arabic word is one shaped run (see [`torno_ui_text::bidi`]).
 pub const ARABIC_FALLBACK: &str = "arabic_fallback";
 
 /// egui's built-in monospace face, also the last fallback of every sans family (#2955).
@@ -184,7 +184,7 @@ impl CjkFontLoader {
     }
 
     /// Called every frame with the live language (a `system` preference resolves to its catalog
-    /// via [`solidcraft_ui_text::effective_language`]). `ready` is true when the shell already has the
+    /// via [`torno_ui_text::effective_language`]). `ready` is true when the shell already has the
     /// on-demand face that language needs. Returns true when a fetch should start now. After a
     /// failed load a CJK language falls back to English for this session; the saved preference is
     /// kept (see [`Self::persisted_language`]). Switching to another CJK language that still needs
@@ -197,7 +197,7 @@ impl CjkFontLoader {
                 self.status = CjkFontStatus::Unloaded;
             }
         }
-        if !needs_cjk_font(solidcraft_ui_text::effective_language(language)) {
+        if !needs_cjk_font(torno_ui_text::effective_language(language)) {
             return false;
         }
         if ready {
@@ -240,7 +240,7 @@ impl CjkFontLoader {
             self.status = CjkFontStatus::Installed;
         } else {
             self.status = CjkFontStatus::Failed;
-            if needs_cjk_font(solidcraft_ui_text::effective_language(language)) {
+            if needs_cjk_font(torno_ui_text::effective_language(language)) {
                 self.fall_back(language);
             }
         }

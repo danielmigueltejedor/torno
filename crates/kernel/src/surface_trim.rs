@@ -4,8 +4,8 @@
 //! when one stops short of the other.
 
 use solidcore_record::Vec3;
-use solidcraft_geom::brep::eval::CurveEval;
-use solidcraft_geom::prelude::*;
+use torno_geom::brep::eval::CurveEval;
+use torno_geom::prelude::*;
 
 use crate::body::Body;
 use crate::splitface::{SplitTool, ToolSide};

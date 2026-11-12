@@ -1,11 +1,11 @@
 //! Render capability discovery and persistent intent. No rendering or host probing.
 
-use solidcraft_geom::MeshGeom;
 use std::sync::Arc;
+use torno_geom::MeshGeom;
 
 use serde::Deserialize;
 use serde_json::{Value, json};
-use solidcraft_doc::render_settings::{RenderSettings, RenderSetup};
+use torno_doc::render_settings::{RenderSettings, RenderSetup};
 
 use super::CommandSpec;
 use crate::params::bad;
@@ -297,7 +297,7 @@ fn fit_camera(s: &mut Session, params: &Value) -> Result<Value> {
     let scene = crate::product_scene::extract(s)?;
     let mut camera = s.camera.unwrap_or_default();
     // Publish only a valid fitted camera; the previous one stays otherwise.
-    if !camera.fit_aspect(&solidcraft_render::view_bounds(&scene.bounds), aspect) && !scene.bounds.is_empty() {
+    if !camera.fit_aspect(&torno_render::view_bounds(&scene.bounds), aspect) && !scene.bounds.is_empty() {
         return Err(bad("render.camera.fit", "the product cannot be framed at this aspect: the fitted camera is out of range"));
     }
     s.camera = Some(camera);
@@ -413,7 +413,7 @@ fn backends(s: &mut Session, params: &Value) -> Result<Value> {
         return Err(bad("render.backends", "expected an empty parameter object"));
     }
     Ok(json!({"schema_version": 1, "default_backend": "builtin", "backends": [s.render_backend()],
-        "cpu_resource_profiles": solidcraft_render::job::CpuBudget::ALL.map(|budget| json!({"id":budget,"limits":budget.limits()}))}))
+        "cpu_resource_profiles": torno_render::job::CpuBudget::ALL.map(|budget| json!({"id":budget,"limits":budget.limits()}))}))
 }
 
 #[cfg(test)]
@@ -465,16 +465,16 @@ mod tests {
 
     #[test]
     fn cooperative_host_never_discovers_cpu_raytracing_or_accepts_its_reserved_viewport_id() {
-        use solidcraft_render::job::CpuHost;
+        use torno_render::job::CpuHost;
         let mut s = Session::default();
         s.set_render_job_host(Some(CpuHost::cooperative())).unwrap();
         let reply = assert_unchanged(&mut s, json!({})).unwrap();
-        let backend: solidcraft_render::BackendDescriptor = serde_json::from_value(reply["backends"][0].clone()).unwrap();
+        let backend: torno_render::BackendDescriptor = serde_json::from_value(reply["backends"][0].clone()).unwrap();
         assert!(backend.executors.iter().any(|d| d.id.as_str() == "cpu-product"));
         assert!(!backend.executors.iter().any(|d| d.id.as_str() == "cpu-raytrace"));
         let mut viewport = CpuHost::cooperative().descriptor().unwrap();
-        viewport.id = solidcraft_render::ExecutorId::new("cpu-raytrace").unwrap();
-        viewport.profiles[0].operation = solidcraft_render::RenderOperation::Viewport;
+        viewport.id = torno_render::ExecutorId::new("cpu-raytrace").unwrap();
+        viewport.profiles[0].operation = torno_render::RenderOperation::Viewport;
         viewport.profiles[0].formats.clear();
         assert!(s.set_render_viewport(Some(viewport)).unwrap_err().to_string().contains("reserved"));
         assert_eq!(s.render_backend(), backend);
@@ -483,8 +483,8 @@ mod tests {
     #[cfg(not(target_arch = "wasm32"))]
     #[test]
     fn native_cpu_discovery_matches_installed_features_and_preserves_raster_default() {
-        use solidcraft_render::job::{CpuHost, Integrator};
-        use solidcraft_render::{RenderFeature, RenderFormat, RenderMode, RenderOperation, RenderRequest};
+        use torno_render::job::{CpuHost, Integrator};
+        use torno_render::{RenderFeature, RenderFormat, RenderMode, RenderOperation, RenderRequest};
         let host = CpuHost::for_platform().unwrap();
         // Query the host so the same test covers feature-off builds and workspace
         // feature unification without assuming the engine's own cfg is sufficient.
@@ -496,11 +496,11 @@ mod tests {
         assert!(Arc::ptr_eq(&doc, &s.doc));
         assert!(!s.is_dirty());
         assert!(s.undo.is_empty());
-        let backend: solidcraft_render::BackendDescriptor = serde_json::from_value(reply["backends"][0].clone()).unwrap();
+        let backend: torno_render::BackendDescriptor = serde_json::from_value(reply["backends"][0].clone()).unwrap();
         let descriptors: Vec<_> = backend.executors.iter().filter(|d| d.id.as_str() == "cpu-raytrace").collect();
         assert_eq!(descriptors.len(), usize::from(raytrace));
         if let Some(descriptor) = descriptors.first() {
-            assert_eq!(descriptor.availability, solidcraft_render::Availability::Available);
+            assert_eq!(descriptor.availability, torno_render::Availability::Available);
             assert_eq!(*descriptor, &host.descriptor_for(Integrator::Raytrace).unwrap());
             assert!(!descriptor.profiles.iter().any(|p| p.features.contains(&RenderFeature::Progressive)));
         }
@@ -514,14 +514,14 @@ mod tests {
             features: vec![RenderFeature::Pbr],
             policy: Default::default(),
         };
-        assert_eq!(solidcraft_render::resolve_request(std::slice::from_ref(&backend), &request).unwrap().executor.as_str(), "cpu-product");
+        assert_eq!(torno_render::resolve_request(std::slice::from_ref(&backend), &request).unwrap().executor.as_str(), "cpu-product");
         assert_eq!(s.scratch().render_backend(), backend);
         s.set_render_job_host(Some(host)).unwrap();
         assert_eq!(s.render_backend(), backend, "reinstalling the same host cannot duplicate method descriptors");
         s.set_render_job_host(Some(CpuHost::cooperative())).unwrap();
         assert!(!s.render_backend().executors.iter().any(|d| d.id.as_str() == "cpu-raytrace"));
         s.set_render_job_host(None).unwrap();
-        assert_eq!(s.render_backend(), solidcraft_render::builtin_backend());
+        assert_eq!(s.render_backend(), torno_render::builtin_backend());
         assert_unchanged(&mut s, json!({})).unwrap();
         assert!(Arc::ptr_eq(&doc, &s.doc));
         assert!(!s.is_dirty());

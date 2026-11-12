@@ -27,7 +27,7 @@ impl CpuPathOptions {
 /// capture, rather than lose radiance or add an inconsistent MIS estimator.
 pub(crate) fn validate_emitters(lights: &[super::RectangleLightOptions]) -> Result<()> {
     use solidcore_record::Vec3;
-    use solidcraft_geom::prelude::*;
+    use torno_geom::prelude::*;
     let invalid = || {
         JobError::new(
             ErrorCode::InvalidRequest,
@@ -42,14 +42,14 @@ pub(crate) fn validate_emitters(lights: &[super::RectangleLightOptions]) -> Resu
         let au = vector(a.edge_u_mm);
         let av = vector(a.edge_v_mm);
         let ac = vector(a.center_mm);
-        let an = solidcraft_viewport::surface::unit_direction(au.cross(av)).map_err(|_| invalid())?;
-        let x = solidcraft_viewport::surface::unit_direction(au).map_err(|_| invalid())?;
+        let an = torno_viewport::surface::unit_direction(au.cross(av)).map_err(|_| invalid())?;
+        let x = torno_viewport::surface::unit_direction(au).map_err(|_| invalid())?;
         let y = an.cross(x);
         for b in lights.iter().skip(i + 1) {
             let bu = vector(b.edge_u_mm);
             let bv = vector(b.edge_v_mm);
             let bc = vector(b.center_mm);
-            let bn = solidcraft_viewport::surface::unit_direction(bu.cross(bv)).map_err(|_| invalid())?;
+            let bn = torno_viewport::surface::unit_direction(bu.cross(bv)).map_err(|_| invalid())?;
             if an.dot(bn) <= 0.0 || an.cross(bn).len() > 64.0 * f64::EPSILON {
                 continue;
             }

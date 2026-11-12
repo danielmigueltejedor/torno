@@ -45,7 +45,7 @@ impl BarRig {
 
     /// A frame: what was chosen, and what was drawn.
     fn frame_output(&self, events: Vec<egui::Event>) -> (Vec<BarAction>, egui::FullOutput) {
-        solidcraft_ui_registry::clear_handles();
+        torno_ui_registry::clear_handles();
         self.time.set(self.time.get() + 1.0 / 60.0);
         let input = egui::RawInput {
             screen_rect: Some(Rect::from_min_size(Pos2::ZERO, vec2(self.width, 400.0))),
@@ -82,7 +82,7 @@ impl BarRig {
     }
 
     fn click(&self, name: &str) -> Vec<BarAction> {
-        let at = solidcraft_ui_registry::handle_at(name).or_else(|| solidcraft_ui_registry::rect_of(name).map(|r| r.center()));
+        let at = torno_ui_registry::handle_at(name).or_else(|| torno_ui_registry::rect_of(name).map(|r| r.center()));
         let at = at.unwrap_or_else(|| panic!("{name} is drawn"));
         self.time.set(self.time.get() + 1.0);
         let press = |pressed| egui::Event::PointerButton { pos: at, button: egui::PointerButton::Primary, pressed, modifiers: egui::Modifiers::NONE };
@@ -99,7 +99,7 @@ impl BarRig {
 fn the_bar_returns_what_was_clicked() {
     let rig = BarRig::new(1200.0);
     assert_eq!(rig.click("t:home"), vec![BarAction::Home]);
-    let file = solidcraft_ui_registry::rect_of("t:file").expect("File is drawn");
+    let file = torno_ui_registry::rect_of("t:file").expect("File is drawn");
     assert_eq!(rig.click("t:file"), vec![BarAction::File { rect: file }]);
     assert_eq!(rig.click("t:save"), vec![BarAction::Button { id: "save".into() }]);
     assert_eq!(rig.click("t:undo"), Vec::new(), "a disabled button runs nothing");
@@ -119,10 +119,10 @@ fn the_bar_returns_what_was_clicked() {
 #[test]
 fn a_compact_bar_keeps_only_what_fits() {
     let rig = BarRig::new(600.0);
-    assert!(solidcraft_ui_registry::rect_of("t:save").is_some());
-    assert!(solidcraft_ui_registry::rect_of("t:undo").is_none(), "Undo is left out");
+    assert!(torno_ui_registry::rect_of("t:save").is_some());
+    assert!(torno_ui_registry::rect_of("t:undo").is_none(), "Undo is left out");
     assert!(rig.out.borrow().as_ref().is_some_and(|out| out.quick.is_none()));
-    assert!(solidcraft_ui_registry::handle_at("t:version").is_none(), "no version on a narrow bar");
+    assert!(torno_ui_registry::handle_at("t:version").is_none(), "no version on a narrow bar");
 }
 
 /// A long app name ends before Home: Home follows the name as drawn, not a place sized for one
@@ -136,7 +136,7 @@ fn home_follows_a_long_app_name() {
         .find(|shape| shape.galley.text() == name)
         .map(|shape| shape.visual_bounding_rect())
         .expect("the name is drawn");
-    let home = solidcraft_ui_registry::rect_of("t:home").expect("Home is drawn");
+    let home = torno_ui_registry::rect_of("t:home").expect("Home is drawn");
     assert!(text.right() < home.left(), "the name ends at {}, Home starts at {}", text.right(), home.left());
 }
 
@@ -162,7 +162,7 @@ impl TabsRig {
     }
 
     fn frame(&self, events: Vec<egui::Event>) -> Vec<TabAction> {
-        solidcraft_ui_registry::clear_handles();
+        torno_ui_registry::clear_handles();
         self.time.set(self.time.get() + 1.0 / 60.0);
         let input = egui::RawInput {
             screen_rect: Some(Rect::from_min_size(Pos2::ZERO, vec2(800.0, 400.0))),
@@ -204,9 +204,9 @@ impl TabsRig {
     }
 
     fn at(&self, name: &str) -> Pos2 {
-        solidcraft_ui_registry::rect_of(name)
+        torno_ui_registry::rect_of(name)
             .map(|r| r.center())
-            .or_else(|| solidcraft_ui_registry::handle_at(name))
+            .or_else(|| torno_ui_registry::handle_at(name))
             .unwrap_or_else(|| panic!("{name} is drawn"))
     }
 }
@@ -224,7 +224,7 @@ fn the_tab_strip_returns_what_was_clicked_and_dragged() {
     assert_eq!(rig.press(rig.at("t:menu:others"), egui::PointerButton::Primary), vec![TabAction::Menu { tab: 2, id: "others".into() }]);
     // Drag the first tab past the last.
     let from = rig.at("t:tab:0");
-    let to = solidcraft_ui_registry::rect_of("t:tab:2").map(|r| r.right_center() - vec2(4.0, 0.0)).expect("tab 2 is drawn");
+    let to = torno_ui_registry::rect_of("t:tab:2").map(|r| r.right_center() - vec2(4.0, 0.0)).expect("tab 2 is drawn");
     let button = |pos, pressed| egui::Event::PointerButton { pos, button: egui::PointerButton::Primary, pressed, modifiers: egui::Modifiers::NONE };
     let mut actions = rig.frame(vec![egui::Event::PointerMoved(from)]);
     actions.extend(rig.frame(vec![button(from, true)]));
@@ -312,7 +312,7 @@ fn the_workspace_switcher_returns_its_click() {
         crate::test_support::raw_frame(&ctx, input, |ui| clicked.push(switcher(ui, &data, ws)));
     }
     assert_eq!(clicked, [false, false, true]);
-    assert_eq!(solidcraft_ui_registry::rect_of("t:ws"), Some(ws));
+    assert_eq!(torno_ui_registry::rect_of("t:ws"), Some(ws));
 }
 
 fn press(pos: Pos2, pressed: bool) -> egui::Event {

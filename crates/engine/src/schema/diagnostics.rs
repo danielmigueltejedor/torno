@@ -10,7 +10,7 @@ use serde_json::{Map, Value, json};
 
 /// List this computer's crash reports, newest first. They stay on this computer and are never
 /// sent anywhere. Read one with `diagnostics.crash_report`; reproduce one with
-/// `solidcraft-cli crashes replay <id>`.
+/// `torno-cli crashes replay <id>`.
 #[derive(Debug, Deserialize, JsonSchema)]
 #[schemars(deny_unknown_fields)]
 pub struct CrashReportsParams {
@@ -85,7 +85,7 @@ impl JsonSchema for CrashReport {
                 "notes": {"description": "What the report could not record, and why."},
                 "path": {"description": "The report's folder on this computer.", "type": "string"},
                 "design_path": path("design"),
-                "replay_path": path("replay (`solidcraft-cli run <replay_path> --in <design_path>`)"),
+                "replay_path": path("replay (`torno-cli run <replay_path> --in <design_path>`)"),
                 "minidump_path": path("minidump"),
                 "param_warnings": {"description": "In the warn parameter-check mode: what the call's parameters got wrong.", "type": "array", "items": {"type": "string"}}
             }
@@ -113,7 +113,7 @@ pub struct CrashReportsCleared {
     pub param_warnings: Vec<String>,
 }
 
-/// Check that crash reports work, by crashing on purpose. Only when the SOLIDCRAFT_CRASH_TEST
+/// Check that crash reports work, by crashing on purpose. Only when the TORNO_CRASH_TEST
 /// environment variable is set.
 #[derive(Debug, Deserialize, JsonSchema)]
 #[schemars(deny_unknown_fields)]
@@ -257,7 +257,7 @@ fn ms(d: std::time::Duration) -> f64 {
 
 impl ProfileReport {
     /// `report` with its `top` rows of most self time (0: all of them).
-    pub fn new(report: &solidcraft_profile::Report, top: usize) -> ProfileReport {
+    pub fn new(report: &torno_profile::Report, top: usize) -> ProfileReport {
         let sorted = report.sorted();
         let all: f64 = report.rows.iter().map(|r| r.self_time.as_secs_f64()).sum();
         let by_category = report
@@ -324,16 +324,16 @@ pub enum ValidationMode {
 
 impl ValidationMode {
     fn parse(id: &str) -> Option<ValidationMode> {
-        solidcraft_kernel::Validation::parse(id).map(ValidationMode::from)
+        torno_kernel::Validation::parse(id).map(ValidationMode::from)
     }
 }
 
-impl From<solidcraft_kernel::Validation> for ValidationMode {
-    fn from(v: solidcraft_kernel::Validation) -> Self {
+impl From<torno_kernel::Validation> for ValidationMode {
+    fn from(v: torno_kernel::Validation) -> Self {
         match v {
-            solidcraft_kernel::Validation::EachStep => ValidationMode::EachStep,
-            solidcraft_kernel::Validation::EachFeature => ValidationMode::EachFeature,
-            solidcraft_kernel::Validation::Off => ValidationMode::Off,
+            torno_kernel::Validation::EachStep => ValidationMode::EachStep,
+            torno_kernel::Validation::EachFeature => ValidationMode::EachFeature,
+            torno_kernel::Validation::Off => ValidationMode::Off,
         }
     }
 }

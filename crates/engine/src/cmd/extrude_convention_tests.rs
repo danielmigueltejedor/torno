@@ -2,8 +2,8 @@
 
 use crate::Session;
 use serde_json::{Value, json};
-use solidcraft_doc::{Document, ExtrudeConvention, FeatureKind};
-use solidcraft_geom::MeshGeom;
+use torno_doc::{Document, ExtrudeConvention, FeatureKind};
+use torno_geom::MeshGeom;
 
 fn run(s: &mut Session, cmd: &str, params: Value) {
     s.execute(cmd, &params).unwrap_or_else(|e| panic!("{cmd}: {e}"));
@@ -26,7 +26,7 @@ fn check(s: &Session, lo: f64, hi: f64) {
     let body = st.body("Block").unwrap();
     let bounds = body.mesh().bounds();
     assert!((bounds.min.z - lo).abs() < 1e-7 && (bounds.max.z - hi).abs() < 1e-7, "{bounds:?}");
-    let m = solidcraft_kernel::measure(&body.body).unwrap();
+    let m = torno_kernel::measure(&body.body).unwrap();
     assert!((m.volume - 100.0 * (hi - lo)).abs() < 1e-7, "{m:?}");
     assert!((m.centroid.z - (lo + hi) * 0.5).abs() < 1e-7);
 }
@@ -120,7 +120,7 @@ fn symmetric_extrude_thin_wall_uses_total_distance_and_to_object_remains_one_sid
     let b = body.mesh().bounds();
     assert!((b.min.z + 5.0).abs() < 1e-7 && (b.max.z - 5.0).abs() < 1e-7);
     // A centred 2 mm wall around a 10 mm square: (12² - 8²) × 10.
-    assert!((solidcraft_kernel::measure(&body.body).unwrap().volume - 800.0).abs() < 1e-7);
+    assert!((torno_kernel::measure(&body.body).unwrap().volume - 800.0).abs() < 1e-7);
     check(&fixture(json!({"to":[0,0,10]})), 0.0, 10.0);
 }
 
@@ -233,7 +233,7 @@ fn through_all_on_either_side_with_a_distance_on_the_other() {
         );
         assert!(s.model.results.iter().all(|r| r.error.is_none()));
         let st = s.model.state();
-        let m = solidcraft_kernel::measure(&st.body("Box").unwrap().body).unwrap();
+        let m = torno_kernel::measure(&st.body("Box").unwrap().body).unwrap();
         // The hole's depth from the volume removed (within the circle's measuring precision).
         let deep = (64000.0 - m.volume) / hole;
         assert!((deep - depth).abs() < 0.05, "{direction}: {deep} deep, want {depth}");
@@ -261,7 +261,7 @@ fn through_all_follows_the_sign_of_the_saved_distance() {
         );
         assert!(s.model.results.iter().all(|r| r.error.is_none()));
         let st = s.model.state();
-        let m = solidcraft_kernel::measure(&st.body("Box").unwrap().body).unwrap();
+        let m = torno_kernel::measure(&st.body("Box").unwrap().body).unwrap();
         let deep = (64000.0 - m.volume) / hole;
         assert!((deep - depth).abs() < 0.05, "{distance}: {deep} deep, want {depth}");
     }
@@ -278,7 +278,7 @@ fn an_older_reversed_two_sided_extrude_keeps_its_shape() {
     let s = Session::new(Document::from_json(&saved.to_string()).unwrap());
     check(&s, -4.0, 10.0);
     let FeatureKind::Extrude { extent, .. } = &s.doc.find_feature("Depth").unwrap().kind else { panic!("extrude") };
-    assert_eq!(extent.direction, solidcraft_doc::Direction::Positive);
+    assert_eq!(extent.direction, torno_doc::Direction::Positive);
 }
 
 /// Designs saved before entered distances kept their sides sent Distance 2 to the other side of

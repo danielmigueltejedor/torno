@@ -1,11 +1,11 @@
 //! Table-driven layout/paint references in both themes. No window or GPU required. Every
-//! specimen here is drawn from plain data; a host's own gallery (SolidCraft's
+//! specimen here is drawn from plain data; a host's own gallery (Torno's
 //! `kit_gallery_tests`) adds the specimens drawn from its data and checks them with
 //! [`check_elements`].
 use super::preferences_figures::{ThemeSample, paint_theme_thumbnail};
 use super::*;
 use egui::{Ui, vec2};
-use solidcraft_theme::Tokens;
+use torno_theme::Tokens;
 
 /// The editable state a specimen draws: two values, a selection and a check.
 pub struct Sample {
@@ -534,7 +534,7 @@ pub const ELEMENTS: &[Element] = &[
     element!("catalog_footer_height", |ui, _| {
         let expected = catalog_footer_height(ui);
         catalog_footer(ui, "Click to apply to the selection.");
-        assert_eq!(solidcraft_ui_registry::rect_of("catalog:footer").unwrap().height(), expected);
+        assert_eq!(torno_ui_registry::rect_of("catalog:footer").unwrap().height(), expected);
     }),
     element!("catalog_footer_with_tip", |ui, _| {
         catalog_footer_with_tip(ui, "Click to apply to the selection.", "Paint and drag assignment are not supported yet.");
@@ -859,7 +859,7 @@ pub const ELEMENTS: &[Element] = &[
     element!("help_icon", |ui, _| {
         ui.horizontal(|ui| {
             text(ui, "Anti-aliasing", Text::Hint("gallery_help"));
-            help_icon(ui, "Applies when SolidCraft restarts.");
+            help_icon(ui, "Applies when Torno restarts.");
         });
     }),
     element!("preference_theme_thumbnails", |ui, _| {
@@ -1075,7 +1075,7 @@ pub const ELEMENTS: &[Element] = &[
     }),
     element!("history_marker", |ui, _| {
         let t = Tokens::get();
-        let accent = solidcraft_theme::TabAccent::for_ramp(&t, solidcraft_theme::AccentRamp::Surface);
+        let accent = torno_theme::TabAccent::for_ramp(&t, torno_theme::AccentRamp::Surface);
         ui.horizontal(|ui| {
             let (rect, _) = ui.allocate_exact_size(vec2(t.space_24 * 7.0, t.space_12), egui::Sense::hover());
             ui.painter().rect_filled(rect, 0.0, t.panel);
@@ -1106,7 +1106,7 @@ pub const ELEMENTS: &[Element] = &[
             "gallery:recovery",
             super::file_view::RecoveryMessage {
                 title: "1 design was recovered",
-                before_filename: " after SolidCraft closed unexpectedly: ",
+                before_filename: " after Torno closed unexpectedly: ",
                 filename: "enclosure-lid.sc",
                 after_filename: ", 2 minutes ago.",
             },
@@ -1267,7 +1267,7 @@ pub const ELEMENTS: &[Element] = &[
         let style = |item: &Item| {
             let (slug, tabs, ramp) = match item.label.as_str() {
                 "Space A" => ("a", Some("Tab A · Tab B"), None),
-                "Space B" => ("b", Some("Tab C"), Some(solidcraft_theme::AccentRamp::Surface)),
+                "Space B" => ("b", Some("Tab C"), Some(torno_theme::AccentRamp::Surface)),
                 _ => ("c", None, None),
             };
             Some(WorkspaceStyle { slug, description: "A sample workspace", tabs, ramp })
@@ -1683,14 +1683,14 @@ pub const ELEMENTS: &[Element] = &[
         let t = Tokens::get();
         for open in [true, false] {
             let (rect, _) = ui.allocate_exact_size(vec2(t.form_close_size, t.form_close_size), egui::Sense::hover());
-            ui.push_id(open, |ui| disclosure_button_at(ui, rect, open, solidcraft_ui_text::tr_label(if open { "Collapse" } else { "Expand" })));
+            ui.push_id(open, |ui| disclosure_button_at(ui, rect, open, torno_ui_text::tr_label(if open { "Collapse" } else { "Expand" })));
         }
     }),
     element!("panel_disclosure_button_at", |ui, _| {
         let t = Tokens::get();
         for open in [true, false] {
             let (rect, _) = ui.allocate_exact_size(vec2(t.form_close_size, t.form_close_size), egui::Sense::hover());
-            ui.push_id(open, |ui| panel_disclosure_button_at(ui, rect, open, solidcraft_ui_text::tr_label(if open { "Collapse" } else { "Expand" })));
+            ui.push_id(open, |ui| panel_disclosure_button_at(ui, rect, open, torno_ui_text::tr_label(if open { "Collapse" } else { "Expand" })));
         }
     }),
     element!("dropdown_indicator", |ui, _| {
@@ -1966,7 +1966,7 @@ pub const ELEMENTS: &[Element] = &[
         let (rect, response) = ui.allocate_exact_size(vec2(t.form_button_height * 3.0, t.form_button_height * 2.0), egui::Sense::click());
         ui.painter().add(persistent_button_shape(ui, &response, rect));
         ui.painter().text(rect.center(), egui::Align2::CENTER_CENTER, "Selected", crate::type_face::semibold(t.font_label), t.selected_ink);
-        solidcraft_ui_registry::publish_target("gallery:persistent_button", rect);
+        torno_ui_registry::publish_target("gallery:persistent_button", rect);
     }),
     element!("native_button_focus", "gallery:native_button_focus", Some("gallery:native_button_focus"), |ui, _| {
         let t = Tokens::get();
@@ -1974,7 +1974,7 @@ pub const ELEMENTS: &[Element] = &[
         response.request_focus();
         ui.painter().rect_filled(rect, t.radius_sm, t.control_fill);
         ui.painter().add(native_button_focus(ui, &response, rect));
-        solidcraft_ui_registry::publish_target("gallery:native_button_focus", rect);
+        torno_ui_registry::publish_target("gallery:native_button_focus", rect);
     }),
     element!("button", "dialog:row:Gallery", Some("dialog:button:Gallery:Add"), |ui, _| {
         row(ui, "Gallery", |ui| {
@@ -2139,7 +2139,7 @@ pub fn example(ui: &mut Ui, element: &Element) -> (&'static str, Option<&'static
         // actual shadow bounds as part of the gallery sample, keeping the paint guard strict.
         ui.expand_to_include_rect(rect + Menu::frame().shadow.margin());
     }
-    solidcraft_ui_registry::publish_rect("gallery:allocation", rect);
+    torno_ui_registry::publish_rect("gallery:allocation", rect);
     (element.rect, element.handle)
 }
 
@@ -2153,20 +2153,20 @@ fn every_element_has_geometry_and_stays_in_its_allocation_in_both_themes() {
 /// `context()`.
 #[cfg(any(test, feature = "test-support"))]
 pub fn check_elements(elements: &[Element], context: fn() -> egui::Context) {
-    let previous = solidcraft_theme::is_dark();
+    let previous = torno_theme::is_dark();
     for dark in [false, true] {
-        solidcraft_theme::set_dark(dark);
+        torno_theme::set_dark(dark);
         for element in elements {
             let name = element.name;
             let ctx = context();
             ctx.set_visuals(if dark { egui::Visuals::dark() } else { egui::Visuals::light() });
             for pass in 0..3 {
                 let events = if element.name.starts_with("checkbox_hovered") && pass > 0 {
-                    vec![egui::Event::PointerMoved(solidcraft_ui_registry::rect_of("gallery:allocation").expect("hover allocation").center())]
+                    vec![egui::Event::PointerMoved(torno_ui_registry::rect_of("gallery:allocation").expect("hover allocation").center())]
                 } else {
                     vec![]
                 };
-                solidcraft_ui_registry::clear_handles();
+                torno_ui_registry::clear_handles();
                 let mut allocation = egui::Rect::NOTHING;
                 let mut published = ("", None);
                 let mut output = ctx.run_ui(
@@ -2188,12 +2188,12 @@ pub fn check_elements(elements: &[Element], context: fn() -> egui::Context) {
                     },
                 );
                 output.textures_delta.clear();
-                let rect = solidcraft_ui_registry::rect_of(published.0).unwrap_or_else(|| panic!("{name}: missing {}", published.0));
+                let rect = torno_ui_registry::rect_of(published.0).unwrap_or_else(|| panic!("{name}: missing {}", published.0));
                 assert!(rect.is_finite() && rect.is_positive(), "{name}: {rect:?}");
                 assert!(allocation.expand(1.0).contains_rect(rect), "{name}: {rect:?} outside {allocation:?}");
                 if let Some(handle) = published.1 {
                     assert!(
-                        rect.contains(solidcraft_ui_registry::handle_at(handle).unwrap_or_else(|| panic!("{name}: missing {handle}"))),
+                        rect.contains(torno_ui_registry::handle_at(handle).unwrap_or_else(|| panic!("{name}: missing {handle}"))),
                         "{name}: handle outside {rect:?}"
                     );
                 }
@@ -2215,7 +2215,7 @@ pub fn check_elements(elements: &[Element], context: fn() -> egui::Context) {
             }
         }
     }
-    solidcraft_theme::set_dark(previous);
+    torno_theme::set_dark(previous);
 }
 
 #[test]
@@ -2227,7 +2227,7 @@ fn apply_does_not_submit_and_obeys_validation() {
             action = footer(ui, "OK", "Cancel", enabled, Footer { apply: Some("Apply"), ..Default::default() });
         };
         super::test_support::frame(&ctx, vec![], &mut draw);
-        let at = solidcraft_ui_registry::handle_at("dialog:apply").unwrap();
+        let at = torno_ui_registry::handle_at("dialog:apply").unwrap();
         super::test_support::frame(&ctx, super::test_support::pointer(at, true), &mut draw);
         super::test_support::frame(&ctx, super::test_support::pointer(at, false), &mut draw);
         assert_eq!(action, if enabled { Action::Apply } else { Action::None });
@@ -2242,7 +2242,7 @@ fn picked_item_remove_and_paired_values_have_independent_targets() {
         removed = list_row(ui, "point-1", "Point 1").clicked();
     };
     super::test_support::frame(&ctx, vec![], &mut draw);
-    let at = solidcraft_ui_registry::handle_at("dialog:list:point-1:remove").unwrap();
+    let at = torno_ui_registry::handle_at("dialog:list:point-1:remove").unwrap();
     super::test_support::frame(&ctx, super::test_support::pointer(at, true), &mut draw);
     super::test_support::frame(&ctx, super::test_support::pointer(at, false), &mut draw);
     assert!(removed);
@@ -2253,9 +2253,9 @@ fn picked_item_remove_and_paired_values_have_independent_targets() {
         value_pair(ui, "Position", [&mut x, &mut y], ["X", "Y"], None);
     };
     super::test_support::frame(&ctx, vec![], &mut draw);
-    let row = solidcraft_ui_registry::rect_of("dialog:row:Position").unwrap();
-    let first = solidcraft_ui_registry::handle_at("dialog:X").unwrap();
-    let second = solidcraft_ui_registry::handle_at("dialog:Y").unwrap();
+    let row = torno_ui_registry::rect_of("dialog:row:Position").unwrap();
+    let first = torno_ui_registry::handle_at("dialog:X").unwrap();
+    let second = torno_ui_registry::handle_at("dialog:Y").unwrap();
     assert_eq!(row.height(), Tokens::get().control_height);
     assert!(row.contains(first) && row.contains(second) && first.x < second.x);
     super::test_support::frame(&ctx, super::test_support::pointer(second, true), &mut draw);
@@ -2267,9 +2267,9 @@ fn picked_item_remove_and_paired_values_have_independent_targets() {
 
 #[test]
 fn gallery_rows_share_a_label_column_after_measurement_in_both_themes() {
-    let previous = solidcraft_theme::is_dark();
+    let previous = torno_theme::is_dark();
     for dark in [false, true] {
-        solidcraft_theme::set_dark(dark);
+        torno_theme::set_dark(dark);
         let ctx = super::test_support::context();
         let mut value = "3".to_owned();
         for _ in 0..3 {
@@ -2282,15 +2282,15 @@ fn gallery_rows_share_a_label_column_after_measurement_in_both_themes() {
                 });
             });
         }
-        let first = solidcraft_ui_registry::rect_of("dialog:control:Edges").unwrap();
-        let second = solidcraft_ui_registry::rect_of("dialog:control:Counterbore depth").unwrap();
+        let first = torno_ui_registry::rect_of("dialog:control:Edges").unwrap();
+        let second = torno_ui_registry::rect_of("dialog:control:Counterbore depth").unwrap();
         assert_eq!(first.left(), second.left());
         assert_eq!(first.height(), Tokens::get().control_height);
         assert_eq!(second.height(), Tokens::get().control_height);
-        let width = solidcraft_ui_registry::rect_of("dialog:label:Edges").unwrap().width();
+        let width = torno_ui_registry::rect_of("dialog:label:Edges").unwrap().width();
         assert!(width >= Tokens::get().form_label_width && width <= Tokens::get().form_label_width * 1.6);
     }
-    solidcraft_theme::set_dark(previous);
+    torno_theme::set_dark(previous);
 }
 
 #[test]
@@ -2308,14 +2308,14 @@ fn compound_row_actions_preserve_the_original_field_handle() {
                         field(ui, &mut value);
                     },
                 );
-                expected = solidcraft_ui_registry::handle_at("dialog:Mid Radius");
+                expected = torno_ui_registry::handle_at("dialog:Mid Radius");
                 button(ui, "×", Button::Small);
             });
         });
     });
-    assert_eq!(solidcraft_ui_registry::handle_at("dialog:Mid Radius"), expected);
+    assert_eq!(torno_ui_registry::handle_at("dialog:Mid Radius"), expected);
     assert!(expected.is_some());
-    assert_ne!(solidcraft_ui_registry::handle_at("dialog:button:Mid Radius:×"), expected);
+    assert_ne!(torno_ui_registry::handle_at("dialog:button:Mid Radius:×"), expected);
 }
 
 #[test]
@@ -2339,7 +2339,7 @@ fn emphasis_and_compact_modes_keep_independent_actions_in_both_themes() {
         };
         super::test_support::frame(&ctx, vec![], &mut draw);
         for handle in ["dialog:Bold", "dialog:Italic", "dialog:Alignment:Long translated centre"] {
-            let at = solidcraft_ui_registry::handle_at(handle).unwrap();
+            let at = torno_ui_registry::handle_at(handle).unwrap();
             super::test_support::frame(&ctx, super::test_support::pointer(at, true), &mut draw);
             super::test_support::frame(&ctx, super::test_support::pointer(at, false), &mut draw);
         }
@@ -2372,8 +2372,8 @@ fn table_cells_keep_alignment_fixed_rows_editing_and_action_targets() {
                                 });
                                 row.cell(|ui| {
                                     let response = cell_editor(ui, ui.scope_id().with("expression"), value, "Expression", false);
-                                    solidcraft_ui_registry::publish_handle(&format!("gallery:cell:{name}"), response.rect.center());
-                                    solidcraft_ui_registry::publish_rect(&format!("gallery:cell:{name}"), response.rect);
+                                    torno_ui_registry::publish_handle(&format!("gallery:cell:{name}"), response.rect.center());
+                                    torno_ui_registry::publish_rect(&format!("gallery:cell:{name}"), response.rect);
                                 });
                                 row.cell(|ui| {
                                     if button(ui, "Delete", Button::Small).clicked() {
@@ -2389,18 +2389,18 @@ fn table_cells_keep_alignment_fixed_rows_editing_and_action_targets() {
         for _ in 0..3 {
             super::test_support::frame(&ctx, vec![], &mut draw);
         }
-        let first_rect = solidcraft_ui_registry::rect_of("gallery:cell:Width").unwrap();
-        let second_rect = solidcraft_ui_registry::rect_of("gallery:cell:Height").unwrap();
-        let header = solidcraft_ui_registry::rect_of("dialog:column:cells:Expression").unwrap();
+        let first_rect = torno_ui_registry::rect_of("gallery:cell:Width").unwrap();
+        let second_rect = torno_ui_registry::rect_of("gallery:cell:Height").unwrap();
+        let header = torno_ui_registry::rect_of("dialog:column:cells:Expression").unwrap();
         assert_eq!(first_rect.left(), header.left());
         assert_eq!(second_rect.left(), header.left());
         assert_eq!(first_rect.height(), Tokens::get().control_height);
         assert_eq!(second_rect.height(), Tokens::get().control_height);
-        let at = solidcraft_ui_registry::handle_at("gallery:cell:Height").unwrap();
+        let at = torno_ui_registry::handle_at("gallery:cell:Height").unwrap();
         super::test_support::frame(&ctx, super::test_support::pointer(at, true), &mut draw);
         super::test_support::frame(&ctx, super::test_support::pointer(at, false), &mut draw);
         super::test_support::frame(&ctx, vec![egui::Event::Text("x".into())], &mut draw);
-        let delete = solidcraft_ui_registry::handle_at("dialog:button:Actions:Delete").unwrap();
+        let delete = torno_ui_registry::handle_at("dialog:button:Actions:Delete").unwrap();
         super::test_support::frame(&ctx, super::test_support::pointer(delete, true), &mut draw);
         super::test_support::frame(&ctx, super::test_support::pointer(delete, false), &mut draw);
         assert_eq!(first, "10 mm");
@@ -2431,7 +2431,7 @@ fn popup_suggestions_and_selectable_lists_keep_click_selection() {
         for _ in 0..3 {
             super::test_support::frame(&ctx, vec![], &mut draw);
         }
-        let at = solidcraft_ui_registry::handle_at("dialog:suggestion:1").unwrap();
+        let at = torno_ui_registry::handle_at("dialog:suggestion:1").unwrap();
         super::test_support::frame(&ctx, super::test_support::pointer(at, true), &mut draw);
         super::test_support::frame(&ctx, super::test_support::pointer(at, false), &mut draw);
         assert_eq!(selected, Some(1));
@@ -2444,7 +2444,7 @@ fn popup_suggestions_and_selectable_lists_keep_click_selection() {
             });
         };
         super::test_support::frame(&ctx, vec![], &mut draw);
-        let at = solidcraft_ui_registry::handle_at("dialog:list:preset").unwrap();
+        let at = torno_ui_registry::handle_at("dialog:list:preset").unwrap();
         super::test_support::frame(&ctx, super::test_support::pointer(at, true), &mut draw);
         super::test_support::frame(&ctx, super::test_support::pointer(at, false), &mut draw);
         assert!(picked);
@@ -2545,9 +2545,9 @@ fn history_seam_example(ui: &mut Ui, state: HistoryHandleState) {
 fn material_widgets_board_in_both_themes() {
     use super::test_support::{raster, textures_update};
     use std::collections::HashMap;
-    let previous = solidcraft_theme::is_dark();
+    let previous = torno_theme::is_dark();
     for dark in [false, true] {
-        solidcraft_theme::set_dark(dark);
+        torno_theme::set_dark(dark);
         let ctx = super::test_support::context();
         let bounds = egui::Rect::from_min_size(egui::Pos2::ZERO, vec2(360.0, 240.0));
         let mut textures = HashMap::new();
@@ -2569,12 +2569,12 @@ fn material_widgets_board_in_both_themes() {
         }
         let image = image.unwrap();
         assert!(image.pixels().any(|p| p.0[3] != 0));
-        if let Some(dir) = std::env::var_os("SOLIDCRAFT_MATERIAL_WIDGET_EVIDENCE") {
+        if let Some(dir) = std::env::var_os("TORNO_MATERIAL_WIDGET_EVIDENCE") {
             std::fs::create_dir_all(&dir).unwrap();
             image.save(std::path::Path::new(&dir).join(if dark { "material-widgets-dark.png" } else { "material-widgets-light.png" })).unwrap();
         }
     }
-    solidcraft_theme::set_dark(previous);
+    torno_theme::set_dark(previous);
 }
 
 #[test]
@@ -2689,14 +2689,14 @@ fn preset_card_and_help_icon_behave() {
 }
 
 /// Light and dark boards of the shared Preferences widgets and of every figure, rendered on the CPU.
-/// Set `SOLIDCRAFT_PREFERENCE_WIDGET_EVIDENCE` to a directory to keep the PNGs.
+/// Set `TORNO_PREFERENCE_WIDGET_EVIDENCE` to a directory to keep the PNGs.
 #[test]
 fn preference_widgets_and_figures_board_in_both_themes() {
     use super::test_support::{raster, textures_update};
     use std::collections::HashMap;
-    let previous = solidcraft_theme::is_dark();
+    let previous = torno_theme::is_dark();
     for dark in [false, true] {
-        solidcraft_theme::set_dark(dark);
+        torno_theme::set_dark(dark);
         for (board, names) in [
             ("widgets", &["picture_card", "toggle_tile", "preset_card", "help_icon", "theme_browser", "preference_theme_thumbnails"][..]),
             ("figures", &["preference_figures"][..]),
@@ -2728,7 +2728,7 @@ fn preference_widgets_and_figures_board_in_both_themes() {
                 }
                 let image = image.unwrap();
                 assert!(image.pixels().any(|p| p.0[3] != 0));
-                if let Some(dir) = std::env::var_os("SOLIDCRAFT_PREFERENCE_WIDGET_EVIDENCE") {
+                if let Some(dir) = std::env::var_os("TORNO_PREFERENCE_WIDGET_EVIDENCE") {
                     std::fs::create_dir_all(&dir).unwrap();
                     let suffix = if scale > 1.0 { "@2x" } else { "" };
                     image
@@ -2738,5 +2738,5 @@ fn preference_widgets_and_figures_board_in_both_themes() {
             }
         }
     }
-    solidcraft_theme::set_dark(previous);
+    torno_theme::set_dark(previous);
 }

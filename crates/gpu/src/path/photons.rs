@@ -1,7 +1,7 @@
 //! Opt-in, prepaid GPU caustic photon storage and cancellable measured prepasses.
 //! Legacy jobs retain the original six-storage-buffer shader/layout unchanged.
 use super::*;
-use solidcraft_render::job::{
+use torno_render::job::{
     CausticOptions,
     photon_sources::{self as power, MAX_PHOTON_SOURCES, PhotonSourceDistribution},
 };
@@ -96,7 +96,7 @@ pub(super) fn validate_scene(scene: &ProductScene, options: JobOptions) -> Resul
     if options.volume.is_some_and(|volume| volume.active()) {
         return Err(JobError::new(ErrorCode::InvalidRequest, "caustic photons cannot combine with active external volume transport"));
     }
-    let validate = |transmission: Option<solidcraft_render::transmission::Transmission>| -> Result<()> {
+    let validate = |transmission: Option<torno_render::transmission::Transmission>| -> Result<()> {
         if let Some(optics) = transmission
             && optics.shadow_transmission()
             && optics.thin_wall_thickness_mm().is_none()
@@ -125,8 +125,7 @@ pub(super) fn validate_punctual_origins(scene: &ProductScene, origin: Vec3, opti
     if options.caustics.is_none() {
         return Ok(());
     }
-    let closed =
-        |optics: Option<solidcraft_render::transmission::Transmission>| optics.is_some_and(|optics| optics.thin_wall_thickness_mm().is_none());
+    let closed = |optics: Option<torno_render::transmission::Transmission>| optics.is_some_and(|optics| optics.thin_wall_thickness_mm().is_none());
     if let Some(lighting) = options.lighting {
         for light in lighting.punctual_lights.iter() {
             let parameters = punctual_parameters(light, origin);
@@ -148,11 +147,11 @@ pub(super) fn validate_punctual_origins(scene: &ProductScene, origin: Vec3, opti
                         let relative = *body.mesh.positions.get(*index as usize).ok_or_else(|| gpu("invalid photon optical vertex"))? - origin;
                         *point = Vec3::new(f64::from(relative.x as f32), f64::from(relative.y as f32), f64::from(relative.z as f32));
                     }
-                    let bounds = points.into_iter().collect::<solidcraft_geom::Aabb3>();
+                    let bounds = points.into_iter().collect::<torno_geom::Aabb3>();
                     if !bounds.inflated(uncertainty).contains(point) {
                         continue;
                     }
-                    if let Ok(normal) = solidcraft_viewport::surface::unit_direction((points[1] - points[0]).cross(points[2] - points[0]))
+                    if let Ok(normal) = torno_viewport::surface::unit_direction((points[1] - points[0]).cross(points[2] - points[0]))
                         && (point - points[0]).dot(normal).abs() <= uncertainty
                     {
                         return Err(JobError::new(

@@ -11,8 +11,8 @@ use crate::test_support::each_shape as each;
 
 /// The sample with Fillet1 failing (the plate made narrower than its fillets).
 fn failing_sample() -> SolveApp {
-    let mut s = solidcraft_engine::Session::default();
-    s.run_script(&solidcraft_engine::sample::script()).unwrap();
+    let mut s = torno_engine::Session::default();
+    s.run_script(&torno_engine::sample::script()).unwrap();
     s.execute("parameters.change", &json!({"name": "width", "expression": "5 mm"})).unwrap();
     SolveApp::new(s, crate::Services::default())
 }
@@ -168,7 +168,7 @@ fn a_sketchs_icon_takes_its_states_colour_in_both_histories_and_the_browser() {
     assert!(report("Fixed").ok() && report("Fixed").dof == 0);
     assert!(!report("Reach").ok(), "{:?}", report("Reach"));
     let states = crate::sketch_state::SketchStates::of(&h.app);
-    let t = solidcraft_theme::Tokens::get();
+    let t = torno_theme::Tokens::get();
     let want = [("Guide", t.sketch), ("Fixed", t.sketch_fixed), ("Reach", t.error)];
     for (name, colour) in want {
         let id = h.app.session.doc.find_feature(name).unwrap().id;

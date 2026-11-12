@@ -32,6 +32,6 @@
   "ungraded": [],
   "what": "two parallel box edges",
   "why_not": [
-    "the failure is SolidCraft's, not a kernel operation's: step 2 (construct.point.two_edges): the edges are parallel"
+    "the failure is Torno's, not a kernel operation's: step 2 (construct.point.two_edges): the edges are parallel"
   ]
 }

@@ -1,10 +1,10 @@
-# solidcraft-viewport-gpu
+# torno-viewport-gpu
 
 The shared viewport renderer's GPU work, on wgpu: the viewport's render pipelines, pictures drawn
 offscreen with them, adapter selection for headless devices, and display plans (solidcore-tess's)
-evaluated in a compute shader. It draws what `solidcraft-viewport` describes (cameras, scenes,
+evaluated in a compute shader. It draws what `torno-viewport` describes (cameras, scenes,
 shading models) and is the same in a window and in a headless picture, so the two shade alike. Its
-workspace dependencies are `solidcraft-viewport` and `solidcraft-color`. The shaders are in
+workspace dependencies are `torno-viewport` and `torno-color`. The shaders are in
 `shaders/`.
 
 The crate reads no environment of an app's: the host chooses the adapter policy and whether bodies

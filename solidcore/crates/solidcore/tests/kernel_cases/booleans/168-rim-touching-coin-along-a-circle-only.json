@@ -58,7 +58,7 @@
   "ungraded": [],
   "what": "a rim on a coin's top face that meets the coin along one circle only (no shared area, no shared volume): it must not be joined into it",
   "why_not": [
-    "body \"Coin\" is no kernel operation's output nor an operand: SolidCraft built it or changed the kernel's record",
-    "body \"Coin (1)\" is no kernel operation's output nor an operand: SolidCraft built it or changed the kernel's record"
+    "body \"Coin\" is no kernel operation's output nor an operand: Torno built it or changed the kernel's record",
+    "body \"Coin (1)\" is no kernel operation's output nor an operand: Torno built it or changed the kernel's record"
   ]
 }

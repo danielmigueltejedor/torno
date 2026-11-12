@@ -40,7 +40,7 @@ pub struct StepHeader {
     pub time_stamp: String,
     pub author: String,
     pub organization: String,
-    /// FILE_DESCRIPTION text; `SolidCraft model` when empty.
+    /// FILE_DESCRIPTION text; `Torno model` when empty.
     pub description: String,
 }
 
@@ -73,7 +73,7 @@ fn rigid_frame(m: &[[f64; 4]; 4]) -> Result<([f64; 3], [f64; 3], [f64; 3])> {
 
 /// STEP text (AP242) for products with bodies and assembly placements; `root` is the top product.
 pub fn step_export_products(products: &[ExportProduct], root: usize, header: &StepHeader) -> Result<String> {
-    let _span = solidcraft_profile::span("kernel", "step_export_products");
+    let _span = torno_profile::span("kernel", "step_export_products");
     if products.is_empty() || root >= products.len() {
         return Err(KernelError::Invalid("nothing to export".into()));
     }
@@ -263,11 +263,11 @@ pub fn step_export_products(products: &[ExportProduct], root: usize, header: &St
 
     let mut text = String::new();
     text.push_str("ISO-10303-21;\nHEADER;\n");
-    let description = if header.description.is_empty() { "SolidCraft model" } else { header.description.as_str() };
+    let description = if header.description.is_empty() { "Torno model" } else { header.description.as_str() };
     let _ = writeln!(text, "FILE_DESCRIPTION(({}),'2;1');", string(description));
     let _ = writeln!(
         text,
-        "FILE_NAME({},{},({}),({}),'SolidCraft','SolidCraft','');",
+        "FILE_NAME({},{},({}),({}),'Torno','Torno','');",
         string(&header.file_name),
         string(&header.time_stamp),
         string(&header.author),
@@ -300,7 +300,7 @@ fn style(w: &mut Writer, item: u64, c: [f32; 3], opacity: f32) -> u64 {
 
 /// STEP text for bodies of one part (names `Body1`…).
 pub fn step_export_bodies(bodies: &[ExportBody], header: &StepHeader) -> Result<String> {
-    let _span = solidcraft_profile::span("kernel", "step_export_bodies");
+    let _span = torno_profile::span("kernel", "step_export_bodies");
     let name = if header.file_name.is_empty() {
         "Part".to_string()
     } else {
@@ -320,7 +320,7 @@ mod tests {
     use solidcore_record::Vec3;
     use solidcore_step::p21;
     use solidcore_step::write::real;
-    use solidcraft_geom::prelude::*;
+    use torno_geom::prelude::*;
 
     #[test]
     fn islands_are_solids_of_their_own_not_voids() {

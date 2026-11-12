@@ -8,7 +8,7 @@ use serde::de::Error as _;
 use serde::{Deserialize, Deserializer};
 use serde_json::Value;
 use solidcore_record::Vec3;
-use solidcraft_kernel::{Construction, Continuity};
+use torno_kernel::{Construction, Continuity};
 
 use super::check::whole;
 use super::types::{Point3, StringList, present};

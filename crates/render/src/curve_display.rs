@@ -1,9 +1,9 @@
 //! Pixel-bounded display paths. CAD segments remain untouched; positive homogeneous
 //! control hulls bound perspective projection, including looping and rational curves.
 use solidcore_record::{Plane, Seg2, Vec2, Vec3};
-use solidcraft_geom::prelude::*;
+use torno_geom::prelude::*;
 
-use solidcraft_viewport::Mat4;
+use torno_viewport::Mat4;
 
 const MAX_VERTICES: usize = 4096;
 const MAX_DEPTH: u8 = 24;

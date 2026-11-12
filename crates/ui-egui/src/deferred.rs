@@ -4,11 +4,11 @@
 //! after the marker (a line of text cut into a block), each of these ran that feature's boolean
 //! on the window thread, and the window froze until it was done.
 //!
-//! The command is evaluated on a copy of the session ([`solidcraft_engine::Session::ahead`]),
+//! The command is evaluated on a copy of the session ([`torno_engine::Session::ahead`]),
 //! which leaves what it computes in the evaluation cache the session shares. Done within the
 //! app's wait ([`crate::dialogs::APPLY_AT_ONCE`]), the command just runs; otherwise the window
 //! goes on, saying it computes, and the command runs for real once the evaluation is in, taking
-//! the features it evaluated ([`solidcraft_engine::Session::prime`]) rather than computing them
+//! the features it evaluated ([`torno_engine::Session::prime`]) rather than computing them
 //! again. Commands asked for meanwhile wait their turn; a marker moved again
 //! replaces the move still waiting, so a drag computes where it ends rather than every slot it
 //! crossed.
@@ -25,29 +25,29 @@ use crate::SolveApp;
 
 /// A command computing off the window thread.
 pub struct Deferred {
-    done: std::sync::mpsc::Receiver<Option<solidcraft_engine::Evaluated>>,
+    done: std::sync::mpsc::Receiver<Option<torno_engine::Evaluated>>,
     /// What it evaluated, once in (`Some(None)`: it failed, or its thread is gone).
-    evaluated: Option<Option<solidcraft_engine::Evaluated>>,
+    evaluated: Option<Option<torno_engine::Evaluated>>,
     /// When it started (ms).
     pub(crate) started: f64,
     pub(crate) command: (String, Value),
     /// The design's revision it was computed for: a design changed meanwhile computes it again.
     revision: u64,
     /// How far its evaluation is, and its Cancel ([`crate::operations`]).
-    pub(crate) progress: std::sync::Arc<solidcraft_engine::doc::progress::Progress>,
+    pub(crate) progress: std::sync::Arc<torno_engine::doc::progress::Progress>,
     /// Which operation it is ([`crate::operations::serial`]), the same while it waits its turn,
     /// computes and computes again.
     pub(crate) serial: u64,
     /// Every result the evaluation ahead computed, whatever the evaluation cache dropped since,
     /// for the run here (a parameter change evaluates twice: the first evaluation is not the
     /// one `evaluated` holds).
-    kept: Option<std::sync::Arc<solidcraft_engine::doc::KeptResults>>,
+    kept: Option<std::sync::Arc<torno_engine::doc::KeptResults>>,
 }
 
 impl Deferred {
     /// Tests: `command` computing until the returned sender goes.
     #[cfg(test)]
-    pub(crate) fn held(command: &str) -> (Deferred, std::sync::mpsc::Sender<Option<solidcraft_engine::Evaluated>>) {
+    pub(crate) fn held(command: &str) -> (Deferred, std::sync::mpsc::Sender<Option<torno_engine::Evaluated>>) {
         let (tx, done) = std::sync::mpsc::channel();
         let job = Deferred {
             done,
@@ -78,7 +78,7 @@ impl Deferred {
 impl Deferred {
     /// A command that never finishes computing, with the sender that keeps it so, for the tests
     /// of what waits for one (the real worker would finish in a moment).
-    pub(crate) fn never_done(id: &str, params: Value, revision: u64) -> (Self, std::sync::mpsc::Sender<Option<solidcraft_engine::Evaluated>>) {
+    pub(crate) fn never_done(id: &str, params: Value, revision: u64) -> (Self, std::sync::mpsc::Sender<Option<torno_engine::Evaluated>>) {
         let (tx, rx) = std::sync::mpsc::channel();
         let job = Deferred {
             done: rx,
@@ -111,7 +111,7 @@ enum Start {
     #[cfg_attr(target_arch = "wasm32", allow(dead_code))]
     Later(Deferred),
     /// It runs now, with what was evaluated for it ahead (if anything).
-    Now(Option<solidcraft_engine::Evaluated>, Option<std::sync::Arc<solidcraft_engine::doc::KeptResults>>),
+    Now(Option<torno_engine::Evaluated>, Option<std::sync::Arc<torno_engine::doc::KeptResults>>),
 }
 
 /// A delete's check computing off the window thread: each check command's reply, in order.
@@ -122,11 +122,11 @@ pub struct DeleteCheck {
     then: AfterCheck,
     /// What the check computes, for the delete itself to find instead of building it again on
     /// the window thread (#9917).
-    kept: std::sync::Arc<solidcraft_engine::doc::KeptResults>,
+    kept: std::sync::Arc<torno_engine::doc::KeptResults>,
     /// The design's revision it was computed for: a design changed meanwhile checks again.
     revision: u64,
     /// How far its evaluation is, and its Cancel ([`crate::operations`]).
-    pub(crate) progress: std::sync::Arc<solidcraft_engine::doc::progress::Progress>,
+    pub(crate) progress: std::sync::Arc<torno_engine::doc::progress::Progress>,
 }
 
 /// A computation dropped unfinished (cancelled, or its result no longer wanted) stops at its
@@ -167,7 +167,7 @@ impl AfterCheck {
     }
 
     /// Carry on with the check's replies, and what it `kept` (when it ran ahead) for the delete.
-    fn finish(self, app: &mut SolveApp, replies: Vec<Result<Value, String>>, kept: Option<std::sync::Arc<solidcraft_engine::doc::KeptResults>>) {
+    fn finish(self, app: &mut SolveApp, replies: Vec<Result<Value, String>>, kept: Option<std::sync::Arc<torno_engine::doc::KeptResults>>) {
         match self {
             AfterCheck::Timeline { features, groups } => {
                 let reports: Vec<Value> = replies.into_iter().map(Result::unwrap_or_default).collect();
@@ -267,8 +267,8 @@ impl SolveApp {
         &mut self,
         id: &str,
         params: Value,
-        evaluated: Option<&solidcraft_engine::Evaluated>,
-        kept: Option<std::sync::Arc<solidcraft_engine::doc::KeptResults>>,
+        evaluated: Option<&torno_engine::Evaluated>,
+        kept: Option<std::sync::Arc<torno_engine::doc::KeptResults>>,
     ) -> Result<Value, String> {
         if let Some(evaluated) = evaluated {
             self.session.prime(evaluated);
@@ -324,10 +324,10 @@ impl SolveApp {
             let kept = ahead.kept();
             let (tx, rx) = std::sync::mpsc::channel();
             let checks = commands.clone();
-            let progress = std::sync::Arc::new(solidcraft_engine::doc::progress::Progress::default());
+            let progress = std::sync::Arc::new(torno_engine::doc::progress::Progress::default());
             let watching = progress.clone();
             let spawned = std::thread::Builder::new().name("delete check".into()).spawn(move || {
-                let replies = solidcraft_engine::doc::progress::watch(watching, || ahead.replies(&checks));
+                let replies = torno_engine::doc::progress::watch(watching, || ahead.replies(&checks));
                 let _ = tx.send(replies.into_iter().map(|r| r.map_err(|e| e.to_string())).collect());
             });
             if spawned.is_ok() {
@@ -413,11 +413,11 @@ impl SolveApp {
         let command = (id.to_string(), params.clone());
         let commands = vec![command.clone()];
         let (tx, rx) = std::sync::mpsc::channel();
-        let progress = std::sync::Arc::new(solidcraft_engine::doc::progress::Progress::default());
+        let progress = std::sync::Arc::new(torno_engine::doc::progress::Progress::default());
         let watching = progress.clone();
         let spawned = std::thread::Builder::new().name("history".into()).spawn(move || {
             let cancelled = watching.clone();
-            let evaluated = solidcraft_engine::doc::progress::watch(watching, || ahead.evaluate(&commands).ok());
+            let evaluated = torno_engine::doc::progress::watch(watching, || ahead.evaluate(&commands).ok());
             // A cancelled evaluation skipped features: what it holds is not the design's.
             let _ = tx.send(evaluated.filter(|_| !cancelled.is_cancelled()));
         });

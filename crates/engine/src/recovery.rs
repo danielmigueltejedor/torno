@@ -14,20 +14,20 @@ use std::sync::Arc;
 use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 
 use serde::{Deserialize, Serialize};
-use solidcraft_doc::Document;
+use torno_doc::Document;
 
 use crate::{EngineError, Result, Session};
 
-/// The recovery folder: `SOLIDCRAFT_RECOVERY_DIR`, else the platform's per-user data folder.
+/// The recovery folder: `TORNO_RECOVERY_DIR`, else the platform's per-user data folder.
 /// Spelled with long names (`vfs::long_names`): an agent's commands reach it by this path, and
 /// short (8.3) names are refused there.
 pub fn default_dir() -> Option<PathBuf> {
-    use solidcraft_io::vfs::long_names;
+    use torno_io::vfs::long_names;
     // Tests never touch the user's real recovery folder.
     if cfg!(test) {
-        return Some(solidcraft_io::vfs::temp_dir().join(format!("solidcraft-test-recovery-{}", std::process::id())));
+        return Some(torno_io::vfs::temp_dir().join(format!("torno-test-recovery-{}", std::process::id())));
     }
-    if let Some(d) = solidcraft_geom::env::var_os("RECOVERY_DIR").filter(|d| !d.is_empty()) {
+    if let Some(d) = torno_geom::env::var_os("RECOVERY_DIR").filter(|d| !d.is_empty()) {
         return Some(long_names(Path::new(&d)));
     }
     let env = |k: &str| std::env::var_os(k).filter(|d| !d.is_empty()).map(PathBuf::from);
@@ -42,33 +42,33 @@ pub fn default_dir() -> Option<PathBuf> {
     // Compatibility shim (docs/compatibility.md): autosaves made before the rename (or, in the
     // Flatpak sandbox, under an earlier app id) are copied to the new folder on first launch; the
     // old folder is left as it was.
-    for old in solidcraft_io::legacy_flatpak_paths(&dir).into_iter().chain([legacy]) {
-        if let Err(e) = solidcraft_io::adopt_legacy_dir(&dir, &old) {
+    for old in torno_io::legacy_flatpak_paths(&dir).into_iter().chain([legacy]) {
+        if let Err(e) = torno_io::adopt_legacy_dir(&dir, &old) {
             log::warn!("recovery: could not copy {} to {}: {e}", old.display(), dir.display());
         }
     }
     Some(dir)
 }
 
-/// SolidCraft's per-user data folder (the recovery folder's parent unless
-/// `SOLIDCRAFT_RECOVERY_DIR` moves that): `%LOCALAPPDATA%\SolidCraft`,
-/// `~/Library/Application Support/SolidCraft`, or `$XDG_DATA_HOME/solidcraft`
-/// (`~/.local/share/solidcraft`).
+/// Torno's per-user data folder (the recovery folder's parent unless
+/// `TORNO_RECOVERY_DIR` moves that): `%LOCALAPPDATA%\Torno`,
+/// `~/Library/Application Support/Torno`, or `$XDG_DATA_HOME/torno`
+/// (`~/.local/share/torno`).
 pub fn data_dir() -> Option<PathBuf> {
     let env = |k: &str| std::env::var_os(k).filter(|d| !d.is_empty()).map(PathBuf::from);
     if cfg!(windows) {
-        Some(env("LOCALAPPDATA")?.join("SolidCraft"))
+        Some(env("LOCALAPPDATA")?.join("Torno"))
     } else if cfg!(target_os = "macos") {
-        Some(env("HOME")?.join("Library/Application Support/SolidCraft"))
+        Some(env("HOME")?.join("Library/Application Support/Torno"))
     } else {
-        Some(env("XDG_DATA_HOME").or_else(|| env("HOME").map(|h| h.join(".local/share")))?.join("solidcraft"))
+        Some(env("XDG_DATA_HOME").or_else(|| env("HOME").map(|h| h.join(".local/share")))?.join("torno"))
     }
 }
 
 /// The recovery folder under the per-user data `root`, and the folder earlier releases used.
 /// Windows and macOS name the app's folder in title case, other systems in lower case.
 fn dirs_under(root: &Path, title_case: bool) -> (PathBuf, PathBuf) {
-    let (name, legacy) = if title_case { ("SolidCraft", "SolveCraft") } else { ("solidcraft", "solvecraft") };
+    let (name, legacy) = if title_case { ("Torno", "SolidCraft") } else { ("torno", "solidcraft") }; // rebrand: keep
     (root.join(name).join("recovery"), root.join(legacy).join("recovery"))
 }
 
@@ -117,7 +117,7 @@ fn read_entry(path: &Path) -> Option<Entry> {
 /// An entry's design: `<id>.sc`, or `<id>.solidcraft` / `<id>.solvecraft` for an autosave an
 /// earlier release wrote (compatibility shim, docs/compatibility.md).
 fn design_file(dir: &Path, id: &str) -> PathBuf {
-    solidcraft_io::DESIGN_EXTS.iter().map(|ext| file(dir, id, ext)).find(|p| p.is_file()).unwrap_or_else(|| file(dir, id, solidcraft_io::DESIGN_EXT))
+    torno_io::DESIGN_EXTS.iter().map(|ext| file(dir, id, ext)).find(|p| p.is_file()).unwrap_or_else(|| file(dir, id, torno_io::DESIGN_EXT))
 }
 
 fn file(dir: &Path, id: &str, ext: &str) -> PathBuf {
@@ -162,9 +162,9 @@ pub fn load(dir: &Path, id: &str) -> Result<(Document, Entry)> {
     }
     let entry = read_entry(&file(dir, id, "json")).filter(|e| e.id == id).ok_or_else(|| EngineError::Other(format!("no recovered design `{id}`")))?;
     let path = design_file(dir, id);
-    let bytes = solidcraft_io::limits::read(&path.to_string_lossy(), solidcraft_io::limits::Kind::Design)
+    let bytes = torno_io::limits::read(&path.to_string_lossy(), torno_io::limits::Kind::Design)
         .map_err(|e| EngineError::Other(format!("recovered design `{id}`: {e}")))?;
-    Ok((solidcraft_io::read_design(&bytes)?, entry))
+    Ok((torno_io::read_design(&bytes)?, entry))
 }
 
 /// Delete an entry. Only a real one: `<id>.json` must describe entry `id` and its design must
@@ -174,7 +174,7 @@ pub fn remove(dir: &Path, id: &str) -> Result<()> {
     if !is_entry {
         return Err(EngineError::Other(format!("no recovered design `{id}`")));
     }
-    for ext in ["json", "lock"].into_iter().chain(solidcraft_io::DESIGN_EXTS) {
+    for ext in ["json", "lock"].into_iter().chain(torno_io::DESIGN_EXTS) {
         let _ = fs::remove_file(file(dir, id, ext));
     }
     Ok(())
@@ -276,13 +276,13 @@ impl Snapshot {
     fn write(&self) -> Result<()> {
         let io = |e: std::io::Error| EngineError::Other(format!("autosave: {e}"));
         let bytes = if self.visibility.is_empty() {
-            solidcraft_io::write_design_container(&self.doc)?
+            torno_io::write_design_container(&self.doc)?
         } else {
             let mut doc = (*self.doc).clone();
             doc.visibility = self.visibility.clone();
-            solidcraft_io::write_design_container(&doc)?
+            torno_io::write_design_container(&doc)?
         };
-        solidcraft_io::write_atomic(&file(&self.dir, &self.id, solidcraft_io::DESIGN_EXT), &bytes, false).map_err(io)?;
+        torno_io::write_atomic(&file(&self.dir, &self.id, torno_io::DESIGN_EXT), &bytes, false).map_err(io)?;
         let entry = Entry {
             id: self.id.clone(),
             path: self.path.clone(),
@@ -291,7 +291,7 @@ impl Snapshot {
             features: self.doc.features.len(),
         };
         let meta = serde_json::to_vec_pretty(&entry).map_err(|e| EngineError::Other(e.to_string()))?;
-        solidcraft_io::write_atomic(&file(&self.dir, &self.id, "json"), &meta, false).map_err(io)?;
+        torno_io::write_atomic(&file(&self.dir, &self.id, "json"), &meta, false).map_err(io)?;
         Ok(())
     }
 }
@@ -385,7 +385,7 @@ impl Autosaver {
         self.last_at = Instant::now();
         if !s.is_dirty() {
             if self.has_entry {
-                for ext in ["json"].into_iter().chain(solidcraft_io::DESIGN_EXTS) {
+                for ext in ["json"].into_iter().chain(torno_io::DESIGN_EXTS) {
                     let _ = fs::remove_file(file(&self.dir, &self.id, ext));
                 }
                 self.has_entry = false;
@@ -428,7 +428,7 @@ impl Autosaver {
         // Crash replays start from this autosave from here, unless the design changed while it
         // was written: the journal then keeps the commands since its older start.
         if Arc::ptr_eq(&s.doc, &doc) {
-            crate::crash::rebased(s, Some(&file(&self.dir, &self.id, solidcraft_io::DESIGN_EXT)), true);
+            crate::crash::rebased(s, Some(&file(&self.dir, &self.id, torno_io::DESIGN_EXT)), true);
         }
         self.last = Some((doc, visibility));
         Ok(())
@@ -441,7 +441,7 @@ impl Autosaver {
         if let Some(w) = self.writing.take() {
             let _ = w.done.recv();
         }
-        for ext in ["json"].into_iter().chain(solidcraft_io::DESIGN_EXTS) {
+        for ext in ["json"].into_iter().chain(torno_io::DESIGN_EXTS) {
             let _ = fs::remove_file(file(&self.dir, &self.id, ext));
         }
         self.lock = None;
@@ -465,13 +465,13 @@ mod tests {
     fn autosave_from_a_legacy_folder_is_listed_and_loads() {
         // Autosaves written by earlier releases: `.solvecraft` (before the rename) and
         // `.solidcraft` (before designs were saved as `.sc`).
-        for ext in solidcraft_io::LEGACY_DESIGN_EXTS {
-            let d = std::env::temp_dir().join(format!("solidcraft-recovery-legacy-{ext}-{}", std::process::id()));
+        for ext in torno_io::LEGACY_DESIGN_EXTS {
+            let d = std::env::temp_dir().join(format!("torno-recovery-legacy-{ext}-{}", std::process::id()));
             let _ = fs::remove_dir_all(&d);
             fs::create_dir_all(&d).unwrap();
             let id = "1-2-3";
             let doc = Document::default();
-            fs::write(d.join(format!("{id}.{ext}")), solidcraft_io::write_design(&doc)).unwrap();
+            fs::write(d.join(format!("{id}.{ext}")), torno_io::write_design(&doc)).unwrap();
             let entry = Entry { id: id.into(), path: Some(format!("/d/part.{ext}")), name: "part".into(), saved_at: 1, features: 0 };
             fs::write(d.join(format!("{id}.json")), serde_json::to_vec(&entry).unwrap()).unwrap();
             assert_eq!(orphans(&d).iter().map(|e| e.id.as_str()).collect::<Vec<_>>(), [id], ".{ext}");
@@ -500,16 +500,16 @@ mod tests {
     #[test]
     fn recovery_dirs_and_their_legacy_names() {
         let (dir, legacy) = super::dirs_under(Path::new("/data"), false);
-        assert_eq!((dir.as_path(), legacy.as_path()), (Path::new("/data/solidcraft/recovery"), Path::new("/data/solvecraft/recovery")));
+        assert_eq!((dir.as_path(), legacy.as_path()), (Path::new("/data/torno/recovery"), Path::new("/data/solidcraft/recovery"))); // rebrand: keep
         let (dir, legacy) = super::dirs_under(Path::new("/data"), true);
-        assert_eq!((dir.as_path(), legacy.as_path()), (Path::new("/data/SolidCraft/recovery"), Path::new("/data/SolveCraft/recovery")));
+        assert_eq!((dir.as_path(), legacy.as_path()), (Path::new("/data/Torno/recovery"), Path::new("/data/SolidCraft/recovery"))); // rebrand: keep
     }
 
     use super::*;
     use serde_json::json;
 
     fn dir(tag: &str) -> PathBuf {
-        let d = std::env::temp_dir().join(format!("solidcraft-recovery-{tag}-{}", std::process::id()));
+        let d = std::env::temp_dir().join(format!("torno-recovery-{tag}-{}", std::process::id()));
         let _ = fs::remove_dir_all(&d);
         d
     }
@@ -604,7 +604,7 @@ mod tests {
         let d = dir("discard");
         fs::create_dir_all(&d).unwrap();
         let part = d.join("part.solidcraft");
-        fs::write(&part, solidcraft_io::write_design(&Document::default())).unwrap();
+        fs::write(&part, torno_io::write_design(&Document::default())).unwrap();
         let mut s = Session::default();
         let discard = |s: &mut Session, id: &str| s.execute("doc.recovery_discard", &json!({"dir": d.to_string_lossy(), "id": id}));
         let e = discard(&mut s, "part").unwrap_err();
@@ -636,9 +636,9 @@ mod tests {
         let mut t = Session::default();
         let r = t.execute("doc.recover", &json!({"dir": d.to_string_lossy(), "id": id, "discard": true})).unwrap();
         assert_eq!(r["features"], 1, "{r}");
-        assert!(orphans(&d).is_empty() && !file(&d, &id, "json").exists() && !file(&d, &id, solidcraft_io::DESIGN_EXT).exists());
+        assert!(orphans(&d).is_empty() && !file(&d, &id, "json").exists() && !file(&d, &id, torno_io::DESIGN_EXT).exists());
         let part = d.join("part.solidcraft");
-        fs::write(&part, solidcraft_io::write_design(&Document::default())).unwrap();
+        fs::write(&part, torno_io::write_design(&Document::default())).unwrap();
         assert!(t.execute("doc.recover", &json!({"dir": d.to_string_lossy(), "id": "part", "discard": true})).is_err());
         assert!(part.exists());
         let _ = fs::remove_dir_all(&d);
@@ -654,7 +654,7 @@ mod tests {
         tick_until_caught_up(&mut a, &s);
         s.mark_saved();
         a.tick(&s, false).unwrap();
-        assert!(!file(&d, &a.id, solidcraft_io::DESIGN_EXT).exists());
+        assert!(!file(&d, &a.id, torno_io::DESIGN_EXT).exists());
         a.close(&s);
         assert_eq!(fs::read_dir(&d).unwrap().count(), 0);
         // Closing with unsaved changes keeps them for the next launch.
@@ -678,7 +678,7 @@ mod tests {
         boundary.name = "x".repeat((1 << 20) - base_len);
         let oversized = Entry { id: "oversized".into(), name: "x".repeat(1 << 20), ..good.clone() };
         for entry in [&good, &boundary, &oversized] {
-            fs::write(file(&d, &entry.id, solidcraft_io::DESIGN_EXT), solidcraft_io::write_design(&Document::default())).unwrap();
+            fs::write(file(&d, &entry.id, torno_io::DESIGN_EXT), torno_io::write_design(&Document::default())).unwrap();
             fs::write(file(&d, &entry.id, "json"), serde_json::to_vec(entry).unwrap()).unwrap();
         }
         assert_eq!(fs::metadata(file(&d, "boundary", "json")).unwrap().len(), 1 << 20);
@@ -702,12 +702,12 @@ mod tests {
         let wrong = Entry { id: "other".into(), path: Some("/unrelated-design.solidcraft".into()), name: "wrong".into(), saved_at: 1, features: 0 };
         fs::write(file(&d, "actual", "json"), serde_json::to_vec(&wrong).unwrap()).unwrap();
         for id in ["actual", "other"] {
-            fs::write(file(&d, id, solidcraft_io::DESIGN_EXT), solidcraft_io::write_design(&Document::default())).unwrap();
+            fs::write(file(&d, id, torno_io::DESIGN_EXT), torno_io::write_design(&Document::default())).unwrap();
         }
         assert!(orphans(&d).is_empty(), "metadata under another ID must not be offered");
         assert!(load(&d, "actual").is_err(), "a mismatched path must not become the next save target");
         assert!(remove(&d, "actual").is_err());
-        assert!(file(&d, "actual", solidcraft_io::DESIGN_EXT).exists());
+        assert!(file(&d, "actual", torno_io::DESIGN_EXT).exists());
         fs::remove_dir_all(&d).unwrap();
     }
 

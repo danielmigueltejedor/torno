@@ -76,10 +76,10 @@
     "boolean2d"
   ],
   "ungraded": [
-    "results: SolidCraft computes it"
+    "results: Torno computes it"
   ],
   "what": "sheet.perforate, a square field over a 40 x 20 x 1 base with a 10 mm flange on its x = 40 edge: no hole within the margin of the bend zone",
   "why_not": [
-    "body \"Body1\" is no kernel operation's output nor an operand: SolidCraft built it or changed the kernel's record"
+    "body \"Body1\" is no kernel operation's output nor an operand: Torno built it or changed the kernel's record"
   ]
 }

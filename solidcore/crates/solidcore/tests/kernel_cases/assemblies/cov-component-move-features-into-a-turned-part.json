@@ -168,7 +168,7 @@
     "extrude"
   ],
   "ungraded": [
-    "results: SolidCraft computes it"
+    "results: Torno computes it"
   ],
   "what": "a sketch and its extrude moved from the design into a component placed turned and moved",
   "why_not": []

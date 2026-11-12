@@ -9,7 +9,7 @@
 //! [`Constraint::text`]: crate::Constraint::text
 
 use solidcore_record::Vec2;
-use solidcraft_geom::prelude::*;
+use torno_geom::prelude::*;
 
 use crate::model::{ConstraintKind, CurveKind, MAX_COORD, Sketch, TwoCircles};
 use crate::union_find::{find, union};

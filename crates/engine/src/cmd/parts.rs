@@ -14,7 +14,7 @@
 
 use serde_json::{Value, json};
 use solidcore_record::Vec3;
-use solidcraft_geom::prelude::*;
+use torno_geom::prelude::*;
 
 use super::CommandSpec;
 use crate::params::{bad, num, str_, vec3};
@@ -317,16 +317,16 @@ fn is_inch(family: &str) -> bool {
 /// A unified inch thread from the catalogue (`1/2-13 UNC`): its nominal size (`1/2`), and its
 /// major diameter and pitch (mm).
 fn unified(size: &str) -> Option<(String, f64, f64)> {
-    use solidcraft_doc::TappedThreadFamily::{Unc, Unf};
-    let t = solidcraft_doc::parse_tapped_thread(size).filter(|t| matches!(t.family, Unc | Unf))?;
+    use torno_doc::TappedThreadFamily::{Unc, Unf};
+    let t = torno_doc::parse_tapped_thread(size).filter(|t| matches!(t.family, Unc | Unf))?;
     let nominal = t.designation.split('-').next()?.to_string();
     Some((nominal, t.major_diameter, t.pitch))
 }
 
 /// The catalogue's threads for a nominal inch size, UNC before UNF.
-fn unified_sizes(nominal: &str) -> Vec<solidcraft_doc::TappedThread> {
-    use solidcraft_doc::TappedThreadFamily::{Unc, Unf};
-    [Unc, Unf].into_iter().flat_map(solidcraft_doc::tapped_thread_sizes).filter(|t| t.designation.split('-').next() == Some(nominal)).collect()
+fn unified_sizes(nominal: &str) -> Vec<torno_doc::TappedThread> {
+    use torno_doc::TappedThreadFamily::{Unc, Unf};
+    [Unc, Unf].into_iter().flat_map(torno_doc::tapped_thread_sizes).filter(|t| t.designation.split('-').next() == Some(nominal)).collect()
 }
 
 /// A length (mm) in fractional inches to the nearest 1/64 (`1-1/2`), or none off that grid.
@@ -769,7 +769,7 @@ fn identity(family: &str, size: &str, sh: &Shape) -> (String, String) {
 /// Give a standard part its part number and description; a field someone changed since the last
 /// size (`was`) is theirs and stays.
 fn set_identity(s: &mut Session, comp: u64, now: (String, String), was: Option<(String, String)>) {
-    use solidcraft_doc::metadata::{DESCRIPTION, Owner, PART_NUMBER};
+    use torno_doc::metadata::{DESCRIPTION, Owner, PART_NUMBER};
     let Some(c) = s.doc.components.iter().find(|c| c.id == comp) else { return };
     let mut m = c.metadata.clone();
     for (k, new, old) in [(PART_NUMBER, now.0, was.as_ref().map(|w| w.0.as_str())), (DESCRIPTION, now.1, was.as_ref().map(|w| w.1.as_str()))] {
@@ -866,7 +866,7 @@ fn insert(s: &mut Session, p: &Value) -> Result<Value> {
     let c = run(s, "component.create", json!({"name": name, "grounded": false}))?;
     let (comp, occ) = (c["component"].as_u64().unwrap_or(0), c["occurrence"].as_u64().unwrap_or(0));
     build(s, &sh)?;
-    s.doc_mut().parts.insert(comp, solidcraft_doc::StandardPart { family: family.clone(), size: size.clone(), length: shape_len(&sh) });
+    s.doc_mut().parts.insert(comp, torno_doc::StandardPart { family: family.clone(), size: size.clone(), length: shape_len(&sh) });
     set_identity(s, comp, identity(&family, &size, &sh), None);
     run(s, "component.activate", json!({"component": active}))?;
     let mut out = InsertedPart {
@@ -921,15 +921,11 @@ fn insert(s: &mut Session, p: &Value) -> Result<Value> {
     } else if let Some(pt) = p.get("point").and_then(vec3) {
         // Placed at a point, its +z along `direction`.
         let dir = p.get("direction").and_then(vec3).and_then(|d| d.normalized()).unwrap_or(Vec3::Z);
-        let m = solidcraft_doc::rigid(
-            Vec3::ZERO,
-            Vec3::ZERO,
-            Vec3::Z.cross(dir).normalized().unwrap_or(Vec3::X),
-            Vec3::Z.dot(dir).clamp(-1.0, 1.0).acos(),
-        );
+        let m =
+            torno_doc::rigid(Vec3::ZERO, Vec3::ZERO, Vec3::Z.cross(dir).normalized().unwrap_or(Vec3::X), Vec3::Z.dot(dir).clamp(-1.0, 1.0).acos());
         let mut m = m;
         m[3] = [pt.x, pt.y, pt.z, 1.0];
-        if !solidcraft_doc::is_placement(&m) {
+        if !torno_doc::is_placement(&m) {
             return Err(bad(cmd, "`point` must be within 1e9 mm and `direction` finite"));
         }
         if let Some(o) = s.doc_mut().occurrences.iter_mut().find(|o| o.id == occ) {
@@ -1004,7 +1000,7 @@ fn hole_wall(s: &Session, a: Vec3) -> Option<HoleWall> {
         for b in &st.bodies {
             for d in dirs {
                 let q = a + d * step;
-                if let Some(c) = solidcraft_doc::kernel::cylinder_face_at(&b.body, q) {
+                if let Some(c) = torno_doc::kernel::cylinder_face_at(&b.body, q) {
                     let v = q - c.axis_point;
                     let along = v.dot(c.axis);
                     let on_wall = ((v - c.axis * along).len() - c.radius).abs() < 1e-3 && along > c.start && along < c.end;
@@ -1013,7 +1009,7 @@ fn hole_wall(s: &Session, a: Vec3) -> Option<HoleWall> {
                         // The end of the wall nearer the pick, and a point on the axis just past it.
                         let (end, out) = if along - c.start < c.end - along { (c.start, -1.0) } else { (c.end, 1.0) };
                         let past = c.axis_point + axis * (end + out * (c.end - c.start).min(1.0) * 0.25);
-                        let open = !matches!(b.body.classify_point(past), Ok(solidcraft_doc::kernel::PointClass::Inside));
+                        let open = !matches!(b.body.classify_point(past), Ok(torno_doc::kernel::PointClass::Inside));
                         let ends = [c.axis_point + axis * c.start, c.axis_point + axis * c.end];
                         return Some(HoleWall {
                             at: q,
@@ -1075,7 +1071,7 @@ fn resize(s: &mut Session, p: &Value) -> Result<Value> {
     let name = part_name(&part.family, &size, &sh);
     let was = shape(&part.family, &part.size, part.length).ok().map(|old| identity(&part.family, &part.size, &old));
     set_identity(s, comp, identity(&part.family, &size, &sh), was);
-    s.doc_mut().parts.insert(comp, solidcraft_doc::StandardPart { family: part.family.clone(), size: size.clone(), length: shape_len(&sh) });
+    s.doc_mut().parts.insert(comp, torno_doc::StandardPart { family: part.family.clone(), size: size.clone(), length: shape_len(&sh) });
     if let Some(c) = s.doc_mut().components.iter_mut().find(|c| c.id == comp) {
         c.name = name.clone();
     }
@@ -1090,7 +1086,7 @@ fn resize(s: &mut Session, p: &Value) -> Result<Value> {
 #[cfg(test)]
 mod tests {
     use serde_json::{Value, json};
-    use solidcraft_geom::prelude::*;
+    use torno_geom::prelude::*;
 
     use crate::Session;
 
@@ -1104,11 +1100,7 @@ mod tests {
     fn bbox(s: &Session, prefix: &str) -> (solidcore_record::Vec3, solidcore_record::Vec3) {
         let st = s.world_state().unwrap();
         let comp = s.doc.components.iter().find(|c| c.name.starts_with(prefix)).map(|c| c.id).unwrap_or(0);
-        let b = st
-            .bodies
-            .iter()
-            .filter(|b| s.doc.model_body_component(b) == comp)
-            .fold(solidcraft_geom::Aabb3::EMPTY, |a, b| a.union(&b.mesh().bounds()));
+        let b = st.bodies.iter().filter(|b| s.doc.model_body_component(b) == comp).fold(torno_geom::Aabb3::EMPTY, |a, b| a.union(&b.mesh().bounds()));
         (b.min, b.max)
     }
 
@@ -1173,7 +1165,7 @@ mod tests {
         let across_corners = |af: f64| af / (std::f64::consts::PI / 6.0).cos();
         let part_number = |s: &Session, out: &Value| {
             let comp = out["component"].as_u64().unwrap_or(0);
-            s.doc.components.iter().find(|c| c.id == comp).and_then(|c| c.metadata.text(solidcraft_doc::metadata::PART_NUMBER)).map(str::to_string)
+            s.doc.components.iter().find(|c| c.id == comp).and_then(|c| c.metadata.text(torno_doc::metadata::PART_NUMBER)).map(str::to_string)
         };
         // Every nominal size 1/4 to 1 but 9/16, coarse and fine.
         let l = run(&mut Session::default(), "parts.library", json!({"family": "hex_cap_screw_inch"}));
@@ -1282,7 +1274,7 @@ mod tests {
         assert!((2.6..2.9).contains(&widest(3.29)), "the flat top: {}", widest(3.29));
         // Its part number is the standard and size, as the other families' are.
         let comp = s.doc.components.iter().find(|c| c.name.starts_with("BHCS")).map(|c| c.id).unwrap_or(0);
-        let number = s.doc.components.iter().find(|c| c.id == comp).and_then(|c| c.metadata.text(solidcraft_doc::metadata::PART_NUMBER));
+        let number = s.doc.components.iter().find(|c| c.id == comp).and_then(|c| c.metadata.text(torno_doc::metadata::PART_NUMBER));
         assert_eq!(number, Some("ISO 7380-1 M6x20"));
     }
 
@@ -1329,7 +1321,7 @@ mod tests {
         assert!((shank - 3.0).abs() < 1e-3, "the shank: {shank}");
         assert!((foot + 3.72).abs() < 1e-3, "the cone's foot: {foot}");
         let comp = s.doc.components.iter().find(|c| c.name.starts_with("CSK")).map(|c| c.id).unwrap_or(0);
-        let number = s.doc.components.iter().find(|c| c.id == comp).and_then(|c| c.metadata.text(solidcraft_doc::metadata::PART_NUMBER));
+        let number = s.doc.components.iter().find(|c| c.id == comp).and_then(|c| c.metadata.text(torno_doc::metadata::PART_NUMBER));
         assert_eq!(number, Some("ISO 10642 M6x20"));
         // The length counts the head, so one no longer than the head is refused, and nothing is made.
         let mut short = Session::default();

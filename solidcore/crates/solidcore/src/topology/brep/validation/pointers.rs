@@ -8,7 +8,7 @@
 //! |------|----------|
 //! | [`validate_pointers`] | `SmBrep::ValidatePointers` |
 //! | `fix_reversed` | `N_CrvIsNotReversed(Fixit=TRUE)` |
-//! | `fix_reversed_on`, `end_turns_back`, `first_fundamental_form` | the SolidCraft fork's `PassesReverseDirectionCheckOn`, `nl_EndTurnsBack`, `sm_FirstFundamentalForm` (WR-406) |
+//! | `fix_reversed_on`, `end_turns_back`, `first_fundamental_form` | the Torno fork's `PassesReverseDirectionCheckOn`, `nl_EndTurnsBack`, `sm_FirstFundamentalForm` (WR-406) |
 //!
 //! Deviations: no recursion; CCW walks are bounded at the native 100000 steps.
 //! Native const geometry repairs use mutable curve access. Warning-only checks
@@ -990,7 +990,7 @@ fn fix_reversed(k: &Kernel, c: &mut crate::curve::curve::Curve) -> Result<()> {
     fix_reversed_on(k, c, None)
 }
 
-/// Not upstream (WR-406, tangency-labs/solidcore#891; the SolidCraft fork's
+/// Not upstream (WR-406, tangency-labs/solidcore#891; the Torno fork's
 /// `nl_EndTurnsBack`): whether the control polygon `p0, p1, p2` at one end of a
 /// curve turns back on itself. Without `metric` this is `N_CrvIsNotReversed`'s test;
 /// with the first fundamental form `[E, F, G]` of a surface at that end the legs are

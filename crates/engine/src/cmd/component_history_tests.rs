@@ -26,9 +26,9 @@ fn hide_history_needs_a_real_component_and_survives_a_save_round_trip() {
     s.execute("component.hide_history", &json!({ "component": "Copy" })).unwrap();
     // The flag rides in the design JSON and comes back on read.
     let json = s.doc.to_json();
-    let read = solidcraft_doc::Document::from_json(&json).unwrap();
+    let read = torno_doc::Document::from_json(&json).unwrap();
     assert!(read.components.iter().find(|c| c.name == "Copy").unwrap().history_hidden);
     // A design without the flag reads as shown, as always.
-    let plain = solidcraft_doc::Document::from_json(&Session::default().doc.to_json()).unwrap();
+    let plain = torno_doc::Document::from_json(&Session::default().doc.to_json()).unwrap();
     assert!(!plain.components.iter().any(|c| c.history_hidden));
 }

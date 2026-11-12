@@ -3,7 +3,7 @@
 
 use serde_json::{Value, json};
 use solidcore_record::Vec3;
-use solidcraft_geom::prelude::*;
+use torno_geom::prelude::*;
 
 use super::solve_counts;
 use crate::Session;
@@ -47,7 +47,7 @@ fn determined_pattern_geometry_does_not_attempt_conflicting_held_solves() {
     let dimension = before
         .constraints
         .iter()
-        .find(|c| matches!(c.kind, solidcraft_sketch::ConstraintKind::Length { l: 0, .. }))
+        .find(|c| matches!(c.kind, torno_sketch::ConstraintKind::Length { l: 0, .. }))
         .and_then(|c| c.param.as_ref())
         .expect("the first line's dimension");
     s.doc_mut().params.iter_mut().find(|p| &p.name == dimension).expect("dimension parameter").expr = "3".into();
@@ -94,7 +94,7 @@ fn frames(s: &mut Session, n: usize, live: bool) -> Vec<Value> {
 }
 
 fn body_contains(s: &Session, p: Vec3) -> bool {
-    s.model.state().bodies.first().expect("a body").body.classify_point(p).unwrap() == solidcraft_kernel::PointClass::Inside
+    s.model.state().bodies.first().expect("a body").body.classify_point(p).unwrap() == torno_kernel::PointClass::Inside
 }
 
 fn pt(s: &Session, id: &str) -> solidcore_record::Vec2 {
@@ -282,7 +282,7 @@ fn a_query_during_a_live_drag_does_not_evaluate_the_model() {
     assert_eq!(s.evaluations, 0);
 }
 
-fn sketch_of(s: &Session) -> solidcraft_sketch::Sketch {
+fn sketch_of(s: &Session) -> torno_sketch::Sketch {
     s.active_sketch.and_then(|i| s.doc.sketch(i).ok()).cloned().expect("sketch mode")
 }
 
@@ -295,7 +295,7 @@ fn a_live_frame_solves_the_dimensions_current_values() {
     let param = sk
         .constraints
         .iter()
-        .find(|c| matches!(c.kind, solidcraft_sketch::ConstraintKind::Length { l, .. } if l == l1))
+        .find(|c| matches!(c.kind, torno_sketch::ConstraintKind::Length { l, .. } if l == l1))
         .and_then(|c| c.param.clone())
         .expect("l1's dimension");
     if let Some(p) = s.doc_mut().params.iter_mut().find(|p| p.name == param) {
@@ -403,7 +403,7 @@ fn a_selection_dragged_by_an_ellipse_axis_takes_the_ellipse_along() {
         run(&mut s, "sketch.drag", json!({"entity": axis, "with": [line], "from": [10, 0], "to": [10, 15], "live": live}));
         let sk = s.doc.sketch(s.active_sketch.expect("sketch mode")).expect("the sketch");
         let ei = sk.curve_index(&e).expect("the ellipse");
-        let solidcraft_sketch::CurveKind::Ellipse { c, m, .. } = sk.curves[ei].kind else { panic!("an ellipse") };
+        let torno_sketch::CurveKind::Ellipse { c, m, .. } = sk.curves[ei].kind else { panic!("an ellipse") };
         let v = solidcore_record::Vec2::new;
         assert!(sk.point(c).expect("its centre").dist(v(0.0, 15.0)) < 1e-6, "live {live}: the centre follows: {:?}", sk.point(c));
         assert!(sk.point(m).expect("its major end").dist(v(20.0, 15.0)) < 1e-6, "live {live}: the major end follows: {:?}", sk.point(m));
@@ -420,7 +420,7 @@ fn on_a_face() -> (Session, String, solidcore_record::Vec2) {
     let sk = sketch_of(&s);
     assert!(!sk.links.is_empty(), "the face's edges are projected");
     let corner = sk.curves.iter().find_map(|c| match c.kind {
-        solidcraft_sketch::CurveKind::Line { a, .. } if c.link.is_none() => sk.points.get(a).map(|p| (p.id.clone(), p.pos)),
+        torno_sketch::CurveKind::Line { a, .. } if c.link.is_none() => sk.points.get(a).map(|p| (p.id.clone(), p.pos)),
         _ => None,
     });
     let (id, at) = corner.expect("a drawn line");

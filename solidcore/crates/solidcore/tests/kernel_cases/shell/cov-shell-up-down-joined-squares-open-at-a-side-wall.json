@@ -91,7 +91,7 @@
       765.36,
       767.24
     ],
-    "what": "four squares drawn edge to edge, three extruded 10 up and three 10 down and joined, shelled 0.346 mm open at a side wall (action matrix (apps/solidcraft-cli/tests/action_matrix.rs): typical/up-down-join, Body1/F2:side:l1 face.shell)"
+    "what": "four squares drawn edge to edge, three extruded 10 up and three 10 down and joined, shelled 0.346 mm open at a side wall (action matrix (apps/torno-cli/tests/action_matrix.rs): typical/up-down-join, Body1/F2:side:l1 face.shell)"
   },
   "expressible": true,
   "operation_expressible": true,
@@ -141,6 +141,6 @@
     "shell"
   ],
   "ungraded": [],
-  "what": "four squares drawn edge to edge, three extruded 10 up and three 10 down and joined, shelled 0.346 mm open at a side wall (action matrix (apps/solidcraft-cli/tests/action_matrix.rs): typical/up-down-join, Body1/F2:side:l1 face.shell)",
+  "what": "four squares drawn edge to edge, three extruded 10 up and three 10 down and joined, shelled 0.346 mm open at a side wall (action matrix (apps/torno-cli/tests/action_matrix.rs): typical/up-down-join, Body1/F2:side:l1 face.shell)",
   "why_not": []
 }

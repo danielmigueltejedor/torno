@@ -1,4 +1,4 @@
-//! The kernel rig's corpus (`crates/solidcore/tests/kernel_cases/`, exported from SolidCraft's
+//! The kernel rig's corpus (`crates/solidcore/tests/kernel_cases/`, exported from Torno's
 //! rig): every operand record an entry carries (in its `<case>.bodies.json.gz`) is this crate's
 //! B-rep record, reads with its serde form (unknown fields refused) and passes its structural
 //! validation, and every operation an entry lists takes records it gives or bodies an earlier

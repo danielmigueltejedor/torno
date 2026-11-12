@@ -108,10 +108,10 @@
     "boolean2d"
   ],
   "ungraded": [
-    "files: SolidCraft computes it"
+    "files: Torno computes it"
   ],
   "what": "sheet.export_bend_table as CSV of an 80 x 40 x 2 base with a 60 degree flange on one long edge and a hem on the other",
   "why_not": [
-    "body \"Body1\" is no kernel operation's output nor an operand: SolidCraft built it or changed the kernel's record"
+    "body \"Body1\" is no kernel operation's output nor an operand: Torno built it or changed the kernel's record"
   ]
 }

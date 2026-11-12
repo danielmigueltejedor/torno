@@ -3,7 +3,7 @@ use crate::{
     FinishKind,
     test_support::{frame, pointer},
 };
-use solidcraft_ui_registry as registry;
+use torno_ui_registry as registry;
 
 #[test]
 fn chain_has_one_active_ring_and_empty_slots_and_returns_each_click() {

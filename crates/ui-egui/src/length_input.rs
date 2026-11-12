@@ -1,13 +1,13 @@
 //! Lengths at the UI boundary. Bare values use the current design unit; explicit units and
 //! parameter expressions keep their meaning. The engine and saved geometry remain in mm.
 
-use solidcraft_engine::doc::{
+use torno_engine::doc::{
     Document,
     expr::{Kind, unit_info},
 };
 
 pub(crate) fn unit(doc: &Document) -> &str {
-    solidcraft_engine::doc::expr::length_unit_or_mm(&doc.units)
+    torno_engine::doc::expr::length_unit_or_mm(&doc.units)
 }
 
 /// A new field follows the same numeric-default policy as the primitive and sketch dialogs.
@@ -20,7 +20,7 @@ pub(crate) fn default(doc: &Document, number: &str) -> String {
 pub(crate) fn defaults(doc: &Document, mut kind: crate::dialogs::Kind) -> crate::dialogs::Kind {
     for value in fields(doc, &mut kind) {
         if let Some(number) = value.strip_suffix(" mm")
-            && solidcraft_engine::doc::expr::is_literal(number)
+            && torno_engine::doc::expr::is_literal(number)
         {
             *value = default(doc, number);
         }
@@ -33,7 +33,7 @@ pub(crate) fn defaults(doc: &Document, mut kind: crate::dialogs::Kind) -> crate:
 pub(crate) fn expression(doc: &Document, text: &str, kind: Kind) -> String {
     let text = text.trim();
     // A definition's value is frozen the same way; the name stays (#4071).
-    if let Some((name, rhs)) = solidcraft_engine::doc::expr::definition(text)
+    if let Some((name, rhs)) = torno_engine::doc::expr::definition(text)
         && !rhs.is_empty()
     {
         return format!("{name} = {}", expression(doc, rhs, kind));
@@ -49,24 +49,20 @@ pub(crate) fn expression(doc: &Document, text: &str, kind: Kind) -> String {
 /// For a field whose command takes only a number, which keeps no expression to name: a typed
 /// `name = value` is refused with the way to name it, rather than defining nothing (#4071).
 pub(crate) fn no_definition(text: &str, label: &str) -> Result<(), String> {
-    match solidcraft_engine::doc::expr::definition(text) {
+    match torno_engine::doc::expr::definition(text) {
         Some((name, _)) => Err(format!("{label} keeps no expression, so it cannot define `{name}`: add `{name}` in Parameters, then type `{name}`")),
         None => Ok(()),
     }
 }
 
-pub(crate) fn eval(doc: &Document, text: &str, kind: Kind) -> solidcraft_engine::doc::Result<f64> {
+pub(crate) fn eval(doc: &Document, text: &str, kind: Kind) -> torno_engine::doc::Result<f64> {
     doc.eval(&expression(doc, text, kind), kind)
 }
 
 /// Legacy bare literals are millimetres, including decimal-comma literals. An unchanged
 /// edit must identify that unit before the UI applies its current design-unit default.
 pub(crate) fn stored(doc: &Document, text: &str) -> String {
-    if solidcraft_engine::doc::expr::is_literal(text) && doc.eval(text, Kind::Unitless).is_ok() {
-        format!("{} mm", text.trim())
-    } else {
-        text.to_string()
-    }
+    if torno_engine::doc::expr::is_literal(text) && doc.eval(text, Kind::Unitless).is_ok() { format!("{} mm", text.trim()) } else { text.to_string() }
 }
 
 /// A computed model-space value written back to an editable field. Use all significant digits:
@@ -90,7 +86,7 @@ pub(crate) fn model_drag(doc: &Document, mm: f64, step_mm: f64, decimals: u8) ->
     let step_u = if step_mm.is_finite() && step_mm > 0.0 { step_mm / scale } else { 0.0 };
     let step_places = if step_u > 0.0 { (-step_u.log10()).ceil().max(0.0) as u8 } else { 0 };
     let places = decimals.max(step_places).min(8);
-    solidcraft_engine::doc::display_units::format_length(mm, u, places)
+    torno_engine::doc::display_units::format_length(mm, u, places)
 }
 
 /// A computed length shown in an editable field or a message, in the design's unit, to a
@@ -122,7 +118,7 @@ pub(crate) fn scaled(text: &str, twice: bool) -> String {
     if text.is_empty() {
         return String::new();
     }
-    if solidcraft_engine::doc::expr::is_literal(text) {
+    if torno_engine::doc::expr::is_literal(text) {
         // The unit is the word at the end (`1e3 mm` is a thousand millimetres).
         let number = text.trim_end_matches(char::is_alphabetic);
         let unit = text.get(number.len()..).unwrap_or_default();
@@ -214,7 +210,7 @@ pub(crate) fn fields<'a>(doc: &Document, kind: &'a mut crate::dialogs::Kind) -> 
             }
             Pl::Rest { width, length, height, thickness, .. } => vec![width, length, height, thickness],
             Pl::Rules { values, .. } => {
-                let kinds = solidcraft_engine::doc::plastic::PlasticRule::library()
+                let kinds = torno_engine::doc::plastic::PlasticRule::library()
                     .first()
                     .map(|rule| rule.fields().iter().map(|(_, _, kind)| *kind).collect::<Vec<_>>())
                     .unwrap_or_default();
@@ -244,7 +240,7 @@ pub(crate) fn fields<'a>(doc: &Document, kind: &'a mut crate::dialogs::Kind) -> 
                     .assembly
                     .joints
                     .iter()
-                    .filter(|j| j.kind != solidcraft_engine::doc::joints::JointKind::Rigid)
+                    .filter(|j| j.kind != torno_engine::doc::joints::JointKind::Rigid)
                     .nth(*b)
                     .is_some_and(|j| !j.kind.is_angle(*ib)) =>
             {

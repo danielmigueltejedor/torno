@@ -9,12 +9,12 @@
 //! bodies the feature built itself (whose faces are named by their role: the sketch curve they
 //! sweep, the cap they are). Naming (`history_names`) reads it; nothing here samples geometry.
 
-use solidcraft_geom::prelude::*;
 use std::sync::{Arc, OnceLock};
+use torno_geom::prelude::*;
 
 use solidcore_record::{Region2, Vec3};
-use solidcraft_kernel::Body;
-use solidcraft_kernel::history::{BodyHistory, Change, FaceOrigin, FaceProv, History};
+use torno_kernel::Body;
+use torno_kernel::history::{BodyHistory, Change, FaceOrigin, FaceProv, History};
 
 use crate::SolvedSketch;
 
@@ -404,7 +404,7 @@ pub(crate) fn box_tool(body: Body) -> Traced {
         sources
             .iter()
             .map(|source| match source {
-                Some(solidcraft_kernel::FaceSource::Box { axis, high, .. }) => {
+                Some(torno_kernel::FaceSource::Box { axis, high, .. }) => {
                     ["x", "y", "z"].get(usize::from(*axis)).map(|a| vec![format!("{}{a}", if *high { "+" } else { "-" })]).unwrap_or_default()
                 }
                 _ => Vec::new(),
@@ -701,7 +701,7 @@ fn order_legacy_family(bodies: &mut [crate::ModelBody], members: &[usize], doc: 
                 m.triangles
                     .iter()
                     .filter_map(|t| m.tri(t))
-                    .map(|[a, b, c]| solidcraft_geom::compare::closest_on_triangle(*p, a, b, c).dist(*p))
+                    .map(|[a, b, c]| torno_geom::compare::closest_on_triangle(*p, a, b, c).dist(*p))
                     .fold(f64::INFINITY, f64::min)
             })
             .fold(0.0, f64::max)

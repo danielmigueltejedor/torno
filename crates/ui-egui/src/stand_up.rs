@@ -1,5 +1,5 @@
 //! Standing up a Y-up file (#3). Many CAD programs save parts with Y up, so a STEP or IGES file
-//! from them opens lying on its back in a Z-up design. After such a file opens, SolidCraft
+//! from them opens lying on its back in a Z-up design. After such a file opens, Torno
 //! offers to stand it up: a quarter turn about X (Y → Z) of the component the file came in as
 //! (#1386), so an assembly's parts and instances turn together, in one step that can be undone.
 //! Preferences › Design › "Offer to stand up Y-up files" turns the offer off; with Y up as the
@@ -12,12 +12,12 @@
 //! any other program is often upright already, so by default it gets a small note over the view
 //! ("Did this part open the wrong way up?"), which goes by itself after `NOTE_SECONDS` and never
 //! blocks input, and only when its bodies seem to lie on their back; Preferences › Design ›
-//! "For files from unknown programs" picks the dialog (always, as before) or no offer instead. SolidCraft's own files are never offered.
+//! "For files from unknown programs" picks the dialog (always, as before) or no offer instead. Torno's own files are never offered.
 //! Either says "assembly" when the file brought more than one body or a component tree. The
 //! context menu's "Turn Up Axis" fixes it any time.
 
 use serde_json::json;
-use solidcraft_engine::geom::prelude::*;
+use torno_engine::geom::prelude::*;
 
 use crate::SolveApp;
 use crate::prefs::StandUpUnknown;
@@ -56,7 +56,7 @@ pub enum Upright {
 
 /// The flat area of `mesh` facing down Z, facing down Y and facing up Y, looking at no more than
 /// `budget` triangles.
-pub fn flat_areas(mesh: &solidcraft_engine::geom::Mesh, budget: usize) -> [f64; 3] {
+pub fn flat_areas(mesh: &torno_engine::geom::Mesh, budget: usize) -> [f64; 3] {
     use solidcore_record::Vec3;
     struct Face {
         first: Vec3,
@@ -131,7 +131,7 @@ pub fn upright(z_down: f64, y_either: f64, size: [f64; 3]) -> Upright {
 pub fn estimate(app: &SolveApp, bodies: &[String]) -> Upright {
     let world = crate::open_meshing::session_world(&app.session);
     let mut areas = [0.0_f64; 3];
-    let mut bounds = solidcraft_engine::geom::Aabb3::EMPTY;
+    let mut bounds = torno_engine::geom::Aabb3::EMPTY;
     let mut budget = MAX_TRIANGLES;
     for body in world.bodies.iter().filter(|b| bodies.contains(&b.name)).take(MAX_BODIES) {
         let mesh = body.mesh();
@@ -151,13 +151,13 @@ pub fn estimate(app: &SolveApp, bodies: &[String]) -> Upright {
 /// new design), and the import's component placement from the command's `result`: offer to
 /// stand them up.
 pub fn offer(app: &mut SolveApp, path: &str, before: &[String], result: Option<&serde_json::Value>) {
-    let io = &solidcraft_engine::io::is_step_path;
-    if !(io(path) || solidcraft_engine::io::is_iges_path(path)) || app.preferences.up_axis != "z" {
+    let io = &torno_engine::io::is_step_path;
+    if !(io(path) || torno_engine::io::is_iges_path(path)) || app.preferences.up_axis != "z" {
         return;
     }
     let text = |k: &str| result.and_then(|r| r.get(k)).and_then(serde_json::Value::as_str);
-    // SolidCraft's own STEP exports already use Z up.
-    if text("system") == Some("SolidCraft") || text("exporter_up") == Some("z") {
+    // Torno's own STEP exports already use Z up.
+    if text("system") == Some("Torno") || text("exporter_up") == Some("z") {
         return;
     }
     let bodies: Vec<String> =
@@ -242,7 +242,7 @@ pub(crate) fn note_due(app: &mut SolveApp, ctx: &egui::Context) -> Option<String
         return None;
     }
     let text = if app.stand_up_assembly { "Did this assembly open the wrong way up?" } else { "Did this part open the wrong way up?" };
-    Some(solidcraft_ui_text::tr_label(text).to_string())
+    Some(torno_ui_text::tr_label(text).to_string())
 }
 
 /// The handles of the note's buttons, in order: the quarter turn, then turning the offer off. They
@@ -256,7 +256,7 @@ pub const NOTE_CLOSE_HANDLES: [&str; 2] = ["toast:stand_up:close", "stand_up:dis
 
 /// The note's button labels, in the order of `NOTE_HANDLES`.
 pub(crate) fn note_labels() -> [String; 2] {
-    [solidcraft_ui_text::tr_label("Stand it up").to_string(), solidcraft_ui_text::tr_label("Don't ask again").to_string()]
+    [torno_ui_text::tr_label("Stand it up").to_string(), torno_ui_text::tr_label("Don't ask again").to_string()]
 }
 
 /// The share of the note's time left now, 1 to 0, for the countdown ring around its close (×).
@@ -296,28 +296,24 @@ pub fn show(app: &mut SolveApp, ctx: &egui::Context) {
         return;
     }
     let title = if app.stand_up_assembly { "Stand this assembly up?" } else { "Stand this part up?" };
-    let (closed, action) = ui_kit::Window::new(egui::Id::unique("sc_stand_up"), "move", solidcraft_ui_text::tr_label(title))
+    let (closed, action) = ui_kit::Window::new(egui::Id::unique("sc_stand_up"), "move", torno_ui_text::tr_label(title))
         .anchor(egui::Align2::CENTER_TOP, egui::vec2(0.0, 140.0))
         .actions("Stand it up", "Leave it", Some("Don't ask again"))
         .show(ctx, true, |ui| {
             ui_kit::text(
                 ui,
-                solidcraft_ui_text::tr_label("Files from many CAD programs have Y up, so they open lying on their back here (Z up)."),
+                torno_ui_text::tr_label("Files from many CAD programs have Y up, so they open lying on their back here (Z up)."),
                 ui_kit::Text::Report("why", false),
             );
             if app.stand_up_reason {
-                ui_kit::text(
-                    ui,
-                    solidcraft_ui_text::tr_label("Exported by SolidWorks, which usually saves Y up"),
-                    ui_kit::Text::Report("reason", false),
-                );
+                ui_kit::text(ui, torno_ui_text::tr_label("Exported by SolidWorks, which usually saves Y up"), ui_kit::Text::Report("reason", false));
             }
             ui_kit::text(
                 ui,
-                solidcraft_ui_text::tr_label("Stand it up: a quarter turn about X, as one Move feature you can undo."),
+                torno_ui_text::tr_label("Stand it up: a quarter turn about X, as one Move feature you can undo."),
                 ui_kit::Text::Report("how", false),
             );
-            ui_kit::text(ui, solidcraft_ui_text::tr_label("Preferences › Design turns the offer back on"), ui_kit::Text::Note("never"));
+            ui_kit::text(ui, torno_ui_text::tr_label("Preferences › Design turns the offer back on"), ui_kit::Text::Note("never"));
         });
     for (handle, key) in [("stand_up:stand", "dialog:ok"), ("stand_up:never", "dialog:apply"), ("stand_up:leave", "dialog:cancel")] {
         if let Some(at) = crate::scenario::handle_at(key) {

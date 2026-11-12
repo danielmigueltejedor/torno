@@ -2,7 +2,7 @@
 //! about an axis, a projection along a direction and a section square to a normal, each
 //! vector of any length, and a line segment whose ends must be proved apart.
 //!
-//! Not upstream: SolidCraft's sweep entries made the vectors unit and compared the ends
+//! Not upstream: Torno's sweep entries made the vectors unit and compared the ends
 //! themselves; that is geometry, so it is the kernel's ([`unit`], [`distance`]), and the
 //! application layer only passes the numbers on. Each refusal of a number here is
 //! `InvalidInput` with this module's operation name ([`OP`]), so a caller tells it from

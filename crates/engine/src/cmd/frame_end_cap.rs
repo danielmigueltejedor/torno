@@ -6,7 +6,7 @@ use crate::schema::features::FeatureResult;
 use crate::schema::{Contract, TypedContract, output_schema_for};
 use crate::{Result, Session};
 use serde_json::{Value, json};
-use solidcraft_doc::{FeatureKind, end_cap};
+use torno_doc::{FeatureKind, end_cap};
 
 const CONTRACT: TypedContract<EndCapParams> = TypedContract::new();
 
@@ -45,7 +45,7 @@ fn end_cap_cmd(s: &mut Session, p: &Value) -> Result<Value> {
         {
             let source = s.doc_mut().feature_mut(anchor.target.origin_feature).ok_or_else(|| bad(cmd, "the member's feature disappeared"))?;
             if let FeatureKind::FrameMember { names, .. } = &mut source.kind {
-                if names.len().saturating_add(pins.keys().filter(|id| !names.contains_key(*id)).count()) > solidcraft_doc::frame::MAX_MEMBERS {
+                if names.len().saturating_add(pins.keys().filter(|id| !names.contains_key(*id)).count()) > torno_doc::frame::MAX_MEMBERS {
                     return Err(bad(cmd, "too many member names to pin"));
                 }
                 names.extend(pins);

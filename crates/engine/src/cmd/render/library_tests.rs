@@ -2,7 +2,7 @@ use super::*;
 #[cfg(not(target_arch = "wasm32"))]
 use image::ImageEncoder;
 #[cfg(feature = "bundled-render-library")]
-use solidcraft_render::job::textures::{BaseColorMode, TextureMap};
+use torno_render::job::textures::{BaseColorMode, TextureMap};
 
 #[test]
 fn authored_library_search_is_bounded_and_concepts_are_not_runtime_presets() {
@@ -48,7 +48,7 @@ fn custom_surface_fixture() -> (Session, std::path::PathBuf, Vec<u8>, Value) {
         .write_image(&[128, 64, 32, 255, 192, 96, 48, 255, 64, 32, 16, 255, 224, 160, 96, 255], 2, 2, image::ExtendedColorType::Rgba8)
         .unwrap();
     let nonce = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos();
-    let path = std::env::temp_dir().join(format!("solidcraft-wood-owned-{}-{nonce}.png", std::process::id()));
+    let path = std::env::temp_dir().join(format!("torno-wood-owned-{}-{nonce}.png", std::process::id()));
     std::fs::write(&path, &bytes).unwrap();
     let input = json!({"name":"Wood","set":{"width":64,"height":64,"job":{"method":"gpu_path","options":{}}},
         "body_index":0,"body_name":"Board","frame":{"origin":[0,0,0],"u":[20,0,0],"v":[0,40,0]},
@@ -82,7 +82,7 @@ fn imported_wood_maps_reopen_without_source_and_keep_geometry_history_and_resour
     std::fs::remove_file(&path).unwrap();
     let saved = s.doc.to_json();
     assert!(!saved.contains(path.to_str().unwrap()));
-    let mut reopened = Session::new(solidcraft_doc::Document::from_json(&saved).unwrap());
+    let mut reopened = Session::new(torno_doc::Document::from_json(&saved).unwrap());
     reopened.execute("render.scene", &json!({})).unwrap();
     let scene = crate::product_scene::extract(&reopened).unwrap();
     let bindings = &reopened.doc.render.setups["Wood"].surfaces;
@@ -93,7 +93,7 @@ fn imported_wood_maps_reopen_without_source_and_keep_geometry_history_and_resour
     assert!(map.gpu_mip_filtering(), "reopened imported images retain their new filtering policy");
     assert!(captured.bindings()[0].roughness.as_ref().unwrap().gpu_mip_filtering());
     assert_eq!(map.dimensions(), [2, 2]);
-    let pixels = map.decode(&solidcraft_render::job::CancelToken::default()).unwrap();
+    let pixels = map.decode(&torno_render::job::CancelToken::default()).unwrap();
     let expected = ((128.0_f64 / 255.0 + 0.055) / 1.055).powf(2.4);
     assert!((f64::from(pixels[0]) - expected).abs() < 1e-7);
     assert_eq!(captured.bindings()[0].frame.u, [20.0, 0.0, 0.0]);
@@ -215,7 +215,7 @@ fn builtin_hdr_capture_is_atomic_undoable_deduplicated_and_path_independent() {
     let id = options.hdr.unwrap().resource;
     assert_eq!(s.doc.render.resources.required(&id).unwrap().bytes(), super::super::library_data::asset("HDR-001").unwrap().0);
     let saved = s.doc.to_json();
-    let reopened = solidcraft_doc::Document::from_json(&saved).unwrap();
+    let reopened = torno_doc::Document::from_json(&saved).unwrap();
     assert_eq!(reopened.render.resources.required(&id).unwrap().id(), id);
     let before = s.undo.len();
     assert!(s.execute("render.library.environment.apply", &request).is_err(), "replacement must be explicit");
@@ -275,7 +275,7 @@ fn explicit_surface_prepare_has_physical_scale_and_does_not_assign_materials() {
 #[cfg(feature = "bundled-render-library")]
 #[test]
 fn wood_grain_rotation_preserves_non_square_repeats_in_each_plane() {
-    use solidcraft_render::job::textures::PlanarFrame;
+    use torno_render::job::textures::PlanarFrame;
     let mut s = Session::default();
     s.execute("solid.box", &json!({"length":100,"width":100,"height":20,"body_name":"Board"})).unwrap();
     let before = s.doc.to_json();
@@ -335,7 +335,7 @@ fn saved_wood_grain_angle_reopens_and_rotates_with_only_its_occurrence() {
     .unwrap();
     assert_eq!((s.doc.materials.clone(), s.doc.features.clone()), physical);
     let saved = s.doc.to_json();
-    let mut reopened = Session::new(solidcraft_doc::Document::from_json(&saved).unwrap());
+    let mut reopened = Session::new(torno_doc::Document::from_json(&saved).unwrap());
     reopened.execute("render.scene", &json!({})).unwrap();
     let bindings = reopened.doc.render.setups["Grain"].surfaces.clone();
     let lower = |session: &Session| {
@@ -428,7 +428,7 @@ fn saved_authored_maps_roundtrip_and_resolve_without_paths_or_captured_ordinals(
     assert_eq!(s.doc.appearances, before.appearances);
     assert_eq!(s.doc.features, before.features);
     let saved = s.doc.to_json();
-    let mut reopened = Session::new(solidcraft_doc::Document::from_json(&saved).unwrap());
+    let mut reopened = Session::new(torno_doc::Document::from_json(&saved).unwrap());
     reopened.execute("render.scene", &json!({})).unwrap();
     let scene = crate::product_scene::extract(&reopened).unwrap();
     let bindings = &reopened.doc.render.setups["Portable"].surfaces;
@@ -446,7 +446,7 @@ fn saved_authored_maps_roundtrip_and_resolve_without_paths_or_captured_ordinals(
     }
     let mut changed = s.doc.render.setups["Portable"].clone();
     let mut binding = changed.surfaces.iter().next().unwrap().clone();
-    let solidcraft_doc::render_surface::SurfaceSource::Builtin(source) = &mut binding.source else { panic!("built-in fixture") };
+    let torno_doc::render_surface::SurfaceSource::Builtin(source) = &mut binding.source else { panic!("built-in fixture") };
     source.base_color_sha256 = HdrId::of(b"changed");
     changed.surfaces.set(binding, true).unwrap();
     assert!(super::super::surface_bindings::resolve(&s, &crate::product_scene::extract(&s).unwrap(), &changed.surfaces, "test").is_err());
@@ -551,7 +551,7 @@ fn saved_passive_ground_keeps_cad_unchanged_and_is_revalidated_after_product_mot
     super::super::staging::apply(&mut staged, &setup, "test").unwrap();
     assert_eq!(staged.meshes.len(), 2);
     assert!(Arc::ptr_eq(&staged.meshes[0].mesh, &original.meshes[0].mesh));
-    let reopened = solidcraft_doc::Document::from_json(&s.doc.to_json()).unwrap();
+    let reopened = torno_doc::Document::from_json(&s.doc.to_json()).unwrap();
     assert_eq!(reopened.render.setups["Stage"], setup);
     assert!(s.execute("render.stage.ground", &request).is_err(), "never replace a stage silently");
     s.execute("render.stage.clear", &json!({"name":"Stage"})).unwrap();
@@ -561,7 +561,7 @@ fn saved_passive_ground_keeps_cad_unchanged_and_is_revalidated_after_product_mot
     let mut intersects = setup;
     let mut panel = intersects.stage.iter().next().unwrap().clone();
     panel.center_mm[2] = 0.0;
-    intersects.stage = solidcraft_render::stage::Stage::new(vec![panel]).unwrap();
+    intersects.stage = torno_render::stage::Stage::new(vec![panel]).unwrap();
     assert!(super::super::staging::apply(&mut original.clone(), &intersects, "test").is_err());
 }
 
@@ -573,7 +573,7 @@ fn complete_authored_rig_keeps_passive_cards_nonemissive_and_scales_exactly_once
     assert_eq!(prepared["projection"]["passive_cards_omitted"], 0);
     assert_eq!(prepared["projection"]["passive_cards_included"], 1);
     assert_eq!(prepared["stage"][0]["center_mm"], json!([90.0, 10.0, 30.0]));
-    let stage: solidcraft_render::stage::Stage = serde_json::from_value(prepared["stage"].clone()).unwrap();
+    let stage: torno_render::stage::Stage = serde_json::from_value(prepared["stage"].clone()).unwrap();
     assert_eq!(stage.iter().next().unwrap().reflectance_linear, [0.75; 3]);
     let input = json!({"name":"Rig","set":{"job":{"method":"gpu_path","options":{}}},"rig":rig,"replace_lighting_and_environment":true});
     s.execute("render.library.studio.apply", &input).unwrap();
@@ -645,7 +645,7 @@ fn cpu_saved_surface_binding_is_offline_undoable_portable_and_preserves_geometry
     s.execute("solid.box", &json!({"length":10,"width":20,"height":5,"body_name":"Coupon"})).unwrap();
     let before = s.doc.clone();
     let undo = s.undo.len();
-    let camera = solidcraft_viewport::Camera::default();
+    let camera = torno_viewport::Camera::default();
     let set = json!({"camera":camera,"width":8,"height":8,"job":{"method":"cpu_raytrace","options":{"progressive":{"samples_per_pixel":3,"seed":9},"output":{"linear_exr":true}}}});
     let input = json!({"name":"CPU maps","set":set,"surface":{"id":"SURF-001","body_index":0,"body_name":"Coupon"}});
     assert!(s.render_job_host().is_none());
@@ -657,7 +657,7 @@ fn cpu_saved_surface_binding_is_offline_undoable_portable_and_preserves_geometry
     let setup = s.doc.render.setups["CPU maps"].clone();
     assert_eq!(setup.surfaces.len(), 1);
     assert_eq!(setup.camera, camera);
-    let reopened = solidcraft_doc::Document::from_json(&s.doc.to_json()).unwrap();
+    let reopened = torno_doc::Document::from_json(&s.doc.to_json()).unwrap();
     assert_eq!(reopened, *s.doc);
     let snapshot = s.doc.clone();
     let history = (s.revision, s.undo.len(), s.redo.len());
@@ -674,7 +674,7 @@ fn cpu_saved_surface_binding_is_offline_undoable_portable_and_preserves_geometry
     }
     let mut stale = setup.clone();
     let mut binding = stale.surfaces.iter().next().unwrap().clone();
-    let solidcraft_doc::render_surface::SurfaceSource::Builtin(source) = &mut binding.source else { panic!("built-in fixture") };
+    let torno_doc::render_surface::SurfaceSource::Builtin(source) = &mut binding.source else { panic!("built-in fixture") };
     source.normal_sha256 = HdrId::of(b"changed");
     stale.surfaces.set(binding, true).unwrap();
     assert!(super::super::surface_bindings::resolve(&s, &crate::product_scene::extract(&s).unwrap(), &stale.surfaces, "test").is_err());
@@ -732,13 +732,13 @@ fn cpu_path_maps_bind_beside_saved_glass_and_targeted_aging_without_weakening_ta
     let setup = &saved.render.setups["Mixed"];
     assert_eq!(setup.surfaces.len(), 1);
     assert_eq!(setup.optics, before.render.setups["Mixed"].optics);
-    let solidcraft_doc::render_settings::RenderJob::CpuRaytrace { options, .. } = setup.job.as_ref().unwrap() else { panic!("CPU intent changed") };
+    let torno_doc::render_settings::RenderJob::CpuRaytrace { options, .. } = setup.job.as_ref().unwrap() else { panic!("CPU intent changed") };
     assert!(options.path.is_some());
     assert_eq!(options.aging.iter().next().unwrap().target.as_ref().unwrap(), &setup.surfaces.iter().next().unwrap().target);
     assert_eq!(saved.features, before.features);
     assert_eq!(saved.materials, before.materials);
     assert_eq!(saved.appearances, before.appearances);
-    assert_eq!(solidcraft_doc::Document::from_json(&saved.to_json()).unwrap(), *saved);
+    assert_eq!(torno_doc::Document::from_json(&saved.to_json()).unwrap(), *saved);
     s.execute("edit.undo", &json!({})).unwrap();
     assert_eq!(s.doc, before);
     s.execute("edit.redo", &json!({})).unwrap();
@@ -748,7 +748,7 @@ fn cpu_path_maps_bind_beside_saved_glass_and_targeted_aging_without_weakening_ta
 
 #[test]
 fn cpu_authored_rig_domain_is_exact_and_preserves_dormant_sampling_without_implicit_lights() {
-    use solidcraft_doc::render_settings::CpuJob;
+    use torno_doc::render_settings::CpuJob;
     let mut s = Session::default();
     let mut accepted = Vec::new();
     let mut over_domain = Vec::new();
@@ -840,7 +840,7 @@ fn cpu_sun_rig_adoption_is_explicit_complete_atomic_and_one_undo() {
     // complete progressive16 Sun request crosses Compact's1,048,576-pixel bound.
     // Upstream's shared setup refusal names the admitting Studio profile rather
     // than repeating the current Compact name, so assert the actual size proof.
-    use solidcraft_render::job::{CpuBudget, CpuProgressiveOptions};
+    use torno_render::job::{CpuBudget, CpuProgressiveOptions};
     let adopted = Some(CpuProgressiveOptions { samples_per_pixel: 16, seed: 0 });
     assert!(CpuBudget::Compact.validate_image(2048, 2048, None).is_ok());
     assert_eq!(CpuBudget::Compact.limits().max_progressive_pixels, 1_048_576);

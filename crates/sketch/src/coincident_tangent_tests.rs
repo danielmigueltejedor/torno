@@ -4,7 +4,7 @@
 //! sqrt(residual) of tangent and lost a row of rank when the start already was tangent.
 
 use solidcore_record::Vec2;
-use solidcraft_geom::prelude::*;
+use torno_geom::prelude::*;
 
 use crate::tests::{Lcg, v};
 use crate::*;

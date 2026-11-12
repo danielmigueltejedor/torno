@@ -138,7 +138,7 @@ fn counter_wound_sweeps() -> (impl Fn(&str) -> Body, impl Fn(&str, &Body)) {
     (body, graded)
 }
 
-/// The second sweep cut from the rod the first one cut, as SolidCraft does it and the case
+/// The second sweep cut from the rod the first one cut, as Torno does it and the case
 /// records it. b14 is the rod cut by the right-handed sweep as the case's run read it back from
 /// its record, b5 the left-handed sweep.
 #[test]

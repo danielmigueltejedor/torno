@@ -63,7 +63,7 @@ fn jpeg_q(w: usize, h: usize, q: u8, paint: impl Fn(usize, usize) -> [u8; 3]) ->
 
 /// Write a reference into the temp dir and return its path.
 fn reference(name: &str, bytes: &[u8]) -> String {
-    let path = std::env::temp_dir().join(format!("solidcraft-compare-picture-{}-{name}", std::process::id()));
+    let path = std::env::temp_dir().join(format!("torno-compare-picture-{}-{name}", std::process::id()));
     std::fs::write(&path, bytes).unwrap();
     path.to_string_lossy().into_owned()
 }

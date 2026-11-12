@@ -3,7 +3,7 @@
 //! whether a face's NURBS form turns its natural normal against its surface's. The record holds
 //! these as data; working them out is the kernel's.
 //!
-//! Origin: SolidCraft's `crates/geom/src/brep/label.rs` (MIT OR Apache-2.0), moved here with its
+//! Origin: Torno's `crates/geom/src/brep/label.rs` (MIT OR Apache-2.0), moved here with its
 //! history (RFC 0003). It takes the kernel's evaluation types; the record's edges and faces are
 //! read by `solidcore-ops`' `label`, which converts them.
 use super::vec::{v3, VecExt};

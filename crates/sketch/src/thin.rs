@@ -12,8 +12,8 @@
 //! merged into regions. Walls that cross or meet (a honeycomb, a ring and a cross) come out as
 //! one region where they touch.
 
-use solidcraft_geom::prelude::*;
 use std::f64::consts::{PI, TAU};
+use torno_geom::prelude::*;
 
 use solidcore_record::{Loop2, Region2, Seg2, Vec2};
 

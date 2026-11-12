@@ -55,7 +55,7 @@ pub(crate) fn panel(app: &mut SolveApp, ui: &mut egui::Ui) {
                     ui_kit::InspectorNames {
                         close: "render:appearance:close",
                         remove: "render:appearance:remove",
-                        remove_label: solidcraft_ui_text::tr("render.inspector_remove"),
+                        remove_label: torno_ui_text::tr("render.inspector_remove"),
                     },
                 ));
             } else {
@@ -136,7 +136,7 @@ pub(super) fn output_actions(app: &mut SolveApp, ui: &mut egui::Ui) {
             ("render.start", app.tr("cmd.render_start").to_owned(), "render:output:render"),
             (
                 "render.batch",
-                solidcraft_ui_text::format("render.batch_all_shots", &[("count", &app.session.doc.render.setups.len().to_string())]),
+                torno_ui_text::format("render.batch_all_shots", &[("count", &app.session.doc.render.setups.len().to_string())]),
                 "render:output:all-shots",
             ),
         ] {
@@ -174,8 +174,8 @@ fn title(app: &SolveApp, selection: &RenderSelection) -> (String, &'static str) 
             let name = items
                 .last()
                 .and_then(|item| match item {
-                    solidcraft_engine::Sel::Body { name } | solidcraft_engine::Sel::Face { body: name, .. } => Some(name.clone()),
-                    solidcraft_engine::Sel::Occurrence { path } => app.session.occurrence_placement(path).ok().map(|p| p.name),
+                    torno_engine::Sel::Body { name } | torno_engine::Sel::Face { body: name, .. } => Some(name.clone()),
+                    torno_engine::Sel::Occurrence { path } => app.session.occurrence_placement(path).ok().map(|p| p.name),
                     _ => None,
                 })
                 .unwrap_or_else(|| app.tr("render.page_appearance").to_owned());

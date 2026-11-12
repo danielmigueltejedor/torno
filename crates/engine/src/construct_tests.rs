@@ -3,7 +3,7 @@
 
 use serde_json::{Value, json};
 use solidcore_record::{Plane, Vec3};
-use solidcraft_geom::prelude::*;
+use torno_geom::prelude::*;
 
 use crate::Session;
 use crate::view::{construction_axes, construction_planes, construction_points};
@@ -86,7 +86,7 @@ fn redefining_a_construction_plane_keeps_its_existing_name() {
     run(&mut s, "edit.undo", json!({}));
     assert!(near(plane(&s, "Mid").origin, Vec3::new(0.0, 0.0, 10.0)));
     run(&mut s, "edit.redo", json!({}));
-    let mut reopened = Session::new(solidcraft_doc::Document::from_json(&s.doc.to_json()).unwrap());
+    let mut reopened = Session::new(torno_doc::Document::from_json(&s.doc.to_json()).unwrap());
     reopened.refresh();
     assert_eq!(reopened.doc.feature(id).unwrap().name, "Mid");
     assert!(near(plane(&reopened, "Mid").origin, Vec3::new(0.0, 0.0, 20.0)));
@@ -190,7 +190,7 @@ fn plane_through_axis_and_point_follows_renamed_sources_edits_undo_and_reopen() 
     run(&mut s, "edit.undo", json!({}));
     assert!(parallel(plane(&s, "Fence").normal(), Vec3::Y));
     run(&mut s, "edit.redo", json!({}));
-    let reopened = solidcraft_doc::format::read(&s.doc.to_json()).unwrap();
+    let reopened = torno_doc::format::read(&s.doc.to_json()).unwrap();
     let mut cold = Session::new(reopened);
     cold.refresh();
     assert!(cold.model.results.iter().all(|r| r.error.is_none()), "{:?}", cold.model.results);
@@ -530,7 +530,7 @@ fn construction_on_a_3d_wire_ignores_its_sketch_plane_and_follows_edits() {
     let updated = plane(&s, "BridgePlane");
     assert!(near(updated.origin, Vec3::new(30.0, 27.5, 25.0)), "{updated:?}");
     assert!(parallel(updated.normal(), Vec3::new(40.0, 15.0, 30.0)));
-    let restored = solidcraft_doc::format::read(&s.doc.to_json()).unwrap();
+    let restored = torno_doc::format::read(&s.doc.to_json()).unwrap();
     let mut cold = Session { doc: restored.into(), ..Default::default() };
     cold.refresh();
     assert!(near(plane(&cold, "BridgePlane").origin, updated.origin));
@@ -730,7 +730,7 @@ fn ambiguous_plane_aliases_refuse_without_document_or_history_changes() {
         let cut = run(&mut s, "inspect.section", json!({"plane":id}));
         assert_eq!(cut["section"]["origin"], json!([0.0, 0.0, 19.05]));
         run(&mut s, "parameters.change", json!({"name":"height","expression":"25.4 mm"}));
-        let mut reopened = Session::new(solidcraft_doc::Document::from_json(&s.doc.to_json()).unwrap());
+        let mut reopened = Session::new(torno_doc::Document::from_json(&s.doc.to_json()).unwrap());
         let old = run(&mut reopened, "sketch.inspect", json!({"sketch":"Sketch1"}));
         assert_eq!(old["plane"]["origin"], json!([0.0, 0.0, 0.0]), "saved origin reference is not reinterpreted");
         let linked = run(&mut reopened, "sketch.inspect", json!({"sketch":"Sketch2"}));
@@ -761,7 +761,7 @@ fn disambiguated_top_plane_pocket_survives_undo_and_cold_reopen() {
     assert_eq!(s.doc.to_json(), before);
     run(&mut s, "edit.redo", json!({}));
     assert_eq!(s.doc.to_json(), saved);
-    let mut reopened = Session::new(solidcraft_doc::Document::from_json(&saved).unwrap());
+    let mut reopened = Session::new(torno_doc::Document::from_json(&saved).unwrap());
     let measured = run(&mut reopened, "inspect.measure", json!({}));
     assert!((measured["total"]["volume_mm3"].as_f64().unwrap() - expected).abs() < 1e-6, "{measured}");
 }
@@ -838,7 +838,7 @@ fn plane_at_angle_direction_only_projects_the_axis_and_pivots() {
 
     // Saved fields reopen and keep the pivot.
     let saved = s.doc.to_json();
-    let reopened = Session::new(solidcraft_doc::Document::from_json(&saved).unwrap());
+    let reopened = Session::new(torno_doc::Document::from_json(&saved).unwrap());
     assert!(near(plane(&reopened, "Pivoted").origin, Vec3::new(5.0, 0.0, 5.0)));
 }
 
@@ -913,7 +913,7 @@ fn offset_plane_through_a_point_follows_the_point() {
     assert!(on_plane(&plane(&s, "Lid"), Vec3::new(1.0, 2.0, 50.0)), "{:?}", plane(&s, "Lid"));
     assert!(on_plane(&plane(&s, "Back"), Vec3::new(1.0, 30.0, 2.0)), "{:?}", plane(&s, "Back"));
     // Saved and opened again, the planes come back where they were.
-    let restored = solidcraft_doc::format::read(&s.doc.to_json()).unwrap();
+    let restored = torno_doc::format::read(&s.doc.to_json()).unwrap();
     let mut cold = Session { doc: restored.into(), ..Default::default() };
     cold.refresh();
     assert!(near(plane(&cold, "Lid").origin, plane(&s, "Lid").origin));

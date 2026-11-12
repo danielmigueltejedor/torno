@@ -32,6 +32,6 @@
   "ungraded": [],
   "what": "plastic.rest, round, 12 across with a 6 mm wall: the wall would fill it",
   "why_not": [
-    "the failure is SolidCraft's, not a kernel operation's: step 2 (plastic.rest): the rest's wall must be thinner than half its width"
+    "the failure is Torno's, not a kernel operation's: step 2 (plastic.rest): the rest's wall must be thinner than half its width"
   ]
 }

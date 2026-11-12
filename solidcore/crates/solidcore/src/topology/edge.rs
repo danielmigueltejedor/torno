@@ -1841,7 +1841,7 @@ fn cover_other_coincident_face(
         }
     }
 
-    // SolidCraft fork (tangency-labs/smlib@b518bbe), under
+    // Torno fork (tangency-labs/smlib@b518bbe), under
     // `Kernel::fixes.cover_wraps_across_closed_seam`: across a seam the covering surface
     // wraps only on the trim-derived bounds. The stored domains are conservative and may
     // be the faces' whole surfaces: across the seam they cover too, and the merged face

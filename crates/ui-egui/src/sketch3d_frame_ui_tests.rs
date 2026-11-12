@@ -2,7 +2,7 @@
 
 use serde_json::json;
 use solidcore_record::Vec3;
-use solidcraft_engine::geom::prelude::*;
+use torno_engine::geom::prelude::*;
 
 #[test]
 fn bridge_line_snaps_to_points_on_two_visible_sketch_planes() {

@@ -10,7 +10,7 @@
 //! the edge, from the second fundamental form of each surface (G2); the curvature-change jump and
 //! its rate's jump compare the first and second arc-length derivatives of those normal sections'
 //! curvatures across the edge (G3, G4). All three come from each surface's exact partial
-//! derivatives ([`solidcraft_geom::brep::normal_section`]), never from samples. Each seam's
+//! derivatives ([`torno_geom::brep::normal_section`]), never from samples. Each seam's
 //! [`SeamReport::order`] is the highest order whose test, and every lower one, its worst station
 //! passes. A rolling-ball fillet is
 //! tangent to the faces it joins but is not curvature continuous: where it meets a plane its
@@ -22,9 +22,9 @@
 use serde::Serialize;
 use solidcore_record::Vec3;
 use solidcore_record::brep::{self as b};
-use solidcraft_geom::brep::normal_section::{SectionJet, normal_section};
-use solidcraft_geom::brep::{eval::CurveEval, eval::SurfaceEval};
-use solidcraft_geom::prelude::*;
+use torno_geom::brep::normal_section::{SectionJet, normal_section};
+use torno_geom::brep::{eval::CurveEval, eval::SurfaceEval};
+use torno_geom::prelude::*;
 
 use crate::body::Body;
 use crate::continuity_order::Continuity;

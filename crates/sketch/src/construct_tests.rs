@@ -3,7 +3,7 @@
 //! (fixed LCG seeds), no timing.
 
 use solidcore_record::Vec2;
-use solidcraft_geom::prelude::*;
+use torno_geom::prelude::*;
 
 use crate::construct::{Placement, seed};
 use crate::decompose::Budget;

@@ -2,7 +2,7 @@
 
 use serde_json::Value;
 use solidcore_record::{Vec2, Vec3};
-use solidcraft_doc::Expr;
+use torno_doc::Expr;
 
 use crate::{EngineError, Result, kernel};
 
@@ -203,7 +203,7 @@ pub fn has_definition(p: &Value) -> bool {
         }
         *budget -= 1;
         match v {
-            Value::String(s) => s.len() <= 4096 && s.contains('=') && solidcraft_doc::expr::definition(s).is_some(),
+            Value::String(s) => s.len() <= 4096 && s.contains('=') && torno_doc::expr::definition(s).is_some(),
             Value::Array(a) => a.iter().any(|x| walk(x, budget)),
             Value::Object(o) => o.values().any(|x| walk(x, budget)),
             _ => false,

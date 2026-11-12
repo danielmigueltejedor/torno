@@ -1,5 +1,5 @@
 //! tangency-labs/solidcore#1670: an offset or shell (thicken) of a caller-keyed copy
-//! (`api_brep_copy`, as SolidCraft copies a body before an operation) came back with
+//! (`api_brep_copy`, as Torno copies a body before an operation) came back with
 //! its edges' curves owned under the caller's result identities (`result_key_of`) or,
 //! after the self-intersection merge, the merge bodies' identities, while the result
 //! was labelled `NamingScheme::Notify` (or `Unknown`) without those keys recorded, so
@@ -232,7 +232,7 @@ fn offset_brep_full(
 }
 
 /// `SmApiBrepCopy` of `b` named in domain `n` (a `NamingScheme::Caller` body with its keys
-/// recorded, solidcore#1585), as SolidCraft copies a body before an operation.
+/// recorded, solidcore#1585), as Torno copies a body before an operation.
 fn copy_of(k: &mut Kernel, b: &Brep, n: u64) -> Brep {
     let target = move |e| named(e, n.saturating_mul(100_000_000));
     let mut state = brep_p2::ArenaNotifyState::new(&Brep::new());

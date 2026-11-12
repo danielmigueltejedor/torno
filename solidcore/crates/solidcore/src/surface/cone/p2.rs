@@ -20,7 +20,7 @@
 //!
 //! Deviations:
 //! - **Opt-in fix** ([`UpstreamFixes::analytic_inversion_answers_apart`](crate::kernel::UpstreamFixes::analytic_inversion_answers_apart),
-//!   WR-662, the SolidCraft fork's tangency-labs/smlib dfc7cb6): the ellipse-trim
+//!   WR-662, the Torno fork's tangency-labs/smlib dfc7cb6): the ellipse-trim
 //!   classification passes a failed cone inversion on instead of reading it as exterior.
 //! - **Out-params** become return values: the offset is `None` where upstream succeeds
 //!   without a surface (both new radii below the tolerance); the recogniser's cone is
@@ -46,7 +46,7 @@
 //!   crossing left the ellipse is returned as outside, and two equal cylinders with
 //!   crossing axes lose half their intersection (a union drops a body, status OK). With
 //!   the field set, the seam lines span the cone's whole height too and only their sweep
-//!   comes from the domain, as the SolidCraft fork does; the face's own trims are applied
+//!   comes from the domain, as the Torno fork does; the face's own trims are applied
 //!   by its caller. By default the seam lines use the domain, as upstream does. Since
 //!   v1.0.1 the trim circles sit at the domain's v limits and the segments are classified
 //!   against the domain, so such an ellipse keeps its part inside the domain either way.
@@ -253,7 +253,7 @@ fn twisted(top: &IsoArc, bot: &IsoArc, ang_tol: f64) -> Result<bool> {
 }
 
 impl Cone {
-    /// Not upstream (SolidCraft's draft of a cylindrical wall): this cylinder turned into the
+    /// Not upstream (Torno's draft of a cylindrical wall): this cylinder turned into the
     /// cone whose radius, the cylinder's at the height `neutral_height` (from the frame's
     /// origin along its axis), changes by `slope` per unit of height. The NURB's control
     /// points move radially, each row by the radius ratio at its height (a rational circle
@@ -1193,7 +1193,7 @@ impl Cone {
 /// than `SM_LT_EXTERIOR`; they are `SM_UNDEF_DOUBLE` where a failure sets that location.
 /// With [`UpstreamFixes::analytic_inversion_answers_apart`](crate::kernel::UpstreamFixes::analytic_inversion_answers_apart)
 /// only the answer "off the generator" reads as exterior; a failed start-plane
-/// transform is returned (the SolidCraft fork, tangency-labs/smlib dfc7cb6, in
+/// transform is returned (the Torno fork, tangency-labs/smlib dfc7cb6, in
 /// `sm_GetEllipseTrimIntervals` and `sm_IsConePointInTrimDomain`).
 fn cone_inversion(
     k: &Kernel,

@@ -16,7 +16,7 @@ use serde::de::Error as _;
 use serde::{Deserialize, Deserializer, Serialize};
 use serde_json::{Value, json};
 use solidcore_record::Vec3;
-use solidcraft_geom::Vec3Geom as _;
+use torno_geom::Vec3Geom as _;
 
 use super::check::{located, whole};
 use super::types::{not_blank_pattern, present};

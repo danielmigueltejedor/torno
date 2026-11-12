@@ -3,7 +3,7 @@
 //! ([`Surface::side_diameter`]), how far a surface runs across a side
 //! ([`Surface::length_across_side`]).
 //!
-//! Not upstream: the operations SolidCraft composed over the kernel, moved into it so the
+//! Not upstream: the operations Torno composed over the kernel, moved into it so the
 //! modelling layer computes no geometry (docs/layers.md §1). Each query returns its value with
 //! a certified enclosure and decides nothing itself (owner rule 13564): the caller compares
 //! the enclosure with its tolerance.
@@ -866,7 +866,7 @@ impl Surface {
     ///   pieces cut to the side): a rational curve with positive weights lies in their hull.
     ///   At a pole the row collapses, so the bound is at rounding level.
     /// - **Lower:** the largest distance between the curve's points at the pieces' ends and
-    ///   at the side's middle (SolidCraft's three points are among them).
+    ///   at the side's middle (Torno's three points are among them).
     ///
     /// Both are widened by the rounding of making the pieces ([`Rounding`]) and, for a
     /// procedural blend measured on its net, twice its bound.

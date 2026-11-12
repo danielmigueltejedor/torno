@@ -50,7 +50,7 @@
 //!   test (its sweep amount is unused); `SM_DEBUG_CODE` blocks, `SM_ASSERT`s and
 //!   `smos_WriteBuffer` messages are dropped.
 //! - **Analytic revolutions** (not upstream: WR-448, tangency-labs/solidcore#545;
-//!   SolidCraft change, tangency-labs/smlib 0b143f7). With
+//!   Torno change, tangency-labs/smlib 0b143f7). With
 //!   [`RotationalSweepGeometry::set_analytic_revolutions`] (off by default, so the
 //!   default follows `c9c5979`; `PrimitiveCreation`'s partial rotational sweep sets it
 //!   from `Kernel::fixes.revolve_analytic_profile_faces`), `EdgeSweepHigher` gives a line or circular arc its
@@ -459,7 +459,7 @@ pub struct RotationalSweepGeometry {
     angle: f64,
     /// `m_dEps`: the tolerance for geometry on the axis, zero sweep lengths, lines.
     eps: f64,
-    /// SolidCraft change (tangency-labs/smlib 0b143f7): sweep a line or circular arc
+    /// Torno change (tangency-labs/smlib 0b143f7): sweep a line or circular arc
     /// to its analytic surface (see [`Self::set_analytic_revolutions`]).
     analytic_revolutions: bool,
 }
@@ -491,7 +491,7 @@ impl RotationalSweepGeometry {
         new
     }
 
-    /// SolidCraft change (tangency-labs/smlib 0b143f7, tangency-labs/solidcore#545):
+    /// Torno change (tangency-labs/smlib 0b143f7, tangency-labs/solidcore#545):
     /// with `make_analytics` also set, [`Self::edge_sweep_higher`] gives an edge
     /// whose curve is a line or circular arc in a plane through the axis its
     /// cylinder, cone, sphere or torus ([`analytic_revolution`]) in place of the
@@ -882,7 +882,7 @@ impl RotationalSweepGeometry {
         };
         let mut new_surf = Surface::from(new_surf);
 
-        // SolidCraft change (tangency-labs/smlib 0b143f7, 9853e54): the cylinder,
+        // Torno change (tangency-labs/smlib 0b143f7, 9853e54): the cylinder,
         // cone, sphere or torus the curve sweeps, in place of the B-spline before its
         // normal is taken (AnalyticSurface precedes it), which CopyAndAddAnalytics
         // does not give

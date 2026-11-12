@@ -21,8 +21,8 @@
 //! | [`PrecisePropertyLayout`]               | `SmPrecisePropertyLayout` (constructor, `Add`)    |
 //! | [`OdeIsoCurveLength`]                   | `SmODEIsoCurveLengthIFEO` (constructor, `Evaluate`) |
 //! | [`OdeArea`]                             | `SmODEAreaIFEO::Evaluate`                         |
-//! | [`surface_knots_inside`]                | `sm_SurfaceKnotsInside` (static; the SolidCraft fork's tangency-labs/smlib@08d9a14) |
-//! | [`trim_curve_breaks`]                   | `sm_TrimCurveBreaks` (static; the SolidCraft fork's tangency-labs/smlib@08d9a14) |
+//! | [`surface_knots_inside`]                | `sm_SurfaceKnotsInside` (static; the Torno fork's tangency-labs/smlib@08d9a14) |
+//! | [`trim_curve_breaks`]                   | `sm_TrimCurveBreaks` (static; the Torno fork's tangency-labs/smlib@08d9a14) |
 //! | [`create_curves_by_trimming`], [`TrimmedCurves`] | `SmFace::CreateCurvesByTrimming`         |
 //! | [`create_curves_from_face`], [`FaceCurves`] | `SmFace::CreateCurvesFromFace`                |
 //! | [`fix_uv_trim_curves`], [`fix_uv_trim_curves_notified`] | `sm_FixUVTrimCurves`              |
@@ -309,7 +309,7 @@ pub fn upward_faceuse(b: &Brep, f: FaceId) -> Result<Option<FaceuseId>> {
     Ok(b.face(f)?.faceuse)
 }
 
-/// `sm_OuterFaceuse` (the fork's offset faces, and SolidCraft's `outer_faceuse`): the face
+/// `sm_OuterFaceuse` (the fork's offset faces, and Torno's `outer_faceuse`): the face
 /// use of `f` on the outside of its body, the one bounding the infinite region (the upward
 /// one when it does, else its mate); `None` without face use.
 ///
@@ -2338,7 +2338,7 @@ impl OdeArea<'_> {
         // the surface: built from first derivatives, it is C^(p-m-1) at a v knot of
         // multiplicity m (p the degree), so discontinuous at a rational circle's double
         // knot, and a step across any knot has an error its estimate does not measure.
-        // Integrated span by span, as the trim curve is (WR-494; the SolidCraft fork's
+        // Integrated span by span, as the trim curve is (WR-494; the Torno fork's
         // tangency-labs/smlib@08d9a14).
         let knots = surface_knots_inside(k, self.surface, SurfParamType::V, self.min_v, p0.y)?;
         let mut piece_y = Vec::new();
@@ -2388,7 +2388,7 @@ impl OdeArea<'_> {
     }
 }
 
-/// `sm_SurfaceKnotsInside` (the SolidCraft fork's tangency-labs/smlib@08d9a14): the
+/// `sm_SurfaceKnotsInside` (the Torno fork's tangency-labs/smlib@08d9a14): the
 /// unique knots of a B-spline-kind surface in `param`'s direction strictly inside
 /// `(lo, hi)`, ascending; none for a surface not of the B-spline kind (smooth
 /// everywhere). The knots are read as upstream's virtual `GetKnots` does, with the NURB
@@ -2417,7 +2417,7 @@ pub fn surface_knots_inside(
     Ok(knots)
 }
 
-/// `sm_TrimCurveBreaks` (the SolidCraft fork's tangency-labs/smlib@08d9a14): where the
+/// `sm_TrimCurveBreaks` (the Torno fork's tangency-labs/smlib@08d9a14): where the
 /// precise-property integrand is not smooth along the UV trim curve `uv_curve` on
 /// `surface`: the curve's own knots over its natural interval, and the parameters where
 /// it crosses a knot line `u = k` of a B-spline surface (found per knot span by a sign

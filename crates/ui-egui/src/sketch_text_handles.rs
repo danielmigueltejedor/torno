@@ -4,17 +4,17 @@
 //! `sketch.edit_text` live; the whole gesture is one undo step and Esc cancels it (the drag
 //! shares [`crate::viewport::Viewport::text_drag`] with moving a text, so it ends and cancels
 //! the same way). A drag from anywhere else inside the frame moves the text ([`grab_inside`]).
-use solidcraft_engine::geom::prelude::*;
 use std::cell::RefCell;
+use torno_engine::geom::prelude::*;
 
 use egui::{Align2, CursorIcon, FontId, Painter, Pos2, Rect, Stroke, StrokeKind, vec2};
 use serde_json::json;
 use solidcore_record::Vec2;
-use solidcraft_engine::sketch::{CurveKind, LinkKind, LinkSource};
+use torno_engine::sketch::{CurveKind, LinkKind, LinkSource};
 
 use crate::SolveApp;
 use crate::viewport::{Hit, Proj};
-use solidcraft_theme::Tokens;
+use torno_theme::Tokens;
 
 /// Pixels from a handle's centre that still grab it.
 const GRAB_PX: f32 = 8.0;
@@ -327,7 +327,7 @@ pub(crate) fn show(app: &SolveApp, ui: &egui::Ui, painter: &Painter, proj: &Proj
             }
             Grab::Rotate => format!("{:.1}°", f.angle.to_degrees()),
         };
-        painter.text(p + vec2(14.0, -14.0), Align2::LEFT_BOTTOM, label, FontId::proportional(solidcraft_theme::Tokens::get().font_body), tk.accent);
+        painter.text(p + vec2(14.0, -14.0), Align2::LEFT_BOTTOM, label, FontId::proportional(torno_theme::Tokens::get().font_body), tk.accent);
     }
 }
 
@@ -401,7 +401,7 @@ mod tests {
     }
 
     use crate::scenario::Harness;
-    use solidcraft_engine::Sel;
+    use torno_engine::Sel;
 
     /// A sketch with "II" (10 mm) seen from the top, the text selected: its handles are up.
     fn setup() -> (Harness, String) {

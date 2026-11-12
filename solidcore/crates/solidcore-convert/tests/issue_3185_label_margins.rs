@@ -42,7 +42,7 @@ fn corpus() -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR")).join("../solidcore/tests/kernel_cases")
 }
 
-/// The corpus's kernel, its fixes on (as the parity run and SolidCraft run it).
+/// The corpus's kernel, its fixes on (as the parity run and Torno run it).
 fn kernel() -> Kernel {
     let v: Value =
         serde_json::from_str(&std::fs::read_to_string(corpus().join("fixes.json")).unwrap())

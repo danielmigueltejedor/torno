@@ -4,7 +4,7 @@
   <rect x="0" y="0" width="1120" height="900" fill="#ffffff"/>
   <text x="40" y="44" font-family="Helvetica" font-size="20" font-weight="bold" fill="#000000">One click through the layers</text>
   <rect x="120" y="80" width="580" height="56" rx="8" fill="#f0f0f0" stroke="#000000" stroke-width="1.5"/>
-  <text x="132" y="104" font-family="Helvetica" font-size="15" font-weight="bold" fill="#000000">Apps: solidcraft, solidcraft-cli</text>
+  <text x="132" y="104" font-family="Helvetica" font-size="15" font-weight="bold" fill="#000000">Apps: torno, torno-cli</text>
   <text x="132" y="124" font-family="Helvetica" font-size="12" fill="#000000">Start the window or the headless CLI. Exempt from the layer rules.</text>
   <rect x="120" y="164" width="580" height="72" rx="8" fill="#f0f0f0" stroke="#000000" stroke-width="1.5"/>
   <text x="132" y="188" font-family="Helvetica" font-size="15" font-weight="bold" fill="#000000">L5  ui-egui, gpu, mcp</text>
@@ -52,7 +52,7 @@
   <text x="776" y="606" font-family="Helvetica" font-size="11" fill="#555555">crates (UI toolkits included). Each builds and</text>
   <text x="776" y="623" font-family="Helvetica" font-size="11" fill="#555555">tests on its own: cargo xtask shared.</text>
   <path d="M30 690 L1090 690" fill="none" stroke="#999999" stroke-width="1.5" stroke-dasharray="8 6"/>
-  <text x="40" y="682" font-family="Helvetica" font-size="12" font-weight="bold" fill="#555555">SolidCraft</text>
+  <text x="40" y="682" font-family="Helvetica" font-size="12" font-weight="bold" fill="#555555">Torno</text>
   <text x="40" y="710" font-family="Helvetica" font-size="12" font-weight="bold" fill="#555555">solidcore</text>
   <text x="560" y="682" font-family="Helvetica" font-size="12" text-anchor="middle" fill="#555555">crossed only through solidcore-ops, -tess and -record</text>
   <rect x="100" y="726" width="240" height="64" rx="8" fill="#f0f0f0" stroke="#000000" stroke-width="1.5"/>

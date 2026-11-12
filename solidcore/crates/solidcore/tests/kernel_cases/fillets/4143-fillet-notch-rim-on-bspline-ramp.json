@@ -146,7 +146,7 @@
     "blend_dropping"
   ],
   "ungraded": [
-    "continuity: SolidCraft computes it"
+    "continuity: Torno computes it"
   ],
   "what": "an R4 round on the rim of an R5 notch where its cylinder meets an extruded B-spline ramp, both ends running into a square wall",
   "why_not": []

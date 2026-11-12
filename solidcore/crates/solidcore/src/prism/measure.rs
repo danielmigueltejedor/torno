@@ -18,7 +18,7 @@
 //! - **The volume:** the section's area interval, widened by the strip the corridor allows,
 //!   times the height's interval.
 //!
-//! Not upstream: SolidCraft's `prism_measure.rs`, read off the kernel's body instead of a record
+//! Not upstream: Torno's `prism_measure.rs`, read off the kernel's body instead of a record
 //! (docs/layers.md §1).
 //!
 //! Deviations: none (no upstream counterpart). No recursion.

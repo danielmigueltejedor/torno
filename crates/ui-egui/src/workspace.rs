@@ -1,9 +1,9 @@
 //! Ribbon structure is UI data; command registrations retain their original placements.
 //! Explicit ids override the old placement table and can also share a command across sections.
 
-use solidcraft_engine::CommandSpec;
-use solidcraft_engine::doc::FeatureKind;
-use solidcraft_theme::{AccentRamp, TabAccent, TabStyle, TabTable, Tokens};
+use torno_engine::CommandSpec;
+use torno_engine::doc::FeatureKind;
+use torno_theme::{AccentRamp, TabAccent, TabStyle, TabTable, Tokens};
 
 pub const RENDER_TABS: &[&str] = &["RENDER"];
 
@@ -29,8 +29,8 @@ pub fn word_cased(name: &str) -> String {
 /// A ribbon tab's name as the ribbon shows it, in the current language: "SHEET METAL" reads
 /// "Sheet Metal", or "Blech" in German. A partial catalog may translate only the word-cased name.
 pub fn tab_name(tab: &str) -> String {
-    let cased = word_cased(solidcraft_ui_text::tr_label(tab_label(tab)));
-    solidcraft_ui_text::tr_label(&cased).to_string()
+    let cased = word_cased(torno_ui_text::tr_label(tab_label(tab)));
+    torno_ui_text::tr_label(&cased).to_string()
 }
 
 pub const TABS: &[&str] = &["MODEL", "SURFACE", "ASSEMBLE", "INSERT", "INSPECT", "MANAGE", "VIEW"];
@@ -66,7 +66,7 @@ const fn tab_style(name: &'static str, ramp: AccentRamp, icon_accent: Option<&'s
 /// these names): at startup, before any theme file is read, and in every test context. Calling
 /// it again does nothing.
 pub fn install_tabs() {
-    solidcraft_theme::install_tabs(TAB_ACCENTS);
+    torno_theme::install_tabs(TAB_ACCENTS);
 }
 
 /// The selection colours of `tab` in `t` ([`TAB_ACCENTS`]).
@@ -641,7 +641,7 @@ pub fn layout<'a>(tab: &str, panel: &str, specs: &[&'a CommandSpec]) -> Option<(
 /// unknown command ids follow the old panel's default destination.
 pub fn legacy_destination(tab: &str, panel: &str, id: &str) -> Option<(&'static str, &'static str)> {
     legacy_panel(tab, panel)?;
-    solidcraft_engine::find_command(id).and_then(destination).or_else(|| legacy_panel(tab, panel))
+    torno_engine::find_command(id).and_then(destination).or_else(|| legacy_panel(tab, panel))
 }
 
 pub fn legacy_panel(tab: &str, panel: &str) -> Option<(&'static str, &'static str)> {
@@ -683,8 +683,8 @@ pub fn feature_icon(k: &FeatureKind) -> Option<&'static str> {
 
 /// Selected geometry identifies the active body; without a body selection use the last body
 /// of the active component, matching feature dialogs.
-fn active_body<'a>(app: &'a crate::SolveApp, state: &'a solidcraft_engine::doc::ModelState) -> Option<&'a str> {
-    use solidcraft_engine::Sel;
+fn active_body<'a>(app: &'a crate::SolveApp, state: &'a torno_engine::doc::ModelState) -> Option<&'a str> {
+    use torno_engine::Sel;
     let selected = app.session.selection.iter().find_map(|s| match s {
         Sel::Body { name } => Some(name.as_str()),
         Sel::Face { body, .. } | Sel::Edge { body, .. } => Some(body.as_str()),
@@ -790,9 +790,7 @@ fn home_tab(app: &crate::SolveApp) -> &'static str {
 pub fn starts_a_sketch(app: &crate::SolveApp, id: &str) -> bool {
     app.preferences.sketch_tab_always
         && app.session.active_sketch.is_none()
-        && solidcraft_engine::find_command(id)
-            .and_then(destination)
-            .is_some_and(|(tab, panel)| tab == "SKETCH" && matches!(panel, "CREATE" | "REFERENCE"))
+        && torno_engine::find_command(id).and_then(destination).is_some_and(|(tab, panel)| tab == "SKETCH" && matches!(panel, "CREATE" | "REFERENCE"))
 }
 
 /// Select contextual tabs on entry (or a different sheet body or frame member), allowing the
@@ -851,7 +849,7 @@ pub fn select_command_tab(app: &mut crate::SolveApp, id: &str) {
 /// The tab to switch to so the ribbon shows command `id`, or `None` to stay: the current tab
 /// already lists it, or its home tab can't be shown.
 pub fn command_tab(app: &crate::SolveApp, id: &str) -> Option<&'static str> {
-    let c = solidcraft_engine::find_command(id)?;
+    let c = torno_engine::find_command(id)?;
     // Keep the tab a toolbar click came from when it already lists this shared command.
     if crate::toolbar_custom::panel_lists(&app.ui.tab).iter().any(|(_, cmds, _)| cmds.iter().any(|c| c.id == id)) {
         return None;
@@ -894,7 +892,7 @@ pub fn legacy_buttons(tab: &str, panel: &str) -> Vec<&'static str> {
         _ => (&[], 2, tab),
     };
     let mut out = ids.to_vec();
-    for c in solidcraft_engine::command_specs().into_iter().filter(|c| c.tab == source && c.panel == panel) {
+    for c in torno_engine::command_specs().into_iter().filter(|c| c.tab == source && c.panel == panel) {
         if !out.contains(&c.id) {
             out.push(c.id);
         }
@@ -911,7 +909,7 @@ mod tests {
     /// Every Construct command appears once, under its entity heading, including filtered menus.
     #[test]
     fn construct_groups_keep_every_command_in_planes_axes_points_order() {
-        let specs = solidcraft_engine::command_specs();
+        let specs = torno_engine::command_specs();
         let (commands, _) = layout("MODEL", "CONSTRUCT", &specs).unwrap();
         let grouped = grouped_commands("MODEL", "CONSTRUCT", &commands);
         assert_eq!(grouped.iter().filter_map(|(h, _)| *h).collect::<Vec<_>>(), ["ui.construct_planes", "ui.construct_axes", "ui.construct_points"]);
@@ -982,7 +980,7 @@ mod tests {
 
     #[test]
     fn modify_groups_order_commands_and_keep_unlisted_commands_at_the_end() {
-        let specs = solidcraft_engine::command_specs();
+        let specs = torno_engine::command_specs();
         let (commands, _) = layout("MODEL", "MODIFY", &specs).unwrap();
         let grouped = grouped_commands("MODEL", "MODIFY", &commands);
         assert_eq!(grouped.iter().filter_map(|(h, _)| *h).collect::<Vec<_>>(), ["Edges", "Faces", "Bodies", "Specialise"]);
@@ -1014,7 +1012,7 @@ mod tests {
 
     #[test]
     fn promoted_long_labels_have_compact_ribbon_names() {
-        let specs = solidcraft_engine::command_specs();
+        let specs = torno_engine::command_specs();
         let english: std::collections::BTreeMap<String, String> =
             serde_json::from_str(include_str!(concat!(env!("OUT_DIR"), "/locales/en.json"))).unwrap();
         for section in SECTIONS {
@@ -1030,12 +1028,12 @@ mod tests {
             }
         }
         for (id, label) in RIBBON_LABELS {
-            assert!(solidcraft_engine::find_command(id).is_some(), "unknown command {id}");
+            assert!(torno_engine::find_command(id).is_some(), "unknown command {id}");
             assert!(label.chars().count() <= 13, "{id}: {label}");
             assert!(english.values().any(|value| value == label), "untranslated ribbon label {label}");
         }
-        assert_eq!(ribbon_button_label(solidcraft_engine::find_command("sketch.create").unwrap()), "New Sketch");
-        assert_eq!(solidcraft_engine::find_command("sketch.create").unwrap().label, "Create Sketch");
+        assert_eq!(ribbon_button_label(torno_engine::find_command("sketch.create").unwrap()), "New Sketch");
+        assert_eq!(torno_engine::find_command("sketch.create").unwrap().label, "Create Sketch");
         let construction = crate::sketch_families::family("sketch.construction_line").unwrap();
         assert_eq!(ribbon_family_label(construction), "X-Lines");
         assert_eq!(construction.label, "Construction Line");
@@ -1043,7 +1041,7 @@ mod tests {
 
     #[test]
     fn every_placed_command_is_reachable_and_every_layout_id_exists() {
-        let specs = solidcraft_engine::command_specs();
+        let specs = torno_engine::command_specs();
         let lists: Vec<_> = SECTIONS.iter().map(|s| (s, layout(s.tab, s.panel, &specs).unwrap())).collect();
         for c in specs.iter().filter(|c| !c.tab.is_empty() && !c.tab.starts_with("RENDER")) {
             assert!(lists.iter().any(|(_, (cmds, _))| cmds.iter().any(|x| x.id == c.id)), "lost toolbar command {} ({}/{})", c.id, c.tab, c.panel);
@@ -1065,7 +1063,7 @@ mod tests {
 
     #[test]
     fn model_defaults_and_shared_commands_follow_the_map() {
-        let specs = solidcraft_engine::command_specs();
+        let specs = torno_engine::command_specs();
         for (panel, expected) in [
             ("SKETCH", vec!["sketch.create"]),
             ("CREATE", vec!["solid.extrude", "solid.revolve", "solid.hole"]),
@@ -1094,10 +1092,10 @@ mod tests {
     /// inventory prints the placement a spec declares (#133).
     #[test]
     fn no_command_is_advertised_at_a_tab_the_ribbon_removed() {
-        for c in solidcraft_engine::command_specs() {
+        for c in torno_engine::command_specs() {
             assert!(!matches!(c.tab, "MESH" | "UTILITIES"), "{} declares the removed {} tab", c.id, c.tab);
         }
-        let spec = solidcraft_engine::find_command("file.save_mesh").expect("file.save_mesh is registered");
+        let spec = torno_engine::find_command("file.save_mesh").expect("file.save_mesh is registered");
         assert_eq!((spec.tab, spec.panel), ("INSERT", "FILES"), "Save As Mesh declares the panel that shows it");
         assert_eq!(destination(spec), Some(("INSERT", "FILES")));
     }
@@ -1162,7 +1160,7 @@ mod tests {
     /// a sheet body, but keeps the ordinary tab look.
     #[test]
     fn weldments_tab_holds_frame_member_and_follows_a_member_body() {
-        let specs = solidcraft_engine::command_specs();
+        let specs = torno_engine::command_specs();
         assert_eq!(panels("WELDMENTS"), ["SKETCH", "CREATE", "CONFIGURE"]);
         let (create, n) = layout("WELDMENTS", "CREATE", &specs).unwrap();
         assert_eq!(create.iter().take(n).map(|c| c.id).collect::<Vec<_>>(), ["frame.member", "frame.end_cap"]);
@@ -1234,7 +1232,7 @@ mod tests {
         assert!(h.call("ui.prefs", json!({"hidden_toolbar_tabs": ["SKETCH"]}))["error"].is_string(), "only choosable tabs");
         assert!(h.call("ui.prefs", json!({"hidden_toolbar_tabs": ["VIEW", "VIEW"]}))["error"].is_string(), "each once");
         assert!(h.call("ui.prefs", json!({"hidden_toolbar_tabs": choosable_tabs().collect::<Vec<_>>()}))["error"].is_null());
-        let mut other = crate::SolveApp::new(solidcraft_engine::Session::default(), crate::Services::default());
+        let mut other = crate::SolveApp::new(torno_engine::Session::default(), crate::Services::default());
         other.load_prefs(&h.app.prefs());
         assert!(visible_tabs(&other).is_empty());
 
@@ -1294,7 +1292,7 @@ mod tests {
         assert_eq!(h.app.preferences.hidden_toolbar_tabs, ["SHEET METAL"]);
         assert!(crate::scenario::handle_at("tab:SHEET METAL").is_none());
         assert!(visible_tabs(&h.app).contains(&"WELDMENTS"));
-        let mut other = crate::SolveApp::new(solidcraft_engine::Session::default(), crate::Services::default());
+        let mut other = crate::SolveApp::new(torno_engine::Session::default(), crate::Services::default());
         other.load_prefs(&h.app.prefs());
         assert!(!visible_tabs(&other).contains(&"SHEET METAL"));
 
@@ -1356,7 +1354,7 @@ mod tests {
     /// fresh document reaches Sheet Metal (to flange a sketch or convert a solid) by its tab.
     #[test]
     fn parameters_and_configurations_are_on_model_and_sheet_metal_and_the_sheet_tab_opens_fresh() {
-        let specs = solidcraft_engine::command_specs();
+        let specs = torno_engine::command_specs();
         for tab in ["MODEL", "SHEET METAL", "SKETCH", "MANAGE"] {
             let ids = panel_ids(tab, &specs);
             assert!(ids.contains(&"parameters.change"), "{tab}: Parameters");
@@ -1372,7 +1370,7 @@ mod tests {
         h.step(&json!({"click":{"handle":"tab:SHEET METAL"}})).unwrap();
         h.frames(2);
         assert_eq!(h.app.ui.tab, "SHEET METAL");
-        let specs = solidcraft_engine::command_specs();
+        let specs = torno_engine::command_specs();
         let (create, _) = layout("SHEET METAL", "CREATE", &specs).unwrap();
         assert!(create.iter().any(|c| c.id == "sheet.convert"), "Convert to Sheet Metal is in the Sheet Metal tab's Create panel");
         for id in ["sheet.flange", "parameters.change", "config.table"] {
@@ -1431,7 +1429,7 @@ mod tests {
     fn parameters_and_configurations_open_separately() {
         use serde_json::json;
         let mut h = crate::scenario::Harness::new();
-        let specs = solidcraft_engine::command_specs();
+        let specs = torno_engine::command_specs();
         let (commands, _) = layout("MANAGE", "CONFIGURATIONS", &specs).unwrap();
         assert!(commands.iter().any(|c| c.id == "config.configure"));
         h.step(&json!({"click":{"handle":"tab:MANAGE"}})).unwrap();
@@ -1464,7 +1462,7 @@ mod tests {
     /// Shared assembly, sheet and plastic commands remain reachable in their ribbon sections.
     #[test]
     fn ribbon_sections_keep_shared_commands_reachable() {
-        let specs = solidcraft_engine::command_specs();
+        let specs = torno_engine::command_specs();
         let ids = |tab, panel| layout(tab, panel, &specs).unwrap().0.iter().map(|c| c.id).collect::<Vec<_>>();
         let joints = ids("ASSEMBLE", "JOINTS");
         assert_eq!(joints.first().copied(), Some("joint.create"));
@@ -1508,11 +1506,11 @@ mod tests {
     #[test]
     fn insert_design_is_on_the_assemble_panel_and_inserts_a_saved_part() {
         use serde_json::json;
-        let specs = solidcraft_engine::command_specs();
+        let specs = torno_engine::command_specs();
         assert!(layout("ASSEMBLE", "COMPONENTS", &specs).unwrap().0.iter().any(|c| c.id == "component.insert_design"));
         let mut h = crate::scenario::Harness::new();
         let part = h.dir.join("part1.solidcraft");
-        let mut s = solidcraft_engine::Session::default();
+        let mut s = torno_engine::Session::default();
         s.execute("solid.box", &json!({"length": 10, "width": 20, "height": 30})).unwrap();
         s.execute("file.save", &json!({"path": part})).unwrap();
         s.execute("file.export", &json!({"path": h.dir.join("part2.step")})).unwrap();

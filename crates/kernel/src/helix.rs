@@ -1,8 +1,8 @@
 //! Helical sweeps (coils, springs) and lofts to a point (pyramids, cones).
 
 use solidcore_record::{Loop2, Plane, Region2, Vec2, Vec3};
-use solidcraft_geom::Mesh;
-use solidcraft_geom::prelude::*;
+use torno_geom::Mesh;
+use torno_geom::prelude::*;
 
 use crate::body::Body;
 use crate::{KernelError, Result};
@@ -17,7 +17,7 @@ fn rot(v: Vec3, k: Vec3, ang: f64) -> Vec3 {
 /// its attitude relative to the axis, as a screw motion does: SMLib's screw sweep, one wall per
 /// profile segment.
 pub fn sweep_helix(plane: &Plane, region: &Region2, axis_origin: Vec3, axis: Vec3, pitch: f64, turns: f64) -> Result<Body> {
-    let _span = solidcraft_profile::span("kernel", "sweep_helix");
+    let _span = torno_profile::span("kernel", "sweep_helix");
     let (k, profile) = helix_profile(plane, region, axis_origin, axis, pitch, turns)?;
     crate::smlib_sweeps::screw(plane, &crate::smlib_sweeps::pieces([&profile]), axis_origin, k, pitch, turns)
 }
@@ -37,7 +37,7 @@ pub fn sweep_helix_radial(
     law: &[(f64, f64)],
     continuous_flanks: bool,
 ) -> Result<Body> {
-    let _span = solidcraft_profile::span("kernel", "sweep_helix_radial");
+    let _span = torno_profile::span("kernel", "sweep_helix_radial");
     let (k, profile) = helix_profile(plane, region, axis_origin, axis, pitch, turns)?;
     if !law.windows(2).all(|w| matches!(w, [a, b] if b.0 > a.0))
         || law.iter().any(|(t, o)| !(t.is_finite() && o.is_finite() && *t >= 0.0 && *t <= turns))
@@ -90,7 +90,7 @@ fn helix_profile(
 /// wound outward: `stations` sections per turn, flat end caps. Watertight by construction, for
 /// faceted booleans (modelled threads).
 pub fn sweep_helix_mesh(plane: &Plane, polygon: &[Vec2], axis_origin: Vec3, axis: Vec3, pitch: f64, turns: f64, stations: usize) -> Result<Mesh> {
-    let _span = solidcraft_profile::span("kernel", "sweep_helix_mesh");
+    let _span = torno_profile::span("kernel", "sweep_helix_mesh");
     let k = axis.normalized().ok_or_else(|| KernelError::Invalid("helix axis".into()))?;
     let m = polygon.len();
     if !(pitch.is_finite() && turns.is_finite() && turns > 0.0 && turns <= 200.0 && (3..=64).contains(&m) && (8..=720).contains(&stations)) {
@@ -129,7 +129,7 @@ pub fn sweep_helix_mesh(plane: &Plane, polygon: &[Vec2], axis_origin: Vec3, axis
 /// A solid from a planar loop of straight segments to an apex point off its plane (a pyramid):
 /// SMLib's loft to a point.
 pub fn loft_to_point(plane: &Plane, lp: &Loop2, apex: Vec3) -> Result<Body> {
-    let _span = solidcraft_profile::span("kernel", "loft_to_point");
+    let _span = torno_profile::span("kernel", "loft_to_point");
     if !apex.is_finite() || lp.segs.is_empty() || lp.segs.len() > 10_000 {
         return Err(KernelError::Invalid("loft to a point: bad section or apex".into()));
     }
@@ -174,7 +174,7 @@ mod tests {
         assert!(loft_to_point(&pl, &lp, Vec3::new(1.0, 1.0, 0.0)).is_err());
     }
 
-    /// solidcraft#11216: a curved section lofts to a point. The circle gives the cone,
+    /// torno#11216: a curved section lofts to a point. The circle gives the cone,
     /// pi r^2 h / 3, as one wall (a seam) over the disk.
     #[test]
     fn cone_from_a_circle_to_a_point() {

@@ -40,6 +40,6 @@
   "ungraded": [],
   "what": "config.column of a parameter the design does not have",
   "why_not": [
-    "the failure is SolidCraft's, not a kernel operation's: step 6 (config.column): invalid parameters for `config.column`: no parameter `Depth`"
+    "the failure is Torno's, not a kernel operation's: step 6 (config.column): invalid parameters for `config.column`: no parameter `Depth`"
   ]
 }

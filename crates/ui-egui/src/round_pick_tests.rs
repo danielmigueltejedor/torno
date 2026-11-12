@@ -5,9 +5,9 @@
 
 use serde_json::{Value, json};
 use solidcore_record::Vec3;
-use solidcraft_engine::Sel;
-use solidcraft_engine::doc::{AxisRef, FeatureKind, PatternKind, PlaneRef};
-use solidcraft_engine::geom::prelude::*;
+use torno_engine::Sel;
+use torno_engine::doc::{AxisRef, FeatureKind, PatternKind, PlaneRef};
+use torno_engine::geom::prelude::*;
 
 use crate::dialogs::Kind;
 use crate::scenario::Harness;
@@ -29,7 +29,7 @@ fn shaft() -> Harness {
 /// polyline: its first point is the vertex where the wall's seam meets it, as near the seam as
 /// the rim.
 fn picks(h: &Harness) -> (Sel, Sel, Sel) {
-    use solidcraft_engine::kernel::{FaceSurface, face_surface};
+    use torno_engine::kernel::{FaceSurface, face_surface};
     let st = h.app.session.world_state().unwrap();
     let b = st.body("Shaft").unwrap();
     let face = |want: fn(&FaceSurface) -> bool, point: Vec3| {
@@ -44,7 +44,7 @@ fn picks(h: &Harness) -> (Sel, Sel, Sel) {
         .iter()
         .enumerate()
         .find_map(|(index, e)| {
-            let c = solidcraft_engine::kernel::edge_circle(&b.body, index)?;
+            let c = torno_engine::kernel::edge_circle(&b.body, index)?;
             (c.center.z > 9.0).then(|| Sel::Edge { body: "Shaft".into(), index, point: crate::viewport::polyline_mid(e) })
         })
         .unwrap();
@@ -244,7 +244,7 @@ fn point_inputs_take_a_circles_centre() {
     for (c, p) in cmds {
         h.app.run(&c, p).unwrap();
     }
-    let points = solidcraft_engine::view::construction_points(&h.app.session);
+    let points = torno_engine::view::construction_points(&h.app.session);
     assert!(points.iter().any(|p| p.2.dist(Vec3::new(40.0, 0.0, 10.0)) < 1e-6), "{points:?}");
     // Revolve's To Object takes the centre as a point.
     h.app.start("solid.revolve");

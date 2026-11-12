@@ -11,7 +11,7 @@ struct HdrFile(String);
 
 impl HdrFile {
     fn new(name: &str, bytes: Option<&[u8]>) -> Self {
-        let path = std::env::temp_dir().join(format!("solidcraft-hdr-schema-{}-{name}.hdr", std::process::id()));
+        let path = std::env::temp_dir().join(format!("torno-hdr-schema-{}-{name}.hdr", std::process::id()));
         let mut hdr = b"#?RADIANCE\nFORMAT=32-bit_rle_rgbe\nPRIMARIES=0.64 0.33 0.30 0.60 0.15 0.06 0.3127 0.3290\n\n-Y 2 +X 4\n".to_vec();
         hdr.extend([128, 64, 32, 129].repeat(8));
         std::fs::write(&path, bytes.unwrap_or(&hdr)).unwrap_or_else(|e| panic!("{e}"));

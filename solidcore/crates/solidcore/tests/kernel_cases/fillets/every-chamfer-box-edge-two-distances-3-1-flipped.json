@@ -149,7 +149,7 @@
     "chamfer_sides"
   ],
   "ungraded": [
-    "continuity: SolidCraft computes it"
+    "continuity: Torno computes it"
   ],
   "what": "a box's top front edge chamfered by two distances, flipped: 3 down the front and 1 along the top",
   "why_not": []

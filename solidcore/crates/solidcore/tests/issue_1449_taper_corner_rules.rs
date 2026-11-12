@@ -1,4 +1,4 @@
-//! tangency-labs/solidcore#1449: `SmApiCreateTaperExtrude`'s draft-corner rules (SolidCraft
+//! tangency-labs/solidcore#1449: `SmApiCreateTaperExtrude`'s draft-corner rules (Torno
 //! fork, tangency-labs/smlib 54148db and e8f23e0).
 //!
 //! - `OffsetCornerType::CurveExtension` (WR-520): each wall continues as itself (a line's

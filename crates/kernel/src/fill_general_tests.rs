@@ -5,8 +5,8 @@
 
 use solidcore_record::brep::{self as b};
 use solidcore_record::{Loop2, Plane, Region2, Vec2, Vec3};
-use solidcraft_geom::brep::{eval::CurveEval, eval::SurfaceEval};
-use solidcraft_geom::prelude::*;
+use torno_geom::brep::{eval::CurveEval, eval::SurfaceEval};
+use torno_geom::prelude::*;
 
 use super::{PATCH_ANGLE_TOL_DEG, PatchReport, PatchSpec, face_tolerance, patch_edges_report};
 use crate::body::Body;
@@ -377,10 +377,10 @@ fn per_edge_continuity_and_hostile_specs() {
 
 /// The seams between `fill` and the faces of `open` beside its edges, in the middle of each
 /// edge (30 % to 70 %): per seam, the largest normal angle (degrees) and jumps of `H₂`, `H₃` and
-/// `H₄` along the direction across the seam (`solidcraft_geom::linkage`), read off the two
+/// `H₄` along the direction across the seam (`torno_geom::linkage`), read off the two
 /// faces' own surfaces: the normal curvature, its rate of change and that rate's.
 fn seam_jumps(open: &Body, fill: &Body) -> Vec<[f64; 4]> {
-    use solidcraft_geom::linkage::surface_jet;
+    use torno_geom::linkage::surface_jet;
     let (ro, rf) = (open.record(), fill.record());
     let normal = |s: &SurfaceEval, uv: [f64; 2]| {
         let (_, su, sv) = s.derivs(uv[0], uv[1]).unwrap();

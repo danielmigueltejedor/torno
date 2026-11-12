@@ -141,10 +141,10 @@ impl ModifierCombo {
     pub fn shown_label(self) -> String {
         let platform = Platform::host();
         if self == Self::CTRL_ALT {
-            return solidcraft_ui_text::format("ui.modifiers_either", &[("first", ctrl_name_for(platform)), ("second", alt_name_for(platform))]);
+            return torno_ui_text::format("ui.modifiers_either", &[("first", ctrl_name_for(platform)), ("second", alt_name_for(platform))]);
         }
         if self == Self::NONE {
-            return solidcraft_ui_text::tr_label("None").to_string();
+            return torno_ui_text::tr_label("None").to_string();
         }
         self.label_for(platform)
     }
@@ -346,7 +346,7 @@ const SELECTION_BINDINGS: &[Binding] = &[
 const SKETCH_SNAP_BINDINGS: &[Binding] = &[
     Binding {
         action: ModAction::SuppressSnap,
-        // Classic SolidCraft: Ctrl/Cmd or Alt/Option each suppress snap.
+        // Classic Torno: Ctrl/Cmd or Alt/Option each suppress snap.
         defaults: &[ModifierCombo::CTRL, ModifierCombo::ALT],
         matching: Match::AtLeast,
         trigger: Trigger::Live,

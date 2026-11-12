@@ -19,23 +19,23 @@
 //! Create Hole › Group holes made together (`hole_group`): the holes one Hole dialog makes, two or
 //! more, go into a feature folder in History, closed at first.
 
-use solidcraft_engine::geom::prelude::*;
 use std::cell::RefCell;
 use std::sync::Arc;
+use torno_engine::geom::prelude::*;
 
 use egui::Pos2;
 use solidcore_record::Vec3;
-use solidcraft_engine::Sel;
-use solidcraft_engine::Session;
-use solidcraft_engine::doc::expr::Kind as ValueKind;
-use solidcraft_engine::geom::{Aabb3, Mesh};
+use torno_engine::Sel;
+use torno_engine::Session;
+use torno_engine::doc::expr::Kind as ValueKind;
+use torno_engine::geom::{Aabb3, Mesh};
 
 use crate::SolveApp;
 use crate::dialogs::{Dialog, Kind};
 use crate::dialogs_assembly::SnapKind;
 use crate::selection::same_item;
 use crate::viewport::{Hit, Proj};
-use solidcraft_theme::Tokens;
+use torno_theme::Tokens;
 
 /// How near (screen points) a pick must come to a snap point to take it.
 pub(crate) const POINT_REACH: f32 = 10.0;
@@ -443,7 +443,7 @@ pub(crate) fn marks(app: &SolveApp, painter: &egui::Painter, proj: &Proj) {
     for s in snaps.iter() {
         let Some(c) = proj.to_screen(s.at) else { continue };
         if on.as_ref().is_some_and(|o| o.at == s.at) {
-            let name = solidcraft_ui_text::tr_label(crate::dialogs_assembly::snap_name(s.kind));
+            let name = torno_ui_text::tr_label(crate::dialogs_assembly::snap_name(s.kind));
             crate::icons::markers::snap(painter, c, None, s.kind, t.hover_profile_edge, Some(name));
         } else {
             crate::icons::markers::snap_hint(painter, c, s.kind, t.manipulator);

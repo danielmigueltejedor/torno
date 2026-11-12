@@ -164,7 +164,7 @@
     "extrude"
   ],
   "ungraded": [
-    "results: SolidCraft computes it"
+    "results: Torno computes it"
   ],
   "what": "plastic.rules after a design rule is made and assigned to a body: the six library rules, then the design's own, the active one and the assignment",
   "why_not": []

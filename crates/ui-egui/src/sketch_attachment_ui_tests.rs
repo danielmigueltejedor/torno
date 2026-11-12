@@ -1,7 +1,7 @@
 use crate::scenario::Harness;
 use serde_json::{Value, json};
-use solidcraft_engine::doc::{FaceAttachmentStatus, FeatureKind, PlaneRef};
-use solidcraft_engine::geom::prelude::*;
+use torno_engine::doc::{FaceAttachmentStatus, FeatureKind, PlaneRef};
+use torno_engine::geom::prelude::*;
 
 fn picked_sketch() -> (Harness, u64) {
     let mut h = Harness::new();
@@ -86,7 +86,7 @@ fn lost_attachment_ghost_rebind_preview_cancel_apply_and_undo_preserve_sketch() 
     let redo = h.app.session.redo.len();
     h.frames(4);
     h.step(&json!({"click":{"world":[3,4,30]}})).unwrap();
-    assert!(matches!(h.app.session.selection.first(), Some(solidcraft_engine::Sel::Face { body, .. }) if body=="ControlBox"));
+    assert!(matches!(h.app.session.selection.first(), Some(torno_engine::Sel::Face { body, .. }) if body=="ControlBox"));
     h.frames(2);
     h.step(&json!({"widget":"Reattach selected face"})).unwrap();
     let commands = crate::sketch_attachment_ui::commands(&h.app)
@@ -119,7 +119,7 @@ fn lost_attachment_ghost_rebind_preview_cancel_apply_and_undo_preserve_sketch() 
     h.app.run("file.save", json!({"path":path})).unwrap();
     // Saving the untitled design names it after its file; everything else is exact.
     let named = |doc: &str| {
-        let mut doc = solidcraft_engine::doc::Document::from_json(doc).unwrap();
+        let mut doc = torno_engine::doc::Document::from_json(doc).unwrap();
         doc.name = "rebound-face".into();
         doc.to_json()
     };
@@ -252,7 +252,7 @@ fn actual_nested_second_placement_face_pick_keeps_target_and_author_paths() {
 fn nested_anchor_saved_fixed_conversion_preserves_rotated_second_author_plane() {
     use solidcore_record::Plane;
     use solidcore_record::Vec3;
-    use solidcraft_engine::doc::{EmbossFace, apply_point, apply_vector};
+    use torno_engine::doc::{EmbossFace, apply_point, apply_vector};
     let mut h = Harness::new();
     h.app.session.auto_project = false;
     let created = h.app.run("component.create", json!({"name":"Author"})).unwrap();
@@ -297,7 +297,7 @@ fn nested_anchor_saved_fixed_conversion_preserves_rotated_second_author_plane() 
         direction_only: false,
         pivot: None,
     };
-    h.app.session = solidcraft_engine::Session::new(document);
+    h.app.session = torno_engine::Session::new(document);
     let raw = h.app.session.doc.sketch(id).unwrap().clone();
     let before = h.app.session.doc.to_json();
     let undo = h.app.session.undo.len();

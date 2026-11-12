@@ -194,7 +194,7 @@
     "blend_dropping"
   ],
   "ungraded": [
-    "continuity: SolidCraft computes it"
+    "continuity: Torno computes it"
   ],
   "what": "a box's top front edge rounded r2, then the vertical edge meeting it at the corner rounded r2 (Tangent chain on)",
   "why_not": []

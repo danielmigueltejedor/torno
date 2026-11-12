@@ -32,6 +32,6 @@
   "ungraded": [],
   "what": "an axis through a flat face",
   "why_not": [
-    "the failure is SolidCraft's, not a kernel operation's: step 2 (construct.axis.through_cylinder): the face is not a cylinder, cone or torus"
+    "the failure is Torno's, not a kernel operation's: step 2 (construct.axis.through_cylinder): the face is not a cylinder, cone or torus"
   ]
 }

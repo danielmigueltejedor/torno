@@ -21,7 +21,7 @@
 //! Ignored statuses keep their outputs; with `Kernel::fixes.sweep_statuses_pass_on`
 //! (fork c8f6a31, WR-662) the ones the fork wraps in `SER` are returned. No recursion.
 //! The surface intersection method checks the kernel's cancel token before each face of
-//! its extraneous-face loop (#2756); results are unchanged. SolidCraft changes
+//! its extraneous-face loop (#2756); results are unchanged. Torno changes
 //! (tangency-labs/smlib 54148db, e8f23e0, in `taper_walls`):
 //! [`OffsetCornerType::CurveExtension`] and, under opt-in
 //! `fixes.taper_tangent_corner_planes` (WR-521), linear-extension corners of a profile
@@ -189,7 +189,7 @@ impl PrimitiveCreation {
 
     /// [`Self::create_taper_extrude`] reporting a refused corner: `Ok(Some(refusal))`
     /// is the fork's `SM_ERR_INVALID_INPUT` with `pOptRefusal` and
-    /// `pOptRefusedCorner` set (SolidCraft change, tangency-labs/smlib 54148db): with
+    /// `pOptRefusedCorner` set (Torno change, tangency-labs/smlib 54148db): with
     /// [`OffsetCornerType::CurveExtension`], or linear-extension corners under
     /// `fixes.taper_tangent_corner_planes` (WR-521), a profile of lines and circular
     /// arcs with a sharp corner gets walls that continue as themselves (or as their
@@ -387,7 +387,7 @@ fn taper(
         missing_faces: false,
     };
 
-    // SolidCraft change (tangency-labs/smlib 54148db, e8f23e0): walls that keep their
+    // Torno change (tangency-labs/smlib 54148db, e8f23e0): walls that keep their
     // curvature at the corners. Without a sharp corner the three corner rules give the
     // same walls, which the offset method builds. The tangent rule too, for lines and
     // arcs (opt-in `fixes.taper_tangent_corner_planes`, WR-521): their walls continue

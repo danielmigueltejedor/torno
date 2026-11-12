@@ -1,7 +1,7 @@
 //! Metrics elements for dense cards; see `docs/ui-kit.md` for tokens and usage.
 use super::layout::FORM;
 use egui::Ui;
-use solidcraft_theme::Tokens;
+use torno_theme::Tokens;
 
 /// Row height for controls. Tokens: `control_height`.
 pub fn row_height() -> f32 {
@@ -33,7 +33,7 @@ const LABEL_COLUMN_MAX: f32 = 1.6;
 /// once and the label column and the captions line up on the same text.
 pub(super) fn indented_label(text: &str) -> String {
     let indent = text.len() - text.trim_start().len();
-    format!("{}{}", &text[..indent], solidcraft_ui_text::tr_label(text.trim_start()))
+    format!("{}{}", &text[..indent], torno_ui_text::tr_label(text.trim_start()))
 }
 
 /// Measured width of a label in the form label font. Tokens: `font_label, dialog_label`.

@@ -140,7 +140,7 @@
     "blend_dropping"
   ],
   "ungraded": [
-    "continuity: SolidCraft computes it"
+    "continuity: Torno computes it"
   ],
   "what": "the top edge of a 10x10 box end rounded r5, half the wall",
   "why_not": []

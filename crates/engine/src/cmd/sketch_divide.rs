@@ -7,7 +7,7 @@
 //! The curve itself is left as it is. Curves of 3D sketches and model edges are not divided yet.
 
 use serde_json::{Value, json};
-use solidcraft_sketch::{ConstraintKind, CurveKind, Sketch, point_along};
+use torno_sketch::{ConstraintKind, CurveKind, Sketch, point_along};
 
 use super::sketch::{add_c, edit};
 use super::{CommandSpec, in_sketch};

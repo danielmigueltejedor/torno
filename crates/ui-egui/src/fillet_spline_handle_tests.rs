@@ -1,7 +1,7 @@
 use crate::scenario::Harness;
 use serde_json::{Value, json};
-use solidcraft_engine::doc::{FeatureKind, FilletStyle, kernel};
-use solidcraft_engine::geom::prelude::*;
+use torno_engine::doc::{FeatureKind, FilletStyle, kernel};
+use torno_engine::geom::prelude::*;
 
 /// A plate whose top narrows from 20 to 2 mm along 40 mm, against a wall behind its slanted
 /// side from z = -15 to 30 (so a blend of its front edges has no cliff to run over and is cut
@@ -77,7 +77,7 @@ fn dragging_a_taper_handle_makes_the_fillet_a_spline() {
     };
     assert_eq!(knots, &taper.spline.knots);
     let values: Vec<f64> =
-        std::iter::once(radius).chain(radii).map(|e| h.app.session.doc.eval(e, solidcraft_engine::doc::expr::Kind::Length).unwrap()).collect();
+        std::iter::once(radius).chain(radii).map(|e| h.app.session.doc.eval(e, torno_engine::doc::expr::Kind::Length).unwrap()).collect();
     let moved: Vec<usize> = (0..values.len()).filter(|i| (values[*i] - taper.spline.radii[*i]).abs() > 1e-3).collect();
     assert_eq!(moved, [k], "{values:?} vs {:?}", taper.spline.radii);
     assert!((values[k] - 4.0).abs() < 0.05, "{values:?}");
@@ -117,8 +117,7 @@ fn dialog_spline(h: &Harness) -> kernel::RadiusSpline {
     let crate::dialogs::Kind::Fillet { radius, .. } = &d.kind else { panic!("a fillet dialog") };
     let knots: Vec<f64> = d.extra["knots"].as_array().unwrap().iter().filter_map(Value::as_f64).collect();
     let rest: Vec<String> = d.extra["radii"].as_array().unwrap().iter().map(|r| r.as_str().map_or_else(|| r.to_string(), str::to_owned)).collect();
-    let values =
-        std::iter::once(radius).chain(&rest).map(|e| h.app.session.doc.eval(e, solidcraft_engine::doc::expr::Kind::Length).unwrap()).collect();
+    let values = std::iter::once(radius).chain(&rest).map(|e| h.app.session.doc.eval(e, torno_engine::doc::expr::Kind::Length).unwrap()).collect();
     FilletStyle::spline(&knots, values)
 }
 

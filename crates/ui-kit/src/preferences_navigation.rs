@@ -4,7 +4,7 @@ pub use super::preferences_figure_ops::{NavigatorAxis, paint_navigation_axes, pa
 use super::{metrics::dimension, text::paint_text};
 use crate::BackingTooltipExt as _;
 use egui::{FontId, Rect, Sense, Stroke, Ui, pos2, vec2};
-use solidcraft_theme::Tokens;
+use torno_theme::Tokens;
 
 /// One mouse silhouette beside the actual mapping selector and binding legend.
 /// The figure is descriptive content, not an icon asset or an application viewport.
@@ -105,7 +105,7 @@ pub fn settings_axis_row(
         super::layout::sized_row(ui, name, height, |ui| {
             // The row already owns these bounds; its centered cursor is not the top edge.
             let rect = ui.max_rect();
-            solidcraft_ui_registry::publish_rect(&format!("prefs:axis:{name}"), rect);
+            torno_ui_registry::publish_rect(&format!("prefs:axis:{name}"), rect);
             t.secondary_hline(ui.painter(), rect.x_range(), rect.bottom(), t.dialog_rule);
             if narrow {
                 let label_rect = Rect::from_min_size(rect.min, vec2(rect.width() * 0.5, line));

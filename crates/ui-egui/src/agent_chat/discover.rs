@@ -8,7 +8,7 @@ use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 use std::time::{Duration, Instant};
 
-/// An agent SolidCraft knows how to start in ACP mode.
+/// An agent Torno knows how to start in ACP mode.
 pub struct Known {
     pub id: &'static str,
     pub name: &'static str,
@@ -220,7 +220,7 @@ fn home() -> Option<PathBuf> {
 }
 
 /// PATH, then the usual places npm, Homebrew, nvm, Volta, bun, pipx and Grok put commands, and on
-/// Windows Node's own install folders: a launcher can start SolidCraft with a PATH that lacks
+/// Windows Node's own install folders: a launcher can start Torno with a PATH that lacks
 /// them, and an npm agent's `.cmd` shim then can't find `node` (#9297).
 pub fn search_dirs() -> Vec<PathBuf> {
     search_dirs_in(&|name| std::env::var_os(name), cfg!(windows))
@@ -483,7 +483,7 @@ fn detect_in(dirs: &[PathBuf], home: Option<&Path>, limit: Duration) -> Detectio
         argv.extend(k.args.iter().map(|a| a.to_string()));
         let mut result = if k.reports_version { probe(&path, limit) } else { Probe::default() };
         if let Some(version) = result.old_node.as_deref() {
-            result.problem = Some(solidcraft_ui_text::format("ui.agent_chat_node_too_old", &[("version", version)]));
+            result.problem = Some(torno_ui_text::format("ui.agent_chat_node_too_old", &[("version", version)]));
             if uses_env_node(&path)
                 && let Some(node) = compatible_node(dirs, limit)
             {
@@ -565,7 +565,7 @@ mod tests {
         use super::super::process::{AgentProcess, FromAgent};
         use std::os::unix::fs::PermissionsExt;
 
-        const CHILD: &str = "SOLIDCRAFT_NODE_COMPAT_TEST";
+        const CHILD: &str = "TORNO_NODE_COMPAT_TEST";
         const BROKEN_NODE: &str = "#!/bin/sh\nif [ \"$1\" = \"--version\" ]; then echo v18.19.1; else echo \"SyntaxError: Unexpected token 'with'\" >&2; echo 'Node.js v18.19.1' >&2; exit 1; fi\n";
         if let Some(root) = std::env::var_os(CHILD) {
             let root = PathBuf::from(root);
@@ -912,7 +912,7 @@ mod tests {
         let _ = std::fs::remove_dir_all(root);
     }
 
-    /// A launcher can start SolidCraft with a PATH that lacks Node (#9297). On Windows, Node's
+    /// A launcher can start Torno with a PATH that lacks Node (#9297). On Windows, Node's
     /// install folders are searched after it, so `node` is found, and an agent started with these
     /// folders as its PATH (`command_for`) finds it too.
     #[test]
@@ -932,7 +932,7 @@ mod tests {
             }
         };
         let dirs = search_dirs_in(&env, true);
-        assert_eq!(dirs.first(), Some(&system), "the PATH SolidCraft was given comes first");
+        assert_eq!(dirs.first(), Some(&system), "the PATH Torno was given comes first");
         for node in [program_files.join("nodejs"), x86.join("nodejs"), nvm.clone()] {
             assert!(dirs.contains(&node), "{} in {dirs:?}", node.display());
         }
@@ -956,10 +956,10 @@ mod tests {
         use super::super::process::{AgentProcess, FromAgent};
         use std::os::unix::fs::PermissionsExt;
 
-        const CHILD: &str = "SOLIDCRAFT_AGENT_PATH_TEST";
+        const CHILD: &str = "TORNO_AGENT_PATH_TEST";
         if let Some(root) = std::env::var_os(CHILD) {
             let root = PathBuf::from(root);
-            let agent = find_in("solidcraft-test-agent", &search_dirs()).unwrap();
+            let agent = find_in("torno-test-agent", &search_dirs()).unwrap();
             // Generous limits: both answer at once, but a whole test run on a loaded machine
             // can keep `env`, the shell and the script from starting within 3 s.
             assert_eq!(probe(&agent, Duration::from_secs(20)).version.as_deref(), Some("1.2.3"));
@@ -979,8 +979,8 @@ mod tests {
         let bin = root.join(".local/bin");
         std::fs::create_dir_all(&bin).unwrap();
         for (name, script) in [
-            ("solidcraft-test-agent", "#!/usr/bin/env solidcraft-test-runtime\n"),
-            ("solidcraft-test-runtime", "#!/bin/sh\nif [ \"$2\" = \"--version\" ]; then printf 'test-agent 1.2.3\\n'; else cat; fi\n"),
+            ("torno-test-agent", "#!/usr/bin/env torno-test-runtime\n"),
+            ("torno-test-runtime", "#!/bin/sh\nif [ \"$2\" = \"--version\" ]; then printf 'test-agent 1.2.3\\n'; else cat; fi\n"),
         ] {
             let path = bin.join(name);
             std::fs::write(&path, script).unwrap();

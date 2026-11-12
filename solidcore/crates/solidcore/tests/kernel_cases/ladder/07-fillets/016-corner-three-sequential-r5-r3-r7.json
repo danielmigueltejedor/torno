@@ -45,6 +45,6 @@
   "ungraded": [],
   "what": "rounds r5 and r3 on the two top edges at a corner, the r3 with its tangent chain, then a round on the vertical edge under them: the r3 chain has rounded that edge, so the pick takes no edge: refused",
   "why_not": [
-    "the failure is SolidCraft's, not a kernel operation's: step 4 (solid.fillet): invalid parameters for `solid.fillet`: [60, 40, 8] is where 2 edges meet: give a point along one edge, such as its midpoint"
+    "the failure is Torno's, not a kernel operation's: step 4 (solid.fillet): invalid parameters for `solid.fillet`: [60, 40, 8] is where 2 edges meet: give a point along one edge, such as its midpoint"
   ]
 }

@@ -26,10 +26,10 @@ use std::sync::Arc;
 
 use serde_json::Value;
 use solidcore_record::Vec3;
-use solidcraft_engine::doc::expr::Kind as ValueKind;
-use solidcraft_engine::geom::prelude::*;
+use torno_engine::doc::expr::Kind as ValueKind;
+use torno_engine::geom::prelude::*;
 
-use solidcraft_engine::Sel;
+use torno_engine::Sel;
 
 use super::{PlaceSource, Spec, circle, face_pick, rect, vec3_of};
 use crate::SolveApp;
@@ -55,7 +55,7 @@ type FacePlane = (Vec3, Vec3, [Vec3; 2]);
 
 thread_local! {
     /// The planes of the planar faces of the model state last asked about, found once per state.
-    static PLANES: RefCell<(Option<Arc<solidcraft_engine::doc::ModelState>>, Arc<Vec<FacePlane>>)> = RefCell::new((None, Arc::new(Vec::new())));
+    static PLANES: RefCell<(Option<Arc<torno_engine::doc::ModelState>>, Arc<Vec<FacePlane>>)> = RefCell::new((None, Arc::new(Vec::new())));
 }
 
 /// The planes of the model's planar faces.
@@ -242,7 +242,7 @@ fn move_to(app: &SolveApp, d: &mut Dialog, hits: &[Hit], _: usize) -> bool {
                 // Typed fields stand the box square to the world: on a curved face, the way out of
                 // it at the point; a tilted face or a curved one whose way out there is off the
                 // axes, which has no outline for it, does not take it.
-                let n = n.or_else(|| solidcraft_engine::doc::hole_direction_at(&crate::open_meshing::session_world(s), p, &[]).map(|d| -d));
+                let n = n.or_else(|| torno_engine::doc::hole_direction_at(&crate::open_meshing::session_world(s), p, &[]).map(|d| -d));
                 if n.is_some_and(|n| !STANDS_ON.iter().any(|axis| square_to(n, *axis))) {
                     return false;
                 }

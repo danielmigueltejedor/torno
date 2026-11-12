@@ -2,7 +2,7 @@
 #[cfg(not(target_arch = "wasm32"))]
 use crate::BackingTooltipExt as _;
 use egui::{InnerResponse, Response, Ui, vec2};
-use solidcraft_theme::Tokens;
+use torno_theme::Tokens;
 
 #[derive(Clone, Copy)]
 pub enum AssistantTone {
@@ -34,7 +34,7 @@ pub fn assistant_badge(ui: &mut Ui, label: &str, tone: AssistantTone) -> Respons
 
 /// A compact informational chip in the active workspace colours.
 pub fn workspace_chip(ui: &mut Ui, label: &str) -> Response {
-    let accent = solidcraft_theme::TabAccent::current(ui.ctx());
+    let accent = torno_theme::TabAccent::current(ui.ctx());
     badge(ui, label, accent.ink, accent.soft)
 }
 
@@ -245,7 +245,7 @@ pub fn assistant_approval<R>(ui: &mut Ui, title: &str, body: impl FnOnce(&mut Ui
                 .inner
         },
     );
-    solidcraft_ui_registry::publish_rect("assistant:approval", output.response.rect);
+    torno_ui_registry::publish_rect("assistant:approval", output.response.rect);
     output
 }
 
@@ -359,7 +359,7 @@ pub fn assistant_send(ui: &mut Ui, enabled: bool, busy: bool, label: &str) -> Re
         let (rect, response) = ui.allocate_exact_size(vec2(size, size), egui::Sense::click());
         let fill = if response.hovered() { t.form_primary.gamma_multiply(0.9) } else { t.form_primary };
         ui.painter().circle_filled(rect.center(), size / 2.0, fill);
-        let ink = if solidcraft_theme::contrast_ratio(t.on_accent, fill) >= 4.5 { t.on_accent } else { t.tab_on_fill_dark };
+        let ink = if torno_theme::contrast_ratio(t.on_accent, fill) >= 4.5 { t.on_accent } else { t.tab_on_fill_dark };
         crate::icons::paint_ink(ui.painter(), rect.shrink(t.space_6), if busy { "stop" } else { "send" }, ink);
         if response.has_focus() {
             ui.painter().circle_stroke(rect.center(), size / 2.0 + t.space_2, egui::Stroke::new(1.0, t.form_primary));

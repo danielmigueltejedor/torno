@@ -123,6 +123,6 @@
   "ungraded": [],
   "what": "a 990 x 100 x 1 strip with holes of 10, 4, 2 and 1 mm: the 1 mm hole fell out of the outline when the mesh sagged by almost the thickness",
   "why_not": [
-    "body \"Plate\" is no kernel operation's output nor an operand: SolidCraft built it or changed the kernel's record"
+    "body \"Plate\" is no kernel operation's output nor an operand: Torno built it or changed the kernel's record"
   ]
 }

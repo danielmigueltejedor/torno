@@ -76,7 +76,7 @@ fn rounded_box_by(k: &mut Kernel, kind: u32, order: u32, weight: f64) -> Brep {
     b
 }
 
-/// Every fix on but the G2 one, as SolidCraft runs: the round is an exact round, a
+/// Every fix on but the G2 one, as Torno runs: the round is an exact round, a
 /// definition with bound 0.
 fn definitions_kernel() -> Kernel {
     let mut k = Kernel::new(&KernelOptions::default());

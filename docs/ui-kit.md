@@ -161,7 +161,7 @@ diagnostics without preparing or evaluating geometry. `details_findings` and
 | `method_section` | Section with a GPU/CPU tag; unsupported contents stay faded with a readable reason. |
 | `read_only_text` | Bounded, selectable code box for read-only diagnostic JSON. |
 
-`crates/ui-kit/src/` (the shared crate `solidcraft-ui-kit`, which `ui-egui` uses as `ui_kit`) contains the tokenised controls used by feature dialogs,
+`crates/ui-kit/src/` (the shared crate `torno-ui-kit`, which `ui-egui` uses as `ui_kit`) contains the tokenised controls used by feature dialogs,
 preferences, manager cards, prompts, context menus and the sketch palette. Import through
 `crate::ui_kit::{...}`. Most controls are crate-visible; the container API is public so platform apps use the same hosts.
 
@@ -344,7 +344,7 @@ table. Panel/Window/Confirm compositions also have dedicated geometry and intera
 | history: `StripHeading`, `HistoryChip`, `HistoryStyle`, `history_drop_bar`, `history_marker`, `HistorySeam`, `history_seam` | Shared strip headings use semibold `font_heading`, `text`, a centred baseline and `space_12` trailing gap. One painter family for bottom chips, 38 pt vertical icon chips and single-line 26 pt name rows (the browser's shared `TREE_ROW_HEIGHT`). Selected items use the active tab tint/ink/border; all variants retain multi-tone feature artwork using one shared kind-to-accent rule (Sketch green, Surface orange, Mesh yellow, Form purple, solids base blue); rolled-back items have 42% opacity; a reference row (a sketch listed under another feature, #6489) has its name in secondary text. Error/warning badges, suppression strikes, horizontal/vertical drop bars and rollback line/hollow circle are shared. No connector lines. | `control_height`, `space_2/3/4/6/8/10/12/14/16/24`, radii, typography, `TabAccent`, `timeline_item`, `control_border`, `text/dim`, `form_error/fill` |
 | tree: `tree_row`, `Row`, `TreeAction` | Shared Browser rows with disclosure, visibility (an eye column at the row's end, clear of a floating scroll bar, with a gap between the disclosure and the activation radio; or beside the disclosure with `eye_left`), activation, selection, appearance swatches, optional subtitle and trailing actions. Compact scene rows are 28 pt, with inline right-aligned summaries, circular swatches, trailing eyes and full-width selection tint. Actions use quiet icons and can appear on hover. Disabled actions retain their reasons and cannot select or fold the row. Browser automation records the same row geometry. | `TREE_ROW_HEIGHT`, `font_label/small`, spacing, control radius/border, `text/dim`, workspace selection tint |
 | search: `CommandSearch`, `MenuItem::search_row` | Ribbon search composition: one persistent ribbon editor expands from 28 to 40 pt and to 520 pt wide with its right edge anchored, magnifier and S/Esc keycap, 38 pt two-line menu row with 26 pt icon tile, accent bold substring, path, shortcut/kind keycap, counts, JSON detail box and footer. The ordinary 30 pt menu row cannot fit a second line; this variant keeps its enabled/selected states and scenario IDs. Ranking and dispatch stay with the caller. | `form_card_width × 2 − space_8` (520 pt), `control_height`, `space_2/3/4/6/8/10/12/14/16/24`, `radius_xl/control_radius`, `control_fill`, `dialog_body/footer/rule/border`, `form_ink/dim/primary/error/error_fill/success/success_fill`, `selected_ink`, `accent_soft`, typography |
-| icons: `IconSet`, `IconData`, `IconExtension`, `install`, `paint_icon`, `paint_on`, `paint_ink` (`_flipped`, `_mirrored`), `paint_app_bar`, `paint_accented`, `paint_danger`, `resolve`, `primary`, `render` | The kit ships no artwork. The host compiles its SVG masters, colour roles, accents and aliases into a `static` `IconSet` and `install`s it once, before the first frame and in its test contexts (Torno: `solidcraft_look::icons::install`). A host that draws another host's icons plus a few masters of its own installs `IconSet::extended(data, extension)`: the other host's `IconData` (the same static tables, not a copy) with an `IconExtension` of its masters, aliases and default accents, drawn in the data's colour roles and accents and taking precedence for a name both have. The painters rasterise a master per (master, look, pixel size) in the set's roles for the theme, accent and colour vision, with theme-file overrides (`set_theme_palette`); an unknown name draws the set's `placeholder` master, and nothing is drawn before a set is installed. The code-drawn glyphs (`glyphs`: transport, caption, badge, pin, cross, breadcrumb, compass axis tip and radius, agent pointer, brand mark) are host painters too, in a `Glyphs` the host installs beside the set (Torno: `solidcraft_look::glyphs::GLYPHS`). | `app_bar_text`, colour vision, the set's palette |
+| icons: `IconSet`, `IconData`, `IconExtension`, `install`, `paint_icon`, `paint_on`, `paint_ink` (`_flipped`, `_mirrored`), `paint_app_bar`, `paint_accented`, `paint_danger`, `resolve`, `primary`, `render` | The kit ships no artwork. The host compiles its SVG masters, colour roles, accents and aliases into a `static` `IconSet` and `install`s it once, before the first frame and in its test contexts (Torno: `torno_look::icons::install`). A host that draws another host's icons plus a few masters of its own installs `IconSet::extended(data, extension)`: the other host's `IconData` (the same static tables, not a copy) with an `IconExtension` of its masters, aliases and default accents, drawn in the data's colour roles and accents and taking precedence for a name both have. The painters rasterise a master per (master, look, pixel size) in the set's roles for the theme, accent and colour vision, with theme-file overrides (`set_theme_palette`); an unknown name draws the set's `placeholder` master, and nothing is drawn before a set is installed. The code-drawn glyphs (`glyphs`: transport, caption, badge, pin, cross, breadcrumb, compass axis tip and radius, agent pointer, brand mark) are host painters too, in a `Glyphs` the host installs beside the set (Torno: `torno_look::glyphs::GLYPHS`). | `app_bar_text`, colour vision, the set's palette |
 | menu: `Menu`, `MenuItem` | Shared popup, 30 pt rows, 28 pt icon column, clipped labels, right-aligned mono shortcuts, submenu chevrons, checked/unchecked and document swatches, inert 40% disabled rows and danger ink; headings and separators; ribbon drag/pin targets retained | `dialog_body/border/rule`, `radius_xl`, `control_height/radius`, `form_ink/dim/primary/error`, `accent_soft`, typography and spacing |
 | radial: `radial_menu` | Eight rounded annular sectors, parallel 4 pt gaps, 9 pt circular corner joins, tab-accent artwork and hover, centre label/key; existing hold/flick/release dispatch | `dialog_body/border`, `form_ink/dim`, `TabAccent`, icon palette, font/spacing tokens |
 | panel: `Window`, `WindowPage` | Shared card frame, header, optional page list, bounded content and footer with a left action | `form_header/footer_height`, `form_card_width`, `form_label_width`, `control_height`, `dialog_footer/rule`, `selected_bg/ink`, spacing |
@@ -448,7 +448,7 @@ sketch-pattern children, drag reordering and command JSON retain their existing 
 `history_icons`, `history_names`, `history_marker` and the `history_seam_rest/hover/drag` states
 have light/dark gallery references. The CPU
 board test captures both strip widths with expanded and collapsed browsers
-(`SOLIDCRAFT_HISTORY_EVIDENCE`).
+(`TORNO_HISTORY_EVIDENCE`).
 
 `text(ui, text, options)` supports the existing text behaviors and the new error band:
 
@@ -568,7 +568,7 @@ The kit sets type through `ui_kit::type_face`: the weights (`medium`, `semibold`
 `RichTextExt`), the family and fallback names a host installs its faces under, the script checks
 and the on-demand CJK font state. It holds no font data. Host contract: before the kit draws, the
 context's fonts bind the weight families. A host with faces of its own binds them in its
-definitions (Torno's look, `solidcraft_look::fonts`, installs IBM Plex at four weights; `with_weight_families`
+definitions (Torno's look, `torno_look::fonts`, installs IBM Plex at four weights; `with_weight_families`
 binds any it leaves out); a host with none calls `type_face::install_weight_families(ctx)` once,
 which replaces the definitions with egui's defaults, and the kit draws every weight with those
 faces. Without either, egui finds no face for the weight families and draws no glyphs for
@@ -775,7 +775,7 @@ The menu gallery includes normal, hovered, open, disabled, checked/unchecked,
 swatch and danger rows, a submenu and rename. Radial geometry tests measure the
 actual side endpoints at both radii and sample all four rounded corners. Optional
 CPU-rendered menu evidence can be produced without a window with
-`SOLIDCRAFT_MENU_EVIDENCE=/tmp/menus cargo test -p solidcraft-ui-egui --lib menu_board_in_both_themes`.
+`TORNO_MENU_EVIDENCE=/tmp/menus cargo test -p torno-ui-egui --lib menu_board_in_both_themes`.
 Desktop interaction and visual acceptance still require a reviewer capture.
 
 Command search uses the ribbon field itself (`sc_sbox_text`); `ribbon:search`,
@@ -791,7 +791,7 @@ rule. Ranking, command mode and keyboard routing remain with the caller.
 
 Generate CPU-rendered evidence of all five search states and the actual ribbon's
 closed/opening/open/closing transition in both themes with
-`SOLIDCRAFT_SEARCH_EVIDENCE=/tmp/search cargo test -p solidcraft-ui-egui --lib command_search`.
+`TORNO_SEARCH_EVIDENCE=/tmp/search cargo test -p torno-ui-egui --lib command_search`.
 
 ### Compact workspace composition
 
@@ -867,7 +867,7 @@ neutral `file_image_tint`; icon and text colours do not change their pixels.
 Spacing, dimensions, fonts and radii come from `theme::Tokens`.
 
 Gallery and geometry tests cover these components. To capture the actual File
-view using public temporary fixtures, set `SOLIDCRAFT_FILE_EVIDENCE` to an output
+view using public temporary fixtures, set `TORNO_FILE_EVIDENCE` to an output
 directory and run `file_view_application_evidence_in_both_themes_and_widths` with
 `--ignored`. It produces desktop and 420 pt narrow PNGs in both themes.
 
@@ -992,7 +992,7 @@ Gallery entries show all five sphere finishes, a mixed filled/empty look chain
 with Body active, and an empty chain with Face active in both themes.
 
 For CPU-rendered review images, run
-`SOLIDCRAFT_MATERIAL_WIDGET_EVIDENCE=/tmp/material-widgets cargo test -p solidcraft-ui-egui ui_kit::gallery::material_widgets_board_in_both_themes`.
+`TORNO_MATERIAL_WIDGET_EVIDENCE=/tmp/material-widgets cargo test -p torno-ui-egui ui_kit::gallery::material_widgets_board_in_both_themes`.
 
 `catalog_scope` supplies compact catalog metrics to the shared search field, segments,
 icon segments and category chips. `catalog_footer` draws the quiet information hint.
@@ -1090,7 +1090,7 @@ The Orientation figures and the visual-style icon are not repeated here: the app
 
 New pieces and figures each have an entry in `gallery::ELEMENTS` (`picture_card`, `toggle_tile`,
 `preset_card`, `help_icon`, `theme_browser`, `preference_theme_thumbnails`, `preference_figures`), checked
-in both themes. `SOLIDCRAFT_PREFERENCE_WIDGET_EVIDENCE=<dir>` keeps the CPU-rendered boards
+in both themes. `TORNO_PREFERENCE_WIDGET_EVIDENCE=<dir>` keeps the CPU-rendered boards
 (`preferences-widgets-*.png`, `preferences-figures-*.png`) from
 `preference_widgets_and_figures_board_in_both_themes`.
 

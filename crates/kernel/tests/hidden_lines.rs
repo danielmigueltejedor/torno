@@ -1,12 +1,12 @@
 //! Hidden lines of bodies the kernel makes, through the production `prepare`, against closed forms.
 
-use solidcraft_geom::prelude::*;
 use std::f64::consts::{FRAC_PI_3, PI};
+use torno_geom::prelude::*;
 
 use solidcore_record::brep;
 use solidcore_record::{Seg2, Vec2, Vec3};
-use solidcraft_geom::hlr::{Line, Options, Placement, Source, View, Visibility, hidden_lines, prepare};
-use solidcraft_kernel::*;
+use torno_geom::hlr::{Line, Options, Placement, Source, View, Visibility, hidden_lines, prepare};
+use torno_kernel::*;
 
 const TOLERANCE: f64 = 1e-3;
 

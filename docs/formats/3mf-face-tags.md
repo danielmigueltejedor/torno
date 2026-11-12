@@ -1,6 +1,6 @@
 # 3MF with B-rep face tags
 
-Version 1 (2026-10). Namespace `https://github.com/bherbruck/solidcraft/formats/3mf-face-tags/2026/10`,
+Version 1 (2026-10). Namespace `https://github.com/getnodalia/torno/formats/3mf-face-tags/2026/10`,
 prefix `ft`.
 
 A tessellated body loses its faces: a plain mesh says where the surface is, not which B-rep face
@@ -27,8 +27,8 @@ open nowhere else. Decimal coordinates lose nothing: written in shortest round-t
 <?xml version="1.0" encoding="UTF-8"?>
 <model unit="millimeter" xml:lang="en-US"
        xmlns="http://schemas.microsoft.com/3dmanufacturing/core/2015/02"
-       xmlns:ft="https://github.com/bherbruck/solidcraft/formats/3mf-face-tags/2026/10">
- <metadata name="Application">SolidCraft</metadata>
+       xmlns:ft="https://github.com/getnodalia/torno/formats/3mf-face-tags/2026/10">
+ <metadata name="Application">Torno</metadata>
  <resources>
   <object id="2" type="model" name="Body1" ft:faces="7">
    <mesh>

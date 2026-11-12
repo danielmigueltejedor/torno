@@ -2,9 +2,9 @@
 use crate::Session;
 use serde_json::{Value, json};
 use solidcore_record::Plane;
-use solidcraft_doc::construct::ConstructGeom;
-use solidcraft_doc::{Document, FeatureKind, PlaneRef};
-use solidcraft_geom::prelude::*;
+use torno_doc::construct::ConstructGeom;
+use torno_doc::{Document, FeatureKind, PlaneRef};
+use torno_geom::prelude::*;
 
 fn run(s: &mut Session, command: &str, params: Value) -> Value {
     s.execute(command, &params).unwrap_or_else(|e| panic!("{command} {params}: {e}"))
@@ -19,7 +19,7 @@ fn plane(s: &Session, name: &str) -> Plane {
 }
 
 fn volume(s: &Session) -> f64 {
-    s.model.state().bodies.iter().map(|b| solidcraft_kernel::measure(&b.body).unwrap().volume).sum()
+    s.model.state().bodies.iter().map(|b| torno_kernel::measure(&b.body).unwrap().volume).sum()
 }
 
 #[test]

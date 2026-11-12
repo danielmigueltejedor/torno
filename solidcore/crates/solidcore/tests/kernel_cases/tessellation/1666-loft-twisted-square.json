@@ -184,7 +184,7 @@
     "loft"
   ],
   "ungraded": [
-    "watertight: SolidCraft computes it"
+    "watertight: Torno computes it"
   ],
   "what": "a loft from a 20x20 square to the same square turned 45 degrees, 30 mm higher: its four side faces are strongly twisted ruled patches, the case a two-triangle mesh gets visibly wrong",
   "why_not": []

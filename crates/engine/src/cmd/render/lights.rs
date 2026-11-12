@@ -1,7 +1,7 @@
 //! Read-only light inspection. No host, geometry evaluation, camera or design mutation.
 
 use serde_json::Value;
-use solidcraft_doc::render_settings::{RenderSettings, RenderSetup};
+use torno_doc::render_settings::{RenderSettings, RenderSetup};
 
 use crate::params::bad;
 use crate::schema::render_lights::{EditParams, EditResult, Geometry, Light, LightIdRemap};
@@ -40,7 +40,7 @@ fn canonical_id(setup: &RenderSetup, lights: &[Light], index: usize) -> Option<S
         let kind = light.geometry.kind();
         let finite_directional = matches!(
             setup.job,
-            Some(solidcraft_doc::render_settings::RenderJob::GpuPath { .. } | solidcraft_doc::render_settings::RenderJob::CpuRaytrace { .. })
+            Some(torno_doc::render_settings::RenderJob::GpuPath { .. } | torno_doc::render_settings::RenderJob::CpuRaytrace { .. })
         ) && kind == "directional";
         let slot = if finite_directional {
             if matches!(light.geometry, Geometry::Directional { angular_radius_rad: Some(_), .. }) {
@@ -126,7 +126,7 @@ fn change(s: &mut Session, params: &Value, operation: &str) -> Result<Value> {
             } else {
                 let patch = input.set.ok_or_else(|| bad(&command, "set is required"))?;
                 let light = lights.get_mut(index).ok_or_else(|| bad(&command, "missing light"))?;
-                if matches!(&setup.job, Some(solidcraft_doc::render_settings::RenderJob::CpuRaytrace { options, .. }) if options.path.is_none())
+                if matches!(&setup.job, Some(torno_doc::render_settings::RenderJob::CpuRaytrace { options, .. }) if options.path.is_none())
                     && light.geometry.kind() == "directional"
                     && patch.softness.is_some()
                 {

@@ -188,7 +188,7 @@ pub fn show(ui: &mut egui::Ui, bar: &Bar<'_>, menu: impl FnOnce(&str) -> Menu) -
     if !bar.rect.is_positive() {
         return None;
     }
-    solidcraft_ui_registry::publish_rect("nav:outer", bar.rect);
+    torno_ui_registry::publish_rect("nav:outer", bar.rect);
     let menu_id = ui.scope_id().with("navigation_bar_menu");
     let mut open = ui.data(|d| d.get_temp::<String>(menu_id)).unwrap_or_default();
     let mut action = None;
@@ -205,9 +205,9 @@ pub fn show(ui: &mut egui::Ui, bar: &Bar<'_>, menu: impl FnOnce(&str) -> Menu) -
         ui.set_opacity(opacity);
         let shown: Vec<_> = bar.slots.iter().map(|s| SlotView { selected: s.selected || open == s.id, ..s.clone() }).collect();
         for (slot, response) in shown.iter().zip(paint_slots(ui, bar.rect, bar.size, bar.edge, &shown, None)) {
-            solidcraft_ui_registry::publish_target(&format!("nav:slot:{}", slot.id), response.rect);
+            torno_ui_registry::publish_target(&format!("nav:slot:{}", slot.id), response.rect);
             if let Some(alias) = slot.alias {
-                solidcraft_ui_registry::publish_handle(alias, response.rect.center());
+                torno_ui_registry::publish_handle(alias, response.rect.center());
             }
             context_menu(&response, Some(slot.index), &bar.labels, &mut action);
             if response.clicked() && slot.kind != NavigationKind::Separator {
@@ -236,7 +236,7 @@ pub fn show(ui: &mut egui::Ui, bar: &Bar<'_>, menu: impl FnOnce(&str) -> Menu) -
                 },
             );
             crate::navigation_tooltip(&response, bar.rect, bar.edge, &bar.labels.more, None);
-            solidcraft_ui_registry::publish_target("nav:more", response.rect);
+            torno_ui_registry::publish_target("nav:more", response.rect);
             context_menu(&response, None, &bar.labels, &mut action);
             if response.clicked() {
                 open = if open == "more" { String::new() } else { "more".to_owned() };
@@ -296,7 +296,7 @@ fn context_menu(response: &egui::Response, index: Option<usize>, labels: &BarLab
         };
         for (id, label, item) in items {
             let row = crate::NavigationMenuRow::new(id, label, "").show(ui);
-            solidcraft_ui_registry::publish_target(&format!("nav:context:{id}"), row.rect);
+            torno_ui_registry::publish_target(&format!("nav:context:{id}"), row.rect);
             if row.clicked() {
                 *action = Some(NavAction::Context(item));
                 ui.close();
@@ -312,7 +312,7 @@ fn overflow_menu(ui: &mut egui::Ui, bar: &Bar<'_>, open: &mut String, action: &m
             let start = ui.next_widget_position();
             crate::navigation_menu_separator(ui);
             let bounds = Rect::from_min_max(start, pos2(start.x + ui.available_width(), ui.next_widget_position().y));
-            solidcraft_ui_registry::publish_target(&format!("nav:slot:{}", slot.id), bounds);
+            torno_ui_registry::publish_target(&format!("nav:slot:{}", slot.id), bounds);
             continue;
         }
         let mut item = crate::NavigationMenuRow::new(slot.id, &slot.name, slot.icon);
@@ -321,9 +321,9 @@ fn overflow_menu(ui: &mut egui::Ui, bar: &Bar<'_>, open: &mut String, action: &m
         }
         let response = item.show(ui);
         context_menu(&response, Some(slot.index), &bar.labels, action);
-        solidcraft_ui_registry::publish_target(&format!("nav:slot:{}", slot.id), response.rect);
+        torno_ui_registry::publish_target(&format!("nav:slot:{}", slot.id), response.rect);
         if let Some(alias) = slot.alias {
-            solidcraft_ui_registry::publish_handle(alias, response.rect.center());
+            torno_ui_registry::publish_handle(alias, response.rect.center());
         }
         crate::navigation_tooltip(&response, response.rect, NavigationEdge::Bottom, &slot.tip, slot.key.as_deref());
         if response.clicked() {
@@ -380,7 +380,7 @@ fn menu_row(ui: &mut egui::Ui, row: &MenuRow) -> egui::Response {
         None => response,
     };
     if !row.target.is_empty() {
-        solidcraft_ui_registry::publish_target(&row.target, response.rect);
+        torno_ui_registry::publish_target(&row.target, response.rect);
     }
     response
 }

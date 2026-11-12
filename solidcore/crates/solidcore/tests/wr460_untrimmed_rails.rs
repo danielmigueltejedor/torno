@@ -2,7 +2,7 @@
 //! before they are trimmed, when their edge interval is still the inside-out
 //! `Extent1d::new()`. Its samples then lay ~1e21 away, so the check either compared garbage
 //! or failed in the closest-point query on a curved edge (status 1001), refusing rounds
-//! that fit. SolidCraft oracle designs 36 and 34 are the repros: a box with rounded
+//! that fit. Torno oracle designs 36 and 34 are the repros: a box with rounded
 //! (or chamfered) vertical edges, then its whole top loop rounded. That check is retired;
 //! the band test that replaces it (`fixes.fillet_refuse_overlapping_bands`, WR-542) keeps
 //! these rounds too, bit for bit as without it.
@@ -64,7 +64,7 @@ fn two_blends(fixed: bool, (w, d, h): (f64, f64, f64), xsect: u32, s: f64, r: f6
     (b, v)
 }
 
-/// SolidCraft oracle design 36: 50 x 40 x 30, verticals R8, top loop R4.
+/// Torno oracle design 36: 50 x 40 x 30, verticals R8, top loop R4.
 #[test]
 fn wr460_rounded_box_top_loop_is_kept() {
     let (_, v) = two_blends(true, (50.0, 40.0, 30.0), 1, 8.0, 4.0);
@@ -80,7 +80,7 @@ fn wr460_rounded_box_top_loop_is_kept() {
     assert!((v - want).abs() < 1e-5 * want, "{v} vs {want}");
 }
 
-/// SolidCraft oracle design 34: 40 x 30 x 20, verticals chamfered 5, top loop R2.
+/// Torno oracle design 34: 40 x 30 x 20, verticals chamfered 5, top loop R2.
 #[test]
 fn wr460_chamfered_box_top_loop_is_kept() {
     let (_, v) = two_blends(true, (40.0, 30.0, 20.0), 0, 5.0, 2.0);

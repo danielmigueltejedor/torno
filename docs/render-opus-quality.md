@@ -105,8 +105,8 @@ approximation. The original Master setup remains available.
 Use the resulting named setup with the native CLI:
 
 ```sh
-solidcraft-cli render OPUS-quality.sc --setup "OPUS Physical CPU 4K" --out cpu.png --timeout 3600
-solidcraft-cli render OPUS-quality.sc --setup "OPUS Physical GPU 4K" --out gpu.png --timeout 3600
+torno-cli render OPUS-quality.sc --setup "OPUS Physical CPU 4K" --out cpu.png --timeout 3600
+torno-cli render OPUS-quality.sc --setup "OPUS Physical GPU 4K" --out gpu.png --timeout 3600
 ```
 
 The exact generated setup names and commands are recorded by the fixture example.

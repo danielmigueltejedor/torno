@@ -176,7 +176,7 @@ impl Body {
 }
 
 /// The conditioning a body's motion must be proved above, its smallest scale against its
-/// largest (a choice of ops: SolidCraft's station maps take the same): a map flattening a body
+/// largest (a choice of ops: Torno's station maps take the same): a map flattening a body
 /// more than this is refused as singular.
 pub const REGULAR_RATIO: f64 = 1e-9;
 

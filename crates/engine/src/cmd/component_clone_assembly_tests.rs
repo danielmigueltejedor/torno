@@ -1,9 +1,9 @@
 #![allow(clippy::unwrap_used, clippy::panic)]
 use super::*;
 use solidcore_record::Vec3;
-use solidcraft_doc::joints::{Coupling, Joint, JointKind, MotionLink, NamedOrigin, Size, Snap, XRef};
-use solidcraft_doc::motion::{ContactSet, ExplodedView, MotionStudy, StudyKey};
-use solidcraft_doc::{IDENTITY, Occurrence};
+use torno_doc::joints::{Coupling, Joint, JointKind, MotionLink, NamedOrigin, Size, Snap, XRef};
+use torno_doc::motion::{ContactSet, ExplodedView, MotionStudy, StudyKey};
+use torno_doc::{IDENTITY, Occurrence};
 
 fn at(occurrence: u64) -> JointOrigin {
     JointOrigin::new(occurrence, Snap::Point { point: Vec3::ZERO, z: None, x: None })

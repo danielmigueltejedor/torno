@@ -112,7 +112,7 @@
     "stitch"
   ],
   "ungraded": [
-    "continuity: SolidCraft computes it"
+    "continuity: Torno computes it"
   ],
   "what": "the hole a three-round corner's blend face leaves, patched g3 (Curvature change): G1 and not G2 over each whole seam, since the faces round the hole meet each other G1 at its corners",
   "why_not": []

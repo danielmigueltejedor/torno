@@ -124,7 +124,7 @@ mod native_tests {
         let side = cyl.faces.iter().find(|f| matches!(f.surface, b::Surface::Cylinder { .. })).unwrap();
         // The side is on SMLib's NURBS form of the cylinder (its domain is the form's): the whole
         // turn, so its domain's two u ends meet, from the base to the top.
-        let form = solidcraft_geom::brep::eval::SurfaceEval::new(side.parameters()).unwrap();
+        let form = torno_geom::brep::eval::SurfaceEval::new(side.parameters()).unwrap();
         let [[u0, u1], [v0, v1]] = side.domain;
         for v in [v0, v1] {
             let (a, z) = (form.point([u0, v]).unwrap(), form.point([u1, v]).unwrap());
@@ -134,7 +134,7 @@ mod native_tests {
         assert!(heights.iter().any(|h| h.abs() < 1e-9) && heights.iter().any(|h| (h - 10.0).abs() < 1e-9), "{heights:?}");
         for e in &cyl.edges {
             // Evaluated on the curve its interval is on (a circle's NURBS form).
-            let eval = solidcraft_geom::brep::eval::CurveEval::new(e.parameters()).unwrap();
+            let eval = torno_geom::brep::eval::CurveEval::new(e.parameters()).unwrap();
             let [a, z] = e.interval;
             // Ends on the edge's vertices.
             for (t, v) in [(a, e.vertices[0]), (z, e.vertices[1])] {
@@ -188,7 +188,7 @@ mod native_tests {
         };
         // On the curve the interval is on (a circle's NURBS form).
         let middle =
-            |e: &b::Edge| solidcraft_geom::brep::eval::CurveEval::new(e.parameters()).unwrap().point(0.5 * (e.interval[0] + e.interval[1])).unwrap();
+            |e: &b::Edge| torno_geom::brep::eval::CurveEval::new(e.parameters()).unwrap().point(0.5 * (e.interval[0] + e.interval[1])).unwrap();
         let copies: Vec<&b::Edge> = record.edges.iter().filter(|e| on_line(e)).collect();
         assert_eq!(copies.len(), 2);
         for copy in copies {
@@ -454,7 +454,7 @@ mod native_tests {
     }
 }
 
-/// `mapped`: SMLib's UV trim moved onto the edge record's parameter (solidcraft#12365).
+/// `mapped`: SMLib's UV trim moved onto the edge record's parameter (torno#12365).
 mod mapped_tests {
     use super::*;
     use solidcore_ops::pcurve::eval;
@@ -478,7 +478,7 @@ mod mapped_tests {
 
     /// The trim SMLib hands over can end a rounding past the edge record's interval with a dead
     /// span there (its last span 3e-11 long after the edge's end, knots `5 x4, 5.00000000003 x4`:
-    /// the slot of a sloped bar, solidcraft#12365). Moving its end knots onto the edge's end
+    /// the slot of a sloped bar, torno#12365). Moving its end knots onto the edge's end
     /// used to leave a run of 8 at 5, which the record refuses as "knot multiplicity", and the
     /// body was lost. The remap drops the dead span: the record is valid and the curve on the
     /// edge is unchanged.
@@ -495,7 +495,7 @@ mod mapped_tests {
         same_curve_on(&out, &base(), [3.0, 5.0]);
     }
 
-    /// The other form seen in solidcraft#12365: the last interior knot run a rounding past the
+    /// The other form seen in torno#12365: the last interior knot run a rounding past the
     /// end knots (`3.0000000000000004 x3, 3 x4`), an unordered knot vector by one ulp. Knots past
     /// an end by rounding are that end, and the dead span they leave is dropped.
     #[test]

@@ -56,6 +56,6 @@
   "ungraded": [],
   "what": "Delete Face on the 0.5 mm deep O15 recess of a plate: the face around the gap must keep its surface",
   "why_not": [
-    "body \"Plate\" is no kernel operation's output nor an operand: SolidCraft built it or changed the kernel's record"
+    "body \"Plate\" is no kernel operation's output nor an operand: Torno built it or changed the kernel's record"
   ]
 }

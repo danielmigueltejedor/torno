@@ -900,7 +900,7 @@ impl Cone {
 // solve's empty-result branch: it explicitly writes EXTERIOR before returning
 // SM_ERR. No UV coordinate is fabricated or consumed on that branch.
 // Start-plane transform errors still propagate (see the module Deviations), which
-// is what the SolidCraft fork's `analytic_inversion_answers_apart` (tangency-labs/smlib
+// is what the Torno fork's `analytic_inversion_answers_apart` (tangency-labs/smlib
 // dfc7cb6, `SER` unless `STEPInversionAnswered`) does for every flag setting.
 fn intersection_inversion(
     cone: &Cone,

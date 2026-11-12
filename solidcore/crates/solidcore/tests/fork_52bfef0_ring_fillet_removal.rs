@@ -57,7 +57,7 @@ fn boss_with_foot_round(k: &mut Kernel) -> Brep {
 }
 
 /// `SmApiBrepCopy` of `b` whose caller names the copy's objects in key domain `domain`
-/// (`NamingScheme::Caller`, as SolidCraft's bodies are).
+/// (`NamingScheme::Caller`, as Torno's bodies are).
 fn caller_named_copy(k: &mut Kernel, b: &Brep, domain: u64) -> Brep {
     let key = |entity, domain: u64| {
         let r = p3::topology_ref(0, entity);

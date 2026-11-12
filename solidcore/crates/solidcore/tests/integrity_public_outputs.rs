@@ -80,7 +80,7 @@ fn square(x0: f64, s: f64) -> Vec<Curve> {
         .collect()
 }
 
-/// `SmApiBrepCopy` of `b`, called as the SolidCraft difftest runner does (its `copy`):
+/// `SmApiBrepCopy` of `b`, called as the Torno difftest runner does (its `copy`):
 /// source and copy named apart in one notification environment.
 fn copy(k: &mut Kernel, b: &Brep) -> solidcore::Result<Brep> {
     let named = |entity, domain: u64| {

@@ -1,5 +1,5 @@
 // The old address's side of moving designs out of the browser's storage for
-// https://docs.solidcraft.io/app/ (browsers keep storage per address).
+// https://getnodalia.github.io/torno/app/ (browsers keep storage per address).
 //
 // In a frame of the exact origin NEW_ORIGIN (its move-designs.html, in tangency-labs/solidcraft-app)
 // this answers that page's requests and shows nothing. Opened on its own it lists the designs with
@@ -15,20 +15,20 @@
 // from that parent. The ancestor check adds a refusal when another page sits above the parent.
 "use strict";
 (() => {
-  const NEW_ORIGIN = "https://app.solidcraft.io";
+  const NEW_ORIGIN = "https://getnodalia.github.io/torno/app";
   const PROTOCOL = 1;
-  /** solidcraft_io::MAX_DESIGN_BYTES: the largest design the app opens. */
+  /** torno_io::MAX_DESIGN_BYTES: the largest design the app opens. */
   const MAX_FILE_BYTES = 256 * 1024 * 1024;
   const MAX_FILES = 5000;
   /** The format number of a larger file isn't worth reading into memory. */
   const MAX_FORMAT_SCAN_BYTES = 64 * 1024 * 1024;
   const MAX_SETTING_CHARS = 8 * 1024 * 1024;
-  /** apps/solidcraft-web/src/files.rs: the stable channel's names, newest first. */
-  const LOCAL_PREFIXES = ["solidcraft.file.", "solvecraft.file."];
+  /** apps/torno-web/src/files.rs: the stable channel's names, newest first. */
+  const LOCAL_PREFIXES = ["torno.file.", "solvecraft.file."];
   const RECOVERY = ["recovery.sc", "recovery.solidcraft", "recovery.solvecraft"];
   const RECOVERY_META = "recovery.json";
   /** Everything else in this site's local storage belongs to the documentation. */
-  const SETTINGS = ["solidcraft.prefs", "solvecraft.prefs", "solidcraft.webgl", "egui_memory_ron"];
+  const SETTINGS = ["torno.prefs", "solvecraft.prefs", "torno.webgl", "egui_memory_ron"];
 
   const storage = () => {
     try {
@@ -104,7 +104,7 @@
         text = await blob.text();
       }
       if (text === null) return null;
-      const match = /^(?:solidcraft|solvecraft)\/(\d+)$/.exec(JSON.parse(text).format ?? "");
+      const match = /^(?:torno|solvecraft)\/(\d+)$/.exec(JSON.parse(text).format ?? "");
       return match ? Number(match[1]) : null;
     } catch {
       return null;
@@ -173,14 +173,14 @@
     window.addEventListener("message", (event) => {
       if (event.source !== window.parent || event.origin !== NEW_ORIGIN) return;
       const message = event.data;
-      if (!message || message.solidcraftTransfer !== PROTOCOL || !Number.isSafeInteger(message.id)) return;
+      if (!message || message.tornoTransfer !== PROTOCOL || !Number.isSafeInteger(message.id)) return;
       answer(message).then(
         (result) => {
-          const reply = { solidcraftTransfer: PROTOCOL, id: message.id, ok: true, ...result };
+          const reply = { tornoTransfer: PROTOCOL, id: message.id, ok: true, ...result };
           window.parent.postMessage(reply, NEW_ORIGIN, result.bytes ? [result.bytes] : []);
         },
         (error) => {
-          const reply = { solidcraftTransfer: PROTOCOL, id: message.id, ok: false, error: String(error?.message ?? error) };
+          const reply = { tornoTransfer: PROTOCOL, id: message.id, ok: false, error: String(error?.message ?? error) };
           window.parent.postMessage(reply, NEW_ORIGIN);
         },
       );
@@ -203,7 +203,7 @@
     const status = document.getElementById("status");
     const entries = [...(await listing()).values()].sort((a, b) => a.name.localeCompare(b.name));
     if (entries.length === 0) {
-      status.textContent = "This browser keeps no designs for the old address. Designs you saved to a file on your computer are still there: open them at app.solidcraft.io with File > Open.";
+      status.textContent = "This browser keeps no designs for the old address. Designs you saved to a file on your computer are still there: open them at getnodalia.github.io/torno/app with File > Open.";
       return;
     }
     status.textContent = entries.length === 1 ? "1 design found." : `${entries.length} designs found.`;

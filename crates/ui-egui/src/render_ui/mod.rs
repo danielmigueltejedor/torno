@@ -5,7 +5,7 @@ use crate::{
     ui_kit::{self, Container, Edge},
 };
 use egui::{Rect, vec2};
-use solidcraft_theme::Tokens;
+use torno_theme::Tokens;
 
 pub(crate) fn reset_shell(app: &mut SolveApp) {
     app.shell.workspace_panels.retain(|id, _| !id.starts_with("render:"));
@@ -126,7 +126,7 @@ fn stage_tools(app: &mut SolveApp, ui: &mut egui::Ui) {
             for (id, label, icon) in
                 [("appearance.paint", "render.paint_label", "appearance"), ("appearance.pick_up", "render.pick_up_label", "select")]
             {
-                if let Some(command) = solidcraft_engine::find_command(id) {
+                if let Some(command) = torno_engine::find_command(id) {
                     let info = crate::render_workspace::interactive_command_info(app, command);
                     let response = ui_kit::compact_icon_label_button(ui, app.tr(label), icon, info.enabled);
                     crate::scenario::publish_target(&format!("render:stage:{id}"), response.rect);
@@ -172,7 +172,7 @@ fn stage_tools(app: &mut SolveApp, ui: &mut egui::Ui) {
             {
                 app.set_status(error, true);
             }
-            if let Some(command) = solidcraft_engine::find_command("render.settings.set") {
+            if let Some(command) = torno_engine::find_command("render.settings.set") {
                 let info = crate::render_workspace::interactive_command_info(app, command);
                 let response = ui_kit::compact_icon_label_button(ui, app.tr("render.shots_save"), command.icon, info.enabled);
                 crate::scenario::publish_target("render:stage:save_shot", response.rect);
@@ -271,8 +271,8 @@ fn shots_pill(app: &mut SolveApp, ui: &mut egui::Ui, free: Rect) {
         free.left_bottom() + vec2(Tokens::get().space_8, -Tokens::get().space_8),
         egui::Align2::LEFT_BOTTOM,
         |ui| {
-            let response = ui_kit::strip_toggle(ui, false, solidcraft_ui_text::tr_label("Shots"))
-                .backing_on_hover_text(solidcraft_ui_text::tr_label("Show Shots strip"));
+            let response =
+                ui_kit::strip_toggle(ui, false, torno_ui_text::tr_label("Shots")).backing_on_hover_text(torno_ui_text::tr_label("Show Shots strip"));
             crate::scenario::publish_target("render:shots:show", response.rect);
             if response.clicked() {
                 let _ = app.run("view.shots_strip", serde_json::json!({"visible":true}));

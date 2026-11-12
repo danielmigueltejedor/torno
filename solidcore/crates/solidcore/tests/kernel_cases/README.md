@@ -15,11 +15,11 @@ The runner that replays the entries is `crates/solidcore-ops/tests/kernel_cases.
 
 ## Where it comes from
 
-Torno's cases were exported. In a Torno checkout at the commit `manifest.json` names (`solidcraft`), pinned to the solidcore rev it names (`solidcore`), run:
+Torno's cases were exported. In a Torno checkout at the commit `manifest.json` names (`torno`), pinned to the solidcore rev it names (`solidcore`), run:
 
 ```sh
-cargo xtask kernel-cases --cli target/release/solidcraft-cli --export DIR
-cargo xtask kernel-cases --ladder --cli target/release/solidcraft-cli --export DIR
+cargo xtask kernel-cases --cli target/release/torno-cli --export DIR
+cargo xtask kernel-cases --ladder --cli target/release/torno-cli --export DIR
 ```
 
 Each case runs as the rig runs it, with the kernel's operations traced at the boundary between Torno and the kernel (Torno's `crates/smlib`, `trace.rs`). The trace records:
@@ -78,7 +78,7 @@ New kernel cases come here. A case about a command, the UI or a product rule sta
 3. **The expected values** in `expected` (Torno's `expected.json` format) are closed-form or exact: a volume, an area, a distance or a count derived by hand or from analysis, with the derivation in `what`. Never a kernel's output, solidcore's included, and never a value taken from commercial CAD.
 4. **The manifest:** add one to the area's `cases` in `manifest.json` (and to `not_expressible` with the reason, for a case the kernel alone does not account for).
 
-To export a case from Torno instead of writing it: draft it there as `tests/kernel-cases/<area>/<id>/recipe.json` and `expected.json`, run `cargo xtask kernel-cases --area <area> --cli target/release/solidcraft-cli --export DIR`, copy `DIR/<area>/<id>.json` and its `.bodies.json.gz` here, and delete the draft there.
+To export a case from Torno instead of writing it: draft it there as `tests/kernel-cases/<area>/<id>/recipe.json` and `expected.json`, run `cargo xtask kernel-cases --area <area> --cli target/release/torno-cli --export DIR`, copy `DIR/<area>/<id>.json` and its `.bodies.json.gz` here, and delete the draft there.
 
 `cargo test -p solidcore-record --test kernel_cases_corpus` checks the structure (the three checks at the top).
 

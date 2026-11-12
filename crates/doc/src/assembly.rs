@@ -10,7 +10,7 @@
 
 use serde::{Deserialize, Serialize};
 use solidcore_record::{Plane, Vec3};
-use solidcraft_geom::prelude::*;
+use torno_geom::prelude::*;
 
 use crate::{DocError, Document, FeatureKind, PlaneRef, Result};
 

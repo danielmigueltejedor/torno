@@ -32,6 +32,6 @@
   "ungraded": [],
   "what": "an axis between two parallel planes",
   "why_not": [
-    "the failure is SolidCraft's, not a kernel operation's: step 2 (construct.axis.two_planes): the planes are parallel"
+    "the failure is Torno's, not a kernel operation's: step 2 (construct.axis.two_planes): the planes are parallel"
   ]
 }

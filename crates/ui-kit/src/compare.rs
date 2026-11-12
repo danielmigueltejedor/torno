@@ -1,6 +1,6 @@
 //! Shared image-comparison divider and corner chips. Geometry and ink use kit tokens.
 use egui::{Rect, Sense, Ui, pos2, vec2};
-use solidcraft_theme::Tokens;
+use torno_theme::Tokens;
 
 pub fn comparison_position(position: f32) -> f32 {
     if position.is_finite() { position.clamp(0.05, 0.95) } else { 0.5 }
@@ -21,7 +21,7 @@ pub fn comparison_divider(ui: &mut Ui, canvas: Rect, position: &mut f32, label: 
     }
     comparison_divider_chrome(ui, canvas, *position);
     response.widget_info(|| egui::WidgetInfo::labeled(egui::Role::Slider, ui.is_enabled(), label));
-    solidcraft_ui_registry::publish_target("render:compare:divider", rail);
+    torno_ui_registry::publish_target("render:compare:divider", rail);
     response
 }
 
@@ -29,7 +29,7 @@ pub fn comparison_divider_chrome(ui: &Ui, canvas: Rect, position: f32) {
     let t = Tokens::get();
     let x = canvas.left() + canvas.width() * comparison_position(position);
     let painter = ui.painter().with_clip_rect(canvas.intersect(ui.clip_rect()));
-    let accent = solidcraft_theme::TabAccent::current(ui.ctx());
+    let accent = torno_theme::TabAccent::current(ui.ctx());
     painter.vline(x, canvas.y_range(), egui::Stroke::new(t.space_2, accent.ink));
     let handle = Rect::from_center_size(pos2(x, canvas.center().y), vec2(t.space_16, t.space_24 + t.space_8));
     painter.rect_filled(handle, t.control_radius, t.panel);
@@ -37,7 +37,7 @@ pub fn comparison_divider_chrome(ui: &Ui, canvas: Rect, position: f32) {
     for offset in [-t.space_6, 0.0, t.space_6] {
         painter.circle_filled(handle.center() + vec2(0.0, offset), t.space_2, accent.ink);
     }
-    solidcraft_ui_registry::publish_rect("render:compare:handle", handle);
+    torno_ui_registry::publish_rect("render:compare:handle", handle);
 }
 
 /// Token-painted chip anchored inside either clipped half of the image canvas.
@@ -51,5 +51,5 @@ pub fn comparison_badge(ui: &mut Ui, bounds: Rect, label: &str, right: bool) {
     painter.rect_filled(rect, t.control_radius, t.panel);
     painter.rect_stroke(rect, t.control_radius, t.control_border_stroke(t.control_border), egui::StrokeKind::Inside);
     painter.with_clip_rect(rect).galley(pos2(rect.left() + t.space_8, rect.center().y - galley.size().y * 0.5), galley, t.form_ink);
-    solidcraft_ui_registry::publish_rect(if right { "render:compare:right-label" } else { "render:compare:left-label" }, rect);
+    torno_ui_registry::publish_rect(if right { "render:compare:right-label" } else { "render:compare:left-label" }, rect);
 }

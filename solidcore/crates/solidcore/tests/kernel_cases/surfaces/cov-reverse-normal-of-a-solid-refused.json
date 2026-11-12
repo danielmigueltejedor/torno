@@ -32,6 +32,6 @@
   "ungraded": [],
   "what": "reverse normal on a solid: refused, its faces face out",
   "why_not": [
-    "the failure is SolidCraft's, not a kernel operation's: step 2 (surface.reverse_normal): invalid input: a solid's faces face out: unstitch it into surfaces first"
+    "the failure is Torno's, not a kernel operation's: step 2 (surface.reverse_normal): invalid input: a solid's faces face out: unstitch it into surfaces first"
   ]
 }

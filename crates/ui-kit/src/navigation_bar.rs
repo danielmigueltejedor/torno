@@ -1,5 +1,5 @@
 //! Stored navigation slots, checked against the host's slot catalogue. Their layout is
-//! [`crate::nav_bar_layout`] and the bar component [`crate::nav_bar`]; SolidCraft's catalogue is
+//! [`crate::nav_bar_layout`] and the bar component [`crate::nav_bar`]; Torno's catalogue is
 //! `navigation_slots`.
 use crate::{NavigationEdge, NavigationIdle, NavigationKind, NavigationSize};
 use serde::{Deserialize, Serialize};

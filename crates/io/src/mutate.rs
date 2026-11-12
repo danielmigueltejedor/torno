@@ -1,10 +1,10 @@
 //! Every reader of bytes the user didn't write, run over mutations of a valid file (#469): each
 //! case gives an error or a result, never a panic, within the time budget and the reader's own
-//! caps. The mutations and the check are `solidcraft_testkit`'s.
+//! caps. The mutations and the check are `torno_testkit`'s.
 
 use solidcore_record::{Vec2, Vec3};
-use solidcraft_geom::Mesh;
-use solidcraft_testkit::{mutations, survives};
+use torno_geom::Mesh;
+use torno_testkit::{mutations, survives};
 
 fn cube() -> Mesh {
     let positions = (0..8).map(|i| Vec3::new(f64::from(i & 1) * 10.0, f64::from((i >> 1) & 1) * 10.0, f64::from((i >> 2) & 1) * 10.0)).collect();
@@ -222,9 +222,9 @@ fn gltf_survives_mutation() {
 
 #[test]
 fn designs_survive_mutation() {
-    let mut doc = solidcraft_doc::Document::new("Fuzz");
+    let mut doc = torno_doc::Document::new("Fuzz");
     doc.set_param("width", "40", Some("mm"), None).unwrap();
-    let mesh = solidcraft_doc::MeshData {
+    let mesh = torno_doc::MeshData {
         name: "Preview".into(),
         positions: vec![0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0].into(),
         triangles: vec![0, 1, 2].into(),
@@ -248,12 +248,12 @@ fn designs_survive_mutation() {
 /// never a panic, and `file_kind` always answers.
 #[test]
 fn drawings_survive_mutation() {
-    use solidcraft_geom::drawing_sheet::{DrawingBorderProfile, Orientation, PaperSize, Sheet};
-    let mut ids = solidcraft_doc::ids::IdSource::seeded(0xd4a);
+    use torno_geom::drawing_sheet::{DrawingBorderProfile, Orientation, PaperSize, Sheet};
+    let mut ids = torno_doc::ids::IdSource::seeded(0xd4a);
     let a3 = Sheet::standard(PaperSize::A3, Orientation::Landscape);
-    let mut drawing = solidcraft_doc::drawing::Drawing::new("Fuzz", "en", "Sheet 1", a3, Some(DrawingBorderProfile::iso()), &mut ids).unwrap();
+    let mut drawing = torno_doc::drawing::Drawing::new("Fuzz", "en", "Sheet 1", a3, Some(DrawingBorderProfile::iso()), &mut ids).unwrap();
     let id = drawing.allocate_id(&mut ids).unwrap();
-    drawing.sources.push(solidcraft_doc::drawing::Source { id, path: "plate.sc".into() });
+    drawing.sources.push(torno_doc::drawing::Source { id, path: "plate.sc".into() });
     let container = crate::write_drawing_container(&drawing).unwrap();
     assert!(crate::read_drawing(&container).is_ok());
     survives("drawing container", &mutations(&container, false, 0xd4b), usize::MAX, |b| {
@@ -274,7 +274,7 @@ fn drawings_survive_mutation() {
 #[test]
 fn paper_scenes_survive_mutation_into_svg() {
     use solidcore_record::{Loop2, Region2, Seg2, Vec2};
-    use solidcraft_geom::paper::{Group, Item, ObjectKind, Scene};
+    use torno_geom::paper::{Group, Item, ObjectKind, Scene};
     let p = Vec2::new;
     let border = Loop2::polygon(&[p(20.0, 10.0), p(410.0, 10.0), p(410.0, 287.0), p(20.0, 287.0)]);
     let items = vec![

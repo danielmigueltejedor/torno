@@ -1,7 +1,7 @@
 //! A bounded region's shells with the one that encloses the others first.
 //!
 //! Not upstream in SMLib: the C API's `PutEnclosingShellsFirst` (`smlib_flat.cpp`, after
-//! `SmuConvert`), moved here from SolidCraft's flat-array import, as it is, for every caller that
+//! `SmuConvert`), moved here from Torno's flat-array import, as it is, for every caller that
 //! builds a body from data (docs/layers.md §1).
 //!
 //! SMLib takes the first shell of every region but the infinite one as the shell that encloses

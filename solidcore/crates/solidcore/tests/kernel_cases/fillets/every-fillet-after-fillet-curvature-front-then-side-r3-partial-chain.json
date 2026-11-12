@@ -123,8 +123,8 @@
     "blend_dropping"
   ],
   "ungraded": [
-    "continuity: SolidCraft computes it",
-    "refusal \"continues tangentially\": SolidCraft's wording of the kernel's error"
+    "continuity: Torno computes it",
+    "refusal \"continues tangentially\": Torno's wording of the kernel's error"
   ],
   "what": "a box's top front edge rounded curvature-continuous size 3, then the top side edge meeting it at the corner rounded the same way alone (Tangent chain off)",
   "why_not": []

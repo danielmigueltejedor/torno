@@ -64,6 +64,6 @@
   "ungraded": [],
   "what": "an L bracket unfolded and refolded: the refold must give the folded part back",
   "why_not": [
-    "body \"Body1\" is no kernel operation's output nor an operand: SolidCraft built it or changed the kernel's record"
+    "body \"Body1\" is no kernel operation's output nor an operand: Torno built it or changed the kernel's record"
   ]
 }

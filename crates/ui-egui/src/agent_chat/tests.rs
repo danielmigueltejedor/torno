@@ -70,7 +70,7 @@ fn transcript_paste_does_not_insert_a_previously_copied_body() {
         assert_eq!(h.app.session.undo.len(), undo);
         // A deliberate click outside the panel returns ownership to CAD.
         transcript_click(&mut h, egui::pos2(700.0, 500.0));
-        h.frame_with(vec![egui::Event::Paste("SolidCraft bodies".into())]);
+        h.frame_with(vec![egui::Event::Paste("Torno bodies".into())]);
         assert_eq!(h.app.session.model.state().bodies.len(), 2, "{layout:?}: CAD paste still works after returning to the model");
     }
 }
@@ -116,7 +116,7 @@ fn transcript_shortcut_ownership_ends_when_the_panel_is_hidden() {
             "minimized" => h.app.preferences.agent_chat_minimized = true,
             _ => h.app.preferences.ai_features = false,
         }
-        h.frame_with(vec![egui::Event::Paste("SolidCraft bodies".into())]);
+        h.frame_with(vec![egui::Event::Paste("Torno bodies".into())]);
         assert_eq!(h.app.session.model.state().bodies.len(), 2, "{hidden}: the invisible panel must not retain CAD keys");
     }
 }
@@ -216,7 +216,7 @@ fn select_all_in_the_transcript_takes_the_whole_conversation() {
         assert!(thought.is_none(), "a thought is not highlighted");
         // The prompt's bubble is filled with the selection colour itself: the outline must show
         // on it, as on the reply's text and code backgrounds, in either theme.
-        let t = solidcraft_theme::Tokens::get();
+        let t = torno_theme::Tokens::get();
         assert_eq!(h.ctx.style_of(h.ctx.theme()).visuals.dark_mode, dark, "the theme took effect");
         for text in ["Thanks", "Transcript clipboard sentinel", "FINAL PARAGRAPH OMEGA.", "CODE BLOCK GAMMA\nsecond code line"] {
             let outline = transcript_highlights(&h, &base, text).1.unwrap_or_else(|| panic!("{text:?} is highlighted"));
@@ -270,7 +270,7 @@ fn chat() -> AgentChat {
 
 #[cfg(not(target_arch = "wasm32"))]
 fn app_with_discovered_login() -> SolveApp {
-    let mut app = SolveApp::new(solidcraft_engine::Session::default(), crate::Services::default());
+    let mut app = SolveApp::new(torno_engine::Session::default(), crate::Services::default());
     app.agent_chat.detection = Some(discover::Detection {
         found: vec![discover::Found {
             id: "qwen",
@@ -374,7 +374,7 @@ fn a_sign_in_proven_in_one_tab_holds_in_every_tab() {
     app.agent_chat.on_event(Event::Ready { agent: "Qwen Code".into(), images: false });
     assert_eq!(agents::current(&app).unwrap().login, "signed_in");
 
-    crate::documents::open_tab(&mut app, solidcraft_engine::Session::default()).unwrap();
+    crate::documents::open_tab(&mut app, torno_engine::Session::default()).unwrap();
     assert_eq!(app.agent_chat.state(), State::Off, "a new tab starts its own conversation");
     assert_eq!(agents::current(&app).unwrap().login, "signed_in");
     assert_eq!(assistant_mark(&app), AssistantMark::Ready, "no sign-in mark in the new tab");
@@ -455,7 +455,7 @@ fn a_permission_is_answered_once() {
 
 /// An app with the chat's endpoint wired to a channel the test feeds, and a message in progress.
 fn app_in_a_turn() -> (SolveApp, Sender<ControlRequest>) {
-    let mut app = SolveApp::new(solidcraft_engine::Session::default(), crate::Services::default());
+    let mut app = SolveApp::new(torno_engine::Session::default(), crate::Services::default());
     // The default mode: modelling runs, files ask.
     assert_eq!(app.preferences.ai_permissions, agents::Mode::Edits);
     let (tx, rx) = channel();
@@ -522,7 +522,7 @@ fn a_revision_is_the_very_design_not_an_equal_one() {
 #[test]
 fn file_actions_wait_for_the_user() {
     let (mut app, tx) = app_in_a_turn();
-    let dir = solidcraft_engine::io::vfs::temp_dir().join(format!("sc-agent-chat-approve-{}", std::process::id()));
+    let dir = torno_engine::io::vfs::temp_dir().join(format!("sc-agent-chat-approve-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
     let path = dir.join("a.solidcraft");
     let save = json!({"command": "file.save", "params": {"path": path.to_string_lossy()}, "allow_paths": [dir.to_string_lossy()]});
@@ -576,8 +576,8 @@ fn the_gate_refuses_and_limits() {
 #[test]
 fn merging_finds_the_turns_start_when_the_history_was_trimmed() {
     // Distinct designs: what counts is which `Arc` a snapshot holds.
-    let doc = |_: usize| Arc::new(solidcraft_engine::doc::Document::default());
-    let snap = |d: &Arc<solidcraft_engine::doc::Document>| solidcraft_engine::Snapshot {
+    let doc = |_: usize| Arc::new(torno_engine::doc::Document::default());
+    let snap = |d: &Arc<torno_engine::doc::Document>| torno_engine::Snapshot {
         label: String::new(),
         doc: d.clone(),
         active_sketch: None,
@@ -601,7 +601,7 @@ fn merging_finds_the_turns_start_when_the_history_was_trimmed() {
 /// asked over the control channel. Turned on, the button is there; discovery waits for the panel.
 #[test]
 fn with_ai_features_off_nothing_of_the_chat_shows_or_runs() {
-    use solidcraft_ui_registry::{handle_at, rect_of};
+    use torno_ui_registry::{handle_at, rect_of};
     let mut h = crate::scenario::Harness::new();
     let shortcut = json!({"key": "A", "shift": true, "cmd": true});
     h.app.preferences.ai_features = false;
@@ -649,7 +649,7 @@ fn ai_features_and_the_toolbar_button_are_on_by_default() {
 /// in the side panel. The control channel does the same.
 #[test]
 fn the_chat_pops_out_into_its_own_window_and_docks_back() {
-    use solidcraft_ui_registry::{handle_at, rect_of};
+    use torno_ui_registry::{handle_at, rect_of};
     let mut h = crate::scenario::Harness::new();
     h.call("ui.agent_chat", json!({"open": true}));
     h.frames(3);
@@ -686,7 +686,7 @@ fn the_chat_pops_out_into_its_own_window_and_docks_back() {
 /// down (686, 687, 686…) on a Retina screen.
 #[test]
 fn the_window_place_is_given_once_when_it_opens() {
-    let mut app = SolveApp::new(solidcraft_engine::Session::default(), crate::Services::default());
+    let mut app = SolveApp::new(torno_engine::Session::default(), crate::Services::default());
     app.preferences.agent_chat_window = Some([1967.0, 160.0, 569.0, 686.0]);
     let first = panel::window_builder(&app.session.doc.name, app.agent_chat.window_placed, &panel::AgentPanelPrefs::read(&app.preferences));
     assert_eq!(first.position, Some(egui::pos2(1967.0, 160.0)));
@@ -774,7 +774,7 @@ fn permission_modes_decide_what_asks() {
     decline_all(&mut app, "test");
     // Allow everything, set for this agent only.
     app.preferences.agent_permissions.insert("codex".into(), agents::Mode::All);
-    let dir = solidcraft_engine::io::vfs::temp_dir().join(format!("sc-agent-chat-all-{}", std::process::id()));
+    let dir = torno_engine::io::vfs::temp_dir().join(format!("sc-agent-chat-all-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
     let path = dir.join("b.solidcraft");
     let save = ask(
@@ -793,11 +793,11 @@ fn permission_modes_decide_what_asks() {
     let _ = std::fs::remove_dir_all(&dir);
 }
 
-/// The agent's own questions: SolidCraft's tools are allowed (its gate checks them), an earlier
+/// The agent's own questions: Torno's tools are allowed (its gate checks them), an earlier
 /// "Always allow" answers by itself, and both leave a note; anything else is asked.
 #[test]
 fn the_agents_own_questions_are_answered_by_the_mode_or_asked() {
-    let mut app = SolveApp::new(solidcraft_engine::Session::default(), crate::Services::default());
+    let mut app = SolveApp::new(torno_engine::Session::default(), crate::Services::default());
     app.agent_chat.running_id = "claude".into();
     let opts = || {
         vec![
@@ -806,8 +806,8 @@ fn the_agents_own_questions_are_answered_by_the_mode_or_asked() {
             PermissionOption { id: "no".into(), name: "Reject".into(), kind: "reject_once".into() },
         ]
     };
-    on_permission(&mut app, 1, "mcp__solidcraft-app__batch".into(), Some("other"), opts());
-    assert!(matches!(app.agent_chat.items.last(), Some(Item::Notice { text, .. }) if text.contains("mcp__solidcraft-app__batch")));
+    on_permission(&mut app, 1, "mcp__torno-app__batch".into(), Some("other"), opts());
+    assert!(matches!(app.agent_chat.items.last(), Some(Item::Notice { text, .. }) if text.contains("mcp__torno-app__batch")));
     on_permission(&mut app, 2, "Run ls".into(), None, opts());
     assert!(matches!(app.agent_chat.items.last(), Some(Item::Permission { answer: None, .. })));
     let n = app.agent_chat.items.len() - 1;
@@ -817,19 +817,19 @@ fn the_agents_own_questions_are_answered_by_the_mode_or_asked() {
     assert!(matches!(app.agent_chat.items.last(), Some(Item::Notice { .. })), "remembered");
 }
 
-/// A title that only mentions SolidCraft is no tool of SolidCraft's: in every mode but Allow
+/// A title that only mentions Torno is no tool of Torno's: in every mode but Allow
 /// everything the user is asked, and the mode still answers when it says to.
 #[test]
-fn a_title_that_mentions_solidcraft_goes_through_the_users_mode() {
-    let mut app = SolveApp::new(solidcraft_engine::Session::default(), crate::Services::default());
+fn a_title_that_mentions_torno_goes_through_the_users_mode() {
+    let mut app = SolveApp::new(torno_engine::Session::default(), crate::Services::default());
     app.agent_chat.running_id = "codex".into();
     let opts = || vec![PermissionOption { id: "allow".into(), name: "Allow".into(), kind: "allow_once".into() }];
     let titles = [
-        ("run solidcraft-cli; ls", Some("execute")),
-        ("run solidcraft-cli; ls", None),
-        ("Edit ~/.local/share/solidcraft/agent-chat/work/notes.txt", Some("edit")),
-        ("mcp__solidcraft__batch", Some("other")),
-        ("mcp__solidcraft-app__batch", Some("execute")),
+        ("run torno-cli; ls", Some("execute")),
+        ("run torno-cli; ls", None),
+        ("Edit ~/.local/share/torno/agent-chat/work/notes.txt", Some("edit")),
+        ("mcp__torno__batch", Some("other")),
+        ("mcp__torno-app__batch", Some("execute")),
     ];
     for mode in [agents::Mode::Ask, agents::Mode::Edits] {
         app.preferences.agent_permissions.insert("codex".into(), mode);
@@ -839,7 +839,7 @@ fn a_title_that_mentions_solidcraft_goes_through_the_users_mode() {
             app.agent_chat.items.clear();
         }
         // The chat's own tool stays a single question, the gate's.
-        on_permission(&mut app, 2, "mcp__solidcraft-app__batch".into(), Some("other"), opts());
+        on_permission(&mut app, 2, "mcp__torno-app__batch".into(), Some("other"), opts());
         assert!(matches!(app.agent_chat.items.last(), Some(Item::Notice { .. })), "{mode:?}");
         app.agent_chat.items.clear();
     }
@@ -903,7 +903,7 @@ impl ChatBackend for Script {
 
 /// An app whose agent is scripted and ready.
 fn app_with_script() -> (SolveApp, Script, egui::Context) {
-    let mut app = SolveApp::new(solidcraft_engine::Session::default(), crate::Services::default());
+    let mut app = SolveApp::new(torno_engine::Session::default(), crate::Services::default());
     let script = Script::default();
     app.agent_chat.backend = Some(Box::new(script.clone()));
     app.agent_chat.state = Some(State::Ready);
@@ -928,7 +928,7 @@ fn document_tabs_keep_their_conversations_and_backend_context() {
     send(&mut app, &ctx, "first request".into());
     send(&mut app, &ctx, "first follow-up".into());
 
-    crate::documents::open_tab(&mut app, solidcraft_engine::Session::default()).unwrap();
+    crate::documents::open_tab(&mut app, torno_engine::Session::default()).unwrap();
     assert!(app.agent_chat.items.is_empty() && app.agent_chat.input.is_empty());
     assert!(app.agent_chat.pending.is_empty() && app.agent_chat.attachments.is_empty());
     assert!(app.agent_chat.backend.is_none() && app.agent_chat.agent_id.is_none());
@@ -980,7 +980,7 @@ fn leaving_during_startup_or_sign_in_keeps_the_unsent_message_for_send() {
         send(&mut app, &ctx, "waiting request".into());
         assert!(script.prompts().is_empty());
         assert!(app.agent_chat.queued.is_some());
-        crate::documents::open_tab(&mut app, solidcraft_engine::Session::default()).unwrap();
+        crate::documents::open_tab(&mut app, torno_engine::Session::default()).unwrap();
         // Both events may have been buffered while the original tab was hidden.
         script.report(Event::AuthRequired { methods: Vec::new() });
         script.report(Event::Ready { agent: "scripted".into(), images: false });
@@ -1000,10 +1000,10 @@ fn leaving_during_startup_or_sign_in_keeps_the_unsent_message_for_send() {
 fn a_late_sign_in_retry_or_permission_cannot_restart_a_departed_turn() {
     let (mut app, script, ctx) = app_with_script();
     send(&mut app, &ctx, "first request".into());
-    crate::documents::open_tab(&mut app, solidcraft_engine::Session::default()).unwrap();
+    crate::documents::open_tab(&mut app, torno_engine::Session::default()).unwrap();
     script.report(Event::Permission {
         key: 7,
-        title: "mcp__solidcraft-app__batch".into(),
+        title: "mcp__torno-app__batch".into(),
         kind: None,
         options: vec![PermissionOption { id: "allow".into(), name: "Allow".into(), kind: "allow_once".into() }],
     });
@@ -1058,8 +1058,8 @@ fn an_agents_new_design_keeps_its_conversation_and_continues() {
         send(&mut app, &ctx, "create another design".into());
         let active = app.agent_chat.turn.as_ref().unwrap().active.clone();
         app.ui.agent_cursor.show = animate;
-        solidcraft_ui_registry::publish_handle("toolbar:file.new", egui::pos2(80.0, 100.0));
-        solidcraft_ui_registry::publish_handle("toolbar:solid.box", egui::pos2(100.0, 100.0));
+        torno_ui_registry::publish_handle("toolbar:file.new", egui::pos2(80.0, 100.0));
+        torno_ui_registry::publish_handle("toolbar:solid.box", egui::pos2(100.0, 100.0));
         let response = chat_tool(&mut app, &tx, &ctx, method, params);
         assert_eq!(response["ok"], true, "{response}");
         assert!(app.agent_chat.backend.is_some(), "the agent must receive its own replacement's reply");
@@ -1083,10 +1083,10 @@ fn an_agents_new_design_keeps_its_conversation_and_continues() {
 #[test]
 fn an_agents_opened_design_keeps_its_conversation_and_undo_ownership() {
     for blank in [true, false] {
-        let dir = std::env::temp_dir().join(format!("solidcraft-chat-open-{}-{blank}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("torno-chat-open-{}-{blank}", std::process::id()));
         std::fs::create_dir_all(&dir).unwrap();
         let path = dir.join("next.solidcraft");
-        let mut next = solidcraft_engine::Session::default();
+        let mut next = torno_engine::Session::default();
         next.execute("solid.box", &boxed(100.0)["params"]).unwrap();
         next.execute("file.save_as", &json!({"path": path})).unwrap();
         let (mut app, script, ctx) = app_with_script();
@@ -1181,10 +1181,10 @@ fn an_agents_failed_new_design_batch_restores_its_undo_boundary() {
 #[cfg(not(target_arch = "wasm32"))]
 #[test]
 fn an_agents_cancelled_open_cannot_replace_the_design_later() {
-    let dir = std::env::temp_dir().join(format!("solidcraft-chat-cancel-open-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("torno-chat-cancel-open-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
     let path = dir.join("next.solidcraft");
-    solidcraft_engine::Session::default().execute("file.save_as", &json!({"path": path})).unwrap();
+    torno_engine::Session::default().execute("file.save_as", &json!({"path": path})).unwrap();
     let (mut app, script, ctx) = app_with_script();
     let (tx, rx) = channel();
     app.agent_chat.tools_rx = Some(rx);
@@ -1268,7 +1268,7 @@ fn leaving_a_tab_refuses_computation_and_export_replies() {
         pump_tools(&mut app);
         app.drain_control(&ctx);
         assert!(app.control_job.is_some() || !app.control_answering.is_empty(), "the worker result waits for a later frame");
-        crate::documents::open_tab(&mut app, solidcraft_engine::Session::default()).unwrap();
+        crate::documents::open_tab(&mut app, torno_engine::Session::default()).unwrap();
         let incoming = app.session.doc.clone();
         let log = app.session.log.clone();
         app.poll_control_jobs(&ctx);
@@ -1290,7 +1290,7 @@ fn leaving_a_tab_refuses_admitted_commands_animations_and_screenshots() {
         let (mut app, tx) = app_in_a_turn();
         let ctx = crate::fonts::test_context();
         app.ui.agent_cursor.show = animate;
-        solidcraft_ui_registry::publish_handle("toolbar:solid.box", egui::pos2(100.0, 100.0));
+        torno_ui_registry::publish_handle("toolbar:solid.box", egui::pos2(100.0, 100.0));
         app.ui.agent_cursor.speed = crate::agent_cursor::Speed::Times(1.0);
         let change = ask(&tx, "engine.execute", boxed(0.0));
         let shot = ask(&tx, "ui.screenshot", json!({}));
@@ -1303,7 +1303,7 @@ fn leaving_a_tab_refuses_admitted_commands_animations_and_screenshots() {
             app.drain_control(&ctx);
             assert!(app.agent.busy(), "the command is waiting on cursor animation");
         }
-        crate::documents::open_tab(&mut app, solidcraft_engine::Session::default()).unwrap();
+        crate::documents::open_tab(&mut app, torno_engine::Session::default()).unwrap();
         let other = app.session.doc.clone();
         app.drain_control(&ctx);
         crate::agent_cursor::step(&mut app, &ctx);
@@ -1320,7 +1320,7 @@ fn leaving_a_tab_refuses_admitted_commands_animations_and_screenshots() {
         assert!(app.session.doc.features.is_empty() && app.session.undo.is_empty());
         // Adopting into a blank tab replaces the document and clears its old conversation.
         app.agent_chat.input = "discarded draft".into();
-        crate::documents::adopt(&mut app, solidcraft_engine::Session::default());
+        crate::documents::adopt(&mut app, torno_engine::Session::default());
         assert!(app.agent_chat.input.is_empty() && app.agent_chat.items.is_empty());
     }
 }
@@ -1341,7 +1341,7 @@ fn late_events_approvals_and_undo_stay_with_the_originating_document() {
     let held = ask(&tx, "engine.execute", boxed(40.0));
     pump_tools(&mut app);
     assert_eq!(app.agent_chat.waiting(), 1);
-    crate::documents::open_tab(&mut app, solidcraft_engine::Session::default()).unwrap();
+    crate::documents::open_tab(&mut app, torno_engine::Session::default()).unwrap();
     assert_eq!(held.try_recv().unwrap()["ok"], false);
     assert_eq!(app.agent_chat.waiting(), 0);
     first.report(Event::Text { thought: false, text: "Stopped in the first design".into() });
@@ -1546,7 +1546,7 @@ fn an_interrupted_turns_changes_undo_as_one_step() {
 /// seen yet (a new chat), bring no note.
 #[test]
 fn a_change_by_hand_between_messages_is_told_to_the_agent() {
-    use solidcraft_engine::doc::Param;
+    use torno_engine::doc::Param;
     let (mut app, script, ctx) = app_with_script();
     let (tx, rx) = channel();
     app.agent_chat.tools_rx = Some(rx);
@@ -1642,7 +1642,7 @@ done
 "#;
     let argv = vec!["sh".to_string(), "-c".to_string(), script.to_string(), "fake-agent".to_string(), log.to_string_lossy().into_owned()];
     let start = backend::StartContext { cwd: dir.clone(), bridge: None, tools: None, wake: Box::new(|| {}) };
-    let mut app = SolveApp::new(solidcraft_engine::Session::default(), crate::Services::default());
+    let mut app = SolveApp::new(torno_engine::Session::default(), crate::Services::default());
     app.agent_chat.backend = Some(Box::new(acp_client::AcpBackend::start(&argv, start).unwrap()));
     app.agent_chat.state = Some(State::Starting);
     let ctx = crate::fonts::test_context();
@@ -1735,7 +1735,7 @@ done
 "#;
     let argv = vec!["sh".to_string(), "-c".to_string(), script.to_string(), "fake-agent".to_string(), log.to_string_lossy().into_owned()];
     let start = backend::StartContext { cwd: dir.clone(), bridge: None, tools: None, wake: Box::new(|| {}) };
-    let mut app = SolveApp::new(solidcraft_engine::Session::default(), crate::Services::default());
+    let mut app = SolveApp::new(torno_engine::Session::default(), crate::Services::default());
     app.agent_chat.backend = Some(Box::new(acp_client::AcpBackend::start(&argv, start).unwrap()));
     app.agent_chat.state = Some(State::Starting);
     let ctx = crate::fonts::test_context();
@@ -1788,7 +1788,7 @@ done
 "#;
     let argv = vec!["sh".to_string(), "-c".to_string(), script.to_string(), "fake-agent".to_string(), log.to_string_lossy().into_owned()];
     let start = backend::StartContext { cwd: dir.clone(), bridge: None, tools: None, wake: Box::new(|| {}) };
-    let mut app = SolveApp::new(solidcraft_engine::Session::default(), crate::Services::default());
+    let mut app = SolveApp::new(torno_engine::Session::default(), crate::Services::default());
     app.agent_chat.backend = Some(Box::new(acp_client::AcpBackend::start(&argv, start).unwrap()));
     app.agent_chat.state = Some(State::Starting);
     let ctx = crate::fonts::test_context();
@@ -1839,7 +1839,7 @@ fn custom_instructions_reach_the_system_note_of_each_new_session() {
     h.app.services.agent_http = Some(http);
     crate::prefs::open_at(&mut h.app, crate::prefs::PAGE_ASSISTANT);
     h.frames(4);
-    assert!(solidcraft_ui_registry::rect_of("prefs:agent_instructions").is_some(), "the field is on the AI page");
+    assert!(torno_ui_registry::rect_of("prefs:agent_instructions").is_some(), "the field is on the AI page");
     h.app.preferences.ai_features = true;
     h.ctx.memory_mut(|m| m.request_focus(egui::Id::unique("prefs_agent_instructions")));
     h.frames(2);
@@ -1934,7 +1934,7 @@ fn an_endpoints_vendor_named_listing_names_its_providers() {
 #[cfg(not(target_arch = "wasm32"))]
 #[test]
 fn the_header_groups_models_by_provider_and_folds_them() {
-    use solidcraft_ui_registry::handle_at;
+    use torno_ui_registry::handle_at;
     let mut h = narrow_chat();
     let script = Script::default();
     h.app.agent_chat.backend = Some(Box::new(script.clone()));
@@ -2186,7 +2186,7 @@ fn the_control_channel_sends_an_unlisted_model_where_it_can_go() {
 /// can be chosen too. The control and the popup stay in a narrow chat's window.
 #[test]
 fn the_header_model_picker_searches_and_takes_a_typed_model() {
-    use solidcraft_ui_registry::{handle_at, rect_of};
+    use torno_ui_registry::{handle_at, rect_of};
     let mut h = narrow_chat();
     let script = Script::default();
     h.app.agent_chat.backend = Some(Box::new(script.clone()));
@@ -2233,7 +2233,7 @@ fn the_header_model_picker_searches_and_takes_a_typed_model() {
 /// go through the option, and other options stay plain dropdowns.
 #[test]
 fn the_header_model_option_searches_and_takes_a_typed_model() {
-    use solidcraft_ui_registry::handle_at;
+    use torno_ui_registry::handle_at;
     let mut h = narrow_chat();
     let script = Script::default();
     h.app.agent_chat.backend = Some(Box::new(script.clone()));
@@ -2272,7 +2272,7 @@ fn the_header_model_option_searches_and_takes_a_typed_model() {
 /// in the popup.
 #[test]
 fn the_header_model_picker_offers_no_typed_model_it_cannot_send_and_shows_why_listing_failed() {
-    use solidcraft_ui_registry::handle_at;
+    use torno_ui_registry::handle_at;
     let mut h = narrow_chat();
     h.app.agent_chat.state = Some(State::Ready);
     h.app.agent_chat.models = vec![acp::ModelInfo { id: "fast".into(), name: "fast".into(), description: String::new() }];
@@ -2293,7 +2293,7 @@ fn the_header_model_picker_offers_no_typed_model_it_cannot_send_and_shows_why_li
 #[cfg(not(target_arch = "wasm32"))]
 #[test]
 fn the_card_of_a_running_endpoint_changes_the_chats_model() {
-    use solidcraft_ui_registry::handle_at;
+    use torno_ui_registry::handle_at;
     let mut h = crate::scenario::Harness::new();
     h.app.home.open = false;
     h.app.preferences.ai_features = true;
@@ -2317,14 +2317,14 @@ fn the_card_of_a_running_endpoint_changes_the_chats_model() {
     // The permission cards put endpoint controls below the fixed page's viewport.
     for _ in 0..32 {
         let at = handle_at("prefs:ai_model:api-1").unwrap();
-        let body = solidcraft_ui_registry::rect_of("prefs:page_body").unwrap();
+        let body = torno_ui_registry::rect_of("prefs:page_body").unwrap();
         if body.contains(at) {
             break;
         }
         h.call("ui.scroll", json!({"x":body.center().x,"y":body.center().y,"delta":if at.y < body.top() {100} else {-100}}));
         h.frames(30);
     }
-    assert!(solidcraft_ui_registry::rect_of("prefs:page_body").unwrap().contains(handle_at("prefs:ai_model:api-1").unwrap()));
+    assert!(torno_ui_registry::rect_of("prefs:page_body").unwrap().contains(handle_at("prefs:ai_model:api-1").unwrap()));
     h.step(&json!({"click": {"handle": "prefs:ai_model:api-1"}})).unwrap();
     h.frames(3);
     assert!(handle_at("prefs:ai_model:api-1:smart").is_some());
@@ -2549,7 +2549,7 @@ fn modern_acknowledgements_stay_with_their_document_without_resuming_its_queue()
     poll(&mut app, &ctx);
     assert!(app.agent_chat.config_pending && app.agent_chat.queued.is_some());
 
-    crate::documents::open_tab(&mut app, solidcraft_engine::Session::default()).unwrap();
+    crate::documents::open_tab(&mut app, torno_engine::Session::default()).unwrap();
     assert!(app.agent_chat.config_options.is_none() && !app.agent_chat.config_pending);
     let second = Script::default();
     app.agent_chat.backend = Some(Box::new(second.clone()));
@@ -2587,7 +2587,7 @@ fn closing_a_pending_modern_chat_preserves_the_surviving_api_endpoint_and_saved_
         set_model(&mut app, "smart");
         assert!(app.agent_chat.config_pending);
 
-        crate::documents::open_tab(&mut app, solidcraft_engine::Session::default()).unwrap();
+        crate::documents::open_tab(&mut app, torno_engine::Session::default()).unwrap();
         let endpoint = "http://127.0.0.1:12345/v1";
         let api = Script::default();
         app.agent_chat.backend = Some(Box::new(api.clone()));
@@ -2624,7 +2624,7 @@ fn closing_a_pending_modern_chat_preserves_the_surviving_api_endpoint_and_saved_
         assert_eq!(api.calls(), ["set_model: smart"], "the closed chat's events cannot reach the surviving backend");
 
         // Reusing the same agent in a fresh design must restore only the last confirmed model.
-        crate::documents::open_tab(&mut app, solidcraft_engine::Session::default()).unwrap();
+        crate::documents::open_tab(&mut app, torno_engine::Session::default()).unwrap();
         assert!(app.agent_chat.config_options.is_none() && !app.agent_chat.config_pending);
         let fresh = Script::default();
         app.agent_chat.backend = Some(Box::new(fresh.clone()));
@@ -2660,7 +2660,7 @@ fn document_disconnect_paths_clear_modern_configuration_and_pending_requests() {
         let (mut app, first, ctx) = app_with_script();
         app.agent_chat.on_event(Event::ConfigOptions(modern_options("fast")));
         set_model(&mut app, "smart");
-        crate::documents::open_tab(&mut app, solidcraft_engine::Session::default()).unwrap();
+        crate::documents::open_tab(&mut app, torno_engine::Session::default()).unwrap();
         app.agent_chat.backend = Some(Box::new(Script::default()));
         app.agent_chat.state = Some(State::Ready);
         app.agent_chat.on_event(Event::ConfigOptions(modern_options("fast")));
@@ -2713,7 +2713,7 @@ done
             let _ = wake_tx.send(());
         }),
     };
-    let mut app = SolveApp::new(solidcraft_engine::Session::default(), crate::Services::default());
+    let mut app = SolveApp::new(torno_engine::Session::default(), crate::Services::default());
     app.agent_chat.backend = Some(Box::new(acp_client::AcpBackend::start(&argv, start).unwrap()));
     app.agent_chat.running_id = "modern".into();
     app.agent_chat.state = Some(State::Starting);
@@ -2880,7 +2880,7 @@ done
 "#;
     let argv = vec!["sh".to_string(), "-c".to_string(), script.to_string(), "fake-agent".to_string(), log.to_string_lossy().into_owned()];
     let start = backend::StartContext { cwd: dir.clone(), bridge: None, tools: None, wake: Box::new(|| {}) };
-    let mut app = SolveApp::new(solidcraft_engine::Session::default(), crate::Services::default());
+    let mut app = SolveApp::new(torno_engine::Session::default(), crate::Services::default());
     app.agent_chat.backend = Some(Box::new(acp_client::AcpBackend::start(&argv, start).unwrap()));
     app.agent_chat.state = Some(State::Starting);
     app.agent_chat.running_id = "fake".into();
@@ -2937,7 +2937,7 @@ done
 "#;
     let argv = vec!["sh".to_string(), "-c".to_string(), script.to_string(), "fake-agent".to_string(), log.to_string_lossy().into_owned()];
     let start = backend::StartContext { cwd: dir.clone(), bridge: None, tools: None, wake: Box::new(|| {}) };
-    let mut app = SolveApp::new(solidcraft_engine::Session::default(), crate::Services::default());
+    let mut app = SolveApp::new(torno_engine::Session::default(), crate::Services::default());
     app.agent_chat.backend = Some(Box::new(acp_client::AcpBackend::start(&argv, start).unwrap()));
     app.agent_chat.state = Some(State::Starting);
     app.agent_chat.running_id = "fake".into();
@@ -2972,7 +2972,7 @@ done
 
 /// A folder of files to attach: a picture and a text file.
 fn attachable(tag: &str) -> std::path::PathBuf {
-    let d = std::env::temp_dir().join(format!("solidcraft-chat-files-{tag}-{}", std::process::id()));
+    let d = std::env::temp_dir().join(format!("torno-chat-files-{tag}-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&d);
     std::fs::create_dir_all(&d).unwrap();
     image::RgbaImage::from_pixel(40, 30, image::Rgba([250, 250, 250, 255])).save(d.join("target.png")).unwrap();
@@ -3060,7 +3060,7 @@ fn pictures_are_read_off_the_window_thread() {
     send(&mut app, &ctx, words);
     assert_eq!(script.prompts().len(), 1);
     {
-        let _ja = solidcraft_ui_text::scope("ja");
+        let _ja = torno_ui_text::scope("ja");
         control(&mut app, &ctx, &json!({"attach": at(&d, "fake.png")})).unwrap();
     }
     settle_files(&mut app, &ctx);
@@ -3116,7 +3116,7 @@ fn files_wait_with_their_message_and_pictures_skip_an_agent_that_takes_none() {
 #[test]
 fn at_most_eight_files_on_a_message() {
     let d = attachable("eight");
-    let mut app = SolveApp::new(solidcraft_engine::Session::default(), crate::Services::default());
+    let mut app = SolveApp::new(torno_engine::Session::default(), crate::Services::default());
     for _ in 0..attach::MAX_FILES {
         attach_path(&mut app, &at(&d, "brief.md")).unwrap();
     }
@@ -3344,7 +3344,7 @@ fn the_agent_list_keeps_the_panels_side_margin() {
         h.app.ui.layout = layout;
         h.frames(3);
         h.frame();
-        let panel = solidcraft_ui_registry::rect_of("agent_chat:panel").expect("the panel");
+        let panel = torno_ui_registry::rect_of("agent_chat:panel").expect("the panel");
         let mut texts = Vec::new();
         for clipped in &h.shapes {
             crate::test_support::each_shape(&clipped.shape, &mut |s| {
@@ -3354,7 +3354,7 @@ fn the_agent_list_keeps_the_panels_side_margin() {
             });
         }
         let at = |label: &str| texts.iter().find(|(text, r)| text == label && panel.contains(r.center())).map(|(_, r)| *r);
-        let margin = solidcraft_theme::Tokens::get().space_12 - 0.5;
+        let margin = torno_theme::Tokens::get().space_12 - 0.5;
         let agent = at(tr("ui.agent_chat_pick")).expect("the Agent row");
         assert!(agent.left() >= panel.left() + margin, "{layout:?}: Agent at {agent:?} in {panel:?}");
         let refresh = at(tr("ui.agent_chat_refresh")).expect("Refresh");
@@ -3368,7 +3368,7 @@ fn add_agent_and_refresh_are_the_same_size() {
     let mut h = narrow_chat();
     h.frames(3);
     h.frame();
-    let panel = solidcraft_ui_registry::rect_of("agent_chat:panel").expect("the panel");
+    let panel = torno_ui_registry::rect_of("agent_chat:panel").expect("the panel");
     let (mut texts, mut boxes) = (Vec::new(), Vec::new());
     for clipped in &h.shapes {
         crate::test_support::each_shape(&clipped.shape, &mut |s| match s {
@@ -3391,7 +3391,7 @@ fn add_agent_and_refresh_are_the_same_size() {
 
 /// Every chip and the text box sit inside the panel.
 fn assert_inside_the_panel(chips: usize) {
-    use solidcraft_ui_registry::rect_of;
+    use torno_ui_registry::rect_of;
     let panel = rect_of("agent_chat:panel").expect("the panel");
     let mut rects: Vec<(String, egui::Rect)> =
         (0..chips).map(|i| (format!("file:{i}"), rect_of(&format!("agent_chat:file:{i}")).expect("a chip"))).collect();
@@ -3405,7 +3405,7 @@ fn assert_inside_the_panel(chips: usize) {
 /// a × that takes it off), inside the chat, and Send sends files with no text.
 #[test]
 fn attached_files_show_as_chips_that_can_be_taken_off_and_sent_alone() {
-    use solidcraft_ui_registry::handle_at;
+    use torno_ui_registry::handle_at;
     let d = attachable("chips");
     let mut h = narrow_chat();
     let script = Script::default();
@@ -3465,7 +3465,7 @@ fn each_file_has_its_own_id_and_thumbnail() {
 /// the clipboard's picture (here given as RGBA, as the system does).
 #[test]
 fn the_plus_button_attaches_a_chosen_file_or_a_pasted_picture() {
-    use solidcraft_ui_registry::handle_at;
+    use torno_ui_registry::handle_at;
     let d = attachable("plus");
     let mut h = narrow_chat();
     let chosen = at(&d, "brief.md");
@@ -3489,7 +3489,7 @@ fn the_plus_button_attaches_a_chosen_file_or_a_pasted_picture() {
     for ext in ["png", "jpg", "gif", "webp", "svg", "md", "step", "stl"] {
         assert!(exts.iter().any(|e| e == ext), "{ext} in {exts:?}");
     }
-    assert!(!exts.iter().any(|e| e == "solidcraft"));
+    assert!(!exts.iter().any(|e| e == "torno"));
     attach_rgba(&mut h.app, 4, 3, &[200; 48]).unwrap();
     attach_rgba(&mut h.app, 4, 3, &[200; 47]).unwrap();
     settle_chat(&mut h);
@@ -3598,7 +3598,7 @@ fn an_imported_parts_chip_says_the_part_stays() {
 /// chat's (the app handles them as before), nor when the chat is closed.
 #[test]
 fn files_dropped_on_the_chat_attach_and_the_app_does_not_open_them() {
-    use solidcraft_ui_registry::rect_of;
+    use torno_ui_registry::rect_of;
     let d = attachable("drop");
     let mut h = narrow_chat();
     h.call("ui.resize", json!({"width": 1600, "height": 1000}));
@@ -3637,7 +3637,7 @@ fn files_dropped_on_the_chat_attach_and_the_app_does_not_open_them() {
 /// one: a drop on the window is the chat's, one elsewhere is not.
 #[test]
 fn files_dropped_on_the_popped_out_chat_attach() {
-    use solidcraft_ui_registry::rect_of;
+    use torno_ui_registry::rect_of;
     let d = attachable("popdrop");
     let mut h = narrow_chat();
     h.call("ui.resize", json!({"width": 1600, "height": 1000}));
@@ -3664,7 +3664,7 @@ fn files_dropped_on_the_popped_out_chat_attach() {
 /// keeps to the chat (a row of chips wider than the chat would widen everything under it).
 #[test]
 fn chips_and_a_long_message_wrap_inside_a_narrow_chat() {
-    use solidcraft_ui_registry::handle_at;
+    use torno_ui_registry::handle_at;
     let d = attachable("wrap");
     let mut h = narrow_chat();
     for _ in 0..6 {
@@ -3701,8 +3701,8 @@ fn an_agents_markdown_is_drawn_as_blocks() {
 
 /// A 40 x 30 x 20 block, its first face and first edge as the selection would hold them, its body
 /// and its feature.
-fn box_selection(app: &mut SolveApp) -> Vec<solidcraft_engine::Sel> {
-    use solidcraft_engine::Sel;
+fn box_selection(app: &mut SolveApp) -> Vec<torno_engine::Sel> {
+    use torno_engine::Sel;
     app.run("solid.box", json!({"length": 40, "width": 30, "height": 20})).expect("a box");
     let face = app.session.execute("model.faces", &json!({"body": "Body1"})).expect("faces")["faces"][0].clone();
     let edge = app.session.execute("model.edges", &json!({"body": "Body1"})).expect("edges")["edges"][0].clone();
@@ -3730,7 +3730,7 @@ fn an_attached_selection_goes_as_text_for_the_agent_and_as_chips_in_the_conversa
     app.agent_chat.attach_selection = true;
     send(&mut app, &ctx, "round this".into());
     let prompt = script.calls().pop().expect("a prompt");
-    assert!(prompt.starts_with("prompt: round this\n\n[Selected in SolidCraft"), "{prompt}");
+    assert!(prompt.starts_with("prompt: round this\n\n[Selected in Torno"), "{prompt}");
     for want in ["Elements:", "- Flat face ", "planar", "area ", "- Edge ", "length ", "name ", "Features:", "feature id", "Bodies:", "- Body1"] {
         assert!(prompt.contains(want), "{want:?} missing from {prompt}");
     }
@@ -3751,7 +3751,7 @@ fn an_attached_selection_goes_as_text_for_the_agent_and_as_chips_in_the_conversa
 /// prompt with all their items.
 #[test]
 fn queued_messages_keep_the_selection_they_were_typed_with() {
-    use solidcraft_engine::Sel;
+    use torno_engine::Sel;
     let (mut app, script, ctx) = app_with_script();
     app.agent_chat.attach_selection = true;
     send(&mut app, &ctx, "first".into());
@@ -3772,8 +3772,8 @@ fn queued_messages_keep_the_selection_they_were_typed_with() {
 /// A large selection is capped and says how much is left out; nothing in it can break the prompt.
 #[test]
 fn a_huge_selection_is_counted_not_dropped_silently() {
-    use solidcraft_engine::Sel;
-    let mut session = solidcraft_engine::Session::default();
+    use torno_engine::Sel;
+    let mut session = torno_engine::Session::default();
     let selection: Vec<Sel> = (0..100).map(|i| Sel::Body { name: format!("Body{i}") }).collect();
     let context = context::describe(&mut session, &selection);
     assert_eq!((context.items.len(), context.omitted, context.total()), (context::MAX_ITEMS, 100 - context::MAX_ITEMS, 100));
@@ -3843,7 +3843,7 @@ fn assistant_marks_follow_chat_login_turns_and_approvals() {
     assert_eq!(assistant_mark_for(State::Ready, "signed_in", true, 0, false, true), Stopped);
 }
 
-/// #12283: an agent started without SolidCraft's tools (no solidcraft-cli beside the app) can't
+/// #12283: an agent started without Torno's tools (no torno-cli beside the app) can't
 /// reach the design. The panel's badge and the application bar's mark say so, not Ready; the
 /// badge's hover text says how to get the tools.
 #[test]
@@ -3863,7 +3863,7 @@ fn an_agent_without_the_design_tools_is_not_shown_as_ready() {
     assert!(h.widget(tr("ui.agent_chat_state_ready")).is_none(), "and not Ready");
     let tip = assistant_tip(&h.app, AssistantMark::NoDesign);
     assert!(tip.contains(tr("ui.agent_chat_state_no_design")), "{tip}");
-    assert!(tr("ui.agent_chat_no_design_hint").contains("SOLIDCRAFT_CLI"));
+    assert!(tr("ui.agent_chat_no_design_hint").contains("TORNO_CLI"));
     // The hint names the cause: the chat's endpoint that did not start, or the missing CLI;
     // the application bar's tooltip carries it too.
     h.app.agent_chat.tools_port = None;
@@ -3872,7 +3872,7 @@ fn an_agent_without_the_design_tools_is_not_shown_as_ready() {
     h.app.agent_chat.tools_port = Some(12345);
     assert_eq!(h.app.agent_chat.no_design_hint(), tr("ui.agent_chat_no_design_hint"));
     assert!(assistant_tip(&h.app, AssistantMark::NoDesign).contains(tr("ui.agent_chat_no_design_hint")));
-    // solidcraft-cli was found and handed to the agent, but its tools did not start (an endpoint
+    // torno-cli was found and handed to the agent, but its tools did not start (an endpoint
     // agent whose MCP start failed): the hint does not say the CLI is missing.
     h.app.agent_chat.tools_bridged = true;
     assert_eq!(h.app.agent_chat.no_design_hint(), tr("ui.agent_chat_tools_not_started"));
@@ -3890,7 +3890,7 @@ fn an_agent_without_the_design_tools_is_not_shown_as_ready() {
 #[cfg(not(target_arch = "wasm32"))]
 fn app_with_endpoints() -> SolveApp {
     let http: backend::HttpFn = Arc::new(|_| Err("offline".into()));
-    let mut app = SolveApp::new(solidcraft_engine::Session::default(), crate::Services { agent_http: Some(http), ..Default::default() });
+    let mut app = SolveApp::new(torno_engine::Session::default(), crate::Services { agent_http: Some(http), ..Default::default() });
     for id in ["api-1", "api-2"] {
         app.preferences.agents.push(agents::AgentConfig {
             id: id.into(),
@@ -3923,14 +3923,14 @@ fn the_agent_started_last_connects_at_start_once_the_agents_are_known() {
     app.agent_chat.detecting = Some(detecting);
     poll(&mut app, &ctx);
     assert!(app.agent_chat.backend.is_none());
-    crate::documents::open_tab(&mut app, solidcraft_engine::Session::default()).unwrap();
+    crate::documents::open_tab(&mut app, torno_engine::Session::default()).unwrap();
     found.send(discover::Detection::default()).unwrap();
     poll(&mut app, &ctx);
     assert_eq!(app.agent_chat.agent_id.as_deref(), Some("api-2"), "the agent started last, not the default");
     assert_eq!(app.agent_chat.state(), State::Starting);
     assert!(app.agent_chat.backend.is_some());
     // A design opened over the launch's blank one keeps the agent: nothing was asked yet.
-    crate::documents::adopt(&mut app, solidcraft_engine::Session::default());
+    crate::documents::adopt(&mut app, torno_engine::Session::default());
     assert!(app.agent_chat.backend.is_some() && app.agent_chat.items.is_empty());
     assert_eq!(app.docs.count(), 2);
     // Once per launch.
@@ -3962,21 +3962,21 @@ fn a_connection_that_never_gets_ready_says_connection_failed_and_offers_retry() 
     assert_eq!(status(&app)["state"], "failed");
 
     // An agent that cannot start.
-    let mut app = SolveApp::new(solidcraft_engine::Session::default(), crate::Services::default());
-    app.preferences.agents.push(agents::AgentConfig { id: "custom-1".into(), command: "solidcraft-no-such-agent-7009".into(), ..Default::default() });
+    let mut app = SolveApp::new(torno_engine::Session::default(), crate::Services::default());
+    app.preferences.agents.push(agents::AgentConfig { id: "custom-1".into(), command: "torno-no-such-agent-7009".into(), ..Default::default() });
     connect(&mut app, &ctx);
     assert_eq!(app.agent_chat.state(), State::Failed);
     assert!(app.preferences.agent_last.is_empty(), "only an agent that started is remembered");
 
     // A found agent that failed its version check (#9034): the picker says it doesn't start, and
     // connecting says why and how to install it again, besides the system's own message.
-    let mut app = SolveApp::new(solidcraft_engine::Session::default(), crate::Services::default());
+    let mut app = SolveApp::new(torno_engine::Session::default(), crate::Services::default());
     let reason = "This version of opencode.exe is not compatible with the version of Windows you're running.";
     app.agent_chat.detection = Some(discover::Detection {
         found: vec![discover::Found {
             id: "opencode",
             name: "OpenCode",
-            argv: vec!["solidcraft-no-such-agent-9034".into(), "acp".into()],
+            argv: vec!["torno-no-such-agent-9034".into(), "acp".into()],
             version: None,
             login: discover::Login::Unknown,
             problem: Some(reason.into()),
@@ -3997,7 +3997,7 @@ fn a_connection_that_never_gets_ready_says_connection_failed_and_offers_retry() 
     assert_eq!(fine.problem_hint(), None);
 
     // No agent at all: the picker opens on what to install.
-    let mut app = SolveApp::new(solidcraft_engine::Session::default(), crate::Services::default());
+    let mut app = SolveApp::new(torno_engine::Session::default(), crate::Services::default());
     app.agent_chat.detection = Some(discover::Detection::default());
     connect(&mut app, &ctx);
     assert_eq!((app.agent_chat.state(), app.agent_chat.picking), (State::Failed, Some(true)));
@@ -4018,7 +4018,7 @@ fn assistant_click_and_shortcut_toggle_the_same_panel_without_a_connection() {
     let mut h = crate::scenario::Harness::new();
     h.frames(3);
     assert_eq!(assistant_mark(&h.app), AssistantMark::Quiet);
-    assert!(solidcraft_ui_registry::handle_at("toolbar:ai").is_none());
+    assert!(torno_ui_registry::handle_at("toolbar:ai").is_none());
     h.step(&json!({"click":{"handle":"titlebar:assistant"}})).unwrap();
     assert!(h.app.agent_chat.open);
     h.step(&json!({"key":"A", "shift":true,"cmd":true})).unwrap();
@@ -4100,7 +4100,7 @@ fn a_messages_pictures_open_in_a_viewer() {
     }
     assert!(h.widget("View attached").is_none(), "thumbnails replace the caption");
     let point = |name: &str| {
-        let p = solidcraft_ui_registry::handle_at(name).unwrap_or_else(|| panic!("{name} is drawn"));
+        let p = torno_ui_registry::handle_at(name).unwrap_or_else(|| panic!("{name} is drawn"));
         json!({"x": p.x, "y": p.y})
     };
     // Hovering is not clicking.
@@ -4111,7 +4111,7 @@ fn a_messages_pictures_open_in_a_viewer() {
     h.call("ui.click", second);
     h.frames(4);
     assert_eq!(h.app.agent_chat.gallery.as_ref().map(|g| g.at), Some(1), "the click opens the viewer on that picture");
-    assert!(solidcraft_ui_registry::rect_of("agent_chat:gallery_picture").is_some(), "the picture is drawn big");
+    assert!(torno_ui_registry::rect_of("agent_chat:gallery_picture").is_some(), "the picture is drawn big");
     // Next wraps round; the arrow keys step too.
     let next = point("agent_chat:gallery_next");
     h.call("ui.click", next);
@@ -4217,18 +4217,18 @@ fn the_viewer_opens_in_the_popped_out_window() {
     let Item::User { pictures, .. } = &h.app.agent_chat.items[0] else { panic!("the message") };
     let first = pictures[0].clone();
     assert!(until_decoded(&mut h, &first), "the picture was decoded");
-    let at = solidcraft_ui_registry::handle_at("agent_chat:picture:0:0").expect("the thumbnail is drawn in the window");
+    let at = torno_ui_registry::handle_at("agent_chat:picture:0:0").expect("the thumbnail is drawn in the window");
     h.call("ui.click", json!({"x": at.x, "y": at.y}));
     h.frames(4);
     assert!(h.app.agent_chat.gallery.is_some(), "the click opened the viewer");
-    assert!(solidcraft_ui_registry::rect_of("agent_chat:gallery_picture").is_some(), "and it is drawn");
+    assert!(torno_ui_registry::rect_of("agent_chat:gallery_picture").is_some(), "and it is drawn");
 }
 
 // ---- Pick context (#2286) ----
 
 /// Put `sels` into the open picker's inputs the way clicks would: each in the input that takes it.
-fn pick_into_dialog(app: &mut SolveApp, sels: &[solidcraft_engine::Sel]) {
-    use solidcraft_engine::Sel;
+fn pick_into_dialog(app: &mut SolveApp, sels: &[torno_engine::Sel]) {
+    use torno_engine::Sel;
     let mut d = app.dialog.take().expect("the picker is open");
     for sel in sels {
         d.active = match sel {
@@ -4296,7 +4296,7 @@ fn the_picker_puts_a_pill_into_the_text_where_the_caret_is() {
 }
 
 /// Make a pick of `sels` and put its pill at character `at` of the box.
-fn pick_pill(app: &mut SolveApp, at: usize, sels: &[solidcraft_engine::Sel]) {
+fn pick_pill(app: &mut SolveApp, at: usize, sels: &[torno_engine::Sel]) {
     start_pick(app, Some(at));
     pick_into_dialog(app, sels);
     let d = app.dialog.take().expect("the picker");
@@ -4322,7 +4322,7 @@ fn picks_reach_the_agent_at_the_place_they_were_made() {
     let prompt = script.calls().pop().expect("a prompt");
     assert!(prompt.starts_with("prompt: make «1: Flat face"), "the face picked second stands first and is 1: {prompt}");
     assert!(prompt.contains(" match «2: Body1» \n\n[Selected"), "the body's mark follows 'match': {prompt}");
-    let block = &prompt[prompt.find("[Selected in SolidCraft").expect("the block")..];
+    let block = &prompt[prompt.find("[Selected in Torno").expect("the block")..];
     assert!(block.contains("stands for the numbered group below"), "{block}");
     let g1 = block.find("\n«1: ").expect("group 1");
     let g2 = block.find("\n«2: Body1»\nBodies:\n- Body1").expect("group 2");
@@ -4476,7 +4476,7 @@ fn a_picked_thing_that_is_also_selected_is_listed_once() {
 /// once, under its pill.
 #[test]
 fn a_face_picked_and_selected_at_another_point_is_listed_once() {
-    use solidcraft_engine::Sel;
+    use torno_engine::Sel;
     let (mut app, _script, ctx) = app_with_script();
     let sels = box_selection(&mut app);
     let Sel::Face { body, index, point } = sels[0].clone() else { panic!("a face") };
@@ -4625,7 +4625,7 @@ fn typing_an_at_sign_opens_the_picker_where_it_was_typed() {
 /// cylinder is a circle drawn as two half arcs, extruded: one wall, each rim one closed edge.
 #[test]
 fn a_rim_clicked_once_is_one_item_not_its_pieces() {
-    use solidcraft_engine::Sel;
+    use torno_engine::Sel;
     let (mut app, script, ctx) = app_with_script();
     app.run("sketch.create", json!({"plane": "XY"})).expect("a sketch");
     app.run("sketch.arc.three_point", json!({"start": [10, 0], "end": [-10, 0], "through": [0, 10]})).expect("an arc");
@@ -4663,7 +4663,7 @@ fn a_rim_clicked_once_is_one_item_not_its_pieces() {
 /// The same for a surface the kernel splits at a seam: one click on the cylinder's wall is one item.
 #[test]
 fn a_split_wall_clicked_once_is_one_item() {
-    use solidcraft_engine::Sel;
+    use torno_engine::Sel;
     let (mut app, script, ctx) = app_with_script();
     app.run("solid.cylinder", json!({"radius": 10, "height": 20})).expect("a cylinder");
     let wall = app.session.execute("model.faces", &json!({"body": "Body1"})).expect("faces")["faces"]
@@ -4708,7 +4708,7 @@ fn click_handle(h: &mut crate::scenario::Harness, handle: &str) {
 }
 
 /// What the picker's inputs hold: Elements, Features, Bodies.
-fn picked(h: &crate::scenario::Harness) -> Vec<Vec<solidcraft_engine::Sel>> {
+fn picked(h: &crate::scenario::Harness) -> Vec<Vec<torno_engine::Sel>> {
     h.app.dialog.as_ref().map(|d| d.inputs.iter().map(|i| i.items.clone()).collect()).unwrap_or_default()
 }
 
@@ -4725,7 +4725,7 @@ fn ok_makes_one_pill_of(h: &mut crate::scenario::Harness, kind: context::Kind, l
 /// selection is left alone (#11318).
 #[test]
 fn a_history_step_clicked_while_picking_lands_in_features_and_leaves_the_selection_alone() {
-    use solidcraft_engine::Sel;
+    use torno_engine::Sel;
     for left in [false, true] {
         let (mut h, features) = picker_over_boxes(1, left);
         let (id, name) = features[0].clone();
@@ -4749,7 +4749,7 @@ fn a_history_step_clicked_while_picking_lands_in_features_and_leaves_the_selecti
 /// Bodies (#11318).
 #[test]
 fn a_browser_row_clicked_while_picking_lands_in_the_list_that_takes_it() {
-    use solidcraft_engine::Sel;
+    use torno_engine::Sel;
     let (mut h, features) = picker_over_boxes(1, false);
     let (id, name) = features[0].clone();
     h.app.tree.expanded.insert("c0/features".into());
@@ -4788,7 +4788,7 @@ fn the_features_field_says_what_to_click() {
 /// The picker lists each picked step under its field, and the × on one takes it out (#11318).
 #[test]
 fn the_picker_lists_what_was_picked_and_takes_one_out() {
-    use solidcraft_engine::Sel;
+    use torno_engine::Sel;
     let (mut h, features) = picker_over_boxes(2, false);
     click_handle(&mut h, "dialog:Features");
     assert_eq!(h.app.dialog.as_ref().map(|d| d.active), Some(1), "a click on the field makes it active");
@@ -4800,7 +4800,7 @@ fn the_picker_lists_what_was_picked_and_takes_one_out() {
     // Each listed item is a row with a × of its own (`ui_kit::list_row`). The list starts folded,
     // as in every dialog (#3683); the arrow beside the field opens it.
     let rows = || {
-        let mut rows: Vec<_> = solidcraft_ui_registry::handles("dialog:list:Features:").into_iter().map(|(name, _)| name).collect();
+        let mut rows: Vec<_> = torno_ui_registry::handles("dialog:list:Features:").into_iter().map(|(name, _)| name).collect();
         rows.sort();
         rows.dedup();
         rows
@@ -4808,7 +4808,7 @@ fn the_picker_lists_what_was_picked_and_takes_one_out() {
     assert!(rows().is_empty(), "the list starts folded");
     click_handle(&mut h, "dialog:list_toggle:Features");
     assert_eq!(rows(), ["dialog:list:Features:0:remove", "dialog:list:Features:1:remove"], "one row per picked step");
-    assert!(solidcraft_ui_registry::rect_of("dialog:list:Features:1").is_some());
+    assert!(torno_ui_registry::rect_of("dialog:list:Features:1").is_some());
     click_handle(&mut h, "dialog:list:Features:0:remove");
     assert_eq!(picked(&h).get(1).map(Vec::as_slice), ids.get(1..), "the first step was taken out");
     assert_eq!(rows(), ["dialog:list:Features:0:remove"], "one row is left");
@@ -4827,7 +4827,7 @@ fn hovering_a_chip_lights_what_it_stands_for() {
     h.frames(4);
     assert!(h.app.highlighted().iter().all(|s| !sels.contains(s)), "nothing is lit without the pointer");
     // The feature's chip is the third item.
-    let at = solidcraft_ui_registry::handle_at("agent_chat:sent:0:chip:2").expect("the chip is drawn");
+    let at = torno_ui_registry::handle_at("agent_chat:sent:0:chip:2").expect("the chip is drawn");
     h.call("ui.move", json!({"x": at.x, "y": at.y}));
     h.call("ui.move", json!({"x": at.x + 1.0, "y": at.y}));
     h.frames(3);
@@ -4851,7 +4851,7 @@ fn hovering_a_pill_in_a_sent_message_lights_its_group() {
     let text = format!("check {} against the body", pills::marker(1, "the feature"));
     h.app.agent_chat.items.push(Item::User { text, image: false, pictures: Vec::new(), context, files: Vec::new() });
     h.frames(4);
-    let at = solidcraft_ui_registry::handle_at("agent_chat:sent:0:pill:1").expect("the pill is drawn in the message");
+    let at = torno_ui_registry::handle_at("agent_chat:sent:0:pill:1").expect("the pill is drawn in the message");
     h.call("ui.move", json!({"x": at.x, "y": at.y}));
     h.call("ui.move", json!({"x": at.x + 1.0, "y": at.y}));
     h.frames(3);
@@ -4861,15 +4861,15 @@ fn hovering_a_pill_in_a_sent_message_lights_its_group() {
     h.frames(3);
     assert!(h.app.highlighted().iter().all(|s| !sels.contains(s)), "lit no longer once the pointer is away");
     // The feature is in the pill, so it has no chip; the body (from Attach selection) has one.
-    assert!(solidcraft_ui_registry::handle_at("agent_chat:sent:0:chip:0").is_some(), "the unplaced body has a chip");
-    assert!(solidcraft_ui_registry::handle_at("agent_chat:sent:0:chip:1").is_none(), "the feature has none: it is a pill");
+    assert!(torno_ui_registry::handle_at("agent_chat:sent:0:chip:0").is_some(), "the unplaced body has a chip");
+    assert!(torno_ui_registry::handle_at("agent_chat:sent:0:chip:1").is_none(), "the feature has none: it is a pill");
 }
 
 /// In the shared panel layout the model is drawn before the panels: a chip still lights its target
 /// while the pointer is on it, and no longer once the pointer is away.
 #[test]
 fn hovering_a_chip_in_the_shared_layout_lights_its_target_until_the_pointer_leaves() {
-    use solidcraft_engine::Sel;
+    use torno_engine::Sel;
     let (mut h, _script) = shared_assistant_harness();
     h.app.run("solid.box", json!({"length": 40, "width": 30, "height": 20, "body_name": "Plate"})).expect("a box");
     let body = Sel::Body { name: "Plate".into() };
@@ -4878,7 +4878,7 @@ fn hovering_a_chip_in_the_shared_layout_lights_its_target_until_the_pointer_leav
     h.app.agent_chat.items.push(Item::User { text: "look".into(), image: false, pictures: Vec::new(), context, files: Vec::new() });
     h.frames(4);
     assert!(!h.app.highlighted().contains(&body), "nothing is lit without the pointer");
-    let chip = solidcraft_ui_registry::handle_at(&format!("agent_chat:sent:{at}:chip:0")).expect("the chip is drawn");
+    let chip = torno_ui_registry::handle_at(&format!("agent_chat:sent:{at}:chip:0")).expect("the chip is drawn");
     h.call("ui.move", json!({"x": chip.x, "y": chip.y}));
     h.call("ui.move", json!({"x": chip.x + 1.0, "y": chip.y}));
     h.frames(3);
@@ -4961,7 +4961,7 @@ fn attached_pictures_of_any_format_are_decoded_in_the_background() {
         assert!(until_decoded(&mut h, &picture), "{format:?} was decoded");
         let texture = picture.decode.texture.get().and_then(|t| t.as_ref()).unwrap_or_else(|| panic!("{format:?} is a texture"));
         assert_eq!(texture.size()[0], width as usize, "{format:?} keeps its width");
-        assert!(solidcraft_ui_registry::handle_at("agent_chat:picture:0:0").is_some(), "{format:?} has its thumbnail");
+        assert!(torno_ui_registry::handle_at("agent_chat:picture:0:0").is_some(), "{format:?} has its thumbnail");
     }
     // Bytes that are no picture: the name where the thumbnail would be, and nothing breaks.
     let broken = Picture::new(b"not a picture at all".to_vec(), "fake.png");
@@ -4997,7 +4997,7 @@ fn an_attached_picture_and_the_views_picture_share_the_viewer() {
 /// Settings › AI › Add agent opens its dialog from the Home tab too (#3483, #3513).
 #[test]
 fn add_agent_opens_its_dialog_from_home() {
-    use solidcraft_ui_registry::handle_at;
+    use torno_ui_registry::handle_at;
     let mut h = crate::scenario::Harness::new();
     // The search for installed agents counts as done, so it doesn't start when the page opens
     // (#14384): finishing between the frame that drew Add agent and the click, it replaced the
@@ -5020,7 +5020,7 @@ fn add_agent_opens_its_dialog_from_home() {
 #[test]
 fn add_agent_takes_a_request_timeout_and_the_state_reports_it() {
     let ctx = egui::Context::default();
-    let mut app = SolveApp::new(solidcraft_engine::Session::default(), crate::Services::default());
+    let mut app = SolveApp::new(torno_engine::Session::default(), crate::Services::default());
     let timeout = |app: &mut SolveApp, id: &str| {
         let state = control(app, &ctx, &json!({})).unwrap();
         state["agents"].as_array().unwrap().iter().find(|a| a["id"] == id).map(|a| a["request_timeout_s"].clone())
@@ -5158,7 +5158,7 @@ fn tool_calls_read_as_what_they_did() {
     assert_eq!(said("execute: solid.extrude", extrude.clone(), None).as_deref(), Some("Extrude Sketch1 by 10 mm"));
     // As an ACP agent names the bridged tool, with the body the result made.
     let made = r#"{"feature": 4, "name": "Extrude1", "created_bodies": ["Body2"], "changed_bodies": []}"#;
-    assert_eq!(said("mcp__solidcraft-app__execute", extrude, Some(made)).as_deref(), Some("Extrude Sketch1 by 10 mm → Body2"));
+    assert_eq!(said("mcp__torno-app__execute", extrude, Some(made)).as_deref(), Some("Extrude Sketch1 by 10 mm → Body2"));
     let edges = json!([[20, 0, 20], [20, 30, 20], [0, 15, 20], [40, 15, 20]]);
     let batch = json!({"commands": [
         {"command": "solid.box", "params": {"length": 40, "width": 30, "height": 20}},
@@ -5188,9 +5188,9 @@ fn tool_calls_read_as_what_they_did() {
 #[test]
 fn tool_cards_show_file_names_never_paths() {
     crate::i18n::install();
-    let shot = r"ui.screenshot: C:\Users\bherbruck\AppData\Local\Temp\solidcraft-mcp-8608-b4c7b64\shot-0.png";
+    let shot = r"ui.screenshot: C:\Users\bherbruck\AppData\Local\Temp\torno-mcp-8608-b4c7b64\shot-0.png";
     assert_eq!(said(shot, json!({}), None).as_deref(), Some("Screenshot"));
-    assert_eq!(said("mcp__solidcraft-app__ui.screenshot", json!({}), None).as_deref(), Some("Screenshot"));
+    assert_eq!(said("mcp__torno-app__ui.screenshot", json!({}), None).as_deref(), Some("Screenshot"));
     // The fallback title (another agent's tools) is cut to file names; temp files drop out.
     assert_eq!(summary::plain_title(shot), "ui.screenshot");
     assert_eq!(summary::plain_title(r"Read C:\Users\Jane Doe\Documents\part.step"), "Read part.step");
@@ -5202,7 +5202,7 @@ fn tool_cards_show_file_names_never_paths() {
     assert_eq!(summary::plain_title("Read /tmp/claude-1000/scratch/out.txt"), "Read");
     assert_eq!(summary::plain_title("ui.render: /var/folders/xy/T/shot.png"), "ui.render");
     assert_eq!(summary::plain_title("Run mcp__x__y with a/b and /"), "Run mcp__x__y with a/b and /");
-    // SolidCraft's own file tools: the name alone; a temp file has none.
+    // Torno's own file tools: the name alone; a temp file has none.
     assert_eq!(
         said("export", json!({"path": "/home/me/cad/part.step"}), None).as_deref().map(|s| s.ends_with("part.step") && !s.contains('/')),
         Some(true)
@@ -5247,7 +5247,7 @@ fn unknown_or_malformed_tool_calls_keep_their_title_and_never_panic() {
         Some(r#"{"bodies": [{"bbox": {"min": [1], "max": "x"}}]}"#),
         Some(r#"{"created_bodies": [1, null, "B"]}"#),
     ];
-    for tool in ["execute", "batch", "measure", "save", "export", "open", "new_design", "set_parameter", "mcp__solidcraft__batch"] {
+    for tool in ["execute", "batch", "measure", "save", "export", "open", "new_design", "set_parameter", "mcp__torno__batch"] {
         for input in &hostile {
             for output in outputs {
                 for done in [true, false] {
@@ -5266,7 +5266,7 @@ fn unknown_or_malformed_tool_calls_keep_their_title_and_never_panic() {
 /// opened. A call with no words keeps its title.
 #[test]
 fn a_tool_card_shows_its_summary_and_keeps_the_json_behind_details() {
-    use solidcraft_ui_registry::handle_at;
+    use torno_ui_registry::handle_at;
     let mut h = crate::scenario::Harness::new();
     h.call("ui.agent_chat", json!({"open": true}));
     h.frames(3);
@@ -5306,11 +5306,11 @@ fn a_tool_card_shows_its_summary_and_keeps_the_json_behind_details() {
 /// The card says "Screenshot"; the full temp path is only under Details.
 #[test]
 fn a_screenshot_card_hides_the_path_until_details() {
-    use solidcraft_ui_registry::handle_at;
+    use torno_ui_registry::handle_at;
     let mut h = crate::scenario::Harness::new();
     h.call("ui.agent_chat", json!({"open": true}));
     h.frames(3);
-    let path = r"C:\Users\bherbruck\AppData\Local\Temp\solidcraft-mcp-8608-b4c7b64\shot-0.png";
+    let path = r"C:\Users\bherbruck\AppData\Local\Temp\torno-mcp-8608-b4c7b64\shot-0.png";
     let n = h.app.agent_chat.items.len();
     h.app.agent_chat.items.push(Item::Tool {
         id: "s".into(),
@@ -5333,7 +5333,7 @@ fn a_screenshot_card_hides_the_path_until_details() {
 /// the only inset left is the text's own padding inside the box (no second margin around it).
 #[test]
 fn the_composer_box_fills_its_parent_in_every_layout() {
-    use solidcraft_ui_registry::rect_of;
+    use torno_ui_registry::rect_of;
     for (layout, popped) in [("floating", false), ("docked", false), ("floating", true), ("docked", true)] {
         let mut h = narrow_chat();
         h.call("ui.resize", json!({"width": 1600, "height": 1000}));
@@ -5362,7 +5362,7 @@ fn the_composer_hint_stays_on_one_row_at_the_narrowest_width() {
     let mut h = narrow_chat();
     h.app.agent_chat.state = Some(State::Ready);
     h.frames(4);
-    let width = solidcraft_ui_registry::rect_of("agent_chat:input").expect("the text box").width();
+    let width = torno_ui_registry::rect_of("agent_chat:input").expect("the text box").width();
     let ctx = crate::fonts::test_context();
     let dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../assets/locales");
     let mut checked = 0;
@@ -5372,12 +5372,12 @@ fn the_composer_hint_stays_on_one_row_at_the_narrowest_width() {
             continue;
         }
         let language = path.file_stem().unwrap().to_string_lossy().into_owned();
-        let _scope = solidcraft_ui_text::scope(&language);
+        let _scope = torno_ui_text::scope(&language);
         for key in ["ui.agent_chat_placeholder", "ui.agent_chat_placeholder_busy"] {
-            let hint = solidcraft_ui_text::tr(key).to_owned();
+            let hint = torno_ui_text::tr(key).to_owned();
             let mut rows = 0;
             let mut output = ctx.run_ui(egui::RawInput::default(), |ui| {
-                rows = crate::ui_kit::assistant_hint_galley(ui, &hint, width - 2.0 * solidcraft_theme::Tokens::get().form_inset).rows.len();
+                rows = crate::ui_kit::assistant_hint_galley(ui, &hint, width - 2.0 * torno_theme::Tokens::get().form_inset).rows.len();
             });
             output.textures_delta.clear();
             assert_eq!(rows, 1, "{language} {key} at {width} wide: {hint}");
@@ -5391,7 +5391,7 @@ fn the_composer_hint_stays_on_one_row_at_the_narrowest_width() {
 /// (the window of #9492): the Assistant's side gives way instead of panicking in `f32::clamp`.
 #[test]
 fn tool_room_beside_the_docked_assistant_survives_an_inside_out_view() {
-    let mut app = SolveApp::new(solidcraft_engine::Session::default(), crate::Services::default());
+    let mut app = SolveApp::new(torno_engine::Session::default(), crate::Services::default());
     app.ui.layout = crate::ui_kit::LayoutMode::Floating;
     app.preferences.ai_features = true;
     app.agent_chat.open = true;
@@ -5442,7 +5442,7 @@ fn click_at(h: &mut crate::scenario::Harness, at: egui::Pos2, button: egui::Poin
 #[test]
 fn the_copy_message_button_copies_the_prompt_as_entered() {
     let mut h = chat_with_copiable_messages();
-    let at = solidcraft_ui_registry::handle_at("agent_chat:copy:0").expect("the prompt's Copy message button");
+    let at = torno_ui_registry::handle_at("agent_chat:copy:0").expect("the prompt's Copy message button");
     click_at(&mut h, at, egui::PointerButton::Primary);
     assert_eq!(copied_text(&h).as_deref(), Some("make a plate\n\nwith two holes:\n- 6 mm\n- 8 mm"), "the whole prompt, paragraphs and list items");
 }
@@ -5454,10 +5454,10 @@ fn the_copy_message_button_copies_the_prompt_as_entered() {
 fn a_prompt_at_the_top_of_the_conversation_is_as_tall_as_its_content() {
     // Kept to the end: the published handles and rects are its last frame's.
     let _h = chat_with_copiable_messages();
-    let button = solidcraft_ui_registry::handle_at("agent_chat:copy:0").expect("the prompt's Copy message button");
-    let prompt = solidcraft_ui_registry::rect_of("agent_chat:msg:0").expect("the prompt's message area");
-    let reply = solidcraft_ui_registry::rect_of("agent_chat:msg:1").expect("the reply's message area");
-    let row = solidcraft_theme::Tokens::get().control_height;
+    let button = torno_ui_registry::handle_at("agent_chat:copy:0").expect("the prompt's Copy message button");
+    let prompt = torno_ui_registry::rect_of("agent_chat:msg:0").expect("the prompt's message area");
+    let reply = torno_ui_registry::rect_of("agent_chat:msg:1").expect("the reply's message area");
+    let row = torno_theme::Tokens::get().control_height;
     assert!(prompt.bottom() - button.y < row, "the bubble ends {} below its button", prompt.bottom() - button.y);
     assert!(reply.top() - button.y < 2.0 * row, "the reply starts {} below the prompt's button", reply.top() - button.y);
 }
@@ -5467,7 +5467,7 @@ fn a_prompt_at_the_top_of_the_conversation_is_as_tall_as_its_content() {
 #[test]
 fn the_copy_message_button_copies_the_reply_as_original_markdown() {
     let mut h = chat_with_copiable_messages();
-    let at = solidcraft_ui_registry::handle_at("agent_chat:copy:1").expect("the reply's Copy message button");
+    let at = torno_ui_registry::handle_at("agent_chat:copy:1").expect("the reply's Copy message button");
     click_at(&mut h, at, egui::PointerButton::Primary);
     assert_eq!(copied_text(&h).as_deref(), Some("# Result\n\nA plate with holes.\n\n```rust\nlet x = 1;\n```"));
 }
@@ -5476,10 +5476,10 @@ fn the_copy_message_button_copies_the_reply_as_original_markdown() {
 #[test]
 fn right_clicking_a_message_offers_copy_message() {
     let mut h = chat_with_copiable_messages();
-    let msg = solidcraft_ui_registry::rect_of("agent_chat:msg:1").expect("the reply's message area");
+    let msg = torno_ui_registry::rect_of("agent_chat:msg:1").expect("the reply's message area");
     click_at(&mut h, msg.center(), egui::PointerButton::Secondary);
     h.frames(1); // let the popup settle at its final place before clicking its row
-    let item = solidcraft_ui_registry::handle_at("agent_chat:copy_menu:1").expect("the right-click menu's Copy message row");
+    let item = torno_ui_registry::handle_at("agent_chat:copy_menu:1").expect("the right-click menu's Copy message row");
     click_at(&mut h, item, egui::PointerButton::Primary);
     assert_eq!(copied_text(&h).as_deref(), Some("# Result\n\nA plate with holes.\n\n```rust\nlet x = 1;\n```"));
 }
@@ -5492,7 +5492,7 @@ fn a_streaming_reply_copies_the_text_received_so_far() {
     h.frames(3);
     h.app.agent_chat.items.push(Item::Agent { thought: false, text: "half a repl".into() });
     h.frames(3);
-    let at = solidcraft_ui_registry::handle_at("agent_chat:copy:0").expect("the streaming reply's button");
+    let at = torno_ui_registry::handle_at("agent_chat:copy:0").expect("the streaming reply's button");
     click_at(&mut h, at, egui::PointerButton::Primary);
     assert_eq!(copied_text(&h).as_deref(), Some("half a repl"));
 }
@@ -5513,8 +5513,8 @@ fn a_picture_only_prompt_and_a_thought_have_no_copy_message_action() {
     });
     h.app.agent_chat.items.push(Item::Agent { thought: true, text: "pondering".into() });
     h.frames(3);
-    assert!(solidcraft_ui_registry::handle_at("agent_chat:copy:0").is_none(), "a picture-only prompt hides the text-copy action");
-    assert!(solidcraft_ui_registry::handle_at("agent_chat:copy:1").is_none(), "a thought has no copy action");
+    assert!(torno_ui_registry::handle_at("agent_chat:copy:0").is_none(), "a picture-only prompt hides the text-copy action");
+    assert!(torno_ui_registry::handle_at("agent_chat:copy:1").is_none(), "a thought has no copy action");
     assert!(h.widget("Copy message").is_none(), "nothing to click");
 }
 
@@ -5534,7 +5534,7 @@ fn shared_assistant_harness() -> (crate::scenario::Harness, Script) {
     h.app.run("sketch.create", json!({"plane":"XY","name":"Retained profile"})).unwrap();
     h.app.run("sketch.finish", json!({})).unwrap();
     let feature = h.app.session.doc.features[0].id;
-    h.app.run("select.set", json!({"items":[solidcraft_engine::Sel::Feature { id: feature }]})).unwrap();
+    h.app.run("select.set", json!({"items":[torno_engine::Sel::Feature { id: feature }]})).unwrap();
     h.app.preferences.shared_panel_layout = true;
     h.frames(6);
     assert!(h.app.panel_runtime().is_some());
@@ -5544,7 +5544,7 @@ fn shared_assistant_harness() -> (crate::scenario::Harness, Script) {
 }
 
 fn shared_assistant_float(h: &mut crate::scenario::Harness, width: f32, height: f32) {
-    use solidcraft_engine::panels::{Destination, InstanceId, LayoutAction, Mutation, Point, SectionId, SectionLocation, Size};
+    use torno_engine::panels::{Destination, InstanceId, LayoutAction, Mutation, Point, SectionId, SectionLocation, Size};
     let instance = InstanceId::new("assistant").unwrap();
     let source = h.app.panel_runtime().unwrap().layout().layout().containing(&instance).unwrap();
     let origin = Point { x: 300.0, y: 200.0 };
@@ -5573,7 +5573,7 @@ fn shared_assistant_body(h: &crate::scenario::Harness) -> egui::Rect {
 
 #[test]
 fn shared_assistant_wide_and_compact_present_real_regions_without_losing_the_composer_selection() {
-    use solidcraft_engine::panels::{Destination, InstanceId, LayoutAction, Mutation, SectionId, SectionLocation, Size, Zone};
+    use torno_engine::panels::{Destination, InstanceId, LayoutAction, Mutation, SectionId, SectionLocation, Size, Zone};
     let (mut h, script) = shared_assistant_harness();
     let input = egui::Id::unique("sc_agent_chat_input");
     h.ctx.memory_mut(|memory| memory.request_focus(input));
@@ -5601,9 +5601,9 @@ fn shared_assistant_wide_and_compact_present_real_regions_without_losing_the_com
         shared_assistant_float(&mut h, width, height);
         let body = shared_assistant_body(&h);
         assert!(body.width() > body.height(), "both cases exercise the Wide host flow");
-        let conversation = solidcraft_ui_registry::rect_of("agent_chat:conversation").unwrap();
-        let composer = solidcraft_ui_registry::rect_of("agent_chat:composer_footer").unwrap();
-        let switcher = solidcraft_ui_registry::rect_of("agent_chat:switcher").unwrap();
+        let conversation = torno_ui_registry::rect_of("agent_chat:conversation").unwrap();
+        let composer = torno_ui_registry::rect_of("agent_chat:composer_footer").unwrap();
+        let switcher = torno_ui_registry::rect_of("agent_chat:switcher").unwrap();
         assert!(body.expand(1.0).contains_rect(conversation));
         assert!(body.expand(1.0).contains_rect(composer));
         assert!(body.expand(1.0).contains_rect(switcher));
@@ -5621,8 +5621,8 @@ fn shared_assistant_wide_and_compact_present_real_regions_without_losing_the_com
     }
     h.app.preferences.language = "ar".into();
     shared_assistant_float(&mut h, 900.0, 420.0);
-    let conversation = solidcraft_ui_registry::rect_of("agent_chat:conversation").unwrap();
-    let composer = solidcraft_ui_registry::rect_of("agent_chat:composer_footer").unwrap();
+    let conversation = torno_ui_registry::rect_of("agent_chat:conversation").unwrap();
+    let composer = torno_ui_registry::rect_of("agent_chat:composer_footer").unwrap();
     assert!(composer.right() <= conversation.left(), "Wide mirrors the two real regions in RTL");
     assert_eq!(h.ctx.memory(|memory| memory.focused()), Some(input), "RTL keeps the composer focused");
     assert_eq!(egui::TextEdit::load_state(&h.ctx, input).unwrap().cursor.char_range(), caret);
@@ -5642,8 +5642,8 @@ fn shared_assistant_wide_and_compact_present_real_regions_without_losing_the_com
         })
         .unwrap();
     h.frames(6);
-    let conversation = solidcraft_ui_registry::rect_of("agent_chat:conversation").unwrap();
-    let composer = solidcraft_ui_registry::rect_of("agent_chat:composer_footer").unwrap();
+    let conversation = torno_ui_registry::rect_of("agent_chat:conversation").unwrap();
+    let composer = torno_ui_registry::rect_of("agent_chat:composer_footer").unwrap();
     assert!(conversation.bottom() <= composer.top() + 1.0);
     assert_eq!(h.app.agent_chat.input, draft);
     assert_eq!(h.ctx.memory(|memory| memory.focused()), Some(input));
@@ -5662,12 +5662,12 @@ fn shared_assistant_wide_and_compact_present_real_regions_without_losing_the_com
 
 #[test]
 fn shared_assistant_transcript_keeps_its_scroll_position_through_responsive_width_changes() {
-    use solidcraft_engine::panels::{Destination, InstanceId, LayoutAction, Mutation, SectionId, SectionLocation, Size, Zone};
+    use torno_engine::panels::{Destination, InstanceId, LayoutAction, Mutation, SectionId, SectionLocation, Size, Zone};
     let (mut h, script) = shared_assistant_harness();
     h.app.agent_chat.items = (0..80).map(|n| Item::Agent { thought: false, text: format!("Parts list row {n}") }).collect();
     shared_assistant_float(&mut h, 900.0, 420.0);
     assert_eq!(rows_in_view(&h).last().unwrap().0, 79);
-    let conversation = solidcraft_ui_registry::rect_of("agent_chat:conversation").unwrap();
+    let conversation = torno_ui_registry::rect_of("agent_chat:conversation").unwrap();
     h.call("ui.scroll", json!({"x":conversation.center().x,"y":conversation.center().y,"delta":1200}));
     h.frames(30);
     let before = rows_in_view(&h).first().unwrap().0;
@@ -5702,7 +5702,7 @@ fn shared_assistant_transcript_keeps_its_scroll_position_through_responsive_widt
 #[test]
 fn shared_assistant_header_uses_live_status_and_one_click_starts_one_new_chat() {
     use crate::panel_runtime::{HostControlTarget, HostPointerTarget};
-    use solidcraft_engine::panels::{ControlId, InstanceId};
+    use torno_engine::panels::{ControlId, InstanceId};
     let (mut h, script) = shared_assistant_harness();
     shared_assistant_float(&mut h, 900.0, 420.0);
     let assistant = InstanceId::new("assistant").unwrap();
@@ -5731,14 +5731,14 @@ fn shared_assistant_header_uses_live_status_and_one_click_starts_one_new_chat() 
         (0..24).map(|n| agents::AgentConfig { id: format!("review-{n}"), name: format!("Review provider {n}"), ..Default::default() }).collect();
     h.app.agent_chat.picking = Some(true);
     h.frames(4);
-    let providers = solidcraft_ui_registry::rect_of("agent_chat:providers").unwrap();
-    assert!(providers.contains(solidcraft_ui_registry::handle_at("agent_chat:pick:review-0").unwrap()));
+    let providers = torno_ui_registry::rect_of("agent_chat:providers").unwrap();
+    assert!(providers.contains(torno_ui_registry::handle_at("agent_chat:pick:review-0").unwrap()));
     h.call("ui.scroll", json!({"x":providers.center().x,"y":providers.center().y,"delta":-900}));
     h.frames(30);
-    let providers = solidcraft_ui_registry::rect_of("agent_chat:providers").unwrap();
-    let switcher = solidcraft_ui_registry::rect_of("agent_chat:switcher").unwrap();
+    let providers = torno_ui_registry::rect_of("agent_chat:providers").unwrap();
+    let switcher = torno_ui_registry::rect_of("agent_chat:switcher").unwrap();
     assert!(
-        switcher.bottom() < providers.top() - solidcraft_theme::Tokens::get().control_height * 4.0,
+        switcher.bottom() < providers.top() - torno_theme::Tokens::get().control_height * 4.0,
         "the real provider scroller is far from its top before New Chat"
     );
     assert!(script.calls().is_empty(), "scrolling the deterministic provider list starts no agent");
@@ -5750,9 +5750,9 @@ fn shared_assistant_header_uses_live_status_and_one_click_starts_one_new_chat() 
     assert!(h.app.agent_chat.confirm_new);
     assert_eq!(h.app.agent_chat.pending.len(), 1);
     assert!(script.calls().is_empty(), "opening confirmation cannot invoke New Chat early");
-    let confirm = solidcraft_ui_registry::rect_of("agent_chat:new_confirm").unwrap();
-    let providers = solidcraft_ui_registry::rect_of("agent_chat:providers").unwrap();
-    let composer = solidcraft_ui_registry::rect_of("agent_chat:composer_footer").unwrap();
+    let confirm = torno_ui_registry::rect_of("agent_chat:new_confirm").unwrap();
+    let providers = torno_ui_registry::rect_of("agent_chat:providers").unwrap();
+    let composer = torno_ui_registry::rect_of("agent_chat:composer_footer").unwrap();
     assert!(providers.expand(1.0).contains_rect(confirm), "a newly requested confirmation is fully visible inside the actual provider clip");
     assert!(shared_assistant_body(&h).contains_rect(confirm));
     assert!(confirm.left() >= composer.left(), "the real confirmation remains reachable in the interaction column");
@@ -5798,7 +5798,7 @@ fn enter_and_the_control_channel_send_the_box_with_its_pills() {
 /// was lit last is kept only for the very same entries.
 #[test]
 fn entries_that_read_the_same_light_their_own_things() {
-    use solidcraft_engine::Sel;
+    use torno_engine::Sel;
     let (mut app, _script, _ctx) = app_with_script();
     app.run("solid.box", json!({"length": 10, "width": 10, "height": 10})).expect("Body1");
     app.run("solid.box", json!({"length": 10, "width": 10, "height": 10, "operation": "new"})).expect("Body2");
@@ -5825,7 +5825,7 @@ fn entries_that_read_the_same_light_their_own_things() {
 /// nothing.
 #[test]
 fn a_chip_lights_its_face_by_name_after_the_faces_are_renumbered() {
-    use solidcraft_engine::Sel;
+    use torno_engine::Sel;
     let (mut app, _script, _ctx) = app_with_script();
     app.run("solid.box", json!({"length": 40, "width": 30, "height": 20})).expect("a box");
     let faces = app.session.execute("model.faces", &json!({"body": "Body1"})).expect("faces")["faces"].as_array().cloned().unwrap_or_default();

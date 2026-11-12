@@ -170,7 +170,7 @@
     "blend_dropping"
   ],
   "ungraded": [
-    "continuity: SolidCraft computes it"
+    "continuity: Torno computes it"
   ],
   "what": "the concave edge where a pipe dips into a plate rounded curvature-continuous size 2: the order-2 section meets the plane G2 (curvature 0) and the pipe G3 (its curvature 1/10 and that curvature's rate, 0)",
   "why_not": []

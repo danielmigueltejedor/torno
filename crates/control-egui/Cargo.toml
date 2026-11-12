@@ -1,5 +1,5 @@
 [package]
-name = "solidcraft-control-egui"
+name = "torno-control-egui"
 description = "The window's own control requests any egui app answers alike: ui.screenshot and ui.resize"
 version.workspace = true
 edition.workspace = true
@@ -9,7 +9,7 @@ license.workspace = true
 workspace = true
 
 [dependencies]
-solidcraft-control = { workspace = true }
+torno-control = { workspace = true }
 serde_json = { workspace = true }
 # The window's own requests (`ui.screenshot`, `ui.resize`) go through egui.
 egui = { workspace = true }

@@ -20,7 +20,7 @@ view.
   this off, for a double-click that maximizes the window instead). On the right: Report a bug,
   Help (?), Preferences (which hold the theme) and the window's buttons. On Linux, to have your
   desktop's own title bar and window buttons instead, set
-  `SOLIDCRAFT_TITLEBAR=system` or put `"titlebar": "system"` in `graphics.json` in the settings
+  `TORNO_TITLEBAR=system` or put `"titlebar": "system"` in `graphics.json` in the settings
   folder (see [Troubleshooting](troubleshooting.md#reset-the-settings)) and restart; `app` (the
   default) puts the application bar back.
 - **Toolbar.** The workspace switcher (DESIGN) sits on the left. The tabs (MODEL, SURFACE,
@@ -547,7 +547,7 @@ and applications (pywal and matugen are two examples); have them write a `solidc
 file from a template. **Choose…** picks the file, **Stop following** (or choosing any theme)
 turns it off; it is off until you choose a file. Only a file that reads completely is applied:
 while it is being written, or if it is broken, missing or larger than 256 KiB, the last good
-theme stays on and the setting says why. `solidcraft --theme-file my-theme.json` follows a file
+theme stays on and the setting says why. `torno --theme-file my-theme.json` follows a file
 for one run without changing your preferences. The browser app has no file to follow; import the
 theme there instead.
 

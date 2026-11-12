@@ -162,6 +162,6 @@
   "ungraded": [],
   "what": "a 100 x 60 x 30 box shelled to 2 mm, converted to sheet metal by its four bottom edges and unfolded",
   "why_not": [
-    "body \"Tray\" is no kernel operation's output nor an operand: SolidCraft built it or changed the kernel's record"
+    "body \"Tray\" is no kernel operation's output nor an operand: Torno built it or changed the kernel's record"
   ]
 }

@@ -21,7 +21,7 @@ pub enum TestError {
 impl TestError {
     pub fn message(&self) -> &str {
         match self {
-            Self::AuthRequired => solidcraft_ui_text::tr("ui.agent_chat_state_auth"),
+            Self::AuthRequired => torno_ui_text::tr("ui.agent_chat_state_auth"),
             Self::Other(message) => message,
         }
     }
@@ -51,7 +51,7 @@ pub enum PromptPart {
 pub enum Event {
     /// Whether the agent takes documents (PDFs) in a message; sent before [`Event::Ready`].
     Documents(bool),
-    /// Whether SolidCraft tools were offered by the backend.
+    /// Whether Torno tools were offered by the backend.
     ToolsAvailable(bool),
     /// Ready for a message. `agent`: its name and version; `images`: it takes pictures.
     Ready {
@@ -122,9 +122,9 @@ pub enum Event {
 
 /// What a backend gets to start.
 pub struct StartContext {
-    /// Its working folder: an empty folder of SolidCraft's own, not the user's files.
+    /// Its working folder: an empty folder of Torno's own, not the user's files.
     pub cwd: std::path::PathBuf,
-    /// The MCP server that reaches this window (`solidcraft-cli mcp --connect` to the chat's own
+    /// The MCP server that reaches this window (`torno-cli mcp --connect` to the chat's own
     /// endpoint), for backends that start MCP servers; `None` when it could not be set up.
     pub bridge: Option<super::acp::McpBridge>,
     /// Where tool calls run in process go, for backends that run their own tool loop.

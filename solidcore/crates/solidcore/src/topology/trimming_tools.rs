@@ -35,7 +35,7 @@
 //!
 //! Deviations:
 //! - **Not upstream (WR-591, opt-in `Kernel::fixes.loops_go_on_round_the_vertex`;
-//!   SolidCraft change, tangency-labs/smlib 9209e76).** Where several curve ends meet
+//!   Torno change, tangency-labs/smlib 9209e76).** Where several curve ends meet
 //!   at a vertex, [`order_curves_into_loops`] goes on along the end next round the
 //!   vertex from the arriving curve (`next_round_the_vertex`, the fork's
 //!   `sm_NextRoundTheVertex`) instead of the first by index, turning about one normal

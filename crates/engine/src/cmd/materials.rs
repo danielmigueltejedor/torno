@@ -5,9 +5,9 @@
 //! features.
 
 use serde_json::Value;
-use solidcraft_doc::appearance::{Look, library};
-use solidcraft_doc::config::Column;
-use solidcraft_doc::{DEFAULT_MATERIAL, MATERIALS, MAX_USER_MATERIALS, UserMaterial, valid_density};
+use torno_doc::appearance::{Look, library};
+use torno_doc::config::Column;
+use torno_doc::{DEFAULT_MATERIAL, MATERIALS, MAX_USER_MATERIALS, UserMaterial, valid_density};
 
 use super::CommandSpec;
 use super::inspect::color_param;
@@ -141,7 +141,7 @@ fn material_reply(cmd: &str, m: &UserMaterial) -> Result<MaterialReply> {
         out.physical_card = Some(serde_json::to_value(record).map_err(|e| bad(cmd, e.to_string()))?);
         out.physical_validation = Some(card.validate()?.into());
         let measured = card.properties.iter().find_map(|p| match p.data {
-            solidcraft_doc::physical_material::PropertyData::Density { kg_m3 } => Some(kg_m3),
+            torno_doc::physical_material::PropertyData::Density { kg_m3 } => Some(kg_m3),
             _ => None,
         });
         out.density_comparison = measured.map(|measured| {
@@ -168,12 +168,12 @@ fn reply(cmd: &str, reply: impl serde::Serialize) -> Result<Value> {
     serde_json::to_value(reply).map_err(|e| bad(cmd, e.to_string()))
 }
 
-fn physical_card(cmd: &str, p: &Value) -> Result<Option<Option<solidcraft_doc::physical_material::ValidatedCard>>> {
+fn physical_card(cmd: &str, p: &Value) -> Result<Option<Option<torno_doc::physical_material::ValidatedCard>>> {
     match p.get("physical_card") {
         None => Ok(None),
         Some(Value::Null) => Ok(Some(None)),
         Some(value) => {
-            solidcraft_doc::physical_material::ValidatedCard::from_value(value).map(|card| Some(Some(card))).map_err(|e| bad(cmd, e.to_string()))
+            torno_doc::physical_material::ValidatedCard::from_value(value).map(|card| Some(Some(card))).map_err(|e| bad(cmd, e.to_string()))
         }
     }
 }

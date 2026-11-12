@@ -1,5 +1,5 @@
 //! `SmBrep::AssertValid`: the whole-body topology check, its walk over every region,
-//! shell, face, loop, edge and vertex, and the `check_brep` report SolidCraft reads.
+//! shell, face, loop, edge and vertex, and the `check_brep` report Torno reads.
 //!
 //! Upstream: `source/SMLib/src/SmBrep.cpp`, `SmSAGObject.cpp`, `SmOwningTopology.cpp`,
 //! `SmTopology.cpp`, `SmRegion.cpp`, `SmShell.cpp`, `SmFace.cpp`, `SmFaceuse.cpp`,
@@ -85,7 +85,7 @@ pub(crate) fn standalone_curve_assert_valid(
 const LEVEL_GIVEN: u8 = 4;
 
 /// The test level of a check (`SmAssertTestLevel`): `Level0` runs the fewest tests,
-/// `Level2` all of them. SolidCraft's "Basic" check is `Level0`, "Full" is `Level2`.
+/// `Level2` all of them. Torno's "Basic" check is `Level0`, "Full" is `Level2`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum CheckLevel {
     /// `SM_LEVEL_0`.

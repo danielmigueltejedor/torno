@@ -15,7 +15,7 @@
 
 use serde::{Deserialize, Serialize};
 use solidcore_record::{Seg2, Vec2};
-use solidcraft_geom::prelude::*;
+use torno_geom::prelude::*;
 
 use crate::decompose::Budget;
 use crate::linalg::{Mat, determined_vars, solve as lin_solve};
@@ -371,7 +371,7 @@ impl State<'_> {
                     nurbs.segs(&p, *degree).unwrap_or_default()
                 } else if *control {
                     let k = (*degree as usize).min(solidcore_record::MAX_BEZIER_DEGREE).min(p.len().saturating_sub(1)).max(1);
-                    crate::curves::bspline_beziers(&p, k).iter().filter_map(|span| solidcraft_geom::bezier(span)).collect()
+                    crate::curves::bspline_beziers(&p, k).iter().filter_map(|span| torno_geom::bezier(span)).collect()
                 } else {
                     crate::curves::fit_beziers_mode(&p, *periodic)
                         .unwrap_or_default()

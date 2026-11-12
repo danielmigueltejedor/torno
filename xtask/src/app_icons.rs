@@ -12,12 +12,12 @@ pub fn run(root: &Path) -> Result<(), String> {
     let mut exports: Vec<(std::path::PathBuf, String)> = Vec::new();
     // The Linux hicolor exports are not drawn here: they sit on the Nodalix app grid (224/256
     // tile, 16 px margin, soft shadow), made by tools/nodalia-app-icon.py in nodalix-icon-theme.
-    let installer = stage.join("solidcraft.ico");
+    let installer = stage.join("torno.ico");
     draw(&installer, 256)?;
-    exports.push((installer, "windows/exports/solidcraft.ico".into()));
-    let executable = stage.join("solidcraft-executable.ico");
+    exports.push((installer, "windows/exports/torno.ico".into()));
+    let executable = stage.join("torno-executable.ico");
     std::fs::write(&executable, windows_ico::encode().map_err(|e| e.to_string())?).map_err(|e| e.to_string())?;
-    exports.push((executable, "windows/exports/solidcraft-executable.ico".into()));
+    exports.push((executable, "windows/exports/torno-executable.ico".into()));
 
     // Finish generation before replacing any canonical exports.
     for (source, relative) in exports {
@@ -32,6 +32,6 @@ pub fn run(root: &Path) -> Result<(), String> {
 
 fn draw(path: &Path, size: usize) -> Result<(), String> {
     let mut c = crate::cargo();
-    c.args(["run", "-q", "--profile", "ci", "-p", "solidcraft-cli", "--", "icon", "--size", &size.to_string(), "--out"]).arg(path);
-    crate::run(c, "solidcraft-cli icon")
+    c.args(["run", "-q", "--profile", "ci", "-p", "torno-cli", "--", "icon", "--size", &size.to_string(), "--out"]).arg(path);
+    crate::run(c, "torno-cli icon")
 }

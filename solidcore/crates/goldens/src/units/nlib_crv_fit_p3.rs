@@ -15,7 +15,7 @@
 //!
 //! Points are `[x, y, z]`. Every run has at least [`MIN_GENERATED`] generated cases.
 //!
-//! `high_derivs_params` (fixture cases only, never generated) runs the SolidCraft
+//! `high_derivs_params` (fixture cases only, never generated) runs the Torno
 //! fork's `N_FitCrvHighDerivsParams` (tangency-labs/smlib#76 68f6913, ported as
 //! `interp_high_derivs_params`) on the Rust side at the parameters `par` gives, which
 //! the Rust side computes itself (`param_values`, upstream `N_FitCalcCrvParamValues`).

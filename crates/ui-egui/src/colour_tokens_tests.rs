@@ -1,12 +1,12 @@
-//! Every colour that carries a meaning comes from `solidcraft_theme::Tokens` (#778): the engine's sketch and
+//! Every colour that carries a meaning comes from `torno_theme::Tokens` (#778): the engine's sketch and
 //! axis tags, the surface analysis colours and every colour an icon draws. These tests hold that
 //! the tokens equal what was drawn before, and that a new colour cannot skip them.
 
 use egui::Color32;
-use solidcraft_engine::view::colors;
-use solidcraft_viewport::Rgb;
+use torno_engine::view::colors;
+use torno_viewport::Rgb;
 
-use solidcraft_theme::Tokens;
+use torno_theme::Tokens;
 
 fn rgb(c: Rgb) -> Color32 {
     Color32::from_rgb(c.0, c.1, c.2)
@@ -71,10 +71,10 @@ fn stroke_colours(shapes: &[egui::epaint::ClippedShape]) -> std::collections::BT
 fn every_axis_is_drawn_in_one_set_of_colours() {
     use egui::{Pos2, Rect, vec2};
     use solidcore_record::Vec3;
-    use solidcraft_theme::{ColorVision, set_dark, set_vision};
+    use torno_theme::{ColorVision, set_dark, set_vision};
     let ctx = crate::fonts::test_context();
     let rect = Rect::from_min_size(Pos2::ZERO, vec2(800.0, 600.0));
-    let cam = solidcraft_viewport::Camera::default();
+    let cam = torno_viewport::Camera::default();
     let proj = crate::viewport::Proj { cam, vp: cam.view_proj(4.0 / 3.0, 100.0), rect };
     let triad = crate::gizmo::Triad { center: Vec3::ZERO, translate: true, rotate: true };
     for (dark, mode) in [false, true].into_iter().flat_map(|d| ColorVision::ALL.map(|m| (d, m))) {
@@ -97,7 +97,7 @@ fn every_axis_is_drawn_in_one_set_of_colours() {
         for (name, d, want) in [("x", Vec3::X, t.axis_x), ("y", Vec3::Y, t.axis_y), ("z", Vec3::Z, t.axis_z)] {
             let at = c + vec2(32.0, 0.0);
             let mut out = ctx.run_ui(egui::RawInput::default(), |ui| {
-                solidcraft_look::compass::axis_tip_scaled(ui.painter(), c, name, d.into(), at, 0.5, false, t, 1.0)
+                torno_look::compass::axis_tip_scaled(ui.painter(), c, name, d.into(), at, 0.5, false, t, 1.0)
             });
             out.textures_delta.clear();
             let end = out.shapes.iter().find_map(|s| match &s.shape {
@@ -135,13 +135,13 @@ fn analysis_colours_reach_the_shader_in_its_order() {
 
 // Icons no longer take their colours from the caller or from `IconColors`: the SVG masters name
 // palette roles (`crates/look/icons/design/palette.toml`, light and dark, plus accents) that the
-// kit's renderer (`ui_kit::icons`) resolves in SolidCraft's set (`solidcraft_look::icons::SET`). The look crate's
+// kit's renderer (`ui_kit::icons`) resolves in Torno's set (`torno_look::icons::SET`). The look crate's
 // own tests hold that every master parses and that only the palette's colours exist, including
 // its colour-vision variants.
 
 /// The most colour literals each UI file may hold, and why. None of them carries a meaning that a
 /// colour vision mode must change. A file with more fails here: make the new colour a token in
-/// `solidcraft_theme::Tokens` (and `crates/theme/src/palettes.rs`) instead, or, if it carries no meaning,
+/// `torno_theme::Tokens` (and `crates/theme/src/palettes.rs`) instead, or, if it carries no meaning,
 /// raise the file's count here and give the reason. Fewer is always fine. The icon sources may
 /// hold none at all.
 const ALLOWED_LITERALS: &[(&str, usize, &str)] = &[
@@ -244,7 +244,7 @@ fn colours_outside_the_theme_are_only_the_listed_neutral_ones() {
     for (path, name) in crate::test_support::kit_files() {
         check(&path, &name, &mut found);
     }
-    assert!(found.is_empty(), "colour literals outside solidcraft_theme::Tokens: {found:?}");
+    assert!(found.is_empty(), "colour literals outside torno_theme::Tokens: {found:?}");
 }
 
 /// The analysis shader takes its colours from the uniform (and so from the tokens). Only the
@@ -278,7 +278,7 @@ fn analysis_shader_colours_come_from_the_uniform() {
             "vec3<f32>(0.35)",
             "vec3<f32>(1.0)",
         ],
-        "a new colour in the analysis shader must come from `ana_c` (solidcraft_color::AnalysisColors)"
+        "a new colour in the analysis shader must come from `ana_c` (torno_color::AnalysisColors)"
     );
     assert_eq!(body.matches("u.ana_c[").count(), 9, "every analysis colour reads `ana_c`");
 }
@@ -323,7 +323,7 @@ fn the_logo_can_take_the_themes_accent() {
     struct Reset;
     impl Drop for Reset {
         fn drop(&mut self) {
-            solidcraft_theme::set_logo_accent(false);
+            torno_theme::set_logo_accent(false);
         }
     }
     let _reset = Reset;

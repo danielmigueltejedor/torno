@@ -1,11 +1,11 @@
-//! SolidCraft's look, ready to install into the UI kit (`solidcraft_ui_kit`): its icon masters and
+//! Torno's look, ready to install into the UI kit (`torno_ui_kit`): its icon masters and
 //! colour roles ([`icons`]), its code-drawn glyphs ([`glyphs`]), its IBM Plex interface faces
 //! ([`fonts`]) and its built-in themes ([`themes`]). The kit ships none of these; a host that wants
-//! SolidCraft's look installs them from here, so there is one copy of each.
+//! Torno's look installs them from here, so there is one copy of each.
 //!
-//! [`install`] installs all of it. A host that wants only some, or SolidCraft's icons with a few
-//! masters of its own ([`icons::DATA`] in a `solidcraft_ui_kit::icons::IconSet::extended`),
-//! installs the parts instead. SolidCraft's workspace tabs are the app's, not the look's.
+//! [`install`] installs all of it. A host that wants only some, or Torno's icons with a few
+//! masters of its own ([`icons::DATA`] in a `torno_ui_kit::icons::IconSet::extended`),
+//! installs the parts instead. Torno's workspace tabs are the app's, not the look's.
 
 pub mod compass;
 pub mod fonts;
@@ -14,7 +14,7 @@ pub mod icons;
 pub mod pointer;
 pub mod themes;
 
-/// Install SolidCraft's look: [`install_tables`] and its fonts into `ctx`. Call it before the
+/// Install Torno's look: [`install_tables`] and its fonts into `ctx`. Call it before the
 /// first frame and in every test context.
 pub fn install(ctx: &egui::Context) {
     install_tables();

@@ -2,7 +2,7 @@
 //! (WR-345 addendum): an offset face's loops winding the other way under an opening are
 //! the cavity's floor.
 //!
-//! SolidCraft rig case shell/616 (a lid shelled 0.5 open at a rib's outer side, which
+//! Torno rig case shell/616 (a lid shelled 0.5 open at a rib's outer side, which
 //! stands 0.15 in from the skirt's outer wall), rebuilt from the commit message: a
 //! 20 x 20 x 5 block with a rib on its top, x 0.15..3.15, y 2..18, z 5..8, shelled 0.5
 //! inward (extended convex edges, merged) open at the rib's outer side x = 0.15. The top's

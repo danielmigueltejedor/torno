@@ -121,7 +121,7 @@
     "shell"
   ],
   "ungraded": [
-    "refusal \"shell: the 2 mm walls would meet along a line (between a hole and the side, for example), which leaves no solid there; use a thinner or thicker wall, or move the feature\": SolidCraft's wording of the kernel's error"
+    "refusal \"shell: the 2 mm walls would meet along a line (between a hole and the side, for example), which leaves no solid there; use a thinner or thicker wall, or move the feature\": Torno's wording of the kernel's error"
   ],
   "what": "a 2 mm shell, open at the bottom, of a 60x40x10 block with an r3 through hole 4 mm from its front face, beside a 10x10 notch at that edge: the walls from the hole and from the front would meet along a line, so the right answer is a refusal that says so (truck took 75 s and failed ('boolean Cut: no result'); SMLib refused it, but as 'status 1027')",
   "why_not": []

@@ -1,12 +1,12 @@
 //! A portable picture from warm display meshes only; never evaluate on save.
 use crate::Session;
-use solidcraft_geom::Aabb3;
-use solidcraft_geom::MeshGeom;
-use solidcraft_viewport::{Camera, Rgb, Scene, SceneMesh, StandardView};
+use torno_geom::Aabb3;
+use torno_geom::MeshGeom;
+use torno_viewport::{Camera, Rgb, Scene, SceneMesh, StandardView};
 
 pub(super) fn saved(s: &Session) -> Option<Vec<u8>> {
     let (scene, camera) = scene(s, HOME_ZOOM, None)?;
-    let [width, height] = solidcraft_io::THUMBNAIL_SIZE;
+    let [width, height] = torno_io::THUMBNAIL_SIZE;
     // Drawn by the renderer the host installed (the GPU); none installed, no thumbnail.
     let renderer = crate::capture::installed()?;
     crate::capture::png_with(Some(&*renderer), &scene, &camera, u32::try_from(width).ok()?, u32::try_from(height).ok()?).ok().map(|p| p.bytes)
@@ -24,7 +24,7 @@ pub(super) fn exported(s: &Session, bodies: &[String]) -> Option<Vec<u8>> {
     let renderer = crate::capture::installed()?;
     let (mut scene, camera) = scene(s, 1.0, Some(bodies))?;
     let rgba = transparent(&*renderer, &mut scene, &camera, EXPORT_SIZE)?;
-    solidcraft_viewport::png(EXPORT_SIZE as usize, EXPORT_SIZE as usize, rgba)
+    torno_viewport::png(EXPORT_SIZE as usize, EXPORT_SIZE as usize, rgba)
 }
 
 /// `scene` drawn over black and over white, unblended to straight RGBA.
@@ -35,7 +35,7 @@ fn transparent(renderer: &crate::capture::Renderer, scene: &mut Scene, camera: &
     };
     let over_black = draw(Rgb(0, 0, 0))?;
     let mut over_white = draw(Rgb(255, 255, 255))?;
-    solidcraft_viewport::unblend(&mut over_white, &over_black);
+    torno_viewport::unblend(&mut over_white, &over_black);
     Some(over_white)
 }
 
@@ -78,7 +78,7 @@ fn scene(s: &Session, zoom: f64, exported: Option<&[String]>) -> Option<(Scene, 
     }
     let mut camera = Camera::default();
     camera.set_view(StandardView::Iso);
-    camera.fit(&solidcraft_render::view_bounds(&bounds));
+    camera.fit(&torno_render::view_bounds(&bounds));
     camera.distance *= zoom;
     scene.radius = (bounds.diagonal() * 0.5).max(camera.half_height()).max(10.);
     scene.background = Some((crate::view::colors::BG_TOP, crate::view::colors::BG_BOTTOM));
@@ -102,16 +102,16 @@ mod tests {
         }
         assert_eq!(scene(&session, HOME_ZOOM, None).unwrap().0.meshes.len(), 1, "the hidden body is not in the picture");
         let expected = saved(&session).unwrap();
-        let bytes = session.design_container(solidcraft_io::DesignCompression::Fast, false, true).unwrap();
-        let doc = solidcraft_io::read_design(&bytes).unwrap();
+        let bytes = session.design_container(torno_io::DesignCompression::Fast, false, true).unwrap();
+        let doc = torno_io::read_design(&bytes).unwrap();
         assert_eq!(doc.visibility.hidden_bodies, vec!["Hidden"]);
         assert_eq!(doc, *session.design());
-        assert_eq!(solidcraft_io::read_design_thumbnail(&bytes), Some(expected));
+        assert_eq!(torno_io::read_design_thumbnail(&bytes), Some(expected));
         let reopened = Session::new(doc);
         assert_eq!(reopened.visibility, session.visibility);
-        let disabled = session.design_container(solidcraft_io::DesignCompression::Fast, false, false).unwrap();
-        assert_eq!(solidcraft_io::read_design(&disabled).unwrap().visibility, session.visibility);
-        assert!(solidcraft_io::read_design_thumbnail(&disabled).is_none());
+        let disabled = session.design_container(torno_io::DesignCompression::Fast, false, false).unwrap();
+        assert_eq!(torno_io::read_design(&disabled).unwrap().visibility, session.visibility);
+        assert!(torno_io::read_design_thumbnail(&disabled).is_none());
     }
 
     #[test]
@@ -127,11 +127,11 @@ mod tests {
             body.mesh();
         }
         let png = saved(&session).unwrap();
-        let bytes = session.design_container(solidcraft_io::DesignCompression::Fast, false, true).unwrap();
-        assert_eq!(solidcraft_io::read_design_thumbnail(&bytes), Some(png));
-        assert_eq!(solidcraft_io::read_design(&bytes).unwrap(), *session.doc);
-        let disabled = session.design_container(solidcraft_io::DesignCompression::Fast, false, false).unwrap();
-        assert!(solidcraft_io::read_design_thumbnail(&disabled).is_none());
+        let bytes = session.design_container(torno_io::DesignCompression::Fast, false, true).unwrap();
+        assert_eq!(torno_io::read_design_thumbnail(&bytes), Some(png));
+        assert_eq!(torno_io::read_design(&bytes).unwrap(), *session.doc);
+        let disabled = session.design_container(torno_io::DesignCompression::Fast, false, false).unwrap();
+        assert!(torno_io::read_design_thumbnail(&disabled).is_none());
     }
 
     /// Without a renderer installed (a browser, a tool that draws nothing) a save has no

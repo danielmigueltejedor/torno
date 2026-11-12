@@ -72,7 +72,7 @@ class Synthetic(unittest.TestCase):
             self.assertEqual(affected.select(SYNTH, [p]), (False, []), p)
 
     def test_windows_metadata_selects_packages_and_preserves_triggers(self):
-        for root in [r"C:\work space\solidcraft", r"\\server\shared work\solidcraft"]:
+        for root in [r"C:\work space\torno", r"\\server\shared work\torno"]:
             for trailing in ["", "\\", "/"]:
                 with self.subTest(root=root, trailing=trailing):
                     meta = windows_metadata(root + trailing)
@@ -83,7 +83,7 @@ class Synthetic(unittest.TestCase):
                         self.assertEqual(affected.select(meta, [path]), (True, []), path)
 
     def test_windows_metadata_rejects_a_manifest_in_a_sibling_workspace(self):
-        for root in [r"C:\work space\solidcraft", r"\\server\shared work\solidcraft"]:
+        for root in [r"C:\work space\torno", r"\\server\shared work\torno"]:
             with self.subTest(root=root):
                 meta = windows_metadata(root + "\\")
                 sibling = root.replace("\\", "/") + "-sibling/crates/base/Cargo.toml"
@@ -100,9 +100,9 @@ class RealWorkspace(unittest.TestCase):
     def test_render_change_selects_render_and_dependents_not_kernel(self):
         full, pk = affected.select(self.meta, ["crates/render/src/lib.rs"])
         self.assertFalse(full)
-        self.assertIn("solidcraft-render", pk)
+        self.assertIn("torno-render", pk)
         self.assertGreater(len(pk), 1)
-        self.assertNotIn("solidcraft-kernel", pk)
+        self.assertNotIn("torno-kernel", pk)
 
     def test_cargo_lock_selects_full(self):
         self.assertEqual(affected.select(self.meta, ["Cargo.lock"]), (True, []))
@@ -113,25 +113,25 @@ class RealWorkspace(unittest.TestCase):
     def test_engine_test_data_selects_the_engine_and_its_dependents_not_the_kernel(self):
         full, pk = affected.select(self.meta, ["tests/hole_matrix/known_failures.txt"])
         self.assertFalse(full)
-        self.assertIn("solidcraft-engine", pk)
-        self.assertNotIn("solidcraft-kernel", pk)
-        self.assertNotIn("solidcraft-render", pk)
+        self.assertIn("torno-engine", pk)
+        self.assertNotIn("torno-kernel", pk)
+        self.assertNotIn("torno-render", pk)
 
     def test_oracle_cases_select_the_cli_and_xtask_not_the_kernel(self):
         full, pk = affected.select(self.meta, ["tests/oracle/box/recipe.json"])
         self.assertFalse(full)
-        self.assertIn("solidcraft-cli", pk)
+        self.assertIn("torno-cli", pk)
         self.assertIn("xtask", pk)
-        self.assertNotIn("solidcraft-kernel", pk)
+        self.assertNotIn("torno-kernel", pk)
 
     def test_embedded_root_files_select_their_crate(self):
-        for path, pkg in [("ATTRIBUTION.md", "solidcraft-ui-egui"), ("LICENSE-MIT", "solidcraft-engine"),
-                          ("NOTICE", "solidcraft-engine"), ("THIRD-PARTY-LICENSES.txt", "solidcraft-engine"),
-                          ("skills/solidcraft-modeling/SKILL.md", "solidcraft-mcp")]:
+        for path, pkg in [("ATTRIBUTION.md", "torno-ui-egui"), ("LICENSE-MIT", "torno-engine"),
+                          ("NOTICE", "torno-engine"), ("THIRD-PARTY-LICENSES.txt", "torno-engine"),
+                          ("skills/torno-modeling/SKILL.md", "torno-mcp")]:
             full, pk = affected.select(self.meta, [path])
             self.assertFalse(full, path)
             self.assertIn(pkg, pk, path)
-            self.assertNotIn("solidcraft-kernel", pk, path)
+            self.assertNotIn("torno-kernel", pk, path)
 
     def test_unmapped_test_data_selects_full(self):
         self.assertEqual(affected.select(self.meta, ["tests/tools/x.json"]), (True, []))
@@ -139,10 +139,10 @@ class RealWorkspace(unittest.TestCase):
     def test_vendored_egui_wgpu_selects_the_ui_and_apps_not_the_kernel(self):
         full, pk = affected.select(self.meta, ["vendor/egui-wgpu/src/winit.rs"])
         self.assertFalse(full)
-        self.assertIn("solidcraft-ui-egui", pk)
-        self.assertIn("solidcraft", pk)
-        self.assertNotIn("solidcraft-kernel", pk)
-        self.assertNotIn("solidcraft-engine", pk)
+        self.assertIn("torno-ui-egui", pk)
+        self.assertIn("torno", pk)
+        self.assertNotIn("torno-kernel", pk)
+        self.assertNotIn("torno-engine", pk)
 
     def test_vendor_readme_alone_selects_nothing(self):
         self.assertEqual(affected.select(self.meta, ["vendor/README.md"]), (False, []))
@@ -150,10 +150,10 @@ class RealWorkspace(unittest.TestCase):
     def test_translation_selects_the_ui_and_xtask_not_the_kernel(self):
         full, pk = affected.select(self.meta, ["assets/locales/ja.json", "assets/locales/it.json"])
         self.assertFalse(full)
-        self.assertIn("solidcraft-ui-egui", pk)
+        self.assertIn("torno-ui-egui", pk)
         self.assertIn("xtask", pk)
-        self.assertNotIn("solidcraft-kernel", pk)
-        self.assertNotIn("solidcraft-engine", pk)
+        self.assertNotIn("torno-kernel", pk)
+        self.assertNotIn("torno-engine", pk)
 
 
 if __name__ == "__main__":

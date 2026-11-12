@@ -212,7 +212,7 @@
     "extrude"
   ],
   "ungraded": [
-    "continuity: SolidCraft computes it"
+    "continuity: Torno computes it"
   ],
   "what": "a plane continued by a surface extruded from a g3 blend curve: exactly G3",
   "why_not": []

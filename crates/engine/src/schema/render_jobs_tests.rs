@@ -1,5 +1,5 @@
 use serde_json::{Value, json};
-use solidcraft_render::job::{CpuHost, JobId, Phase};
+use torno_render::job::{CpuHost, JobId, Phase};
 
 use super::{
     CancelParams, CopyParams, ExportParams, ImageCopied, ImageExported, JobPhase, PinParams, RegradeParams, RenderCancelled, RenderProgress,
@@ -211,7 +211,7 @@ fn render_job_commands_reply_with_their_schemas() {
     assert_eq!(reply(&mut s, "render.result.pin", json!({"job": job}), &pinned), json!({"frame": state["frame"]}));
     let copied = reply(&mut s, "render.result.copy", json!({}), &output_schema_for::<ImageCopied>());
     assert_eq!(copied, json!({"frame": state["frame"]}));
-    let path = std::env::temp_dir().join(format!("solidcraft-render-jobs-schema-{}.png", std::process::id()));
+    let path = std::env::temp_dir().join(format!("torno-render-jobs-schema-{}.png", std::process::id()));
     let exported = reply(&mut s, "render.export", json!({"job": job, "path": path, "overwrite": true}), &output_schema_for::<ImageExported>());
     let written = std::fs::metadata(&path).map(|m| m.len()).unwrap_or_default();
     let _ = std::fs::remove_file(&path);
@@ -271,7 +271,7 @@ fn regrade_and_export_of_a_linear_master_reply_with_their_schemas() {
             "denoise_mask" => frame.denoise_mask_png().unwrap_or_else(|| panic!("missing retained guide mask")),
             _ => frame.png(),
         };
-        let path = std::env::temp_dir().join(format!("solidcraft-render-jobs-schema-{}-{}-{format}.{extension}", std::process::id(), job.serial));
+        let path = std::env::temp_dir().join(format!("torno-render-jobs-schema-{}-{}-{format}.{extension}", std::process::id(), job.serial));
         let r = reply(&mut s, "render.export", json!({"job": job, "path": path, "format": format, "overwrite": true}), &exported);
         assert_eq!(std::fs::read(&path).unwrap_or_else(|e| panic!("{e}")), expected);
         let _ = std::fs::remove_file(&path);

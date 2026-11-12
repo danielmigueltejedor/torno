@@ -1,6 +1,6 @@
 use serde_json::{Value, json};
-use solidcraft_doc::FeatureKind;
-use solidcraft_doc::frame::{self, MAX_MEMBERS};
+use torno_doc::FeatureKind;
+use torno_doc::frame::{self, MAX_MEMBERS};
 
 use super::{
     FrameMemberParams, ProfileInsertParams, ProfileInsertResult, ProfileListParams, ProfileListResult, ProfilePropertiesParams,

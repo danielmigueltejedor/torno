@@ -1,7 +1,7 @@
 //! Collected glyph artwork. Caption geometry adapted from VectorCraft (MIT OR Apache-2.0).
 use egui::{Color32, Pos2, Rect, Stroke, Ui, pos2, vec2};
-use solidcraft_ui_kit::icons::glyphs::Glyphs;
-use solidcraft_ui_kit::window_chrome::Caption;
+use torno_ui_kit::icons::glyphs::Glyphs;
+use torno_ui_kit::window_chrome::Caption;
 
 /// [`Glyphs::transport`]: a history transport mark centred on `c`.
 pub fn transport_glyph(p: &egui::Painter, c: egui::Pos2, what: &str, col: Color32) {
@@ -114,9 +114,9 @@ pub fn breadcrumb(p: &egui::Painter, c: egui::Pos2, col: Color32) {
     p.line_segment([pos2(c.x + 1.5, c.y), pos2(c.x - 1.5, c.y + 3.0)], s);
 }
 
-/// The SolidCraft mark in its colours, 20 points high, centred on `c` (the application bar).
+/// The Torno mark in its colours, 20 points high, centred on `c` (the application bar).
 pub fn brand_mark(p: &egui::Painter, c: Pos2) {
-    brand_mark_styled(p, c, 20.0, solidcraft_theme::Tokens::get().logo, true);
+    brand_mark_styled(p, c, 20.0, torno_theme::Tokens::get().logo, true);
 }
 
 /// The same original mark as a single quiet silhouette, without face seams or outlines.
@@ -133,7 +133,7 @@ fn brand_mark_styled(p: &egui::Painter, c: Pos2, height: f32, colours: [Color32;
     };
     // The faces are separated by gaps that show the application bar, not by white lines.
     let [light, mid, dark] = colours;
-    let edge_col = solidcraft_theme::Tokens::get().app_bar;
+    let edge_col = torno_theme::Tokens::get().app_bar;
     face(light, &[(3.5, 105.9), (177.0, 5.8), (263.4, 55.6), (263.8, 156.0), (177.0, 406.4)]);
     face(light, &[(177.0, 206.1), (263.8, 156.0), (350.5, 206.2), (350.5, 306.3), (177.0, 406.4)]);
     face(mid, &[(3.5, 105.9), (177.0, 206.1), (177.0, 406.4)]);
@@ -177,7 +177,7 @@ pub fn cross(p: &egui::Painter, r: Rect, s: Stroke) {
     p.line_segment([r.right_top(), r.left_bottom()], s);
 }
 
-/// SolidCraft's code-drawn glyphs, as the kit draws them ([`solidcraft_ui_kit::icons::glyphs`]).
+/// Torno's code-drawn glyphs, as the kit draws them ([`torno_ui_kit::icons::glyphs`]).
 pub static GLYPHS: Glyphs = Glyphs {
     transport: transport_glyph,
     caption: paint_glyph,
@@ -193,5 +193,5 @@ pub static GLYPHS: Glyphs = Glyphs {
 
 /// Make [`GLYPHS`] the glyphs the kit draws, once per process; calling it again does nothing.
 pub fn install() {
-    solidcraft_ui_kit::icons::glyphs::install(&GLYPHS);
+    torno_ui_kit::icons::glyphs::install(&GLYPHS);
 }

@@ -1,6 +1,6 @@
 use serde_json::json;
 use solidcore_record::Vec3;
-use solidcraft_engine::Session;
+use torno_engine::Session;
 
 use super::*;
 use crate::Services;
@@ -9,7 +9,7 @@ use crate::dialogs::{Kind, apply_commands, preview_commands};
 #[test]
 fn missing_joint_messages_are_drawn_in_full() {
     for language in ["en", "de", "vi"] {
-        let _language = solidcraft_ui_text::scope(language);
+        let _language = torno_ui_text::scope(language);
         for (command, message) in [
             ("joint.screw", "needs a joint that turns and one that slides"),
             ("joint.gear", "needs two joints that turn"),
@@ -32,7 +32,7 @@ fn missing_joint_messages_are_drawn_in_full() {
                 draw(&mut app);
             }
             let output = draw(&mut app);
-            if let Ok(dir) = std::env::var("SOLIDCRAFT_DIALOG_STATUS_EVIDENCE") {
+            if let Ok(dir) = std::env::var("TORNO_DIALOG_STATUS_EVIDENCE") {
                 std::fs::create_dir_all(&dir).unwrap();
                 crate::ui_kit::test_raster(
                     &ctx,
@@ -44,7 +44,7 @@ fn missing_joint_messages_are_drawn_in_full() {
                 .save(std::path::Path::new(&dir).join(format!("{command}-{language}.png")))
                 .unwrap();
             }
-            let message = solidcraft_ui_text::tr_label(message);
+            let message = torno_ui_text::tr_label(message);
             let text = crate::test_support::text_shapes(&output).find(|text| text.galley.text() == message).expect("missing-joint message");
             assert!(!text.galley.elided, "{command} ({language}) cuts off: {message}");
             let bounds = text.galley.rect.translate(text.pos.to_vec2());
@@ -195,7 +195,7 @@ fn a_cylindrical_joint_is_a_screw_on_its_own() {
     assert_eq!(c[0], ("joint.screw".to_string(), json!({"joint": joint(&app, "Nut"), "pitch": "1.5 mm", "reverse": false})));
     app.run(&c[0].0, c[0].1.clone()).unwrap();
     app.run("joint.drive", json!({"joint": "Nut", "values": [360]})).unwrap();
-    let nut = solidcraft_engine::doc::joints::joint_values(&app.session.doc.assembly).get(&joint(&app, "Nut")).cloned().unwrap_or_default();
+    let nut = torno_engine::doc::joints::joint_values(&app.session.doc.assembly).get(&joint(&app, "Nut")).cloned().unwrap_or_default();
     assert!((nut.get(1).copied().unwrap_or(f64::NAN) - 1.5).abs() < 1e-9, "{nut:?}");
 }
 
@@ -221,7 +221,7 @@ fn play_turns_the_angle_of_a_planar_pinion() {
 #[test]
 fn the_dialog_labels_translate() {
     crate::i18n::install();
-    let de = solidcraft_ui_text::Locale::for_language("de");
+    let de = torno_ui_text::Locale::for_language("de");
     for (english, german) in [
         ("Gear 1", "Zahnrad 1"),
         ("Radius 2", "Radius 2"),
@@ -231,5 +231,5 @@ fn the_dialog_labels_translate() {
     ] {
         assert_eq!(de.label(english), german);
     }
-    assert_eq!(solidcraft_ui_text::Locale::for_language("ja").label("not a round face"), "円筒面ではありません");
+    assert_eq!(torno_ui_text::Locale::for_language("ja").label("not a round face"), "円筒面ではありません");
 }

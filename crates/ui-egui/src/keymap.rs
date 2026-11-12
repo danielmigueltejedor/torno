@@ -7,7 +7,7 @@ use crate::ui_kit::BackingTooltipExt as _;
 use std::collections::BTreeMap;
 
 use serde_json::{Value, json};
-use solidcraft_engine::{CommandSpec, command_specs};
+use torno_engine::{CommandSpec, command_specs};
 
 use crate::SolveApp;
 use crate::ui_kit;
@@ -234,13 +234,13 @@ pub(crate) fn saved_keys(id: &str, v: &Value) -> Option<Vec<String>> {
 /// Every other application-reserved key remains protected for every command.
 fn reserved_for(id: &str, key: &str) -> bool {
     RESERVED.contains(&key)
-        && !(solidcraft_engine::panels::ContextualPanelAction::from_command_id(id).is_some()
+        && !(torno_engine::panels::ContextualPanelAction::from_command_id(id).is_some()
             && key.rsplit('+').next().is_some_and(|name| matches!(name, "Left" | "Right" | "Up" | "Down")))
 }
 
 /// Effective registered chords for the host's deferred, focus-checked input path.
-pub(crate) fn panel_shortcuts(app: &SolveApp) -> Vec<(solidcraft_engine::panels::ContextualPanelAction, egui::KeyboardShortcut)> {
-    use solidcraft_engine::panels::ContextualPanelAction;
+pub(crate) fn panel_shortcuts(app: &SolveApp) -> Vec<(torno_engine::panels::ContextualPanelAction, egui::KeyboardShortcut)> {
+    use torno_engine::panels::ContextualPanelAction;
     ContextualPanelAction::ALL
         .into_iter()
         .flat_map(|action| {
@@ -378,7 +378,7 @@ pub fn effective(app: &SolveApp, id: &str) -> Option<String> {
 pub fn keys(app: &SolveApp, id: &str) -> Vec<String> {
     match app.keymap.custom.get(id) {
         Some(keys) => keys.clone(),
-        None => solidcraft_engine::find_command(id).and_then(|c| c.shortcut).filter(|k| !k.is_empty()).map(str::to_string).into_iter().collect(),
+        None => torno_engine::find_command(id).and_then(|c| c.shortcut).filter(|k| !k.is_empty()).map(str::to_string).into_iter().collect(),
     }
 }
 
@@ -423,7 +423,7 @@ pub(crate) fn scope(id: &str) -> Scope {
     if id.starts_with("render.") || matches!(id, "appearance.paint" | "appearance.pick_up") {
         return Scope::Render;
     }
-    match solidcraft_engine::find_command(id).map(|c| c.tab) {
+    match torno_engine::find_command(id).map(|c| c.tab) {
         Some("SKETCH") => Scope::Sketch,
         Some(tab) if tab.starts_with("RENDER") => Scope::Render,
         Some("") | None => Scope::Everywhere,
@@ -461,10 +461,10 @@ pub fn command_for(app: &SolveApp, key: &str) -> Option<&'static str> {
         .into_iter()
         .filter(|id| {
             // Shared panel bindings run only in the host's late input path.
-            solidcraft_engine::panels::ContextualPanelAction::from_command_id(id).is_none()
+            torno_engine::panels::ContextualPanelAction::from_command_id(id).is_none()
                 && (scope(id) != Scope::Render || here == Scope::Render)
                 && (here != Scope::Render || scope(id) != Scope::Sketch)
-                && solidcraft_engine::find_command(id).is_some_and(|c| crate::render_workspace::interactive_command_info(app, c).enabled)
+                && torno_engine::find_command(id).is_some_and(|c| crate::render_workspace::interactive_command_info(app, c).enabled)
         })
         .collect();
     let mine = enabled.iter().find(|id| scope(id) == here);
@@ -533,9 +533,9 @@ fn sketch_tool_for(app: &SolveApp, key: &str) -> Option<&'static str> {
     if app.session.active_sketch.is_some() || crate::render_workspace::active(app) {
         return None;
     }
-    commands_for(app, key).into_iter().find(|id| {
-        solidcraft_engine::find_command(id).is_some_and(|c| c.tab == "SKETCH" && c.panel != "FINISH SKETCH" && c.id != "sketch.construction")
-    })
+    commands_for(app, key)
+        .into_iter()
+        .find(|id| torno_engine::find_command(id).is_some_and(|c| c.tab == "SKETCH" && c.panel != "FINISH SKETCH" && c.id != "sketch.construction"))
 }
 
 /// Make `key` a command's only key (`""` clears its keys). See [`bind_at`].
@@ -548,11 +548,11 @@ pub fn bind(app: &mut SolveApp, id: &str, key: &str, replace: bool) -> Result<()
 /// other commands use the key unless `replace` (they lose that key and keep their others). A
 /// sketch tool and a model command may share a key: each runs in its own mode.
 pub fn bind_at(app: &mut SolveApp, id: &str, slot: Option<usize>, key: &str, replace: bool) -> Result<(), String> {
-    let spec = solidcraft_engine::find_command(id).ok_or_else(|| format!("no command `{id}`"))?;
+    let spec = torno_engine::find_command(id).ok_or_else(|| format!("no command `{id}`"))?;
     let canonical = if key.is_empty() { String::new() } else { canonical_key(key).ok_or("unknown shortcut key")? };
     let key = canonical.as_str();
     if reserved_for(id, key) {
-        return Err(format!("{key} is used by SolidCraft itself"));
+        return Err(format!("{key} is used by Torno itself"));
     }
     let mut list = keys(app, id);
     if slot.is_some_and(|n| n >= list.len()) && list.len() >= MAX_KEYS {
@@ -561,7 +561,7 @@ pub fn bind_at(app: &mut SolveApp, id: &str, slot: Option<usize>, key: &str, rep
     if !key.is_empty() {
         let others: Vec<&'static str> = commands_for(app, key).into_iter().filter(|o| *o != id && clash(o, id)).collect();
         if !others.is_empty() && !replace {
-            let names: Vec<&str> = others.iter().filter_map(|o| solidcraft_engine::find_command(o).map(|c| c.label)).collect();
+            let names: Vec<&str> = others.iter().filter_map(|o| torno_engine::find_command(o).map(|c| c.label)).collect();
             return Err(format!("{key} is already used by {}", names.join(", ")));
         }
         for o in others {
@@ -590,7 +590,7 @@ pub fn bind_at(app: &mut SolveApp, id: &str, slot: Option<usize>, key: &str, rep
 
 /// Keep a command's keys, as a change only when they aren't its default.
 fn set_keys(app: &mut SolveApp, id: &str, keys: Vec<String>) {
-    let default = solidcraft_engine::find_command(id).and_then(|c| c.shortcut).filter(|k| !k.is_empty());
+    let default = torno_engine::find_command(id).and_then(|c| c.shortcut).filter(|k| !k.is_empty());
     if keys.iter().map(String::as_str).eq(default) {
         app.keymap.custom.remove(id);
     } else {
@@ -662,7 +662,7 @@ pub fn page(app: &mut SolveApp, ui: &mut egui::Ui) {
     let mut action: Option<(String, &str)> = None;
     ui_kit::scope(ui, |ui| {
         if !filtering {
-            let t = solidcraft_theme::Tokens::get();
+            let t = torno_theme::Tokens::get();
             let edit_label = if app.keymap.read_only { app.tr_label("Edit shortcuts") } else { app.tr("install.done") };
             let actions_width = ui_kit::ContentWidth::button(ui, edit_label)
                 + ui_kit::icon_label_width(ui, app.tr("prefs.profile_export"), Some("export_tray"), false)
@@ -681,7 +681,7 @@ pub fn page(app: &mut SolveApp, ui: &mut egui::Ui) {
                             ui,
                             egui::Id::unique("sc_keymap_filter"),
                             &mut app.keymap.filter,
-                            solidcraft_ui_text::tr_label("Filter commands or keys"),
+                            torno_ui_text::tr_label("Filter commands or keys"),
                         )
                     })
                     .inner;
@@ -837,10 +837,10 @@ pub fn page(app: &mut SolveApp, ui: &mut egui::Ui) {
         Some((_, "done")) => stop_capture(app),
         Some((_, "export")) => {
             let text = crate::toolbar_custom::export(app).to_string();
-            app.pick_save("SolidCraft shortcuts.json", &["json"], move |app, path| {
+            app.pick_save("Torno shortcuts.json", &["json"], move |app, path| {
                 if let Some(path) = path {
                     // Through `vfs`, like every other save: the web app hands it out as a download.
-                    app.keymap.message = solidcraft_engine::io::vfs::write(&path, text.as_bytes()).err().map(|e| format!("export: {e}"));
+                    app.keymap.message = torno_engine::io::vfs::write(&path, text.as_bytes()).err().map(|e| format!("export: {e}"));
                 }
             });
         }
@@ -848,7 +848,7 @@ pub fn page(app: &mut SolveApp, ui: &mut egui::Ui) {
             app.pick_open(|app, path| {
                 let Some(path) = path else { return };
                 // Through `vfs`, like every other import: in the web app a picked file is there.
-                let r = solidcraft_engine::io::vfs::read_to_string(&path, crate::toolbar_custom::MAX_IMPORT_BYTES)
+                let r = torno_engine::io::vfs::read_to_string(&path, crate::toolbar_custom::MAX_IMPORT_BYTES)
                     .map_err(|e| e.to_string())
                     .and_then(|t| serde_json::from_str::<Value>(&t).map_err(|e| e.to_string()))
                     .and_then(|v| crate::toolbar_custom::import(app, &v));
@@ -894,7 +894,7 @@ fn shortcut_row(
     label: &str,
     filtering: bool,
 ) -> Option<(String, &'static str)> {
-    let t = solidcraft_theme::Tokens::get();
+    let t = torno_theme::Tokens::get();
     let editing = !app.keymap.read_only;
     let capturing = app.keymap.capturing.as_deref() == Some(command.id);
     let mut slots: Vec<(usize, String, bool)> = keys.iter().enumerate().map(|(slot, key)| (slot, crate::ui_kit::chord_label(key), true)).collect();
@@ -906,7 +906,7 @@ fn shortcut_row(
             *text = app.keymap.recorder.preview().unwrap_or_else(|| app.tr("prefs.shortcuts_press").to_owned());
         }
     }
-    let unassigned = solidcraft_ui_text::tr("prefs.shortcuts_not_assigned");
+    let unassigned = torno_ui_text::tr("prefs.shortcuts_not_assigned");
     let widths: Vec<f32> = slots
         .iter()
         .map(|(slot, text, assigned)| {
@@ -1048,11 +1048,8 @@ fn outcome(app: &SolveApp, ui: &mut egui::Ui) -> Option<&'static str> {
     }
     if let Some((_, key, _, _)) = app.keymap.conflict.clone() {
         ui.horizontal_wrapped(|ui| {
-            let replace = ui_kit::button(
-                ui,
-                solidcraft_ui_text::format("keymap.use_anyway", &[("key", &crate::ui_kit::chord_label(&key))]),
-                ui_kit::Button::Normal,
-            );
+            let replace =
+                ui_kit::button(ui, torno_ui_text::format("keymap.use_anyway", &[("key", &crate::ui_kit::chord_label(&key))]), ui_kit::Button::Normal);
             crate::scenario::publish_target("keymap:replace", replace.rect);
             if replace.clicked() {
                 chosen = Some("replace");
@@ -1088,7 +1085,7 @@ mod tests {
 
     #[test]
     fn panel_bindings_preserve_contextual_arrows_and_rebind_clear_conflict_and_reset() {
-        use solidcraft_engine::panels::ContextualPanelAction;
+        use torno_engine::panels::ContextualPanelAction;
         let mut a = app();
         let defaults = panel_shortcuts(&a);
         assert_eq!(defaults.len(), 4);
@@ -1212,7 +1209,7 @@ mod tests {
     }
 
     fn app() -> SolveApp {
-        SolveApp::new(solidcraft_engine::Session::default(), Default::default())
+        SolveApp::new(torno_engine::Session::default(), Default::default())
     }
 
     #[test]
@@ -2026,7 +2023,7 @@ mod card_tests {
                                 .job
                                 .sections
                                 .iter()
-                                .all(|section| section.format.font_id.size == solidcraft_theme::Tokens::get().font_page_heading);
+                                .all(|section| section.format.font_id.size == torno_theme::Tokens::get().font_page_heading);
                     }
                 });
             }
@@ -2161,7 +2158,7 @@ mod card_tests {
     /// it is written refuses a path outside it, which shows the write goes through `vfs`.
     #[test]
     fn shortcut_export_writes_through_vfs() {
-        use solidcraft_engine::io::vfs;
+        use torno_engine::io::vfs;
         let mut h = Harness::new();
         h.app.home.open = false;
         h.call("ui.prefs", json!({"open":"Keyboard Shortcuts"}));
@@ -2209,7 +2206,7 @@ mod card_tests {
     /// read goes through `vfs`.
     #[test]
     fn shortcut_import_reads_through_vfs() {
-        use solidcraft_engine::io::vfs;
+        use torno_engine::io::vfs;
         let mut h = Harness::new();
         h.app.home.open = false;
         bind(&mut h.app, "solid.extrude", "Shift+E", true).unwrap();

@@ -1,7 +1,7 @@
 //! tangency-labs/solidcore#2014: [`UpstreamFixes::flags`] lists every opt-in fix by its
 //! field name with its value, in declaration order, and [`UpstreamFixes::NAMES`] the names
 //! alone, so a consumer that pins solidcore notices a new flag without parsing the derived
-//! `Debug` (SolidCraft's `every_upstream_fix_is_on` did). Both are generated from the
+//! `Debug` (Torno's `every_upstream_fix_is_on` did). Both are generated from the
 //! struct definition, so a new field cannot be left out.
 //!
 //! The issue's input and expected values: `UpstreamFixes::default().flags()` yields one

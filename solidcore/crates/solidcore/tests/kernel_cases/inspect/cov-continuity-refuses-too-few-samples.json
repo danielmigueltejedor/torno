@@ -32,6 +32,6 @@
   "ungraded": [],
   "what": "continuity with 2 stations a seam",
   "why_not": [
-    "the failure is SolidCraft's, not a kernel operation's: step 2 (inspect.continuity): invalid parameters for `inspect.continuity`: `samples` must be 3…257 stations along each edge"
+    "the failure is Torno's, not a kernel operation's: step 2 (inspect.continuity): invalid parameters for `inspect.continuity`: `samples` must be 3…257 stations along each edge"
   ]
 }

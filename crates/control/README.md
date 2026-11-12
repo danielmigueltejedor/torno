@@ -1,4 +1,4 @@
-# solidcraft-control
+# torno-control
 
 The control channel any app may share (docs/control-protocol.md). An app that listens for
 control makes a random token per launch, writes it to a file only the user can read and refuses

@@ -18,8 +18,8 @@
 
 use solidcore_record::Vec3;
 use solidcore_record::brep::{self as b};
-use solidcraft_geom::brep::{eval::CurveEval, eval::SurfaceEval};
-use solidcraft_geom::prelude::*;
+use torno_geom::brep::{eval::CurveEval, eval::SurfaceEval};
+use torno_geom::prelude::*;
 
 use crate::body::Body;
 use crate::bridge::{self, Continuity, Frame};

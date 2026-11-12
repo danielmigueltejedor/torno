@@ -2,7 +2,7 @@
 //! has no end at the mate of the other edge's vertex. Two r 2.75 cylinders whose axes meet at
 //! a small turn, each cut back to the mitre plane that halves it, meet face to face there; their
 //! union fails for turns up to about 0.3 degrees (C++ SMLib v1.0.1 the same: 0.1, 0.25 and 0.3
-//! fail, 0.4 and up succeed). SolidCraft's tube corners (a52 `lead-out-minus`) are the
+//! fail, 0.4 and up succeed). Torno's tube corners (a52 `lead-out-minus`) are the
 //! repro. No fix yet: the record WR-492 says why.
 #![allow(
     clippy::unwrap_used,

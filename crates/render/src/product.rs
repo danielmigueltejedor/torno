@@ -2,7 +2,7 @@
 
 use std::sync::Arc;
 
-use solidcraft_geom::{Aabb3, Mesh};
+use torno_geom::{Aabb3, Mesh};
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct FaceAppearance {
@@ -10,7 +10,7 @@ pub struct FaceAppearance {
     pub face: u32,
     pub color: [u8; 3],
     pub opacity: f64,
-    pub surface: Option<solidcraft_viewport::surface::OpaqueSurface>,
+    pub surface: Option<torno_viewport::surface::OpaqueSurface>,
     pub transmission: Option<crate::transmission::Transmission>,
 }
 
@@ -22,7 +22,7 @@ pub struct ProductMesh {
     pub mesh: Arc<Mesh>,
     pub color: [u8; 3],
     pub opacity: f64,
-    pub surface: Option<solidcraft_viewport::surface::OpaqueSurface>,
+    pub surface: Option<torno_viewport::surface::OpaqueSurface>,
     pub transmission: Option<crate::transmission::Transmission>,
     pub faces: Vec<FaceAppearance>,
 }

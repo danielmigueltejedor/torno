@@ -4,16 +4,16 @@ use crate::schema::render_surface_resources::{
 };
 use crate::{Result, Session, params::bad, schema::TypedContract};
 use serde_json::{Value, json};
-use solidcraft_doc::{
+use std::sync::Arc;
+use torno_doc::{
     render_resources::HdrId,
     render_settings::RenderJob,
     render_surface::{EmbeddedSurfaceKind, EmbeddedSurfaceSource, SavedSurface, SurfaceSource},
     render_texture_resources::{MAX_TEXTURE_RESOURCE_BYTES, TextureProvenance, TextureResource, TextureResources},
 };
-use solidcraft_geom::MeshGeom;
-use solidcraft_render::job::textures::PlanarFrame;
-use solidcraft_render::texture_input::MapRole;
-use std::sync::Arc;
+use torno_geom::MeshGeom;
+use torno_render::job::textures::PlanarFrame;
+use torno_render::texture_input::MapRole;
 
 pub(super) const IMPORT_CONTRACT: TypedContract<ImportParams> = TypedContract::new();
 pub(super) const LIST_CONTRACT: TypedContract<ListParams> = TypedContract::new();
@@ -34,7 +34,7 @@ fn capture(
         return Err(bad(command, "texture import requires a bounded scoped local path"));
     }
     let expected = input.expected_sha256.as_deref().map(|value| id(value, command)).transpose()?;
-    let bytes = solidcraft_io::vfs::read(&input.path, solidcraft_render::texture_input::MAX_TEXTURE_BYTES)
+    let bytes = torno_io::vfs::read(&input.path, torno_render::texture_input::MAX_TEXTURE_BYTES)
         .map_err(|e| bad(command, format!("could not capture texture: {e}")))?;
     if expected.is_some_and(|expected| expected != HdrId::of(&bytes)) {
         return Err(bad(command, "texture file changed since selection; inspect and select it again"));
@@ -95,7 +95,7 @@ pub(super) fn import(s: &mut Session, params: &Value) -> Result<Value> {
     }
     let world = s.world_state()?;
     let computed = world.bodies.iter().find(|body| body.name == input.body_name).ok_or_else(|| bad(command, "surface world body disappeared"))?;
-    let inverse = solidcraft_doc::mat_inverse(&computed.source_transform).ok_or_else(|| bad(command, "surface placement is not invertible"))?;
+    let inverse = torno_doc::mat_inverse(&computed.source_transform).ok_or_else(|| bad(command, "surface placement is not invertible"))?;
     let local_frame = super::surface_bindings::transform(frame, &inverse, command)?;
     let provenance = TextureProvenance { author: input.provenance.author, source: input.provenance.source, license: input.provenance.license };
     let mut settings = (*s.doc.render).clone();

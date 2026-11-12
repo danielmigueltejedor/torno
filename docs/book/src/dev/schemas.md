@@ -15,7 +15,7 @@ command's exact parameters instead of guessing from prose.
 
 The tests in `crates/engine/src/schema/coverage_tests.rs` say what to do. A command without
 schemas is only a warning for now (the test prints the list); it will become required once the
-PR backlog is down, so give new commands both schemas now. Set `SOLIDCRAFT_SCHEMA_RULE_STRICT=1`
+PR backlog is down, so give new commands both schemas now. Set `TORNO_SCHEMA_RULE_STRICT=1`
 to make the missing-schema check fail today.
 
 - **"`x.y` has no input or output schema"** (or "no input schema", "no output schema"): a new
@@ -229,7 +229,7 @@ every caller the tests have: run the whole suite with the audit recorder and sum
 
 ```text
 mkdir -p audit
-SOLIDCRAFT_PARAM_AUDIT=$PWD/audit cargo test --workspace --no-fail-fast --features solidcraft-engine/param-audit
+TORNO_PARAM_AUDIT=$PWD/audit cargo test --workspace --no-fail-fast --features torno-engine/param-audit
 python3 scripts/param_audit.py audit
 ```
 

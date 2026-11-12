@@ -1,10 +1,10 @@
 //! How far a bounded plane reaches over a box: whether its section with a face in the box is
 //! the infinite plane's (every corner's foot on the plane inside its parameter rectangle).
 //!
-//! Not upstream: SolidCraft's composition (`plane_covers`), moved into the kernel so the
+//! Not upstream: Torno's composition (`plane_covers`), moved into the kernel so the
 //! modelling layer computes no geometry (docs/layers.md §1). A query with a certified value
 //! (owner rule 13564): it returns the margin and its enclosure, and the caller compares it
-//! with its tolerance. Unlike SolidCraft's, it runs on the plane's own placement and scales,
+//! with its tolerance. Unlike Torno's, it runs on the plane's own placement and scales,
 //! not on three evaluated points and a 2x2 solve.
 //!
 //! Deviations: none (no upstream counterpart). No recursion.

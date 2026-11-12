@@ -218,7 +218,7 @@ impl OriginalSurfaceTrimAccess<FilletObject, FaceId> for TrimAccess<'_, '_> {
             id,
             solver,
         )?;
-        // SolidCraft change (smlib d657afa): faces that
+        // Torno change (smlib d657afa): faces that
         // 'leaked' outside the fillet's boundaries are an error. The trim used to be
         // dropped then, and the fillet's faces merged into the body left whole.
         if leaked {
@@ -407,7 +407,7 @@ impl FilletSession<'_> {
         }
     }
 
-    /// SolidCraft change (smlib d657afa, `DoFilletingSteps`): an edge of the body with more than two faces
+    /// Torno change (smlib d657afa, `DoFilletingSteps`): an edge of the body with more than two faces
     /// (where two lumps of the body touch along a line, as a bore's wall touching the
     /// bottom face) bounds the material a blend takes off on one side of it, so it is
     /// marked with the common edges before the trims: the faces beyond it are not the

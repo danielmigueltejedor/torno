@@ -1,6 +1,6 @@
 use super::*;
 use crate::test_support::{key, pointer};
-use solidcraft_ui_registry as registry;
+use torno_ui_registry as registry;
 
 #[derive(Clone, Debug, Default, PartialEq)]
 struct Values {

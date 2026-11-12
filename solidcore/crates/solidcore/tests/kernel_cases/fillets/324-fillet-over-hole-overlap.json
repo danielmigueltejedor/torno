@@ -149,7 +149,7 @@
     "blend_dropping"
   ],
   "ungraded": [
-    "continuity: SolidCraft computes it"
+    "continuity: Torno computes it"
   ],
   "what": "a 4 mm fillet on a top edge whose round overlaps the rim of a through hole (the hole breaks into the round)",
   "why_not": []

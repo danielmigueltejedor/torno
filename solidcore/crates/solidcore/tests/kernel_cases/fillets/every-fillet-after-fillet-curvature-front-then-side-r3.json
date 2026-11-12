@@ -161,7 +161,7 @@
     "blend_dropping"
   ],
   "ungraded": [
-    "refusal \"larger than the faces beside its edges allow\": SolidCraft's wording of the kernel's error"
+    "refusal \"larger than the faces beside its edges allow\": Torno's wording of the kernel's error"
   ],
   "what": "a box's top front edge rounded curvature-continuous size 3, then the top side edge meeting it at the corner rounded the same way with its tangent chain, which runs on round the first round's end curve: refused, the size 3 has no room there",
   "why_not": []

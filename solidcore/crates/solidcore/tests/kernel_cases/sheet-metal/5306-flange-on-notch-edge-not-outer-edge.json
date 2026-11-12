@@ -72,6 +72,6 @@
   "ungraded": [],
   "what": "a 90 deg flange on the edge inside an open rectangular notch of a sheet-metal plate (100x60, notch 20 wide, 15 deep from the far edge): the flange was built on the plate's outer edge instead",
   "why_not": [
-    "body \"Body1\" is no kernel operation's output nor an operand: SolidCraft built it or changed the kernel's record"
+    "body \"Body1\" is no kernel operation's output nor an operand: Torno built it or changed the kernel's record"
   ]
 }

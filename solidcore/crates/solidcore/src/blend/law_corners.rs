@@ -3,7 +3,7 @@
 //! circles lie (a dip or a peak), the corner ball's zone at a dip, and the crossing curve
 //! between rail points at a peak.
 //!
-//! Not in the pinned upstream: the SolidCraft fork's law corners (tangency-labs/smlib#79,
+//! Not in the pinned upstream: the Torno fork's law corners (tangency-labs/smlib#79,
 //! 7babe17, 58d03ef and 62fcc82; WR-685's law-corner addendum, #2273). The round is the union of its balls: each side of a law
 //! corner is skinned on its own and ends on the corner ball's touch circle of its own
 //! side, through the same two rail points. Where the law dips the circle after lies ahead

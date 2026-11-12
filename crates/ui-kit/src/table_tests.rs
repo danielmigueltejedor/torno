@@ -1,6 +1,6 @@
 use super::*;
 use crate::test_support as harness;
-use solidcraft_ui_registry as registry;
+use torno_ui_registry as registry;
 
 #[test]
 fn fitting_flex_tables_have_no_horizontal_scrollbar_at_card_widths_and_pixel_scales() {

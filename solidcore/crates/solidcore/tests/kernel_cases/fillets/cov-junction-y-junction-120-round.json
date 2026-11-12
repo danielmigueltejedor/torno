@@ -275,7 +275,7 @@
     "blend_dropping"
   ],
   "ungraded": [
-    "continuity: SolidCraft computes it"
+    "continuity: Torno computes it"
   ],
   "what": "three pipes R4 at 120 degrees in a plane, their intersection edges rounded 1",
   "why_not": []

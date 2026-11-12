@@ -11,7 +11,7 @@
 use egui::{Event, Key, Modifiers};
 
 use super::{AgentChat, Item, markdown, markdown_view};
-use solidcraft_ui_text::tr;
+use torno_ui_text::tr;
 
 /// The messages Select All takes: what the user sent and what the assistant answered.
 fn message(item: &Item) -> Option<(bool, &str)> {

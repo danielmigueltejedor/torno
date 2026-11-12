@@ -9,11 +9,11 @@
 //! capped, nothing is allocated from a count read out of the file (lists grow as their items are
 //! read), and every refusal is an [`Error`], never a panic.
 //!
-//! Origin: SolidCraft's `crates/step/src/p21.rs` at `a5b71ca2` (MIT OR Apache-2.0). With the STEP
+//! Origin: Torno's `crates/step/src/p21.rs` at `a5b71ca2` (MIT OR Apache-2.0). With the STEP
 //! merge (#2577) this becomes solidcore's one Part 21 implementation; `step-import`'s `part21.rs`
 //! goes with #2585.
 //!
-//! Deviations from SolidCraft: [`Exchange::entities`] is a `BTreeMap` (was a `HashMap`), so
+//! Deviations from Torno: [`Exchange::entities`] is a `BTreeMap` (was a `HashMap`), so
 //! iterating it is in id order on every platform; what is stored and which definition wins a
 //! duplicate id are unchanged. The complex-instance part limit is the named `MAX_COMPLEX_PARTS`
 //! (was the literal 64). Otherwise only lint-driven rewrites that keep the same result (`map_or`,
@@ -21,7 +21,7 @@
 //! comments on every public item.
 //!
 //! Changed in review (#2591): a parse refuses with a typed [`Error`] (the messages are
-//! SolidCraft's); unterminated `\X2\`/`\X4\` runs decode in linear time; the parameter count is
+//! Torno's); unterminated `\X2\`/`\X4\` runs decode in linear time; the parameter count is
 //! capped ([`MAX_PARAMS`]), so is the record count ([`MAX_RECORDS`]), and a repeated id counts
 //! against [`MAX_ENTITIES`]; a number with no digit and an integer beyond i64 are refused; a
 //! leading byte order mark is skipped; `\S\` before a UTF-8 character is kept as written.
@@ -624,7 +624,7 @@ fn decode_string_with(raw: &[u8], mut find_end: impl FnMut(&[u8]) -> Option<usiz
                 }
             }
             // A run may be followed straight away by the backslash of the next escape
-            // (SolidCraft #2344).
+            // (Torno #2344).
             if run {
                 continue;
             }
@@ -994,7 +994,7 @@ FILE_NAME('a');junk').;ENDSEC;DATA;ENDSEC;END-ISO-10303-21;"
         assert_eq!(decode_string(b"\\X\\E9"), "\u{e9}");
         assert_eq!(decode_string(b"a\\X2\\00E900E8\\X0\\b"), "a\u{e9}\u{e8}b");
         assert_eq!(decode_string(b"\\"), "\\");
-        // One run per character, as SolidCraft's `step_out` writes them (SolidCraft #2344).
+        // One run per character, as Torno's `step_out` writes them (Torno #2344).
         assert_eq!(
             decode_string(b"\\X2\\5706\\X0\\\\X2\\89D2\\X0\\20"),
             "\u{5706}\u{89d2}20"

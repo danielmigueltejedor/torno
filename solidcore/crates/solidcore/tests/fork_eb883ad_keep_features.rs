@@ -1,4 +1,4 @@
-//! The SolidCraft fork's tangency-labs/smlib@eb883ad (WR-703, #2273): a boss or a hole inside a
+//! The Torno fork's tangency-labs/smlib@eb883ad (WR-703, #2273): a boss or a hole inside a
 //! round's band stays, the round trimmed round it in place; the cases are the fork's ddbb782.
 //!
 //! The 40 x 30 x 20 block's top front edge (y = 0, z = 20) is rounded; the feature, a cylinder of

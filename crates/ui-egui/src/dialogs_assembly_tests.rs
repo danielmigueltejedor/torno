@@ -1,5 +1,5 @@
 use serde_json::json;
-use solidcraft_engine::Session;
+use torno_engine::Session;
 
 use super::*;
 use crate::Services;
@@ -31,7 +31,7 @@ fn joint_from_two_snaps() {
     d.pick(&app.session, fb);
     if let Kind::Assembly(Asm::Joint(f)) = &mut d.kind {
         f.kind = 1;
-        f.fit_limits(&solidcraft_engine::doc::Document::default());
+        f.fit_limits(&torno_engine::doc::Document::default());
         f.limits[0] = (true, "-45 deg".into(), "45 deg".into());
     }
     let c = apply_commands(&app, &d).unwrap();
@@ -123,7 +123,7 @@ fn revolute_joint_uses_the_picked_straight_edges() {
     let a = app.session.doc.find_component("A").unwrap();
     let b = app.session.doc.find_component("B").unwrap();
     let ground = app.session.doc.occurrence_of(a).unwrap().transform;
-    let placed = |app: &SolveApp, p| solidcraft_engine::doc::apply_point(&app.session.doc.occurrence_of(b).unwrap().transform, p);
+    let placed = |app: &SolveApp, p| torno_engine::doc::apply_point(&app.session.doc.occurrence_of(b).unwrap().transform, p);
     let ends = [Vec3::new(30.0, 0.0, 10.0), Vec3::new(30.0, 20.0, 10.0)];
     let before = ends.map(|p| placed(&app, p));
     let off_axis = Vec3::new(50.0, 10.0, 10.0);
@@ -178,9 +178,8 @@ fn arms_jointed_at_edges_and_corners_follow_a_thicker_arm() {
         for (id, p) in apply_commands(&app, &d).unwrap() {
             app.run(&id, p).unwrap();
         }
-        let world = |app: &SolveApp, o: u64, p: Vec3| {
-            solidcraft_engine::doc::apply_point(&solidcraft_engine::doc::joints::occurrence_world(&app.session.doc, o), p)
-        };
+        let world =
+            |app: &SolveApp, o: u64, p: Vec3| torno_engine::doc::apply_point(&torno_engine::doc::joints::occurrence_world(&app.session.doc, o), p);
         // The spots: a round edge's centre, else the pick; B's in the arm's own coordinates.
         let spot = |p: Vec3| if what == "round edge" { Vec3::new(p.x - 3.0, p.y, p.z) } else { p };
         let (spot_a, spot_b) = (spot(pa), spot(pb) - Vec3::new(0.0, 60.0, 0.0));
@@ -285,7 +284,7 @@ fn editing_a_saved_joint_keeps_its_explicit_axis() {
     .unwrap();
     let joint = app.session.doc.assembly.joints[0].clone();
     let saved = app.session.doc.to_json();
-    app = SolveApp::new(Session::new(solidcraft_engine::doc::format::read(&saved).unwrap()), Services::default());
+    app = SolveApp::new(Session::new(torno_engine::doc::format::read(&saved).unwrap()), Services::default());
     let mut d = edit_joint(&app, joint.id).unwrap();
     if let Kind::Assembly(Asm::Joint(f)) = &mut d.kind {
         f.flip = true;
@@ -459,7 +458,7 @@ fn a_hole_side_shows_its_wall_not_the_plate_beside_it() {
     )
     .unwrap();
     let joint = app.session.doc.assembly.joints[0].clone();
-    assert!(matches!(joint.a.snap, solidcraft_engine::doc::joints::Snap::CircleCenter { face: Some(_), .. }), "{:?}", joint.a.snap);
+    assert!(matches!(joint.a.snap, torno_engine::doc::joints::Snap::CircleCenter { face: Some(_), .. }), "{:?}", joint.a.snap);
     let d = edit_joint(&app, joint.id).unwrap();
     let item = d.inputs[0].items.first().unwrap_or_else(|| panic!("no pre-fill for the hole side"));
     let snap = snap_of(&app.session, item).unwrap();
@@ -506,7 +505,7 @@ fn a_picked_snap_is_measured_once_not_every_frame() {
     let face = snap_of(&h.app.session, &bottom).unwrap();
     assert!(face.at.dist(Vec3::new(65.0, 5.0, 0.0)) < 1e-9 && face.z.dist(-Vec3::Z) < 1e-9, "{face:?}");
     let cmds = apply_commands(&h.app, h.app.dialog.as_ref().unwrap()).unwrap();
-    let ((), work) = solidcraft_engine::kernel::profile::capture(|| {
+    let ((), work) = torno_engine::kernel::profile::capture(|| {
         for _ in 0..3 {
             h.frame();
             apply_commands(&h.app, h.app.dialog.as_ref().unwrap()).unwrap();
@@ -553,7 +552,7 @@ fn as_built_animation_drives_the_new_shared_id_and_handles_exhaustion() {
     app.session.doc_mut().next_id = u64::MAX;
     let cmds = preview_commands(&app, &d).unwrap();
     let result = app.session.scratch().execute(&cmds[0].0, &cmds[0].1);
-    assert!(result.is_err() && !matches!(result, Err(solidcraft_engine::EngineError::Internal(..))), "{result:?}");
+    assert!(result.is_err() && !matches!(result, Err(torno_engine::EngineError::Internal(..))), "{result:?}");
 
     // A programmatic document can also contain the largest possible joint id. The old
     // preview added one to that id without checking, before the engine's panic guard.
@@ -563,7 +562,7 @@ fn as_built_animation_drives_the_new_shared_id_and_handles_exhaustion() {
     let cmds = preview_commands(&app, &d).unwrap();
     assert_eq!(cmds.len(), 1, "an exhausted preview must not invent a drive target");
     let result = app.session.scratch().execute(&cmds[0].0, &cmds[0].1);
-    assert!(result.is_err() && !matches!(result, Err(solidcraft_engine::EngineError::Internal(..))), "{result:?}");
+    assert!(result.is_err() && !matches!(result, Err(torno_engine::EngineError::Internal(..))), "{result:?}");
 }
 
 /// As-built joints and rigid groups take components from body picks; New Component makes one
@@ -618,8 +617,8 @@ fn straight_edge_snap_follows_a_rotated_occurrence() {
     let b = app.session.doc.find_component("B").unwrap();
     app.run("occurrence.move", json!({"occurrence": occ(&app, "B"), "axis": [1, 2, 3], "angle": "37 deg", "translate": [50, 20, 10]})).unwrap();
     let transform = app.session.doc.occurrence_of(b).unwrap().transform;
-    let mid = solidcraft_engine::doc::apply_point(&transform, Vec3::new(30.0, 10.0, 10.0));
-    let axis = solidcraft_engine::doc::apply_vector(&transform, Vec3::Y);
+    let mid = torno_engine::doc::apply_point(&transform, Vec3::new(30.0, 10.0, 10.0));
+    let axis = torno_engine::doc::apply_vector(&transform, Vec3::Y);
     let st = crate::open_meshing::session_world(&app.session);
     let mesh = st.body("Body2").unwrap().mesh();
     let index = mesh.edges.iter().position(|e| polyline_mid(e).dist(mid) < 1e-6).unwrap();
@@ -740,9 +739,9 @@ fn picks_on_one_component_say_why_and_offer_components() {
         frame(&mut app, vec![]);
     }
     let out = frame(&mut app, vec![]);
-    let why = solidcraft_ui_text::format("joint.one_component", &[("bodies", "Body1, Body2")]);
+    let why = torno_ui_text::format("joint.one_component", &[("bodies", "Body1, Body2")]);
     assert!(text_at(&out, &why).is_some(), "the dialog says why");
-    let at = text_at(&out, solidcraft_ui_text::tr("cmd.component_from_bodies")).expect("and offers the way out");
+    let at = text_at(&out, torno_ui_text::tr("cmd.component_from_bodies")).expect("and offers the way out");
     let button = |pressed| egui::Event::PointerButton { pos: at, button: egui::PointerButton::Primary, pressed, modifiers: Default::default() };
     frame(&mut app, vec![egui::Event::PointerMoved(at)]);
     frame(&mut app, vec![button(true)]);
@@ -977,7 +976,7 @@ fn joint_origins_follow_their_component() {
     let at = |app: &SolveApp| {
         let v = origins_world(&app.session);
         let (_, m) = v.iter().find(|(n, _)| n == "Top of B").unwrap();
-        solidcraft_engine::doc::apply_point(m, Vec3::ZERO)
+        torno_engine::doc::apply_point(m, Vec3::ZERO)
     };
     assert!(at(&app).dist(Vec3::new(40.0, 10.0, 10.0)) < 1e-6, "{:?}", at(&app));
     let b = occ(&app, "B");
@@ -1242,7 +1241,7 @@ fn motion_trace_keeps_the_picked_point_path() {
     let at = |p: &Value| Vec3::new(p["point"][0].as_f64().unwrap(), p["point"][1].as_f64().unwrap(), p["point"][2].as_f64().unwrap());
     assert!(at(p).dist(placed) < 1e-6, "{p}");
     let mut scratch = app.session.scratch();
-    scratch.param_check = solidcraft_engine::schema::ParamCheck::Strict;
+    scratch.param_check = torno_engine::schema::ParamCheck::Strict;
     let preview = scratch.execute("motion.trace", &super::trace::preview_params(p.clone())).unwrap();
     assert!(preview["samples"] == 100 && preview["stopped_at"].is_null(), "{preview}");
     crate::dialogs::run_dialog(&mut app, &d).unwrap();
@@ -1264,7 +1263,7 @@ fn motion_trace_keeps_the_picked_point_path() {
     let start = app.session.scratch().execute("motion.trace", &p).unwrap()["points"][0].clone();
     let (_, _, seen, put) = trace::placement(&app.session, &d.inputs).unwrap();
     let drawn = {
-        use solidcraft_engine::doc::{apply_point, mat_inverse};
+        use torno_engine::doc::{apply_point, mat_inverse};
         apply_point(&seen, apply_point(&mat_inverse(&put).unwrap(), at(&json!({"point": start}))))
     };
     assert!(drawn.dist(shown) < 1e-6, "{drawn:?} wants {shown:?}");
@@ -1276,7 +1275,7 @@ fn motion_trace_keeps_the_picked_point_path() {
         .doc
         .features
         .iter()
-        .find(|f| f.component == component && matches!(f.kind, solidcraft_engine::doc::FeatureKind::Box { .. }))
+        .find(|f| f.component == component && matches!(f.kind, torno_engine::doc::FeatureKind::Box { .. }))
         .unwrap()
         .param_names[2]
         .clone();
@@ -1336,10 +1335,10 @@ fn components_from_bodies_dialog_select_all_cancel_and_ok() {
     assert!(matches!(d.kind, Kind::Assembly(Asm::FromBodies)));
     assert!(apply_commands(&h.app, d).is_err(), "OK requires at least one body");
     assert_eq!(h.app.session.doc, before);
-    h.step(&json!({"widget":solidcraft_ui_text::tr("ui.select_all")})).unwrap();
+    h.step(&json!({"widget":torno_ui_text::tr("ui.select_all")})).unwrap();
     let commands = apply_commands(&h.app, h.app.dialog.as_ref().unwrap()).unwrap();
     assert_eq!(commands, vec![("component.from_bodies".into(), json!({"bodies":names}))]);
-    if let Ok(path) = std::env::var("SOLIDCRAFT_COMPONENTS_DIALOG_EVIDENCE") {
+    if let Ok(path) = std::env::var("TORNO_COMPONENTS_DIALOG_EVIDENCE") {
         let ctx = crate::fonts::test_context();
         let bounds = egui::Rect::from_min_size(egui::Pos2::ZERO, egui::vec2(1600.0, 1000.0));
         let mut textures = Default::default();
@@ -1363,7 +1362,7 @@ fn components_from_bodies_dialog_select_all_cancel_and_ok() {
     h.step(&json!({"start":"component.from_bodies"})).unwrap();
     let d = h.app.dialog.as_ref().unwrap();
     assert_eq!(d.inputs[0].items.body_names(), vec![names[0].clone()]);
-    h.step(&json!({"widget":solidcraft_ui_text::tr("ui.select_all")})).unwrap();
+    h.step(&json!({"widget":torno_ui_text::tr("ui.select_all")})).unwrap();
     h.step(&json!({"widget":"OK"})).unwrap();
     assert!(h.app.dialog.is_none());
     for name in &names {
@@ -1417,8 +1416,8 @@ fn find_limits_fills_the_limits_from_where_the_door_meets_the_block() {
         frame(app, vec![button(true)]);
         frame(app, vec![button(false)]);
     };
-    click(&mut app, &solidcraft_ui_text::tr_label("Limits").to_uppercase());
-    click(&mut app, solidcraft_ui_text::tr("joint.find_limits"));
+    click(&mut app, &torno_ui_text::tr_label("Limits").to_uppercase());
+    click(&mut app, torno_ui_text::tr("joint.find_limits"));
     assert_eq!(*app.session.doc, *before, "nothing changes until OK");
     let Some(Kind::Assembly(Asm::Joint(f))) = app.dialog.as_ref().map(|d| &d.kind) else { panic!("the dialog stays open") };
     // The door's face 4 mm off its hinge line meets the block's corner (80, 30) opening, and the
@@ -1457,11 +1456,7 @@ fn find_limits_searches_the_joint_as_edited_and_leaves_a_free_side() {
     // from it the other, where nothing is in its way.
     assert_eq!(f.limits[0].0, untouched.0, "one side found: the row stays as it was: {:?}", f.found);
     assert!(f.limits[0].1 == untouched.1 || f.limits[0].2 == untouched.2, "{:?} {:?}", f.limits, f.found);
-    assert!(
-        f.found[0].contains(solidcraft_ui_text::tr_label("Minimum")) && f.found[0].contains(solidcraft_ui_text::tr_label("Maximum")),
-        "{:?}",
-        f.found
-    );
+    assert!(f.found[0].contains(torno_ui_text::tr_label("Minimum")) && f.found[0].contains(torno_ui_text::tr_label("Maximum")), "{:?}", f.found);
     assert!(f.found_note.is_none(), "{:?}", f.found_note);
     // Edited after the search, the joint is no longer the one searched (its notes then go).
     let searched = f.searched.clone().expect("what was searched");

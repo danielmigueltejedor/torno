@@ -297,7 +297,7 @@ pub struct MassProperties {
 
 /// The geometry of a display mesh (solidcore-tess's [`Mesh`]): its measures, point and ray
 /// queries, and the edge chains and face patches picking extends to. In scope with
-/// `use solidcraft_geom::prelude::*`.
+/// `use torno_geom::prelude::*`.
 pub trait MeshGeom {
     /// Generate angle-weighted corner normals without changing positions or connectivity.
     /// Only opposite, two-face manifold edges join a smoothing fan. A group of zero

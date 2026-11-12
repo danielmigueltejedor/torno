@@ -5,8 +5,8 @@
 
 use solidcore_record::Vec3;
 use solidcore_record::brep::Surface;
-use solidcraft_geom::brep::eval::SurfaceEval;
-use solidcraft_geom::prelude::*;
+use torno_geom::brep::eval::SurfaceEval;
+use torno_geom::prelude::*;
 
 /// A degree-`p` × degree-`q` surface on a net of `p + 3` × `q + 3` points with interior knots each
 /// way, bent in z: its knots and points (`rows[i][j]`, i along u).

@@ -49,6 +49,6 @@
   "ungraded": [],
   "what": "011's Tr20x4 thread with a chamfered tip and no depth: refused, ISO 4753 is for metric threads",
   "why_not": [
-    "the failure is SolidCraft's, not a kernel operation's: step 2 (solid.thread): ISO 4753's chamfered end is for ISO metric threads: give a trapezoidal thread its chamfer depth (its root is 2.25 mm deep)"
+    "the failure is Torno's, not a kernel operation's: step 2 (solid.thread): ISO 4753's chamfered end is for ISO metric threads: give a trapezoidal thread its chamfer depth (its root is 2.25 mm deep)"
   ]
 }

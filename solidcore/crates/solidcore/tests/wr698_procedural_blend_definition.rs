@@ -573,7 +573,7 @@ use solidcore::surface::procedural_blend::record::{
     ProceduralBlendRecord, RadiusRecord, SupportKindRecord, SupportRecord,
 };
 
-/// The record through JSON (as SolidCraft's record would store it), back to the kernel
+/// The record through JSON (as Torno's record would store it), back to the kernel
 /// and to a record again: `(json, record back, json back)`.
 fn round_trip(k: &Kernel, pb: &ProceduralBlend) -> (String, ProceduralBlend, String) {
     let rec = to_record(k, pb).unwrap();

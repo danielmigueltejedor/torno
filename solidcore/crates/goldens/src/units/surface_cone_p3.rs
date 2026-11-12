@@ -247,7 +247,7 @@ fn cylinder(origin: [f64; 3], radius: f64, height: f64) -> Vec<f64> {
     ]
 }
 
-/// Parallel-axis cylinders (SolidCraft boolean: R=20 at z 2..13 vs r=3.04 through
+/// Parallel-axis cylinders (Torno boolean: R=20 at z 2..13 vs r=3.04 through
 /// (0,20,2)) with full and v-trimmed face domains. Domains are fractions of the natural
 /// uv domain, which for a cylinder is v in [0, height] (height 11 here).
 fn parallel_cylinder_cases() -> Vec<Case> {

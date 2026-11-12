@@ -10,9 +10,9 @@ use crate::offset::{Surf, face_edges, surf_of};
 use crate::{KernelError, Result, guard};
 use solidcore_record::brep::{Brep, Curve, Frame, Loop, Surface};
 use solidcore_record::{Loop2, Plane, Region2, Seg2, Vec2, Vec3};
-use solidcraft_geom::brep::eval::CurveEval;
-use solidcraft_geom::brep::form;
-use solidcraft_geom::prelude::*;
+use torno_geom::brep::eval::CurveEval;
+use torno_geom::brep::form;
+use torno_geom::prelude::*;
 
 fn fail(s: &str) -> KernelError {
     KernelError::Invalid(format!("cylinder emboss: {s}"))

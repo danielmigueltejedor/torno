@@ -2,7 +2,7 @@ use crate::test_support::*;
 use crate::*;
 
 use egui::Ui;
-use solidcraft_ui_registry as registry;
+use torno_ui_registry as registry;
 
 #[test]
 fn footer_clicks_and_keyboard_respect_validation_and_editor_focus() {
@@ -78,7 +78,7 @@ fn enabled_buttons_show_the_pointing_hand_and_disabled_ones_do_not() {
 /// Cancel are not affected. The same holds for a confirmation's third action on the left.
 #[test]
 fn apply_with_nothing_to_apply_is_disabled_for_pointer_keyboard_and_accessibility() {
-    use solidcraft_theme::Tokens;
+    use torno_theme::Tokens;
     for confirm in [false, true] {
         for nothing_to_apply in [true, false] {
             let live = !nothing_to_apply;
@@ -155,13 +155,13 @@ fn apply_with_nothing_to_apply_is_disabled_for_pointer_keyboard_and_accessibilit
 #[test]
 fn positioned_shared_buttons_center_text_and_respect_disabled_clicks_in_both_themes() {
     use egui::{Pos2, RawInput, Rect, RichText, Shape, vec2};
-    use solidcraft_theme::Tokens;
-    let previous = solidcraft_theme::is_dark();
+    use torno_theme::Tokens;
+    let previous = torno_theme::is_dark();
     for dark in [false, true] {
-        solidcraft_theme::set_dark(dark);
+        torno_theme::set_dark(dark);
         for enabled in [false, true] {
             let ctx = crate::test_support::context();
-            solidcraft_theme::apply(&ctx);
+            torno_theme::apply(&ctx);
             let rects =
                 [Rect::from_min_size(egui::pos2(20.0, 30.0), vec2(108.0, 32.0)), Rect::from_min_size(egui::pos2(140.0, 30.0), vec2(108.0, 32.0))];
             let mut clicks = [0_usize; 2];
@@ -202,7 +202,7 @@ fn positioned_shared_buttons_center_text_and_respect_disabled_clicks_in_both_the
                     .expect("native button label is painted");
                 if enabled && index == 0 {
                     let ink = text.galley.job.sections.first().expect("primary text format").format.color;
-                    assert!(solidcraft_theme::contrast_ratio(ink, Tokens::get().form_primary) >= 4.5, "primary label remains legible in both themes");
+                    assert!(torno_theme::contrast_ratio(ink, Tokens::get().form_primary) >= 4.5, "primary label remains legible in both themes");
                 }
                 let center = text.pos + text.galley.size() / 2.0;
                 assert!((center.x - rects[index].center().x).abs() <= 1.0, "{label} horizontal center: {center:?}");
@@ -215,5 +215,5 @@ fn positioned_shared_buttons_center_text_and_respect_disabled_clicks_in_both_the
             assert_eq!(clicks, if enabled { [1, 1] } else { [0, 0] });
         }
     }
-    solidcraft_theme::set_dark(previous);
+    torno_theme::set_dark(previous);
 }

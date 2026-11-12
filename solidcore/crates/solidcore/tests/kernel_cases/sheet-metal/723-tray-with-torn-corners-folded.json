@@ -109,6 +109,6 @@
   "ungraded": [],
   "what": "a 120 x 90 tray with four 20 mm 90 degree flanges and the tear corner relief: each torn bend end is a helical cut across the bend",
   "why_not": [
-    "body \"Body1\" is no kernel operation's output nor an operand: SolidCraft built it or changed the kernel's record"
+    "body \"Body1\" is no kernel operation's output nor an operand: Torno built it or changed the kernel's record"
   ]
 }

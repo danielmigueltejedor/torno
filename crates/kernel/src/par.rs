@@ -48,8 +48,8 @@ pub fn map_with_local_pools<T: Sync, R: Send>(items: &[T], max_threads: usize, f
             }
             let pool = cell.get().ok_or_else(|| crate::KernelError::Failed("missing mesh worker".into()))?;
             let scope = crate::validation::current();
-            let stop = solidcraft_smlib::stop::current();
-            pool.install(|| solidcraft_smlib::stop::scoped(stop, || crate::validation::within(scope, || guard("mesh worker", || f(item)))))
+            let stop = torno_smlib::stop::current();
+            pool.install(|| torno_smlib::stop::scoped(stop, || crate::validation::within(scope, || guard("mesh worker", || f(item)))))
         })
     };
     #[cfg(target_arch = "wasm32")]
@@ -65,9 +65,9 @@ pub fn map_with_local_pools<T: Sync, R: Send>(items: &[T], max_threads: usize, f
 pub fn map_on_threads<T: Sync, R: Send>(items: &[T], max_threads: usize, f: impl Fn(&T) -> R + Sync) -> Vec<Option<R>> {
     // The threads run under the caller's validation mode (`crate::validation`) and stop token.
     let scope = crate::validation::current();
-    let stop = solidcraft_smlib::stop::current();
+    let stop = torno_smlib::stop::current();
     let one = |item: &T| {
-        solidcraft_smlib::stop::scoped(stop.clone(), || crate::validation::within(scope.clone(), || guard("parallel item", || Ok(f(item))).ok()))
+        torno_smlib::stop::scoped(stop.clone(), || crate::validation::within(scope.clone(), || guard("parallel item", || Ok(f(item))).ok()))
     };
     #[cfg(not(target_arch = "wasm32"))]
     {
@@ -87,7 +87,7 @@ pub fn map_on_threads<T: Sync, R: Send>(items: &[T], max_threads: usize, f: impl
             let mut out: Vec<Option<R>> = std::iter::repeat_with(|| None).take(items.len()).collect();
             std::thread::scope(|scope| {
                 // A thread that cannot start leaves its share to the others.
-                let helpers: Vec<_> = (1..threads).filter_map(|_| kernel_thread("solidcraft-each").spawn_scoped(scope, work).ok()).collect();
+                let helpers: Vec<_> = (1..threads).filter_map(|_| kernel_thread("torno-each").spawn_scoped(scope, work).ok()).collect();
                 let mut all = work();
                 for h in helpers {
                     // `work` never panics (every item runs under the guard).

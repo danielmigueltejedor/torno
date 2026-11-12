@@ -52,6 +52,6 @@
   "ungraded": [],
   "what": "a block with a closed cavity written as BREP_WITH_VOIDS whose void shell (outward-facing faces) is turned by ORIENTED_CLOSED_SHELL .F.; the cavity must be taken out, not added",
   "why_not": [
-    "body \"Hollow\" is no kernel operation's output nor an operand: SolidCraft built it or changed the kernel's record"
+    "body \"Hollow\" is no kernel operation's output nor an operand: Torno built it or changed the kernel's record"
   ]
 }

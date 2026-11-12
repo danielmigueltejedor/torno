@@ -2,12 +2,12 @@
 //! No render is started. Geometry and the original OPUS Master setup are retained.
 use serde_json::{Value, json};
 use solidcore_record::Vec3;
-use solidcraft_engine::{
+use std::{error::Error, fs, path::PathBuf, sync::Arc};
+use torno_engine::{
     Session,
     doc::{Document, FeatureKind, MeshData, render_settings::RenderSetup},
 };
-use solidcraft_geom::prelude::*;
-use std::{error::Error, fs, path::PathBuf, sync::Arc};
+use torno_geom::prelude::*;
 
 fn require(condition: bool, message: &str) -> Result<(), Box<dyn Error>> {
     if condition { Ok(()) } else { Err(message.into()) }
@@ -161,7 +161,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     require(args.next().is_none(), "unexpected argument")?;
     fs::create_dir(&output)?;
     let original = fs::read(&baseline)?;
-    let mut doc: Document = solidcraft_io::read_design(&original)?;
+    let mut doc: Document = torno_io::read_design(&original)?;
     let master = doc.render.setups.get("OPUS Master").cloned().ok_or("missing OPUS Master")?;
     require(master.surfaces.len() == 104 && master.optics.len() == 30 && master.coats.len() == 6, "fixture bindings differ from OPUS baseline")?;
     require(doc.components.len() == 82 && doc.assembly.joints.len() == 81 && doc.assembly.links.len() == 15, "fixture assembly counts differ")?;
@@ -209,9 +209,9 @@ fn main() -> Result<(), Box<dyn Error>> {
         "assembly, pose or occurrence metadata changed",
     )?;
     let copy_path = output.join("OPUS-04-physical-reference.sc");
-    let copy = solidcraft_io::write_design_container(&session.doc)?;
+    let copy = torno_io::write_design_container(&session.doc)?;
     fs::write(&copy_path, &copy)?;
-    let reopened = solidcraft_io::read_design(&copy)?;
+    let reopened = torno_io::read_design(&copy)?;
     require(reopened == *session.doc, "copy changed on cold reopen")?;
     fs::write(output.join("baseline-scene.json"), serde_json::to_vec_pretty(&baseline_scene)?)?;
     fs::write(output.join("reference-setups.json"), serde_json::to_vec_pretty(&setup_receipts)?)?;

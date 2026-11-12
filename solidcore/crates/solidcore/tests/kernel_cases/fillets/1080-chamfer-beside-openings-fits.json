@@ -165,7 +165,7 @@
     "blend_dropping"
   ],
   "ungraded": [
-    "continuity: SolidCraft computes it"
+    "continuity: Torno computes it"
   ],
   "what": "a 4 mm chamfer on the top front edge of a cube with three square openings stays clear of the openings (they start 5 mm in)",
   "why_not": []

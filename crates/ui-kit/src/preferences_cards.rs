@@ -5,7 +5,7 @@
 use super::{metrics::dimension, preferences::centred_text};
 use crate::BackingTooltipExt as _;
 use egui::{Color32, FontId, Painter, Rect, Response, Sense, Stroke, StrokeKind, Ui, pos2, vec2};
-use solidcraft_theme::Tokens;
+use torno_theme::Tokens;
 
 /// How a card or tile looks in a state. Kept separate from painting so the state rules can be tested.
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -187,7 +187,7 @@ fn paint_card(ui: &mut Ui, card: &Card, width: f32, tile: bool) -> Response {
     }
     let kind = if tile { egui::Role::CheckBox } else { egui::Role::RadioButton };
     response.widget_info(|| egui::WidgetInfo::selected(kind, enabled, card.selected, card.label));
-    solidcraft_ui_registry::publish_target(&format!("prefs:card:{}", card.label), rect);
+    torno_ui_registry::publish_target(&format!("prefs:card:{}", card.label), rect);
     let response = response.backing_on_hover_text(card.label);
     let response = if let Some(options) = card.options { response.backing_on_hover_text(options) } else { response };
     if enabled { response.on_hover_cursor(egui::CursorIcon::PointingHand) } else { response }
@@ -282,8 +282,8 @@ pub fn settings_picture_choices_sized(
                         for (column, option) in choices.iter().enumerate() {
                             let index = row * columns + column;
                             let response = picture_card(ui, &option.card(selected == index, enabled, size.aspect), width);
-                            solidcraft_ui_registry::publish_target(&format!("prefs:{key}:{}", option.key), response.rect);
-                            solidcraft_ui_registry::publish_target(&format!("dialog:{label}:{}", option.label), response.rect);
+                            torno_ui_registry::publish_target(&format!("prefs:{key}:{}", option.key), response.rect);
+                            torno_ui_registry::publish_target(&format!("dialog:{label}:{}", option.label), response.rect);
                             if !indexed && super::settings_search::texts_hit(ui, &[option.label]) {
                                 super::settings_search::remember(ui, option.label, response.rect);
                                 indexed = true;
@@ -366,7 +366,7 @@ pub fn preset_card(
         tick(p, Rect::from_center_size(centre, vec2(t.space_12, t.space_12)), dim(t.on_accent));
     }
     response.widget_info(|| egui::WidgetInfo::selected(egui::Role::RadioButton, enabled, selected, name));
-    solidcraft_ui_registry::publish_target(&format!("prefs:preset:{name}"), rect);
+    torno_ui_registry::publish_target(&format!("prefs:preset:{name}"), rect);
     if enabled { response.on_hover_cursor(egui::CursorIcon::PointingHand) } else { response }
 }
 
@@ -381,7 +381,7 @@ pub fn help_icon(ui: &mut Ui, text: &str) -> Response {
     p.circle_filled(pos2(rect.center().x, rect.top() + size * 0.3), 0.9, ink);
     p.line_segment([pos2(rect.center().x, rect.top() + size * 0.46), pos2(rect.center().x, rect.bottom() - size * 0.24)], Stroke::new(1.2, ink));
     response.widget_info(|| egui::WidgetInfo::labeled(egui::Role::Label, ui.is_enabled(), text));
-    solidcraft_ui_registry::publish_target("prefs:help_icon", rect);
+    torno_ui_registry::publish_target("prefs:help_icon", rect);
     response.backing_on_hover_text(text)
 }
 
@@ -439,10 +439,10 @@ pub fn settings_plugin_card(
         let tile = Rect::from_center_size(pos2(rect.left() + tile_side / 2.0, header_center), vec2(tile_side, tile_side));
         ui.painter().rect_filled(tile, t.radius_lg, t.selected_bg);
         crate::icons::paint_ink(ui.painter(), tile.shrink(t.space_8), "settings_plug", t.form_primary);
-        solidcraft_ui_registry::publish_rect(&format!("prefs:plugin:{key}:icon"), tile);
+        torno_ui_registry::publish_rect(&format!("prefs:plugin:{key}:icon"), tile);
         let at = pos2(tile.right() + t.space_12, header_center - text_height / 2.0);
         let title_rect = Rect::from_min_size(at, title.size());
-        solidcraft_ui_registry::publish_rect(&format!("prefs:plugin:{key}:title"), title_rect);
+        torno_ui_registry::publish_rect(&format!("prefs:plugin:{key}:title"), title_rect);
         let version_at = pos2(at.x + title.size().x + t.space_8, at.y + (header_height - version_galley.size().y) / 2.0);
         ui.painter().galley(pos2(at.x, at.y + (header_height - title.size().y) / 2.0), title, t.form_ink);
         ui.painter().galley(version_at, version_galley, t.form_dim);

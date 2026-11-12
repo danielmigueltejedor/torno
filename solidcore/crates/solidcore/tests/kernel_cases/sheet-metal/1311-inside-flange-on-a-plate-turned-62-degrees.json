@@ -54,6 +54,6 @@
   "ungraded": [],
   "what": "a 100 x 60 plate turned 62 degrees about the origin with a 90 degree inside flange on one edge: the trimmed corner falls on the sew grid and the flange failed to close",
   "why_not": [
-    "body \"Body1\" is no kernel operation's output nor an operand: SolidCraft built it or changed the kernel's record"
+    "body \"Body1\" is no kernel operation's output nor an operand: Torno built it or changed the kernel's record"
   ]
 }

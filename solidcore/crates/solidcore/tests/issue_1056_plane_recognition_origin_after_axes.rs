@@ -4,13 +4,13 @@
 //! be perpendicular to X. With a domain far from v = 0 the turn is multiplied by the
 //! distance to the origin.
 //!
-//! The case is SolidCraft rig sweeps/4305's swept groove wall: a planar bilinear patch
+//! The case is Torno rig sweeps/4305's swept groove wall: a planar bilinear patch
 //! over u 0..1, v 4..5, 40 mm along v, whose v direction leans `TURN = 3.2116e-8` rad
 //! off perpendicular to u. Closed form (to first order in `TURN`, the second-order terms
 //! are below 1e-14 mm):
 //! - flag off (upstream): the corner at v = 4 is `4 * 40 * TURN = 5.1386e-6` mm off the
 //!   wall and the corner at v = 5 is `200 * TURN = 6.4232e-6` mm off. Those are the
-//!   vertex/face gaps the SolidCraft check refused against its 5e-6 limit.
+//!   vertex/face gaps the Torno check refused against its 5e-6 limit.
 //! - flag on (fixed): the corner at v = 4 is on the wall and the corner at v = 5 is off
 //!   by the wall's own span times the turn, `40 * TURN = 1.2846e-6` mm. This is the
 //!   analytic limit, since an orthogonal plane cannot follow the lean exactly.
@@ -77,7 +77,7 @@ fn flag_off_places_the_origin_along_the_unturned_axis() {
         "v = 5 corner gap {high:e}, expected {:e}",
         5.0 * SPAN * TURN
     );
-    // Over SolidCraft's 5e-6 vertex gap limit, as the refused cut reported.
+    // Over Torno's 5e-6 vertex gap limit, as the refused cut reported.
     assert!(low > 5.0e-6 && high > 5.0e-6);
 }
 

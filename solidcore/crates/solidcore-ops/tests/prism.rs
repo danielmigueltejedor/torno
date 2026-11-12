@@ -1,5 +1,5 @@
 //! The prism family: planar region booleans and extrusion, prism sections and equivalence.
-//! Moved from SolidCraft's `crates/kernel/src/prism.rs` and `prism_measure.rs` tests (see
+//! Moved from Torno's `crates/kernel/src/prism.rs` and `prism_measure.rs` tests (see
 //! notes-f-prism/TESTS.md for each move). The oracles are closed forms; the tests compute them
 //! with the maths the library itself may not use.
 #![allow(

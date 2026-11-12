@@ -5,13 +5,13 @@
 //! rounds of one kind, all `SM_FSG_BLEND_CURVE`, are G2, so `SM_BCE_SETBACK` with fill order
 //! 2). Each corner builds a valid body.
 //!
-//! The bodies are SolidCraft's kernel-rig inputs (brett19/solidcraft `b47da26e8`,
+//! The bodies are Torno's kernel-rig inputs (brett19/torno `b47da26e8`,
 //! `perf-inputs/2369-g2-corners/*/before-fillet.smb`), each taken just before its fillet.
 //! They are test data only:
 //! - `data/issue_2369_g2_bar_corner.smb` (sha256 `f3bff138...cc6d`): a bar 40 x 16 x 10 whose
 //!   far end is a half disc R8 about (40, 8), with a disc R8 on its top extruded 10 up and
 //!   joined. The three edges at its top corner (0, 0, 10) are rounded
-//!   (SolidCraft case report-fillet-curvature-three-edges-at-bar-corner).
+//!   (Torno case report-fillet-curvature-three-edges-at-bar-corner).
 //! - `data/issue_2369_g2_bar_corner_residues.smb` (sha256 `e4546903...0e3e`): the same bar
 //!   with the sketch solver's residues of about 1e-10, its corner at (0.489294, 0.057925, 10)
 //!   (report-fillet-curvature-three-edges-at-bar-corner-solver-residues, and with the setback
@@ -20,12 +20,12 @@
 //!   less a 30 x 20 x 5 pocket from (15, 10, 5). Its two floor edges and the upright edge at
 //!   (15, 10, 5) are concave (cov-fillet-g2-pocket-corner).
 //!
-//! The outside-setback case's value is closed-form, quoted from SolidCraft's
+//! The outside-setback case's value is closed-form, quoted from Torno's
 //! `expected.json`: V = V0 - 27 - (the three sections outside the cube) = 9526.705048390. It
 //! is checked to 1e-9 relative. The others pin what the port builds (measured; flag on: the
-//! Setback's G2 fill, 16, 16 and 20 faces). SolidCraft's expected values for them (9361.3087
+//! Setback's G2 fill, 16, 16 and 20 faces). Torno's expected values for them (9361.3087
 //! within 0.29%, 9545.9794 within 0.28%, the pocket by its invariants only) are graded by
-//! SolidCraft, not here. Each volume is integrated on the rounds' certified nets, so its
+//! Torno, not here. Each volume is integrated on the rounds' certified nets, so its
 //! check is widened by the most they can move it (`volume`).
 #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)] // test helpers
 
@@ -150,7 +150,7 @@ fn corner_vertex(b: &Brep, es: &[EdgeId]) -> VertexId {
 /// What the corner was made as.
 type Made = (FilletCornerType, Option<BlendCornerEvent>);
 
-/// SolidCraft's `curvature` fillet (its `blend_edges`): the picked edges rounded at radius 2
+/// Torno's `curvature` fillet (its `blend_edges`): the picked edges rounded at radius 2
 /// with the G2 section at the equal-area thumbweight, the corners created, then filleted
 /// and stitched.
 fn round(file: &str, picks: &[[f64; 3]]) -> (Kernel, Brep, Made) {
@@ -199,7 +199,7 @@ const RESIDUES: [[f64; 3]; 3] = [
 ];
 const POCKET: [[f64; 3]; 3] = [[30.0, 10.0, 5.0], [15.0, 20.0, 5.0], [15.0, 10.0, 7.5]];
 
-/// The outside-setback case's closed form (SolidCraft's expected.json).
+/// The outside-setback case's closed form (Torno's expected.json).
 const OUTSIDE_SETBACK: f64 = 9526.705048390453;
 
 /// The body has volume `want` to 1e-9 relative (and the most its nets can move it, see

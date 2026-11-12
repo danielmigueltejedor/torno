@@ -2,7 +2,7 @@
 
 use serde_json::json;
 use solidcore_record::Vec3;
-use solidcraft_geom::prelude::*;
+use torno_geom::prelude::*;
 
 use super::tests::{place, run};
 use crate::Session;
@@ -46,7 +46,7 @@ fn a_part_set_in_from_a_corner_stays_there_as_the_panel_grows() {
     }
     let snap = s.doc.assembly.joints.first().map(|j| j.a.snap.clone());
     assert!(
-        matches!(&snap, Some(solidcraft_doc::joints::Snap::Edge { edge: Some(_), face: Some(_), corner: Some(_), .. })),
+        matches!(&snap, Some(torno_doc::joints::Snap::Edge { edge: Some(_), face: Some(_), corner: Some(_), .. })),
         "the edge, the face and the corner's other edge are kept by name: {snap:?}"
     );
 }
@@ -99,7 +99,7 @@ fn edge_origins_refuse_bad_picks_and_report_a_lost_edge() {
     );
     let mut doc = (*s.doc).clone();
     if let Some(j) = doc.assembly.joints.first_mut()
-        && let solidcraft_doc::joints::Snap::Edge { edge, .. } = &mut j.a.snap
+        && let torno_doc::joints::Snap::Edge { edge, .. } = &mut j.a.snap
     {
         *edge = Some("F999:nothing|F998:nowhere".into());
     }
@@ -115,23 +115,23 @@ fn an_edge_origin_on_a_body_placed_by_an_offset_lands_on_that_edge() {
     // places it. Edge origins picked where the plate is shown sit on its edges there.
     let mut s = Session::default();
     run(&mut s, "solid.box", json!({"length": 40, "width": 30, "height": 5, "corner": [0, 0, 0], "body_name": "Plate"}));
-    let offset = solidcraft_doc::rigid(Vec3::new(7.0, 0.0, 3.0), Vec3::ZERO, Vec3::X, std::f64::consts::FRAC_PI_2);
+    let offset = torno_doc::rigid(Vec3::new(7.0, 0.0, 3.0), Vec3::ZERO, Vec3::X, std::f64::consts::FRAC_PI_2);
     s.doc_mut().body_offsets.insert("Plate".into(), offset);
     s.refresh();
-    let at = |p: Vec3| solidcraft_doc::apply_point(&offset, p);
-    let up = solidcraft_doc::apply_vector(&offset, Vec3::Z);
+    let at = |p: Vec3| torno_doc::apply_point(&offset, p);
+    let up = torno_doc::apply_vector(&offset, Vec3::Z);
     let st = s.model.state();
-    let resolve = |snap: solidcraft_doc::joints::Snap| {
-        let o = solidcraft_doc::joints::JointOrigin::new(0, snap);
-        let m = solidcraft_doc::joints::resolve_origin(&s.doc, &st, &o).unwrap_or_else(|e| panic!("{e}"));
+    let resolve = |snap: torno_doc::joints::Snap| {
+        let o = torno_doc::joints::JointOrigin::new(0, snap);
+        let m = torno_doc::joints::resolve_origin(&s.doc, &st, &o).unwrap_or_else(|e| panic!("{e}"));
         (Vec3::new(m[3][0], m[3][1], m[3][2]), Vec3::new(m[2][0], m[2][1], m[2][2]))
     };
     // The middle of the top face's front edge, and the corner at the plate's own origin.
-    let middle = solidcraft_doc::joints::edge_snap(&s.doc, &st, 0, at(Vec3::new(20.0, 0.0, 5.0)), Some(at(Vec3::new(20.0, 10.0, 5.0))), None)
+    let middle = torno_doc::joints::edge_snap(&s.doc, &st, 0, at(Vec3::new(20.0, 0.0, 5.0)), Some(at(Vec3::new(20.0, 10.0, 5.0))), None)
         .unwrap_or_else(|e| panic!("{e}"));
     let (o, z) = resolve(middle);
     assert!(near(o, at(Vec3::new(20.0, 0.0, 5.0))) && near(z, up), "{o:?} {z:?}");
-    let corner = solidcraft_doc::joints::edge_snap(
+    let corner = torno_doc::joints::edge_snap(
         &s.doc,
         &st,
         0,

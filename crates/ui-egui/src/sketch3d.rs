@@ -8,8 +8,8 @@
 //! Everything runs `sketch.line3d`, `sketch.arc3d`, `sketch.spline3d`, `sketch.point3d`,
 //! `sketch.move3d`, `sketch.line` and `sketch.arc.three_point`.
 
-use solidcraft_engine::geom::prelude::*;
 use std::cell::RefCell;
+use torno_engine::geom::prelude::*;
 
 use egui::{Pos2, Rect, Shape, Stroke, vec2};
 use serde_json::{Value, json};
@@ -18,7 +18,7 @@ use solidcore_record::{Vec2, Vec3};
 use crate::SolveApp;
 use crate::tools::Tool;
 use crate::viewport::{Hit, Proj, pick_3d};
-use solidcraft_theme::Tokens;
+use torno_theme::Tokens;
 
 thread_local! {
     /// Points of the curve being drawn in 3D (with the tool they belong to).
@@ -257,7 +257,7 @@ pub fn preview(app: &SolveApp, t: &Tool, painter: &egui::Painter, proj: &Proj) -
                 s + vec2(10.0, -14.0),
                 egui::Align2::LEFT_BOTTOM,
                 label,
-                egui::FontId::proportional(solidcraft_theme::Tokens::get().font_micro),
+                egui::FontId::proportional(torno_theme::Tokens::get().font_micro),
                 tk.text,
             );
         }
@@ -265,15 +265,15 @@ pub fn preview(app: &SolveApp, t: &Tool, painter: &egui::Painter, proj: &Proj) -
             crate::tool_cursor::readout_at(painter, proj.rect, s),
             egui::Align2::LEFT_TOP,
             format!("{}, {}, {}", crate::prefs::show_mm(app, h.x, 1), crate::prefs::show_mm(app, h.y, 1), crate::prefs::show_mm(app, h.z, 1)),
-            egui::FontId::proportional(solidcraft_theme::Tokens::get().font_small),
+            egui::FontId::proportional(torno_theme::Tokens::get().font_small),
             tk.text_dim,
         );
     }
     if matches!(t.cmd, "sketch.arc.three_point" | "sketch.arc3d") && pts.len() == 2 {
         // The arc the third click would finish: from the first point to the second, through the cursor.
         let poly = match hover.map(|(h, _)| h) {
-            Some(h) => match solidcraft_engine::sketch::arc_from_3_points(pts[0], h, pts[1]) {
-                Some(a) => solidcraft_engine::sketch::arc_polyline(&a, 0.2),
+            Some(h) => match torno_engine::sketch::arc_from_3_points(pts[0], h, pts[1]) {
+                Some(a) => torno_engine::sketch::arc_polyline(&a, 0.2),
                 None => vec![pts[0], h, pts[1]],
             },
             None => vec![pts[0], pts[1]],
@@ -285,7 +285,7 @@ pub fn preview(app: &SolveApp, t: &Tool, painter: &egui::Painter, proj: &Proj) -
         if let Some((h, _)) = hover {
             w.push(h);
         }
-        let poly: Vec<Pos2> = solidcraft_engine::sketch::fit_polyline(&w).into_iter().filter_map(|p| proj.to_screen(p)).collect();
+        let poly: Vec<Pos2> = torno_engine::sketch::fit_polyline(&w).into_iter().filter_map(|p| proj.to_screen(p)).collect();
         painter.add(Shape::line(poly, stroke));
     } else {
         painter.add(Shape::line(all, stroke));

@@ -1,11 +1,11 @@
-//! The SolidCraft fork's tangency-labs/smlib@d305e69 (#2273, smlib#79 step 5): the top edge
+//! The Torno fork's tangency-labs/smlib@d305e69 (#2273, smlib#79 step 5): the top edge
 //! of #851's arc wall rounded and chamfered into the wall's tip, the knife edge where the
 //! wall runs out tangent into the back face, builds (`BandCutsThePart`, aac4288, WR-696). Near the tip the part is thinner than the
 //! blend's band, so the blend takes all of the part between its rails there and ends: the
 //! part is not cut in two, the tip is blended away.
 //!
 //! The capi's `round_of_an_arc_wall_into_its_tip`, `chamfer_of_an_arc_wall_into_its_tip` and
-//! `chamfers_of_an_arc_wall_and_the_top_front` (`ops_kernel.cpp` at d305e69, SolidCraft rig
+//! `chamfers_of_an_arc_wall_and_the_top_front` (`ops_kernel.cpp` at d305e69, Torno rig
 //! fillets/851-fillet-arc-top-edge-9-5, 851-chamfer-arc-top-edge-9-5 and
 //! 851-chamfer-arc-and-top-front-2), graded as the capi's `scenario_blend` grades them: built,
 //! one solid, the volume to 1e-6 relative (the rig's analytic volumes), and here also
@@ -146,7 +146,7 @@ fn the_arc_walls_top_edge_and_the_top_front_chamfered_together_build() {
     assert_blend_builds(&[ARC_TOP, TOP_FRONT], 2.0, 0, 9453.6359553261);
 }
 
-/// The capi's `chamfer_two_distances_past_the_top_refused` (SolidCraft rig
+/// The capi's `chamfer_two_distances_past_the_top_refused` (Torno rig
 /// fillets/2893-chamfer-two-distances-past-the-top-refused): the top rim of a cylinder r10 x 20
 /// chamfered 12 across the top and 3 down the wall. 12 across a top of radius 10 runs past
 /// the axis, so no chamfer between the top and the wall has those sizes: refused for no room

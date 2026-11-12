@@ -82,7 +82,7 @@
 //! - **Touching loops** (not upstream, WR-405, tangency-labs/solidcore#892, opt-in
 //!   `Kernel::fixes.join_touching_loops`): `create_plane_with_3d_curves`
 //!   joins a loop touching another loop of its face at a vertex into that loop
-//!   (`join_touching_loops`, the SolidCraft fork's `JoinTouchingLoops`).
+//!   (`join_touching_loops`, the Torno fork's `JoinTouchingLoops`).
 //! - **`IsParallelToVector`** (WR-39, #2145, opt-in
 //!   `Kernel::fixes.surface_parallel_to_vector_checks`): [`Surface::is_parallel_to_vector`]
 //!   forwards `k` to [`BSplineSurface::is_parallel_to_vector_with_kernel`] and
@@ -2788,7 +2788,7 @@ impl Surface {
     }
 
     /// Whether an analytic [`Self::step_inversion`] answered
-    /// (`SmSurface::STEPInversionAnswered`, the SolidCraft fork's tangency-labs/smlib
+    /// (`SmSurface::STEPInversionAnswered`, the Torno fork's tangency-labs/smlib
     /// dfc7cb6): it succeeded, or, with
     /// [`UpstreamFixes::analytic_inversion_answers_apart`](crate::kernel::UpstreamFixes::analytic_inversion_answers_apart),
     /// returned `SM_ERR_NOT_WITHIN_TOLERANCE` (the point is off the surface) or
@@ -4444,7 +4444,7 @@ impl Surface {
     }
 }
 
-/// Not upstream (WR-405, tangency-labs/solidcore#892; the SolidCraft fork's
+/// Not upstream (WR-405, tangency-labs/solidcore#892; the Torno fork's
 /// `SmTrimmingTools::JoinTouchingLoops`): joins each loop that touches another loop
 /// of its outer loop's set at a vertex into that loop, so the face's boundary passes
 /// the vertex twice in one loop. `ordered`, `loop_counts`, `orients` and

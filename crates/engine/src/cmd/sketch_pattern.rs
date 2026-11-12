@@ -1,7 +1,7 @@
 //! Associative sketch patterns. Editing retains ids at surviving instance indices; a changed
 //! seed list rebuilds every copy.
 
-use solidcraft_sketch::{SketchPattern, SketchPatternKind};
+use torno_sketch::{SketchPattern, SketchPatternKind};
 
 use super::*;
 use crate::cmd::{alignment_param, reversed_param};
@@ -10,7 +10,7 @@ use crate::schema::sketch_modify::PatternResult;
 pub(super) fn run(s: &mut Session, p: &Value, circular: bool) -> Result<Value> {
     let cmd = if circular { "sketch.pattern.circular" } else { "sketch.pattern.rectangular" };
     let (out, info) = edit(s, p, cmd, true, |sk, doc| {
-        if sk.patterns.len() >= solidcraft_sketch::limits::max_constraints() {
+        if sk.patterns.len() >= torno_sketch::limits::max_constraints() {
             return Err(bad(cmd, "too many sketch patterns"));
         }
         let old_index = str_(p, "pattern").and_then(|id| sk.patterns.iter().position(|x| x.id == id));
@@ -63,9 +63,9 @@ pub(super) fn run(s: &mut Session, p: &Value, circular: bool) -> Result<Value> {
         }
         for (key, expression) in &expressions {
             let kind = match key.as_str() {
-                "count" | "count2" => solidcraft_doc::expr::Kind::Unitless,
-                "angle" => solidcraft_doc::expr::Kind::Angle,
-                _ => solidcraft_doc::expr::Kind::Length,
+                "count" | "count2" => torno_doc::expr::Kind::Unitless,
+                "angle" => torno_doc::expr::Kind::Angle,
+                _ => torno_doc::expr::Kind::Length,
             };
             let value = doc.eval(expression, kind).map_err(|e| bad(cmd, format!("`{key}`: {e}")))?;
             params[key] = json!(if key == "angle" { value.to_degrees() } else { value });
@@ -123,7 +123,7 @@ pub(super) fn run(s: &mut Session, p: &Value, circular: bool) -> Result<Value> {
             let expression =
                 expressions.remove("count").or_else(|| old.as_ref().and_then(|p| p.count_expression.clone()).filter(|_| p.get("count").is_none()));
             if let Some(expression) = &expression {
-                let value = doc.eval(expression, solidcraft_doc::expr::Kind::Unitless)?;
+                let value = doc.eval(expression, torno_doc::expr::Kind::Unitless)?;
                 params["count"] = json!(SketchPattern::circular_quantity(value).map_err(|e| bad(cmd, format!("`count`: {e}")))?);
             }
             expression

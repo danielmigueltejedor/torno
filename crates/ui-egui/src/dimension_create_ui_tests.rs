@@ -1,7 +1,7 @@
 //! Dimension creation is an editable draft, accepted by the real focused value field.
 use crate::scenario::Harness;
 use serde_json::json;
-use solidcraft_engine::geom::prelude::*;
+use torno_engine::geom::prelude::*;
 
 fn line(end: [f64; 2]) -> Harness {
     crate::dim_view::cancel();
@@ -63,7 +63,7 @@ fn dimension_editor_names_and_reference_picks_drive_new_and_existing_dimensions(
     h.step(&json!({"key":"Enter"})).unwrap();
     assert_eq!(h.app.session.doc.param(&target).unwrap().expr, format!("2 * {source}"));
     h.app.run("parameters.change", json!({"name":source,"expression":"15 mm"})).unwrap();
-    assert!((h.app.session.doc.eval(&target, solidcraft_engine::doc::expr::Kind::Length).unwrap() - 30.).abs() < 1e-6);
+    assert!((h.app.session.doc.eval(&target, torno_engine::doc::expr::Kind::Length).unwrap() - 30.).abs() < 1e-6);
     crate::dim_view::cancel();
 }
 
@@ -169,7 +169,7 @@ fn dimension_tool_click_on_an_existing_dimension_edits_its_value() {
     type_value(&mut h, "25");
     h.step(&json!({"key":"Enter"})).unwrap();
     assert!(!crate::dim_view::editing(), "{}", h.call("ui.inspect", json!({})));
-    assert!((h.app.session.doc.eval("d1", solidcraft_engine::doc::expr::Kind::Length).unwrap() - 25.).abs() < 1e-6);
+    assert!((h.app.session.doc.eval("d1", torno_engine::doc::expr::Kind::Length).unwrap() - 25.).abs() < 1e-6);
     assert_eq!(h.app.session.doc.next_d_name(), "d2", "no new dimension was made");
     assert_eq!(h.app.tool.as_ref().map(|t| t.cmd), Some("sketch.dimension"), "the tool stays on");
     // A click on geometry still picks it for a new dimension.
@@ -321,7 +321,7 @@ fn double_clicking_a_dimension_opens_the_window_with_a_live_preview() {
     h.step(&json!({"key":"Enter"})).unwrap();
     h.frames(2);
     assert!(!crate::dim_view::editing());
-    assert!((h.app.session.doc.eval("d1", solidcraft_engine::doc::expr::Kind::Length).unwrap() - 27.).abs() < 1e-6);
+    assert!((h.app.session.doc.eval("d1", torno_engine::doc::expr::Kind::Length).unwrap() - 27.).abs() < 1e-6);
     assert_eq!(h.app.session.undo.len(), undo + 1, "one undo step");
     crate::dim_view::cancel();
 }
@@ -332,7 +332,7 @@ fn double_clicking_a_dimension_opens_the_window_with_a_live_preview() {
 #[test]
 fn window_steps_keep_the_written_unit_and_decimal_mark() {
     use crate::dim_view::window::stepped;
-    use solidcraft_engine::doc::expr::Kind::{Angle, Length};
+    use torno_engine::doc::expr::Kind::{Angle, Length};
     assert_eq!(stepped("20 mm", 1.0, Length, "mm", 1.0, 1.0).as_deref(), Some("21 mm"));
     assert_eq!(stepped("20", -1.0, Length, "mm", 0.5, 1.0).as_deref(), Some("19.5"));
     assert_eq!(stepped("1 in", 1.0, Length, "mm", 2.54, 1.0).as_deref(), Some("1.1 in"));
@@ -357,7 +357,7 @@ fn the_dimension_window_preferences_default_save_and_reset() {
     assert_eq!(old.dimension_input, DimensionInput::View, "saved preferences without it keep the box");
     let read = crate::prefs::lenient(&json!({"dimension_input": "sideways", "dimension_step_mm": 2.0}));
     assert_eq!((read.dimension_input, read.dimension_step_mm), (DimensionInput::View, 2.0), "an unknown choice costs only itself");
-    let mut app = crate::SolveApp::new(solidcraft_engine::Session::default(), Default::default());
+    let mut app = crate::SolveApp::new(torno_engine::Session::default(), Default::default());
     for refused in [
         json!({"dimension_input": "sideways"}),
         json!({"dimension_step_mm": 0.0}),
@@ -370,7 +370,7 @@ fn the_dimension_window_preferences_default_save_and_reset() {
     assert_eq!(app.preferences, Prefs::default(), "a refusal changes nothing");
     control(&mut app, &json!({"open": "Sketch", "dimension_input": "window", "dimension_step_mm": 0.5, "dimension_step_deg": 15.0})).unwrap();
     control(&mut app, &json!({"button": "apply"})).unwrap();
-    let mut other = crate::SolveApp::new(solidcraft_engine::Session::default(), Default::default());
+    let mut other = crate::SolveApp::new(torno_engine::Session::default(), Default::default());
     other.load_prefs(&app.prefs());
     assert_eq!(
         (other.preferences.dimension_input, other.preferences.dimension_step_mm, other.preferences.dimension_step_deg),
@@ -394,7 +394,7 @@ fn the_sketch_page_switches_dimension_values_to_a_window() {
     let mut h = Harness::new();
     h.call("ui.prefs", json!({"open": "Sketch"}));
     h.frames(4);
-    let handle = format!("dialog:{}:{}", solidcraft_ui_text::tr("prefs.dimension_values"), solidcraft_ui_text::tr("prefs.dimension_values_window"));
+    let handle = format!("dialog:{}:{}", torno_ui_text::tr("prefs.dimension_values"), torno_ui_text::tr("prefs.dimension_values_window"));
     crate::prefs::reveal_preference(&mut h, &handle);
     h.step(&json!({"click":{"handle": handle}})).unwrap();
     h.frames(2);
@@ -717,7 +717,7 @@ fn dimension_to_fillet_virtual_sharp_keeps_the_arc_and_fixed_origin() {
     let sk = &solved.sketch;
     assert!((sk.point(sk.point_index(&corner).unwrap()).unwrap().y - 30.).abs() < 1e-6);
     assert!(sk.point(sk.resolve_point("riser.start").unwrap()).unwrap().len() < 1e-8);
-    assert!(sk.curves.iter().any(|c| matches!(c.kind, solidcraft_engine::sketch::CurveKind::Arc { .. })), "the dimension retains the fillet arc");
+    assert!(sk.curves.iter().any(|c| matches!(c.kind, torno_engine::sketch::CurveKind::Arc { .. })), "the dimension retains the fillet arc");
     h.app.run("edit.undo", json!({})).unwrap();
     assert_eq!(h.app.session.doc.to_json(), baseline);
 }
@@ -780,8 +780,8 @@ fn inch_dimension_entry_survives_unit_changes_undo_and_reopen() {
     assert_eq!(h.app.session.world_state().unwrap().sketch(sketch).unwrap().sketch, before);
     h.app.run("edit.undo", json!({})).unwrap();
     assert_eq!(h.app.session.doc.units, "in");
-    let doc = solidcraft_engine::doc::Document::from_json(&h.app.session.doc.to_json()).unwrap();
-    let reopened = solidcraft_engine::Session::new(doc);
+    let doc = torno_engine::doc::Document::from_json(&h.app.session.doc.to_json()).unwrap();
+    let reopened = torno_engine::Session::new(doc);
     assert_eq!(reopened.doc.units, "in");
     assert_eq!(reopened.world_state().unwrap().sketch(sketch).unwrap().sketch, before);
     crate::dim_view::cancel();
@@ -865,12 +865,7 @@ fn a_driven_dimension_nothing_fixes_any_more_takes_a_value() {
         let sk = &state.sketch(sketch).unwrap().sketch;
         sk.constraints
             .iter()
-            .find(|c| {
-                matches!(
-                    c.kind,
-                    solidcraft_engine::sketch::ConstraintKind::Diameter { .. } | solidcraft_engine::sketch::ConstraintKind::Radius { .. }
-                )
-            })
+            .find(|c| matches!(c.kind, torno_engine::sketch::ConstraintKind::Diameter { .. } | torno_engine::sketch::ConstraintKind::Radius { .. }))
             .cloned()
             .unwrap()
     };
@@ -959,13 +954,13 @@ fn keys(h: &mut Harness, text: &str) {
     h.settle();
 }
 
-fn solved(h: &Harness) -> solidcraft_engine::sketch::Sketch {
+fn solved(h: &Harness) -> torno_engine::sketch::Sketch {
     let state = h.app.session.world_state().unwrap();
     state.sketch(h.app.session.active_sketch.unwrap()).unwrap().sketch.clone()
 }
 
 /// The dimensions added since `before` (constraints with a parameter or a value).
-fn added(h: &Harness, before: usize) -> Vec<solidcraft_engine::sketch::Constraint> {
+fn added(h: &Harness, before: usize) -> Vec<torno_engine::sketch::Constraint> {
     solved(h).constraints.into_iter().filter(|c| c.kind.is_dimension()).skip(before).collect()
 }
 
@@ -982,7 +977,7 @@ fn assert_live(h: &Harness) {
 
 #[test]
 fn type_first_line_circle_arc_distance_and_angle_commit_one_undo_step_each() {
-    use solidcraft_engine::sketch::ConstraintKind as K;
+    use torno_engine::sketch::ConstraintKind as K;
     let line = [("sketch.line", json!({"points":[[0,0],[20,0]],"infer":false}))];
     let circle = [("sketch.circle.center", json!({"center":[10,0],"radius":5}))];
     let arc = [("sketch.arc.center_point", json!({"center":[10,0],"start":[18,0],"sweep":90}))];
@@ -1013,7 +1008,7 @@ fn type_first_line_circle_arc_distance_and_angle_commit_one_undo_step_each() {
         assert_eq!(h.app.session.doc.to_json(), original, "nothing changes until Enter");
         // The text follows the pointer while typing: Enter places it there.
         // (For the angle, inside the wedge both before and after it changes.)
-        let cursor = if check(&solidcraft_engine::sketch::ConstraintKind::Angle { a: 0, b: 1, value: 60f64.to_radians(), flip: false }) {
+        let cursor = if check(&torno_engine::sketch::ConstraintKind::Angle { a: 0, b: 1, value: 60f64.to_radians(), flip: false }) {
             [10.4, 6.0]
         } else {
             [centre[0] + 3.0, centre[1] + 9.0]
@@ -1114,7 +1109,7 @@ fn near(a: [f32; 4], b: [f32; 4]) -> bool {
     a.iter().zip(b).all(|(a, b)| (a - b).abs() < 0.6)
 }
 
-fn bounds(sk: &solidcraft_engine::sketch::Sketch) -> [f32; 4] {
+fn bounds(sk: &torno_engine::sketch::Sketch) -> [f32; 4] {
     let (lo, hi) = sk.bounds().unwrap_or_default();
     [lo.x, lo.y, hi.x, hi.y].map(|v| v as f32)
 }
@@ -1255,7 +1250,7 @@ fn a_typed_value_does_not_light_a_selected_design_profile() {
     assert_live(&h);
     keys(&mut h, "60");
     let sketch = h.app.session.active_sketch.unwrap();
-    h.app.session.selection = vec![solidcraft_engine::Sel::Profile { sketch, index: 0 }];
+    h.app.session.selection = vec![torno_engine::Sel::Profile { sketch, index: 0 }];
     assert!(crate::dim_view::preview_solve(&h.app).is_some(), "the value is still typed");
     assert!(crate::viewport::build_highlight(&h.app).merged().trans.is_empty(), "no profile lit while the value is typed");
     crate::dim_view::cancel();
@@ -1277,7 +1272,7 @@ fn a_typed_value_draws_the_curves_before_the_profiles_use_up_the_budget() {
     let rect = egui::Rect::from_min_size(egui::Pos2::ZERO, egui::vec2(800.0, 600.0));
     let proj = crate::viewport::projection(&h.app, rect);
     let plane = h.app.session.world_state().unwrap().sketch(h.app.session.active_sketch.unwrap()).unwrap().plane;
-    let mut all = solidcraft_engine::render::SamplingBudget::new(131_072, 1_048_576);
+    let mut all = torno_engine::render::SamplingBudget::new(131_072, 1_048_576);
     let need = crate::sketch_display::curve_with_budget(&preview, 0, &plane, &proj, h.app.viewport.pixels_per_point(), &mut all).vertex_count;
     assert!(need > 4, "the circle takes some vertices: {need}");
     crate::sketch_display::UNCACHED_VERTICES.with(|v| v.set(Some(need)));
@@ -1296,7 +1291,7 @@ fn point_drawn(h: &mut Harness, world: [f64; 2]) -> bool {
 
 /// Is a sketch curve's hover highlight painted this frame?
 fn hover_painted(h: &Harness) -> bool {
-    let col = egui::epaint::ColorMode::Solid(solidcraft_theme::Tokens::get().hover_profile_edge);
+    let col = egui::epaint::ColorMode::Solid(torno_theme::Tokens::get().hover_profile_edge);
     h.shapes.iter().any(|s| matches!(&s.shape, egui::Shape::Path(p) if p.stroke.width == 3.0 && p.stroke.color == col))
 }
 
@@ -1485,7 +1480,7 @@ fn a_caret_the_person_moved_stays_where_they_put_it() {
 /// picked points where they are (it neither moves nor scales them) and Enter keeps them there.
 #[test]
 fn type_first_switching_between_aligned_horizontal_and_vertical_keeps_the_picked_points() {
-    use solidcraft_engine::sketch::ConstraintKind as K;
+    use torno_engine::sketch::ConstraintKind as K;
     let end = [12., 16.];
     let mid = [6., 8.];
     // Across from the picks, above them, beside them.
@@ -1551,7 +1546,7 @@ fn type_first_switching_between_aligned_horizontal_and_vertical_keeps_the_picked
 
 #[test]
 fn midpoint_then_edge_creates_a_distance_in_one_undo_step() {
-    use solidcraft_engine::sketch::ConstraintKind;
+    use torno_engine::sketch::ConstraintKind;
     let mut h = line([20., 0.]);
     h.app.run("sketch.line", json!({"points":[[-10,-10],[-10,20]]})).unwrap();
     h.app.run("sketch.constraint.fix", json!({"entity":"l2"})).unwrap();
@@ -1580,7 +1575,7 @@ fn midpoint_then_edge_creates_a_distance_in_one_undo_step() {
         let sk = &solved.sketch;
         let c = sk.constraints.iter().find(|c| c.param.is_some()).unwrap();
         assert!(matches!(c.kind, ConstraintKind::PointLineDistance { .. }));
-        assert!((solidcraft_engine::sketch::measure_dimension(sk, &c.kind).unwrap() - 25.).abs() < 1e-6);
+        assert!((torno_engine::sketch::measure_dimension(sk, &c.kind).unwrap() - 25.).abs() < 1e-6);
         let accepted = h.app.session.doc.to_json();
         h.app.run("edit.undo", json!({})).unwrap();
         assert_eq!(h.app.session.doc.to_json(), baseline);
@@ -1623,7 +1618,7 @@ fn midpoint_face_sketch() -> Harness {
 
 #[test]
 fn overlapping_sketch_midpoint_to_model_edge_dimensions_the_snapped_point() {
-    use solidcraft_engine::sketch::{ConstraintKind, Shape};
+    use torno_engine::sketch::{ConstraintKind, Shape};
     let mut h = midpoint_face_sketch();
     let baseline = h.app.session.doc.to_json();
     let undo = h.app.session.undo.len();
@@ -1645,7 +1640,7 @@ fn overlapping_sketch_midpoint_to_model_edge_dimensions_the_snapped_point() {
     assert!(sk.curves[source].link.is_none(), "the short sketch edge won the overlapping pick");
     let Shape::Line { a, b } = sk.shape(source).unwrap() else { panic!() };
     assert!((a.dist(b) - 10.).abs() < 1e-6);
-    assert!((solidcraft_engine::sketch::measure_dimension(&sk, &c.kind).unwrap() - 13.).abs() < 1e-6);
+    assert!((torno_engine::sketch::measure_dimension(&sk, &c.kind).unwrap() - 13.).abs() < 1e-6);
     assert_eq!(h.app.session.doc.to_json(), baseline);
     type_value(&mut h, "12 mm");
     h.step(&json!({"key":"Enter"})).unwrap();
@@ -1658,7 +1653,7 @@ fn overlapping_sketch_midpoint_to_model_edge_dimensions_the_snapped_point() {
 
 #[test]
 fn midpoint_pairs_dimension_sketch_and_projected_model_edges() {
-    use solidcraft_engine::sketch::ConstraintKind;
+    use torno_engine::sketch::ConstraintKind;
     for (first, second, projected) in [
         ([-3_f64, -5.], [5., 4.], [false, false]),
         ([-3., -5.], [10., 5.], [false, true]),
@@ -1694,7 +1689,7 @@ fn midpoint_pairs_dimension_sketch_and_projected_model_edges() {
             assert_eq!(sk.curves[l].link.is_some(), expected);
         }
         let measured = ((first[0] - second[0]).powi(2) + (first[1] - second[1]).powi(2)).sqrt();
-        assert!((solidcraft_engine::sketch::measure_dimension(sk, &c.kind).unwrap() - measured).abs() < 1e-6);
+        assert!((torno_engine::sketch::measure_dimension(sk, &c.kind).unwrap() - measured).abs() < 1e-6);
         assert_eq!(h.app.session.undo.len(), undo + 1);
         h.app.run("edit.undo", json!({})).unwrap();
         assert_eq!(h.app.session.doc.to_json(), baseline);
@@ -1704,7 +1699,7 @@ fn midpoint_pairs_dimension_sketch_and_projected_model_edges() {
 
 #[test]
 fn midpoint_selection_keeps_line_circle_gap_dimensions_in_both_orders() {
-    use solidcraft_engine::sketch::ConstraintKind;
+    use torno_engine::sketch::ConstraintKind;
     for reverse in [false, true] {
         let mut h = line([20., 0.]);
         h.app.run("sketch.circle.center", json!({"center":[10,10],"radius":3})).unwrap();
@@ -1723,7 +1718,7 @@ fn midpoint_selection_keeps_line_circle_gap_dimensions_in_both_orders() {
 
 #[test]
 fn midpoint_dimension_orientation_follows_the_pointer_before_placement() {
-    use solidcraft_engine::sketch::ConstraintKind;
+    use torno_engine::sketch::ConstraintKind;
     for (first, second) in [([-3_f64, -5.], [5., 4.]), ([-3., -5.], [10., 5.]), ([10., 5.], [-3., -5.]), ([0., -5.], [10., 5.])] {
         for (horizontal, held_y, reused) in
             [(true, false, false), (false, false, false), (true, true, false), (false, true, false), (true, false, true), (false, false, true)]
@@ -1743,7 +1738,7 @@ fn midpoint_dimension_orientation_follows_the_pointer_before_placement() {
                     .enumerate()
                     .find_map(|(i, c)| {
                         c.link.as_ref()?;
-                        let solidcraft_engine::sketch::Shape::Line { a, b } = ss.sketch.shape(i)? else {
+                        let torno_engine::sketch::Shape::Line { a, b } = ss.sketch.shape(i)? else {
                             return None;
                         };
                         ((ss.plane.to_world(a).y + 5.).abs() < 1e-6 && (ss.plane.to_world(b).y + 5.).abs() < 1e-6).then(|| c.id.clone())
@@ -1763,7 +1758,7 @@ fn midpoint_dimension_orientation_follows_the_pointer_before_placement() {
                         .iter()
                         .enumerate()
                         .find_map(|(i, c)| {
-                            let solidcraft_engine::sketch::Shape::Line { a, b } = ss.sketch.shape(i)? else {
+                            let torno_engine::sketch::Shape::Line { a, b } = ss.sketch.shape(i)? else {
                                 return None;
                             };
                             let at = ss.plane.to_world((a + b) * 0.5);
@@ -2000,8 +1995,8 @@ fn editing_a_dimension_to_a_definition_names_its_parameter() {
 #[test]
 fn the_status_after_a_dimension_is_in_the_interface_language() {
     crate::i18n::install();
-    let pl = solidcraft_ui_text::Locale::for_language("pl");
-    let en = solidcraft_ui_text::Locale::for_language("en");
+    let pl = torno_ui_text::Locale::for_language("pl");
+    let en = torno_ui_text::Locale::for_language("en");
     let status = |h: &Harness| h.app.status.as_ref().map(|s| (s.0.clone(), s.2));
     let polish = |mut h: Harness| {
         h.app.preferences.language = "pl".into();
@@ -2056,9 +2051,9 @@ fn a_typed_value_does_not_light_a_selected_design_curve() {
     let sketch = h.app.session.active_sketch.unwrap();
     let id = solved(&h).curves[0].id.clone();
     for sel in [
-        solidcraft_engine::Sel::SketchCurve { id: id.clone(), sketch: None },
-        solidcraft_engine::Sel::SketchCurve { id: id.clone(), sketch: Some(sketch) },
-        solidcraft_engine::Sel::ExternalSketchCurve { sketch, id: id.clone() },
+        torno_engine::Sel::SketchCurve { id: id.clone(), sketch: None },
+        torno_engine::Sel::SketchCurve { id: id.clone(), sketch: Some(sketch) },
+        torno_engine::Sel::ExternalSketchCurve { sketch, id: id.clone() },
     ] {
         h.app.session.selection = vec![sel.clone()];
         assert!(crate::viewport::build_highlight(&h.app).overlay.is_empty(), "{sel:?}: no curve lit while the value is typed");
@@ -2091,7 +2086,7 @@ fn a_typed_value_hides_the_curvature_combs() {
     let id = solved(&h).curves[0].id.clone();
     h.app.run("inspect.curvature_comb", json!({"curves":[id]})).unwrap();
     h.step(&json!({"start":"sketch.dimension"})).unwrap();
-    let teeth = egui::epaint::Stroke::new(1.0, solidcraft_theme::Tokens::get().comb_teeth);
+    let teeth = egui::epaint::Stroke::new(1.0, torno_theme::Tokens::get().comb_teeth);
     let comb_drawn = |h: &Harness| h.shapes.iter().any(|s| matches!(&s.shape, egui::Shape::LineSegment { stroke, .. } if *stroke == teeth));
     h.frames(1);
     assert!(comb_drawn(&h), "the comb is drawn");

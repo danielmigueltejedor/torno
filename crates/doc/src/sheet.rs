@@ -11,9 +11,9 @@
 
 use serde::{Deserialize, Serialize};
 use solidcore_record::{Loop2, Plane, Region2, Seg2, Vec2, Vec3};
-use solidcraft_geom::prelude::*;
-use solidcraft_geom::{Aabb2, LINEAR_TOL, Ring};
-use solidcraft_kernel::{self as kernel, Body, EdgeSpec, FaceSpec, SurfSpec};
+use torno_geom::prelude::*;
+use torno_geom::{Aabb2, LINEAR_TOL, Ring};
+use torno_kernel::{self as kernel, Body, EdgeSpec, FaceSpec, SurfSpec};
 
 use crate::expr::{self, Kind, Value};
 use crate::{DocError, Document, IDENTITY, Mat, Result, apply_point, apply_vector, mat_inverse, mat_mul};
@@ -1754,7 +1754,7 @@ fn torn_end(start: Vec2, far: Vec2, d: Vec2, n: Vec2, ba: f64, th: f64, ease: f6
     if let Some(p) = pts.last_mut() {
         *p = far;
     }
-    solidcraft_geom::bezier(&pts).unwrap_or(Seg2::Line { a: start, b: far })
+    torno_geom::bezier(&pts).unwrap_or(Seg2::Line { a: start, b: far })
 }
 
 /// Two flanges on the far edges of two flanges that meet at a corner of the base (see
@@ -3236,8 +3236,8 @@ impl SheetBody {
 
     /// Remove the same hole cylinders from the inertia spread as from volume and centroid.
     /// The input and output tensors are at unit density, about their respective centroids.
-    pub fn correct_perforation_mass_properties(&self, measured: &mut solidcraft_geom::MassProperties, placement: &Mat) -> Result<()> {
-        use solidcraft_geom::inertia;
+    pub fn correct_perforation_mass_properties(&self, measured: &mut torno_geom::MassProperties, placement: &Mat) -> Result<()> {
+        use torno_geom::inertia;
         let (mut removed, mut moment_delta, mut removed_inertia) = (0.0, Vec3::ZERO, [[0.0; 3]; 3]);
         self.visit_perforation_cylinders(placement, |center, volume, _, own| {
             let delta = measured.centroid - center;
@@ -3274,7 +3274,7 @@ impl SheetBody {
     }
 
     /// Analytic cylinders at each panel's current fold, in the requested measurement frame.
-    fn visit_perforation_cylinders(&self, placement: &Mat, mut visit: impl FnMut(Vec3, f64, f64, solidcraft_geom::inertia::Tensor3)) -> Result<()> {
+    fn visit_perforation_cylinders(&self, placement: &Mat, mut visit: impl FnMut(Vec3, f64, f64, torno_geom::inertia::Tensor3)) -> Result<()> {
         if self.perforations.is_empty() {
             return Ok(());
         }
@@ -3318,7 +3318,7 @@ impl SheetBody {
                 };
                 let center = apply_point(world, v3(hole) + Vec3::Z * (self.t / 2.0));
                 let rotation = [0, 1, 2].map(|i| [0, 1, 2].map(|j| world[j][i]));
-                visit(center, volume, area_delta, solidcraft_geom::inertia::transformed(&own, &rotation));
+                visit(center, volume, area_delta, torno_geom::inertia::transformed(&own, &rotation));
             }
         }
         Ok(())
@@ -7170,11 +7170,7 @@ mod tests {
             [c, c + Vec2::new(0.0, -6.0), c + Vec2::new(-6.0, -12.0), b + Vec2::new(8.0, -2.0), b],
         );
         let lobe = |f: fn(Vec2) -> Vec2| Loop2 {
-            segs: vec![
-                solidcraft_geom::bezier(&cubic.map(f)).unwrap(),
-                solidcraft_geom::bezier(&quartic.map(f)).unwrap(),
-                Seg2::Line { a: f(b), b: f(a) },
-            ],
+            segs: vec![torno_geom::bezier(&cubic.map(f)).unwrap(), torno_geom::bezier(&quartic.map(f)).unwrap(), Seg2::Line { a: f(b), b: f(a) }],
         };
         let drawn = lobe(|p| p);
         let mapped = s.region_to_flat(None, &below, &Region2 { outer: drawn.clone(), holes: vec![] }).unwrap();

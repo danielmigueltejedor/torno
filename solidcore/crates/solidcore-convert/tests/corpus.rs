@@ -1,5 +1,5 @@
 //! The rig corpus's operand bodies (`crates/solidcore/tests/kernel_cases/`, #2549) through the
-//! direct conversion: each record a case gives goes to the kernel as SolidCraft read it, back to
+//! direct conversion: each record a case gives goes to the kernel as Torno read it, back to
 //! the record (which validates), to the kernel again (the same counts) and to the
 //! same record again, to the rounding of a crossing at part scale. A sample of the entries,
 //! every `STRIDE`th in name order. No valid body is refused going in; a body the conversion
@@ -76,7 +76,7 @@ struct Tally {
     changed: Vec<String>,
 }
 
-/// One body: in as SolidCraft read it, then round. A refusal going in is the kernel's or the
+/// One body: in as Torno read it, then round. A refusal going in is the kernel's or the
 /// record's (not this test's); going out, it must be a typed refusal, and is listed.
 fn one(name: &str, record: &Record, trusted: bool, fixes: &UpstreamFixes, t: &mut Tally) {
     t.bodies += 1;

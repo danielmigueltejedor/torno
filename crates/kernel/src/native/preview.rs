@@ -2,7 +2,7 @@
 //! before meshing (at least one triangle per face) and charged with what the mesh used; the
 //! planner bounds its own work per face, so hostile records cost a bounded amount.
 use super::{Body, Result, invalid};
-use solidcraft_geom::Mesh;
+use torno_geom::Mesh;
 
 /// A coarse mesh of `body` (finer with `detail`, 1–8) charged to `remaining` triangles.
 pub fn native_preview_mesh(body: &Body, detail: usize, remaining: &mut usize) -> Result<Mesh> {

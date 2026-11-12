@@ -1,7 +1,7 @@
 //! Analytic regressions for lofted passages (#2435).
 
-use solidcraft_geom::prelude::*;
 use std::f64::consts::PI;
+use torno_geom::prelude::*;
 
 use solidcore_record::{Loop2, Plane, Region2, Vec2, Vec3};
 
@@ -27,7 +27,7 @@ fn loft_regions_preserve_a_tapered_round_passage_and_step() {
         let body = loft_regions(&secs).unwrap();
         check(&body, want, 1e-3);
         assert!(!body.mesh(&crate::MeshTolerance::chord(0.001)).unwrap().contains(Vec3::new(0.0, 0.0, 10.0)), "passage was filled");
-        let imported = step_import(&step_export(&[&body], "SolidCraft").unwrap()).unwrap();
+        let imported = step_import(&step_export(&[&body], "Torno").unwrap()).unwrap();
         assert_eq!(imported.bodies.len(), 1);
         check(&imported.bodies[0].body, want, 1e-3);
     }

@@ -1,5 +1,5 @@
 //! Shells, face offsets, thickening and sheet offsets against closed forms (the cases of
-//! SolidCraft's `core/offset_tests.rs`, on record face indices through the body's `Order`).
+//! Torno's `core/offset_tests.rs`, on record face indices through the body's `Order`).
 
 use std::f64::consts::PI;
 
@@ -420,7 +420,7 @@ fn an_inside_out_body_is_refused() {
     assert_eq!(b.to_smb(false).unwrap(), before);
 }
 
-/// Drafts against closed forms (SolidCraft's `draft_*` cases, on record face indices), the oblique
+/// Drafts against closed forms (Torno's `draft_*` cases, on record face indices), the oblique
 /// neutral plane's, and the refusals.
 mod drafts {
     use super::{all_fixes, block, face, order, rel, top, volume, ABC};

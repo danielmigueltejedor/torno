@@ -7,7 +7,7 @@ use crate::ui_kit::{NavigationEdge, NavigationIdle, NavigationKind, NavigationSi
 use crate::{SolveApp, scenario, ui_kit};
 use egui::{Rect, Sense, vec2};
 use serde_json::json;
-use solidcraft_theme::Tokens;
+use torno_theme::Tokens;
 
 #[derive(Default)]
 pub(super) struct State {
@@ -36,7 +36,7 @@ pub(super) fn show(app: &mut SolveApp, ui: &mut egui::Ui) {
             let id = ui.make_persistent_id("navigation_bar");
             ui.ctx().data_mut(|data| data.insert_persisted(id, true));
         }
-        ui_kit::settings_section(ui, "navigation_bar", solidcraft_ui_text::tr("navbar.custom.title"), |ui| {
+        ui_kit::settings_section(ui, "navigation_bar", torno_ui_text::tr("navbar.custom.title"), |ui| {
             let width = ui.available_width();
             let t = Tokens::get();
             let header = ui.horizontal_wrapped(|ui| {
@@ -96,18 +96,18 @@ pub(super) fn show(app: &mut SolveApp, ui: &mut egui::Ui) {
 
 fn segments(ui: &mut egui::Ui, key: &str, selected: &mut usize, options: &[&str], change: impl FnMut(usize)) {
     let label_key = format!("navbar.custom.{key}");
-    let label = solidcraft_ui_text::tr(&label_key);
+    let label = torno_ui_text::tr(&label_key);
     ui_kit::row(ui, label, |ui| segment_control(ui, key, selected, options, change));
 }
 
 fn segment_control(ui: &mut egui::Ui, key: &str, selected: &mut usize, options: &[&str], mut change: impl FnMut(usize)) {
     ui.spacing_mut().item_spacing.x = Tokens::get().space_6;
     let label_key = format!("navbar.custom.{key}");
-    let label = solidcraft_ui_text::tr(&label_key);
+    let label = torno_ui_text::tr(&label_key);
     let labels: Vec<_> = options
         .iter()
         .map(|key| {
-            solidcraft_ui_text::tr(match *key {
+            torno_ui_text::tr(match *key {
                 "navbar.custom.always" => "prefs.layout_page.always",
                 "navbar.custom.hide_idle" => "prefs.layout_page.hover",
                 "navbar.custom.labels" => "prefs.layout_page.icons_labels",
@@ -119,7 +119,7 @@ fn segment_control(ui: &mut egui::Ui, key: &str, selected: &mut usize, options: 
         change(*selected);
     }
     if key == "preview_as" {
-        ui_kit::help_icon(ui, solidcraft_ui_text::tr("navbar.custom.intro"));
+        ui_kit::help_icon(ui, torno_ui_text::tr("navbar.custom.intro"));
     }
     if let Some(rect) = scenario::rect_of(&format!("dialog:segments:{label}")) {
         scenario::publish_target(&format!("prefs:navbar:{key}"), rect);
@@ -130,7 +130,7 @@ fn segment_control(ui: &mut egui::Ui, key: &str, selected: &mut usize, options: 
         if let Some(rect) = scenario::rect_of(&format!("dialog:{label}:{option}")) {
             scenario::publish_target(&format!("prefs:navbar:{key}:{index}"), rect);
             if let Some(legacy) = options.get(index) {
-                scenario::publish_target(&format!("dialog:{label}:{}", solidcraft_ui_text::tr(legacy)), rect);
+                scenario::publish_target(&format!("dialog:{label}:{}", torno_ui_text::tr(legacy)), rect);
             }
         }
     }
@@ -138,7 +138,7 @@ fn segment_control(ui: &mut egui::Ui, key: &str, selected: &mut usize, options: 
 
 fn option(ui: &mut egui::Ui, key: &str, selected: &mut usize, options: &[&str], change: impl FnMut(usize)) {
     let label_key = format!("navbar.custom.{key}");
-    let label = solidcraft_ui_text::tr(&label_key);
+    let label = torno_ui_text::tr(&label_key);
     ui_kit::settings_compound_field(ui, label, label, |ui| segment_control(ui, key, selected, options, change));
 }
 
@@ -233,7 +233,7 @@ fn preview(app: &mut SolveApp, ui: &mut egui::Ui, state: &mut State, width: f32)
 fn slot_count(app: &SolveApp, ui: &mut egui::Ui, stage: Rect, bar: Rect) {
     let t = Tokens::get();
     let view = Tokens::view();
-    let text = solidcraft_ui_text::format(
+    let text = torno_ui_text::format(
         "prefs.layout_page.slot_count",
         &[("count", &app.preferences.navigation_bar.slots.len().to_string()), ("max", &navigation_bar::MAX_SLOTS.to_string())],
     );
@@ -409,7 +409,7 @@ fn inspector_header(app: &mut SolveApp, ui: &mut egui::Ui, state: &mut State, in
 fn available(app: &mut SolveApp, ui: &mut egui::Ui, state: &mut State) {
     ui.scope(|ui| {
         ui.spacing_mut().item_spacing.y = Tokens::get().space_6;
-        let caption = solidcraft_ui_text::format("navbar.custom.available", &[("available", app.tr("ui.workspace_available"))]);
+        let caption = torno_ui_text::format("navbar.custom.available", &[("available", app.tr("ui.workspace_available"))]);
         ui.horizontal(|ui| {
             ui_kit::settings_inline_note(ui, app.tr("ui.workspace_available"));
             ui_kit::help_icon(ui, &caption);
@@ -543,8 +543,8 @@ fn anchor_option(bar: &mut NavigationBar, ui: &mut egui::Ui) {
         "navbar.custom.anchor.bottom_centre",
         "navbar.custom.anchor.bottom_right",
     ]
-    .map(solidcraft_ui_text::tr);
-    if let Some(index) = ui_kit::settings_anchor_field(ui, solidcraft_ui_text::tr("navbar.custom.position"), selected, &names) {
+    .map(torno_ui_text::tr);
+    if let Some(index) = ui_kit::settings_anchor_field(ui, torno_ui_text::tr("navbar.custom.position"), selected, &names) {
         bar.edge = if index >= 3 { NavigationEdge::Bottom } else { NavigationEdge::Top };
         bar.position = match index % 3 {
             0 => Position::Left,

@@ -29,7 +29,7 @@ use serde::{Deserialize, Serialize};
 use crate::SolveApp;
 use crate::context_menu::{act, cmd};
 use crate::ui_kit::Item;
-use solidcraft_theme::Tokens;
+use torno_theme::Tokens;
 
 /// Most tools one ring may hold.
 pub(crate) const MAX_TOOLS: usize = 12;
@@ -169,7 +169,7 @@ pub(crate) fn label_of(id: &str) -> Option<String> {
     if let Some((_, label, _)) = ACTIONS.iter().find(|(i, _, _)| *i == id) {
         return Some((*label).to_string());
     }
-    solidcraft_engine::find_command(id).map(|spec| short(spec.label).to_string())
+    torno_engine::find_command(id).map(|spec| short(spec.label).to_string())
 }
 
 /// The tool `id` as a menu item (its state follows the design), or none for an unknown id.
@@ -194,7 +194,7 @@ pub(crate) fn item(app: &SolveApp, id: &str) -> Option<Item> {
         }
         _ => match ACTIONS.iter().find(|(i, _, _)| *i == id) {
             Some((i, label, icon)) => Some(act(i, label, icon)),
-            None => solidcraft_engine::find_command(id).map(|spec| cmd(app, spec.id, short(spec.label))),
+            None => torno_engine::find_command(id).map(|spec| cmd(app, spec.id, short(spec.label))),
         },
     }
 }
@@ -205,7 +205,7 @@ pub(crate) fn catalog() -> Vec<(String, String)> {
     let mut v: Vec<(String, String)> = SPECIALS.iter().map(|(i, l)| ((*i).to_string(), (*l).to_string())).collect();
     v.extend(ACTIONS.iter().map(|(i, l, _)| ((*i).to_string(), (*l).to_string())));
     v.extend(VIEWS.iter().filter_map(|id| Some(((*id).to_string(), label_of(id)?))));
-    for spec in solidcraft_engine::command_specs() {
+    for spec in torno_engine::command_specs() {
         if !spec.tab.is_empty() && spec.planned.is_none() && !v.iter().any(|(i, _)| i == spec.id) {
             v.push((spec.id.to_string(), short(spec.label).to_string()));
         }
@@ -374,14 +374,14 @@ pub(crate) fn paint(painter: &Painter, c: Pos2, scale: f32, studio: Studio, item
         Some(item) => painter.text(
             c,
             Align2::CENTER_CENTER,
-            solidcraft_ui_text::tr_label(&item.label),
+            torno_ui_text::tr_label(&item.label),
             FontId::proportional((t.font_title * scale).max(t.font_badge)),
             t.text,
         ),
         None => painter.text(
             c,
             Align2::CENTER_CENTER,
-            solidcraft_ui_text::tr_label(studio.label()),
+            torno_ui_text::tr_label(studio.label()),
             FontId::proportional((t.font_intro * scale).max(t.font_badge)),
             t.text_dim,
         ),
@@ -602,14 +602,10 @@ fn apply(list: &mut Vec<String>, op: Op) -> bool {
 /// The rows of Preferences › Navigation that belong to gestures: the switch, the button that
 /// opens the editor, and what the mouse mode has to be.
 pub(crate) fn nav_rows(app: &mut SolveApp, ui: &mut egui::Ui, t: &Tokens) {
-    crate::ui_kit::settings_block(ui, solidcraft_ui_text::tr_label("Mouse gestures"), t.space_24 * 6.0 + t.space_6, |ui| {
+    crate::ui_kit::settings_block(ui, torno_ui_text::tr_label("Mouse gestures"), t.space_24 * 6.0 + t.space_6, |ui| {
         ui.horizontal_wrapped(|ui| {
-            crate::ui_kit::checkbox(
-                ui,
-                solidcraft_ui_text::tr_label("Ring of tools on the right button"),
-                &mut app.preferences.mouse_gestures.enabled,
-            );
-            let customize = crate::ui_kit::button(ui, solidcraft_ui_text::tr_label("Customize…"), crate::ui_kit::Button::Normal);
+            crate::ui_kit::checkbox(ui, torno_ui_text::tr_label("Ring of tools on the right button"), &mut app.preferences.mouse_gestures.enabled);
+            let customize = crate::ui_kit::button(ui, torno_ui_text::tr_label("Customize…"), crate::ui_kit::Button::Normal);
             crate::scenario::publish_handle("gestures:customize", customize.rect.center());
             if customize.clicked() {
                 app.gesture.editor.open = true;
@@ -619,16 +615,16 @@ pub(crate) fn nav_rows(app: &mut SolveApp, ui: &mut egui::Ui, t: &Tokens) {
         if app.preferences.nav != MOUSE_MODE {
             crate::ui_kit::text(
                 ui,
-                solidcraft_ui_text::tr_label("Mouse gestures only work with the SolidWorks mouse mode (the wheel orbits, Ctrl + wheel pans)."),
+                torno_ui_text::tr_label("Mouse gestures only work with the SolidWorks mouse mode (the wheel orbits, Ctrl + wheel pans)."),
                 crate::ui_kit::Text::Hint("mouse_gesture_mode"),
             );
-            if crate::ui_kit::button(ui, solidcraft_ui_text::tr_label("Use the SolidWorks mouse mode"), crate::ui_kit::Button::Normal).clicked() {
+            if crate::ui_kit::button(ui, torno_ui_text::tr_label("Use the SolidWorks mouse mode"), crate::ui_kit::Button::Normal).clicked() {
                 crate::prefs::choose_nav_preset(&mut app.preferences, crate::prefs::nav_preset(MOUSE_MODE));
             }
         } else if app.preferences.mouse_gestures.enabled {
             crate::ui_kit::text(
                 ui,
-                solidcraft_ui_text::tr_label(
+                torno_ui_text::tr_label(
                     "With gestures on, the right button no longer orbits the view: hold it and move to open the ring, then touch a tool's zone. A plain right-click still opens the menu.",
                 ),
                 crate::ui_kit::Text::Hint("mouse_gesture_help"),
@@ -646,23 +642,23 @@ fn editor(app: &mut SolveApp, ctx: &egui::Context) {
     let t = Tokens::get();
     let mut studio = app.gesture.editor.studio;
     let mut config = app.preferences.mouse_gestures.clone();
-    let closed = crate::ui_kit::Window::new(egui::Id::unique("sc_gesture_editor"), "settings", solidcraft_ui_text::tr_label("Mouse gestures"))
+    let closed = crate::ui_kit::Window::new(egui::Id::unique("sc_gesture_editor"), "settings", torno_ui_text::tr_label("Mouse gestures"))
         .cards(3.0)
         .show_body(ctx, |ui| {
-            crate::ui_kit::checkbox(ui, solidcraft_ui_text::tr_label("Ring of tools on the right button"), &mut config.enabled);
+            crate::ui_kit::checkbox(ui, torno_ui_text::tr_label("Ring of tools on the right button"), &mut config.enabled);
             if app.preferences.nav != MOUSE_MODE {
                 ui.colored_label(
                     t.warning,
-                    solidcraft_ui_text::tr_label("Mouse gestures only work with the SolidWorks mouse mode (the wheel orbits, Ctrl + wheel pans)."),
+                    torno_ui_text::tr_label("Mouse gestures only work with the SolidWorks mouse mode (the wheel orbits, Ctrl + wheel pans)."),
                 );
             }
             ui.horizontal(|ui| {
-                ui.label(solidcraft_ui_text::tr_label("Studio"));
+                ui.label(torno_ui_text::tr_label("Studio"));
                 ui.scope(|ui| {
                     ui.set_max_width(200.0);
-                    crate::ui_kit::dropdown_menu(ui, "gesture_studio", solidcraft_ui_text::tr_label(studio.label()), |ui| {
+                    crate::ui_kit::dropdown_menu(ui, "gesture_studio", torno_ui_text::tr_label(studio.label()), |ui| {
                         for s in Studio::ALL {
-                            if crate::ui_kit::list_picker(ui, s.label(), solidcraft_ui_text::tr_label(s.label()), studio == s).clicked() {
+                            if crate::ui_kit::list_picker(ui, s.label(), torno_ui_text::tr_label(s.label()), studio == s).clicked() {
                                 studio = s;
                             }
                         }
@@ -670,7 +666,7 @@ fn editor(app: &mut SolveApp, ctx: &egui::Context) {
                 });
                 if crate::ui_kit::button(
                     ui,
-                    solidcraft_ui_text::tr_label("Restore this studio's tools"),
+                    torno_ui_text::tr_label("Restore this studio's tools"),
                     crate::ui_kit::Button::Enabled(config.is_custom(studio)),
                 )
                 .clicked()
@@ -686,14 +682,9 @@ fn editor(app: &mut SolveApp, ctx: &egui::Context) {
                 ui.vertical(|ui| {
                     ui.set_min_width(330.0);
                     ui.label(
-                        egui::RichText::new(format!(
-                            "{} {}/{}",
-                            solidcraft_ui_text::tr_label("Tools, clockwise from the top"),
-                            list.len(),
-                            MAX_TOOLS
-                        ))
-                        .size(t.font_small)
-                        .color(t.text_dim),
+                        egui::RichText::new(format!("{} {}/{}", torno_ui_text::tr_label("Tools, clockwise from the top"), list.len(), MAX_TOOLS))
+                            .size(t.font_small)
+                            .color(t.text_dim),
                     );
                     for i in 0..list.len() {
                         ui.horizontal(|ui| {
@@ -709,7 +700,7 @@ fn editor(app: &mut SolveApp, ctx: &egui::Context) {
                                     |ui| {
                                         let filter_id = ui.scope_id().with("filter");
                                         let mut filter: String = ui.data_mut(|d| d.get_temp(filter_id).unwrap_or_default());
-                                        crate::ui_kit::text_field(ui, &mut filter, solidcraft_ui_text::tr_label("Filter…"));
+                                        crate::ui_kit::text_field(ui, &mut filter, torno_ui_text::tr_label("Filter…"));
                                         ui.data_mut(|d| d.insert_temp(filter_id, filter.clone()));
                                         let needle = filter.trim().to_lowercase();
                                         egui::ScrollArea::vertical().max_height(260.0).show(ui, |ui| {
@@ -744,7 +735,7 @@ fn editor(app: &mut SolveApp, ctx: &egui::Context) {
                             }
                         });
                     }
-                    if crate::ui_kit::button(ui, solidcraft_ui_text::tr_label("Add a tool"), crate::ui_kit::Button::Enabled(list.len() < MAX_TOOLS))
+                    if crate::ui_kit::button(ui, torno_ui_text::tr_label("Add a tool"), crate::ui_kit::Button::Enabled(list.len() < MAX_TOOLS))
                         .clicked()
                     {
                         op = Some(Op::Add);
@@ -783,7 +774,7 @@ mod tests {
     use egui::pos2;
 
     fn app() -> SolveApp {
-        SolveApp::new(solidcraft_engine::Session::default(), Default::default())
+        SolveApp::new(torno_engine::Session::default(), Default::default())
     }
 
     fn on(n: usize) -> Vec<bool> {
@@ -1124,7 +1115,7 @@ mod tests {
         for studio in Studio::ALL {
             for id in studio.defaults() {
                 // Shipped rings also contain planned actions and Render editors without toolbar destinations.
-                let offered = solidcraft_engine::find_command(id).is_none_or(|spec| spec.planned.is_none() && !spec.tab.is_empty());
+                let offered = torno_engine::find_command(id).is_none_or(|spec| spec.planned.is_none() && !spec.tab.is_empty());
                 assert_eq!(catalog.iter().any(|(i, _)| i == id), offered, "{studio:?}: `{id}` must follow the catalog's toolbar-tool policy");
             }
         }
@@ -1273,7 +1264,7 @@ mod tests {
         let faces = body.body.faces(0.1).unwrap();
         let flat = faces.iter().find(|f| f.plane_normal.is_some()).unwrap();
         let normal = flat.plane_normal.unwrap();
-        h.app.session.selection = vec![solidcraft_engine::Sel::Face { body: body.name.clone(), index: flat.index, point: flat.centroid }];
+        h.app.session.selection = vec![torno_engine::Sel::Face { body: body.name.clone(), index: flat.index, point: flat.centroid }];
         h.app.preferences.nav = MOUSE_MODE.into();
         h.app.preferences.mouse_gestures.enabled = true;
         h.app.preferences.mouse_gestures.set_tools(Studio::Part, tools.map(String::from).to_vec());
@@ -1289,7 +1280,7 @@ mod tests {
 
     #[test]
     fn the_standard_views_and_look_at_can_go_on_a_ring() {
-        use solidcraft_engine::geom::Vec3Geom as _;
+        use torno_engine::geom::Vec3Geom as _;
         let offered = catalog();
         for id in ["view.front", "view.back", "view.left", "view.right", "view.top", "view.bottom", "view.isometric", "ui.lookAt"] {
             assert!(offered.iter().any(|(i, _)| i == id), "`{id}` is offered");

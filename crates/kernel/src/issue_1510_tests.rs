@@ -2,7 +2,7 @@
 //! and together are the body.
 
 use solidcore_record::{Plane, Vec3};
-use solidcraft_geom::prelude::*;
+use torno_geom::prelude::*;
 
 use crate::{Body, BoolOp, build::box_solid, build::cylinder, ops::boolean, ops::split_by_plane};
 

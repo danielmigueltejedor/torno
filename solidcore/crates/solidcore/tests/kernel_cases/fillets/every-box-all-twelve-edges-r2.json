@@ -379,7 +379,7 @@
     "blend_dropping"
   ],
   "ungraded": [
-    "continuity: SolidCraft computes it"
+    "continuity: Torno computes it"
   ],
   "what": "all twelve edges of a box rounded r2 at once: the rounded box (twelve quarter cylinders, eight sphere octants)",
   "why_not": []

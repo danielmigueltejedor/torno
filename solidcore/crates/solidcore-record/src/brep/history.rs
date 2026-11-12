@@ -6,7 +6,7 @@
 //! operation's own operand list, which each operation documents. An operation returns its
 //! history beside the B-rep; a backend that cannot report it returns none and never guesses.
 //! These are the runtime types; the saved form is [`super::envelope`], kept separate so that a
-//! change here cannot redefine saved fields. `solidcraft_kernel::history` re-exports them and
+//! change here cannot redefine saved fields. `torno_kernel::history` re-exports them and
 //! adds what needs a kernel body.
 
 use std::collections::{BTreeSet, HashMap};

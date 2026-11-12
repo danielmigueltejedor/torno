@@ -1,7 +1,7 @@
 //! A variable round as the union of its balls (opt-in, not upstream): the knots where a
 //! round's curves turn.
 //!
-//! Not in the pinned upstream: the SolidCraft fork's `source/SMLib/src/SmFilletSection.cpp`
+//! Not in the pinned upstream: the Torno fork's `source/SMLib/src/SmFilletSection.cpp`
 //! (`sm_FilletCurveCorners`, from tangency-labs/smlib@6eecf04), called by
 //! `SmGnSectionFSG::CircleSurface`, the fork's circular section (WR-685, #2250).
 //!

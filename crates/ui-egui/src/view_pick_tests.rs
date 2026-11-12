@@ -4,7 +4,7 @@
 use serde_json::json;
 
 use solidcore_record::Vec3;
-use solidcraft_viewport::Camera;
+use torno_viewport::Camera;
 
 use crate::scenario::Harness;
 

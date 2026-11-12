@@ -1,7 +1,7 @@
 //! Real keyboard input must stay inside the dimensions of the shape being drawn.
 
 use serde_json::json;
-use solidcraft_engine::geom::prelude::*;
+use torno_engine::geom::prelude::*;
 
 use super::{BOX, in_view};
 use crate::scenario::Harness;
@@ -150,7 +150,7 @@ fn clicking_a_parameter_suggestion_fills_the_length_box() {
     let sk = &state.sketch(h.app.session.active_sketch.unwrap()).unwrap().sketch;
     assert_eq!(sk.curves.len(), 1);
     let length = sk.shape(0).map(|s| match s {
-        solidcraft_engine::sketch::Shape::Line { a, b } => a.dist(b),
+        torno_engine::sketch::Shape::Line { a, b } => a.dist(b),
         _ => 0.0,
     });
     assert!(length.is_some_and(|l| (l - 24.0).abs() < 1e-6), "{length:?}");
@@ -179,8 +179,8 @@ fn two_point_circle_takes_a_typed_diameter() {
 /// the major radius one kept from the first stage.
 #[test]
 fn an_ellipse_takes_a_typed_major_and_minor_radius() {
-    use solidcraft_engine::doc::expr::Kind;
-    use solidcraft_engine::sketch::CurveKind;
+    use torno_engine::doc::expr::Kind;
+    use torno_engine::sketch::CurveKind;
     let labels = |h: &Harness| h.app.tool.as_ref().unwrap().dims.iter().map(|b| b.label).collect::<Vec<_>>();
     let mut h = drawing("sketch.ellipse");
     assert_eq!(labels(&h), ["Major radius"]);
@@ -264,7 +264,7 @@ fn a_typed_rho_shapes_the_conic_whose_apex_is_placed_next() {
         .curves
         .iter()
         .find_map(|curve| match curve.kind {
-            solidcraft_engine::sketch::CurveKind::Conic { apex, rho, .. } => Some((apex, rho)),
+            torno_engine::sketch::CurveKind::Conic { apex, rho, .. } => Some((apex, rho)),
             _ => None,
         })
         .expect("the typed value placed a conic");
@@ -310,7 +310,7 @@ fn rounded_rectangle_takes_typed_width_height_and_radius() {
     h.step(&json!({"key": "Enter"})).unwrap();
     let state = h.app.session.world_state().unwrap();
     let sketch = state.sketch(h.app.session.active_sketch.unwrap()).unwrap();
-    let kinds: Vec<_> = sketch.sketch.curves.iter().map(|c| matches!(c.kind, solidcraft_engine::sketch::CurveKind::Arc { .. })).collect();
+    let kinds: Vec<_> = sketch.sketch.curves.iter().map(|c| matches!(c.kind, torno_engine::sketch::CurveKind::Arc { .. })).collect();
     assert_eq!(kinds.iter().filter(|arc| **arc).count(), 4, "four corner arcs");
     assert_eq!(kinds.len(), 9, "four sides, four arcs and the centre's construction diagonal");
     assert_eq!(sketch.sketch.curves.iter().filter(|c| c.construction).count(), 1, "only the diagonal is construction");
@@ -342,7 +342,7 @@ fn rounded_rectangle_clicks_use_a_default_radius() {
 /// step as the shape.
 #[test]
 fn dimension_new_shapes_dimensions_every_size_only_when_on() {
-    use solidcraft_engine::doc::expr::Kind;
+    use torno_engine::doc::expr::Kind;
     let dimensions = |h: &Harness| -> Vec<f64> {
         let doc = &h.app.session.doc;
         let mut values: Vec<f64> = doc.params.iter().filter(|p| p.model).filter_map(|p| doc.eval(&p.name, Kind::Length).ok()).collect();
@@ -404,7 +404,7 @@ fn place_from_the_origin_fully_constrains_new_shapes() {
 /// does on a line or a circle, and the click ties the end to the spline.
 #[test]
 fn a_line_end_on_a_spline_snaps_on_it_and_stays_on_it() {
-    use solidcraft_engine::sketch::{ConstraintKind, CurveKind};
+    use torno_engine::sketch::{ConstraintKind, CurveKind};
     let mut h = Harness::new();
     h.app.run("sketch.create", json!({"plane": "XY"})).unwrap();
     h.app.run("sketch.spline.fit_point", json!({"points": [[-30, 0], [-10, 18], [10, 6], [30, 20]]})).unwrap();
@@ -455,7 +455,7 @@ fn a_line_end_on_a_spline_snaps_on_it_and_stays_on_it() {
 #[test]
 fn a_line_end_on_a_circle_within_the_axis_snap_lands_on_the_quadrant_the_preview_shows() {
     use solidcore_record::Vec2;
-    use solidcraft_engine::sketch::{ConstraintKind, CurveKind};
+    use torno_engine::sketch::{ConstraintKind, CurveKind};
     let r = 30.0_f64;
     for (deg, end, horizontal) in [(-1.5_f64, Vec2::new(r, 0.0), true), (91.8, Vec2::new(0.0, r), false), (178.0, Vec2::new(-r, 0.0), true)] {
         let mut h = Harness::new();
@@ -499,7 +499,7 @@ fn a_line_end_on_a_circle_within_the_axis_snap_lands_on_the_quadrant_the_preview
 #[test]
 fn a_line_end_on_a_circle_outside_the_axis_snap_stays_at_the_cursor() {
     use solidcore_record::Vec2;
-    use solidcraft_engine::sketch::CurveKind;
+    use torno_engine::sketch::CurveKind;
     let mut h = Harness::new();
     h.app.run("sketch.create", json!({"plane": "XY"})).unwrap();
     h.app.run("sketch.circle.center", json!({"center": [0, 0], "radius": 30})).unwrap();
@@ -539,7 +539,7 @@ fn a_midpoint_line_shows_its_length_and_angle_while_it_is_drawn() {
 /// #6198: a typed length and angle drive the midpoint line that is drawn.
 #[test]
 fn a_midpoint_line_takes_a_typed_length_and_angle() {
-    use solidcraft_engine::sketch::ConstraintKind;
+    use torno_engine::sketch::ConstraintKind;
     let mut h = Harness::new();
     h.app.run("sketch.create", json!({"plane": "XY"})).unwrap();
     h.step(&json!({"start": "sketch.line.midpoint"})).unwrap();

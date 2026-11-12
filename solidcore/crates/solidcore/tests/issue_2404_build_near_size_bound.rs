@@ -37,7 +37,7 @@ use solidcore::topology::brep::validation::{check_brep, CheckLevel};
 use solidcore::topology::EdgeId;
 use solidcore::{Brep, Kernel};
 
-/// Every fix on (SolidCraft's set).
+/// Every fix on (Torno's set).
 fn kernel() -> Kernel {
     let mut k = Kernel::new(&KernelOptions::default());
     k.fixes = UpstreamFixes::all();

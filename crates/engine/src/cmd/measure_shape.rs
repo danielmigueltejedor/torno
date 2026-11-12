@@ -5,8 +5,8 @@
 
 use serde_json::{Value, json};
 use solidcore_record::Vec3;
-use solidcraft_geom::UnitVec3;
-use solidcraft_geom::prelude::*;
+use torno_geom::UnitVec3;
+use torno_geom::prelude::*;
 
 use std::f64::consts::{PI, TAU};
 
@@ -74,8 +74,8 @@ pub(crate) fn add_round(v: &mut Value, shape: &Shape) {
 /// circular edge is a torus whose tube radius is the fillet's (`major_radius` is the ring
 /// through the middle of the rolling ball), a ball or a spherical corner patch a sphere. These
 /// faces have no axis to measure from, so they stay out of [`Shape`].
-pub(crate) fn add_curved(v: &mut Value, surface: Option<solidcraft_kernel::FaceSurface>) {
-    use solidcraft_kernel::FaceSurface;
+pub(crate) fn add_curved(v: &mut Value, surface: Option<torno_kernel::FaceSurface>) {
+    use torno_kernel::FaceSurface;
     let (radius, kind) = match surface {
         Some(FaceSurface::Torus { minor, major, .. }) if minor.is_finite() && minor > 0.0 => {
             if major.is_finite() {
@@ -338,8 +338,8 @@ pub(crate) fn slot_outline(
 /// A slot cut or boss on a solid, found from one of its half-cylinder ends: another half
 /// cylinder of the same radius on a parallel axis, bulging the other way, and two planes along
 /// the slot `r` either side of its centre line. `faces` gives each face's surface and points.
-pub(crate) fn slot_from_faces(picked: &Shape, picked_pts: &[Vec3], faces: &[(solidcraft_kernel::FaceSurface, Vec<Vec3>)]) -> Option<Slot> {
-    use solidcraft_kernel::FaceSurface;
+pub(crate) fn slot_from_faces(picked: &Shape, picked_pts: &[Vec3], faces: &[(torno_kernel::FaceSurface, Vec<Vec3>)]) -> Option<Slot> {
+    use torno_kernel::FaceSurface;
     let Shape::Round { center, axis, radius, angle, planar: false, .. } = *picked else { return None };
     if (angle - PI).abs() > 0.3 {
         return None;

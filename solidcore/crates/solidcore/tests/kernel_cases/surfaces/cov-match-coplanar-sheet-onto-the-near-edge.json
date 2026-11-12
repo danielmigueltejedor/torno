@@ -109,7 +109,7 @@
     "stitch"
   ],
   "ungraded": [
-    "continuity: SolidCraft computes it"
+    "continuity: Torno computes it"
   ],
   "what": "a sheet 2 mm short of a coplanar sheet's edge, matched G2 onto it and stitched: flat, x 10..20",
   "why_not": []

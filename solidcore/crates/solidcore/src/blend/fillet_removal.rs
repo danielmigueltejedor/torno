@@ -36,7 +36,7 @@
 //!   evaluation copies of the surfaces with the flag on, leaving the B-rep's surfaces
 //!   alone.
 //! - **Ring fillets (not upstream).** With `Kernel::fixes.fillet_removal_takes_ring_fillets`
-//!   (WR-605, the SolidCraft fork's tangency-labs/smlib 52bfef0) [`delete_fillet_face`]
+//!   (WR-605, the Torno fork's tangency-labs/smlib 52bfef0) [`delete_fillet_face`]
 //!   hands a ring fillet to [`ring::RingFilletRemoval`].
 //! - **Notifications.** Each B-rep edit notifies through the kernel's callbacks
 //!   (`with_kernel_callbacks`), one edit at a time, as upstream's objects notify their
@@ -57,7 +57,7 @@
 //!   installed it, as upstream; the end edges' curves are owned again after
 //!   `replace_3d_curve`, and the side edges' run-on curves are named by the edit's
 //!   identity itself, the key `SetCurve` records.
-//! - **Exact only (not upstream).** WR-606, the SolidCraft fork's tangency-labs/smlib
+//! - **Exact only (not upstream).** WR-606, the Torno fork's tangency-labs/smlib
 //!   5b0534b: [`FilletRemoval::set_exact_only`] (off by default; [`delete_fillet_face`]
 //!   never sets it) makes the removal refuse what SMLib would only approximate. A side
 //!   edge that stops short of a new corner runs on along its own line (its end span
@@ -150,7 +150,7 @@ pub struct FilletCornerInfo {
     pub new_side_edge_ext_end_face_uv: Option<Curve>,
     /// `m_pNewSideEdgeExtTanFaceUV`.
     pub new_side_edge_ext_tan_face_uv: Option<Curve>,
-    /// Not upstream (WR-606, exact only; SolidCraft change, tangency-labs/smlib 5b0534b):
+    /// Not upstream (WR-606, exact only; Torno change, tangency-labs/smlib 5b0534b):
     /// the side edge's line run on to the new corner (`m_pNewSideCurve`), until
     /// `DoRemoval` installs it.
     pub new_side_curve: Option<Curve>,
@@ -249,7 +249,7 @@ impl FilletRemoval {
         }
     }
 
-    /// Not upstream (WR-606; SolidCraft change, tangency-labs/smlib 5b0534b,
+    /// Not upstream (WR-606; Torno change, tangency-labs/smlib 5b0534b,
     /// `SetExactOnly`): remove only what SMLib makes exactly. A side edge runs on to
     /// the new corner only along its line (not on a fitted intersection), a face grows
     /// only within its surface's domain or on a plane, and every corner has a side
@@ -1866,7 +1866,7 @@ pub fn delete_fillet_face(
         Some(t) => t,
         None => crate::topology::face::p2::tolerance(b, fillet_face)?,
     };
-    // Not upstream (WR-605, `fixes.fillet_removal_takes_ring_fillets`; SolidCraft change,
+    // Not upstream (WR-605, `fixes.fillet_removal_takes_ring_fillets`; Torno change,
     // tangency-labs/smlib 52bfef0): a ring fillet (closed rails, no ends) has its own
     // removal.
     if k.fixes.fillet_removal_takes_ring_fillets

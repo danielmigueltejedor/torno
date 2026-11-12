@@ -301,7 +301,7 @@ fn a_rail_that_stops_short_is_refused() {
     assert!(format!("{err:?}").contains("does not reach"), "{err:?}");
 }
 
-/// SolidCraft's station count: a station per degree of turn. A quarter arc twisted a quarter
+/// Torno's station count: a station per degree of turn. A quarter arc twisted a quarter
 /// turn turns 180 degrees in all: 180 steps (as the rule's ceiling rounds pi over a degree),
 /// 0 and 1 among the fractions; a straight path with no
 /// twist takes the least, 16 steps.
@@ -621,7 +621,7 @@ fn the_frames_turn_about_no_axis_along_the_path() {
 }
 
 /// The parallel orientation keeps the profile as it is, and refuses a station the path crosses
-/// at no more than the least angle asked (here SolidCraft's 5 degrees) to its plane: a quarter
+/// at no more than the least angle asked (here Torno's 5 degrees) to its plane: a quarter
 /// arc from `y` reaches `-x`, square to it.
 #[test]
 fn the_parallel_orientation_keeps_the_profile() {

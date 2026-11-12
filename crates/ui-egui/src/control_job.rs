@@ -4,9 +4,9 @@
 //!
 //! The window thread still owns the design. What leaves it is the computing:
 //! - **Design changes** (`engine.execute` of a modelling command, `engine.batch`) are evaluated
-//!   ahead on a copy of the session ([`solidcraft_engine::Session::ahead`]), as the history
+//!   ahead on a copy of the session ([`torno_engine::Session::ahead`]), as the history
 //!   marker and undo are ([`crate::deferred`]). What that computes is kept
-//!   ([`solidcraft_engine::doc::KeptResults`]); once it is in, the request runs here for real, as
+//!   ([`torno_engine::doc::KeptResults`]); once it is in, the request runs here for real, as
 //!   it always did (undo step, recovery autosave, crash journal, agent cursor, reply), and finds
 //!   every feature it computed there, whatever the bounded evaluation cache dropped meanwhile.
 //!   One design change computes at a time; later ones wait their turn, in order.
@@ -31,7 +31,7 @@ use std::sync::mpsc::{Receiver, TryRecvError};
 
 use serde_json::{Value, json};
 
-use solidcraft_engine::doc::KeptResults;
+use torno_engine::doc::KeptResults;
 
 use crate::SolveApp;
 use crate::control::ControlRequest;
@@ -94,7 +94,7 @@ const MAX_TRIES: u8 = 3;
 
 /// The command's own id (as registered), if it has one.
 fn spec_id(command: &str) -> Option<&'static str> {
-    solidcraft_engine::find_command(command).map(|c| c.id)
+    torno_engine::find_command(command).map(|c| c.id)
 }
 
 fn names_a_file(params: &Value) -> bool {
@@ -137,7 +137,7 @@ pub(crate) fn changes_the_design(method: &str) -> bool {
 }
 
 /// Whether `doc` is the design `session` shows, as it is or edited since (an undo step away).
-fn shows_design(session: &solidcraft_engine::Session, doc: &Arc<solidcraft_engine::doc::Document>) -> bool {
+fn shows_design(session: &torno_engine::Session, doc: &Arc<torno_engine::doc::Document>) -> bool {
     Arc::ptr_eq(&session.doc, doc) || session.undo.iter().chain(&session.redo).any(|snap| Arc::ptr_eq(&snap.doc, doc))
 }
 
@@ -153,7 +153,7 @@ fn design_replaced(label: &str) -> Value {
 enum Work {
     /// Evaluated ahead: once in, the request runs here. `doc` and `revision` are the design it
     /// was computed for.
-    Ahead { commands: Vec<(String, Value)>, doc: Arc<solidcraft_engine::doc::Document>, revision: u64, tries: u8, kept: Arc<KeptResults> },
+    Ahead { commands: Vec<(String, Value)>, doc: Arc<torno_engine::doc::Document>, revision: u64, tries: u8, kept: Arc<KeptResults> },
     /// Run on a copy; the reply comes from there.
     Answer,
 }
@@ -183,21 +183,18 @@ impl ControlJob {
 }
 
 fn label(app: &SolveApp, command: &str) -> String {
-    let language = solidcraft_ui_text::Locale::for_language(&app.preferences.language);
-    language.label(solidcraft_engine::find_command(command).map_or(command, |c| c.label)).to_string()
+    let language = torno_ui_text::Locale::for_language(&app.preferences.language);
+    language.label(torno_engine::find_command(command).map_or(command, |c| c.label)).to_string()
 }
 
 /// Run `f` on a worker thread (with the request's folder scope), answering on the returned
 /// channel. `None` without threads (the web).
-fn spawn(
-    scope: Option<solidcraft_engine::io::vfs::PathScope>,
-    f: impl FnOnce() -> Option<Value> + Send + 'static,
-) -> Option<Receiver<Option<Value>>> {
+fn spawn(scope: Option<torno_engine::io::vfs::PathScope>, f: impl FnOnce() -> Option<Value> + Send + 'static) -> Option<Receiver<Option<Value>>> {
     let (tx, rx) = std::sync::mpsc::channel();
     std::thread::Builder::new()
         .name("agent".into())
         .spawn(move || {
-            let r = solidcraft_engine::io::vfs::scoped(scope, f);
+            let r = torno_engine::io::vfs::scoped(scope, f);
             let _ = tx.send(r);
         })
         .ok()?;
@@ -337,16 +334,16 @@ fn ahead_commands(method: &str, p: &Value) -> Vec<(String, Value)> {
             // As the batch will run them: with `coalesce_parameters`, a run of parameter edits
             // as one edit (#5822).
             let coalesce = p.get("coalesce_parameters").and_then(Value::as_bool).unwrap_or(false);
-            solidcraft_engine::batch_params::plan(steps, coalesce)
+            torno_engine::batch_params::plan(steps, coalesce)
                 .into_iter()
                 .map(|run| match run {
-                    solidcraft_engine::batch_params::BatchRun::Step(i) => {
+                    torno_engine::batch_params::BatchRun::Step(i) => {
                         let step = steps.get(i)?;
                         let command = step.get("command").or_else(|| step.get("id")).and_then(Value::as_str)?;
                         Some((command.to_string(), step.get("params").cloned().filter(|v| !v.is_null()).unwrap_or(json!({}))))
                     }
-                    solidcraft_engine::batch_params::BatchRun::Params { changes, .. } => {
-                        Some(("parameters.change".to_string(), solidcraft_engine::batch_params::combined_params(&changes)))
+                    torno_engine::batch_params::BatchRun::Params { changes, .. } => {
+                        Some(("parameters.change".to_string(), torno_engine::batch_params::combined_params(&changes)))
                     }
                 })
                 .map_while(|c| c.filter(|(command, params)| computes_ahead(command, params)))
@@ -491,7 +488,7 @@ impl SolveApp {
         let reply = reply.unwrap_or_else(|| json!({"ok": false, "error": format!("`{}` ended without a reply", job.label)}));
         let export = executed(&job.req.params).and_then(|(command, _)| spec_id(command)).is_some_and(|id| ANSWERED_ON_A_COPY.contains(&id));
         if reply["ok"] == true && export {
-            let language = solidcraft_ui_text::Locale::for_language(&self.preferences.language);
+            let language = torno_ui_text::Locale::for_language(&self.preferences.language);
             self.session.echo(language.format("ui.command_done", &[("command", job.label.as_str())]));
         }
         let _ = job.req.reply.send(reply);

@@ -2,12 +2,12 @@
 //! to each saved map role; provenance is bounded inert text, never a permission grant.
 use crate::{DocError, Result, render_resources::HdrId};
 use serde::{Deserialize, Serialize, de::DeserializeSeed, ser::SerializeStruct};
-use solidcraft_render::texture_input::{MapRole, TextureSource};
 use std::{collections::BTreeMap, fmt, sync::Arc};
+use torno_render::texture_input::{MapRole, TextureSource};
 
 pub const MAX_TEXTURE_RESOURCES: usize = 32;
 pub const MAX_TEXTURE_RESOURCE_BYTES: usize = 64 * 1024 * 1024;
-pub const MAX_TEXTURE_BYTES: usize = solidcraft_render::texture_input::MAX_TEXTURE_BYTES;
+pub const MAX_TEXTURE_BYTES: usize = torno_render::texture_input::MAX_TEXTURE_BYTES;
 pub const MAX_TEXTURE_EDGE: u32 = 1024;
 const MAX_PROVENANCE_JSON: usize = 48 * 1024;
 fn invalid(message: impl Into<String>) -> DocError {
@@ -84,7 +84,7 @@ impl TextureResource {
     }
     /// Binding roles are explicit; one encoded image may be color or linear data.
     pub fn validate_role(&self, role: MapRole) -> Result<()> {
-        solidcraft_render::texture_input::validate_color_declarations(&self.bytes, role).map_err(|e| invalid(e.to_string()))
+        torno_render::texture_input::validate_color_declarations(&self.bytes, role).map_err(|e| invalid(e.to_string()))
     }
     pub fn provenance(&self) -> &TextureProvenance {
         &self.provenance
@@ -400,7 +400,7 @@ mod tests {
         include_bytes!("../../../assets/render/starter/materials/exports/SURF-027/base_color.png").to_vec()
     }
     fn provenance() -> TextureProvenance {
-        TextureProvenance { author: "SolidCraft contributors".into(), source: "original test asset".into(), license: "MIT OR Apache-2.0".into() }
+        TextureProvenance { author: "Torno contributors".into(), source: "original test asset".into(), license: "MIT OR Apache-2.0".into() }
     }
     fn resource() -> TextureResource {
         TextureResource::new(image(), provenance()).unwrap()
@@ -451,7 +451,7 @@ mod tests {
                 SavedSurface {
                     target: RenderBodyTarget { definition: "Wood test panel".into(), feature: 7, component: 0, occurrence_path: vec![] },
                     source: SurfaceSource::Embedded(embedded),
-                    local_frame: solidcraft_render::job::textures::PlanarFrame { origin: [0.; 3], u: [240., 0., 0.], v: [0., 480., 0.] },
+                    local_frame: torno_render::job::textures::PlanarFrame { origin: [0.; 3], u: [240., 0., 0.], v: [0., 480., 0.] },
                     normal_strength: 0.5,
                 },
                 false,
@@ -573,7 +573,7 @@ mod tests {
                 metallic: None,
                 flip_v: false,
             }),
-            local_frame: solidcraft_render::job::textures::PlanarFrame { origin: [0.; 3], u: [1., 0., 0.], v: [0., 1., 0.] },
+            local_frame: torno_render::job::textures::PlanarFrame { origin: [0.; 3], u: [1., 0., 0.], v: [0., 1., 0.] },
             normal_strength: 1.,
         };
         setup.surfaces.set(binding.clone(), false).unwrap();

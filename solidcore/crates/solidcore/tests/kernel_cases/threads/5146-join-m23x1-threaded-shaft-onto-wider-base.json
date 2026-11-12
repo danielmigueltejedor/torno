@@ -102,7 +102,7 @@
       "rel": 0.01
     },
     "volume_mm3": 13187.253,
-    "what": "a O23 shaft with a modelled M23x1 thread joined onto the O26 cylinder it stands on: SolidCraft ended without a clean exit during the combine"
+    "what": "a O23 shaft with a modelled M23x1 thread joined onto the O26 cylinder it stands on: Torno ended without a clean exit during the combine"
   },
   "expressible": true,
   "operation_expressible": true,
@@ -162,6 +162,6 @@
     "boolean"
   ],
   "ungraded": [],
-  "what": "a O23 shaft with a modelled M23x1 thread joined onto the O26 cylinder it stands on: SolidCraft ended without a clean exit during the combine",
+  "what": "a O23 shaft with a modelled M23x1 thread joined onto the O26 cylinder it stands on: Torno ended without a clean exit during the combine",
   "why_not": []
 }

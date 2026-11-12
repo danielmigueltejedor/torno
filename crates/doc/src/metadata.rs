@@ -1,7 +1,7 @@
 //! Design and part properties (#1015): the optional `metadata` object of the design and of each
 //! component.
 //!
-//! SolidCraft reads a few well-known, unprefixed text keys from it (project, part number,
+//! Torno reads a few well-known, unprefixed text keys from it (project, part number,
 //! revision, author, organization, description, licence), listed once in [`KEYS`] with where
 //! each may be set (the design, a component or both), how its value is checked and its label.
 //! It keeps every other key exactly as it was through open, edit and save. Other tools keep
@@ -11,7 +11,7 @@
 //! Reading never validates: a well-known key holding something other than text is kept as it
 //! is and reads as absent, so a file another tool wrote always opens. Writing through
 //! [`Metadata::set`] (the `document.metadata.set` and `component.metadata.set` commands) checks
-//! the key against where it is set, the value's kind and its size, so nothing SolidCraft writes
+//! the key against where it is set, the value's kind and its size, so nothing Torno writes
 //! is malformed.
 //!
 //! The map is stored as is: typed fields would refuse a design another tool had written
@@ -64,7 +64,7 @@ impl Owner {
     }
 }
 
-/// One of SolidCraft's own keys.
+/// One of Torno's own keys.
 pub struct Key {
     pub name: &'static str,
     /// Where it may be set.
@@ -76,8 +76,8 @@ pub struct Key {
     check: fn(&str, Value) -> Result<Option<Value>>,
 }
 
-/// SolidCraft's own keys, in the order the Design Properties dialog shows them; a new key is one
-/// row here. Every other unprefixed key is reserved for SolidCraft too.
+/// Torno's own keys, in the order the Design Properties dialog shows them; a new key is one
+/// row here. Every other unprefixed key is reserved for Torno too.
 pub static KEYS: &[Key] = &[
     Key { name: PROJECT, scope: Scope::Both, label: "ui.design_properties.project", check: text },
     Key { name: PART_NUMBER, scope: Scope::Both, label: "ui.design_properties.part_number", check: text },
@@ -115,7 +115,7 @@ pub const MAX_TOTAL_BYTES: usize = 256 * 1024;
 #[serde(transparent)]
 pub struct Metadata(pub Map<String, Value>);
 
-/// SolidCraft's keys that may be set in `owner`'s metadata, in [`KEYS`]' order.
+/// Torno's keys that may be set in `owner`'s metadata, in [`KEYS`]' order.
 pub fn keys(owner: Owner) -> impl Iterator<Item = &'static Key> {
     KEYS.iter().filter(move |k| k.scope.covers(owner))
 }
@@ -126,12 +126,12 @@ pub fn key_list(owner: Owner) -> String {
     keys(owner).map(|k| k.name).chain(bom_type).collect::<Vec<_>>().join(", ")
 }
 
-/// One of SolidCraft's keys, by name.
+/// One of Torno's keys, by name.
 pub fn key(name: &str) -> Option<&'static Key> {
     KEYS.iter().find(|k| k.name == name)
 }
 
-/// A key SolidCraft reads as a design or part property.
+/// A key Torno reads as a design or part property.
 pub fn is_well_known(name: &str) -> bool {
     key(name).is_some() || name == BOM_TYPE
 }
@@ -144,7 +144,7 @@ pub fn is_namespaced(key: &str) -> bool {
         && key.split('.').all(|l| !l.is_empty() && l.bytes().all(|b| b.is_ascii_alphanumeric() || b == b'-' || b == b'_'))
 }
 
-/// Text SolidCraft keeps as a property: at most [`MAX_TEXT_BYTES`], and no control characters
+/// Text Torno keeps as a property: at most [`MAX_TEXT_BYTES`], and no control characters
 /// but line breaks and tabs. `what` names it in the refusal.
 pub fn check_text(what: &str, text: &str) -> Result<()> {
     if text.len() > MAX_TEXT_BYTES {
@@ -244,12 +244,12 @@ impl Metadata {
         self.text(LICENSE)
     }
     /// The component's bill of materials type: normal when the key is missing, or holds a word
-    /// this build doesn't know (a newer SolidCraft's type reads as normal and is kept as it is).
+    /// this build doesn't know (a newer Torno's type reads as normal and is kept as it is).
     pub fn bom_type(&self) -> BomType {
         self.text(BOM_TYPE).and_then(BomType::parse).unwrap_or_default()
     }
 
-    /// The keys SolidCraft doesn't read (other tools' data, or keys a newer SolidCraft added),
+    /// The keys Torno doesn't read (other tools' data, or keys a newer Torno added),
     /// kept as they are.
     pub fn others(&self) -> impl Iterator<Item = (&String, &Value)> {
         self.0.iter().filter(|(k, _)| !is_well_known(k))
@@ -309,7 +309,7 @@ fn check(owner: Owner, key: &str, value: Value) -> Result<Option<Value>> {
     }
     let shown: String = key.chars().take(64).collect();
     Err(invalid(format!(
-        "`{shown}` is not a {}: SolidCraft's are {}; another tool's data goes under a reverse-DNS key such as `com.example.tool`",
+        "`{shown}` is not a {}: Torno's are {}; another tool's data goes under a reverse-DNS key such as `com.example.tool`",
         owner.names().0,
         key_list(owner)
     )))
@@ -376,7 +376,7 @@ mod tests {
         assert_eq!(m.bom_type(), BomType::Inseparable, "a refused value leaves the old one");
         assert!(m.set(Component, BOM_TYPE, json!("")).unwrap(), "empty text removes it");
         assert_eq!(m.bom_type(), BomType::Normal);
-        assert!(m.others().next().is_none(), "SolidCraft reads it, so it isn't another tool's key");
+        assert!(m.others().next().is_none(), "Torno reads it, so it isn't another tool's key");
         // A word a newer build wrote is kept as it is and reads as normal here.
         let newer: Metadata = serde_json::from_value(json!({"bom_type": "kit"})).unwrap();
         assert_eq!(newer.bom_type(), BomType::Normal);
@@ -420,7 +420,7 @@ mod tests {
         for name in ["", "colour", "Author", "author ", "com.acme.tool"] {
             assert!(!is_well_known(name), "{name:?}");
         }
-        // Every key SolidCraft took on the design and on a component before the table still is.
+        // Every key Torno took on the design and on a component before the table still is.
         assert_eq!(key_list(Design), "project, part_number, revision, author, organization, description, license");
         assert_eq!(key_list(Component), format!("{}, {BOM_TYPE}", key_list(Design)), "a component also takes its bill of materials type");
     }
@@ -447,13 +447,13 @@ mod tests {
         let refusal = |owner, key: &str| Metadata::default().set(owner, key, json!("x")).unwrap_err().to_string();
         assert_eq!(
             refusal(Design, "colour"),
-            "`colour` is not a design property: SolidCraft's are project, part_number, revision, author, organization, \
+            "`colour` is not a design property: Torno's are project, part_number, revision, author, organization, \
              description, license; another tool's data goes under a reverse-DNS key such as `com.example.tool`",
             "the design's wording is as it was"
         );
         assert_eq!(
             refusal(Component, "colour"),
-            "`colour` is not a part property: SolidCraft's are project, part_number, revision, author, organization, \
+            "`colour` is not a part property: Torno's are project, part_number, revision, author, organization, \
              description, license, bom_type; another tool's data goes under a reverse-DNS key such as `com.example.tool`"
         );
         for owner in [Design, Component] {

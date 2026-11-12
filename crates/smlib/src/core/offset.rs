@@ -45,7 +45,7 @@ use super::blend::{Miss, on_copy, p3, pick, points_ok, status as blend_status, t
 use super::{Body, answer};
 use crate::{Error, Result};
 
-/// The capi's statuses as SolidCraft errors: an operation's own result.
+/// The capi's statuses as Torno errors: an operation's own result.
 type Out<T> = std::result::Result<T, Error>;
 
 /// `SM_ERR_INVALID_INPUT`.
@@ -375,7 +375,7 @@ fn move_faces(k: &mut Kernel, b: &mut Brep, picked: &[FaceId], distance: f64) ->
         OffsetFacesRefusal::NotExact => Error::NotExact,
         OffsetFacesRefusal::NoEffect => Error::NoEffect,
         // Not in the fork (solidcore#2020, #2027): the blends cannot be put back, the fillet's
-        // status kept. SolidCraft has no such error: a move solidcore does not make.
+        // status kept. Torno has no such error: a move solidcore does not make.
         OffsetFacesRefusal::NotPutBack => Error::Unsupported,
         OffsetFacesRefusal::None => status(e),
     })

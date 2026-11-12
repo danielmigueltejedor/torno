@@ -1,9 +1,9 @@
 use super::*;
 use crate::ProductMesh;
 use crate::job::{AnisotropicFaceOptions, AnisotropicOrientation, ReflectionBody, ReflectionMode, ReflectionOptions};
-use solidcraft_geom::Mesh;
-use solidcraft_viewport::StandardView;
 use std::sync::Arc;
+use torno_geom::Mesh;
+use torno_viewport::StandardView;
 
 fn scene() -> ProductScene {
     let reflector = ProductMesh {
@@ -42,7 +42,7 @@ fn scene() -> ProductScene {
 }
 
 fn request(orientation: AnisotropicOrientation, reflect: bool) -> ImageRequest {
-    let mut camera = solidcraft_viewport::Camera { distance: 50.0, ..Default::default() };
+    let mut camera = torno_viewport::Camera { distance: 50.0, ..Default::default() };
     camera.set_view(StandardView::Front);
     let target = AnisotropicFaceOptions {
         body_index: 0,

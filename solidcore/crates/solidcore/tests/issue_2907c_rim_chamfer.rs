@@ -1,5 +1,5 @@
 //! tangency-labs/solidcore#2907: a tangent chain of seven edges chamfered on a curved face,
-//! the rim of SolidCraft's public `examples/regressions/front_triangle_hull_triangle.json`
+//! the rim of Torno's public `examples/regressions/front_triangle_hull_triangle.json`
 //! (the body before its chamfer, `data/issue_2907c_hull_rim.smb`). The band check took a rail
 //! point far across the face for one inside another blend's band, whose chord direction it
 //! only projected on: refused as overlapping at any size past the smallest. The edges are 15

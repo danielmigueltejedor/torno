@@ -1,5 +1,5 @@
 //! A design's bodies are made and used on whichever kernel of the pool is free
-//! (`solidcraft_smlib`'s `core::Pool`). What it builds must not depend on which: to the last
+//! (`torno_smlib`'s `core::Pool`). What it builds must not depend on which: to the last
 //! number, on a new kernel or one that has done much, while another is busy, with bodies made on
 //! one kernel going into operations on another, through the evaluation cache, undo and redo.
 
@@ -50,10 +50,10 @@ fn a_design_rebuilds_the_same_on_any_kernel() {
     let first = built(&design(&f));
     assert!(!first.is_empty());
     // On a new kernel, the one that built it above busy elsewhere.
-    let held = solidcraft_kernel::hold_a_kernel();
+    let held = torno_kernel::hold_a_kernel();
     assert_same("a new kernel", &first, &built(&design(&f)));
     // And another new one, with both of those out of use.
-    let held_too = solidcraft_kernel::hold_a_kernel();
+    let held_too = torno_kernel::hold_a_kernel();
     assert_same("another new kernel", &first, &built(&design(&f)));
     drop((held, held_too));
     // On one that has built plenty since.
@@ -73,7 +73,7 @@ fn a_procedural_blend_builds_the_same_on_any_kernel() {
         ("solid.fillet", json!({"edges": [[20, 0, 20]], "radius": 3, "type": "curvature"})),
     ];
     let first = design(&f);
-    let held = solidcraft_kernel::hold_a_kernel();
+    let held = torno_kernel::hold_a_kernel();
     let second = design(&f);
     let b = built(&second);
     assert_same("a new kernel", &built(&first), &b);
@@ -93,7 +93,7 @@ fn a_thread_builds_the_same_on_any_kernel() {
         ("solid.thread", json!({"face": [13.4, 10, 2], "modeled": true})),
     ];
     let first = built(&design(&f));
-    let held = solidcraft_kernel::hold_a_kernel();
+    let held = torno_kernel::hold_a_kernel();
     assert_same("a new kernel", &first, &built(&design(&f)));
     drop(held);
 }
@@ -109,14 +109,14 @@ fn bodies_from_another_kernel_go_on_through_the_cache_undo_and_redo() {
     let (before, after) = (built(&design(&f)), built(&design(&all)));
 
     let mut s = design(&f);
-    let held = solidcraft_kernel::hold_a_kernel();
+    let held = torno_kernel::hold_a_kernel();
     let (id, p) = join();
     run(&mut s, id, p);
     assert_same("joined on another kernel", &after, &built(&s));
     run(&mut s, "edit.undo", json!({}));
     assert_same("undone", &before, &built(&s));
     drop(held);
-    let held = solidcraft_kernel::hold_a_kernel();
+    let held = torno_kernel::hold_a_kernel();
     run(&mut s, "edit.redo", json!({}));
     assert_same("redone", &after, &built(&s));
     // Rebuilt without the cache, every feature again, while that kernel stays out of use.

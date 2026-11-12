@@ -25,15 +25,15 @@ use crate::ui_kit::BackingTooltipExt as _;
 use crate::ui_kit::{Container, Surface};
 use egui::{Align2, FontId, Pos2, Rect, Sense, pos2, vec2};
 use serde_json::{Value, json};
-use solidcraft_engine::Sel;
-use solidcraft_engine::geom::prelude::*;
-use solidcraft_engine::sketch::CurveKind;
 use std::hash::{Hash, Hasher};
+use torno_engine::Sel;
+use torno_engine::geom::prelude::*;
+use torno_engine::sketch::CurveKind;
 
 use crate::SolveApp;
 use crate::tool_modifiers::Held;
 use crate::viewport::{Hit, Proj};
-use solidcraft_theme::Tokens;
+use torno_theme::Tokens;
 
 /// How long the left button stays down, without moving, before the list opens.
 pub const HOLD_SECS: f64 = 0.5;
@@ -191,7 +191,7 @@ fn body_of(h: &Hit) -> Option<&str> {
 /// How far along the pick ray (`o`, `d`) a body's hit lies: a face's or vertex's point, or an
 /// edge's point nearest the ray (its middle can lie much deeper or nearer).
 fn hit_depth(
-    st: &solidcraft_engine::doc::ModelState,
+    st: &torno_engine::doc::ModelState,
     index: &std::collections::HashMap<&str, usize>,
     o: solidcore_record::Vec3,
     d: solidcore_record::Vec3,
@@ -203,7 +203,7 @@ fn hit_depth(
         Hit::Edge { body, index: ei, mid, .. } => {
             let under = index.get(body.as_str()).and_then(|i| st.bodies.get(*i)).and_then(|b| {
                 let (m, place) = b.mesh_in_place();
-                let at = |p: solidcore_record::Vec3| solidcraft_engine::doc::apply_point(&place, p);
+                let at = |p: solidcore_record::Vec3| torno_engine::doc::apply_point(&place, p);
                 let dd = d.dot(d);
                 m.edges
                     .get(*ei)?
@@ -273,14 +273,14 @@ fn sketch_name(app: &SolveApp, sketch: u64) -> String {
 }
 
 /// "Line 3" (its kind and number), with what kind of geometry it is when that matters.
-pub(crate) fn curve_label(sk: &solidcraft_engine::sketch::Sketch, id: &str) -> String {
+pub(crate) fn curve_label(sk: &torno_engine::sketch::Sketch, id: &str) -> String {
     if let Some((i, c)) = sk.curves.iter().enumerate().find(|(_, c)| c.id == id) {
         let kind = curve_kind_name(&c.kind);
         let n = id_number(id).unwrap_or_else(|| sk.curves.iter().take(i + 1).filter(|x| curve_kind_name(&x.kind) == kind).count() as u64);
         let mut s = format!("{kind} {n}");
         if let Some(link) = &c.link {
             let kind = sk.links.iter().find(|l| &l.id == link).map(|l| l.kind);
-            s.push_str(if kind == Some(solidcraft_engine::sketch::LinkKind::Intersect) { " (intersected)" } else { " (projected)" });
+            s.push_str(if kind == Some(torno_engine::sketch::LinkKind::Intersect) { " (intersected)" } else { " (projected)" });
         } else if c.construction {
             s.push_str(" (construction)");
         }
@@ -293,7 +293,7 @@ pub(crate) fn curve_label(sk: &solidcraft_engine::sketch::Sketch, id: &str) -> S
 }
 
 /// "Point (arc 2 centre)": the role it plays in the first curve that uses it.
-pub(crate) fn point_label(sk: &solidcraft_engine::sketch::Sketch, id: &str) -> String {
+pub(crate) fn point_label(sk: &torno_engine::sketch::Sketch, id: &str) -> String {
     let Some(pi) = sk.points.iter().position(|p| p.id == id) else { return id.to_string() };
     let role = sk.curves.iter().find_map(|c| {
         let name = format!("{} {}", curve_kind_name(&c.kind).to_lowercase(), id_number(&c.id).unwrap_or(0));
@@ -321,8 +321,7 @@ pub(crate) fn point_label(sk: &solidcraft_engine::sketch::Sketch, id: &str) -> S
 /// by the name the preferences give it)…
 pub fn label(app: &SolveApp, sel: &Sel) -> String {
     let st = crate::open_meshing::session_world(&app.session);
-    let in_sketch =
-        |sketch: u64, f: &dyn Fn(&solidcraft_engine::sketch::Sketch) -> String| st.sketch(sketch).map(|ss| f(&ss.sketch)).unwrap_or_default();
+    let in_sketch = |sketch: u64, f: &dyn Fn(&torno_engine::sketch::Sketch) -> String| st.sketch(sketch).map(|ss| f(&ss.sketch)).unwrap_or_default();
     match sel {
         Sel::SketchMidpoint { id } => {
             format!("MID · {}", app.session.active_sketch.map(|s| in_sketch(s, &|sk| curve_label(sk, id))).unwrap_or_else(|| id.clone()))
@@ -649,13 +648,13 @@ pub fn show(app: &mut SolveApp, ctx: &egui::Context) {
             ui.set_max_height(size.y);
             crate::ui_kit::Menu::show(ui, width, |ui| {
                 let (r, _) = ui.allocate_exact_size(vec2(w, header), Sense::hover());
-                let title = solidcraft_ui_text::tr_label("Select Other").to_uppercase();
+                let title = torno_ui_text::tr_label("Select Other").to_uppercase();
                 let title = if p.total > p.rows.len() { format!("{title} · {} / {}", p.rows.len(), p.total) } else { title };
                 ui.painter().text(
                     pos2(r.left() + 8.0, r.center().y),
                     Align2::LEFT_CENTER,
                     title,
-                    FontId::proportional(solidcraft_theme::Tokens::get().font_panel),
+                    FontId::proportional(torno_theme::Tokens::get().font_panel),
                     t.text_dim,
                 );
                 egui::ScrollArea::vertical().min_scrolled_height(0.0).max_height(scroll_height).show(ui, |ui| {

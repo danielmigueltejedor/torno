@@ -40,18 +40,18 @@ pub fn time<T>(profile: bool, f: impl FnOnce() -> T) -> (T, Step) {
     }
 }
 
-/// `SOLIDCRAFT_PROFILE` asks for the profiler from the start: `1`, `true`, `on` or `yes`.
+/// `TORNO_PROFILE` asks for the profiler from the start: `1`, `true`, `on` or `yes`.
 pub fn profile_env_on(value: Option<&str>) -> bool {
     value.map(|v| v.trim().to_ascii_lowercase()).is_some_and(|v| matches!(v.as_str(), "1" | "true" | "on" | "yes"))
 }
 
-/// Start the profiler when `SOLIDCRAFT_PROFILE` asks for it (the apps call this at start-up);
+/// Start the profiler when `TORNO_PROFILE` asks for it (the apps call this at start-up);
 /// true when it is recording.
 pub fn profile_from_env() -> bool {
-    if profile_env_on(solidcraft_geom::env::var("PROFILE").as_deref()) {
-        solidcraft_profile::set_enabled(true);
+    if profile_env_on(torno_geom::env::var("PROFILE").as_deref()) {
+        torno_profile::set_enabled(true);
     }
-    solidcraft_profile::enabled()
+    torno_profile::enabled()
 }
 
 /// Milliseconds to the microsecond, so the JSON stays readable.

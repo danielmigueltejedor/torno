@@ -1,9 +1,9 @@
-//! What SolidCraft's requests do when they outlast their wait (docs/control-protocol.md, #1618), as
-//! a [`solidcraft_control::Effect`]: nothing (it only reads), write a file (an export or a save),
+//! What Torno's requests do when they outlast their wait (docs/control-protocol.md, #1618), as
+//! a [`torno_control::Effect`]: nothing (it only reads), write a file (an export or a save),
 //! or change the design. The app's control server and the bridged MCP server both say it.
 
 use serde_json::Value;
-use solidcraft_control::Effect;
+use torno_control::Effect;
 
 /// Control methods that only read: a timed-out one changes nothing when it finishes.
 /// (`ui.screenshot` with a `path`, and `ui.render`, write a file: see [`effect`].)

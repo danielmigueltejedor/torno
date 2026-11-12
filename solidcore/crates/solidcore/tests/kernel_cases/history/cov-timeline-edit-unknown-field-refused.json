@@ -36,6 +36,6 @@
   "ungraded": [],
   "what": "timeline.edit with a misspelt field",
   "why_not": [
-    "the failure is SolidCraft's, not a kernel operation's: step 3 (timeline.edit): invalid parameters for `timeline.edit`: unknown field `radus`; FilletFeature has `body`, `edges`, `radius` (timeline.inspect shows them with their values)"
+    "the failure is Torno's, not a kernel operation's: step 3 (timeline.edit): invalid parameters for `timeline.edit`: unknown field `radus`; FilletFeature has `body`, `edges`, `radius` (timeline.inspect shows them with their values)"
   ]
 }

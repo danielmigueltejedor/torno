@@ -8,7 +8,7 @@
 
 use serde_json::{Map, Value};
 
-use solidcraft_ui_text::{format as trf, tr, tr_label};
+use torno_ui_text::{format as trf, tr, tr_label};
 
 /// Steps of a batch named before "and N more".
 const MAX_STEPS: usize = 4;
@@ -28,7 +28,7 @@ pub struct Units<'a> {
     pub decimals: u8,
 }
 
-/// The call in words, or `None` when it is not one of SolidCraft's tools or says too little.
+/// The call in words, or `None` when it is not one of Torno's tools or says too little.
 /// `title`: the call's title as the agent gave it; `input`: its arguments; `output`: what it
 /// returned (text); `done`: it completed (a finished save reads "Saved …", one still running
 /// or failed "Save …").
@@ -39,15 +39,15 @@ pub fn summary(title: &str, input: Option<&Value>, output: Option<&str>, done: b
     Some(clip(&text, MAX_SUMMARY))
 }
 
-/// SolidCraft's tool a title names: `mcp__<server>__<tool>` (an agent names MCP tools after their
-/// server, which for SolidCraft's has `solidcraft` in it), or the in-app client's own `measure`,
+/// Torno's tool a title names: `mcp__<server>__<tool>` (an agent names MCP tools after their
+/// server, which for Torno's has `torno` in it), or the in-app client's own `measure`,
 /// `execute: solid.box`, `batch: …`.
 pub fn tool_name(title: &str) -> Option<&str> {
     let head = title.trim();
     let name = head.split(|c: char| c == ':' || c.is_whitespace()).next()?;
     let parts: Vec<&str> = name.split("__").take(4).collect();
     match parts.as_slice() {
-        ["mcp", server, tool] if server.to_ascii_lowercase().contains("solidcraft") && !tool.is_empty() => Some(*tool),
+        ["mcp", server, tool] if server.to_ascii_lowercase().contains("torno") && !tool.is_empty() => Some(*tool),
         [bare] if !bare.is_empty() && head.strip_prefix(*bare).is_some_and(|rest| rest.is_empty() || rest.starts_with(':')) => Some(*bare),
         _ => None,
     }
@@ -270,7 +270,7 @@ fn plural((one, other): (&str, &str), count: usize) -> String {
 
 /// A command's label in the interface language.
 fn label(id: &str) -> Option<&'static str> {
-    solidcraft_engine::find_command(id).map(|c| tr_label(c.label))
+    torno_engine::find_command(id).map(|c| tr_label(c.label))
 }
 
 /// A file's name without its folders; `None` for a temporary file (the agent's scratch, not
@@ -282,11 +282,11 @@ fn file_name(path: &str) -> Option<String> {
     Some(word(path.rsplit(['/', '\\']).find(|p| !p.is_empty()).unwrap_or(path)))
 }
 
-/// A path in a temporary folder (`/tmp`, `%TEMP%`, macOS `/var/folders`) or one of SolidCraft's
+/// A path in a temporary folder (`/tmp`, `%TEMP%`, macOS `/var/folders`) or one of Torno's
 /// own scratch folders.
 fn is_temp(path: &str) -> bool {
     let p = path.replace('\\', "/").to_ascii_lowercase();
-    ["/tmp/", "/temp/", "/var/folders/", "/appdata/local/temp", "solidcraft-mcp-", "/dev/shm/"].iter().any(|m| p.contains(m))
+    ["/tmp/", "/temp/", "/var/folders/", "/appdata/local/temp", "torno-mcp-", "/dev/shm/"].iter().any(|m| p.contains(m))
         || p.ends_with("/tmp")
         || p.ends_with("/temp")
 }

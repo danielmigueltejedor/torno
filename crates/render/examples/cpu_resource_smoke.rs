@@ -2,12 +2,12 @@
 //! benchmark or an application/UI test. Writes only to a new caller-selected folder.
 use serde_json::json;
 use solidcore_record::Vec3;
-use solidcraft_geom::Mesh;
-use solidcraft_geom::MeshGeom;
-use solidcraft_render::job::{CpuBudget, CpuHost, DirectionalLightOptions, ImageRequest, Integrator, JobId, JobOptions, Phase, RaytraceOptions};
-use solidcraft_render::{ProductMesh, ProductScene};
-use solidcraft_viewport::{Camera, StandardView, surface::OpaqueSurface};
 use std::{error::Error, fs, path::PathBuf, sync::Arc, time::Duration};
+use torno_geom::Mesh;
+use torno_geom::MeshGeom;
+use torno_render::job::{CpuBudget, CpuHost, DirectionalLightOptions, ImageRequest, Integrator, JobId, JobOptions, Phase, RaytraceOptions};
+use torno_render::{ProductMesh, ProductScene};
+use torno_viewport::{Camera, StandardView, surface::OpaqueSurface};
 
 fn scene() -> Result<ProductScene, Box<dyn Error>> {
     let mesh = Arc::new(Mesh {
@@ -108,7 +108,7 @@ fn body_scene() -> Result<ProductScene, Box<dyn Error>> {
             result.meshes.push(body);
         }
     }
-    result.bounds = solidcraft_geom::Aabb3 { min: Vec3::new(-100.0, -50.0, 0.0), max: Vec3::new(100.0, 50.0, 0.0) };
+    result.bounds = torno_geom::Aabb3 { min: Vec3::new(-100.0, -50.0, 0.0), max: Vec3::new(100.0, 50.0, 0.0) };
     Ok(result)
 }
 
@@ -130,7 +130,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     }
     let mut studio = request(width, height, budget);
     if case == "bodies" {
-        studio.camera.fit(&solidcraft_render::view_bounds(&source.bounds));
+        studio.camera.fit(&torno_render::view_bounds(&source.bounds));
     }
     let admission = host.admit(&source, &studio, JobOptions::default())?;
     let id = JobId { session: 20261022, serial: 1, generation: 1 };

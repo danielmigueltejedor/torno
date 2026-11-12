@@ -94,7 +94,7 @@
     "stitch"
   ],
   "ungraded": [
-    "continuity: SolidCraft computes it"
+    "continuity: Torno computes it"
   ],
   "what": "a G2 blend bridging a 10 mm step between two parallel sheets (z = 0 and z = 10), stitched to both: it meets each at G2",
   "why_not": []

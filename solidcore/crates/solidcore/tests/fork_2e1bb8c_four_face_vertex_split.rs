@@ -1,4 +1,4 @@
-//! The SolidCraft fork's tangency-labs/smlib@2e1bb8c (WR-666, its #2052, the default
+//! The Torno fork's tangency-labs/smlib@2e1bb8c (WR-666, its #2052, the default
 //! path since #2981): a vertex where four plane faces meet splits into the edge their
 //! two pairs' planes give, once; the loop gaps the split leaves close, and the
 //! shell/inset then reaches its closed form. On the commit message's two cases,
@@ -10,7 +10,7 @@
 //! - an 80 x 60 x 20 slab with that floor's pocket cut 10 deep into its top, shelled 3
 //!   inward open at the top,
 //!
-//! both as SolidCraft's `smlib_shell` calls `SmApiShellBrepFull(b, -t, TRUE, TRUE, TRUE,
+//! both as Torno's `smlib_shell` calls `SmApiShellBrepFull(b, -t, TRUE, TRUE, TRUE,
 //! [top])`. Four faces meet at each corner of the floor (two walls, two facets) and at the
 //! drain (four facets), every edge there convex (the trough) or concave (the pocket), and
 //! their four offset planes do not meet in one point: each offset vertex is two, joined by
@@ -268,7 +268,7 @@ struct Shelled {
 }
 
 /// `part` shelled `t` inward open at its top (the plane face at `top`) under `fixes`, as
-/// SolidCraft's `smlib_shell` calls `SmApiShellBrepFull`.
+/// Torno's `smlib_shell` calls `SmApiShellBrepFull`.
 fn shell(
     fixes: &UpstreamFixes,
     make: fn(&mut Kernel) -> Brep,

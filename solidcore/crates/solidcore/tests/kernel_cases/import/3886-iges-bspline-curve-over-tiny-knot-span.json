@@ -49,6 +49,6 @@
   "ungraded": [],
   "what": "a box of six trimmed planes with one edge written as a B-spline curve (126) over a knot span of 1e-7: both faces it bounds must be kept",
   "why_not": [
-    "body \"Body1\" is no kernel operation's output nor an operand: SolidCraft built it or changed the kernel's record"
+    "body \"Body1\" is no kernel operation's output nor an operand: Torno built it or changed the kernel's record"
   ]
 }

@@ -1,13 +1,11 @@
 //! Design-owned physical materials, edited inside the existing assignment panel.
 //! Drafts never mutate the document; Save is one ordinary material command.
 use serde_json::{Value, json};
-use solidcraft_engine::doc::physical_material::{
-    Conditions, Elasticity, Family, MaterialAxes, MaterialCard, Property, PropertyData, Source, SourceKind,
-};
-use solidcraft_engine::doc::{Document, UserMaterial, appearance::Look};
+use torno_engine::doc::physical_material::{Conditions, Elasticity, Family, MaterialAxes, MaterialCard, Property, PropertyData, Source, SourceKind};
+use torno_engine::doc::{Document, UserMaterial, appearance::Look};
 
 use crate::{SolveApp, ui_kit};
-use solidcraft_ui_text::tr;
+use torno_ui_text::tr;
 
 const KINDS: [&str; 9] = [
     "density",
@@ -51,7 +49,7 @@ impl Editor {
         let materials: Vec<_> = bodies
             .iter()
             .map(|body| {
-                let assigned = doc.materials.get(body).map(String::as_str).unwrap_or(solidcraft_engine::doc::DEFAULT_MATERIAL);
+                let assigned = doc.materials.get(body).map(String::as_str).unwrap_or(torno_engine::doc::DEFAULT_MATERIAL);
                 doc.material_name(assigned).filter(|name| doc.material_density(name).is_some())
             })
             .collect();
@@ -117,7 +115,7 @@ impl Draft {
         let user = source.and_then(|name| doc.user_material(name)).cloned();
         let original = (!duplicate).then(|| user.clone()).flatten();
         let name = match source {
-            Some(name) if duplicate => solidcraft_ui_text::format("material.editor.copy_name", &[("name", name)]),
+            Some(name) if duplicate => torno_ui_text::format("material.editor.copy_name", &[("name", name)]),
             Some(name) => name.to_string(),
             None => String::new(),
         };
@@ -139,7 +137,7 @@ impl Draft {
             return Err(tr("material.editor.name_required").to_string());
         }
         let density = number(&self.density, "density_g_cm3")?;
-        if !solidcraft_engine::doc::valid_density(density) {
+        if !torno_engine::doc::valid_density(density) {
             return Err(tr("material.editor.density_range").to_string());
         }
         let card = if self.card_enabled { Some(self.card.build()?) } else { None };

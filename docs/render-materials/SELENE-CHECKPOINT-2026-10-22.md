@@ -16,7 +16,7 @@ Twelve explicit closed glass bodies, 48 exact PBR body bindings across six autho
 - Selected native export and manifest: `be930718`.
 - Final UI repair/package source: `fb0d7a42`, tree `0bec3bc30e91550709d0494a2f7c5b15a7f57d41`. The closing gate verified that tree unchanged. Later checkpoint documentation does not change the tested renderer/UI code.
 
-The personal branch is `lab/render-scale-resources` in `0xlillith/solidcraft`, draft PR #7. Upstream, main and releases are unchanged.
+The personal branch is `lab/render-scale-resources` in `0xlillith/torno`, draft PR #7. Upstream, main and releases are unchanged.
 
 ## Completed validation
 

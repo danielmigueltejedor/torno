@@ -135,7 +135,7 @@
     "extrude"
   ],
   "ungraded": [
-    "continuity: SolidCraft computes it"
+    "continuity: Torno computes it"
   ],
   "what": "two planes meeting at a right angle: the seam is a crease, G0 and not G1",
   "why_not": []

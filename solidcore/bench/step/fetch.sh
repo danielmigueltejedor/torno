@@ -7,7 +7,7 @@
 # Reserved", the others are someone else's data too).
 #
 # Sources:
-#   solidcraft   SolidCraft's own STEP tests, when this runs inside SolidCraft's tree:
+#   torno   Torno's own STEP tests, when this runs inside Torno's tree:
 #                tests/step-conformance, tests/kernel-cases/import/*/input.step,
 #                tests/step-regressions
 #   conformance  github.com/dan335/step-conformance at $CONFORMANCE_REV (CC0 1.0), corpus/
@@ -29,7 +29,7 @@ CADMPEG_REV=bbf22db3c0e100e6c7f5309e6f33d17839ff13e5
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CORE="$(cd "$HERE/../.." && pwd)"
 DEST="${1:-$HERE/corpus}"
-# SolidCraft's tree holds solidcore at solidcore/; outside it there is no SolidCraft section.
+# Torno's tree holds solidcore at solidcore/; outside it there is no Torno section.
 APP=""
 if [ -d "$CORE/../tests/step-conformance" ]; then APP="$(cd "$CORE/.." && pwd)"; fi
 
@@ -58,7 +58,7 @@ add() { # section, path, source label
 step_files() { find "$1" -type f \( -iname '*.step' -o -iname '*.stp' -o -iname '*.p21' \) -print0 | sort -z; }
 
 if [ -n "$APP" ]; then
-  while IFS= read -r -d '' f; do add solidcraft "$f" "${f#"$APP"/}"; done < <(
+  while IFS= read -r -d '' f; do add torno "$f" "${f#"$APP"/}"; done < <(
     step_files "$APP/tests/step-conformance"; step_files "$APP/tests/kernel-cases/import"; step_files "$APP/tests/step-regressions")
 fi
 

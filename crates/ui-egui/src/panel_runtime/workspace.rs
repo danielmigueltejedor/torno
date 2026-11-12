@@ -2,7 +2,7 @@
 //! runtime action sink; resolved geometry and drag previews are observational.
 use std::collections::BTreeMap;
 
-use solidcraft_engine::panels::*;
+use torno_engine::panels::*;
 
 use super::runtime::{RuntimeHostProposal, standalone_header_action};
 use super::*;
@@ -90,9 +90,9 @@ pub struct HostOptions {
 impl Default for HostOptions {
     fn default() -> Self {
         Self {
-            metrics: HostMetrics { inline_max_height: solidcraft_theme::PANEL_INLINE_MAX_HEIGHT, ..HostMetrics::default() },
+            metrics: HostMetrics { inline_max_height: torno_theme::PANEL_INLINE_MAX_HEIGHT, ..HostMetrics::default() },
             geometry: HostGeometryPolicy::default(),
-            content_header_height: solidcraft_theme::Tokens::get().control_height,
+            content_header_height: torno_theme::Tokens::get().control_height,
         }
     }
 }
@@ -822,8 +822,8 @@ impl WorkspacePanelHost {
             resolve_frame_layout(runtime, frame.layout.render_domain, frame.layout.capacity, &frame.layout.chrome_obstacles, &self.options)?;
         let scope = runtime_scope(runtime);
         let window = runtime.environment().window.clone();
-        let locale = solidcraft_ui_text::Locale::for_language(solidcraft_ui_text::language());
-        let _resolved_labels = solidcraft_ui_text::resolved_labels();
+        let locale = torno_ui_text::Locale::for_language(torno_ui_text::language());
+        let _resolved_labels = torno_ui_text::resolved_labels();
         let mut metadata = BTreeMap::new();
         let mut owners = BTreeMap::new();
         let mut header_icons = BTreeMap::new();
@@ -1249,9 +1249,9 @@ impl WorkspacePanelHost {
         {
             let now = ui.input(|input| input.time);
             let started = *self.preview_started.get_or_insert(now);
-            let duration = solidcraft_theme::panel_motion_duration(ui.ctx(), runtime.environment().motion == Motion::Reduced);
+            let duration = torno_theme::panel_motion_duration(ui.ctx(), runtime.environment().motion == Motion::Reduced);
             let progress = if duration <= 0.0 { 1.0 } else { ((now - started) as f32 / duration).clamp(0.0, 1.0) };
-            let opacity = solidcraft_theme::panel_motion_ease(progress);
+            let opacity = torno_theme::panel_motion_ease(progress);
             if let Some(projected) = &preview.projected {
                 for section in &projected.sections {
                     if section.outer != preview.bounds
@@ -1674,7 +1674,7 @@ impl WorkspacePanelHost {
         for (horizontal, bounds) in scroll_tracks(&frame.layout) {
             let target = HostControlTarget::Scroll { horizontal };
             let id = scoped_id(scope, window, None, &target);
-            let label = solidcraft_ui_text::tr(if horizontal { "ui.panel_host.scroll_horizontal" } else { "ui.panel_host.scroll_vertical" });
+            let label = torno_ui_text::tr(if horizontal { "ui.panel_host.scroll_horizontal" } else { "ui.panel_host.scroll_vertical" });
             let (visible, total, offset) = if horizontal {
                 (frame.layout.capacity.size.width, frame.layout.extent.width, frame.layout.allocation_environment.scroll.x)
             } else {
@@ -1697,7 +1697,7 @@ impl WorkspacePanelHost {
         _commands: &mut Vec<HostCommand>,
         pointer_events: &mut Vec<(egui::Id, HostPointerEvent)>,
         allow_actions: bool,
-        _locale: solidcraft_ui_text::Locale,
+        _locale: torno_ui_text::Locale,
     ) {
         for control in &frame.controls {
             let HostControlTarget::Pointer(target @ HostPointerTarget::Sash { first, .. }) = &control.target else {
@@ -2019,7 +2019,7 @@ fn chrome_label(
     target: &HostPointerTarget,
     fallback: &str,
     metadata: &BTreeMap<InstanceId, PanelPresentation>,
-    locale: solidcraft_ui_text::Locale,
+    locale: torno_ui_text::Locale,
 ) -> String {
     match target {
         HostPointerTarget::Menu { .. } => locale.text("ui.panel_host.menu").to_owned(),
@@ -2467,7 +2467,7 @@ impl PanelHost for WorkspaceContentHost<'_> {
                         }
                     }
                 }
-                let t = solidcraft_theme::Tokens::get();
+                let t = torno_theme::Tokens::get();
                 // The title and its controls share the card background. One
                 // kit separator spans the header, rather than per-control tiles.
                 if !section.collapsed && !section.inline {
@@ -2529,7 +2529,7 @@ impl PanelHost for WorkspaceContentHost<'_> {
                         let has_footer_actions = presentation.actions.iter().any(|action| !section.actions.iter().any(|(id, _)| *id == action.id));
                         let row_height = if has_footer_actions { self.layout.metrics.control_extent.min(footer.size.height) } else { 0.0 };
                         if row_height > 0.0 && egui_rect(footer).intersect(content_ui.clip_rect()).is_positive() {
-                            let inset = solidcraft_theme::Tokens::get().space_4.min(footer.size.width / 2.0);
+                            let inset = torno_theme::Tokens::get().space_4.min(footer.size.width / 2.0);
                             let row = LogicalRect {
                                 origin: Point { x: footer.origin.x + inset, y: footer.origin.y },
                                 size: Size { width: footer.size.width - 2.0 * inset, height: row_height },
@@ -2644,7 +2644,7 @@ fn render_slot(
         return;
     }
     let bounds = egui_rect(bounds);
-    let t = solidcraft_theme::Tokens::get();
+    let t = torno_theme::Tokens::get();
     let inset = bounds.shrink2(egui::vec2(t.space_4.min(bounds.width().max(0.0) / 2.0), t.space_2.min(bounds.height().max(0.0) / 2.0)));
     let clip = ui.clip_rect().intersect(inset);
     if !clip.is_positive() {
@@ -2778,7 +2778,7 @@ fn scroll_tracks(layout: &HostLayout) -> Vec<(bool, LogicalRect)> {
     if !capacity.is_positive() {
         return Vec::new();
     }
-    let thickness = solidcraft_theme::Tokens::get().space_8.min(capacity.width()).min(capacity.height());
+    let thickness = torno_theme::Tokens::get().space_8.min(capacity.width()).min(capacity.height());
     let horizontal = layout.extent.width > layout.capacity.size.width;
     let vertical = layout.extent.height > layout.capacity.size.height;
     let mut tracks = Vec::new();
@@ -2819,7 +2819,7 @@ impl WorkspacePanelHost {
         frame: &mut HostFrame,
         commands: &mut Vec<HostCommand>,
         allow_actions: bool,
-        locale: solidcraft_ui_text::Locale,
+        locale: torno_ui_text::Locale,
     ) {
         let (Some(menu), Some(anchor)) = (self.menu.clone(), self.menu_anchor) else {
             return;
@@ -2850,7 +2850,7 @@ impl WorkspacePanelHost {
             egui::ScrollArea::vertical().id_salt(("items", scroll_id)).max_height(ui.available_height()).show(ui, |ui| {
                 ui.set_min_width(ui.available_width());
                 if let Some(reason) = &self.last_rejection {
-                    ui.colored_label(solidcraft_theme::Tokens::get().form_error, locale.text(rule_key(reason.rule)));
+                    ui.colored_label(torno_theme::Tokens::get().form_error, locale.text(rule_key(reason.rule)));
                 }
                 match &menu {
                     HostMenu::Panel(instance) => {
@@ -3003,7 +3003,7 @@ fn menu_geometry(capacity: LogicalRect, anchor: LogicalRect) -> Option<egui::Rec
     if !capacity.is_positive() || !capacity.is_finite() {
         return None;
     }
-    let t = solidcraft_theme::Tokens::get();
+    let t = torno_theme::Tokens::get();
     if capacity.width() <= t.space_6 * 2.0 || capacity.height() <= t.space_6 * 2.0 {
         return None;
     }
@@ -3056,7 +3056,7 @@ fn menu_instance(
     instance: &InstanceId,
     clip: egui::Rect,
     allow_actions: bool,
-    locale: solidcraft_ui_text::Locale,
+    locale: torno_ui_text::Locale,
 ) {
     let label = metadata.get(instance).map_or_else(|| locale.text("ui.panel_host.tab").to_owned(), |value| value.title.clone());
     ui.label(&label);
@@ -3103,7 +3103,7 @@ fn shared_label(
     instance: &InstanceId,
     runtime: &PanelRuntime,
     metadata: &BTreeMap<InstanceId, PanelPresentation>,
-    locale: solidcraft_ui_text::Locale,
+    locale: torno_ui_text::Locale,
 ) -> String {
     if *action == HostSharedAction::Collapse && runtime.layout().layout().containing(instance).is_ok_and(|section| section.collapsed) {
         return locale.text("ui.panel_host.expand").to_owned();

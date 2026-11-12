@@ -12,7 +12,7 @@ use crate::SolveApp;
 pub(crate) fn start_selected(app: &mut SolveApp) {
     let mut components = app.tree.picked_components.clone();
     for selection in &app.session.selection {
-        if let solidcraft_engine::Sel::Occurrence { path } = selection
+        if let torno_engine::Sel::Occurrence { path } = selection
             && let Ok(placement) = app.session.occurrence_placement(path)
         {
             components.push(placement.component);
@@ -41,7 +41,7 @@ pub(crate) fn start(app: &mut SolveApp, component: u64, occurrence: Option<u64>)
     }
     let document = app.session.doc.clone();
     // A design of any release, or a plain JSON design: what Insert Design takes.
-    let mut extensions = solidcraft_engine::io::DESIGN_EXTS.to_vec();
+    let mut extensions = torno_engine::io::DESIGN_EXTS.to_vec();
     extensions.push("json");
     app.pick_open_for(&extensions, move |app, path| {
         let Some(path) = path else { return };
@@ -52,12 +52,12 @@ pub(crate) fn start(app: &mut SolveApp, component: u64, occurrence: Option<u64>)
             return;
         }
         // Picked in the file dialog: its server is the user's choice.
-        let hosts: Vec<String> = solidcraft_engine::io::vfs::network_host(&path).into_iter().collect();
+        let hosts: Vec<String> = torno_engine::io::vfs::network_host(&path).into_iter().collect();
         let mut params = json!({"component": component, "path": path});
         if let Some(occurrence) = occurrence {
             params["occurrence"] = json!(occurrence);
         }
-        let relinked = solidcraft_engine::io::vfs::allowing_hosts(&hosts, || app.run("component.relink", params));
+        let relinked = torno_engine::io::vfs::allowing_hosts(&hosts, || app.run("component.relink", params));
         if let Ok(result) = relinked {
             let done = if occurrence.is_some() { app.tr_label("ui.relink_one_done") } else { app.tr_label("ui.relink_done") }.to_string();
             let warnings: Vec<&str> = result["warnings"].as_array().into_iter().flatten().filter_map(|w| w.as_str()).collect();
@@ -79,7 +79,7 @@ pub(crate) fn extract(app: &mut SolveApp, component: u64) {
     }
     let Some(name) = app.session.doc.components.iter().find(|c| c.id == component).map(|c| c.name.clone()) else { return };
     let document = app.session.doc.clone();
-    let ext = solidcraft_engine::io::DESIGN_EXT;
+    let ext = torno_engine::io::DESIGN_EXT;
     app.pick_save(&format!("{name}.{ext}"), &[ext], move |app, path| {
         let Some(mut path) = path else { return };
         if !Arc::ptr_eq(&document, &app.session.doc) {
@@ -143,7 +143,7 @@ fn disk_stamps(app: &mut SolveApp) -> Vec<(u64, Stamp)> {
 }
 
 /// [`disk_stamps`] for any open design (`on`: the preference `update_changed_links`).
-pub(crate) fn stamps_of(session: &mut solidcraft_engine::Session, on: bool) -> Vec<(u64, Stamp)> {
+pub(crate) fn stamps_of(session: &mut torno_engine::Session, on: bool) -> Vec<(u64, Stamp)> {
     if cfg!(target_arch = "wasm32") || !on || session.doc.links.is_empty() {
         return Vec::new();
     }
@@ -169,7 +169,7 @@ pub(crate) fn record(stamps: &mut Vec<(u64, Stamp)>, component: u64, stamp: Stam
 
 /// The shown design's linked components whose files are no longer what the design last read
 /// (`component.links` `changed`), as when one changed while the design was closed (#9739).
-fn changed_since_read(session: &mut solidcraft_engine::Session) -> Vec<u64> {
+fn changed_since_read(session: &mut torno_engine::Session) -> Vec<u64> {
     let Ok(links) = session.execute("component.links", &json!({})) else { return Vec::new() };
     links["links"].as_array().into_iter().flatten().filter(|l| l["changed"].as_bool() == Some(true)).filter_map(|l| l["component"].as_u64()).collect()
 }
@@ -238,7 +238,7 @@ pub(crate) fn read_again(app: &mut SolveApp, options: &serde_json::Map<String, V
 #[derive(Clone, Debug)]
 pub struct Copies {
     linked: u64,
-    document: Arc<solidcraft_engine::doc::Document>,
+    document: Arc<torno_engine::doc::Document>,
     copies: Vec<(u64, String)>,
 }
 
@@ -259,16 +259,15 @@ pub fn link_copies(app: &mut SolveApp, accept: bool) -> bool {
 pub fn show_copies(app: &mut SolveApp, ctx: &egui::Context) {
     let Some(c) = app.menu.link_copies.clone() else { return };
     let name = app.session.doc.components.iter().find(|x| x.id == c.linked).map(|x| x.name.clone()).unwrap_or_default();
-    let (closed, action) =
-        crate::ui_kit::Confirm::new(egui::Id::unique("sc_link_copies"), "help", solidcraft_ui_text::tr_label("Link Identical Copies"))
-            .actions("Link", "Keep", None)
-            .show(ctx, true, |ui| {
-                let text = solidcraft_ui_text::format("ui.link_copies_text", &[("name", &name)]);
-                crate::ui_kit::text(ui, &text, crate::ui_kit::Text::Report("copies", false));
-                for (id, copy) in &c.copies {
-                    crate::ui_kit::text(ui, &format!("  • {copy}"), crate::ui_kit::Text::Report(&format!("copy:{id}"), false));
-                }
-            });
+    let (closed, action) = crate::ui_kit::Confirm::new(egui::Id::unique("sc_link_copies"), "help", torno_ui_text::tr_label("Link Identical Copies"))
+        .actions("Link", "Keep", None)
+        .show(ctx, true, |ui| {
+            let text = torno_ui_text::format("ui.link_copies_text", &[("name", &name)]);
+            crate::ui_kit::text(ui, &text, crate::ui_kit::Text::Report("copies", false));
+            for (id, copy) in &c.copies {
+                crate::ui_kit::text(ui, &format!("  • {copy}"), crate::ui_kit::Text::Report(&format!("copy:{id}"), false));
+            }
+        });
     match action {
         crate::ui_kit::Action::Ok => drop(link_copies(app, true)),
         crate::ui_kit::Action::Cancel => drop(link_copies(app, false)),
@@ -282,11 +281,11 @@ pub fn show_copies(app: &mut SolveApp, ctx: &egui::Context) {
 mod tests {
     use super::*;
     use crate::context_menu::{self, Target};
-    use solidcraft_engine::Session;
     use std::path::PathBuf;
+    use torno_engine::Session;
 
     fn fixture(name: &str) -> (SolveApp, u64, u64, PathBuf, PathBuf) {
-        let folder = std::env::temp_dir().join(format!("solidcraft-relink-ui-{name}-{}", std::process::id()));
+        let folder = std::env::temp_dir().join(format!("torno-relink-ui-{name}-{}", std::process::id()));
         std::fs::create_dir_all(&folder).unwrap();
         let source = folder.join("source.solidcraft");
         let moved = folder.join("moved.solidcraft");
@@ -307,7 +306,7 @@ mod tests {
 
     fn answer(app: &mut SolveApp, path: Option<String>) {
         app.services.pick_open = Some(Box::new(move |extensions| {
-            assert_eq!(extensions, &["sc", "solidcraft", "solvecraft", "json"], "a design of any release, or a plain JSON design");
+            assert_eq!(extensions, &["sc", "solidcraft", "solvecraft", "json"], "a design of any release, or a plain JSON design"); // rebrand: keep
             let result = path.clone();
             Box::pin(async move { result })
         }));
@@ -400,7 +399,7 @@ mod tests {
         app.start("component.relink");
         assert!(!app.file_picker_busy());
         assert!(app.status.as_ref().is_some_and(|(s, _, error)| s.contains("Select one linked") && *error));
-        app.session.selection = vec![solidcraft_engine::Sel::Occurrence { path: vec![occurrence] }];
+        app.session.selection = vec![torno_engine::Sel::Occurrence { path: vec![occurrence] }];
         app.start("component.relink");
         assert!(app.file_picker_busy());
         crate::file_picker::tick(&mut app, &egui::Context::default());
@@ -424,7 +423,7 @@ mod tests {
 
     #[test]
     fn extract_menu_asks_where_to_save_and_links_the_component_there() {
-        let folder = std::env::temp_dir().join(format!("solidcraft-extract-ui-{}", std::process::id()));
+        let folder = std::env::temp_dir().join(format!("torno-extract-ui-{}", std::process::id()));
         std::fs::create_dir_all(&folder).unwrap();
         let mut app = SolveApp::new(Session::default(), Default::default());
         let made = app.run("component.create", json!({"name": "Bracket", "grounded": false})).unwrap();
@@ -462,7 +461,7 @@ mod tests {
 
     #[test]
     fn extract_offers_to_link_identical_copies() {
-        let folder = std::env::temp_dir().join(format!("solidcraft-extract-copies-ui-{}", std::process::id()));
+        let folder = std::env::temp_dir().join(format!("torno-extract-copies-ui-{}", std::process::id()));
         std::fs::create_dir_all(&folder).unwrap();
         let mut app = SolveApp::new(Session::default(), Default::default());
         let made = app.run("component.create", json!({"name": "Bracket"})).unwrap();
@@ -493,7 +492,7 @@ mod tests {
 
     #[test]
     fn changed_linked_designs_update_the_assembly_when_its_tab_returns() {
-        let folder = std::env::temp_dir().join(format!("solidcraft-changed-link-ui-{}", std::process::id()));
+        let folder = std::env::temp_dir().join(format!("torno-changed-link-ui-{}", std::process::id()));
         std::fs::create_dir_all(&folder).unwrap();
         let file = folder.join("plate.solidcraft");
         let mut part = Session::default();
@@ -505,7 +504,7 @@ mod tests {
             crate::open_meshing::session_world(&app.session)
                 .bodies
                 .iter()
-                .map(|b| solidcraft_engine::kernel::measure(&b.body).unwrap().volume)
+                .map(|b| torno_engine::kernel::measure(&b.body).unwrap().volume)
                 .sum::<f64>()
         };
         let ctx = egui::Context::default();
@@ -563,7 +562,7 @@ mod tests {
     /// second tab to step away to; the helpers save a part, settle the background work and
     /// measure the assembly.
     fn two_links(name: &str) -> (SolveApp, std::path::PathBuf, std::path::PathBuf, std::path::PathBuf) {
-        let folder = std::env::temp_dir().join(format!("solidcraft-two-links-{name}-{}", std::process::id()));
+        let folder = std::env::temp_dir().join(format!("torno-two-links-{name}-{}", std::process::id()));
         let _ = std::fs::remove_dir_all(&folder);
         std::fs::create_dir_all(&folder).unwrap();
         let (plate, cube) = (folder.join("plate.solidcraft"), folder.join("cube.solidcraft"));
@@ -599,7 +598,7 @@ mod tests {
     }
 
     fn volume(app: &SolveApp) -> f64 {
-        crate::open_meshing::session_world(&app.session).bodies.iter().map(|b| solidcraft_engine::kernel::measure(&b.body).unwrap().volume).sum()
+        crate::open_meshing::session_world(&app.session).bodies.iter().map(|b| torno_engine::kernel::measure(&b.body).unwrap().volume).sum()
     }
 
     /// Away to the blank tab and back to the assembly.

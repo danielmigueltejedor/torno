@@ -38,7 +38,7 @@ impl Class {
     }
 }
 
-/// The layering table. Names are package names without the `solidcraft-`
+/// The layering table. Names are package names without the `torno-`
 /// prefix.
 pub const TABLE: &[(&str, Class)] = &[
     ("geom", Class::Layer(0)),
@@ -78,7 +78,7 @@ pub const TABLE: &[(&str, Class)] = &[
     ("theme", Class::Shared),
     // the UI kit and its components (ribbon, app bar, history and navigation bars, view compass, window chrome, theme files), drawn from host data (#14251)
     ("ui-kit", Class::Shared),
-    // SolidCraft's look, ready to install into the kit: icon masters and roles, code-drawn glyphs, IBM Plex faces, built-in themes
+    // Torno's look, ready to install into the kit: icon masters and roles, code-drawn glyphs, IBM Plex faces, built-in themes
     ("look", Class::Shared),
     // the control channel: the per-launch token and its files, what a request still running does (#12946)
     ("control", Class::Shared),
@@ -91,7 +91,7 @@ pub const TABLE: &[(&str, Class)] = &[
     // the viewport in an egui window: egui-wgpu paint callbacks and install (#12943)
     ("viewport-egui", Class::Shared),
     // apps and tooling
-    ("solidcraft", Class::Exempt),
+    ("torno", Class::Exempt),
     ("cli", Class::Exempt),
     ("web", Class::Exempt),
     ("xtask", Class::Exempt),
@@ -118,7 +118,7 @@ pub const UI_CRATES: &[&str] = &["egui", "eframe", "egui-wgpu", "wgpu", "winit",
 pub const UI_MIN_LAYER: u8 = 5;
 
 pub fn short_name(pkg: &str) -> &str {
-    pkg.strip_prefix("solidcraft-").unwrap_or(pkg)
+    pkg.strip_prefix("torno-").unwrap_or(pkg)
 }
 
 pub fn classify(pkg: &str) -> Option<Class> {
@@ -210,7 +210,7 @@ impl std::fmt::Display for Violation {
                 write!(f, "{krate}: standalone crate must not depend on workspace crate {dep}")
             }
             Violation::TestkitAsNormalDep { krate } => {
-                write!(f, "{krate}: solidcraft-testkit may only be a dev-dependency")
+                write!(f, "{krate}: torno-testkit may only be a dev-dependency")
             }
             Violation::UiBelowL5 { krate, dep, layer } => {
                 write!(f, "{krate} (L{layer}) depends on UI crate `{dep}`; UI toolkits are only allowed in L5+")
@@ -392,7 +392,7 @@ fn is_solidcore_name(name: &str) -> bool {
     name == "solidcore" || name.starts_with("solidcore-") || name == "ssi" || name.starts_with("step-") || name == "nurbs-grid-mesh"
 }
 
-/// The seam rule: SolidCraft crosses into solidcore only through the public crates ([`SEAM_PUBLIC`]). Every other
+/// The seam rule: Torno crosses into solidcore only through the public crates ([`SEAM_PUBLIC`]). Every other
 /// solidcore crate, in any dependency kind, must be named in `allow` (lines
 /// `crate-path -> solidcore-crate  reason`; `#` comments). The list only shrinks: a listed use
 /// that is gone is an error too. Returns the messages, sorted.
@@ -499,7 +499,7 @@ fn manifest_dep_entries(doc: &toml::Table) -> Vec<(String, String, toml::Value)>
 
 /// The standalone rule: every manifest under `solidcore/` (`manifests`: repo-relative path, text) builds from
 /// solidcore's own tree. No dependency, `[workspace.dependencies]` entry or `[patch]` may point with `path` outside
-/// `solidcore/`, and none may be a SolidCraft crate (`solidcraft-*`, also behind `package = ...`).
+/// `solidcore/`, and none may be a Torno crate (`torno-*`, also behind `package = ...`).
 pub fn standalone_check(manifests: &[(String, String)]) -> Vec<String> {
     let mut errors = Vec::new();
     for (file, text) in manifests {
@@ -513,8 +513,8 @@ pub fn standalone_check(manifests: &[(String, String)]) -> Vec<String> {
         let dir: Vec<String> = file.rsplit_once('/').map(|(d, _)| d).and_then(normalize_rel).unwrap_or_default();
         for (what, key, spec) in manifest_dep_entries(&doc) {
             let real = spec.get("package").and_then(toml::Value::as_str).unwrap_or(&key);
-            if real.starts_with("solidcraft-") || key.starts_with("solidcraft-") {
-                errors.push(format!("{file}: {what} dependency `{key}` is a SolidCraft crate; {STANDALONE_RULE}"));
+            if real.starts_with("torno-") || key.starts_with("torno-") {
+                errors.push(format!("{file}: {what} dependency `{key}` is a Torno crate; {STANDALONE_RULE}"));
             }
             if let Some(path) = spec.get("path").and_then(toml::Value::as_str) {
                 let joined = normalize_rel(&format!("{}/{path}", dir.join("/")));
@@ -584,35 +584,35 @@ mod tests {
     #[test]
     fn clean_downward_graph_passes() {
         let g = [
-            c("solidcraft-geom", &[("kurbo", Normal, false)]),
-            c("solidcraft-doc", &[("solidcraft-geom", Normal, true)]),
-            c("solidcraft-engine", &[("solidcraft-doc", Normal, true), ("solidcraft-testkit", Dev, true)]),
-            c("solidcraft-ui-egui", &[("solidcraft-engine", Normal, true), ("egui", Normal, false)]),
-            c("solidcraft-cli", &[("solidcraft-ui-egui", Normal, true)]),
+            c("torno-geom", &[("kurbo", Normal, false)]),
+            c("torno-doc", &[("torno-geom", Normal, true)]),
+            c("torno-engine", &[("torno-doc", Normal, true), ("torno-testkit", Dev, true)]),
+            c("torno-ui-egui", &[("torno-engine", Normal, true), ("egui", Normal, false)]),
+            c("torno-cli", &[("torno-ui-egui", Normal, true)]),
         ];
         assert!(check(&g).is_empty(), "{:?}", check(&g));
     }
 
     #[test]
     fn upward_dependency_flagged() {
-        let v = check(&[c("solidcraft-doc", &[("solidcraft-engine", Normal, true)])]);
+        let v = check(&[c("torno-doc", &[("torno-engine", Normal, true)])]);
         assert!(matches!(v[..], [Violation::Upward { from: 2, to: 4, .. }]));
     }
 
     #[test]
     fn sideways_dependency_flagged() {
-        let v = check(&[c("solidcraft-kernel", &[("solidcraft-sketch", Normal, true)])]);
+        let v = check(&[c("torno-kernel", &[("torno-sketch", Normal, true)])]);
         assert!(matches!(v[..], [Violation::Upward { from: 1, to: 1, .. }]));
     }
 
     #[test]
     fn self_dev_dependency_ignored() {
-        assert!(check(&[c("solidcraft-doc", &[("solidcraft-doc", Dev, true)])]).is_empty());
+        assert!(check(&[c("torno-doc", &[("torno-doc", Dev, true)])]).is_empty());
     }
 
     #[test]
     fn upward_dev_dependency_flagged() {
-        let v = check(&[c("solidcraft-geom", &[("solidcraft-doc", Dev, true)])]);
+        let v = check(&[c("torno-geom", &[("torno-doc", Dev, true)])]);
         assert!(matches!(v[..], [Violation::Upward { kind: Dev, .. }]));
     }
 
@@ -622,12 +622,12 @@ mod tests {
     fn ui_crates_reached_through_a_shared_crate_below_l5_flagged() {
         let classes = |pkg: &str| if short_name(pkg).starts_with("view") { Some(Class::Shared) } else { classify(pkg) };
         let g = [
-            c("solidcraft-engine", &[("solidcraft-doc", Normal, true), ("solidcraft-viewtest", Dev, true)]),
-            c("solidcraft-doc", &[("solidcraft-viewbase", Normal, true)]),
-            c("solidcraft-viewbase", &[("solidcraft-viewgpu", Normal, true), ("serde", Normal, false)]),
-            c("solidcraft-viewgpu", &[("wgpu", Normal, false), ("egui", Normal, false)]),
-            c("solidcraft-viewtest", &[("egui-wgpu", Normal, false)]),
-            c("solidcraft-ui-egui", &[("solidcraft-viewgpu", Normal, true)]),
+            c("torno-engine", &[("torno-doc", Normal, true), ("torno-viewtest", Dev, true)]),
+            c("torno-doc", &[("torno-viewbase", Normal, true)]),
+            c("torno-viewbase", &[("torno-viewgpu", Normal, true), ("serde", Normal, false)]),
+            c("torno-viewgpu", &[("wgpu", Normal, false), ("egui", Normal, false)]),
+            c("torno-viewtest", &[("egui-wgpu", Normal, false)]),
+            c("torno-ui-egui", &[("torno-viewgpu", Normal, true)]),
         ];
         let v = check_with(&g, classes);
         let reached: Vec<(&str, &str, &str)> = v
@@ -640,62 +640,62 @@ mod tests {
         assert_eq!(
             reached,
             [
-                ("solidcraft-doc", "solidcraft-viewgpu", "egui"),
-                ("solidcraft-doc", "solidcraft-viewgpu", "wgpu"),
-                ("solidcraft-engine", "solidcraft-viewgpu", "egui"),
-                ("solidcraft-engine", "solidcraft-viewgpu", "wgpu"),
+                ("torno-doc", "torno-viewgpu", "egui"),
+                ("torno-doc", "torno-viewgpu", "wgpu"),
+                ("torno-engine", "torno-viewgpu", "egui"),
+                ("torno-engine", "torno-viewgpu", "wgpu"),
             ]
         );
-        assert!(v[0].to_string().contains("reaches UI crate `egui` through solidcraft-viewgpu"), "{}", v[0]);
-        let clean = [c("solidcraft-engine", &[("solidcraft-viewbase", Normal, true)]), c("solidcraft-viewbase", &[("serde", Normal, false)])];
+        assert!(v[0].to_string().contains("reaches UI crate `egui` through torno-viewgpu"), "{}", v[0]);
+        let clean = [c("torno-engine", &[("torno-viewbase", Normal, true)]), c("torno-viewbase", &[("serde", Normal, false)])];
         assert!(check_with(&clean, classes).is_empty());
     }
 
     #[test]
     fn ui_crates_below_l6_flagged() {
         for dep in ["egui", "eframe", "winit", "egui_kittest", "rfd", "bevy_ecs", "bevy"] {
-            let v = check(&[c("solidcraft-engine", &[(dep, Normal, false)])]);
+            let v = check(&[c("torno-engine", &[(dep, Normal, false)])]);
             assert!(matches!(v[..], [Violation::UiBelowL5 { layer: 4, .. }]), "{dep}");
         }
-        assert!(check(&[c("solidcraft-engine", &[("egui_extras_not", Normal, false)])]).is_empty());
-        assert!(check(&[c("solidcraft-ui-egui", &[("winit", Normal, false)])]).is_empty());
+        assert!(check(&[c("torno-engine", &[("egui_extras_not", Normal, false)])]).is_empty());
+        assert!(check(&[c("torno-ui-egui", &[("winit", Normal, false)])]).is_empty());
     }
 
     #[test]
     fn unregistered_crate_is_error() {
-        let v = check(&[c("solidcraft-mystery", &[])]);
-        assert!(matches!(&v[..], [Violation::Unregistered { krate }] if krate == "solidcraft-mystery"));
+        let v = check(&[c("torno-mystery", &[])]);
+        assert!(matches!(&v[..], [Violation::Unregistered { krate }] if krate == "torno-mystery"));
         assert!(v[0].to_string().contains("register"));
     }
 
     #[test]
     fn testkit_only_as_dev_dependency() {
-        let v = check(&[c("solidcraft-doc", &[("solidcraft-testkit", Normal, true)])]);
+        let v = check(&[c("torno-doc", &[("torno-testkit", Normal, true)])]);
         assert!(matches!(v[..], [Violation::TestkitAsNormalDep { .. }]));
-        assert!(check(&[c("solidcraft-doc", &[("solidcraft-testkit", Dev, true)])]).is_empty());
-        assert!(check(&[c("solidcraft-testkit", &[("solidcraft-engine", Normal, true)])]).is_empty());
+        assert!(check(&[c("torno-doc", &[("torno-testkit", Dev, true)])]).is_empty());
+        assert!(check(&[c("torno-testkit", &[("torno-engine", Normal, true)])]).is_empty());
     }
 
     #[test]
     fn apps_and_xtask_exempt() {
-        for app in ["solidcraft", "solidcraft-cli", "xtask"] {
-            assert!(check(&[c(app, &[("egui", Normal, false), ("solidcraft-ui-egui", Normal, true)])]).is_empty());
+        for app in ["torno", "torno-cli", "xtask"] {
+            assert!(check(&[c(app, &[("egui", Normal, false), ("torno-ui-egui", Normal, true)])]).is_empty());
         }
     }
 
     #[test]
     fn shared_crate_must_not_depend_on_layered_crates() {
-        let v = check(&[c("solidcraft-ui-registry", &[("solidcraft-engine", Normal, true)])]);
-        assert!(matches!(&v[..], [Violation::SharedDependsOnApp { krate, dep }] if krate == "solidcraft-ui-registry" && dep == "solidcraft-engine"));
+        let v = check(&[c("torno-ui-registry", &[("torno-engine", Normal, true)])]);
+        assert!(matches!(&v[..], [Violation::SharedDependsOnApp { krate, dep }] if krate == "torno-ui-registry" && dep == "torno-engine"));
         assert!(v[0].to_string().contains("shared crate must depend only on"));
-        let v = check(&[c("solidcraft-ui-registry", &[("solidcraft-geom", Build, true)])]);
+        let v = check(&[c("torno-ui-registry", &[("torno-geom", Build, true)])]);
         assert!(matches!(v[..], [Violation::SharedDependsOnApp { .. }]));
     }
 
     #[test]
     fn any_crate_may_use_a_shared_crate() {
-        for user in ["solidcraft-geom", "solidcraft-engine", "solidcraft-ui-egui", "solidcraft-testkit"] {
-            assert!(check(&[c(user, &[("solidcraft-ui-registry", Normal, true)])]).is_empty(), "{user}");
+        for user in ["torno-geom", "torno-engine", "torno-ui-egui", "torno-testkit"] {
+            assert!(check(&[c(user, &[("torno-ui-registry", Normal, true)])]).is_empty(), "{user}");
         }
     }
 
@@ -703,7 +703,7 @@ mod tests {
     fn shared_crate_may_use_shared_and_external_crates() {
         let classes = |pkg: &str| if short_name(pkg) == "ui-text" { Some(Class::Shared) } else { classify(pkg) };
         for kind in [Normal, Dev, Build] {
-            let g = [c("solidcraft-ui-registry", &[("solidcraft-ui-text", kind, true), ("serde", Normal, false), ("solidcore", Normal, false)])];
+            let g = [c("torno-ui-registry", &[("torno-ui-text", kind, true), ("serde", Normal, false), ("solidcore", Normal, false)])];
             assert!(check_with(&g, classes).is_empty(), "{kind:?}: {:?}", check_with(&g, classes));
         }
     }
@@ -711,13 +711,13 @@ mod tests {
     #[test]
     fn shared_crate_may_use_ui_crates() {
         for dep in ["egui", "eframe", "winit", "wgpu"] {
-            assert!(check(&[c("solidcraft-ui-registry", &[(dep, Normal, false)])]).is_empty(), "{dep}");
+            assert!(check(&[c("torno-ui-registry", &[(dep, Normal, false)])]).is_empty(), "{dep}");
         }
     }
 
     #[test]
     fn shared_crate_must_not_use_testkit_even_in_tests() {
-        let v = check(&[c("solidcraft-ui-registry", &[("solidcraft-testkit", Dev, true)])]);
+        let v = check(&[c("torno-ui-registry", &[("torno-testkit", Dev, true)])]);
         assert!(matches!(v[..], [Violation::SharedDependsOnApp { .. }]));
     }
 
@@ -725,7 +725,7 @@ mod tests {
 
     fn seam_crate(dep: &str, kind: DepKind, from_solidcore: bool) -> Crate {
         Crate {
-            name: "solidcraft-smlib".into(),
+            name: "torno-smlib".into(),
             path: "crates/smlib".into(),
             deps: vec![Dep { name: dep.into(), kind, workspace: false, from_solidcore }],
         }
@@ -798,7 +798,7 @@ mod tests {
     #[test]
     fn seam_matches_by_package_name_not_source() {
         let meta: Value = serde_json::from_str(
-            r#"{"packages":[{"name":"solidcraft-smlib","manifest_path":"/w/crates/smlib/Cargo.toml","dependencies":[
+            r#"{"packages":[{"name":"torno-smlib","manifest_path":"/w/crates/smlib/Cargo.toml","dependencies":[
                 {"name":"solidcore","kind":null,"path":"/w/solidcore/crates/solidcore"},
                 {"name":"solidcore-ops","kind":null,"source":"git+https://github.com/tangency-labs/solidcore?rev=abc"}]}]}"#,
         )
@@ -814,17 +814,17 @@ mod tests {
     fn metadata_parsing() {
         let meta: Value = serde_json::from_str(
             r#"{"packages":[
-                {"name":"solidcraft-doc","dependencies":[
-                    {"name":"solidcraft-geom","kind":null,"path":"/x/crates/geom"},
+                {"name":"torno-doc","dependencies":[
+                    {"name":"torno-geom","kind":null,"path":"/x/crates/geom"},
                     {"name":"serde","kind":null},
                     {"name":"proptest","kind":"dev"}]},
-                {"name":"solidcraft-geom","dependencies":[]}
+                {"name":"torno-geom","dependencies":[]}
             ]}"#,
         )
         .unwrap();
         let g = from_metadata(&meta, None).unwrap();
         assert_eq!(g.len(), 2);
-        let doc = g.iter().find(|c| c.name == "solidcraft-doc").unwrap();
+        let doc = g.iter().find(|c| c.name == "torno-doc").unwrap();
         assert!(doc.deps[0].workspace && !doc.deps[1].workspace);
         assert_eq!(doc.deps[2].kind, Dev);
         assert!(check(&g).is_empty());
@@ -853,11 +853,11 @@ mod tests {
     }
 
     #[test]
-    fn standalone_solidcraft_crate_fails() {
-        let e = sc("solidcore/crates/ops/Cargo.toml", "[dependencies]\nsolidcraft-geom = \"0.1\"\n");
+    fn standalone_torno_crate_fails() {
+        let e = sc("solidcore/crates/ops/Cargo.toml", "[dependencies]\ntorno-geom = \"0.1\"\n");
         assert_eq!(e.len(), 1, "{e:?}");
-        assert!(e[0].contains("solidcraft-geom"));
-        let renamed = "[dependencies]\ng = { package = \"solidcraft-geom\", version = \"0.1\" }\n";
+        assert!(e[0].contains("torno-geom"));
+        let renamed = "[dependencies]\ng = { package = \"torno-geom\", version = \"0.1\" }\n";
         assert_eq!(sc("solidcore/crates/ops/Cargo.toml", renamed).len(), 1);
     }
 
@@ -865,7 +865,7 @@ mod tests {
     fn standalone_dev_build_target_and_patch_leaks_fail() {
         let dev = "[dev-dependencies]\ngeom = { path = \"../../../crates/geom\" }\n";
         assert_eq!(sc("solidcore/crates/ops/Cargo.toml", dev).len(), 1);
-        let build = "[build-dependencies]\nsolidcraft-testkit = { path = \"../../../crates/testkit\" }\n";
+        let build = "[build-dependencies]\ntorno-testkit = { path = \"../../../crates/testkit\" }\n";
         assert!(!sc("solidcore/crates/ops/Cargo.toml", build).is_empty());
         let target = "[target.'cfg(unix)'.dependencies]\ngeom = { path = \"../../../crates/geom\" }\n";
         assert_eq!(sc("solidcore/crates/ops/Cargo.toml", target).len(), 1);

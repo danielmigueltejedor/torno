@@ -43,6 +43,6 @@
   "ungraded": [],
   "what": "a fillet on a sheet metal corner changes the body but not its sheet model, so the flat pattern would be a sharp rectangle: it must refuse",
   "why_not": [
-    "the failure is SolidCraft's, not a kernel operation's: step 7 (sheet.flat_pattern): not supported yet: the flat pattern of `Body1` can't include Fillet1, which changed the body after its sheet metal features, so the flat pattern, DXF and bend table would not match the part; remove or suppress Fillet1, or make that shape with sheet metal features"
+    "the failure is Torno's, not a kernel operation's: step 7 (sheet.flat_pattern): not supported yet: the flat pattern of `Body1` can't include Fillet1, which changed the body after its sheet metal features, so the flat pattern, DXF and bend table would not match the part; remove or suppress Fillet1, or make that shape with sheet metal features"
   ]
 }

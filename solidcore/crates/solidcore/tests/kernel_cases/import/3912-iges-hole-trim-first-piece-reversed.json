@@ -47,6 +47,6 @@
   "ungraded": [],
   "what": "a 10 x 10 trimmed patch with a 4 x 4 square hole whose composite trim curve starts with a reversed piece: the hole stays a hole",
   "why_not": [
-    "body \"Body1\" is no kernel operation's output nor an operand: SolidCraft built it or changed the kernel's record"
+    "body \"Body1\" is no kernel operation's output nor an operand: Torno built it or changed the kernel's record"
   ]
 }

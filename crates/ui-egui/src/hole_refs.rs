@@ -13,18 +13,18 @@
 use egui::{Color32, Pos2, Stroke, vec2};
 use serde_json::{Value, json};
 use solidcore_record::Vec3;
-use solidcraft_engine::doc::HoleReference;
-use solidcraft_engine::doc::expr::Kind as ValueKind;
-use solidcraft_engine::doc::hole_reference::{ReferenceFrame, on_reference_face, reference_frame};
-use solidcraft_engine::geom::prelude::*;
-use solidcraft_engine::{Sel, Session};
+use torno_engine::doc::HoleReference;
+use torno_engine::doc::expr::Kind as ValueKind;
+use torno_engine::doc::hole_reference::{ReferenceFrame, on_reference_face, reference_frame};
+use torno_engine::geom::prelude::*;
+use torno_engine::{Sel, Session};
 
 use crate::SolveApp;
 use crate::dialogs::{Dialog, Kind};
 use crate::place_gizmo::Freedom;
 use crate::selection::{EDGES, FACES, PLANAR_FACES, SelInput, VERTICES};
 use crate::viewport::Proj;
-use solidcraft_theme::Tokens;
+use torno_theme::Tokens;
 
 /// The reference edge inputs, after the face input.
 pub(crate) const REFERENCES: [&str; 2] = ["Reference 1", "Reference 2"];
@@ -171,7 +171,7 @@ fn direction(s: &Session, d: &Dialog, at: Vec3) -> Option<Vec3> {
     if let Kind::Primitive { at: Some((_, normal)), .. } = &d.kind {
         return normal.map(|n| -n);
     }
-    d.extra.get("direction").and_then(vec3).or_else(|| solidcraft_engine::doc::hole_direction_at(&crate::open_meshing::session_world(s), at, &[]))
+    d.extra.get("direction").and_then(vec3).or_else(|| torno_engine::doc::hole_direction_at(&crate::open_meshing::session_world(s), at, &[]))
 }
 
 /// The face's frame at the place for the picked edges (and which reference inputs they are), found
@@ -433,7 +433,7 @@ pub(crate) fn restore(s: &Session, d: &mut Dialog, references: &[HoleReference],
             // A literal distance shows at the document's precision; its exact value stays for the
             // model. An expression stays as written, since rounding it would break its parameters.
             let exact = r.distance.to_string();
-            let literal = if solidcraft_engine::doc::expr::is_literal(&exact) { s.doc.eval(&exact, ValueKind::Length).ok() } else { None };
+            let literal = if torno_engine::doc::expr::is_literal(&exact) { s.doc.eval(&exact, ValueKind::Length).ok() } else { None };
             match literal {
                 Some(value) => {
                     let shown = crate::prefs::format_length(value, &s.doc.units, decimals);

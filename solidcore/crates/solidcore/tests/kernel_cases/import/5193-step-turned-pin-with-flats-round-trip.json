@@ -103,6 +103,6 @@
   "ungraded": [],
   "what": "a turned pin (revolves with two grooves, a stepped bore with a drill point from one end, a stud with chamfered root and tip on the other) with two milled flats, exported to STEP and read back: truck's STEP lost two faces of the flats' neighbours and grew 0.075% (synthetic: the report's own pin, re-dimensioned)",
   "why_not": [
-    "body \"Pin\" is no kernel operation's output nor an operand: SolidCraft built it or changed the kernel's record"
+    "body \"Pin\" is no kernel operation's output nor an operand: Torno built it or changed the kernel's record"
   ]
 }

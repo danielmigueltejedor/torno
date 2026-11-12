@@ -38,6 +38,6 @@
   "ungraded": [],
   "what": "a fillet whose edge pick is 15 mm from the nearest edge must be refused, not applied to some other edge",
   "why_not": [
-    "the failure is SolidCraft's, not a kernel operation's: step 2 (solid.fillet): invalid parameters for `solid.fillet`: no edge at [10, -15, 10]: the nearest edge is 15.000 mm away"
+    "the failure is Torno's, not a kernel operation's: step 2 (solid.fillet): invalid parameters for `solid.fillet`: no edge at [10, -15, 10]: the nearest edge is 15.000 mm away"
   ]
 }

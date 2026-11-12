@@ -1,11 +1,11 @@
 //! Mesh bodies: triangles without a B-rep (imported 3MF/STL). They render, measure, move and
 //! export; B-rep features refuse them.
 
-use solidcraft_geom::prelude::*;
 use std::collections::HashMap;
+use torno_geom::prelude::*;
 
 use solidcore_record::Vec3;
-use solidcraft_geom::Mesh;
+use torno_geom::Mesh;
 
 use crate::body::Body;
 use crate::{KernelError, Result};
@@ -79,7 +79,7 @@ pub fn mesh_body(positions: &[Vec3], triangles: &[[u32; 3]]) -> Result<Body> {
 /// A mesh with optional independent, finite nonzero shading normals per triangle corner.
 /// Welding and winding repair affect geometric indices; seams never affect connectivity.
 pub fn mesh_body_with_normals(positions: &[Vec3], triangles: &[[u32; 3]], normals: &[[Vec3; 3]]) -> Result<Body> {
-    let _span = solidcraft_profile::span("kernel", "mesh_body");
+    let _span = torno_profile::span("kernel", "mesh_body");
     if triangles.len() > MAX_TRIANGLES {
         return Err(KernelError::Invalid(format!("mesh with {} triangles (limit {MAX_TRIANGLES})", triangles.len())));
     }

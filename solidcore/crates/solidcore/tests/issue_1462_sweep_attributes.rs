@@ -18,7 +18,7 @@ use solidcore::sweep::api_brep::{
 use solidcore::topology::Brep;
 use solidcore::{EntityRef, Kernel};
 
-/// The first application attribute id SolidCraft uses.
+/// The first application attribute id Torno uses.
 const BASE_ID: u64 = 10007;
 
 /// Tags every face and edge (list order) of `b` with its own copy-behaviour long

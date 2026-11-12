@@ -4,7 +4,7 @@
 use crate::frame::Side;
 use egui::{Color32, Context, Frame, Id, Stroke, WidgetText};
 use serde::{Deserialize, Serialize};
-use solidcraft_theme::Tokens;
+use torno_theme::Tokens;
 
 pub type Background = fn(&egui::Painter, Frame, egui::Rect, egui::Shape) -> egui::Shape;
 
@@ -259,7 +259,7 @@ struct HostWindows {
 }
 
 fn host_windows_key(ctx: &Context) -> Id {
-    Id::unique(("solidcraft_host_windows", ctx.viewport_id()))
+    Id::unique(("torno_host_windows", ctx.viewport_id()))
 }
 
 #[derive(Clone, Default)]
@@ -270,7 +270,7 @@ struct LayerRaises {
 }
 
 fn layer_raise_key(ctx: &Context) -> Id {
-    Id::unique(("solidcraft_container_layer_raises", ctx.viewport_id()))
+    Id::unique(("torno_container_layer_raises", ctx.viewport_id()))
 }
 
 #[derive(Clone)]
@@ -285,10 +285,10 @@ struct HostEscape {
 }
 
 fn modal_boundary_key(ctx: &Context) -> Id {
-    Id::unique(("solidcraft_container_modal", ctx.viewport_id()))
+    Id::unique(("torno_container_modal", ctx.viewport_id()))
 }
 fn host_escape_key(ctx: &Context) -> Id {
-    Id::unique(("solidcraft_container_host_escape", ctx.viewport_id()))
+    Id::unique(("torno_container_host_escape", ctx.viewport_id()))
 }
 
 /// The shared modal show boundary, including its first invisible sizing pass.
@@ -641,7 +641,7 @@ impl Container {
         tip.show(|ui| {
             let body = |ui: &mut egui::Ui| {
                 ui.label(text);
-                solidcraft_ui_registry::publish_rect("kit:tooltip", ui.min_rect());
+                torno_ui_registry::publish_rect("kit:tooltip", ui.min_rect());
             };
             match slot {
                 Some(slot) => slot.body(ui, body),
@@ -665,7 +665,7 @@ impl Container {
         tip.show(|ui| {
             let body = |ui: &mut egui::Ui| {
                 add(ui);
-                solidcraft_ui_registry::publish_rect("kit:tooltip", ui.min_rect());
+                torno_ui_registry::publish_rect("kit:tooltip", ui.min_rect());
             };
             match slot {
                 Some(slot) => slot.body(ui, body),
@@ -1084,7 +1084,7 @@ impl Container {
     /// popup in both layouts; only the universal module constructs the egui popup frame.
     pub fn popup_frame(style: &egui::Style) -> Frame {
         let mut frame = Frame::popup(style);
-        frame.stroke = Tokens::get().borders.stroke(solidcraft_theme::BorderRole::Primary, frame.stroke);
+        frame.stroke = Tokens::get().borders.stroke(torno_theme::BorderRole::Primary, frame.stroke);
         frame
     }
 

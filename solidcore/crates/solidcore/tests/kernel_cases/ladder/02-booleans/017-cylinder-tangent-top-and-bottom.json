@@ -63,7 +63,7 @@
   "ungraded": [],
   "what": "a cylinder r10 along X tangent to both the top and bottom faces, cut: two pieces with zero-angle cusps",
   "why_not": [
-    "body \"Part\" is no kernel operation's output nor an operand: SolidCraft built it or changed the kernel's record",
-    "body \"Part (1)\" is no kernel operation's output nor an operand: SolidCraft built it or changed the kernel's record"
+    "body \"Part\" is no kernel operation's output nor an operand: Torno built it or changed the kernel's record",
+    "body \"Part (1)\" is no kernel operation's output nor an operand: Torno built it or changed the kernel's record"
   ]
 }

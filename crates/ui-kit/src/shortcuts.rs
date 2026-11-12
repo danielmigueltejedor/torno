@@ -1,7 +1,7 @@
 //! Shared chord keycaps and the Preferences title-bar search field.
 use crate::icons;
 use egui::{FontId, Rect, Response, Sense, Stroke, Ui, pos2, vec2};
-use solidcraft_theme::Tokens;
+use torno_theme::Tokens;
 
 fn chord_parts(chord: &str) -> Vec<&str> {
     // A literal plus key follows the separator, as in Ctrl++; keep its own full keycap.
@@ -89,7 +89,7 @@ fn search_with_icon(ui: &mut Ui, id: egui::Id, value: &mut String, hint: &str, p
     icons::paint_ink(ui.painter(), icon, "zoom", t.form_dim);
     let show_clear = !value.is_empty();
     let clear_side = if show_clear { height } else { super::CommandSearch::key(ui, r.right_center() - vec2(t.space_6, 0.0), "Ctrl F") + t.space_12 };
-    solidcraft_ui_registry::publish_rect(&format!("{prefix}:search:frame"), r);
+    torno_ui_registry::publish_rect(&format!("{prefix}:search:frame"), r);
     let editor =
         Rect::from_min_max(pos2((icon.right() + t.space_6).min(r.right()), r.top()), pos2((r.right() - clear_side).max(icon.right()), r.bottom()));
     let response = ui
@@ -99,7 +99,7 @@ fn search_with_icon(ui: &mut Ui, id: egui::Id, value: &mut String, hint: &str, p
                 editor.size(),
                 super::fields::text_input(egui::TextEdit::singleline(value))
                     .id(id)
-                    .hint_text(solidcraft_ui_text::tr_label(hint))
+                    .hint_text(torno_ui_text::tr_label(hint))
                     .font(FontId::proportional(t.font_label))
                     .text_color(t.form_ink)
                     .margin(vec2(t.space_4, 0.0))
@@ -114,7 +114,7 @@ fn search_with_icon(ui: &mut Ui, id: egui::Id, value: &mut String, hint: &str, p
     if show_clear {
         let clear_rect = Rect::from_center_size(pos2(r.right() - height * 0.5, r.center().y), vec2(height, height));
         let clear = ui.push_id(id.with("clear"), |ui| super::quiet_icon_button_at(ui, clear_rect, "close", "Clear")).inner;
-        solidcraft_ui_registry::publish_handle(&format!("{prefix}:search:clear"), clear_rect.center());
+        torno_ui_registry::publish_handle(&format!("{prefix}:search:clear"), clear_rect.center());
         if clear.clicked() {
             value.clear();
             cleared = true;
@@ -125,7 +125,7 @@ fn search_with_icon(ui: &mut Ui, id: egui::Id, value: &mut String, hint: &str, p
     }
     super::layout::publish(ui, &response, egui::Role::TextInput);
     response.widget_info(|| {
-        let mut info = egui::WidgetInfo::labeled(egui::Role::TextInput, ui.is_enabled(), solidcraft_ui_text::tr_label(hint));
+        let mut info = egui::WidgetInfo::labeled(egui::Role::TextInput, ui.is_enabled(), torno_ui_text::tr_label(hint));
         info.current_text_value = Some(value.clone());
         info
     });

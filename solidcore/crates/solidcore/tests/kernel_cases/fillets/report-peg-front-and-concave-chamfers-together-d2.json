@@ -177,7 +177,7 @@
     "blend_dropping"
   ],
   "ungraded": [
-    "continuity: SolidCraft computes it"
+    "continuity: Torno computes it"
   ],
   "what": "the peg's front top edge and its concave arc chamfered 2 together, the convex and the concave chamfer meeting where the front face runs tangent into the cylinder; reported from the app (2026-10-30, test-peg part)",
   "why_not": []

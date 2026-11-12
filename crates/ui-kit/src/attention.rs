@@ -2,7 +2,7 @@
 //! other things that wait can use it too). A small count, or a plain dot, on the top-right
 //! corner of what it belongs to.
 use egui::{Align2, Painter, Pos2, Rect, vec2};
-use solidcraft_theme::Tokens;
+use torno_theme::Tokens;
 
 /// Where the mark sits on `target` (a button's or icon's rect): `space_3` in from its top-right
 /// corner. Tokens: space_3.

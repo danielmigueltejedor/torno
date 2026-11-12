@@ -104,6 +104,6 @@
   "ungraded": [],
   "what": "a cylinder's top face projected onto a sketch 10 mm above it and extruded: the projected circle is the profile",
   "why_not": [
-    "body \"Body1\" is no kernel operation's output nor an operand: SolidCraft built it or changed the kernel's record"
+    "body \"Body1\" is no kernel operation's output nor an operand: Torno built it or changed the kernel's record"
   ]
 }

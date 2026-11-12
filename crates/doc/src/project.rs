@@ -10,12 +10,12 @@
 //! lines and circular arcs are recovered exactly, the rest (an ellipse from a tilted circle,
 //! a spline edge running out of the plane) becomes a chain of lines.
 
-use solidcraft_geom::prelude::*;
 use std::collections::BTreeMap;
+use torno_geom::prelude::*;
 
 use solidcore_record::{Plane, Seg2, Vec2, Vec3};
-use solidcraft_geom::Mesh;
-use solidcraft_sketch::{CurveKind, LinkGeom, LinkKind, LinkSource, Sketch, WireCurve};
+use torno_geom::Mesh;
+use torno_sketch::{CurveKind, LinkGeom, LinkKind, LinkSource, Sketch, WireCurve};
 
 use crate::eval::ModelState;
 use crate::expr::Value;
@@ -36,7 +36,7 @@ pub struct Resolved {
     /// 3D curves (world coordinates).
     pub wires: Vec<Vec<Vec3>>,
     /// Each wire's exact curve where its source has one (an included edge or sketch curve),
-    /// one list per wire, empty for a curve known only as points ([`solidcraft_sketch::Wire::exact`]).
+    /// one list per wire, empty for a curve known only as points ([`torno_sketch::Wire::exact`]).
     pub exact: Vec<Vec<WireCurve>>,
     pub source: LinkSource,
     /// The reference was not exactly where it was and was re-found on the nearest geometry.
@@ -332,10 +332,10 @@ fn resolve_uncached(
             }
         }
         LinkSource::SketchAxis { name } => {
-            vec![solidcraft_sketch::sketch_axis_geom(name).ok_or_else(|| DocError::Unknown(format!("sketch axis `{name}`")))?]
+            vec![torno_sketch::sketch_axis_geom(name).ok_or_else(|| DocError::Unknown(format!("sketch axis `{name}`")))?]
         }
         LinkSource::Text { text, at, height, angle, font, style, .. } if style.path.is_none() => {
-            solidcraft_sketch::text_geometry_styled(font.as_deref(), text, *at, *height, *angle, style, None)?
+            torno_sketch::text_geometry_styled(font.as_deref(), text, *at, *height, *angle, style, None)?
         }
         // Its path is a curve of its own sketch: set with the sketch (`Sketch::text_source_geometry`).
         LinkSource::Text { .. } => return Err(DocError::Invalid("a text on a path is set with its sketch".into())),
@@ -435,7 +435,7 @@ fn first_hits(
     let slack = 4.0 * target.display_tol();
     let mut kept = Vec::with_capacity(curves.len());
     for (curve, interval) in curves {
-        let eval = solidcraft_geom::brep::eval::CurveEval::new(&curve).map_err(|e| DocError::Invalid(format!("projected curve: {e}")))?;
+        let eval = torno_geom::brep::eval::CurveEval::new(&curve).map_err(|e| DocError::Invalid(format!("projected curve: {e}")))?;
         let mid = eval.point(0.5 * (interval[0] + interval[1])).ok_or_else(|| DocError::Invalid("projected curve: no middle point".into()))?;
         let origin = mid - dir * reach;
         let front = mesh.raycast(origin, dir).is_some_and(|(t, _)| t < reach - slack);
@@ -581,7 +581,7 @@ fn exact_edges(body: &crate::ModelBody, plane: &Plane, edges: &[usize]) -> Vec<O
 /// and weights. `None` for one a sketch can't hold.
 fn link_spline(s: &crate::kernel::PlanarSpline) -> Option<LinkGeom> {
     let degree = u8::try_from(s.degree).ok()?;
-    let nurbs = solidcraft_sketch::Nurbs { knots: s.knots.clone(), weights: s.weights.clone() };
+    let nurbs = torno_sketch::Nurbs { knots: s.knots.clone(), weights: s.weights.clone() };
     nurbs.check(s.points.len(), degree).ok()?;
     Some(LinkGeom::Spline { pts: s.points.clone(), control: true, degree, periodic: false, nurbs: Some(nurbs) })
 }
@@ -637,7 +637,7 @@ fn piece_samples(piece: &crate::kernel::PlanarPiece) -> Option<Vec<Vec2>> {
         crate::kernel::PlanarPiece::Seg(s) => Some((0..=CIRCLE_SAMPLES).map(|i| s.point_at(at(i))).collect()),
         crate::kernel::PlanarPiece::Spline(s) => {
             let degree = u8::try_from(s.degree).ok()?;
-            let nurbs = solidcraft_sketch::Nurbs { knots: s.knots.clone(), weights: s.weights.clone() };
+            let nurbs = torno_sketch::Nurbs { knots: s.knots.clone(), weights: s.weights.clone() };
             (0..=CIRCLE_SAMPLES).map(|i| nurbs.point(&s.points, degree, at(i))).collect()
         }
     }
@@ -856,7 +856,7 @@ fn projection_face_edges(body: &crate::ModelBody, mesh: &Mesh, index: u32, plane
         .body
         .face_sources()
         .and_then(|sources| sources.get(index as usize))
-        .is_some_and(|source| matches!(source, Some(solidcraft_kernel::FaceSource::ShellPlanar { .. })));
+        .is_some_and(|source| matches!(source, Some(torno_kernel::FaceSource::ShellPlanar { .. })));
     if shell_plane { order::raw_face_edges(mesh, index, plane) } else { order::face_edges(mesh, index, plane) }
 }
 
@@ -865,11 +865,11 @@ fn certified_planar_construction(body: &crate::ModelBody, index: usize) -> bool 
         matches!(
             source,
             Some(
-                solidcraft_kernel::FaceSource::ShellPlanar { producer: Some(_), .. }
-                    | solidcraft_kernel::FaceSource::Box { producer: Some(_), .. }
-                    | solidcraft_kernel::FaceSource::CylinderCap { .. }
-                    | solidcraft_kernel::FaceSource::CertifiedExtrudeSide { plane: Some(_), .. }
-                    | solidcraft_kernel::FaceSource::CertifiedExtrudeCap { .. }
+                torno_kernel::FaceSource::ShellPlanar { producer: Some(_), .. }
+                    | torno_kernel::FaceSource::Box { producer: Some(_), .. }
+                    | torno_kernel::FaceSource::CylinderCap { .. }
+                    | torno_kernel::FaceSource::CertifiedExtrudeSide { plane: Some(_), .. }
+                    | torno_kernel::FaceSource::CertifiedExtrudeCap { .. }
             )
         )
     })
@@ -1447,7 +1447,7 @@ fn as_spline(pts: &[Vec2], tol: f64) -> Option<LinkGeom> {
         if fit.len() < 2 {
             return None;
         }
-        let poly = solidcraft_sketch::spline_polyline(&fit, false, 3);
+        let poly = torno_sketch::spline_polyline(&fit, false, 3);
         let ok = pts.iter().all(|q| {
             poly.windows(2)
                 .map(|w| {
@@ -1561,7 +1561,7 @@ fn surface_facing(m: &Mesh, t: &[u32; 3], flat: Vec3) -> Vec3 {
 /// either way: a round wall seen edge-on joins its two rims at different angles, and thin
 /// slivers of a narrow chamfer can point the other way. Any other triangle faces as the surface
 /// does at its corners ([`surface_facing`]).
-fn silhouette(plane: &Plane, m: &Mesh, body: Option<&solidcraft_kernel::Body>) -> Vec<LinkGeom> {
+fn silhouette(plane: &Plane, m: &Mesh, body: Option<&torno_kernel::Body>) -> Vec<LinkGeom> {
     let n = plane.normal();
     let size = m.bounds().diagonal().max(1e-9);
     // Vertices welded within this: the copies of a vertex on the seam between two faces can lie
@@ -1710,10 +1710,10 @@ enum Facing {
 /// plane (edge-on when it contains `n`), a cylinder about `n` (edge-on), a cone about `n`.
 /// `sum` is the face's triangles' normals weighted by their areas, dotted with `n`: the side a
 /// plane or such a cone faces. `None` for any other face: each triangle says.
-fn face_facing(body: &solidcraft_kernel::Body, face: u32, n: Vec3, sum: f64) -> Option<Facing> {
-    use solidcraft_kernel::FaceSurface;
+fn face_facing(body: &torno_kernel::Body, face: u32, n: Vec3, sum: f64) -> Option<Facing> {
+    use torno_kernel::FaceSurface;
     let side = if sum > 0.0 { Facing::Front } else { Facing::Away };
-    match solidcraft_kernel::face_surface(body, face as usize)? {
+    match torno_kernel::face_surface(body, face as usize)? {
         FaceSurface::Plane { normal, .. } if normal.vec().dot(n).abs() < 1e-9 => Some(Facing::Away),
         FaceSurface::Plane { .. } => Some(side),
         FaceSurface::Cylinder { axis, .. } if axis.vec().dot(n).abs() > 1.0 - 1e-12 => Some(Facing::Away),
@@ -1989,7 +1989,7 @@ fn refine_rounds(mut v: Vec<LinkGeom>, exact: &[Vec2], size: f64) -> Vec<LinkGeo
         changed = false;
         for &(i, ki, j, kj) in &joints {
             let (Some(p), Some(q)) = (end_now(&stands, i, ki), end_now(&stands, j, kj)) else { continue };
-            if p.dist(q) > solidcraft_sketch::ENDPOINT_JOIN_TOL {
+            if p.dist(q) > torno_sketch::ENDPOINT_JOIN_TOL {
                 for k in [i, j] {
                     if let Some(s) = stands.get_mut(k).filter(|s| **s) {
                         *s = false;

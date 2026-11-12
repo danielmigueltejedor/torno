@@ -14,9 +14,9 @@
 //! This check is local to manual sketch projection.
 
 use solidcore_record::Vec3;
-use solidcraft_geom::Mesh;
-use solidcraft_geom::brep::eval::SurfaceEval;
-use solidcraft_geom::prelude::*;
+use torno_geom::Mesh;
+use torno_geom::brep::eval::SurfaceEval;
+use torno_geom::prelude::*;
 
 use crate::history_names::{Match, Names};
 use crate::naming::{self, closest, edge_names, face_names, strip_piece};
@@ -603,10 +603,10 @@ fn recover_numbered_projected_face(body: &ModelBody, name: &str, pick: Vec3) -> 
     let trimmed = if others.is_empty() {
         &body.body
     } else {
-        isolated = solidcraft_kernel::remove_faces(&body.body, &others).ok()?;
+        isolated = torno_kernel::remove_faces(&body.body, &others).ok()?;
         &isolated
     };
-    matches!(trimmed.classify_point(point), Ok(solidcraft_kernel::PointClass::OnBoundary)).then_some((face, point))
+    matches!(trimmed.classify_point(point), Ok(torno_kernel::PointClass::OnBoundary)).then_some((face, point))
 }
 
 /// The one face a name `model.faces` lists finds, on the body called `body` or, without one, on

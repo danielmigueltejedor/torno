@@ -1,8 +1,8 @@
 use super::*;
 use crate::{ProductMesh, job::PunctualLightOptions};
-use solidcraft_geom::{Aabb3, Mesh};
-use solidcraft_viewport::StandardView;
 use std::sync::Arc;
+use torno_geom::{Aabb3, Mesh};
+use torno_viewport::StandardView;
 
 fn plane(name: &str, x: f64, z: f64, half: f64) -> ProductMesh {
     ProductMesh {
@@ -29,7 +29,7 @@ fn task(blocker: Option<(f64, f64)>, shadows: bool) -> ImageTask {
     }
     let bounds = meshes.iter().fold(Aabb3::EMPTY, |b, m| b.union(&m.mesh.bounds()));
     let scene = ProductScene { meshes, bounds };
-    let mut camera = solidcraft_viewport::Camera { distance: 80.0, fov: 0.0, ..Default::default() };
+    let mut camera = torno_viewport::Camera { distance: 80.0, fov: 0.0, ..Default::default() };
     camera.set_view(StandardView::Top);
     let options = RaytraceOptions {
         threads: 1,

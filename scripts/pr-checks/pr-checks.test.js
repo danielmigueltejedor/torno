@@ -49,7 +49,7 @@ test('parseDefaults yes forms', () => {
 
 test('isBot and isDocsOnly', () => {
   assert.ok(pc.isBot({ login: 'dependabot[bot]', type: 'Bot' }));
-  assert.ok(pc.isBot({ login: 'solidcraft-generated[bot]' }));
+  assert.ok(pc.isBot({ login: 'torno-generated[bot]' }));
   assert.ok(!pc.isBot({ login: 'alice', type: 'User' }));
   assert.ok(pc.isDocsOnly(['README.md', 'docs/a.png']));
   assert.ok(!pc.isDocsOnly(['README.md', 'crates/a.rs']));
@@ -91,7 +91,7 @@ function fakes(pull, { pulls = [], files = [] } = {}) {
   };
   const failures = [];
   const core = { setFailed: (m) => failures.push(m), info() {}, notice() {} };
-  const context = { repo: { owner: 'tangency-labs', repo: 'solidcraft' }, payload: { pull_request: pull } };
+  const context = { repo: { owner: 'tangency-labs', repo: 'torno' }, payload: { pull_request: pull } };
   return { github, core, context, calls, failures };
 }
 

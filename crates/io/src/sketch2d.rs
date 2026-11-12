@@ -2,7 +2,7 @@
 //! plain 2D geometry in millimetres; the engine turns it into sketch curves.
 
 use solidcore_record::Vec2;
-use solidcraft_geom::prelude::*;
+use torno_geom::prelude::*;
 
 /// One imported 2D entity (millimetres, y up).
 #[derive(Clone, Debug, PartialEq)]

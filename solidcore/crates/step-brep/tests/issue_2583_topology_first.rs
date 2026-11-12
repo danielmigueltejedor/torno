@@ -10,15 +10,15 @@
 //!
 //! | file | bodies | faces | closed | volume expected (mm³) | bound | today: topology first / stitch only |
 //! |---|---|---|---|---|---|---|
-//! | `fixtures/rod_doubled_edge.step` (SolidCraft) | 1 | 7 | 1 | 74 900.620862 (closed form) | 1e-9 | 7.753e-6 / 7.175e-7, known failing; Level 2 fails (33 / 22) |
+//! | `fixtures/rod_doubled_edge.step` (Torno) | 1 | 7 | 1 | 74 900.620862 (closed form) | 1e-9 | 7.753e-6 / 7.175e-7, known failing; Level 2 fails (33 / 22) |
 //! | `AP203 geometry only/nist_ctc_02_asme1_rc` | 2 | 664 | 1 | `4.710152747498E7` (validation) | 1e-9 + 1.1e-13 | 3.613e-6 / 8.296e-7, known failing |
 //! | `AP203 with PMI/nist_ctc_02_asme1_ap203` | 1 | 487 | 1 | `rc`'s (none in the file) | 1e-9 + 1.1e-13 | not built from its topology (face `#1152`, #2928) / 7.601e-4, known failing |
 //! | `nist_ctc_02_asme1_ap242-e2` | 3 | 637 | 1 | `47106788.0321802` (validation) | 1e-9 + 1.1e-15 | 9.034e-7 / 1.095e-6, known failing |
 //!
 //! The extra bodies are one-face `SHELL_BASED_SURFACE_MODEL`s, open sheets.
 //!
-//! **`rod_doubled_edge`** comes from SolidCraft's `tests/step-regressions/` (MIT OR
-//! Apache-2.0; written by SolidCraft from the public commands of SolidCraft #4598): a
+//! **`rod_doubled_edge`** comes from Torno's `tests/step-regressions/` (MIT OR
+//! Apache-2.0; written by Torno from the public commands of Torno #4598): a
 //! Ø40 × 60 rod with a Ø8 cross bore, whose bore rim was exported as a B-spline of 1 399
 //! control points running back and forth. Its volume in closed form is
 //! [`rod_closed_form`].
@@ -101,7 +101,7 @@ const ROD_BOUND: f64 = ACCURACY;
 /// The rod's volume against its closed form today: (topology first, stitch only).
 const ROD_STATE: (State, State) = (State::KnownFailing(7.753e-6), State::KnownFailing(7.175e-7));
 
-/// SolidCraft's `tests/step-regressions/rod_doubled_edge.step`.
+/// Torno's `tests/step-regressions/rod_doubled_edge.step`.
 const ROD: &[u8] = include_bytes!("fixtures/rod_doubled_edge.step");
 
 /// The volume of `rod_doubled_edge` in closed form, from the file's geometry.

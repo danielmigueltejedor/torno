@@ -32,6 +32,6 @@
   "ungraded": [],
   "what": "a plane through two skew box edges",
   "why_not": [
-    "the failure is SolidCraft's, not a kernel operation's: step 2 (construct.plane.two_edges): the edges are not in one plane"
+    "the failure is Torno's, not a kernel operation's: step 2 (construct.plane.two_edges): the edges are not in one plane"
   ]
 }

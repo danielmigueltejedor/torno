@@ -1,8 +1,8 @@
 //! The fork's own regression test for WR-537 (tangency-labs/smlib@577f7be, capi test
-//! `booleans` `hair_off_pin_at_a_seam`), ported: SolidCraft's inspect.interference. A pin
+//! `booleans` `hair_off_pin_at_a_seam`), ported: Torno's inspect.interference. A pin
 //! of radius 3 a hair (1e-6, inside the tolerance) off the axis of a hole of its own
 //! radius through a 20 x 20 x 5 plate. Both cylinders are extruded from a circle whose
-//! seam is at 0.6131 rad (SolidCraft's cylinders), so the two seams lie a micrometre
+//! seam is at 0.6131 rad (Torno's cylinders), so the two seams lie a micrometre
 //! apart. Their walls are one surface to the tolerance: the plate and the pin share no
 //! material. Upstream (the pinned C++ 1.0.1) fails with `SM_ERR` (1001), because a
 //! breakpoint on one seam solves to both ends of the other wall's period and is dropped
@@ -27,7 +27,7 @@ use solidcore::primitive::api_primitives::create_box;
 use solidcore::sweep::api_brep::create_linear_sweep;
 use solidcore::{Brep, Kernel};
 
-/// The seam angle of SolidCraft's cylinders.
+/// The seam angle of Torno's cylinders.
 const SEAM: f64 = 0.6131;
 
 /// A cylinder r 3 about (x, 0) from z = -2 up 9, extruded from a circle whose seam is at

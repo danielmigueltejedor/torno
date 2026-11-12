@@ -37,6 +37,6 @@
   "ungraded": [],
   "what": "a square thread on a d10 x 30 cylinder: refused, no current standard defines one",
   "why_not": [
-    "the failure is SolidCraft's, not a kernel operation's: step 2 (solid.thread): invalid parameters for `solid.thread`: no current standard defines a square thread (ISO, ASME and DIN have none; Machinery's Handbook gives only historical proportions): use trapezoidal (ISO 2904) or acme (ASME B1.5)"
+    "the failure is Torno's, not a kernel operation's: step 2 (solid.thread): invalid parameters for `solid.thread`: no current standard defines a square thread (ISO, ASME and DIN have none; Machinery's Handbook gives only historical proportions): use trapezoidal (ISO 2904) or acme (ASME B1.5)"
   ]
 }

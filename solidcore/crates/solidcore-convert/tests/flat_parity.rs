@@ -1,6 +1,6 @@
-//! Parity with SolidCraft's flat-array hop (#3137): every operand record of the rig corpus
-//! (`crates/solidcore/tests/kernel_cases/`) is what SolidCraft's flat export wrote (record →
-//! arrays → kernel → arrays → record), or, for a body SolidCraft made or read itself (not
+//! Parity with Torno's flat-array hop (#3137): every operand record of the rig corpus
+//! (`crates/solidcore/tests/kernel_cases/`) is what Torno's flat export wrote (record →
+//! arrays → kernel → arrays → record), or, for a body Torno made or read itself (not
 //! `trusted`), what it handed the kernel. Each goes to the kernel ([`to_kernel`]) and back
 //! ([`to_record`]); the record that comes back is compared with the one that went in, field by
 //! field, bit for bit. A difference is classed by where it is (indices dropped) and, for a
@@ -195,7 +195,7 @@ fn kind(face: &Value) -> String {
 fn one(name: &str, record: &Record, trusted: bool, fixes: &UpstreamFixes, t: &mut Tally) {
     t.bodies += 1;
     // a sheet face used on its reverse side: the kernel keeps both uses of a sheet's face and
-    // the record comes back with the `same` one, as SolidCraft's flat export wrote it
+    // the record comes back with the `same` one, as Torno's flat export wrote it
     // (a sheet's shell is listed by one region; a closed shell by the two it separates)
     let listed = |i: usize| {
         record

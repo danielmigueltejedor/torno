@@ -190,7 +190,7 @@
     "blend_dropping"
   ],
   "ungraded": [
-    "continuity: SolidCraft computes it"
+    "continuity: Torno computes it"
   ],
   "what": "the three edges at one box corner chamfered 2 together: three planar chamfers meeting at one point",
   "why_not": []

@@ -8,7 +8,7 @@ use schemars::{JsonSchema, Schema, SchemaGenerator, json_schema};
 use serde::de::Error as _;
 use serde::{Deserialize, Deserializer, Serialize};
 use serde_json::Value;
-use solidcraft_doc::physical_material::{DirectionalModulus, IsotropicModuli, MaterialAxes, Validation};
+use torno_doc::physical_material::{DirectionalModulus, IsotropicModuli, MaterialAxes, Validation};
 
 use super::check::whole;
 

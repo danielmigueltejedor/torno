@@ -65,6 +65,6 @@
   "ungraded": [],
   "what": "002's L with an 8 mm hem on the base's back edge, folded under it with a 1 mm inner radius",
   "why_not": [
-    "body \"Body1\" is no kernel operation's output nor an operand: SolidCraft built it or changed the kernel's record"
+    "body \"Body1\" is no kernel operation's output nor an operand: Torno built it or changed the kernel's record"
   ]
 }

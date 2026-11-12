@@ -1,7 +1,7 @@
 //! Fork tangency-labs/smlib@37af643 under `Kernel::fixes.offset_keep_cavity_regions`
 //! (WR-667): an inset keeps the regions that are cavity, not every finite region.
 //!
-//! SolidCraft rig case shell/545's frame, rebuilt from the commit message: a 20 x 20 x 5
+//! Torno rig case shell/545's frame, rebuilt from the commit message: a 20 x 20 x 5
 //! block with a recess from the top ((5, 5)..(15, 15), z 3..5) and a square ring cut from
 //! the bottom ((2, 2)..(18, 18) less (7, 7)..(13, 13), z 0..2.5), so a 0.5 floor lies
 //! between the recess and the ring where they overlap. Shelled 0.5 inward (extended convex
@@ -180,7 +180,7 @@ fn flag_on_keeps_only_the_cavity() {
     assert!((v - 638.75).abs() <= 1e-9 * 638.75, "{v}");
 }
 
-/// With the SolidCraft set's offset fixes that touch this path as well (WR-345's crossing
+/// With the Torno set's offset fixes that touch this path as well (WR-345's crossing
 /// loops, WR-455's one-pass stitch), the flag gives the same shell.
 #[test]
 fn flag_on_with_offset_fixes() {

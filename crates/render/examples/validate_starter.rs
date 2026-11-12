@@ -7,8 +7,16 @@ use image::ImageDecoder;
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use solidcore_record::Vec3;
-use solidcraft_geom::prelude::*;
-use solidcraft_render::{
+use std::{
+    error::Error,
+    f64::consts::PI,
+    fs::File,
+    io::{self, Read},
+    path::{Path, PathBuf},
+    process::ExitCode,
+};
+use torno_geom::prelude::*;
+use torno_render::{
     lighting::{DecodedHdr, HdrDecodeTask, HdrSource, HdrTaskPoll},
     texture_input::{
         MapRole, TextureSource,
@@ -19,15 +27,7 @@ use solidcraft_render::{
         mips::{MAX_MIP_TAIL_BYTES, MipChain},
     },
 };
-use solidcraft_viewport::surface::unit_direction;
-use std::{
-    error::Error,
-    f64::consts::PI,
-    fs::File,
-    io::{self, Read},
-    path::{Path, PathBuf},
-    process::ExitCode,
-};
+use torno_viewport::surface::unit_direction;
 
 const PACK: &str = "assets/render/starter";
 const LIMIT: usize = 16 * 1024 * 1024;
@@ -415,12 +415,10 @@ fn check_hdr(root: &Path, entry: &Environment) -> Result<HdrReceipt> {
     })
 }
 fn validate(root: &Path) -> Result<Report> {
-    let mut report = Report { schema: "solidcraft-native-starter-check/1", ..Default::default() };
+    let mut report = Report { schema: "torno-native-starter-check/1", ..Default::default() };
     let surfaces: Surfaces = serde_json::from_slice(&read_bounded(root, &format!("{PACK}/materials/manifest.json"), 4 * 1024 * 1024)?)?;
     require(
-        surfaces.schema == "solidcraft-authored-surface-manifest/1"
-            && surfaces.generator_version == "1.0.0"
-            && surfaces.license == "MIT OR Apache-2.0",
+        surfaces.schema == "torno-authored-surface-manifest/1" && surfaces.generator_version == "1.0.0" && surfaces.license == "MIT OR Apache-2.0",
         "unknown surface manifest",
     )?;
     require(
@@ -457,7 +455,7 @@ fn validate(root: &Path) -> Result<Report> {
     }
     let environments: Environments = serde_json::from_slice(&read_bounded(root, &format!("{PACK}/environments/manifest.json"), 4 * 1024 * 1024)?)?;
     require(
-        environments.schema == "solidcraft.render-environment-manifest/1"
+        environments.schema == "torno.render-environment-manifest/1"
             && environments.version == "1.0.0"
             && environments.license == "MIT OR Apache-2.0"
             && !environments.runtime_ready,
@@ -481,7 +479,7 @@ fn root() -> Result<PathBuf> {
     Ok(Path::new(env!("CARGO_MANIFEST_DIR")).parent().and_then(Path::parent).ok_or("missing repository root")?.to_path_buf())
 }
 fn run() -> Result<()> {
-    require(std::env::args_os().count() == 1, "usage: cargo run --locked --profile ci -p solidcraft-render --example validate_starter")?;
+    require(std::env::args_os().count() == 1, "usage: cargo run --locked --profile ci -p torno-render --example validate_starter")?;
     let report = validate(&root()?)?;
     println!("{}", serde_json::to_string_pretty(&report)?);
     Ok(())
@@ -499,7 +497,7 @@ fn main() -> ExitCode {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use solidcraft_render::{lighting::HdrErrorCode, texture_sampling::mips::MipError};
+    use torno_render::{lighting::HdrErrorCode, texture_sampling::mips::MipError};
 
     #[test]
     fn portable_paths_reject_escapes_and_ambiguous_windows_forms() {

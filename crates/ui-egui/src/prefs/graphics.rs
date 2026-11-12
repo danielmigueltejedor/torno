@@ -42,7 +42,7 @@ pub(super) fn show(app: &mut SolveApp, ui: &mut egui::Ui) {
             });
         });
         ui_kit::settings_section(ui, "quality", app.tr("prefs.curved_surfaces"), |ui| {
-            use solidcraft_engine::doc::display_quality::DisplayQuality;
+            use torno_engine::doc::display_quality::DisplayQuality;
             let current = DisplayQuality::parse(&app.preferences.display_quality).unwrap_or_default();
             let figures: [fn(&egui::Painter, egui::Rect); 4] = [
                 |p, r| paint_graphics_figure(p, r, PreferenceFigure::Quality(8)),
@@ -55,7 +55,7 @@ pub(super) fn show(app: &mut SolveApp, ui: &mut egui::Ui) {
                 ui.spacing_mut().item_spacing = egui::vec2(t.space_10, t.space_10);
                 for ((q, figure), note) in DisplayQuality::ALL.into_iter().zip(figures).zip(notes) {
                     let label_id = format!("ui.display_quality_{}", q.id());
-                    let label = solidcraft_ui_text::tr(&label_id);
+                    let label = torno_ui_text::tr(&label_id);
                     let width = (t.space_24 * 5.0 + t.space_10).max(ui_kit::ContentWidth::name(ui, label) + t.space_12).min(ui.max_rect().width());
                     let response = ui_kit::picture_card(
                         ui,
@@ -205,7 +205,7 @@ pub(super) fn show(app: &mut SolveApp, ui: &mut egui::Ui) {
             });
             ui_kit::settings_form(ui, t.form_label_width + t.space_24, |ui| {
                 ui_kit::row(ui, app.tr_label("Visual style"), |ui| {
-                    let options = crate::navigation_slots::VISUAL_STYLES.map(|(_, label)| solidcraft_ui_text::tr_label(label));
+                    let options = crate::navigation_slots::VISUAL_STYLES.map(|(_, label)| torno_ui_text::tr_label(label));
                     let choices: Vec<_> =
                         options.into_iter().zip(["style_shaded_edges", "style_shaded", "style_wireframe", "style_hidden_edges"]).collect();
                     let mut selected = usize::from(app.ui.visual_style.min(3));
@@ -311,10 +311,10 @@ pub(super) fn show(app: &mut SolveApp, ui: &mut egui::Ui) {
                     let response = ui_kit::choice_chip(
                         ui,
                         id,
-                        if id == "viewport_section_status" { solidcraft_ui_text::tr_label(label) } else { solidcraft_ui_text::tr(label) },
+                        if id == "viewport_section_status" { torno_ui_text::tr_label(label) } else { torno_ui_text::tr(label) },
                         *value,
                     )
-                    .backing_on_hover_text(solidcraft_ui_text::tr(help));
+                    .backing_on_hover_text(torno_ui_text::tr(help));
                     crate::scenario::publish_target(&format!("prefs:{id}"), response.rect);
                     if response.clicked() {
                         *value = !*value;
@@ -527,7 +527,7 @@ fn graphics_api_row(app: &mut SolveApp, ui: &mut egui::Ui, label_width: f32) {
     if let Some(backend) = app.services.graphics_backend {
         let running = graphics_backend_label(backend);
         let selected = graphics_backend_label(&app.preferences.graphics_backend);
-        let message = solidcraft_ui_text::format("prefs.graphics_api_running", &[("current", &running), ("selected", &selected)]);
+        let message = torno_ui_text::format("prefs.graphics_api_running", &[("current", &running), ("selected", &selected)]);
         ui_kit::text(ui, &message, ui_kit::Text::Hint("graphics_api_running"));
     }
     ui_kit::text(ui, app.tr("prefs.graphics_api_restart_note"), ui_kit::Text::Hint("graphics_api_restart_note"));

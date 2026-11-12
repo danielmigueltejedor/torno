@@ -16,8 +16,8 @@ use crate::ui_kit::{BackingTooltipExt as _, Container, Item, LIST_W, MenuItem, S
 use egui::{Pos2, Rect, Sense, Vec2, pos2, vec2};
 use serde::Serialize;
 use serde_json::{Value, json};
-use solidcraft_engine::geom::prelude::*;
-use solidcraft_engine::{Sel, doc::FeatureKind};
+use torno_engine::geom::prelude::*;
+use torno_engine::{Sel, doc::FeatureKind};
 
 use crate::SolveApp;
 
@@ -132,7 +132,7 @@ pub enum Target {
 
 /// A command entry: label, icon, shortcut and enablement come from the registry.
 pub(crate) fn cmd(app: &SolveApp, id: &str, label: &str) -> Item {
-    let info = solidcraft_engine::find_command(id).map(|c| c.info(&app.session));
+    let info = torno_engine::find_command(id).map(|c| c.info(&app.session));
     let shortcut = match id {
         "edit.undo" => "Ctrl+Z".to_string(),
         "edit.redo" => "Ctrl+Y".to_string(),
@@ -553,13 +553,11 @@ fn picked_face_feature(app: &SolveApp) -> Option<u64> {
 pub(crate) fn face_feature(app: &SolveApp, body: &str, index: usize) -> Option<u64> {
     let state = crate::open_meshing::session_world(&app.session);
     let body = state.body(body)?;
-    let names = solidcraft_engine::doc::naming::face_names(body);
+    let names = torno_engine::doc::naming::face_names(body);
     let name = names.get(index)?;
-    let id = solidcraft_engine::doc::persistent_name::made_by(name)?;
+    let id = torno_engine::doc::persistent_name::made_by(name)?;
     let owner = app.session.doc.feature(body.feature)?;
-    if matches!(owner.kind, solidcraft_engine::doc::FeatureKind::Import { .. } | solidcraft_engine::doc::FeatureKind::MeshImport { .. })
-        && id != owner.id
-    {
+    if matches!(owner.kind, torno_engine::doc::FeatureKind::Import { .. } | torno_engine::doc::FeatureKind::MeshImport { .. }) && id != owner.id {
         return None;
     }
     app.session.doc.feature(id).filter(|f| f.component == app.session.doc.model_body_component(body)).map(|f| f.id)
@@ -810,8 +808,8 @@ fn sketch_items(app: &SolveApp, id: u64) -> Vec<Item> {
         .selection
         .iter()
         .filter_map(|sel| match sel {
-            solidcraft_engine::Sel::Feature { id }
-                if app.session.doc.feature(*id).is_some_and(|f| matches!(f.kind, solidcraft_engine::doc::FeatureKind::Sketch { .. })) =>
+            torno_engine::Sel::Feature { id }
+                if app.session.doc.feature(*id).is_some_and(|f| matches!(f.kind, torno_engine::doc::FeatureKind::Sketch { .. })) =>
             {
                 Some(id.to_string())
             }
@@ -864,9 +862,9 @@ fn replace_sketch_item(app: &SolveApp, id: u64) -> Item {
 /// Replace Sketch from a file: the design file's sketches to choose from, in a menu at `at`;
 /// a file with one sketch replaces at once.
 fn replace_sketch_from_file(app: &mut SolveApp, sketch: u64, at: Pos2) {
-    app.pick_open_for(&solidcraft_engine::io::DESIGN_EXTS, move |app, path| {
+    app.pick_open_for(&torno_engine::io::DESIGN_EXTS, move |app, path| {
         let Some(path) = path else { return };
-        let sketches: Vec<(u64, String)> = match solidcraft_engine::io::read_design_file(&path, None::<fn(solidcraft_engine::io::DesignPreview)>) {
+        let sketches: Vec<(u64, String)> = match torno_engine::io::read_design_file(&path, None::<fn(torno_engine::io::DesignPreview)>) {
             Ok((doc, _)) => doc.features.iter().filter(|f| matches!(f.kind, FeatureKind::Sketch { .. })).map(|f| (f.id, f.name.clone())).collect(),
             Err(e) => {
                 app.set_status(format!("{path}: {e}"), true);
@@ -886,7 +884,7 @@ fn plane_items(app: &SolveApp, id: u64) -> Vec<Item> {
     let Some(f) = app.session.doc.feature(id) else { return Vec::new() };
     let visible = !app.session.visibility.hidden_origin.contains(&f.name);
     let mut items = Vec::new();
-    if matches!(f.kind, solidcraft_engine::doc::FeatureKind::ConstructionPlane { .. }) {
+    if matches!(f.kind, torno_engine::doc::FeatureKind::ConstructionPlane { .. }) {
         items.push(cmd(app, "sketch.create", "Create Sketch").with(json!({ "plane": f.name })));
         items.push(Item::sep());
     }
@@ -922,7 +920,7 @@ fn origin_axis_items(app: &SolveApp, name: &str) -> Vec<Item> {
 /// An assembly joint: edit, drive, suppress, delete.
 fn joint_items(app: &SolveApp, id: u64) -> Vec<Item> {
     let Some(j) = app.session.doc.assembly.joints.iter().find(|j| j.id == id) else { return Vec::new() };
-    let rigid = j.kind == solidcraft_engine::doc::joints::JointKind::Rigid;
+    let rigid = j.kind == torno_engine::doc::joints::JointKind::Rigid;
     // Show/Hide acts on every joint picked in the browser (this one among them).
     let mut joints = app.tree.picked_joints.clone();
     if !joints.contains(&id) {
@@ -1205,10 +1203,9 @@ fn explode_text(app: &SolveApp) -> Option<Item> {
 /// Break Link (#10417): projected geometry among the selection (a model edge or vertex, another
 /// sketch's curve) becomes normal sketch geometry, which Trim, drags and dimensions change like
 /// any other. Messages already send people here ("use Break Link on it"); text has Explode Text.
-fn break_link(app: &SolveApp, sk: &solidcraft_engine::sketch::Sketch, ents: &[String]) -> Option<Item> {
-    let projected = |link: Option<&String>| {
-        link.and_then(|l| sk.link(l)).is_some_and(|l| !matches!(l.source, solidcraft_engine::sketch::LinkSource::Text { .. }))
-    };
+fn break_link(app: &SolveApp, sk: &torno_engine::sketch::Sketch, ents: &[String]) -> Option<Item> {
+    let projected =
+        |link: Option<&String>| link.and_then(|l| sk.link(l)).is_some_and(|l| !matches!(l.source, torno_engine::sketch::LinkSource::Text { .. }));
     let linked: Vec<&str> = ents
         .iter()
         .filter_map(|id| match sk.curves.iter().find(|c| &c.id == id) {
@@ -1231,7 +1228,7 @@ fn alignment_items(selection: &[Sel]) -> Vec<Item> {
 /// Sketch entity items: construction, fix, delete, dimension and the constraints the selection
 /// can take.
 fn sketch_entity_items(app: &SolveApp) -> Vec<Item> {
-    use solidcraft_engine::sketch::{ConstraintKind, CurveKind};
+    use torno_engine::sketch::{ConstraintKind, CurveKind};
     let Some(sid) = app.session.active_sketch else { return Vec::new() };
     let st = crate::open_meshing::session_world(&app.session);
     let Some(ss) = st.sketch(sid) else { return Vec::new() };
@@ -1338,7 +1335,7 @@ fn sketch_entity_items(app: &SolveApp) -> Vec<Item> {
             ss.sketch
                 .curve_index(id)
                 .and_then(|i| ss.sketch.curves.get(i))
-                .is_some_and(|c| matches!(c.kind, solidcraft_engine::sketch::CurveKind::Line { .. }))
+                .is_some_and(|c| matches!(c.kind, torno_engine::sketch::CurveKind::Line { .. }))
         })
         .cloned()
         .collect();
@@ -1660,7 +1657,7 @@ pub fn run_item(app: &mut SolveApp, item: &Item, at: Pos2) {
             // The design is open here, so its file's place is already the user's choice. Its saved
             // file is read beside the window, as a picked one is (#11593).
             let note = (p.get("unsaved").and_then(Value::as_bool) == Some(true))
-                .then(|| solidcraft_ui_text::format("ui.insert_design.saved_file", &[("name", name)]));
+                .then(|| torno_ui_text::format("ui.insert_design.saved_file", &[("name", name)]));
             app.insert_design_async(path, note);
         }
         "ui.insertBrowse" => app.pick_design_to_insert(),
@@ -1979,14 +1976,14 @@ pub fn run_item(app: &mut SolveApp, item: &Item, at: Pos2) {
                 let calibrate = item.id == "ui.calibrateCanvas";
                 app.tree.canvas_panel = Some(crate::browser::CanvasPanel::new(app, c, calibrate));
                 if calibrate {
-                    app.set_status(solidcraft_ui_text::tr("browser.calibrate_click_a"), false);
+                    app.set_status(torno_ui_text::tr("browser.calibrate_click_a"), false);
                 }
             }
         }
         "ui.straightenCanvas" => {
             if let Some(c) = id_of(&p, "canvas") {
                 app.tree.canvas_panel = Some(crate::browser::CanvasPanel::straighten(app, c));
-                app.set_status(solidcraft_ui_text::tr("browser.straighten_click_a"), false);
+                app.set_status(torno_ui_text::tr("browser.straighten_click_a"), false);
             }
         }
         "ui.newGroup" | "ui.ungroup" | "ui.groupSelected" => crate::browser::group_action(app, &item.id, &p),
@@ -2018,15 +2015,15 @@ fn sketches_to_parts(app: &mut SolveApp, p: Value) {
     let mut why: Vec<String> = Vec::new();
     for kept in out.get("kept").and_then(Value::as_array).into_iter().flatten() {
         let code = kept.get("code").and_then(Value::as_str).unwrap_or_default();
-        let reason = solidcraft_ui_text::tr(&format!("browser.sketches_to_parts_{code}")).to_string();
+        let reason = torno_ui_text::tr(&format!("browser.sketches_to_parts_{code}")).to_string();
         if !why.contains(&reason) {
             why.push(reason);
         }
     }
     let message = if why.is_empty() {
-        solidcraft_ui_text::format("browser.sketches_to_parts_moved", &[("moved", &count("moved"))])
+        torno_ui_text::format("browser.sketches_to_parts_moved", &[("moved", &count("moved"))])
     } else {
-        solidcraft_ui_text::format(
+        torno_ui_text::format(
             "browser.sketches_to_parts_result",
             &[("moved", &count("moved")), ("stayed", &count("stayed")), ("why", &why.join("; "))],
         )
@@ -2082,7 +2079,7 @@ pub(crate) fn show_current_keys(app: &SolveApp, list: &mut [Item]) {
 /// axes, components' bodies, canvases, joints' glyphs). When some are shown and some hidden, all are hidden.
 /// A clicked folder takes precedence, and toggles its own visibility without changing its items.
 pub fn toggle_visibility(app: &mut SolveApp) {
-    use solidcraft_engine::doc::FeatureKind;
+    use torno_engine::doc::FeatureKind;
     if crate::browser::toggle_picked_folder(app) {
         return;
     }
@@ -2399,7 +2396,7 @@ pub fn check_target(app: &SolveApp, target: &Target) -> Result<(), String> {
             component(*id) && ["bodies", "sketches", "construction"].contains(&folder.as_str()) && crate::browser::scope_shows(app, scope, *id)
         }
         Target::Joint { id } => doc.assembly.joints.iter().any(|j| j.id == *id),
-        Target::ToolbarCommand { id } => solidcraft_engine::find_command(id).is_some(),
+        Target::ToolbarCommand { id } => torno_engine::find_command(id).is_some(),
         Target::NamedView { name } => {
             doc.named_views.iter().any(|v| v.name == *name) || crate::browser::STANDARD_VIEWS.iter().any(|(label, _)| label == name)
         }
@@ -2890,10 +2887,10 @@ pub fn finish_rename(app: &mut SolveApp, text: Option<&str>, commit: bool) -> bo
     true
 }
 
-/// How the workspace menu shows each of SolidCraft's workspaces ([`Target::Workspace`]).
+/// How the workspace menu shows each of Torno's workspaces ([`Target::Workspace`]).
 fn workspace_style(item: &Item) -> Option<crate::ui_kit::WorkspaceStyle> {
     use crate::ui_kit::WorkspaceStyle;
-    use solidcraft_theme::AccentRamp;
+    use torno_theme::AccentRamp;
     let planned = |slug, description| WorkspaceStyle { slug, description, tabs: None, ramp: None };
     Some(match item.label.as_str() {
         "Design" => {
@@ -2913,9 +2910,9 @@ fn workspace_style(item: &Item) -> Option<crate::ui_kit::WorkspaceStyle> {
     })
 }
 
-/// The kit's workspace menu over SolidCraft's workspaces (`items` of [`Target::Workspace`]).
+/// The kit's workspace menu over Torno's workspaces (`items` of [`Target::Workspace`]).
 pub(crate) fn workspace_menu(ui: &mut egui::Ui, items: &[Item], key_row: Option<usize>, height: f32) -> Option<Item> {
-    let menu = crate::ui_kit::WorkspaceMenu { items, style: &workspace_style, footer: solidcraft_ui_text::tr("ui.workspace_footer") };
+    let menu = crate::ui_kit::WorkspaceMenu { items, style: &workspace_style, footer: torno_ui_text::tr("ui.workspace_footer") };
     crate::ui_kit::workspace_menu(ui, &menu, key_row, height)
 }
 
@@ -2975,7 +2972,7 @@ mod tests {
     /// both ways; a line's length does not.
     #[test]
     fn a_circle_dimension_menu_toggles_radius_and_diameter() {
-        use solidcraft_engine::sketch::ConstraintKind;
+        use torno_engine::sketch::ConstraintKind;
         let mut h = crate::scenario::Harness::new();
         h.app.home.open = false;
         h.app.run("sketch.create", json!({"plane":"XY"})).unwrap();
@@ -3165,7 +3162,7 @@ mod tests {
     #[test]
     fn line_offset_context_menu_breaks_association_and_allows_trim() {
         use solidcore_record::Vec2;
-        use solidcraft_engine::sketch::Shape;
+        use torno_engine::sketch::Shape;
 
         let mut h = crate::scenario::Harness::new();
         h.app.home.open = false;
@@ -3390,7 +3387,7 @@ mod tests {
         assert!(h.app.cam.back().dist(flat.plane_normal.unwrap()) < 2e-6);
         assert_eq!((h.app.cam.distance, h.app.cam.fov), (before.distance, before.fov));
         assert!(h.app.viewport.context_menu.is_none());
-        assert_eq!(solidcraft_ui_text::Locale::for_language("ja").label("Normal to Selection"), "選択アイテムに垂直");
+        assert_eq!(torno_ui_text::Locale::for_language("ja").label("Normal to Selection"), "選択アイテムに垂直");
         // Ctrl+8 and the context menu share Look At, including its repeat-to-flip behavior.
         h.step(&json!({"key":"8","cmd":true})).unwrap();
         h.frames(90);
@@ -3426,7 +3423,7 @@ mod tests {
 
     #[test]
     fn disabled_radial_menu_does_not_capture_right_button_hold() {
-        let mut app = SolveApp::new(solidcraft_engine::Session::default(), Default::default());
+        let mut app = SolveApp::new(torno_engine::Session::default(), Default::default());
         let ctx = crate::fonts::test_context();
         let point = pos2(600.0, 400.0);
         app.viewport.mouse = Some(point);

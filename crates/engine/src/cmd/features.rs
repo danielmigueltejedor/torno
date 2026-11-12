@@ -2,13 +2,13 @@
 
 use serde_json::{Value, json};
 use solidcore_record::Vec3;
-use solidcraft_doc::{
+use torno_doc::{
     AxisRef, Direction, Expr, Extent, FeatureKind, Operation, PointExpr, ProfileSel, RailFit, SweepOrientation, SweepRail, ThinSide, ThinWall,
     Touching, expr::Kind, point_expr,
 };
-use solidcraft_doc::{BodyName, FeatureName, SketchId};
-use solidcraft_doc::{Dir, FacePick, Position};
-use solidcraft_geom::prelude::*;
+use torno_doc::{BodyName, FeatureName, SketchId};
+use torno_doc::{Dir, FacePick, Position};
+use torno_geom::prelude::*;
 
 use super::{CommandSpec, not_in_sketch};
 use crate::params::{UNKNOWN_COMMAND, bad, bool_, expr, expr_problem, req_expr, str_, string_list, string_list_or_default, vec2, vec3};
@@ -228,7 +228,7 @@ fn extrude_base(s: &Session, p: &Value) -> Option<(Vec3, Vec3)> {
         ProfileSel::Indices { indices } => ps.get(*indices.first()?)?.region.interior_point(),
         ProfileSel::Points { points } => *points.first()?,
         selection @ (ProfileSel::Curves { .. } | ProfileSel::OffsetBoundaries { .. } | ProfileSel::WholeBoundaries { .. }) => {
-            let indices = solidcraft_doc::profile_selection_indices(ss, &selection).ok()?;
+            let indices = torno_doc::profile_selection_indices(ss, &selection).ok()?;
             ps.get(*indices.first()?)?.region.interior_point()
         }
     };
@@ -272,7 +272,7 @@ impl Session {
     /// active component has no body of its own while the model has some (a sketch in the
     /// assembly's root cutting through its parts, #1234). The command and its preview both ask
     /// this, so the preview never refuses a cut the command makes (#3085).
-    pub fn cut_takes_every_body(&self, st: &solidcraft_doc::ModelState) -> bool {
+    pub fn cut_takes_every_body(&self, st: &torno_doc::ModelState) -> bool {
         !st.bodies.is_empty() && !st.bodies.iter().any(|b| self.doc.model_body_component(b) == self.active_component)
     }
 }
@@ -283,7 +283,7 @@ fn grouped_face(p: &Value) -> Option<Vec3> {
 }
 
 /// [`auto_operation`] probing the model `st`.
-fn auto_operation_in(s: &Session, p: &Value, st: &solidcraft_doc::ModelState) -> Option<&'static str> {
+fn auto_operation_in(s: &Session, p: &Value, st: &torno_doc::ModelState) -> Option<&'static str> {
     let symmetric = p.get("to").is_none() && str_(p, "direction").is_some_and(|d| d.eq_ignore_ascii_case("symmetric"));
     // Imported face groups can belong to a child of an empty active component.
     // Probe in the same coordinate frame as the face picks.
@@ -351,8 +351,8 @@ fn auto_operation_in(s: &Session, p: &Value, st: &solidcraft_doc::ModelState) ->
     }
     // A profile's points are in the active component's frame; a body placed differently (in a
     // moved or turned component) is probed where it is shown. Face picks are in `st`'s frame.
-    let frames: Vec<Option<solidcraft_doc::Mat>> = bodies.iter().map(|b| if grouped.is_some() { None } else { into_body_frame(s, b) }).collect();
-    let inside = |q: Vec3| bodies.iter().zip(&frames).any(|(b, m)| b.mesh().contains(m.as_ref().map_or(q, |m| solidcraft_doc::apply_point(m, q))));
+    let frames: Vec<Option<torno_doc::Mat>> = bodies.iter().map(|b| if grouped.is_some() { None } else { into_body_frame(s, b) }).collect();
+    let inside = |q: Vec3| bodies.iter().zip(&frames).any(|(b, m)| b.mesh().contains(m.as_ref().map_or(q, |m| torno_doc::apply_point(m, q))));
     // A step into whatever is right in front of the profile, short of the far end.
     let near = |d: f64| d.signum() * (d.abs() * 0.5).min(START_PROBE_MM);
     let into = |d: f64| inside(base + n * near(d)) || inside(base + n * (d * 0.5));
@@ -372,7 +372,7 @@ fn auto_operation_in(s: &Session, p: &Value, st: &solidcraft_doc::ModelState) ->
 /// How far a Through All extrude with no distance reaches from `base`, signed by its
 /// direction: past every body of the model. Without it `auto` could not tell a cut through
 /// a part from an addition and made a separate body.
-fn through_all_reach(st: &solidcraft_doc::ModelState, p: &Value, base: Vec3) -> Option<f64> {
+fn through_all_reach(st: &torno_doc::ModelState, p: &Value, base: Vec3) -> Option<f64> {
     let through_all = bool_(p, "through_all").unwrap_or(false) || str_(p, "extent").is_some_and(|e| e.eq_ignore_ascii_case("through_all"));
     if !through_all {
         return None;
@@ -424,7 +424,7 @@ pub(super) fn feature_sketch(s: &Session, p: &Value, cmd: &str) -> Result<u64> {
 /// profile that reference geometry cuts into regions takes the whole drawn profile
 /// ([`drawn_profile_regions`], #5302).
 pub(super) fn stable_profiles(s: &Session, kind: &mut FeatureKind, exact: bool) -> Result<()> {
-    use solidcraft_doc::sketch::profile_at_point;
+    use torno_doc::sketch::profile_at_point;
     let st = s.model.state();
     for (sketch, sel) in kind.profile_sels_mut() {
         let Some(ss) = st.sketch(sketch) else { continue };
@@ -437,7 +437,7 @@ pub(super) fn stable_profiles(s: &Session, kind: &mut FeatureKind, exact: bool) 
                 if let Some(i) = indices.iter().find(|i| **i >= have) {
                     return Err(EngineError::Other(format!("there is no profile {i} in {} (it has {have})", ss.name)));
                 }
-                solidcraft_doc::profile_selection_indices(ss, sel)?
+                torno_doc::profile_selection_indices(ss, sel)?
             }
             ProfileSel::Points { points } => {
                 if points.len() > ss.profiles.len() {
@@ -475,20 +475,20 @@ pub(super) fn stable_profiles(s: &Session, kind: &mut FeatureKind, exact: bool) 
                     }
                 }
                 let selection = ProfileSel::Curves { loops: normalized };
-                solidcraft_doc::profile_selection_indices(ss, &selection)?;
+                torno_doc::profile_selection_indices(ss, &selection)?;
                 *sel = selection;
                 continue;
             }
             ProfileSel::OffsetBoundaries { .. } | ProfileSel::WholeBoundaries { .. } => {
                 // Explicit identities retain the caller's semantics. Validate through the
                 // same resolver as recomputation, including reserved-role precedence.
-                solidcraft_doc::profile_selection_indices(ss, sel)?;
+                torno_doc::profile_selection_indices(ss, sel)?;
                 continue;
             }
             ProfileSel::All => continue,
         };
         let picked = if exact { indices } else { drawn_profile_regions(ss, &indices) };
-        let captured = solidcraft_doc::capture_profile_selection(ss, &picked)?;
+        let captured = torno_doc::capture_profile_selection(ss, &picked)?;
         *sel = match captured {
             ProfileSel::OffsetBoundaries { associations }
                 if associations.iter().any(|id| {
@@ -529,12 +529,12 @@ pub(super) fn stable_profiles(s: &Session, kind: &mut FeatureKind, exact: bool) 
 /// of it, a real boundary of the material, so the pick keeps its own region. The drawn profiles
 /// are the disjoint faces of the drawn graph, so a drawn hole keeps filling only itself
 /// (#5176).
-fn drawn_profile_regions(ss: &solidcraft_doc::SolvedSketch, indices: &[usize]) -> Vec<usize> {
+fn drawn_profile_regions(ss: &torno_doc::SolvedSketch, indices: &[usize]) -> Vec<usize> {
     const MAX_PROFILES: usize = 10_000;
     if indices.is_empty() || indices.len() > MAX_PROFILES || ss.profiles.len() > MAX_PROFILES {
         return indices.to_vec();
     }
-    let drawn = solidcraft_sketch::find_drawn_profiles(&ss.sketch);
+    let drawn = torno_sketch::find_drawn_profiles(&ss.sketch);
     if drawn.is_empty() || drawn.len() >= ss.profiles.len() {
         return indices.to_vec();
     }
@@ -607,7 +607,7 @@ pub(crate) fn profiles(p: &Value, cmd: &str) -> Result<ProfileSel> {
     match v {
         Value::Object(fields) => {
             if fields.get("type").and_then(Value::as_str) == Some("whole_boundaries") {
-                return solidcraft_doc::whole_profile_selection_from_value(v).map_err(|error| bad(cmd, error.to_string()));
+                return torno_doc::whole_profile_selection_from_value(v).map_err(|error| bad(cmd, error.to_string()));
             }
             if !fields.contains_key("offset_boundaries") && fields.get("type").and_then(Value::as_str) != Some("offset_boundaries") {
                 return Err(bad(
@@ -698,7 +698,7 @@ pub(super) fn check_expr(s: &Session, e: &str, kind: Kind, cmd: &str, what: &str
 /// A pattern count: a whole, unit-less number (see `expr::eval_count`).
 pub(super) fn check_count(s: &Session, e: &str, cmd: &str, what: &str) -> Result<()> {
     let (vals, _) = s.doc.param_values();
-    solidcraft_doc::expr::eval_count(e, &vals).map(|_| ()).map_err(|err| bad(cmd, format!("{what}: {err}")))
+    torno_doc::expr::eval_count(e, &vals).map(|_| ()).map_err(|err| bad(cmd, format!("{what}: {err}")))
 }
 
 /// Add a feature, evaluate, and report its result (an evaluation error fails the command).
@@ -735,29 +735,26 @@ pub(super) fn add_feature_in(s: &mut Session, p: &Value, kind: FeatureKind, worl
     let (refs, names) = match &kind {
         FeatureKind::Fillet { edges, body, .. } | FeatureKind::Chamfer { edges, body, .. } => {
             let st = s.model.state();
-            (
-                solidcraft_doc::edge_refs(&st, body, &solidcraft_doc::plain(edges)),
-                solidcraft_doc::edge_names_for(&st, body, &solidcraft_doc::plain(edges)),
-            )
+            (torno_doc::edge_refs(&st, body, &torno_doc::plain(edges)), torno_doc::edge_names_for(&st, body, &torno_doc::plain(edges)))
         }
         // Sheet metal edges are named by the sheet model.
         FeatureKind::SheetFlange { edges, .. } => {
             let points: Vec<_> = edges.iter().map(|e| e.point).collect();
-            (Vec::new(), solidcraft_doc::sheet::sheet_edge_names(&s.model.state(), &solidcraft_doc::plain(&points)))
+            (Vec::new(), torno_doc::sheet::sheet_edge_names(&s.model.state(), &torno_doc::plain(&points)))
         }
-        FeatureKind::SheetHem { edges, .. } => (Vec::new(), solidcraft_doc::sheet::sheet_edge_names(&s.model.state(), &solidcraft_doc::plain(edges))),
+        FeatureKind::SheetHem { edges, .. } => (Vec::new(), torno_doc::sheet::sheet_edge_names(&s.model.state(), &torno_doc::plain(edges))),
         // A hole's reference edges (#37) are edges of the body it is drilled into.
         FeatureKind::Hole { position, references, .. } if !references.is_empty() => {
             let edges: Vec<Vec3> = references.iter().map(|r| r.edge.0).collect();
-            (Vec::new(), solidcraft_doc::hole_reference::reference_edge_names(&s.model.state(), position.0, &edges))
+            (Vec::new(), torno_doc::hole_reference::reference_edge_names(&s.model.state(), position.0, &edges))
         }
         // A cylinder's reference edges (#6380) are edges of the body it stands on.
         FeatureKind::Cylinder { base, references, .. } if !references.is_empty() => {
-            (Vec::new(), solidcraft_doc::hole_reference::cylinder_edge_names(&s.model.state(), base, references))
+            (Vec::new(), torno_doc::hole_reference::cylinder_edge_names(&s.model.state(), base, references))
         }
         // A conversion's bend edges are edges of the body it converts.
         FeatureKind::SheetConvert { body, bends, .. } if !bends.is_empty() => {
-            (Vec::new(), solidcraft_doc::sheet::bend_edge_names(&s.model.state(), body, &solidcraft_doc::plain(bends)))
+            (Vec::new(), torno_doc::sheet::bend_edge_names(&s.model.state(), body, &torno_doc::plain(bends)))
         }
         _ => (Vec::new(), Vec::new()),
     };
@@ -767,11 +764,11 @@ pub(super) fn add_feature_in(s: &mut Session, p: &Value, kind: FeatureKind, worl
             let state = s.model.state();
             let body = state.body(&face.body).ok_or_else(|| EngineError::Other("selected cylinder body no longer exists".into()))?;
             let frame = face.body_frame(&s.doc, body).map_err(|e| EngineError::Other(e.to_string()))?;
-            let inverse = solidcraft_doc::mat_inverse(&frame).ok_or_else(|| EngineError::Other("invalid cylinder placement".into()))?;
-            let at = solidcraft_doc::apply_point(&solidcraft_doc::mat_mul(&inverse, &s.active_component_frame()), face.at.0);
-            let mut scoped = solidcraft_doc::ModelState::default();
+            let inverse = torno_doc::mat_inverse(&frame).ok_or_else(|| EngineError::Other("invalid cylinder placement".into()))?;
+            let at = torno_doc::apply_point(&torno_doc::mat_mul(&inverse, &s.active_component_frame()), face.at.0);
+            let mut scoped = torno_doc::ModelState::default();
             scoped.bodies.push(body.clone());
-            let names = solidcraft_doc::naming::face_names_at(&scoped, &[at]);
+            let names = torno_doc::naming::face_names_at(&scoped, &[at]);
             if names.len() != 1 || names.first().is_none_or(|name| name.is_empty()) {
                 return Err(EngineError::Other("selected cylinder face has no persistent identity".into()));
             }
@@ -781,7 +778,7 @@ pub(super) fn add_feature_in(s: &mut Session, p: &Value, kind: FeatureKind, worl
         } else if matches!(kind, FeatureKind::Hole { .. }) {
             hole_face_names(s, p, &kind)?
         } else {
-            solidcraft_doc::face_point_names(&s.doc, &s.model.state(), &kind, s.active_component)?
+            torno_doc::face_point_names(&s.doc, &s.model.state(), &kind, s.active_component)?
         }
     };
     // Primitives have no `targets` of their own: their `targets` are the bodies taking part (#259).
@@ -874,7 +871,7 @@ pub(super) fn add_feature_in(s: &mut Session, p: &Value, kind: FeatureKind, worl
     let st = s.model.state();
     let bodies: Vec<&str> = st.bodies.iter().map(|b| b.name.as_str()).collect();
     // Bodies that were there before and now have other geometry, and bodies that are gone.
-    let old: std::collections::HashMap<&str, &solidcraft_doc::kernel::Body> = before.bodies.iter().map(|b| (b.name.as_str(), &b.body)).collect();
+    let old: std::collections::HashMap<&str, &torno_doc::kernel::Body> = before.bodies.iter().map(|b| (b.name.as_str(), &b.body)).collect();
     // The bodies this feature made, apart from the ones it changed or that were there (#374),
     // and the pieces a cut left of a body made earlier, which keep that body's feature.
     let created: Vec<&str> = st.bodies.iter().filter(|b| b.feature == id || !old.contains_key(b.name.as_str())).map(|b| b.name.as_str()).collect();
@@ -1045,7 +1042,7 @@ fn cut_scope(s: &Session, p: &Value, operation: Operation, sketch: u64, face_bod
 fn default_extrude_profiles(s: &Session, sketch: u64) -> ProfileSel {
     let st = s.model.state();
     let Some(ss) = st.sketch(sketch) else { return ProfileSel::All };
-    let drawn = solidcraft_sketch::find_drawn_profiles(&ss.sketch);
+    let drawn = torno_sketch::find_drawn_profiles(&ss.sketch);
     let ps = if drawn.is_empty() { ss.profiles.clone() } else { drawn };
     if ps.len() > 10_000 || ps.iter().all(|p| p.region.holes.is_empty()) {
         return ProfileSel::All;
@@ -1059,7 +1056,7 @@ fn default_extrude_profiles(s: &Session, sketch: u64) -> ProfileSel {
             ps.iter().filter(|other| other.region.holes.iter().any(|hole| hole.contains(probe))).count() % 2 == 0
         })
         .collect();
-    let all = solidcraft_sketch::without_text_counters(&ss.sketch, ps.clone());
+    let all = torno_sketch::without_text_counters(&ss.sketch, ps.clone());
     if material.iter().map(|p| &p.outer_curves).eq(all.iter().map(|p| &p.outer_curves)) {
         return ProfileSel::All;
     }
@@ -1072,7 +1069,7 @@ fn default_extrude_profiles(s: &Session, sketch: u64) -> ProfileSel {
     } else {
         ProfileSel::Curves { loops: material.iter().map(|p| p.outer_curves.clone()).collect() }
     };
-    match solidcraft_doc::profile_selection_indices(ss, &sel) {
+    match torno_doc::profile_selection_indices(ss, &sel) {
         Ok(found) if found.len() == material.len() && material.iter().all(|p| !p.outer_curves.is_empty()) => sel,
         _ => ProfileSel::All,
     }
@@ -1080,14 +1077,14 @@ fn default_extrude_profiles(s: &Session, sketch: u64) -> ProfileSel {
 
 /// The matrix taking a point of the active component's frame into the frame `b`'s geometry is
 /// kept in, as the evaluator moves a tool into it; `None` when the two are the same.
-fn into_body_frame(s: &Session, b: &solidcraft_doc::ModelBody) -> Option<solidcraft_doc::Mat> {
+fn into_body_frame(s: &Session, b: &torno_doc::ModelBody) -> Option<torno_doc::Mat> {
     let frame = s.doc.component_transform(s.doc.model_body_component(b));
-    let world = s.doc.model_body_offset(b).map_or(frame, |offset| solidcraft_doc::mat_mul(&frame, offset));
+    let world = s.doc.model_body_offset(b).map_or(frame, |offset| torno_doc::mat_mul(&frame, offset));
     let active = s.doc.component_transform(s.active_component);
     if world == active {
         return None;
     }
-    solidcraft_doc::mat_inverse(&world).map(|into| solidcraft_doc::mat_mul(&into, &active))
+    torno_doc::mat_inverse(&world).map(|into| torno_doc::mat_mul(&into, &active))
 }
 
 /// The body whose face `sketch` is attached to, when a join or cut made in the active component
@@ -1098,7 +1095,7 @@ fn into_body_frame(s: &Session, b: &solidcraft_doc::ModelBody) -> Option<solidcr
 /// its bodies come from a linked design file, or the face was picked on a further placement of a
 /// component placed more than once (the change is drawn at the first).
 fn face_body_reached(s: &Session, sketch: u64) -> Result<Option<String>> {
-    let Some(FeatureKind::Sketch { plane: solidcraft_doc::PlaneRef::Face { anchor: Some(anchor), .. }, .. }) = s.doc.feature(sketch).map(|f| &f.kind)
+    let Some(FeatureKind::Sketch { plane: torno_doc::PlaneRef::Face { anchor: Some(anchor), .. }, .. }) = s.doc.feature(sketch).map(|f| &f.kind)
     else {
         return Ok(None);
     };
@@ -1145,21 +1142,21 @@ fn face_body_reached(s: &Session, sketch: u64) -> Result<Option<String>> {
 /// otherwise take the name of the face that was picked. Over every body, as before, elsewhere.
 fn hole_face_names(s: &Session, p: &Value, kind: &FeatureKind) -> Result<Vec<String>> {
     let st = s.model.state();
-    let all = solidcraft_doc::face_point_names(&s.doc, &st, kind, s.active_component)?;
+    let all = torno_doc::face_point_names(&s.doc, &st, kind, s.active_component)?;
     let drilled = string_list_or_default(p, "participants");
     if drilled.is_empty() || drilled.iter().any(|b| b == "*") {
         return Ok(all);
     }
-    let mut scoped = solidcraft_doc::ModelState::default();
+    let mut scoped = torno_doc::ModelState::default();
     scoped.bodies = st.bodies.iter().filter(|b| drilled.contains(&b.name)).cloned().collect();
-    let own = solidcraft_doc::face_point_names(&s.doc, &scoped, kind, s.active_component)?;
+    let own = torno_doc::face_point_names(&s.doc, &scoped, kind, s.active_component)?;
     Ok(own.into_iter().zip(all).map(|(own, any)| if own.is_empty() { any } else { own }).collect())
 }
 
 /// The body whose face `sketch` is attached to (on the face itself, not offset from it), when
 /// it is one the active component works on ([`active_scope`]).
 fn sketch_face_body(s: &Session, sketch: u64) -> Option<String> {
-    let FeatureKind::Sketch { plane: solidcraft_doc::PlaneRef::Face { anchor: Some(anchor), .. }, .. } = &s.doc.feature(sketch)?.kind else {
+    let FeatureKind::Sketch { plane: torno_doc::PlaneRef::Face { anchor: Some(anchor), .. }, .. } = &s.doc.feature(sketch)?.kind else {
         return None;
     };
     let st = s.model.state();
@@ -1201,13 +1198,13 @@ pub fn shown_scope(s: &Session) -> Option<Vec<String>> {
 /// are components inside it) works on the bodies of the components inside it whose geometry is
 /// in its own frame, as an import places it: a profile sketched on such a part's face meets the
 /// part where it is shown (#3223).
-fn active_scope<'a>(s: &Session, st: &'a solidcraft_doc::ModelState) -> Vec<&'a solidcraft_doc::ModelBody> {
+fn active_scope<'a>(s: &Session, st: &'a torno_doc::ModelState) -> Vec<&'a torno_doc::ModelBody> {
     let active = s.active_component;
     let own: Vec<_> = st.bodies.iter().filter(|b| s.doc.model_body_component(b) == active).collect();
     if !own.is_empty() {
         return own;
     }
-    let Some(into_active) = solidcraft_doc::mat_inverse(&s.doc.component_transform(active)) else { return own };
+    let Some(into_active) = torno_doc::mat_inverse(&s.doc.component_transform(active)) else { return own };
     st.bodies
         .iter()
         .filter(|b| {
@@ -1216,9 +1213,9 @@ fn active_scope<'a>(s: &Session, st: &'a solidcraft_doc::ModelState) -> Vec<&'a 
                 return false;
             }
             let frame = s.doc.component_transform(comp);
-            let world = s.doc.model_body_offset(b).map_or(frame, |offset| solidcraft_doc::mat_mul(&frame, offset));
-            let rel = solidcraft_doc::mat_mul(&into_active, &world);
-            rel.iter().flatten().zip(solidcraft_doc::IDENTITY.iter().flatten()).all(|(a, b)| (a - b).abs() < 1e-9)
+            let world = s.doc.model_body_offset(b).map_or(frame, |offset| torno_doc::mat_mul(&frame, offset));
+            let rel = torno_doc::mat_mul(&into_active, &world);
+            rel.iter().flatten().zip(torno_doc::IDENTITY.iter().flatten()).all(|(a, b)| (a - b).abs() < 1e-9)
         })
         .collect()
 }
@@ -1259,7 +1256,7 @@ fn thin_param(s: &Session, p: &Value, sketch: u64, cmd: &str) -> Result<ThinWall
 }
 
 /// The regions of a thin wall in its (solved) sketch, with the current parameter values.
-fn thin_regions(s: &Session, ss: &solidcraft_doc::SolvedSketch, thin: &ThinWall) -> std::result::Result<Vec<solidcore_record::Region2>, String> {
+fn thin_regions(s: &Session, ss: &torno_doc::SolvedSketch, thin: &ThinWall) -> std::result::Result<Vec<solidcore_record::Region2>, String> {
     let length = |e: &str| s.doc.eval(&s.doc.with_design_unit(e, Kind::Length), Kind::Length).map_err(|e| e.to_string());
     let t = length(&thin.thickness)?;
     let (inside, outside) = match thin.side {
@@ -1274,7 +1271,7 @@ fn thin_regions(s: &Session, ss: &solidcraft_doc::SolvedSketch, thin: &ThinWall)
         .filter_map(|id| ss.sketch.curve_index(id))
         .map(|ci| ss.sketch.exact_segs(ci).unwrap_or_else(|| ss.sketch.segs(ci)))
         .collect();
-    solidcraft_sketch::thin_wall_regions(&curves, inside, outside).map_err(|e| format!("thin wall: {e}"))
+    torno_sketch::thin_wall_regions(&curves, inside, outside).map_err(|e| format!("thin wall: {e}"))
 }
 
 /// An extrude's extent from its parameters: distance (or through all, or to an object), the
@@ -1315,7 +1312,7 @@ pub(super) fn extent_param(s: &Session, p: &Value, cmd: &str) -> Result<Extent> 
     // A symmetric distance the call doesn't qualify is the total, split evenly around the start
     // plane, for solid and surface extrudes alike.
     let convention = match p.get("convention") {
-        None => solidcraft_doc::ExtrudeConvention::TotalDistance,
+        None => torno_doc::ExtrudeConvention::TotalDistance,
         Some(value) => serde_json::from_value(value.clone()).map_err(|_| bad(cmd, "`convention` must be total_distance or legacy_per_side"))?,
     };
     Ok(Extent {
@@ -1364,7 +1361,7 @@ fn revolve(s: &mut Session, p: &Value) -> Result<Value> {
     let symmetric =
         matches!(str_(p, "direction").map(str::to_ascii_lowercase).as_deref(), Some("symmetric")) || bool_(p, "symmetric").unwrap_or(false);
     let convention = match p.get("convention") {
-        None => solidcraft_doc::RevolveConvention::SketchNormal,
+        None => torno_doc::RevolveConvention::SketchNormal,
         Some(value) => serde_json::from_value(value.clone()).map_err(|_| bad(cmd, "`convention` must be sketch_normal or legacy_axis_start"))?,
     };
     let operation = operation(p, cmd)?;
@@ -1412,7 +1409,7 @@ pub(super) fn axis_param(s: &Session, sketch: u64, p: &Value, cmd: &str) -> Resu
             let owner = o.get("sketch").map(|v| sketch_id(s, Some(v), cmd, "axis.sketch")).transpose()?;
             return Ok(AxisRef::SketchLine { curve: curve.into(), sketch: owner });
         }
-        let origin = point_param(s, o, "origin", cmd)?.unwrap_or_else(|| solidcraft_doc::point_expr(Vec3::ZERO));
+        let origin = point_param(s, o, "origin", cmd)?.unwrap_or_else(|| torno_doc::point_expr(Vec3::ZERO));
         let dir = match o.get("dir") {
             None => return Err(bad(cmd, "axis needs `dir`")),
             Some(v) => vec3(v).ok_or_else(|| bad(cmd, "axis `dir` must be a direction [x, y, z] of numbers"))?,
@@ -1454,7 +1451,7 @@ fn radius_expr(s: &Session, p: &Value, cmd: &str) -> Result<Expr> {
 /// The unit a bare length typed into a command means: the design's units. (A point's bare
 /// coordinates, and a bare number already stored in a feature, are millimetres.)
 pub(super) fn typed_length_unit(s: &Session) -> String {
-    solidcraft_doc::expr::length_unit_or_mm(&s.doc.units).to_string()
+    torno_doc::expr::length_unit_or_mm(&s.doc.units).to_string()
 }
 
 /// The lengths a command works one expression out from (a radius from a diameter, a pitch from
@@ -1465,7 +1462,7 @@ pub(super) fn typed_length_unit(s: &Session) -> String {
 /// parameter), which is read in the design's units itself, they stay bare and are read with it,
 /// as before.
 pub(super) fn length_operands<const N: usize>(s: &Session, operands: [(&str, &str); N]) -> [String; N] {
-    use solidcraft_doc::expr::is_bare_number;
+    use torno_doc::expr::is_bare_number;
     let follows = operands.iter().any(|(e, _)| !is_bare_number(e) && s.doc.eval(e, Kind::Unitless).is_ok());
     operands.map(|(e, unit)| if !follows && is_bare_number(e) { format!("{} {unit}", e.trim()) } else { e.to_string() })
 }
@@ -1526,7 +1523,7 @@ fn prim_box(s: &mut Session, p: &Value) -> Result<Value> {
         // bare numbers are millimetres, the sizes' the design's units.
         (None, Some([cx, cy, cz])) => {
             let unit = typed_length_unit(s);
-            let mm_per_unit = solidcraft_doc::expr::unit_info(&unit).map_or(1.0, |(_, k)| k);
+            let mm_per_unit = torno_doc::expr::unit_info(&unit).map_or(1.0, |(_, k)| k);
             let back = |c: Expr, size: &Expr| -> Expr {
                 match (c.parse::<f64>(), size.parse::<f64>()) {
                     (Ok(a), Ok(b)) => format!("{}", a - b * mm_per_unit / 2.0).into(),
@@ -1621,8 +1618,8 @@ struct EdgePicks {
 struct PickRow {
     body: usize,
     name: String,
-    frame: solidcraft_doc::Mat,
-    inverse: solidcraft_doc::Mat,
+    frame: torno_doc::Mat,
+    inverse: torno_doc::Mat,
 }
 
 /// What one body's edges near a pick are: the point in its frame, its distance from the pick on
@@ -1681,12 +1678,8 @@ fn edge_points(s: &Session, p: &Value, cmd: &str) -> Result<EdgePicks> {
             _ => Ok(i),
         }
     };
-    let identity = |i: usize, b: &solidcraft_doc::ModelBody| PickRow {
-        body: i,
-        name: b.name.clone(),
-        frame: solidcraft_doc::IDENTITY,
-        inverse: solidcraft_doc::IDENTITY,
-    };
+    let identity =
+        |i: usize, b: &torno_doc::ModelBody| PickRow { body: i, name: b.name.clone(), frame: torno_doc::IDENTITY, inverse: torno_doc::IDENTITY };
     // Mesh bodies have no edges to pick: rounding one is refused later, saying why.
     let local: Vec<PickRow> = st.bodies.iter().enumerate().filter(|(_, b)| !b.body.is_mesh()).map(|(i, b)| identity(i, b)).collect();
     let placed = crate::frames::placed(s);
@@ -1699,7 +1692,7 @@ fn edge_points(s: &Session, p: &Value, cmd: &str) -> Result<EdgePicks> {
                 .iter()
                 .filter_map(|(name, own, frame)| {
                     let body = *index.get(own.as_str())?;
-                    let inverse = solidcraft_doc::mat_inverse(frame)?;
+                    let inverse = torno_doc::mat_inverse(frame)?;
                     (!st.bodies.get(body)?.body.is_mesh()).then(|| PickRow { body, name: name.clone(), frame: *frame, inverse })
                 })
                 .collect()
@@ -1716,7 +1709,7 @@ fn edge_points(s: &Session, p: &Value, cmd: &str) -> Result<EdgePicks> {
         let tol = (size * 2e-3).max(1e-3);
         // The display mesh flags seams (a smooth surface meeting itself, as down the side
         // of a cylinder), which nobody means by a pick where they end.
-        let shape = match b.body.mesh(&solidcraft_kernel::MeshTolerance::chord(tol)) {
+        let shape = match b.body.mesh(&torno_kernel::MeshTolerance::chord(tol)) {
             // An edge where the faces meet tangentially (the spans of a spline wall
             // meeting) can't be blended either: nobody means it by a pick.
             Ok(m) => Some((
@@ -1768,7 +1761,7 @@ fn edge_points(s: &Session, p: &Value, cmd: &str) -> Result<EdgePicks> {
             _ => (pt, local.iter().collect()),
         };
         let q_of = |r: &PickRow| {
-            let q = solidcraft_doc::apply_point(&r.inverse, w);
+            let q = torno_doc::apply_point(&r.inverse, w);
             (q.x.is_finite() && q.y.is_finite() && q.z.is_finite()).then_some(q)
         };
         // Only bodies whose box (grown by the reach) holds the pick: an edge lies in its body's box.
@@ -1811,7 +1804,7 @@ fn edge_points(s: &Session, p: &Value, cmd: &str) -> Result<EdgePicks> {
             let (d, edge) = candidates
                 .iter()
                 .filter(|(_, d)| *d <= polyline + 2.0 * chord)
-                .map(|(i, d)| (edge_foot(&b.body, *i, q).map_or(*d, |(_, foot)| solidcraft_doc::apply_point(&r.frame, foot).dist(w)), *i))
+                .map(|(i, d)| (edge_foot(&b.body, *i, q).map_or(*d, |(_, foot)| torno_doc::apply_point(&r.frame, foot).dist(w)), *i))
                 .fold((f64::INFINITY, None), |best, (d, i)| if d < best.0 { (d, Some(i)) } else { best });
             hits.push(RowHit { row: k, q, d, edge, edge_like, near });
         }
@@ -1963,11 +1956,11 @@ fn and_list(names: &[String], most: usize) -> String {
 
 /// The distance from `q` to edge `index` of `body` on its exact curve, and the point there:
 /// samples, then a golden-section search between the best one's neighbours.
-fn edge_foot(body: &solidcraft_kernel::Body, index: usize, q: Vec3) -> Option<(f64, Vec3)> {
+fn edge_foot(body: &torno_kernel::Body, index: usize, q: Vec3) -> Option<(f64, Vec3)> {
     const SAMPLES: usize = 32;
     const STEPS: usize = 40;
     let e = body.record().edges.get(index)?;
-    let c = solidcraft_geom::brep::eval::CurveEval::new(e.parameters()).ok()?;
+    let c = torno_geom::brep::eval::CurveEval::new(e.parameters()).ok()?;
     let [t0, t1] = e.interval;
     if !(t0.is_finite() && t1.is_finite()) {
         return None;
@@ -2040,9 +2033,9 @@ fn press_pull(s: &mut Session, p: &Value) -> Result<Value> {
     // A fillet's or chamfer's face: its size changes by the distance (the feature is edited). A
     // chamfer's face is flat, so this is asked before whether the face is planar (#4986).
     if let Some(fp) = vec3(face) {
-        let name = solidcraft_doc::naming::face_names_at(&s.model.state(), &[fp]).into_iter().next().unwrap_or_default();
-        let fid = solidcraft_doc::persistent_name::made_by(&name);
-        if solidcraft_doc::persistent_name::is_blend(&name) {
+        let name = torno_doc::naming::face_names_at(&s.model.state(), &[fp]).into_iter().next().unwrap_or_default();
+        let fid = torno_doc::persistent_name::made_by(&name);
+        if torno_doc::persistent_name::is_blend(&name) {
             let f = fid.and_then(|id| s.doc.feature(id)).cloned().ok_or_else(|| bad(cmd, "the blend's feature is gone"))?;
             let (key, old) = match &f.kind {
                 FeatureKind::Fillet { radius, .. } => ("radius", radius.clone()),
@@ -2071,7 +2064,7 @@ fn press_pull(s: &mut Session, p: &Value) -> Result<Value> {
     // Pushed in: the extrude cuts the other way by as much (a bare number stays one, so it keeps
     // being read as a bare number typed into the extrude).
     let flipped = match distance.trim().parse::<f64>() {
-        Ok(v) if solidcraft_doc::expr::is_bare_number(&distance) => Expr::new(format!("{}", -v)),
+        Ok(v) if torno_doc::expr::is_bare_number(&distance) => Expr::new(format!("{}", -v)),
         _ => Expr::new(format!("-({distance})")),
     };
     let (dist, dir, op) = if d > 0.0 { (distance, "positive", "join") } else { (flipped, "negative", "cut") };
@@ -2084,9 +2077,9 @@ fn fillet(s: &mut Session, p: &Value) -> Result<Value> {
     let radius = req_expr(cmd, p, "radius")?;
     check_expr(s, &radius, Kind::Length, cmd, "radius")?;
     let style = match str_(p, "type").map(str::to_ascii_lowercase).as_deref() {
-        None | Some("constant") | Some("rolling_ball") => solidcraft_doc::FilletStyle::Constant,
-        Some("chord") | Some("chord_length") => solidcraft_doc::FilletStyle::Chord,
-        Some("curvature") | Some("g2") => solidcraft_doc::FilletStyle::Curvature,
+        None | Some("constant") | Some("rolling_ball") => torno_doc::FilletStyle::Constant,
+        Some("chord") | Some("chord_length") => torno_doc::FilletStyle::Chord,
+        Some("curvature") | Some("g2") => torno_doc::FilletStyle::Curvature,
         Some("variable") => {
             let radius2 = req_expr(cmd, p, "radius2")?;
             check_expr(s, &radius2, Kind::Length, cmd, "radius2")?;
@@ -2109,7 +2102,7 @@ fn fillet(s: &mut Session, p: &Value) -> Result<Value> {
                 mid.push((t, r.into()));
             }
             let smooth = p.get("smooth").and_then(Value::as_bool).unwrap_or(false);
-            solidcraft_doc::FilletStyle::Variable { radius2, start: Position(start), mid, smooth }
+            torno_doc::FilletStyle::Variable { radius2, start: Position(start), mid, smooth }
         }
         Some("spline") => {
             let start = p
@@ -2134,14 +2127,14 @@ fn fillet(s: &mut Session, p: &Value) -> Result<Value> {
                     "a spline fillet needs `radii` (the control radii after `radius`) and `knots` (as many as all control radii, the degree 1…3 and one more)",
                 ));
             }
-            solidcraft_doc::FilletStyle::Spline { start: Position(start), knots, radii }
+            torno_doc::FilletStyle::Spline { start: Position(start), knots, radii }
         }
         Some(o) => return Err(bad(cmd, format!("unknown fillet type `{o}` (constant, chord, variable, spline or curvature)"))),
     };
     let fit = match str_(p, "fit").map(str::to_ascii_lowercase).as_deref() {
-        None | Some("exact") => solidcraft_doc::FilletFit::Exact,
-        Some("reduce") => solidcraft_doc::FilletFit::Reduce,
-        Some("taper") => solidcraft_doc::FilletFit::Taper,
+        None | Some("exact") => torno_doc::FilletFit::Exact,
+        Some("reduce") => torno_doc::FilletFit::Reduce,
+        Some("taper") => torno_doc::FilletFit::Taper,
         Some(o) => return Err(bad(cmd, format!("unknown fit `{o}` (exact, reduce or taper)"))),
     };
     if !fit.is_exact() && !style.is_constant() {
@@ -2149,8 +2142,8 @@ fn fillet(s: &mut Session, p: &Value) -> Result<Value> {
     }
     // What fills the corners where three blended edges meet.
     let corner = match str_(p, "corner").map(str::to_ascii_lowercase).as_deref() {
-        None | Some("rolling") => solidcraft_doc::FilletCorner::Rolling,
-        Some("g2") => solidcraft_doc::FilletCorner::G2,
+        None | Some("rolling") => torno_doc::FilletCorner::Rolling,
+        Some("g2") => torno_doc::FilletCorner::G2,
         Some(o) => return Err(bad(cmd, format!("unknown corner `{o}` (rolling or g2)"))),
     };
     if !corner.is_rolling() && (!style.is_constant() || !fit.is_exact()) {
@@ -2164,7 +2157,7 @@ fn fillet(s: &mut Session, p: &Value) -> Result<Value> {
             let vertex = item.get("vertex").and_then(vec3).ok_or_else(|| bad(cmd, "each setback needs `vertex`: [x,y,z] at the corner"))?;
             let distance = expr(item, "distance").ok_or_else(|| bad(cmd, "each setback needs `distance`: a length"))?;
             check_expr(s, &distance, Kind::Length, cmd, "setback distance")?;
-            setbacks.push(solidcraft_doc::CornerSetback { vertex: Position(vertex), distance });
+            setbacks.push(torno_doc::CornerSetback { vertex: Position(vertex), distance });
         }
         if !setbacks.is_empty() && (!style.is_constant() || !fit.is_exact()) {
             return Err(bad(cmd, "`setbacks` are built for a constant-radius fillet (`type: constant`, `fit: exact`) only"));
@@ -2172,12 +2165,12 @@ fn fillet(s: &mut Session, p: &Value) -> Result<Value> {
     }
     // How two rounds turn at a sharp side edge.
     let turn = match str_(p, "turn").map(str::to_ascii_lowercase).as_deref() {
-        None | Some("mitre") => solidcraft_doc::FilletTurn::Mitre,
-        Some("swept") => solidcraft_doc::FilletTurn::Swept,
+        None | Some("mitre") => torno_doc::FilletTurn::Mitre,
+        Some("swept") => torno_doc::FilletTurn::Swept,
         Some(o) => return Err(bad(cmd, format!("unknown turn `{o}` (mitre or swept)"))),
     };
-    if !turn.is_mitre() && (!style.is_constant() || fit == solidcraft_doc::FilletFit::Taper || !corner.is_rolling() || !setbacks.is_empty()) {
-        return Err(bad(cmd, solidcraft_doc::SWEPT_TAKES));
+    if !turn.is_mitre() && (!style.is_constant() || fit == torno_doc::FilletFit::Taper || !corner.is_rolling() || !setbacks.is_empty()) {
+        return Err(bad(cmd, torno_doc::SWEPT_TAKES));
     }
     let mut out = add_feature(
         s,
@@ -2513,7 +2506,7 @@ fn copy_keeps_appearance(s: &mut Session, reply: &Value, sources: &[String], cmd
     Ok(())
 }
 
-fn source_features(s: &Session, p: &Value, cmd: &str) -> Result<Vec<solidcraft_doc::FeatureId>> {
+fn source_features(s: &Session, p: &Value, cmd: &str) -> Result<Vec<torno_doc::FeatureId>> {
     let names = string_list(cmd, p, "features")?;
     if names.is_empty() {
         return Err(bad(cmd, "`features` must list features to copy"));
@@ -2525,7 +2518,7 @@ fn source_features(s: &Session, p: &Value, cmd: &str) -> Result<Vec<solidcraft_d
 
 /// An axis line from its parameter, with what it follows: an edge or round face of the model
 /// ({edge|face: [x,y,z]}) or a construction axis by name ([`named_axis_line`]).
-fn axis_line(s: &Session, p: &Value, cmd: &str) -> Result<(Vec3, Vec3, Option<solidcraft_doc::construct::GeoRef>, Option<FeatureName>)> {
+fn axis_line(s: &Session, p: &Value, cmd: &str) -> Result<(Vec3, Vec3, Option<torno_doc::construct::GeoRef>, Option<FeatureName>)> {
     if let Some((geo, o, d)) = super::construct::model_axis_param(s, p.get("axis"), cmd)? {
         return Ok((o, d, Some(geo), None));
     }
@@ -2573,8 +2566,8 @@ pub(crate) fn axis_line_object(o: &Value) -> std::result::Result<(Vec3, Vec3), &
 fn finish_pattern(
     s: &mut Session,
     p: &Value,
-    features: Vec<solidcraft_doc::FeatureId>,
-    pattern: solidcraft_doc::PatternKind,
+    features: Vec<torno_doc::FeatureId>,
+    pattern: torno_doc::PatternKind,
     bodies: Vec<String>,
 ) -> Result<Value> {
     let comps = string_list(UNKNOWN_COMMAND, p, "components")?;
@@ -2582,7 +2575,7 @@ fn finish_pattern(
         return add_feature(s, p, FeatureKind::Pattern { features, pattern, bodies: bodies.into_iter().map(BodyName).collect() });
     }
     let cmd = "pattern (components)";
-    let mats = solidcraft_doc::pattern_matrices(&s.doc, &s.model.state(), &pattern)?;
+    let mats = torno_doc::pattern_matrices(&s.doc, &s.model.state(), &pattern)?;
     let mut made = Vec::new();
     for c in &comps {
         let id = s
@@ -2593,7 +2586,7 @@ fn finish_pattern(
             .ok_or_else(|| bad(cmd, format!("no component `{c}`")))?;
         let src = s.doc.occurrence_of(id).cloned().ok_or_else(|| bad(cmd, format!("component `{c}` has no occurrence")))?;
         for m in &mats {
-            made.push(s.doc_mut().add_occurrence(id, src.parent, solidcraft_doc::mat_mul(m, &src.transform))?);
+            made.push(s.doc_mut().add_occurrence(id, src.parent, torno_doc::mat_mul(m, &src.transform))?);
         }
     }
     Ok(json!({"occurrences": made}))
@@ -2601,7 +2594,7 @@ fn finish_pattern(
 
 /// What a pattern copies: features (replayed), bodies (`bodies: [names]`), or components
 /// (`components: [names]`, placed again as occurrences).
-fn pattern_sources(s: &Session, p: &Value, cmd: &str) -> Result<(Vec<solidcraft_doc::FeatureId>, Vec<String>)> {
+fn pattern_sources(s: &Session, p: &Value, cmd: &str) -> Result<(Vec<torno_doc::FeatureId>, Vec<String>)> {
     if !string_list(cmd, p, "components")?.is_empty() {
         return Ok((Vec::new(), Vec::new()));
     }
@@ -2632,7 +2625,7 @@ fn pattern_rect(s: &mut Session, p: &Value) -> Result<Value> {
     if let Some(c) = &spacing2 {
         check_expr(s, c, Kind::Length, cmd, "spacing2")?;
     }
-    let pattern = solidcraft_doc::PatternKind::Rectangular {
+    let pattern = torno_doc::PatternKind::Rectangular {
         dir1: Dir(dir1),
         count1,
         spacing1,
@@ -2649,7 +2642,7 @@ fn pattern_rect(s: &mut Session, p: &Value) -> Result<Value> {
 
 /// The line a circular pattern turns about, as [`axis_line`] reads it, except that the origin of
 /// `{origin, dir}` may be length expressions, kept so the pattern follows them (#10852).
-fn pattern_axis(s: &Session, p: &Value, cmd: &str) -> Result<(PointExpr, Vec3, Option<solidcraft_doc::construct::GeoRef>, Option<FeatureName>)> {
+fn pattern_axis(s: &Session, p: &Value, cmd: &str) -> Result<(PointExpr, Vec3, Option<torno_doc::construct::GeoRef>, Option<FeatureName>)> {
     if let Some(a @ Value::Object(o)) = p.get("axis")
         && o.contains_key("origin")
         && !super::is_model_axis(a)
@@ -2657,10 +2650,10 @@ fn pattern_axis(s: &Session, p: &Value, cmd: &str) -> Result<(PointExpr, Vec3, O
         // Read under its full name, so a refusal says which origin it means.
         let origin = point_param(s, &json!({ "axis.origin": o.get("origin") }), "axis.origin", cmd)?;
         let dir = a.get("dir").and_then(vec3).and_then(|d| d.normalized()).ok_or_else(|| bad(cmd, "axis needs a non-zero `dir`"))?;
-        return Ok((origin.unwrap_or_else(|| solidcraft_doc::point_expr(Vec3::ZERO)), dir, None, None));
+        return Ok((origin.unwrap_or_else(|| torno_doc::point_expr(Vec3::ZERO)), dir, None, None));
     }
     let (origin, dir, axis_ref, axis_feature) = axis_line(s, p, cmd)?;
-    Ok((solidcraft_doc::point_expr(origin), dir, axis_ref, axis_feature))
+    Ok((torno_doc::point_expr(origin), dir, axis_ref, axis_feature))
 }
 
 fn pattern_circ(s: &mut Session, p: &Value) -> Result<Value> {
@@ -2671,7 +2664,7 @@ fn pattern_circ(s: &mut Session, p: &Value) -> Result<Value> {
     check_count(s, &count, cmd, "count")?;
     let angle = expr(p, "angle").unwrap_or_else(|| "360 deg".into());
     check_expr(s, &angle, Kind::Angle, cmd, "angle")?;
-    let pattern = solidcraft_doc::PatternKind::Circular {
+    let pattern = torno_doc::PatternKind::Circular {
         origin,
         axis: Dir(axis),
         count,
@@ -2706,7 +2699,7 @@ fn pattern_path(s: &mut Session, p: &Value) -> Result<Value> {
         Some(o) => return Err(bad(cmd, format!("unknown orientation `{o}` (identical or path)"))),
     };
     let flip = bool_(p, "flip").unwrap_or(false);
-    let pattern = solidcraft_doc::PatternKind::Path { path_sketch: SketchId(path_sketch), path, count, spacing, extent, flip, orient };
+    let pattern = torno_doc::PatternKind::Path { path_sketch: SketchId(path_sketch), path, count, spacing, extent, flip, orient };
     finish_pattern(s, p, features, pattern, bodies)
 }
 
@@ -2800,8 +2793,8 @@ pub(crate) fn explicit_plane(o: &Value, origin: Vec3) -> Option<solidcore_record
 /// feature id; kept by name, so the feature follows the plane when it changes), or an
 /// explicit plane `{origin, x_dir, y_dir}` / `{origin, normal}`. Every command that takes a
 /// plane reads it here.
-pub(super) fn plane_param(s: &Session, v: Option<&Value>, cmd: &str) -> Result<solidcraft_doc::PlaneRef> {
-    use solidcraft_doc::PlaneRef;
+pub(super) fn plane_param(s: &Session, v: Option<&Value>, cmd: &str) -> Result<torno_doc::PlaneRef> {
+    use torno_doc::PlaneRef;
     const WANT: &str = PLANE_FORMS;
     let construction = |r: &str| match s.doc.find_feature(r) {
         Some(f) if matches!(f.kind, FeatureKind::ConstructionPlane { .. }) => Ok(PlaneRef::Construction { feature: f.id.into() }),
@@ -2840,7 +2833,7 @@ pub(super) fn plane_param(s: &Session, v: Option<&Value>, cmd: &str) -> Result<s
             let at = |e: &str| s.doc.eval(e, Kind::Length).unwrap_or(0.0);
             let here = Vec3::new(at(&origin[0]), at(&origin[1]), at(&origin[2]));
             let plane = explicit_plane(o, here).ok_or_else(|| bad(cmd, "plane needs x_dir and y_dir, or normal"))?;
-            if origin.iter().all(|e| solidcraft_doc::expr::is_literal(e)) {
+            if origin.iter().all(|e| torno_doc::expr::is_literal(e)) {
                 return Ok(PlaneRef::Custom { plane });
             }
             Ok(PlaneRef::Placed { origin, x_dir: plane.x, y_dir: plane.y })
@@ -2850,7 +2843,7 @@ pub(super) fn plane_param(s: &Session, v: Option<&Value>, cmd: &str) -> Result<s
 }
 
 fn plane_offset(s: &mut Session, p: &Value) -> Result<Value> {
-    use solidcraft_doc::PlaneRef;
+    use torno_doc::PlaneRef;
     let cmd = "construct.plane.offset";
     // Through a point, or at a distance along the base's normal.
     let through = match p.get("through").filter(|t| !t.is_null()) {
@@ -2894,7 +2887,7 @@ fn plane_angle(s: &mut Session, p: &Value) -> Result<Value> {
         Some(t) => Some(Box::new(super::construct::geo(s, Some(t), cmd, "pivot")?)),
         None => None,
     };
-    let at_angle = |base: solidcraft_doc::PlaneRef| solidcraft_doc::PlaneRef::AtAngle {
+    let at_angle = |base: torno_doc::PlaneRef| torno_doc::PlaneRef::AtAngle {
         base: Box::new(base),
         axis_origin,
         axis_dir,
@@ -2918,7 +2911,7 @@ fn split_face(s: &mut Session, p: &Value) -> Result<Value> {
     let cmd = "solid.split_face";
     let faces = face_points(s, p, cmd)?;
     let picked = faces_body(s, p, &faces);
-    let xy = || solidcraft_doc::PlaneRef::Origin { name: "XY".into() };
+    let xy = || torno_doc::PlaneRef::Origin { name: "XY".into() };
     let kind = if let Some(t) = p.get("tool").filter(|t| !t.is_null()) {
         let tb = t.get("body").and_then(Value::as_str).ok_or_else(|| bad(cmd, "`tool.body` must name a body"))?.to_string();
         let point = t.get("point").and_then(crate::params::vec3).ok_or_else(|| bad(cmd, "`tool.point` must be [x, y, z] on the tool face"))?;
@@ -2926,7 +2919,7 @@ fn split_face(s: &mut Session, p: &Value) -> Result<Value> {
             faces: faces.into_iter().map(FacePick).collect(),
             body: picked.body.clone().map(BodyName),
             plane: xy(),
-            tool: Some(solidcraft_doc::FaceAt { body: BodyName(tb), point: Position(point) }),
+            tool: Some(torno_doc::FaceAt { body: BodyName(tb), point: Position(point) }),
             sketch: None,
         }
     } else if p.get("sketch").is_some_and(|v| !v.is_null()) {
@@ -2965,15 +2958,15 @@ fn split_body(s: &mut Session, p: &Value) -> Result<Value> {
         if st.sketch(sketch).is_none() {
             return Err(bad(cmd, format!("no sketch {sketch}")));
         }
-        solidcraft_doc::sketch_line_plane(&st, sketch, &line).map_err(|e| bad(cmd, e.to_string()))?;
+        torno_doc::sketch_line_plane(&st, sketch, &line).map_err(|e| bad(cmd, e.to_string()))?;
         return add_feature(
             s,
             p,
             FeatureKind::Split {
                 body: BodyName(body),
-                plane: solidcraft_doc::PlaneRef::Origin { name: "XY".into() },
+                plane: torno_doc::PlaneRef::Origin { name: "XY".into() },
                 tool: None,
-                sketch: Some(solidcraft_doc::SketchId(sketch)),
+                sketch: Some(torno_doc::SketchId(sketch)),
                 line: Some(line),
             },
         );
@@ -2984,7 +2977,7 @@ fn split_body(s: &mut Session, p: &Value) -> Result<Value> {
         let point = t.get("point").and_then(crate::params::vec3).ok_or_else(|| bad(cmd, "`tool.point` must be [x, y, z] on the tool face"))?;
         let st = s.model.state();
         let tbody = st.body(&tb).ok_or_else(|| bad(cmd, format!("no body `{tb}`")))?;
-        if solidcraft_doc::appearance::face_index_at(tbody, point).is_none() {
+        if torno_doc::appearance::face_index_at(tbody, point).is_none() {
             return Err(bad(cmd, "`tool.point` is not on a face of the tool body"));
         }
         return add_feature(
@@ -2992,8 +2985,8 @@ fn split_body(s: &mut Session, p: &Value) -> Result<Value> {
             p,
             FeatureKind::Split {
                 body: BodyName(body),
-                plane: solidcraft_doc::PlaneRef::Origin { name: "XY".into() },
-                tool: Some(solidcraft_doc::FaceAt { body: BodyName(tb), point: Position(point) }),
+                plane: torno_doc::PlaneRef::Origin { name: "XY".into() },
+                tool: Some(torno_doc::FaceAt { body: BodyName(tb), point: Position(point) }),
                 sketch: None,
                 line: None,
             },
@@ -3073,7 +3066,7 @@ fn head_recess(s: &Session, cmd: &str, p: &Value) -> Result<Option<(Expr, Expr)>
         return Err(bad(cmd, format!("`head_gap` must be 0 to {dk} mm (the head's diameter), not {g}")));
     }
     let mm = |x: f64| format!("{} mm", (x * 1e6).round() / 1e6);
-    Ok(Some(if solidcraft_doc::expr::references(gap.as_str()).is_empty() {
+    Ok(Some(if torno_doc::expr::references(gap.as_str()).is_empty() {
         (Expr::new(mm(dk + 2.0 * g)), Expr::new(mm(k + g)))
     } else {
         (Expr::new(format!("{dk} mm + 2 * ({})", gap.as_str())), Expr::new(format!("{k} mm + ({})", gap.as_str())))
@@ -3083,7 +3076,7 @@ fn head_recess(s: &Session, cmd: &str, p: &Value) -> Result<Option<(Expr, Expr)>
 /// The pitches to try for a plain `M<d>` that has no ISO coarse pitch, `None` for anything else.
 fn fine_only_hint(t: &str) -> Option<String> {
     let diameter = t.trim().strip_prefix(['M', 'm']).and_then(|d| d.trim().parse::<f64>().ok());
-    diameter.and_then(solidcraft_doc::thread_forms::no_coarse_pitch)
+    diameter.and_then(torno_doc::thread_forms::no_coarse_pitch)
 }
 
 /// Largest nominal diameter automatic thread sizing knows (the last ISO coarse size).
@@ -3092,13 +3085,12 @@ const LARGEST_COARSE: f64 = 56.0;
 /// The refusal for automatic sizing on a cylinder too big for the coarse table (a Ø75 shaft):
 /// `None` when sizing finds a thread, or the cylinder is not past the table's end (the feature's
 /// own error then explains). It suggests sizes with a pitch to type, scaled to the diameter.
-fn beyond_coarse_range(st: &solidcraft_doc::ModelState, face: Vec3) -> Option<String> {
-    if solidcraft_doc::suggested_thread(st, face).is_ok() {
+fn beyond_coarse_range(st: &torno_doc::ModelState, face: Vec3) -> Option<String> {
+    if torno_doc::suggested_thread(st, face).is_ok() {
         return None;
     }
-    let cyl = st.bodies.iter().filter_map(|b| solidcraft_doc::kernel::cylinder_face_at(&b.body, face)).min_by(|a, b| {
-        let dist =
-            |c: &solidcraft_doc::kernel::CylinderFace| ((face - c.axis_point - c.axis * (face - c.axis_point).dot(c.axis)).len() - c.radius).abs();
+    let cyl = st.bodies.iter().filter_map(|b| torno_doc::kernel::cylinder_face_at(&b.body, face)).min_by(|a, b| {
+        let dist = |c: &torno_doc::kernel::CylinderFace| ((face - c.axis_point - c.axis * (face - c.axis_point).dot(c.axis)).len() - c.radius).abs();
         dist(a).total_cmp(&dist(b))
     })?;
     let dia = cyl.radius * 2.0;
@@ -3147,26 +3139,26 @@ fn hole(s: &mut Session, p: &Value) -> Result<Value> {
             if single && (ids.len() != 1 || flip) {
                 return Err(bad(cmd, "a `single` hole takes one sketch point and no `flip`"));
             }
-            Some((solidcraft_doc::SketchPoints { sketch: SketchId(sketch), ids, flip, single }, first, -n))
+            Some((torno_doc::SketchPoints { sketch: SketchId(sketch), ids, flip, single }, first, -n))
         }
         _ => None,
     };
     let thread = str_(p, "thread").map(|t| t.trim().to_string()).filter(|t| !t.is_empty());
     let hand = match str_(p, "hand") {
-        None | Some("right") => solidcraft_doc::thread_forms::ThreadHand::Right,
-        Some("left") => solidcraft_doc::thread_forms::ThreadHand::Left,
+        None | Some("right") => torno_doc::thread_forms::ThreadHand::Right,
+        Some("left") => torno_doc::thread_forms::ThreadHand::Left,
         Some(h) => return Err(bad(cmd, format!("unknown hand `{h}` (right or left)"))),
     };
-    if thread.is_none() && hand != solidcraft_doc::thread_forms::ThreadHand::Right {
+    if thread.is_none() && hand != torno_doc::thread_forms::ThreadHand::Right {
         return Err(bad(cmd, "`hand` needs `thread` (a tapped hole)"));
     }
     if let Some(t) = &thread
-        && solidcraft_doc::parse_tapped_thread(t).is_none()
+        && torno_doc::parse_tapped_thread(t).is_none()
     {
         return Err(bad(
             cmd,
             fine_only_hint(t)
-                .or_else(|| solidcraft_doc::untabulated_taper_tap(t))
+                .or_else(|| torno_doc::untabulated_taper_tap(t))
                 .unwrap_or_else(|| format!("unknown tapped thread `{t}` (ISO metric or a catalogued UNC/UNF, G, Rp, Rc or NPT size)")),
         ));
     }
@@ -3193,7 +3185,7 @@ fn hole(s: &mut Session, p: &Value) -> Result<Value> {
     }
     // A position given as length expressions (#1678), say `["leg_h*0.4", "width/2", "t"]`: kept,
     // so the hole follows the parameters; drilled where they evaluate now.
-    let at: Option<solidcraft_doc::PointExpr> = match p.get("position").and_then(Value::as_array) {
+    let at: Option<torno_doc::PointExpr> = match p.get("position").and_then(Value::as_array) {
         Some(a) if points.is_none() && a.len() == 3 && a.iter().any(Value::is_string) => {
             let mut coords = Vec::with_capacity(3);
             for v in a {
@@ -3203,16 +3195,16 @@ fn hole(s: &mut Session, p: &Value) -> Result<Value> {
                     _ => return Err(bad(cmd, "`position` must be [x, y, z]: numbers or length expressions")),
                 };
                 check_expr(s, &e, Kind::Length, cmd, "position")?;
-                coords.push(solidcraft_doc::Expr::new(e));
+                coords.push(torno_doc::Expr::new(e));
             }
-            let [x, y, z]: [solidcraft_doc::Expr; 3] = coords.try_into().map_err(|_| bad(cmd, "`position` must be [x, y, z]"))?;
+            let [x, y, z]: [torno_doc::Expr; 3] = coords.try_into().map_err(|_| bad(cmd, "`position` must be [x, y, z]"))?;
             Some([x, y, z])
         }
         _ => None,
     };
     let at_value = match &at {
         Some([x, y, z]) => {
-            let c = |e: &solidcraft_doc::Expr| s.doc.eval(e, Kind::Length).map_err(|e| bad(cmd, format!("`position`: {e}")));
+            let c = |e: &torno_doc::Expr| s.doc.eval(e, Kind::Length).map_err(|e| bad(cmd, format!("`position`: {e}")));
             Some(Vec3::new(c(x)?, c(y)?, c(z)?)).filter(|v| v.is_finite())
         }
         None => None,
@@ -3250,7 +3242,7 @@ fn hole(s: &mut Session, p: &Value) -> Result<Value> {
                 };
                 let scope: &[String] = if named.iter().any(|b| b == "*") { &[] } else { &named };
                 let st = s.model.state();
-                solidcraft_doc::hole_direction_at(&st, position, scope).ok_or_else(|| bad(cmd, "no face at `position`; give `direction`"))?
+                torno_doc::hole_direction_at(&st, position, scope).ok_or_else(|| bad(cmd, "no face at `position`; give `direction`"))?
             }
         },
     };
@@ -3275,7 +3267,7 @@ fn hole(s: &mut Session, p: &Value) -> Result<Value> {
             Expr::new(format!("{d} mm"))
         }
         (None, Some(t), None) => {
-            let size = solidcraft_doc::parse_tapped_thread(t).ok_or_else(|| bad(cmd, "thread"))?;
+            let size = torno_doc::parse_tapped_thread(t).ok_or_else(|| bad(cmd, "thread"))?;
             Expr::new(format!("{} mm", size.tap_drill))
         }
         (None, None, None) => return Err(bad(cmd, "needs `diameter`, `thread` (a tapped hole) or `clearance` (a bolt size)")),
@@ -3284,7 +3276,7 @@ fn hole(s: &mut Session, p: &Value) -> Result<Value> {
     // A tapped hole drilled to another size than the tap maker's: from the thread's minor
     // diameter to 5% over that drill.
     if let (Some(t), Some(_)) = (&thread, expr(p, "diameter"))
-        && let Some(size) = solidcraft_doc::parse_tapped_thread(t)
+        && let Some(size) = torno_doc::parse_tapped_thread(t)
     {
         let given = s.doc.eval(&diameter, Kind::Length).map_err(|e| bad(cmd, format!("`diameter`: {e}")))?;
         size.check_drill(given).map_err(|e| bad(cmd, e))?;
@@ -3310,10 +3302,10 @@ fn hole(s: &mut Session, p: &Value) -> Result<Value> {
     }
     let kind = match str_(p, "type").unwrap_or(if head.is_some() { "counterbore" } else { "simple" }) {
         "simple" => match expr(p, "tip_angle") {
-            Some(t) if depth.is_some() => solidcraft_doc::HoleKind::Drilled { tip_angle: t },
-            _ => solidcraft_doc::HoleKind::Simple,
+            Some(t) if depth.is_some() => torno_doc::HoleKind::Drilled { tip_angle: t },
+            _ => torno_doc::HoleKind::Simple,
         },
-        "drilled" => solidcraft_doc::HoleKind::Drilled { tip_angle: expr(p, "tip_angle").unwrap_or_else(|| "118 deg".into()) },
+        "drilled" => torno_doc::HoleKind::Drilled { tip_angle: expr(p, "tip_angle").unwrap_or_else(|| "118 deg".into()) },
         "counterbore" => {
             // Sized to the screw's head unless given; a value given, even a bad one, is checked.
             let given = |k: &str| !matches!(p.get(k), None | Some(Value::Null));
@@ -3323,9 +3315,9 @@ fn hole(s: &mut Session, p: &Value) -> Result<Value> {
                 }
                 None => (get("cb_diameter")?, get("cb_depth")?),
             };
-            solidcraft_doc::HoleKind::Counterbore { cb_diameter, cb_depth, tip_angle: expr(p, "tip_angle"), bridge: bridge.clone() }
+            torno_doc::HoleKind::Counterbore { cb_diameter, cb_depth, tip_angle: expr(p, "tip_angle"), bridge: bridge.clone() }
         }
-        "countersink" => solidcraft_doc::HoleKind::Countersink {
+        "countersink" => torno_doc::HoleKind::Countersink {
             cs_diameter: get("cs_diameter")?,
             // The default only when no angle is given: a supplied one out of range is refused (#9625).
             cs_angle: match p.get("cs_angle") {
@@ -3338,7 +3330,7 @@ fn hole(s: &mut Session, p: &Value) -> Result<Value> {
         other => return Err(bad(cmd, format!("unknown hole type `{other}`"))),
     };
     match (&kind, &bridge) {
-        (solidcraft_doc::HoleKind::Counterbore { .. }, Some(b)) => check_expr(s, b, Kind::Length, cmd, "bridge")?,
+        (torno_doc::HoleKind::Counterbore { .. }, Some(b)) => check_expr(s, b, Kind::Length, cmd, "bridge")?,
         (_, Some(_)) => return Err(bad(cmd, "`bridge` needs `type: counterbore`")),
         _ => {}
     }
@@ -3404,16 +3396,16 @@ fn hole(s: &mut Session, p: &Value) -> Result<Value> {
 
 /// A thread's runout parameter: a length, `standard` (ISO 3508's 2.5 P) or `short` (1.25 P);
 /// none or 0: no runout.
-fn runout_param(s: &Session, p: &Value, cmd: &str, key: &str) -> Result<Option<solidcraft_doc::ThreadRunout>> {
+fn runout_param(s: &Session, p: &Value, cmd: &str, key: &str) -> Result<Option<torno_doc::ThreadRunout>> {
     Ok(match p.get(key) {
         None | Some(Value::Null) => None,
-        Some(Value::String(t)) if t == "standard" => Some(solidcraft_doc::ThreadRunout::Standard),
-        Some(Value::String(t)) if t == "short" => Some(solidcraft_doc::ThreadRunout::Short),
+        Some(Value::String(t)) if t == "standard" => Some(torno_doc::ThreadRunout::Standard),
+        Some(Value::String(t)) if t == "short" => Some(torno_doc::ThreadRunout::Short),
         Some(Value::Number(n)) if n.as_f64() == Some(0.0) => None,
         Some(_) => {
             let e = expr(p, key).ok_or_else(|| bad(cmd, format!("`{key}` must be a length, \"standard\" or \"short\"")))?;
             check_expr(s, &e, Kind::Length, cmd, key)?;
-            Some(solidcraft_doc::ThreadRunout::Length { length: e })
+            Some(torno_doc::ThreadRunout::Length { length: e })
         }
     })
 }
@@ -3421,16 +3413,16 @@ fn runout_param(s: &Session, p: &Value, cmd: &str, key: &str) -> Result<Option<s
 /// Where reference edges (#37) put a hole's (or a cylinder's) centre picked at `at` on a flat
 /// face, `dir` into it: at their distances from the edges, which must be straight edges at the
 /// given points, and cross.
-fn referenced_centre(s: &Session, cmd: &str, references: &[solidcraft_doc::HoleReference], at: Vec3, dir: Vec3) -> Result<Vec3> {
+fn referenced_centre(s: &Session, cmd: &str, references: &[torno_doc::HoleReference], at: Vec3, dir: Vec3) -> Result<Vec3> {
     let st = s.model.state();
     let mut distances = Vec::with_capacity(references.len());
     for r in references {
         distances.push(s.doc.eval(&r.distance, Kind::Length).map_err(|e| bad(cmd, format!("`references`: {e}")))?);
     }
     let edges: Vec<(Vec3, Option<&str>)> = references.iter().map(|r| (r.edge.0, None)).collect();
-    let frame = solidcraft_doc::hole_reference::reference_frame(&st, at, dir, &edges, true).map_err(|e| bad(cmd, e.to_string()))?;
+    let frame = torno_doc::hole_reference::reference_frame(&st, at, dir, &edges, true).map_err(|e| bad(cmd, e.to_string()))?;
     let centre = frame.place(at, &distances).map_err(|e| bad(cmd, e.to_string()))?;
-    if !solidcraft_doc::hole_reference::on_reference_face(&st, &frame, centre) {
+    if !torno_doc::hole_reference::on_reference_face(&st, &frame, centre) {
         let what = if cmd == "solid.cylinder" { "cylinder's base" } else { "hole's centre" };
         return Err(bad(cmd, format!("the reference distances put the {what} off its face")));
     }
@@ -3439,10 +3431,10 @@ fn referenced_centre(s: &Session, cmd: &str, references: &[solidcraft_doc::HoleR
 
 /// A hole's reference edges (#37): `references: [{edge: [x, y, z], distance: expr}]`, at most
 /// two, each distance a length.
-fn hole_reference_params(s: &Session, p: &Value, cmd: &str) -> Result<Vec<solidcraft_doc::HoleReference>> {
+fn hole_reference_params(s: &Session, p: &Value, cmd: &str) -> Result<Vec<torno_doc::HoleReference>> {
     let Some(v) = p.get("references") else { return Ok(Vec::new()) };
     let list = v.as_array().ok_or_else(|| bad(cmd, "`references` must be a list of {edge: [x, y, z], distance}"))?;
-    let most = solidcraft_doc::hole_reference::MAX_HOLE_REFERENCES;
+    let most = torno_doc::hole_reference::MAX_HOLE_REFERENCES;
     if list.len() > most {
         return Err(bad(cmd, format!("a hole takes at most {most} `references`")));
     }
@@ -3454,7 +3446,7 @@ fn hole_reference_params(s: &Session, p: &Value, cmd: &str) -> Result<Vec<solidc
             .ok_or_else(|| bad(cmd, format!("`references[{i}].edge` must be a point [x, y, z] on a straight edge of the face")))?;
         let distance = expr(r, "distance").ok_or_else(|| bad(cmd, format!("`references[{i}].distance` {}", expr_problem(r.get("distance")))))?;
         check_expr(s, &distance, Kind::Length, cmd, "references")?;
-        out.push(solidcraft_doc::HoleReference { edge: Position(edge), distance });
+        out.push(torno_doc::HoleReference { edge: Position(edge), distance });
     }
     Ok(out)
 }
@@ -3479,17 +3471,13 @@ fn hidden_body_picked_at(s: &Session, p: Vec3, shown: &[String]) -> Option<Strin
 }
 
 /// The body, among those `keep` takes, with the face nearest `p` within its pick tolerance.
-fn body_with_face_at(
-    st: &solidcraft_doc::ModelState,
-    p: Vec3,
-    keep: impl Fn(&solidcraft_doc::ModelBody) -> bool,
-) -> Option<&solidcraft_doc::ModelBody> {
+fn body_with_face_at(st: &torno_doc::ModelState, p: Vec3, keep: impl Fn(&torno_doc::ModelBody) -> bool) -> Option<&torno_doc::ModelBody> {
     st.bodies
         .iter()
         .filter(|b| !b.body.is_mesh() && keep(b))
         .filter_map(|b| {
-            let (d, _) = solidcraft_doc::appearance::nearest_face(b, p)?;
-            (d <= solidcraft_doc::appearance::pick_tolerance(b)).then_some((d, b))
+            let (d, _) = torno_doc::appearance::nearest_face(b, p)?;
+            (d <= torno_doc::appearance::pick_tolerance(b)).then_some((d, b))
         })
         .min_by(|a, b| a.0.total_cmp(&b.0))
         .map(|(_, b)| b)
@@ -3502,11 +3490,11 @@ fn sketch_hole_points(s: &Session, sketch: u64) -> Vec<String> {
     let mut ends: Vec<usize> = Vec::new();
     for c in &ss.sketch.curves {
         match &c.kind {
-            solidcraft_sketch::CurveKind::Circle { .. } => {}
-            solidcraft_sketch::CurveKind::Arc { a, b, .. } | solidcraft_sketch::CurveKind::Line { a, b } => ends.extend([*a, *b]),
-            solidcraft_sketch::CurveKind::Ellipse { m, .. } => ends.push(*m),
-            solidcraft_sketch::CurveKind::Spline { pts, .. } => ends.extend(pts.iter().copied()),
-            solidcraft_sketch::CurveKind::Conic { a, b, apex, .. } => ends.extend([*a, *b, *apex]),
+            torno_sketch::CurveKind::Circle { .. } => {}
+            torno_sketch::CurveKind::Arc { a, b, .. } | torno_sketch::CurveKind::Line { a, b } => ends.extend([*a, *b]),
+            torno_sketch::CurveKind::Ellipse { m, .. } => ends.push(*m),
+            torno_sketch::CurveKind::Spline { pts, .. } => ends.extend(pts.iter().copied()),
+            torno_sketch::CurveKind::Conic { a, b, apex, .. } => ends.extend([*a, *b, *apex]),
         }
     }
     ss.sketch.points.iter().enumerate().filter(|(i, p)| p.id != "origin" && !ends.contains(i)).map(|(_, p)| p.id.clone()).collect()
@@ -3644,7 +3632,7 @@ pub(super) fn sweep_options(s: &Session, p: &Value, cmd: &str) -> Result<(SweepO
         Some(_) => {
             let t = expr(p, "twist").ok_or_else(|| bad(cmd, "`twist` must be an angle or an expression"))?;
             let v = s.doc.eval(&t, Kind::Angle).map_err(|e| bad(cmd, format!("twist: {e}")))?;
-            if !(v.is_finite() && v.abs() <= solidcraft_kernel::SweepControl::MAX_TWIST) {
+            if !(v.is_finite() && v.abs() <= torno_kernel::SweepControl::MAX_TWIST) {
                 return Err(bad(cmd, "`twist` must be within four turns (1440 deg)"));
             }
             Some(t)
@@ -3655,7 +3643,7 @@ pub(super) fn sweep_options(s: &Session, p: &Value, cmd: &str) -> Result<(SweepO
         Some(_) => {
             let k = req_expr(cmd, p, "scale")?;
             let v = s.doc.eval(&k, Kind::Unitless).map_err(|e| bad(cmd, format!("scale: {e}")))?;
-            let range = solidcraft_kernel::SweepControl::MIN_SCALE..=solidcraft_kernel::SweepControl::MAX_SCALE;
+            let range = torno_kernel::SweepControl::MIN_SCALE..=torno_kernel::SweepControl::MAX_SCALE;
             if !(v.is_finite() && range.contains(&v)) {
                 return Err(bad(cmd, "`scale` (the end scale) must be between 0.01 and 100"));
             }
@@ -3754,14 +3742,10 @@ fn loft(s: &mut Session, p: &Value) -> Result<Value> {
             if !st.sketch(sketch).is_some_and(|ss| ss.sketch.points.iter().any(|q| q.id == pt)) {
                 return Err(bad(cmd, format!("no point `{pt}` in the section's sketch")));
             }
-            sections.push(solidcraft_doc::LoftSection {
-                sketch: SketchId(sketch),
-                profiles: solidcraft_doc::ProfileSel::All,
-                point: Some(pt.to_string()),
-            });
+            sections.push(torno_doc::LoftSection { sketch: SketchId(sketch), profiles: torno_doc::ProfileSel::All, point: Some(pt.to_string()) });
             continue;
         }
-        sections.push(solidcraft_doc::LoftSection { sketch: SketchId(sketch), profiles: profiles(sec, cmd)?, point: None });
+        sections.push(torno_doc::LoftSection { sketch: SketchId(sketch), profiles: profiles(sec, cmd)?, point: None });
     }
     let (rails, rail_fit) = guide_rails(s, p, cmd, "loft", None)?;
     let operation = operation(p, cmd)?;
@@ -3794,7 +3778,7 @@ fn thread(s: &mut Session, p: &Value) -> Result<Value> {
         .get("face")
         .and_then(|v| vec3(v).or_else(|| v.get("point").and_then(vec3)))
         .ok_or_else(|| bad(cmd, "`face` must be a point [x, y, z] on a cylindrical face"))?;
-    use solidcraft_doc::thread_forms::{SteepFlank, ThreadForm, ThreadHand, ThreadTip};
+    use torno_doc::thread_forms::{SteepFlank, ThreadForm, ThreadHand, ThreadTip};
     let designation = str_(p, "designation").map(|t| t.trim().to_string()).filter(|t| !t.is_empty());
     let form = match str_(p, "form") {
         Some(f) => ThreadForm::from_name(f).ok_or_else(|| {
@@ -3833,7 +3817,7 @@ fn thread(s: &mut Session, p: &Value) -> Result<Value> {
         Some("chamfer") => return Err(bad(cmd, "tip `chamfer` is now `both` (every free end) or `start` (the end the thread starts from)")),
         Some(t) => return Err(bad(cmd, format!("unknown tip `{t}` (none, start or both)"))),
     };
-    let angled = |key: &str, kind: Kind| -> Result<Option<solidcraft_doc::Expr>> {
+    let angled = |key: &str, kind: Kind| -> Result<Option<torno_doc::Expr>> {
         let e = expr(p, key);
         if let Some(e) = &e {
             check_expr(s, e, kind, cmd, key)?;
@@ -3859,8 +3843,8 @@ fn thread(s: &mut Session, p: &Value) -> Result<Value> {
     let up_to = match p.get("up_to") {
         None | Some(Value::Null) => None,
         Some(v) => Some(match vec3(v) {
-            Some(q) => solidcraft_doc::ThreadLimit::Face(FacePick(q)),
-            None => solidcraft_doc::ThreadLimit::Plane(plane_param(s, Some(v), cmd)?),
+            Some(q) => torno_doc::ThreadLimit::Face(FacePick(q)),
+            None => torno_doc::ThreadLimit::Plane(plane_param(s, Some(v), cmd)?),
         }),
     };
     match (str_(p, "extent"), &length, &up_to) {
@@ -4084,7 +4068,7 @@ mod thin_extrude_tests;
 #[path = "extrude_convention_tests.rs"]
 mod extrude_convention_tests;
 /// `solid.fillet corner?: rolling|g2`: the default keeps the rolling ball's sphere corner, `g2`
-/// sets the corner back and fills it with the G2 patch (`solidcraft_kernel::fillet_g2_corners`),
+/// sets the corner back and fills it with the G2 patch (`torno_kernel::fillet_g2_corners`),
 /// with `setbacks` naming its distance, and an unknown word is refused.
 #[cfg(test)]
 #[allow(clippy::unwrap_used)]
@@ -4117,19 +4101,19 @@ mod corner_tests {
         let ball = default.world_state().unwrap().body("B").unwrap().body.clone();
         let same = rolling.world_state().unwrap().body("B").unwrap().body.clone();
         // `corner: rolling` is the default: the same body, to the last bit of its area.
-        assert_eq!(solidcraft_kernel::measure(&ball).unwrap().area, solidcraft_kernel::measure(&same).unwrap().area);
-        assert!(solidcraft_kernel::measure(&ball).unwrap().volume > 7000.0);
+        assert_eq!(torno_kernel::measure(&ball).unwrap().area, torno_kernel::measure(&same).unwrap().area);
+        assert!(torno_kernel::measure(&ball).unwrap().volume > 7000.0);
         // `corner: g2`: the corner set back (1.5 r by default, or as `setbacks` says) and filled
         // with the G2 patch: one closed solid of the box's faces, the rounds and the patch, a
         // little fuller than the ball's corner (its patch spans the setback, not the ball).
-        let ball_volume = solidcraft_kernel::measure(&ball).unwrap().volume;
+        let ball_volume = torno_kernel::measure(&ball).unwrap().volume;
         for setbacks in [json!([]), json!([{"vertex": [0, 0, 0], "distance": 7}])] {
             let mut s = Session::default();
             run(&mut s, "solid.box", &json!({"length": 20, "width": 20, "height": 20, "body_name": "B"}));
             run(&mut s, "solid.fillet", &json!({"edges": [[10, 0, 0], [0, 10, 0], [0, 0, 10]], "radius": 4, "corner": "g2", "setbacks": setbacks}));
             let body = s.world_state().unwrap().body("B").unwrap().body.clone();
             assert!(body.validity().is_empty(), "{:?}", body.validity());
-            let m = solidcraft_kernel::measure(&body).unwrap();
+            let m = torno_kernel::measure(&body).unwrap();
             eprintln!("corner g2, setbacks {setbacks}: {} faces, volume {:.4} (ball {:.4})", m.faces, m.volume, ball_volume);
             assert_eq!(m.faces, 10);
             assert!((m.volume - ball_volume).abs() < 1e-3 * ball_volume, "{} vs {}", m.volume, ball_volume);
@@ -4181,7 +4165,7 @@ mod corner_tests {
             assert_eq!(reply["warning"], json!(null), "{reply}");
             let body = s.world_state().unwrap().body("B").unwrap().body.clone();
             assert!(body.validity().is_empty(), "{:?}", body.validity());
-            (s, solidcraft_kernel::measure(&body).unwrap(), body)
+            (s, torno_kernel::measure(&body).unwrap(), body)
         };
         let (mitred, mitre, _) = turned(None);
         let (_, named, _) = turned(Some("mitre"));
@@ -4202,7 +4186,7 @@ mod corner_tests {
                 continue;
             }
             corners += 1;
-            let eval = solidcraft_geom::brep::eval::SurfaceEval::new(&f.surface).unwrap();
+            let eval = torno_geom::brep::eval::SurfaceEval::new(&f.surface).unwrap();
             let [[u0, u1], [v0, v1]] = f.domain;
             for i in 0..=4 {
                 for j in 0..=4 {
@@ -4221,7 +4205,7 @@ mod corner_tests {
         let e = s.execute("solid.fillet", &json!({"edges": BASE, "radius": 1, "turn": "round"})).unwrap_err().to_string();
         assert!(e.contains("unknown turn `round` (mitre or swept)"), "{e}");
         let e = s.execute("solid.fillet", &json!({"edges": BASE, "radius": 1, "turn": "swept", "type": "chord"})).unwrap_err().to_string();
-        assert!(e.contains(solidcraft_doc::SWEPT_TAKES), "{e}");
+        assert!(e.contains(torno_doc::SWEPT_TAKES), "{e}");
         // A pocket 5 deep in the plate, its floor's edges rounded: the rounds meet at its concave
         // upright edges.
         let mut s = Session::default();

@@ -3,7 +3,7 @@
 
 use super::*;
 use crate::bridge::{bridge, sample_grid};
-use solidcraft_geom::brep::eval::SurfaceEval;
+use torno_geom::brep::eval::SurfaceEval;
 
 /// The blend's surface: it is one face.
 fn surface_of(body: &Body) -> SurfaceEval {

@@ -1,4 +1,4 @@
-# solidcraft-ui-text
+# torno-ui-text
 
 Translated interface text: the message catalogs, lookup by stable id, label resolution,
 `{name}` substitution, the language choice and the per-thread language, plus right-to-left
@@ -40,14 +40,14 @@ carry into a worker thread.
 Each catalog is a `static`, and the list is a `'static` slice with English first:
 
 ```rust
-use solidcraft_ui_text::Catalog;
+use torno_ui_text::Catalog;
 
 static ENGLISH: Catalog = Catalog::new("en", "English", include_str!("locales/en.json"));
 static GERMAN: Catalog = Catalog::new("de", "Deutsch", include_str!("locales/de.json"));
 pub const LOCALES: &[&Catalog] = &[&ENGLISH, &GERMAN];
 
 fn main() {
-    solidcraft_ui_text::install(LOCALES);
+    torno_ui_text::install(LOCALES);
     // ...
 }
 ```

@@ -151,7 +151,7 @@ impl Document {
                     }
                 }
                 for link in &mut sketch.links {
-                    if let solidcraft_sketch::LinkSource::Text { exprs, .. } = &mut link.source {
+                    if let torno_sketch::LinkSource::Text { exprs, .. } = &mut link.source {
                         for e in [&mut exprs.x, &mut exprs.y, &mut exprs.height].into_iter().flatten() {
                             found.take(e, Reads::Typed(Kind::Length));
                         }

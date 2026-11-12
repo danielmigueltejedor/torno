@@ -20,8 +20,8 @@ use schemars::{JsonSchema, Schema, SchemaGenerator, json_schema};
 use serde::de::{DeserializeOwned, Error as _};
 use serde::{Deserialize, Deserializer, Serialize};
 use serde_json::{Map, Value};
-use solidcraft_render::job::JobId;
-use solidcraft_render::job::presentation::Presentation;
+use torno_render::job::JobId;
+use torno_render::job::presentation::Presentation;
 
 use super::check::whole;
 use crate::render_jobs::RenderQueueState;

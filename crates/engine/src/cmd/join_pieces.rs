@@ -3,7 +3,7 @@
 //! result OK makes, and with the warning a Join apart gets (#4434).
 
 use serde_json::Value;
-use solidcraft_geom::prelude::*;
+use torno_geom::prelude::*;
 
 use crate::Session;
 
@@ -45,7 +45,7 @@ impl crate::Ahead {
         }
         let (Some(alone), Some(joined)) = (with_operation(cmds, "new"), with_operation(cmds, "join")) else { return (None, None) };
         let Ok(tools) = s.preview(&alone) else { return (None, None) };
-        let tools: Vec<&solidcraft_doc::ModelBody> = tools.after.bodies.iter().filter(|b| tools.before.body(&b.name).is_none()).collect();
+        let tools: Vec<&torno_doc::ModelBody> = tools.after.bodies.iter().filter(|b| tools.before.body(&b.name).is_none()).collect();
         // Every body the Join could take part in (its scope is narrower): none touched, none joined.
         let named: Vec<String> = joined
             .iter()
@@ -54,7 +54,7 @@ impl crate::Ahead {
                 crate::params::string_list_or_default(p, "targets").into_iter().chain(crate::params::string_list_or_default(p, "participants"))
             })
             .collect();
-        let candidates: Vec<&solidcraft_doc::ModelBody> = before
+        let candidates: Vec<&torno_doc::ModelBody> = before
             .bodies
             .iter()
             .filter(|b| named.is_empty() || named.iter().any(|n| n == "*" || *n == b.name))
@@ -66,7 +66,7 @@ impl crate::Ahead {
         let Ok((after, _)) = s.preview_in_place(&joined, None) else { return (None, None) };
         let state = after.model.state();
         // A Join with nothing to join makes a new body.
-        if state.bodies.iter().any(|b| before.body(&b.name).is_none()) || !solidcraft_doc::join_pieces_added(&before, &state).is_empty() {
+        if state.bodies.iter().any(|b| before.body(&b.name).is_none()) || !torno_doc::join_pieces_added(&before, &state).is_empty() {
             return (Some(Addition::Apart), None);
         }
         if inside && adds_nothing(&before, &state, &tools) {
@@ -82,7 +82,7 @@ impl crate::Ahead {
 /// Whether the Join from `before` to `after` added (next to) no volume: its material lies inside
 /// the bodies. Display meshes are close enough for that, against the material's own volume;
 /// measuring a large body exactly takes seconds.
-fn adds_nothing(before: &solidcraft_doc::ModelState, after: &solidcraft_doc::ModelState, tools: &[&solidcraft_doc::ModelBody]) -> bool {
+fn adds_nothing(before: &torno_doc::ModelState, after: &torno_doc::ModelState, tools: &[&torno_doc::ModelBody]) -> bool {
     let (mut had, mut have) = (0.0, 0.0);
     for was in &before.bodies {
         match after.body(&was.name) {
@@ -99,7 +99,7 @@ fn adds_nothing(before: &solidcraft_doc::ModelState, after: &solidcraft_doc::Mod
 }
 
 /// The volume a closed mesh encloses.
-fn mesh_volume(m: &solidcraft_geom::Mesh) -> f64 {
+fn mesh_volume(m: &torno_geom::Mesh) -> f64 {
     m.triangles.iter().filter_map(|t| m.tri(t)).map(|[a, b, c]| a.dot(b.cross(c)) / 6.0).sum::<f64>().abs()
 }
 

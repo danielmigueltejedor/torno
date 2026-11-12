@@ -9,7 +9,7 @@
     "usage": "Historical v7 comparison only. Never use these IDs as targets for the improved SELENE-showcase source."
   },
   "source": {
-    "repository": "0xlillith/solidcraft-rover",
+    "repository": "0xlillith/torno-rover",
     "commit": "b32437915372d32b71419dc8f5143fe22ff1e869",
     "path": "models/Rover-v7.solidcraft",
     "sha256": "fcb08540b1db08325f366fd0ff235f84f66d96406961482736bc097d7248c6d6",
@@ -664,7 +664,7 @@
   "attribution_requirements": [
     "SRC-SELENE-ATTRIBUTION",
     "Retain Ubuntu Font Licence 1.0 notice for modeled Ubuntu Light lettering in a future derivative.",
-    "Retain SolidCraft emblem attribution."
+    "Retain Torno emblem attribution."
   ],
   "appearance_role_hints": [
     {

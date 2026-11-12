@@ -1,7 +1,7 @@
 //! Standard behaviours are registered here; file declarations alone do not offer a control.
 use crate::theme_files::{OptionDef, OptionValue, ThemeFile};
-use solidcraft_theme::Tokens;
 use std::collections::BTreeMap;
+use torno_theme::Tokens;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Availability {

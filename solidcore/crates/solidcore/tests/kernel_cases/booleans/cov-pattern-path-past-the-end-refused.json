@@ -40,6 +40,6 @@
   "ungraded": [],
   "what": "6 instances 20 mm apart need 100 mm of an 80 mm path: refused",
   "why_not": [
-    "the failure is SolidCraft's, not a kernel operation's: step 6 (solid.pattern.path): the instances run past the end of the path (80.000 mm long)"
+    "the failure is Torno's, not a kernel operation's: step 6 (solid.pattern.path): the instances run past the end of the path (80.000 mm long)"
   ]
 }

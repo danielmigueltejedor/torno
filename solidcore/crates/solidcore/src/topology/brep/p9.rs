@@ -37,7 +37,7 @@
 //! remain uncertified while part 2 and face notification dependencies defer;
 //! passing refusal/projection comparisons do not certify those paths.
 //! Opt-in ([`UpstreamFixes::new_edge_vertex_tolerance_covers_gap`](crate::kernel::UpstreamFixes::new_edge_vertex_tolerance_covers_gap),
-//! WR-469): `MakeEdgeInFaceWithVU` follows the SolidCraft fork's fix: after
+//! WR-469): `MakeEdgeInFaceWithVU` follows the Torno fork's fix: after
 //! `RefreshTolerance`, which keeps a vertex's tolerance as it was, each end vertex's
 //! tolerance grows to twice its gap to the new edge's end (only if larger), as
 //! `UpdateVertexEdgeIntervals` sets it. By default it leaves gaps up to the full
@@ -2293,7 +2293,7 @@ fn redistribute_inner_loops(
             i += 1;
             continue;
         }
-        // (the SolidCraft fork's work count)
+        // (the Torno fork's work count)
         k.work_counters.add_loop_classified();
         let target = if classify_to_original { face } else { new_face };
         let other = if classify_to_original { new_face } else { face };

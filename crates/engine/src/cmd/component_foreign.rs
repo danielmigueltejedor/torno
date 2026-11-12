@@ -29,7 +29,7 @@ pub(super) fn paste_from_design(s: &mut Session, p: &Value) -> Result<Value> {
     };
     // The target as the design places it, without an exploded view shown.
     let frame = s.design_document().path_transform(to, &path).ok_or_else(|| bad(cmd, "that path is not a placement of the target"))?;
-    let into_target = solidcraft_doc::mat_inverse(&frame).ok_or_else(|| bad(cmd, "the target's frame is not invertible"))?;
+    let into_target = torno_doc::mat_inverse(&frame).ok_or_else(|| bad(cmd, "the target's frame is not invertible"))?;
     if copy.bodies.is_empty() {
         return paste_components(s, &copy, to, path, into_target, p);
     }
@@ -43,15 +43,15 @@ pub(super) fn paste_from_design(s: &mut Session, p: &Value) -> Result<Value> {
         let body = copy.world.body(seen).ok_or_else(|| bad(cmd, format!("no body `{seen}` in {}", copy.design)))?;
         let name = copy.names.get(i).unwrap_or(seen);
         let taken = |n: &str| state.body(n).is_some() || names.iter().any(|x| x == n);
-        let new = if taken(name) { solidcraft_doc::copy_name(name, taken) } else { name.clone() };
-        shapes.push(solidcraft_kernel::transform_matrix(&body.body, into_target)?);
+        let new = if taken(name) { torno_doc::copy_name(name, taken) } else { name.clone() };
+        shapes.push(torno_kernel::transform_matrix(&body.body, into_target)?);
         names.push(new);
     }
     drop(state);
-    let list: Vec<solidcraft_kernel::ExportBody> =
-        names.iter().zip(&shapes).map(|(name, body)| solidcraft_kernel::ExportBody { name: name.clone(), body, color: body.color() }).collect();
-    let header = solidcraft_kernel::StepHeader { organization: "SolidCraft".into(), ..Default::default() };
-    let step = solidcraft_kernel::step_export_bodies(&list, &header)?;
+    let list: Vec<torno_kernel::ExportBody> =
+        names.iter().zip(&shapes).map(|(name, body)| torno_kernel::ExportBody { name: name.clone(), body, color: body.color() }).collect();
+    let header = torno_kernel::StepHeader { organization: "Torno".into(), ..Default::default() };
+    let step = torno_kernel::step_export_bodies(&list, &header)?;
     let mut scratch = s.scratch();
     let kind = FeatureKind::Import { file: format!("{} (pasted)", copy.design), step: step.into(), components: Vec::new(), skip: Vec::new() };
     // Named as any import is ("Import1"); the design they came from stays on it as its file.
@@ -73,20 +73,13 @@ pub(super) fn paste_from_design(s: &mut Session, p: &Value) -> Result<Value> {
 /// Independent copies of the components copied in another design, each with what it holds, in
 /// `to` (placed by `path`; `into_target` takes world coordinates into it), where each is in the
 /// world; one step to undo. They are selected.
-fn paste_components(
-    s: &mut Session,
-    copy: &crate::ForeignCopy,
-    to: u64,
-    path: Vec<u64>,
-    into_target: solidcraft_doc::Mat,
-    p: &Value,
-) -> Result<Value> {
+fn paste_components(s: &mut Session, copy: &crate::ForeignCopy, to: u64, path: Vec<u64>, into_target: torno_doc::Mat, p: &Value) -> Result<Value> {
     let origin = crate::cmd::component_clone::Source::copied(copy);
     let mut computed: Option<Session> = None;
     let mut made = Vec::new();
     for (component, occurrence, world) in &copy.placed {
         let source_occurrence = copy.doc.occurrences.iter().find(|o| o.id == *occurrence).cloned();
-        let transform = solidcraft_doc::mat_mul(&into_target, world);
+        let transform = torno_doc::mat_mul(&into_target, world);
         if !super::valid_position(&transform) {
             return Err(bad("component.paste_from_design", "copy transform exceeds supported numeric range"));
         }

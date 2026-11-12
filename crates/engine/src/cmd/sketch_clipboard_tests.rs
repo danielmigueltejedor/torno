@@ -1,7 +1,7 @@
 use serde_json::{Value, json};
 use solidcore_record::Vec2;
-use solidcraft_geom::prelude::*;
-use solidcraft_sketch::{ConstraintKind, CurveKind, LinkKind, Sketch};
+use torno_geom::prelude::*;
+use torno_sketch::{ConstraintKind, CurveKind, LinkKind, Sketch};
 
 use crate::{Sel, Session};
 
@@ -158,7 +158,7 @@ fn every_kind_of_sketch_geometry_pastes() {
     // The text came as a new, editable text 100 mm up.
     let texts: Vec<_> = sk.links.iter().filter(|l| l.kind == LinkKind::Text).collect();
     assert_eq!(texts.len(), 2);
-    let Some(solidcraft_sketch::LinkSource::Text { at, text, .. }) =
+    let Some(torno_sketch::LinkSource::Text { at, text, .. }) =
         texts.iter().map(|l| &l.source).find(|src| !before.links.iter().any(|b| &b.source == *src))
     else {
         panic!()
@@ -284,7 +284,7 @@ fn sketch_geometry_pastes_into_another_design_with_values_not_foreign_parameters
     assert!(at.iter().zip(&corner).all(|(p, q)| p.dist(*q) < 1e-6), "{at:?} vs {corner:?}");
     let exprs: Vec<String> = sk.constraints.iter().filter_map(|c| c.param.as_ref()).filter_map(|n| b.doc.param(n)).map(|p| p.expr.clone()).collect();
     assert_eq!(exprs.len(), 2, "{exprs:?}");
-    assert!(exprs.iter().all(|e| solidcraft_doc::expr::references(e).is_empty()), "{exprs:?}");
+    assert!(exprs.iter().all(|e| torno_doc::expr::references(e).is_empty()), "{exprs:?}");
     assert!(exprs.iter().any(|e| e == "10"), "{exprs:?}");
     let width = sk.constraints.iter().filter_map(|c| c.kind.value()).fold(0.0_f64, f64::max);
     assert!((width - 25.4).abs() < 1e-6, "the width stays 1 in, not the other design's w: {width}");
@@ -296,7 +296,7 @@ fn sketch_geometry_pastes_into_another_design_with_values_not_foreign_parameters
 }
 
 fn volume(s: &Session) -> f64 {
-    s.model.state().bodies.iter().map(|b| solidcraft_kernel::measure(&b.body).unwrap().volume).sum()
+    s.model.state().bodies.iter().map(|b| torno_kernel::measure(&b.body).unwrap().volume).sum()
 }
 
 /// A design with sketch `Small` (a 10 x 10 square from the origin) extruded 5 mm, then sketch
@@ -414,7 +414,7 @@ fn replace_sketch_never_rebinds_a_reference_to_an_old_curve_onto_a_new_one() {
 /// dimension that named that design's parameter keeps its value, without the parameter.
 #[test]
 fn replace_sketch_takes_a_sketch_from_another_design_file() {
-    let dir = std::env::temp_dir().join(format!("solidcraft-replace-sketch-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("torno-replace-sketch-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
     let path = dir.join("Other.sc");
     let mut other = Session::default();
@@ -438,7 +438,7 @@ fn replace_sketch_takes_a_sketch_from_another_design_file() {
 fn replace_sketch_refuses_bad_requests_and_leaves_the_design_as_it_was() {
     let mut s = two_sketches();
     let before = s.doc.to_json();
-    let extrude = s.doc.features.iter().find(|f| !matches!(f.kind, solidcraft_doc::FeatureKind::Sketch { .. })).unwrap().id;
+    let extrude = s.doc.features.iter().find(|f| !matches!(f.kind, torno_doc::FeatureKind::Sketch { .. })).unwrap().id;
     for bad in [
         json!({"sketch": "Small"}),
         json!({"sketch": "Small", "from": "Small"}),

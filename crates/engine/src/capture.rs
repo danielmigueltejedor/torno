@@ -8,7 +8,7 @@
 use std::sync::{Arc, Condvar, Mutex, RwLock};
 use std::time::{Duration, Instant};
 
-use solidcraft_viewport::{Camera, Scene};
+use torno_viewport::{Camera, Scene};
 
 /// A picture: straight RGBA, rows top to bottom, and the renderer that drew it (`gpu`,
 /// `gpu-software` or `cpu`).
@@ -24,7 +24,7 @@ pub struct Png {
 }
 
 /// What a reply says when the CPU rasterizer drew the picture.
-pub const CPU_WARNING: &str = "drawn by the CPU rasterizer (no GPU adapter qualified, or SOLIDCRAFT_GPU=cpu): surface analysis colours, highlights and legends are not drawn; `solidcraft-cli gpu` lists the adapters";
+pub const CPU_WARNING: &str = "drawn by the CPU rasterizer (no GPU adapter qualified, or TORNO_GPU=cpu): surface analysis colours, highlights and legends are not drawn; `torno-cli gpu` lists the adapters";
 
 /// The warning that goes with a picture drawn by `renderer`, if any.
 pub fn warning(renderer: &str) -> Option<&'static str> {
@@ -138,7 +138,7 @@ pub fn rgba_with(renderer: Option<&Renderer>, scene: &Scene, cam: &Camera, width
 /// [`png`] with `renderer` instead of the installed one.
 pub fn png_with(renderer: Option<&Renderer>, scene: &Scene, cam: &Camera, width: u32, height: u32) -> Result<Png, String> {
     let Picture { rgba, renderer } = rgba_with(renderer, scene, cam, width, height)?;
-    let bytes = solidcraft_viewport::png(width as usize, height as usize, rgba).ok_or_else(|| "PNG encoding failed".to_string())?;
+    let bytes = torno_viewport::png(width as usize, height as usize, rgba).ok_or_else(|| "PNG encoding failed".to_string())?;
     Ok(Png { bytes, renderer })
 }
 

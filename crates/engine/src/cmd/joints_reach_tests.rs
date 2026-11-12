@@ -3,7 +3,7 @@
 
 use serde_json::{Value, json};
 use solidcore_record::Vec3;
-use solidcraft_geom::prelude::*;
+use torno_geom::prelude::*;
 
 use super::tests::{four_bar, meet, occ, part, pin, place, run};
 use crate::Session;
@@ -370,17 +370,17 @@ fn reach_preserves_full_diagnostics_without_repeating_dof_analysis() {
         assert_eq!(super::solve_counts::take().1, usize::from(!quiet));
         assert_eq!(r["reached"], angle != 100.0, "{r}");
         assert_eq!(r["stopped_by_loop"].is_object(), angle == 100.0, "{r}");
-        let expected = super::sol_json(&solidcraft_doc::joints::solve(&s.doc, &s.model.state()), &json!({"quiet":quiet}));
+        let expected = super::sol_json(&torno_doc::joints::solve(&s.doc, &s.model.state()), &json!({"quiet":quiet}));
         for key in ["dof", "fixed", "errors", "conflicts"] {
             assert_eq!(r.get(key), expected.get(key), "{key}: {r}");
         }
         let listed = run(&mut s, "joint.list", json!({}));
-        let full = super::sol_json(&solidcraft_doc::joints::solve(&s.doc, &s.model.state()), &json!({}));
+        let full = super::sol_json(&torno_doc::joints::solve(&s.doc, &s.model.state()), &json!({}));
         assert_eq!(listed["dof"], full["dof"]);
     }
     for command in ["edit.undo", "edit.redo"] {
         run(&mut s, command, json!({}));
-        let full = solidcraft_doc::joints::solve(&s.doc, &s.model.state());
+        let full = torno_doc::joints::solve(&s.doc, &s.model.state());
         assert!(full.conflicts.is_empty() && full.errors.is_empty());
         for part in ["Crank", "Coupler", "Rocker"] {
             assert_eq!(full.dof.get(&occ(&s, part)), Some(&1), "{command}: {part}");
@@ -406,7 +406,7 @@ fn quarter_turn_reaches_keep_the_four_bar_closed_and_diagnostics_current() {
         assert!(place(&s, "Coupler", q0).dist(rocker) < 1e-6, "{r}");
         assert!(place(&s, "Coupler", p0).dist(point) < 1e-5, "{r}");
         assert_eq!(place(&s, "Ground", Vec3::ZERO), ground);
-        let full = solidcraft_doc::joints::solve(&s.doc, &s.model.state());
+        let full = torno_doc::joints::solve(&s.doc, &s.model.state());
         assert!(full.errors.is_empty() && full.conflicts.is_empty(), "{full:?}");
         for part in ["Crank", "Coupler", "Rocker"] {
             assert_eq!(full.dof.get(&occ(&s, part)), Some(&1));
@@ -418,7 +418,7 @@ fn quarter_turn_reaches_keep_the_four_bar_closed_and_diagnostics_current() {
     for (command, point) in [("edit.undo", Vec3::new(20.0, 0.0, 0.0)), ("edit.redo", p0)] {
         run(&mut s, command, json!({}));
         assert!(place(&s, "Crank", p0).dist(point) < 1e-5, "{command}");
-        let full = solidcraft_doc::joints::solve(&s.doc, &s.model.state());
+        let full = torno_doc::joints::solve(&s.doc, &s.model.state());
         assert!(full.errors.is_empty() && full.conflicts.is_empty(), "{command}: {full:?}");
         for part in ["Crank", "Coupler", "Rocker"] {
             assert_eq!(full.dof.get(&occ(&s, part)), Some(&1));

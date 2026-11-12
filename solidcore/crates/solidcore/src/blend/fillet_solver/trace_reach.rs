@@ -1,8 +1,8 @@
 //! How far a fillet solver's trace extends its base surfaces' domains: the extension
-//! factor's share, and the reach across the edge that SolidCraft's fork lets a trace
+//! factor's share, and the reach across the edge that Torno's fork lets a trace
 //! have so that a blend wider than its faces is traced as far as its rails.
 //!
-//! Upstream: not in SMLib at the pinned commit. SolidCraft's fork
+//! Upstream: not in SMLib at the pinned commit. Torno's fork
 //! (tangency-labs/smlib, rev `68fb9162`) adds `m_dTraceReach`, `m_abTraceAcross`,
 //! `SetTraceReach` and `SmFilletSolver::GetDomainExtension` (`SmFilletSolver.h`,
 //! `SmFilletSolver.cpp`) in commit `a9277fd` (WR-609). They are used only with the

@@ -8,9 +8,9 @@
 
 use serde_json::json;
 use solidcore_record::Vec3;
-use solidcraft_engine::Sel;
-use solidcraft_engine::doc::FeatureKind;
-use solidcraft_engine::geom::prelude::*;
+use torno_engine::Sel;
+use torno_engine::doc::FeatureKind;
+use torno_engine::geom::prelude::*;
 
 use crate::dialogs::Kind;
 use crate::scenario::{Harness, handle_at, rect_of};
@@ -69,7 +69,7 @@ fn last_hole(h: &Harness) -> (u64, Vec3) {
 }
 
 fn solid_at(h: &Harness, p: Vec3) -> bool {
-    h.app.session.model.state().bodies.iter().any(|b| b.body.classify_point(p).unwrap() == solidcraft_engine::kernel::PointClass::Inside)
+    h.app.session.model.state().bodies.iter().any(|b| b.body.classify_point(p).unwrap() == torno_engine::kernel::PointClass::Inside)
 }
 
 const MIDDLE: Vec3 = Vec3::new(20.0, 15.0, 20.0);
@@ -183,7 +183,7 @@ struct Painted {
 
 fn painted(h: &Harness, c: egui::Pos2) -> Painted {
     use egui::epaint::{ColorMode, Shape};
-    let core = solidcraft_theme::Tokens::get().icons.highlight;
+    let core = torno_theme::Tokens::get().icons.highlight;
     let mut p = Painted { dots: Vec::new(), lines: Vec::new(), tips: Vec::new(), circles: 0 };
     for clipped in &h.shapes {
         crate::test_support::each_shape(&clipped.shape, &mut |s| match s {

@@ -157,8 +157,8 @@ fn extruded_circles_check_the_same_with_and_without_the_shortcuts() {
 }
 
 /// The checks of the bodies at level 2, twice each (a body checked again after an edit
-/// elsewhere, as SolidCraft re-checks), timed, with the shortcuts on or off and the
-/// curve check's opt-in fixes (SolidCraft sets them).
+/// elsewhere, as Torno re-checks), timed, with the shortcuts on or off and the
+/// curve check's opt-in fixes (Torno sets them).
 fn time_checks(bodies: &mut [Brep], shortcuts: bool) -> f64 {
     let mut k = kernel(shortcuts, true);
     let start = Instant::now();

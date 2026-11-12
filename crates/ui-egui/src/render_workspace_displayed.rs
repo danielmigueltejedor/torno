@@ -3,7 +3,7 @@
 
 use egui::{Context, Painter, Rect};
 use serde::Serialize;
-use solidcraft_engine::render::job::{FrameInfo, JobId, PreviewInfo, adaptive::AdaptivePreview};
+use torno_engine::render::job::{FrameInfo, JobId, PreviewInfo, adaptive::AdaptivePreview};
 
 use crate::SolveApp;
 

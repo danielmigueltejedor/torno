@@ -1,8 +1,8 @@
-//! Regression test for tangency-labs/solidcore#2431 on SolidCraft's own input
-//! (`851-fillet-top-front-then-upright`, step 7): the body SolidCraft hands the blend after
+//! Regression test for tangency-labs/solidcore#2431 on Torno's own input
+//! (`851-fillet-top-front-then-upright`, step 7): the body Torno hands the blend after
 //! the top front edge is rounded R2 (`data/issue_2431_851_before_front_upright_r2.smb`, the
 //! rig's blend-call dump, sha256 3bb0c88f...), then the front upright at the arc R2 with the
-//! tangent chain SolidCraft's propagation pulls in: the upright, the edge over the top front
+//! tangent chain Torno's propagation pulls in: the upright, the edge over the top front
 //! round's end curve and the arc's top edge.
 //!
 //! The middle piece rolls on the top front round, a cylinder of the ball's radius: its offset
@@ -10,7 +10,7 @@
 //! builds that piece as the ball's triangle between the sections the Joins on either side
 //! place through the ball's centre, so an end of the edge where the chain runs on into
 //! another blend closes the zone. #2431 at first judged those ends by the plane square to
-//! the edge alone and refused the chain (naming 2 less the fit margin), which SolidCraft then
+//! the edge alone and refused the chain (naming 2 less the fit margin), which Torno then
 //! retried at that size, a trace of minutes. Now the chain builds at R2 and no size is noted.
 #![allow(
     clippy::unwrap_used,
@@ -40,7 +40,7 @@ const WALL: f64 = 21.0;
 
 /// The three edges rounded R2 together on the in-code part
 /// (`issue_2403_chain_over_end_curve::three_edges_together_end_on_the_corner_ball`);
-/// SolidCraft's grid gives 9524.342896 to 5e-3.
+/// Torno's grid gives 9524.342896 to 5e-3.
 const THREE_TOGETHER: f64 = 9524.343664763;
 
 /// Every fix but `geometric_g2_continuity`.

@@ -3,29 +3,29 @@
 //! a face (its edges, a thin label) draws over it at any angle, with a section shown or not, and a
 //! section's cap hides what lies behind it (#6328). Each check runs with the depth the
 //! device draws with (a 32-bit float buffer, reversed, where it has one) and with the 24-bit
-//! fallback. Skipped, with the reason printed, without a GPU adapter (`SOLIDCRAFT_REQUIRE_GPU=1`
+//! fallback. Skipped, with the reason printed, without a GPU adapter (`TORNO_REQUIRE_GPU=1`
 //! makes that a failure).
 
 use serde_json::json;
 use solidcore_record::Vec3;
-use solidcraft_engine::Session;
-use solidcraft_engine::geom::Mesh;
-use solidcraft_engine::view::{self, Guides};
-use solidcraft_geom::prelude::*;
-use solidcraft_viewport::{Camera, Rgb, Scene, SceneLine, SceneMesh, StandardView};
-use solidcraft_viewport_gpu::GpuError;
-use solidcraft_viewport_gpu::capture::{self, Capturer};
 use std::sync::{Arc, OnceLock};
+use torno_engine::Session;
+use torno_engine::geom::Mesh;
+use torno_engine::view::{self, Guides};
+use torno_geom::prelude::*;
+use torno_viewport::{Camera, Rgb, Scene, SceneLine, SceneMesh, StandardView};
+use torno_viewport_gpu::GpuError;
+use torno_viewport_gpu::capture::{self, Capturer};
 
-/// The adapter policy the app's environment names (`SOLIDCRAFT_GPU`).
-fn policy() -> solidcraft_viewport_gpu::select::Policy {
-    solidcraft_gpu::env::policy().unwrap_or_else(|e| panic!("{e}"))
+/// The adapter policy the app's environment names (`TORNO_GPU`).
+fn policy() -> torno_viewport_gpu::select::Policy {
+    torno_gpu::env::policy().unwrap_or_else(|e| panic!("{e}"))
 }
 
 fn or_skip(c: Result<&'static Capturer, &'static GpuError>) -> Option<&'static Capturer> {
     match c {
         Ok(c) => Some(c),
-        Err(e @ GpuError::NoAdapter(_)) if std::env::var_os("SOLIDCRAFT_REQUIRE_GPU").is_none() => {
+        Err(e @ GpuError::NoAdapter(_)) if std::env::var_os("TORNO_REQUIRE_GPU").is_none() => {
             eprintln!("skipping: {e}");
             None
         }
@@ -35,7 +35,7 @@ fn or_skip(c: Result<&'static Capturer, &'static GpuError>) -> Option<&'static C
 
 /// The device's own depth, then the 24-bit fallback (the same device kind, its own instance).
 fn capturers() -> Vec<(&'static str, &'static Capturer)> {
-    static FALLBACK: OnceLock<solidcraft_viewport_gpu::Result<Capturer>> = OnceLock::new();
+    static FALLBACK: OnceLock<torno_viewport_gpu::Result<Capturer>> = OnceLock::new();
     let Some(own) = or_skip(capture::shared(policy())) else { return Vec::new() };
     let Some(fallback) = or_skip(FALLBACK.get_or_init(|| Capturer::headless_with_depth(policy(), wgpu::TextureFormat::Depth24PlusStencil8)).as_ref())
     else {
@@ -46,7 +46,7 @@ fn capturers() -> Vec<(&'static str, &'static Capturer)> {
 }
 
 fn reversed(c: &Capturer) -> bool {
-    solidcraft_viewport_gpu::view::reversed_depth(Some(c.depth_format()))
+    torno_viewport_gpu::view::reversed_depth(Some(c.depth_format()))
 }
 
 /// RGBA pixels as `[r, g, b, a]`.
@@ -199,8 +199,8 @@ fn an_edge_on_a_face_draws_whole_at_any_angle() {
 
 /// A selected edge's highlight from `a` to `b` on a face of normal `n`, in a highlight scene of
 /// its own: a 3 px core in a 6 px halo (`GpuScene::lifted_line`).
-fn highlight(a: Vec3, b: Vec3, n: Vec3) -> solidcraft_viewport_gpu::view::GpuScene {
-    let mut sc = solidcraft_viewport_gpu::view::GpuScene::default();
+fn highlight(a: Vec3, b: Vec3, n: Vec3) -> torno_viewport_gpu::view::GpuScene {
+    let mut sc = torno_viewport_gpu::view::GpuScene::default();
     let red = sc.color([255, 0, 0, 255]);
     sc.lifted_line(a.to_f32(), b.to_f32(), red, 6.0, [n.to_f32(), n.to_f32()]);
     sc
@@ -288,7 +288,7 @@ fn the_device_draws_with_float_depth_where_it_has_it() {
     eprintln!("GPU: {}, depth {:?}", c.adapter_name(), c.depth_format());
     let float = c.depth_format() == wgpu::TextureFormat::Depth32FloatStencil8;
     assert_eq!(float, reversed(c));
-    if std::env::var_os("SOLIDCRAFT_REQUIRE_GPU").is_some() {
+    if std::env::var_os("TORNO_REQUIRE_GPU").is_some() {
         assert!(float, "a desktop GPU without Depth32FloatStencil8: {:?}", c.depth_format());
     }
 }
@@ -598,7 +598,7 @@ fn touching_caps_are_hatched_apart_and_keep_their_hatch() {
         let by_part = c.rgba(&Scene { grid: Vec::new(), ..view::scene(&s, &cam).unwrap() }, &cam, w, h).unwrap();
         let (la, lb) = (hatch_seen(&by_part, w, &a), hatch_seen(&by_part, w, &b));
         assert_ne!(la, lb, "{mode} depth: the touching caps look alike");
-        let expect = |hatch: solidcraft_viewport::hatch::Hatch| hatch.turned();
+        let expect = |hatch: torno_viewport::hatch::Hatch| hatch.turned();
         assert_eq!((la.1, lb.1), (expect(first[0]), expect(first[1])), "{mode} depth: the caps' angles");
         let one = c.rgba(&Scene { grid: Vec::new(), part_hatch: None, ..view::scene(&s, &cam).unwrap() }, &cam, w, h).unwrap();
         let (oa, ob) = (hatch_seen(&one, w, &a), hatch_seen(&one, w, &b));
@@ -669,7 +669,7 @@ fn a_visible_edge_beside_a_face_seen_edge_on_has_no_hidden_copy() {
                 let scene =
                     Scene { meshes: vec![SceneMesh::solid(Arc::new(mesh.clone()), Rgb(160, 165, 175))], lines, radius: 40.0, ..Default::default() };
                 let hidden = |keep: &dyn Fn(&(Vec3, Vec3, [Vec3; 2])) -> bool| {
-                    let mut sc = solidcraft_viewport_gpu::view::GpuScene::default();
+                    let mut sc = torno_viewport_gpu::view::GpuScene::default();
                     let col = sc.color([0, 255, 0, 255]);
                     for e in edges.iter().filter(|e| keep(e)) {
                         sc.hidden_line(e.0.to_f32(), e.1.to_f32(), col, 1.0);

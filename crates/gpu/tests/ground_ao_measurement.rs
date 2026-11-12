@@ -1,18 +1,18 @@
 //! Manual timestamp measurement: model-only AO versus the virtual-ground receiver.
-//! Run explicitly with --ignored, WGPU_BACKEND and SOLIDCRAFT_GPU=hardware|software.
-//! SOLIDCRAFT_BENCH_OUTPUT_DIR is the folder for JSON evidence. Not a CI speed threshold.
+//! Run explicitly with --ignored, WGPU_BACKEND and TORNO_GPU=hardware|software.
+//! TORNO_BENCH_OUTPUT_DIR is the folder for JSON evidence. Not a CI speed threshold.
 #![cfg(not(target_arch = "wasm32"))]
 use serde_json::json;
 use solidcore_record::Vec3;
-use solidcraft_engine::geom::Aabb3;
-use solidcraft_geom::MeshGeom;
-use solidcraft_gpu as gpu;
-use solidcraft_viewport::Camera;
-use solidcraft_viewport_gpu::view::{Frame, GpuScene, GpuTarget, Renderer};
 use std::{
     sync::Arc,
     time::{Duration, Instant},
 };
+use torno_engine::geom::Aabb3;
+use torno_geom::MeshGeom;
+use torno_gpu as gpu;
+use torno_viewport::Camera;
+use torno_viewport_gpu::view::{Frame, GpuScene, GpuTarget, Renderer};
 
 #[test]
 #[ignore = "manual CPU/GPU measurement; requires a timestamp-capable adapter"]
@@ -21,7 +21,7 @@ fn measure_ground_ao_renderer_cost() -> Result<(), Box<dyn std::error::Error>> {
     ao_comparison(1)
 }
 fn ao_comparison(ground: u32) -> Result<(), Box<dyn std::error::Error>> {
-    let (adapter, _) = solidcraft_viewport_gpu::select::pick(gpu::env::policy().map_err(std::io::Error::other)?).ok_or("no matching adapter")?;
+    let (adapter, _) = torno_viewport_gpu::select::pick(gpu::env::policy().map_err(std::io::Error::other)?).ok_or("no matching adapter")?;
     let info = adapter.get_info();
     let features = wgpu::Features::TIMESTAMP_QUERY | wgpu::Features::TIMESTAMP_QUERY_INSIDE_ENCODERS;
     if !adapter.features().contains(features) {
@@ -41,7 +41,7 @@ fn ao_comparison(ground: u32) -> Result<(), Box<dyn std::error::Error>> {
         tess: false,
         oit: false,
     };
-    let mut session = solidcraft_engine::Session::default();
+    let mut session = torno_engine::Session::default();
     for corner in [[-65, -10, 0], [45, -10, 0]] {
         session.execute("solid.box", &json!({"length":20,"width":20,"height":20,"corner":corner,"operation":"new"}))?;
     }
@@ -172,8 +172,7 @@ fn ao_comparison(ground: u32) -> Result<(), Box<dyn std::error::Error>> {
         2 => "ao-ground-projection",
         _ => "ao-baseline",
     };
-    let output =
-        std::env::var_os("SOLIDCRAFT_BENCH_OUTPUT_DIR").map(std::path::PathBuf::from).ok_or("set SOLIDCRAFT_BENCH_OUTPUT_DIR to an output folder")?;
+    let output = std::env::var_os("TORNO_BENCH_OUTPUT_DIR").map(std::path::PathBuf::from).ok_or("set TORNO_BENCH_OUTPUT_DIR to an output folder")?;
     std::fs::create_dir_all(&output)?;
     std::fs::write(output.join(format!("{label}-comparison.json")), serde_json::to_vec_pretty(&result)?)?;
     println!("{label} comparison completed: {} {:?}", info.name, info.backend);
@@ -228,7 +227,7 @@ fn comparison_frame(scene: GpuScene, cam: &Camera, width: u32, height: u32, key:
         outline: false,
         eye: [0.0; 4],
         ao_radius: 0.0,
-        ao_samples: solidcraft_viewport_gpu::view::AO_SAMPLES,
+        ao_samples: torno_viewport_gpu::view::AO_SAMPLES,
         hover_tint: [0.0; 3],
         selection_tint: [0.0; 3],
         hatch: Default::default(),
@@ -239,10 +238,6 @@ fn comparison_frame(scene: GpuScene, cam: &Camera, width: u32, height: u32, key:
 }
 
 fn receiver(sc: &mut GpuScene, b: Aabb3, cam: &Camera, radius: f64) {
-    sc.ground_ao = solidcraft_viewport_gpu::view::GroundAo::new(
-        solidcraft_render::view_bounds(&b),
-        b.min.z - 0.001 * (1.0 + b.diagonal()),
-        cam.up,
-        radius as f32,
-    );
+    sc.ground_ao =
+        torno_viewport_gpu::view::GroundAo::new(torno_render::view_bounds(&b), b.min.z - 0.001 * (1.0 + b.diagonal()), cam.up, radius as f32);
 }

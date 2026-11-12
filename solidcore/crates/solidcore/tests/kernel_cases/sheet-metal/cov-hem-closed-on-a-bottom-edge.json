@@ -56,6 +56,6 @@
   ],
   "what": "sheet.hem on the bottom edge of a 100 x 60 x 2 base: the hem folds over the top face",
   "why_not": [
-    "body \"Body1\" is no kernel operation's output nor an operand: SolidCraft built it or changed the kernel's record"
+    "body \"Body1\" is no kernel operation's output nor an operand: Torno built it or changed the kernel's record"
   ]
 }

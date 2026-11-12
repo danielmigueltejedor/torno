@@ -1,6 +1,6 @@
 //! With no catalogs installed (this test binary installs none), every id reads as itself.
 
-use solidcraft_ui_text as text;
+use torno_ui_text as text;
 
 #[test]
 fn with_nothing_installed_every_id_reads_as_itself() {

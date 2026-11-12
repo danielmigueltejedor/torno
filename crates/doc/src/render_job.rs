@@ -3,14 +3,14 @@
 use std::{fmt, marker::PhantomData};
 
 use serde::{Deserialize, Serialize};
-use solidcraft_render::{
+use torno_render::{
     job::{
         CpuBudget, CpuProgressiveOptions, DenoiseSettings, DirectionalLightOptions, JobOptions, LightingPreset, PunctualLightOptions,
         RaytraceEnvironmentOptions, RaytraceOptions, RectangleLightOptions, StudioLighting, Sun, ThinLens, ToneMap,
     },
     lighting::environment::SkyGradient,
 };
-use solidcraft_viewport::Camera;
+use torno_viewport::Camera;
 
 use crate::{
     DocError, Result,
@@ -95,9 +95,9 @@ pub struct CpuJob {
     #[serde(skip_serializing_if = "std::ops::Not::not")]
     pub metal_energy_compensation: bool,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub caustics: Option<solidcraft_render::job::CausticOptions>,
+    pub caustics: Option<torno_render::job::CausticOptions>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub volume: Option<solidcraft_render::job::volume::HomogeneousVolume>,
+    pub volume: Option<torno_render::job::volume::HomogeneousVolume>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub sun: Option<Sun>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -105,9 +105,9 @@ pub struct CpuJob {
     #[serde(skip_serializing_if = "crate::render_aging::SavedAgingStack::is_empty")]
     pub aging: crate::render_aging::SavedAgingStack,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub adaptive: Option<solidcraft_render::job::adaptive::AdaptiveSampling>,
+    pub adaptive: Option<torno_render::job::adaptive::AdaptiveSampling>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub path: Option<solidcraft_render::job::CpuPathOptions>,
+    pub path: Option<torno_render::job::CpuPathOptions>,
     #[serde(skip_serializing_if = "std::ops::Not::not")]
     pub denoise: bool,
     #[serde(skip_serializing_if = "DenoiseSettings::is_default")]
@@ -115,12 +115,12 @@ pub struct CpuJob {
     #[serde(skip_serializing_if = "std::ops::Not::not")]
     pub denoise_diagnostics: bool,
     /// Internal scale; saved width and height remain the exported image size.
-    #[serde(skip_serializing_if = "solidcraft_render::job::single_supersample")]
+    #[serde(skip_serializing_if = "torno_render::job::single_supersample")]
     pub supersampling: u32,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub lens: Option<ThinLens>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub output: Option<Box<solidcraft_render::job::OutputOptions>>,
+    pub output: Option<Box<torno_render::job::OutputOptions>>,
     #[serde(skip_serializing_if = "CpuBudget::is_compact")]
     pub budget: CpuBudget,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -190,7 +190,7 @@ impl CpuJob {
     /// identities have been resolved into captured runtime body indices.
     pub fn validate_surface_maps(&self, exposure_ev: f64) -> Result<()> {
         let options = self.validated_parameters(exposure_ev)?;
-        solidcraft_render::job::textures::validate_cpu_options(&options).map_err(|e| DocError::Invalid(e.to_string()))
+        torno_render::job::textures::validate_cpu_options(&options).map_err(|e| DocError::Invalid(e.to_string()))
     }
     /// Pure lowering, valid on hosts without a CPU raytracer. Checks bounds before cloning lists.
     pub fn to_runtime(&self, exposure_ev: f64) -> Result<RaytraceOptions> {
@@ -222,7 +222,7 @@ impl CpuJob {
             .map(|sky| -> Result<_> {
                 sky.validate()?;
                 let SkyEnvironment::Sky { gradient, rotation_rad, intensity } = *sky;
-                Ok(Box::new(solidcraft_render::job::CpuSky { gradient, rotation_rad, intensity }))
+                Ok(Box::new(torno_render::job::CpuSky { gradient, rotation_rad, intensity }))
             })
             .transpose()?;
         let options = RaytraceOptions {
@@ -273,21 +273,21 @@ pub struct GpuJob {
     #[serde(skip_serializing_if = "std::ops::Not::not")]
     pub metal_energy_compensation: bool,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub caustics: Option<solidcraft_render::job::CausticOptions>,
+    pub caustics: Option<torno_render::job::CausticOptions>,
     #[serde(skip_serializing_if = "crate::render_aging::SavedAgingStack::is_empty")]
     pub aging: crate::render_aging::SavedAgingStack,
     pub nested_media: bool,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub volume: Option<solidcraft_render::job::volume::HomogeneousVolume>,
+    pub volume: Option<torno_render::job::volume::HomogeneousVolume>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub adaptive: Option<solidcraft_render::job::adaptive::AdaptiveSampling>,
+    pub adaptive: Option<torno_render::job::adaptive::AdaptiveSampling>,
     /// Conditional Fresnel strata per primary sample; one keeps the old stream.
     pub transmission_samples: u32,
 
-    #[serde(skip_serializing_if = "solidcraft_render::job::finishing::Finishing::is_identity")]
-    pub finishing: solidcraft_render::job::finishing::Finishing,
+    #[serde(skip_serializing_if = "torno_render::job::finishing::Finishing::is_identity")]
+    pub finishing: torno_render::job::finishing::Finishing,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub backdrop: Option<solidcraft_render::job::finishing::Backdrop>,
+    pub backdrop: Option<torno_render::job::finishing::Backdrop>,
     pub linear_exr: bool,
     pub samples: u32,
     pub max_depth: u32,
@@ -302,7 +302,7 @@ pub struct GpuJob {
     #[serde(skip_serializing_if = "std::ops::Not::not")]
     pub denoise_diagnostics: bool,
     /// Internal scale; saved width and height remain the exported image size.
-    #[serde(skip_serializing_if = "solidcraft_render::job::single_supersample")]
+    #[serde(skip_serializing_if = "torno_render::job::single_supersample")]
     pub supersampling: u32,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub lens: Option<ThinLens>,
@@ -500,7 +500,7 @@ fn area_lights<'de, D: serde::Deserializer<'de>>(d: D) -> std::result::Result<Op
 #[cfg(test)]
 mod cpu_volume_portable_tests {
     use super::*;
-    use solidcraft_render::job::{CpuPathOptions, CpuProgressiveOptions, volume::HomogeneousVolume};
+    use torno_render::job::{CpuPathOptions, CpuProgressiveOptions, volume::HomogeneousVolume};
     #[test]
     fn cpu_volume_saved_parameters_roundtrip_lower_without_default_adoption_or_hidden_repairs() {
         let v = HomogeneousVolume {

@@ -160,7 +160,7 @@
     "blend_dropping"
   ],
   "ungraded": [
-    "continuity: SolidCraft computes it"
+    "continuity: Torno computes it"
   ],
   "what": "the peg's front top edge chamfered 1, then its concave arc chamfered 2: the second chamfer's chain runs on down the first chamfer's end on the cylinder, which leaves the front face tangentially; reported from the app (2026-10-30, test-peg part)",
   "why_not": []

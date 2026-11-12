@@ -208,10 +208,10 @@ fn start_listing(app: &mut SolveApp, ctx: &egui::Context, key: ListingKey, secre
     };
     let (tx, rx) = std::sync::mpsc::channel();
     let (protocol, url, allow_insecure_http) = (key.0, key.1.clone(), key.3);
-    let language = solidcraft_ui_text::language();
+    let language = torno_ui_text::language();
     let wake = ctx.clone();
     let spawned = std::thread::Builder::new().name("endpoint-models".into()).spawn(move || {
-        let _language = solidcraft_ui_text::scope(language);
+        let _language = torno_ui_text::scope(language);
         let list = secret().and_then(|secret| match protocol {
             Protocol::OpenAi => super::api_client::model_list(&http, &url, secret.as_deref(), allow_insecure_http),
             Protocol::Anthropic => super::api_client::anthropic_model_list(&http, &url, secret.as_deref()),
@@ -467,7 +467,7 @@ fn timeout_field(ui: &mut egui::Ui, secs: &mut u64, handle: &str) -> bool {
         info
     });
     ui.label(tr("prefs.assistant_seconds"));
-    solidcraft_ui_registry::publish_target(handle, r.rect);
+    torno_ui_registry::publish_target(handle, r.rect);
     r.changed()
 }
 
@@ -475,7 +475,7 @@ fn timeout_field(ui: &mut egui::Ui, secs: &mut u64, handle: &str) -> bool {
 fn effort_field(ui: &mut egui::Ui, effort: &mut String, handle: &str) -> bool {
     let response = ui_kit::cell_editor(ui, ui.scope_id().with("ai_reasoning_effort"), effort, tr("ui.ai_reasoning_effort_field_hint"), false)
         .backing_on_hover_text(tr("ui.ai_reasoning_effort_hint"));
-    solidcraft_ui_registry::publish_target(handle, response.rect);
+    torno_ui_registry::publish_target(handle, response.rect);
     response.changed()
 }
 
@@ -503,13 +503,13 @@ pub fn page(app: &mut SolveApp, ui: &mut egui::Ui) {
             ui.horizontal(|ui| {
                 let response = ui_kit::checkbox(ui, tr("ui.ai_show_features"), &mut app.preferences.ai_features)
                     .backing_on_hover_text(tr("ui.ai_show_features_note"));
-                solidcraft_ui_registry::publish_handle("prefs:ai_features", response.rect.center());
+                torno_ui_registry::publish_handle("prefs:ai_features", response.rect.center());
                 ui_kit::help_icon(ui, tr("ui.ai_show_features_note"));
             });
             ui.add_enabled_ui(app.preferences.ai_features && !cfg!(target_arch = "wasm32"), |ui| {
                 let response = ui_kit::checkbox(ui, tr("ui.ai_toolbar_button"), &mut app.preferences.ai_toolbar_button)
                     .backing_on_hover_text(tr("ui.ai_toolbar_button_note"));
-                solidcraft_ui_registry::publish_handle("prefs:ai_toolbar_button", response.rect.center());
+                torno_ui_registry::publish_handle("prefs:ai_toolbar_button", response.rect.center());
             });
             if cfg!(target_arch = "wasm32") {
                 ui_kit::text(ui, tr("ui.agent_chat_desktop_only"), ui_kit::Text::Hint("desktop"));
@@ -545,7 +545,7 @@ fn connecting_section(app: &mut SolveApp, ui: &mut egui::Ui) {
         ] {
             ui.horizontal(|ui| {
                 let response = ui_kit::checkbox(ui, tr(label), value).backing_on_hover_text(tr(help));
-                solidcraft_ui_registry::publish_handle(&format!("prefs:{handle}"), response.rect.center());
+                torno_ui_registry::publish_handle(&format!("prefs:{handle}"), response.rect.center());
                 ui_kit::help_icon(ui, tr(help));
             });
         }
@@ -562,7 +562,7 @@ fn instructions_section(app: &mut SolveApp, ui: &mut egui::Ui) {
             // Typed text belongs to the field, not to Preferences search.
             crate::ui_kit::settings_search::note_key_sink(ui.ctx());
         }
-        solidcraft_ui_registry::publish_target("prefs:agent_instructions", response.rect);
+        torno_ui_registry::publish_target("prefs:agent_instructions", response.rect);
         ui_kit::text(ui, tr("ai.prefs.instructions_note"), ui_kit::Text::Hint("instructions"));
     });
 }
@@ -617,11 +617,11 @@ fn permissions_section(app: &mut SolveApp, ui: &mut egui::Ui) {
             }
             let names: std::collections::HashMap<_, _> = agents::entries(app).into_iter().map(|entry| (entry.id, entry.name)).collect();
             for (agent, tools) in remembered {
-                let t = solidcraft_theme::Tokens::get();
+                let t = torno_theme::Tokens::get();
                 ui_kit::settings_block(ui, names.get(&agent).unwrap_or(&agent), t.space_24 * 6.0 + t.space_6, |ui| {
                     ui.horizontal(|ui| {
                         let reset = ui_kit::button(ui, tr("ui.ai_reset"), ui_kit::Button::Small);
-                        solidcraft_ui_registry::publish_target(&format!("prefs:ai_approvals_reset:{agent}"), reset.rect);
+                        torno_ui_registry::publish_target(&format!("prefs:ai_approvals_reset:{agent}"), reset.rect);
                         if reset.clicked() {
                             app.preferences.agent_always_allow.remove(&agent);
                         }
@@ -634,7 +634,7 @@ fn permissions_section(app: &mut SolveApp, ui: &mut egui::Ui) {
 }
 
 fn panel_section(app: &mut SolveApp, ui: &mut egui::Ui) {
-    let t = solidcraft_theme::Tokens::get();
+    let t = torno_theme::Tokens::get();
     ui_kit::settings_section(ui, "panel", tr("ui.ai_panel"), |ui| {
         let label_width = [tr("ui.agent_chat_side"), tr("ui.agent_chat_turn_limit")]
             .iter()
@@ -672,7 +672,7 @@ fn panel_section(app: &mut SolveApp, ui: &mut egui::Ui) {
                 for option in options {
                     crate::ui_kit::settings_search::follow(ui, option, response.rect);
                 }
-                solidcraft_ui_registry::publish_target("prefs:agent_chat_turn_limit:mode", response.rect);
+                torno_ui_registry::publish_target("prefs:agent_chat_turn_limit:mode", response.rect);
                 if limit != previous {
                     p.agent_chat_turn_limit = if limit == 0 { 0 } else { gate::SEEDED_TURN_LIMIT };
                 }
@@ -684,7 +684,7 @@ fn panel_section(app: &mut SolveApp, ui: &mut egui::Ui) {
                         info.label = Some(tr("prefs.assistant_limit").to_owned());
                         info
                     });
-                    solidcraft_ui_registry::publish_target("prefs:agent_chat_turn_limit:value", response.rect);
+                    torno_ui_registry::publish_target("prefs:agent_chat_turn_limit:value", response.rect);
                 }
             });
         });
@@ -698,17 +698,17 @@ fn pointer_section(app: &mut SolveApp, ui: &mut egui::Ui) {
             ui,
             |ui| {
                 let response = ui_kit::checkbox(ui, tr("ai.prefs.show_pointer"), &mut app.ui.agent_cursor.show)
-                    .backing_on_hover_text(solidcraft_ui_text::tr_label("Show the pointer an AI agent moves (#35)"));
-                solidcraft_ui_registry::publish_target("prefs:agent_pointer_show", response.rect);
+                    .backing_on_hover_text(torno_ui_text::tr_label("Show the pointer an AI agent moves (#35)"));
+                torno_ui_registry::publish_target("prefs:agent_pointer_show", response.rect);
                 ui.add_enabled_ui(app.ui.agent_cursor.show, |ui| {
-                    let speed_label_width = ui_kit::ContentWidth::label(ui, tr("ai.prefs.pointer_speed")) + solidcraft_theme::Tokens::get().space_4;
+                    let speed_label_width = ui_kit::ContentWidth::label(ui, tr("ai.prefs.pointer_speed")) + torno_theme::Tokens::get().space_4;
                     ui_kit::settings_form(ui, speed_label_width, |ui| {
                         ui_kit::row(ui, tr("ai.prefs.pointer_speed"), |ui| {
                             let name = tr("prefs.assistant_pointer_speed");
                             crate::ui_kit::settings_search::note_current(ui, name);
                             let response =
                                 ui_kit::named_control(ui, name, |ui| crate::agent_cursor::speed_slider(ui, &mut app.ui.agent_cursor.speed));
-                            solidcraft_ui_registry::publish_target("prefs:agent_pointer_speed", response.rect);
+                            torno_ui_registry::publish_target("prefs:agent_pointer_speed", response.rect);
                             let value = match app.ui.agent_cursor.speed {
                                 crate::agent_cursor::Speed::Times(value) => value,
                                 crate::agent_cursor::Speed::Instant => 5.5,
@@ -727,13 +727,13 @@ fn pointer_section(app: &mut SolveApp, ui: &mut egui::Ui) {
                     ui.horizontal(|ui| {
                         let response = ui_kit::checkbox(ui, tr("ai.prefs.follow_camera"), &mut app.ui.agent_cursor.follow_camera)
                             .backing_on_hover_text(tr("prefs.assistant_follow_help"));
-                        solidcraft_ui_registry::publish_target("prefs:agent_pointer_follow", response.rect);
+                        torno_ui_registry::publish_target("prefs:agent_pointer_follow", response.rect);
                         ui_kit::help_icon(ui, tr("prefs.assistant_follow_help"));
                     });
                 });
                 (app.ui.agent_cursor.show, app.ui.agent_cursor.speed.label(), app.ui.agent_cursor.follow_camera)
             },
-            |ui, (visible, speed, follow)| crate::prefs::figures::pointer_preview(ui, visible, solidcraft_ui_text::tr_label(&speed), follow),
+            |ui, (visible, speed, follow)| crate::prefs::figures::pointer_preview(ui, visible, torno_ui_text::tr_label(&speed), follow),
         );
     });
 }
@@ -750,7 +750,7 @@ fn mcp_section(app: &mut SolveApp, ui: &mut egui::Ui) {
         ui.horizontal(|ui| {
             let response =
                 ui_kit::checkbox(ui, tr("ui.mcp_compact"), &mut app.preferences.mcp_compact).backing_on_hover_text(tr("ui.mcp_compact_note"));
-            solidcraft_ui_registry::publish_handle("prefs:mcp_compact", response.rect.center());
+            torno_ui_registry::publish_handle("prefs:mcp_compact", response.rect.center());
             ui_kit::help_icon(ui, tr("ui.mcp_compact_note"));
         });
     });
@@ -769,10 +769,10 @@ fn control_channel(app: &mut SolveApp, ui: &mut egui::Ui) {
         let port = |port: u16| port.to_string();
         let badge = match &status {
             Status::Listening(p) => {
-                Some((solidcraft_ui_text::format("ai.prefs.control_listening", &[("port", &port(*p))]), ui_kit::SettingsBadgeTone::Success))
+                Some((torno_ui_text::format("ai.prefs.control_listening", &[("port", &port(*p))]), ui_kit::SettingsBadgeTone::Success))
             }
             Status::FromLaunch(p) => {
-                Some((solidcraft_ui_text::format("ai.prefs.control_listening", &[("port", &port(*p))]), ui_kit::SettingsBadgeTone::Neutral))
+                Some((torno_ui_text::format("ai.prefs.control_listening", &[("port", &port(*p))]), ui_kit::SettingsBadgeTone::Neutral))
             }
             Status::Error(_) => Some((tr("ai.prefs.control_not_listening").to_owned(), ui_kit::SettingsBadgeTone::Warning)),
             Status::Off => None,
@@ -785,7 +785,7 @@ fn control_channel(app: &mut SolveApp, ui: &mut egui::Ui) {
     ui_kit::settings_form(ui, ui_kit::ContentWidth::label(ui, label), |ui| {
         ui_kit::row(ui, label, |ui| {
             ui.add_enabled_ui(app.preferences.agent_control, |ui| {
-                let t = solidcraft_theme::Tokens::get();
+                let t = torno_theme::Tokens::get();
                 ui_kit::settings_control_width(ui, t.space_24 * 3.0 + t.space_8, |ui| {
                     let response = ui_kit::number_field(ui, &mut app.preferences.agent_control_port, MIN_PORT..=u16::MAX, 1.0, "")
                         .backing_on_hover_text(tr("ai.prefs.control_port_note"));
@@ -795,9 +795,9 @@ fn control_channel(app: &mut SolveApp, ui: &mut egui::Ui) {
         });
     });
     let note = match status {
-        Status::FromLaunch(p) => Some(solidcraft_ui_text::format("ai.prefs.control_from_launch", &[("port", &p.to_string())])),
-        Status::Error(StartError::PortTaken(p)) => Some(solidcraft_ui_text::format("ai.prefs.control_port_taken", &[("port", &p.to_string())])),
-        Status::Error(StartError::Failed(e)) => Some(solidcraft_ui_text::format("ai.prefs.control_failed", &[("error", &e)])),
+        Status::FromLaunch(p) => Some(torno_ui_text::format("ai.prefs.control_from_launch", &[("port", &p.to_string())])),
+        Status::Error(StartError::PortTaken(p)) => Some(torno_ui_text::format("ai.prefs.control_port_taken", &[("port", &p.to_string())])),
+        Status::Error(StartError::Failed(e)) => Some(torno_ui_text::format("ai.prefs.control_failed", &[("error", &e)])),
         Status::Listening(_) | Status::Off => None,
     };
     if let Some(note) = note {
@@ -817,7 +817,7 @@ fn agents_section(app: &mut SolveApp, ui: &mut egui::Ui) {
     let mut retimed: Option<(String, u64)> = None;
     let mut reeffort: Option<(String, String)> = None;
     let mut picked_model: Option<(String, ui_kit::Picked)> = None;
-    let t = solidcraft_theme::Tokens::get();
+    let t = torno_theme::Tokens::get();
     ui_kit::settings_section_count(ui, "agents", tr("ui.ai_agents"), Some(&all.len().to_string()), |ui| {
         if app.agent_chat.detecting.is_some() {
             ui_kit::text(ui, tr("ui.agent_chat_detecting"), ui_kit::Text::Hint("detecting"));
@@ -848,12 +848,12 @@ fn agents_section(app: &mut SolveApp, ui: &mut egui::Ui) {
                                         tr(if is_default { "ui.ai_default" } else { "ai.prefs.make_default" }),
                                         if is_default { ui_kit::Button::SmallSelected } else { ui_kit::Button::Small },
                                     );
-                                    solidcraft_ui_registry::publish_target(&format!("dialog:list:{}", entry.id), choice.rect);
+                                    torno_ui_registry::publish_target(&format!("dialog:list:{}", entry.id), choice.rect);
                                     if choice.clicked() {
                                         app.preferences.agent_default = entry.id.clone();
                                     }
                                     let test_button = ui_kit::button(ui, tr("ui.ai_test"), ui_kit::Button::Small);
-                                    solidcraft_ui_registry::publish_handle(&format!("prefs:ai_test:{}", entry.id), test_button.rect.center());
+                                    torno_ui_registry::publish_handle(&format!("prefs:ai_test:{}", entry.id), test_button.rect.center());
                                     let tip = match entry.kind {
                                         Kind::Acp => "ui.ai_test_acp_tip",
                                         Kind::Api => "ui.ai_test_api_tip",
@@ -864,14 +864,14 @@ fn agents_section(app: &mut SolveApp, ui: &mut egui::Ui) {
                                     }
                                     if !entry.found {
                                         let edit_button = ui_kit::button(ui, tr("ui.ai_edit"), ui_kit::Button::Small);
-                                        solidcraft_ui_registry::publish_handle(&format!("prefs:ai_edit:{}", entry.id), edit_button.rect.center());
+                                        torno_ui_registry::publish_handle(&format!("prefs:ai_edit:{}", entry.id), edit_button.rect.center());
                                         if edit_button.backing_on_hover_text(tr("ui.ai_edit_tip")).clicked() {
                                             edit = Some(entry.id.clone());
                                         }
                                     }
                                     if !entry.found {
                                         let button = ui_kit::button(ui, tr("ui.ai_remove"), ui_kit::Button::Ghost);
-                                        solidcraft_ui_registry::publish_target(&format!("prefs:ai_remove:{}", entry.id), button.rect);
+                                        torno_ui_registry::publish_target(&format!("prefs:ai_remove:{}", entry.id), button.rect);
                                         if button.clicked() {
                                             remove = Some(entry.id.clone());
                                         }
@@ -1013,7 +1013,7 @@ fn agents_section(app: &mut SolveApp, ui: &mut egui::Ui) {
                             });
                         }
                     });
-                    solidcraft_ui_registry::publish_rect(&format!("prefs:ai_card:{}", entry.id), card.response.rect);
+                    torno_ui_registry::publish_rect(&format!("prefs:ai_card:{}", entry.id), card.response.rect);
                     let metadata = [&entry.name, &entry.id, &detail];
                     if let Some(text) = metadata.iter().find(|text| crate::ui_kit::settings_search::texts_hit(ui, &[*text])) {
                         crate::ui_kit::settings_search::remember(ui, text, card.response.rect);
@@ -1037,7 +1037,7 @@ fn agents_section(app: &mut SolveApp, ui: &mut egui::Ui) {
         }
         ui.horizontal_wrapped(|ui| {
             let button = ui_kit::icon_label_button(ui, tr("ui.ai_add_agent"), "plus", true, false);
-            solidcraft_ui_registry::publish_handle("prefs:ai_add", button.rect.center());
+            torno_ui_registry::publish_handle("prefs:ai_add", button.rect.center());
             if button.clicked() {
                 open_add(app);
             }
@@ -1131,8 +1131,8 @@ pub fn dialog(app: &mut SolveApp, ctx: &egui::Context) {
                 ui_kit::text(ui, tr("ai.http.warning"), ui_kit::Text::Report("http_warning", false));
             });
         for (handle, target) in [("ai_add:http_accept", "dialog:ok"), ("ai_add:http_cancel", "dialog:cancel")] {
-            if let Some(rect) = solidcraft_ui_registry::rect_of(target) {
-                solidcraft_ui_registry::publish_handle(handle, rect.center());
+            if let Some(rect) = torno_ui_registry::rect_of(target) {
+                torno_ui_registry::publish_handle(handle, rect.center());
             }
         }
         if let Some(s) = app.agent_chat.settings.add.as_mut() {
@@ -1180,8 +1180,8 @@ pub fn dialog(app: &mut SolveApp, ctx: &egui::Context) {
                         s.test = None;
                     }
                     for (_, key) in kinds {
-                        if let Some(at) = solidcraft_ui_registry::handle_at(&format!("dialog:{}:{}", tr("ui.ai_kind"), tr(key))) {
-                            solidcraft_ui_registry::publish_handle(&format!("ai_add:{key}"), at);
+                        if let Some(at) = torno_ui_registry::handle_at(&format!("dialog:{}:{}", tr("ui.ai_kind"), tr(key))) {
+                            torno_ui_registry::publish_handle(&format!("ai_add:{key}"), at);
                         }
                     }
                 });
@@ -1237,8 +1237,8 @@ pub fn dialog(app: &mut SolveApp, ctx: &egui::Context) {
                             choose_preset(s, *protocol, 0);
                         }
                         for (name, key) in [("openai", "ui.ai_add_api"), ("anthropic", "ui.ai_add_anthropic")] {
-                            if let Some(at) = solidcraft_ui_registry::handle_at(&format!("dialog:{}:{}", tr("ui.ai_protocol"), tr(key))) {
-                                solidcraft_ui_registry::publish_handle(&format!("ai_add:protocol:{name}"), at);
+                            if let Some(at) = torno_ui_registry::handle_at(&format!("dialog:{}:{}", tr("ui.ai_protocol"), tr(key))) {
+                                torno_ui_registry::publish_handle(&format!("ai_add:protocol:{name}"), at);
                             }
                         }
                     });
@@ -1248,13 +1248,13 @@ pub fn dialog(app: &mut SolveApp, ctx: &egui::Context) {
                         let picker = ui_kit::dropdown_menu(ui, "sc_ai_add_preset", choices.get(s.preset).copied().unwrap_or_default(), |ui| {
                             for (index, preset) in choices.iter().enumerate() {
                                 let response = ui_kit::list_picker(ui, preset, preset, s.preset == index);
-                                solidcraft_ui_registry::publish_handle(&format!("ai_add:preset:{preset}"), response.rect.center());
+                                torno_ui_registry::publish_handle(&format!("ai_add:preset:{preset}"), response.rect.center());
                                 if response.clicked() {
                                     choose_preset(s, s.protocol, index);
                                 }
                             }
                         });
-                        solidcraft_ui_registry::publish_handle("ai_add:preset", picker.rect.center());
+                        torno_ui_registry::publish_handle("ai_add:preset", picker.rect.center());
                     });
                     ui_kit::row(ui, tr("ui.ai_name"), |ui| {
                         ui_kit::text_field(ui, &mut s.name, "");
@@ -1305,7 +1305,7 @@ pub fn dialog(app: &mut SolveApp, ctx: &egui::Context) {
                         ui.add_enabled_ui(has_keychain, |ui| {
                             let hint = tr(if s.saved_key { "ui.ai_key_keep_hint" } else { "ui.ai_key_hint" });
                             let r = ui_kit::password_field(ui, egui::Id::unique("sc_ai_add_key"), &mut s.key, hint);
-                            solidcraft_ui_registry::publish_target("ai_add:key", r.rect);
+                            torno_ui_registry::publish_target("ai_add:key", r.rect);
                             s.list_again |= r.lost_focus();
                         });
                     });
@@ -1313,7 +1313,7 @@ pub fn dialog(app: &mut SolveApp, ctx: &egui::Context) {
                     if let Some(url) = s.insecure_http_endpoint() {
                         let mut allow = s.allow_insecure_http();
                         let r = ui_kit::checkbox(ui, tr("ai.http.allow"), &mut allow).backing_on_hover_text(tr("ai.http.warning"));
-                        solidcraft_ui_registry::publish_target("ai_add:allow_insecure_http", r.rect);
+                        torno_ui_registry::publish_target("ai_add:allow_insecure_http", r.rect);
                         if r.changed() {
                             if allow {
                                 s.confirm_insecure_http = Some(url);
@@ -1337,8 +1337,8 @@ pub fn dialog(app: &mut SolveApp, ctx: &egui::Context) {
     if app.agent_chat.settings.add.as_ref().is_some_and(|s| s.confirm_insecure_http.is_some()) {
         return;
     }
-    if let Some(rect) = solidcraft_ui_registry::rect_of("dialog:ok") {
-        solidcraft_ui_registry::publish_handle("ai_add:add", rect.center());
+    if let Some(rect) = torno_ui_registry::rect_of("dialog:ok") {
+        torno_ui_registry::publish_handle("ai_add:add", rect.center());
     }
     add |= action == ui_kit::Action::Ok;
     open &= !closed && action != ui_kit::Action::Cancel;
@@ -1505,8 +1505,8 @@ mod card_tests {
     /// before clicking a card action whose published geometry may be outside the viewport.
     fn reveal_card_action(h: &mut Harness, handle: &str) -> Result<(), String> {
         for _ in 0..32 {
-            let at = solidcraft_ui_registry::handle_at(handle).ok_or_else(|| format!("{handle}: the real card action is not published"))?;
-            let body = solidcraft_ui_registry::rect_of("prefs:page_body").ok_or("Preferences has no scroll viewport")?;
+            let at = torno_ui_registry::handle_at(handle).ok_or_else(|| format!("{handle}: the real card action is not published"))?;
+            let body = torno_ui_registry::rect_of("prefs:page_body").ok_or("Preferences has no scroll viewport")?;
             if body.contains(at) {
                 return Ok(());
             }
@@ -1526,10 +1526,10 @@ mod card_tests {
             h.call("ui.resize", json!({"width":1600,"height":4000}));
             h.call("ui.prefs", json!({"open":"Assistant","theme":theme}));
             h.frames(4);
-            let warning = solidcraft_ui_registry::rect_of("prefs:ai_mode:all:icon").unwrap();
-            assert!(solidcraft_ui_registry::rect_of("prefs:ai_mode:all").unwrap().contains_rect(warning));
-            let heading = solidcraft_ui_registry::rect_of("prefs:page_heading").unwrap();
-            let body = solidcraft_ui_registry::rect_of("prefs:page_body").unwrap();
+            let warning = torno_ui_registry::rect_of("prefs:ai_mode:all:icon").unwrap();
+            assert!(torno_ui_registry::rect_of("prefs:ai_mode:all").unwrap().contains_rect(warning));
+            let heading = torno_ui_registry::rect_of("prefs:page_heading").unwrap();
+            let body = torno_ui_registry::rect_of("prefs:page_body").unwrap();
             assert!(body.contains_rect(heading));
             let mut page_font = false;
             let mut scope_visible = false;
@@ -1546,7 +1546,7 @@ mod card_tests {
                                     .job
                                     .sections
                                     .iter()
-                                    .all(|section| section.format.font_id.size == solidcraft_theme::Tokens::get().font_page_heading);
+                                    .all(|section| section.format.font_id.size == torno_theme::Tokens::get().font_page_heading);
                         }
                     });
                 }
@@ -1561,13 +1561,13 @@ mod card_tests {
             assert!(privacy_visible, "the localized privacy note remains visible without hovering, including with AI off");
             let mut previous: Option<f32> = None;
             for key in ["assistant_availability", "permissions", "agents", "instructions", "panel", "assistant_connecting", "agent_pointer"] {
-                let section = solidcraft_ui_registry::rect_of(&format!("prefs:section:{key}")).unwrap();
+                let section = torno_ui_registry::rect_of(&format!("prefs:section:{key}")).unwrap();
                 assert!((section.left() - body.left()).abs() <= 1.0 && (section.right() - body.right()).abs() <= 1.0);
-                assert!((section.height() - (solidcraft_theme::Tokens::get().control_height + solidcraft_theme::Tokens::get().space_2)).abs() <= 1.0);
+                assert!((section.height() - (torno_theme::Tokens::get().control_height + torno_theme::Tokens::get().space_2)).abs() <= 1.0);
                 if let Some(bottom) = previous {
                     assert!((section.top() - bottom - 38.0).abs() <= 1.0, "{theme}: {key} retains the page section rhythm");
                 }
-                previous = Some(solidcraft_ui_registry::rect_of(&format!("prefs:section:{key}:body")).unwrap().bottom());
+                previous = Some(torno_ui_registry::rect_of(&format!("prefs:section:{key}:body")).unwrap().bottom());
             }
         }
     }
@@ -1597,12 +1597,12 @@ mod card_tests {
                     h.frames(30);
                     assert_eq!(h.app.prefs_window.shell.section, crate::prefs::PAGE_ASSISTANT);
                     assert!(h.app.prefs_window.shell.filter.is_empty());
-                    let slider = solidcraft_ui_registry::rect_of("prefs:agent_pointer_speed").unwrap();
-                    assert_eq!(slider, solidcraft_ui_registry::rect_of("dialog:slider:Pointer speed").unwrap());
-                    let body = solidcraft_ui_registry::rect_of("dialog:page_body").unwrap();
+                    let slider = torno_ui_registry::rect_of("prefs:agent_pointer_speed").unwrap();
+                    assert_eq!(slider, torno_ui_registry::rect_of("dialog:slider:Pointer speed").unwrap());
+                    let body = torno_ui_registry::rect_of("dialog:page_body").unwrap();
                     assert!(body.contains_rect(slider), "{query} reveals the editor inside the page");
                     assert!(
-                        solidcraft_ui_registry::handle_at("prefs:revealed").unwrap().distance(slider.center()) <= 1.0,
+                        torno_ui_registry::handle_at("prefs:revealed").unwrap().distance(slider.center()) <= 1.0,
                         "{query} reveals the slider itself"
                     );
                     let tree = h.output.accesskit_update.as_ref().unwrap();
@@ -1636,7 +1636,7 @@ mod card_tests {
                 AgentConfig {
                     id: "acp-current".into(),
                     name: "Current fixture".into(),
-                    command: "solidcraft-fixture-agent --acp".into(),
+                    command: "torno-fixture-agent --acp".into(),
                     ..Default::default()
                 },
                 AgentConfig {
@@ -1671,10 +1671,10 @@ mod card_tests {
                 h.frames(30);
                 assert_eq!(h.app.prefs_window.shell.section, crate::prefs::PAGE_ASSISTANT);
                 assert!(h.app.prefs_window.shell.filter.is_empty());
-                let card = solidcraft_ui_registry::rect_of("prefs:ai_card:api-public").unwrap();
-                assert!(solidcraft_ui_registry::rect_of("dialog:page_body").unwrap().contains_rect(card));
+                let card = torno_ui_registry::rect_of("prefs:ai_card:api-public").unwrap();
+                assert!(torno_ui_registry::rect_of("dialog:page_body").unwrap().contains_rect(card));
                 assert!(
-                    solidcraft_ui_registry::handle_at("prefs:revealed").unwrap().distance(card.center()) <= 1.0,
+                    torno_ui_registry::handle_at("prefs:revealed").unwrap().distance(card.center()) <= 1.0,
                     "{query} reveals the same complete card"
                 );
             }
@@ -1690,7 +1690,7 @@ mod card_tests {
                 h.step(&json!({"key":"Enter"})).unwrap();
                 h.frames(30);
                 assert!(h.app.prefs_window.shell.filter.is_empty());
-                assert!(solidcraft_ui_registry::rect_of("dialog:page_body").unwrap().contains_rect(solidcraft_ui_registry::rect_of(handle).unwrap()));
+                assert!(torno_ui_registry::rect_of("dialog:page_body").unwrap().contains_rect(torno_ui_registry::rect_of(handle).unwrap()));
             }
             h.app.prefs_window.shell.filter = "Permissions".into();
             h.frames(6);
@@ -1798,12 +1798,7 @@ mod card_tests {
         }));
         // An ACP default keeps the API fixture noncurrent; baseline capability polling is unchanged.
         h.app.preferences.agents = vec![
-            AgentConfig {
-                id: "acp-public".into(),
-                name: "Public ACP".into(),
-                command: "solidcraft-fixture-agent --acp".into(),
-                ..Default::default()
-            },
+            AgentConfig { id: "acp-public".into(), name: "Public ACP".into(), command: "torno-fixture-agent --acp".into(), ..Default::default() },
             AgentConfig {
                 id: "api-public".into(),
                 name: "Public endpoint".into(),
@@ -1888,7 +1883,7 @@ mod card_tests {
         crate::i18n::install();
         assert_eq!(
             capability_warning("local:4b", Some(false)).as_deref(),
-            Some("local:4b can't use SolidCraft's tools, so it can only chat. Pick a model with tool support.")
+            Some("local:4b can't use Torno's tools, so it can only chat. Pick a model with tool support.")
         );
         assert_eq!(capability_warning("local:4b", Some(true)), None);
         assert_eq!(capability_warning("local:4b", None), None);
@@ -1909,7 +1904,7 @@ mod card_tests {
         h.frames(3);
         assert_eq!(h.app.agent_chat.settings.add.as_ref().unwrap().error, refused, "the message stays while the fields do");
         // Typing the command takes the refusal away before Add is clicked again.
-        h.app.agent_chat.settings.add.as_mut().unwrap().command = "solidcraft-fixture-agent --acp".into();
+        h.app.agent_chat.settings.add.as_mut().unwrap().command = "torno-fixture-agent --acp".into();
         h.frames(3);
         assert_eq!(h.app.agent_chat.settings.add.as_ref().unwrap().error, None, "the message was about the empty command, which is gone");
         // The message is about the fields Add ran with (#641): the same fields again are refused again.
@@ -1950,7 +1945,7 @@ mod card_tests {
         assert!(h.app.agent_chat.settings.add.as_ref().unwrap().error.is_some());
         let add = h.app.agent_chat.settings.add.as_mut().unwrap();
         add.name = "Local fixture".into();
-        add.command = "solidcraft-fixture-agent --acp".into();
+        add.command = "torno-fixture-agent --acp".into();
         h.frames(3);
         h.step(&json!({"click":{"handle":"ai_add:add"}})).unwrap();
         assert!(h.app.agent_chat.settings.add.is_none());
@@ -1958,7 +1953,7 @@ mod card_tests {
         open_add(&mut h.app);
         h.frames(3);
         h.step(&json!({"click":{"handle":"ai_add:ui.ai_add_endpoint"}})).unwrap();
-        assert!(solidcraft_ui_registry::handle_at("ai_add:key").is_some());
+        assert!(torno_ui_registry::handle_at("ai_add:key").is_some());
         assert!(h.app.services.secrets.is_none(), "this fixture has no keychain");
         h.step(&json!({"click":{"handle":"ai_add:protocol:anthropic"}})).unwrap();
         {
@@ -2081,7 +2076,7 @@ mod card_tests {
         h.app.agent_chat.agent_id = Some(id.clone());
         super::super::connect(&mut h.app, &h.ctx);
         assert!(h.app.agent_chat.backend.is_some());
-        crate::documents::open_tab(&mut h.app, solidcraft_engine::Session::default()).unwrap();
+        crate::documents::open_tab(&mut h.app, torno_engine::Session::default()).unwrap();
         h.app.preferences.agents.push(AgentConfig {
             id: "unrelated".into(),
             kind: Kind::Api,
@@ -2092,7 +2087,7 @@ mod card_tests {
         h.app.agent_chat.agent_id = Some("unrelated".into());
         super::super::connect(&mut h.app, &h.ctx);
         assert!(h.app.agent_chat.backend.is_some());
-        crate::documents::open_tab(&mut h.app, solidcraft_engine::Session::default()).unwrap();
+        crate::documents::open_tab(&mut h.app, torno_engine::Session::default()).unwrap();
         h.app.agent_chat.agent_id = Some(id.clone());
         super::super::connect(&mut h.app, &h.ctx);
         assert!(h.app.agent_chat.backend.is_some());
@@ -2139,7 +2134,7 @@ mod card_tests {
         };
         let completion = queue(&mut h.app.agent_chat.settings, "revoked");
         // Main keeps picker state in the window when a different document becomes active.
-        crate::documents::open_tab(&mut h.app, solidcraft_engine::Session::default()).unwrap();
+        crate::documents::open_tab(&mut h.app, torno_engine::Session::default()).unwrap();
         assert!(h.app.agent_chat.running_id.is_empty(), "listing does not require a conversation");
         assert!(open_edit(&mut h.app, "revoked"));
         h.app.agent_chat.settings.add.as_mut().unwrap().insecure_http_url = None;
@@ -2159,7 +2154,7 @@ mod card_tests {
         for id in ["revoked", "unrelated"] {
             let mut chat = AgentChat::default();
             let _completion = queue(&mut chat.settings, id);
-            chat.disconnect_endpoint(&mut solidcraft_engine::Session::default(), "revoked");
+            chat.disconnect_endpoint(&mut torno_engine::Session::default(), "revoked");
             assert_eq!(chat.settings.card_listing.is_some(), id == "unrelated");
             assert!(chat.settings.listing.is_some(), "started listings are preserved for {id}");
         }
@@ -2189,7 +2184,7 @@ mod card_tests {
         h.call("ui.prefs", json!({"open": "AI"}));
         h.frames(4);
         reveal_card_action(&mut h, "prefs:ai_edit:custom-1").unwrap();
-        let edit = solidcraft_ui_registry::handle_at("prefs:ai_edit:custom-1").expect("an added agent has Edit");
+        let edit = torno_ui_registry::handle_at("prefs:ai_edit:custom-1").expect("an added agent has Edit");
         h.call("ui.click", json!({"x": edit.x, "y": edit.y}));
         h.frames(4);
         {
@@ -2198,7 +2193,7 @@ mod card_tests {
             assert_eq!(s.kind, AddKind::Custom);
             assert_eq!((s.name.as_str(), s.command.as_str()), ("Mine", "my-agent --acp"));
         }
-        assert!(solidcraft_ui_registry::handle_at("ai_add:ui.ai_add_custom").is_none(), "editing keeps the agent's kind");
+        assert!(torno_ui_registry::handle_at("ai_add:ui.ai_add_custom").is_none(), "editing keeps the agent's kind");
         let s = h.app.agent_chat.settings.add.as_mut().unwrap();
         s.name = "Mine, verbose".into();
         s.command = "my-agent --acp --verbose".into();
@@ -2449,7 +2444,7 @@ mod card_tests {
         h.step(&json!({"click":{"handle":"ai_add:preset"}})).unwrap();
         h.frames(3);
         // The presets outgrow the popup's height: scroll its list to the end, where OpenRouter is.
-        let top = solidcraft_ui_registry::handle_at("ai_add:preset:Ollama").unwrap();
+        let top = torno_ui_registry::handle_at("ai_add:preset:Ollama").unwrap();
         h.call("ui.scroll", json!({"x":top.x,"y":top.y,"delta":-1000}));
         h.frames(10);
         h.step(&json!({"click":{"handle":"ai_add:preset:OpenRouter"}})).unwrap();
@@ -2476,11 +2471,11 @@ mod card_tests {
         assert_eq!(requests().last().cloned(), Some(("https://openrouter.ai/api/v1/models".to_string(), true)), "with a key is another listing");
 
         // A row and a typed model.
-        assert!(solidcraft_ui_registry::handle_at("ai_add:model").is_some());
+        assert!(torno_ui_registry::handle_at("ai_add:model").is_some());
         h.step(&json!({"click":{"handle":"ai_add:model"}})).unwrap();
         h.frames(3);
-        assert!(solidcraft_ui_registry::handle_at("ai_add:model:search").is_some());
-        assert!(solidcraft_ui_registry::handle_at("ai_add:model:group:Vendor").is_some(), "an endpoint's vendors are the groups");
+        assert!(torno_ui_registry::handle_at("ai_add:model:search").is_some());
+        assert!(torno_ui_registry::handle_at("ai_add:model:group:Vendor").is_some(), "an endpoint's vendors are the groups");
         h.step(&json!({"click":{"handle":"ai_add:model:vendor/big"}})).unwrap();
         h.frames(3);
         assert_eq!(h.app.agent_chat.settings.add.as_ref().unwrap().model, "vendor/big");
@@ -2552,7 +2547,7 @@ mod card_tests {
         h.step(&json!({"call":"ui.prefs","params":{"open":"AI"}})).unwrap();
         h.frames(4);
         reveal_card_action(&mut h, "prefs:ai_model:api-1").unwrap();
-        assert!(solidcraft_ui_registry::handle_at("prefs:ai_model:api-1").is_some());
+        assert!(torno_ui_registry::handle_at("prefs:ai_model:api-1").is_some());
         assert!(seen.lock().unwrap().is_empty(), "looking at the page asks nobody");
 
         h.step(&json!({"click":{"handle":"prefs:ai_model:api-1"}})).unwrap();

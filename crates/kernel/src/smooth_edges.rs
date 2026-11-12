@@ -16,9 +16,9 @@
 //! geometry (a station that does not evaluate) keeps its existing presentation.
 use solidcore_record::Vec3;
 use solidcore_record::brep::{Brep, Loop, Shell};
-use solidcraft_geom::Mesh;
-use solidcraft_geom::brep::eval::{CurveEval, SurfaceEval};
-use solidcraft_geom::prelude::*;
+use torno_geom::Mesh;
+use torno_geom::brep::eval::{CurveEval, SurfaceEval};
+use torno_geom::prelude::*;
 
 use crate::body::Body;
 
@@ -41,7 +41,7 @@ const STATIONS: usize = 8;
 /// 1–2% step the eye tells apart on a smooth gradient. So a join this close to tangent shows no
 /// line in the shading. Exact tangency (fillets, analytic seams) reads 1e-12 or so, far inside
 /// it; real creases a model means are degrees. Tangency alone does not hide an edge ([`BEND`]).
-/// It is SolidCraft's one angle for smooth: a blend finds nothing to round below it too.
+/// It is Torno's one angle for smooth: a blend finds nothing to round below it too.
 pub(crate) const ANGLE: f64 = 0.5 * std::f64::consts::PI / 180.0;
 /// Largest difference of the two faces' normal curvatures across an edge, relative to the
 /// larger one (or to 1 / the edge's length where both are flatter), that still counts as one

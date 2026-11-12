@@ -3,8 +3,8 @@
 
 use serde_json::{Value, json};
 use solidcore_record::Vec2;
-use solidcraft_geom::prelude::*;
-use solidcraft_sketch::{ConstraintKind, Sketch};
+use torno_geom::prelude::*;
+use torno_sketch::{ConstraintKind, Sketch};
 
 use crate::Session;
 

@@ -176,7 +176,7 @@
     "blend_dropping"
   ],
   "ungraded": [
-    "watertight: SolidCraft computes it"
+    "watertight: Torno computes it"
   ],
   "what": "on #851's knife-edge part (tessellation/1263): the arc's top edge and the top front edge together chamfered 2",
   "why_not": []

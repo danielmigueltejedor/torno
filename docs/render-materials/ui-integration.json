@@ -9,10 +9,10 @@
     "readable_specification": "UI_INTEGRATION.md",
     "runtime_ready": false
   },
-  "id": "SOLIDCRAFT-RENDER-UI-001",
+  "id": "TORNO-RENDER-UI-001",
   "source_snapshots": {
     "integration_base": {
-      "repository": "0xlillith/solidcraft",
+      "repository": "0xlillith/torno",
       "branch": "lab/render-materials",
       "commit": "93a2922c5ee272fb605703ae84c05825b4a74607",
       "version": "0.18.2",

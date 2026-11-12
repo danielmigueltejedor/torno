@@ -1,7 +1,7 @@
 [book]
-title = "SolidCraft"
+title = "Torno"
 description = "An open-source parametric 3D CAD application in pure Rust: user guide and developer guide."
-authors = ["SolidCraft contributors"]
+authors = ["Torno contributors"]
 language = "en"
 src = "src"
 
@@ -10,7 +10,7 @@ build-dir = "../../target/book"
 create-missing = false
 
 [output.html]
-git-repository-url = "https://github.com/tangency-labs/solidcraft"
+git-repository-url = "https://github.com/getnodalia/torno"
 edit-url-template = "https://github.com/tangency-labs/solidcraft/edit/main/docs/book/{path}"
 site-url = "/"
 additional-css = ["theme/media.css"]

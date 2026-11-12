@@ -2,9 +2,9 @@
 //! sides an intersection curve is taken on (bodies, faces and other sketches' curves), and spun profiles.
 
 use solidcore_record::{Plane, Seg2, Vec2, Vec3};
-use solidcraft_geom::Mesh;
-use solidcraft_geom::prelude::*;
-use solidcraft_sketch::{LinkSource, WireCurve};
+use torno_geom::Mesh;
+use torno_geom::prelude::*;
+use torno_sketch::{LinkSource, WireCurve};
 
 use crate::eval::ModelState;
 
@@ -586,8 +586,8 @@ fn tri_dist(p: Vec3, t: &[Vec3; 3]) -> f64 {
 }
 
 /// Sample a fitted planar curve.
-fn link_polyline(g: &solidcraft_sketch::LinkGeom) -> Vec<Vec2> {
-    use solidcraft_sketch::LinkGeom;
+fn link_polyline(g: &torno_sketch::LinkGeom) -> Vec<Vec2> {
+    use torno_sketch::LinkGeom;
     match *g {
         LinkGeom::Line(a, b) => vec![a, b],
         LinkGeom::Circle(c, r) => (0..=96).map(|i| c + Vec2::from_angle(i as f64 / 96.0 * std::f64::consts::TAU) * r).collect(),
@@ -599,12 +599,12 @@ fn link_polyline(g: &solidcraft_sketch::LinkGeom) -> Vec<Vec2> {
             let r = c.dist(a);
             (0..=48).map(|i| c + Vec2::from_angle(s0 + sw * i as f64 / 48.0) * r).collect()
         }
-        LinkGeom::Conic { a, apex, b, rho } => (0..=32).map(|i| solidcraft_sketch::conic_point(a, apex, b, rho, i as f64 / 32.0)).collect(),
+        LinkGeom::Conic { a, apex, b, rho } => (0..=32).map(|i| torno_sketch::conic_point(a, apex, b, rho, i as f64 / 32.0)).collect(),
         LinkGeom::Ellipse { c, major, minor } => {
-            (0..=96).map(|i| solidcraft_sketch::ellipse_point(c, major, minor, i as f64 / 96.0 * std::f64::consts::TAU)).collect()
+            (0..=96).map(|i| torno_sketch::ellipse_point(c, major, minor, i as f64 / 96.0 * std::f64::consts::TAU)).collect()
         }
         LinkGeom::Spline { ref pts, control, degree, periodic, ref nurbs } => {
-            solidcraft_sketch::spline_polyline_mode(pts, control, degree, periodic, nurbs.as_ref())
+            torno_sketch::spline_polyline_mode(pts, control, degree, periodic, nurbs.as_ref())
         }
         LinkGeom::Point(_) => Vec::new(),
     }

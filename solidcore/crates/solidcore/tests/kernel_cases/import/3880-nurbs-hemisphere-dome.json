@@ -59,6 +59,6 @@
   "ungraded": [],
   "what": "a hemisphere r=20 whose curved face is a rational B-spline surface, flat disc below",
   "why_not": [
-    "body \"dome_nurbs\" is no kernel operation's output nor an operand: SolidCraft built it or changed the kernel's record"
+    "body \"dome_nurbs\" is no kernel operation's output nor an operand: Torno built it or changed the kernel's record"
   ]
 }

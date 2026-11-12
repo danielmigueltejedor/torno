@@ -8,8 +8,8 @@
 use crate::i18n::LocaleNames as _;
 use egui::Rect;
 use serde_json::{Value, json};
-use solidcraft_engine::Session;
-use solidcraft_viewport::Camera;
+use torno_engine::Session;
+use torno_viewport::Camera;
 
 use crate::SolveApp;
 use crate::ui_kit;
@@ -37,7 +37,7 @@ pub const MAX_OPEN: usize = 32;
 /// A design that is not the active one: everything that belongs to it alone.
 pub struct DocSlot {
     pub(crate) session: Session,
-    pub(crate) autosave: Option<solidcraft_engine::recovery::Autosaver>,
+    pub(crate) autosave: Option<torno_engine::recovery::Autosaver>,
     pub(crate) big_operation: bool,
     cam: Camera,
     pub(crate) pending_feature_edit: Option<crate::feature_edit::PendingFeatureEdit>,
@@ -546,9 +546,9 @@ pub(crate) fn session_at_mut<'a>(app: &'a mut SolveApp, path: &str) -> Option<&'
 /// Select an already-open saved design without reloading or framing it. Identity is derived
 /// from the current session path so Save As immediately changes which file the tab owns.
 pub(crate) fn reuse_path(app: &mut SolveApp, path: &str) -> Result<bool, String> {
-    solidcraft_engine::io::vfs::check(path).map_err(|e| e.to_string())?;
+    torno_engine::io::vfs::check(path).map_err(|e| e.to_string())?;
     // Imports create unsaved designs, rather than owning their source file.
-    if solidcraft_engine::io::is_step_path(path) || solidcraft_engine::io::is_mesh_path(path) {
+    if torno_engine::io::is_step_path(path) || torno_engine::io::is_mesh_path(path) {
         return Ok(false);
     }
     let matches = |s: &Session| s.path.as_deref().is_some_and(|p| same_path(p, path));
@@ -654,7 +654,7 @@ pub fn adopt(app: &mut SolveApp, session: Session) -> bool {
 pub fn export(app: &mut SolveApp) -> Result<Value, String> {
     let revision = app.session.design_revision();
     let design = app.session.design();
-    let text = String::from_utf8(solidcraft_engine::io::write_design(&design)).map_err(|e| e.to_string())?;
+    let text = String::from_utf8(torno_engine::io::write_design(&design)).map_err(|e| e.to_string())?;
     Ok(json!({"name": design.name, "revision": revision, "dirty": app.session.is_dirty(), "format": "json", "text": text}))
 }
 
@@ -667,7 +667,7 @@ pub fn import(app: &mut SolveApp, p: &Value) -> Result<Value, String> {
         return Err("a file is being opened or saved, or designs are being closed: try again".into());
     }
     let text = p.get("text").and_then(Value::as_str).ok_or("missing `text` (the design's JSON)")?;
-    let mut doc = solidcraft_engine::io::read_design(text.as_bytes()).map_err(|e| e.to_string())?;
+    let mut doc = torno_engine::io::read_design(text.as_bytes()).map_err(|e| e.to_string())?;
     if let Some(name) = p.get("name").and_then(Value::as_str).map(str::trim).filter(|n| !n.is_empty()) {
         doc.name = name.to_string();
     }
@@ -917,7 +917,7 @@ fn quit_step(app: &mut SolveApp) {
             app.docs.quitting = None;
             app.quit_requested = true;
             // The next launch reopens the designs saved to a file (#5542).
-            let sessions: Vec<&solidcraft_engine::Session> = match app.docs.slots.is_empty() {
+            let sessions: Vec<&torno_engine::Session> = match app.docs.slots.is_empty() {
                 true => vec![&app.session],
                 false => app.docs.slots.iter().map(|s| s.as_ref().map_or(&app.session, |d| &d.session)).collect(),
             };
@@ -994,8 +994,8 @@ fn tab_paths(app: &SolveApp) -> Vec<Option<String>> {
 /// saved design has changes not saved yet (`dirty`), which the bullet after a cut name no longer
 /// shows (#11408). The tab puts its full name above when it cuts it short (#5868).
 fn tab_place(path: Option<&str>, dirty: bool) -> String {
-    let place = path.map_or_else(|| solidcraft_ui_text::tr_label("Not saved yet").to_string(), crate::home::friendly_path);
-    if dirty && path.is_some() { format!("{place}\n{}", solidcraft_ui_text::tr("document.tab_unsaved_changes")) } else { place }
+    let place = path.map_or_else(|| torno_ui_text::tr_label("Not saved yet").to_string(), crate::home::friendly_path);
+    if dirty && path.is_some() { format!("{place}\n{}", torno_ui_text::tr("document.tab_unsaved_changes")) } else { place }
 }
 
 /// The designs a launch with no file to open reopens: those open at the last quit that still
@@ -1016,13 +1016,13 @@ pub fn reopen_plan(app: &SolveApp, dir: Option<&std::path::Path>) -> (Vec<String
     let Some(dir) = dir else {
         return (designs_to_reopen(app), Vec::new());
     };
-    let stuck = solidcraft_engine::recovery::stuck_reopen(dir);
+    let stuck = torno_engine::recovery::stuck_reopen(dir);
     if !stuck.is_empty() {
-        solidcraft_engine::recovery::clear_reopen(dir);
+        torno_engine::recovery::clear_reopen(dir);
         return (Vec::new(), stuck);
     }
     let reopen = designs_to_reopen(app);
-    solidcraft_engine::recovery::begin_reopen(dir, &reopen);
+    torno_engine::recovery::begin_reopen(dir, &reopen);
     (reopen, Vec::new())
 }
 
@@ -1124,7 +1124,7 @@ pub fn control(app: &mut SolveApp, p: &Value) -> Value {
     })
 }
 
-/// Where SolidCraft's tab strip publishes its parts (scripts and scenarios use these names).
+/// Where Torno's tab strip publishes its parts (scripts and scenarios use these names).
 const TAB_HANDLES: crate::app_bar::TabHandles<'static> = crate::app_bar::TabHandles {
     tab: "tab:design:",
     close: "tab:close:",
@@ -1148,7 +1148,7 @@ pub fn tabs(app: &mut SolveApp, ui: &mut egui::Ui, r: Rect, x0: f32, x1: f32) {
     let info = tabs_info(app);
     let paths = tab_paths(app);
     let n = info.len();
-    let locale = solidcraft_ui_text::Locale::for_language(&app.preferences.language);
+    let locale = torno_ui_text::Locale::for_language(&app.preferences.language);
     let names: Vec<String> = info.iter().map(|(name, _)| locale.given_name(name)).collect();
     let places: Vec<String> = info.iter().zip(&paths).map(|((_, dirty), path)| tab_place(path.as_deref(), *dirty)).collect();
     let selected = if app.docs.slots.is_empty() { 0 } else { app.docs.active };
@@ -1173,9 +1173,9 @@ pub fn tabs(app: &mut SolveApp, ui: &mut egui::Ui, r: Rect, x0: f32, x1: f32) {
                 max: MAX_DESIGN_NAME,
             }),
             menu: &TAB_MENU,
-            close_name: solidcraft_ui_text::tr("ui.close_tab"),
+            close_name: torno_ui_text::tr("ui.close_tab"),
             close_tip: "Close",
-            more_tip: solidcraft_ui_text::tr_label("All open designs"),
+            more_tip: torno_ui_text::tr_label("All open designs"),
             new_tip: &new_tip,
             id: tab_strip_id(),
             handles: TAB_HANDLES,
@@ -1251,7 +1251,7 @@ fn renaming_tab_state(rename: Option<&crate::context_menu::Rename>) -> bool {
 
 /// Starts editing the selected design's name in its tab, with the name as shown selected.
 fn start_tab_rename(app: &mut SolveApp, name: &str, tab: Rect) {
-    let text = solidcraft_ui_text::Locale::for_language(&app.preferences.language).given_name(name);
+    let text = torno_ui_text::Locale::for_language(&app.preferences.language).given_name(name);
     app.menu.rename = Some(crate::context_menu::Rename {
         what: crate::context_menu::RenameWhat::Component(0),
         text,
@@ -1272,7 +1272,7 @@ pub enum Answer {
 
 /// The "save changes?" prompt for a tab being closed, or for each unsaved design when quitting.
 pub fn prompt(app: &mut SolveApp, ctx: &egui::Context) {
-    let _language = solidcraft_ui_text::scope(&app.preferences.language);
+    let _language = torno_ui_text::scope(&app.preferences.language);
     quit_step(app);
     // Saved, it asks the Capture Position question first (#9736): that question is the one to
     // answer meanwhile, not this one again.
@@ -1308,16 +1308,16 @@ pub fn prompt(app: &mut SolveApp, ctx: &egui::Context) {
     }
     let grouped = app.docs.group.is_some();
     let title = if let Some(group) = &app.docs.group {
-        solidcraft_ui_text::format("document.save_many", &[("n", &group.rows.len().to_string())])
+        torno_ui_text::format("document.save_many", &[("n", &group.rows.len().to_string())])
     } else {
-        solidcraft_ui_text::format("document.save_changes", &[("name", &name_display)])
+        torno_ui_text::format("document.save_changes", &[("name", &name_display)])
     };
-    let save_label = solidcraft_ui_text::tr(if grouped { "document.save_selected" } else { "ui.save" });
+    let save_label = torno_ui_text::tr(if grouped { "document.save_selected" } else { "ui.save" });
     let mut show_tab = None;
     let mut row_action = None;
     let (closed, action) = ui_kit::Confirm::new(egui::Id::unique("sc_close_prompt"), "status_warning", &title)
         .tone(ui_kit::Tone::Warning)
-        .actions(save_label, solidcraft_ui_text::tr("ui.cancel"), Some(solidcraft_ui_text::tr("ui.don_t_save")))
+        .actions(save_label, torno_ui_text::tr("ui.cancel"), Some(torno_ui_text::tr("ui.don_t_save")))
         .secondary_left()
         .selected(match choice {
             Answer::Save => ui_kit::Action::Ok,
@@ -1326,7 +1326,7 @@ pub fn prompt(app: &mut SolveApp, ctx: &egui::Context) {
         })
         .show(ctx, true, |ui| {
             if let Some(group) = app.docs.group.as_mut() {
-                let t = solidcraft_theme::Tokens::get();
+                let t = torno_theme::Tokens::get();
                 let row_height = t.control_height + t.font_small + t.space_8 + t.space_8;
                 let chrome = t.form_close_size + t.form_footer_height + t.space_24 * 3.0;
                 let height = (row_height * 8.0).min((ctx.content_rect().height() - chrome).max(t.control_height));
@@ -1343,7 +1343,7 @@ pub fn prompt(app: &mut SolveApp, ctx: &egui::Context) {
                                     ui.with_layout(egui::Layout::right_to_left(egui::Align::Min), |ui| {
                                         ui.spacing_mut().item_spacing.x = t.space_8;
                                         for (key, save) in [("document.discard_row", false), ("document.save_row", true)] {
-                                            let button = ui_kit::button(ui, solidcraft_ui_text::tr(key), ui_kit::Button::Small);
+                                            let button = ui_kit::button(ui, torno_ui_text::tr(key), ui_kit::Button::Small);
                                             let action = if save { "save" } else { "discard" };
                                             crate::scenario::publish_target(&format!("save_many:{action}:{index}"), button.rect);
                                             if button.clicked() {
@@ -1371,7 +1371,7 @@ pub fn prompt(app: &mut SolveApp, ctx: &egui::Context) {
                                                 }
                                                 let path = ui_kit::text(
                                                     ui,
-                                                    session.path.as_deref().unwrap_or(solidcraft_ui_text::tr("document.not_saved_yet")),
+                                                    session.path.as_deref().unwrap_or(torno_ui_text::tr("document.not_saved_yet")),
                                                     ui_kit::Text::Note("save_path"),
                                                 );
                                                 crate::scenario::publish_rect(&format!("save_many:path:{index}"), path.rect);
@@ -1388,7 +1388,7 @@ pub fn prompt(app: &mut SolveApp, ctx: &egui::Context) {
             } else {
                 ui_kit::text(
                     ui,
-                    &solidcraft_ui_text::format("document.unsaved_changes", &[("name", &name_display)]),
+                    &torno_ui_text::format("document.unsaved_changes", &[("name", &name_display)]),
                     ui_kit::Text::Report("unsaved", false),
                 );
             }
@@ -1516,7 +1516,7 @@ pub(crate) fn saved_for_close(app: &mut SolveApp) {
     batch_step(app);
 }
 
-/// Where SolidCraft's document tab strip keeps its state.
+/// Where Torno's document tab strip keeps its state.
 fn tab_strip_id() -> egui::Id {
     egui::Id::unique("sc_doc_tabs")
 }
@@ -1537,7 +1537,7 @@ use crate::app_bar::{drop_slot, tab_layout as layout, tab_shape};
 #[cfg(test)]
 use egui::{pos2, vec2};
 #[cfg(test)]
-use solidcraft_theme::Tokens;
+use torno_theme::Tokens;
 
 /// Whether the selected tab's design name is being edited in the tab.
 #[cfg(test)]
@@ -1549,12 +1549,12 @@ fn renaming_tab(app: &SolveApp) -> bool {
 mod tests {
     #[test]
     fn reopening_saved_design_preserves_dirty_session_and_view() {
-        let mut a = super::SolveApp::new(solidcraft_engine::Session::default(), Default::default());
-        let path = std::env::temp_dir().join(format!("solidcraft-reopen-{}.solidcraft", std::process::id()));
+        let mut a = super::SolveApp::new(torno_engine::Session::default(), Default::default());
+        let path = std::env::temp_dir().join(format!("torno-reopen-{}.solidcraft", std::process::id()));
         let path = path.to_string_lossy().into_owned();
         a.session.execute("file.save", &serde_json::json!({"path": path})).unwrap();
         a.session.execute("solid.box", &serde_json::json!({"length": 10, "width": 12, "height": 14})).unwrap();
-        a.session.selection = vec![solidcraft_engine::Sel::Body { name: "Body1".into() }];
+        a.session.selection = vec![torno_engine::Sel::Body { name: "Body1".into() }];
         a.cam.distance = 123.0;
         a.session.visibility.hidden_profiles = vec![7];
         let doc = a.session.doc.clone();
@@ -1641,7 +1641,7 @@ mod tests {
 
     #[test]
     fn saved_path_identity_uses_the_filesystem_without_folding_case() {
-        let dir = std::env::temp_dir().join(format!("solidcraft-tab-paths-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("torno-tab-paths-{}", std::process::id()));
         std::fs::create_dir_all(dir.join("other")).unwrap();
         let path = dir.join("design.solidcraft");
         std::fs::write(&path, b"identity test").unwrap();
@@ -1968,7 +1968,7 @@ mod tests {
         assert_eq!(rows.as_array().unwrap().len(), 1);
         assert_eq!((rows[0]["index"].clone(), rows[0]["selected"].clone()), (json!(1), json!(true)));
         assert!(dirty(&h.app, 1));
-        let design = solidcraft_engine::io::read_design(&std::fs::read(file).unwrap()).unwrap();
+        let design = torno_engine::io::read_design(&std::fs::read(file).unwrap()).unwrap();
         assert_eq!(design.features.len(), 1);
         control(&mut h.app, &json!({"answer":"cancel"}));
         assert_eq!(h.app.docs.count(), 3, "Cancel keeps the remaining tabs");
@@ -2061,7 +2061,7 @@ mod tests {
         crate::file_picker::tick(&mut h.app, &h.ctx);
         crate::save_job::tick(&mut h.app, true);
         assert!(active_is_blank(&h.app));
-        let design = solidcraft_engine::io::read_design(&std::fs::read(file).unwrap()).unwrap();
+        let design = torno_engine::io::read_design(&std::fs::read(file).unwrap()).unwrap();
         assert_eq!(design.features.len(), 1);
         assert_eq!(std::fs::read_dir(&h.dir).unwrap().count(), 1, "only the selected design was saved");
     }
@@ -2083,7 +2083,7 @@ mod tests {
         crate::save_job::tick(&mut h.app, true);
         assert!(h.app.quit_requested);
         for (file, features) in [(&first, 1), (&second, 2)] {
-            let design = solidcraft_engine::io::read_design(&std::fs::read(file).unwrap()).unwrap();
+            let design = torno_engine::io::read_design(&std::fs::read(file).unwrap()).unwrap();
             assert_eq!(design.features.len(), features);
         }
         h.app = four_tabs();
@@ -2183,7 +2183,7 @@ mod tests {
             }
             previous_path = Some(path);
         }
-        if let Ok(dir) = std::env::var("SOLIDCRAFT_SAVE_MANY_EVIDENCE") {
+        if let Ok(dir) = std::env::var("TORNO_SAVE_MANY_EVIDENCE") {
             let bounds = crate::scenario::rect_of("dialog:window").unwrap().expand(Tokens::get().space_24);
             let image = ui_kit::raster_test_shapes(&h.ctx, output.shapes, output.pixels_per_point, bounds, &textures);
             std::fs::create_dir_all(&dir).unwrap();
@@ -2455,7 +2455,7 @@ mod tests {
     fn tabs_keep_their_own_design() {
         let mut a = app();
         a.run("solid.box", json!({"length": 10, "width": 10, "height": 10})).unwrap();
-        a.session.selection = vec![solidcraft_engine::Sel::Body { name: "Body1".into() }];
+        a.session.selection = vec![torno_engine::Sel::Body { name: "Body1".into() }];
         a.cam.distance = 123.0;
         new_design(&mut a);
         assert_eq!(a.docs.count(), 2);
@@ -2506,7 +2506,7 @@ mod tests {
 
         let mut a = app();
         a.preferences.save_prompt_one_at_a_time = true;
-        let file = std::env::temp_dir().join(format!("solidcraft-quit-save-{}.solidcraft", std::process::id()));
+        let file = std::env::temp_dir().join(format!("torno-quit-save-{}.solidcraft", std::process::id()));
         let _ = std::fs::remove_file(&file);
         a.run("solid.box", json!({"length": 10, "width": 10, "height": 10})).unwrap();
         a.run("file.save_as", json!({"path": file.to_string_lossy()})).unwrap();
@@ -2523,7 +2523,7 @@ mod tests {
         crate::save_job::tick(&mut a, true);
         assert!(!dirty(&a, 0), "saved");
         assert_eq!(
-            std::fs::read(&file).ok().and_then(|b| solidcraft_engine::io::read_design(&b).ok()).map(|d| d.features.len()),
+            std::fs::read(&file).ok().and_then(|b| torno_engine::io::read_design(&b).ok()).map(|d| d.features.len()),
             Some(2),
             "the file holds the change"
         );
@@ -2548,7 +2548,7 @@ mod tests {
     /// reason said, and the launch after that reopens normally again.
     #[test]
     fn reopen_plan_skips_what_killed_the_last_session() {
-        let dir = std::env::temp_dir().join(format!("solidcraft-reopen-plan-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("torno-reopen-plan-{}", std::process::id()));
         let _ = std::fs::remove_dir_all(&dir);
         std::fs::create_dir_all(&dir).unwrap();
         let file = dir.join("part.solidcraft");
@@ -2591,7 +2591,7 @@ mod tests {
         assert!(!a.quit_requested && a.docs.quitting.is_none() && a.session.is_dirty());
 
         // A picked file: saved, then quit.
-        let file = std::env::temp_dir().join(format!("solidcraft-quit-saveas-{}.solidcraft", std::process::id()));
+        let file = std::env::temp_dir().join(format!("torno-quit-saveas-{}.solidcraft", std::process::id()));
         let _ = std::fs::remove_file(&file);
         let to = file.to_string_lossy().to_string();
         a.services.pick_save = Some(Box::new(move |_: &str, _: &[&str]| Box::pin(std::future::ready(Some(to.clone())))));
@@ -2702,7 +2702,7 @@ mod tests {
         let text = a.session.design().to_json();
         let mut c = app();
         c.preferences.hide_origin = true;
-        c.session = Session::new(solidcraft_engine::doc::Document::from_json(&text).unwrap());
+        c.session = Session::new(torno_engine::doc::Document::from_json(&text).unwrap());
         assert!(c.origin_shown() && c.session.visibility == a.session.visibility);
     }
 
@@ -2754,7 +2754,7 @@ mod tests {
     fn adopt_reuses_a_blank_design() {
         let mut a = app();
         let mut s = Session::default();
-        s.run_script(&solidcraft_engine::sample::script()).unwrap();
+        s.run_script(&torno_engine::sample::script()).unwrap();
         adopt(&mut a, s);
         assert_eq!(a.docs.count(), 1);
         assert!(!a.session.doc.features.is_empty());
@@ -2766,17 +2766,17 @@ mod tests {
     }
 
     /// The items picked in the open dialog's first input.
-    fn dialog_picks(a: &SolveApp) -> Vec<solidcraft_engine::Sel> {
+    fn dialog_picks(a: &SolveApp) -> Vec<torno_engine::Sel> {
         a.dialog.as_ref().and_then(|d| d.inputs.first()).map(|i| i.items.clone()).unwrap_or_default()
     }
 
     /// Tab 1: a box measured between two corners, on INSPECT. Tab 2: a sketch with the Line tool.
-    fn measuring_and_drawing(keep: bool) -> (SolveApp, Vec<solidcraft_engine::Sel>) {
+    fn measuring_and_drawing(keep: bool) -> (SolveApp, Vec<torno_engine::Sel>) {
         let mut a = app();
         a.preferences.keep_work_on_tab_switch = keep;
         a.run("solid.box", json!({"length": 3, "width": 4, "height": 12, "body_name": "Box"})).unwrap();
         a.session.selection =
-            [[0.0, 0.0, 0.0], [3.0, 4.0, 12.0]].into_iter().map(|p| solidcraft_engine::Sel::Vertex { body: "Box".into(), point: p.into() }).collect();
+            [[0.0, 0.0, 0.0], [3.0, 4.0, 12.0]].into_iter().map(|p| torno_engine::Sel::Vertex { body: "Box".into(), point: p.into() }).collect();
         a.ui.tab = "INSPECT".into();
         a.start("inspect.measure");
         let picks = dialog_picks(&a);

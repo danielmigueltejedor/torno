@@ -13,8 +13,8 @@
 //! station is the plain loft's control points moved by an affine map, so each is exact too.
 
 use solidcore_record::{Plane, Seg2, Vec3};
-use solidcraft_geom::bspline::CurveN;
-use solidcraft_geom::prelude::*;
+use torno_geom::bspline::CurveN;
+use torno_geom::prelude::*;
 
 use crate::sweep_path::RailFit;
 use crate::{KernelError, Result};
@@ -141,7 +141,7 @@ pub(crate) fn railed(sections: &[Section], closed: bool, rails: &[Vec<Vec3>], fi
         ));
     }
     let ctrl: Vec<Vec<Vec<Vec3>>> = sections.iter().map(|s| s.curves.iter().map(|c| points(c).0).collect()).collect();
-    let mut bounds = solidcraft_geom::Aabb3::EMPTY;
+    let mut bounds = torno_geom::Aabb3::EMPTY;
     for p in ctrl.iter().flatten().flatten() {
         if !p.is_finite() {
             return Err(fail("sections"));
@@ -392,7 +392,7 @@ fn centroid(section: &[CurveN<4>]) -> Option<Vec3> {
                 continue;
             }
             let (mid, half) = (0.5 * (a + b), 0.5 * (b - a));
-            for (x, wt) in solidcraft_geom::bspline::GAUSS_8 {
+            for (x, wt) in torno_geom::bspline::GAUSS_8 {
                 let ([hx, hy, hz, hw], [dx, dy, dz, dw]) = c.eval(mid + half * x)?;
                 if !(hw.abs() > 1e-300) {
                     return None;

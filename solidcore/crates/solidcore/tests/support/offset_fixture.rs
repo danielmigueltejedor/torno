@@ -273,7 +273,7 @@ fn working_lists(region: RegionId) -> [ObjectRef; 2] {
     })
 }
 
-/// `SmApiShellBrepFull` as SolidCraft's `smlib_shell` and the difftest runner call it:
+/// `SmApiShellBrepFull` as Torno's `smlib_shell` and the difftest runner call it:
 /// `part` (B-rep 0) is copied with the `SmBrep` copy constructor and the copy shelled,
 /// `open` (faces of `part`) removed.
 pub fn api_shell(

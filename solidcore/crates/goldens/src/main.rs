@@ -12,7 +12,7 @@
 //!          --jobs N (-j; default 1, 0 = all cores)   # units in N child processes (`goldens::jobs`)
 //!          --report-dir <dir>  --no-report   # where `--jobs` keeps its unit times
 //! cargo run -p goldens -- --ssi-corpus [--tol 1e-6|default] [--jobs N] [glob]
-//! cargo run -p goldens -- --solidcraft-cases [glob]
+//! cargo run -p goldens -- --torno-cases [glob]
 //! cargo run -p goldens -- --step-corpus [--constructor] [--jobs N] [glob]
 //! ```
 //! Exit status: 0 no failures, 1 any failure, 2 usage / harness setup error.
@@ -28,7 +28,7 @@ const USAGE: &str = "usage: goldens [--unit <id>]... [--all] (--goldens [--bless
        [--seeds N] [--filter <substr>] [--jobs N] [--report-dir <dir>] [--no-report]
        goldens --list [--seeds N]
        goldens --ssi-corpus [--tol 1e-6|default] [--jobs N] [--report-dir <dir>] [--no-report] [case-glob]
-       goldens --solidcraft-cases [--report-dir <dir>] [--no-report] [case-glob]
+       goldens --torno-cases [--report-dir <dir>] [--no-report] [case-glob]
        goldens --step-corpus [--constructor] [--jobs N] [--report-dir <dir>] [--no-report] [file-glob]";
 
 /// Default child processes of `--ssi-corpus` and `--step-corpus`.
@@ -49,7 +49,7 @@ struct Args {
     report_dir: Option<PathBuf>,
     no_report: bool,
     ssi_corpus: bool,
-    solidcraft_cases: bool,
+    torno_cases: bool,
     step_corpus: bool,
     constructor: bool,
     tol: Option<String>,
@@ -84,7 +84,7 @@ fn parse_args() -> Result<Args, String> {
             "--report-dir" => a.report_dir = Some(PathBuf::from(val("--report-dir")?)),
             "--no-report" => a.no_report = true,
             "--ssi-corpus" => a.ssi_corpus = true,
-            "--solidcraft-cases" => a.solidcraft_cases = true,
+            "--torno-cases" => a.torno_cases = true,
             "--step-corpus" => a.step_corpus = true,
             "--constructor" => a.constructor = true,
             "--tol" => a.tol = Some(val("--tol")?),
@@ -103,7 +103,7 @@ fn parse_args() -> Result<Args, String> {
             "--reverse" => a.reverse = true,
             "-h" | "--help" => return Err(String::new()),
             other
-                if (a.ssi_corpus || a.solidcraft_cases || a.step_corpus)
+                if (a.ssi_corpus || a.torno_cases || a.step_corpus)
                     && !other.starts_with('-')
                     && a.glob.is_none() =>
             {
@@ -159,13 +159,13 @@ fn main() -> ExitCode {
         return goldens::step::run_corpus(&root, &opts);
     }
 
-    if args.solidcraft_cases {
-        let opts = goldens::solidcraft::CasesOptions {
+    if args.torno_cases {
+        let opts = goldens::torno::CasesOptions {
             glob: args.glob.clone(),
             report_dir: args.report_dir.clone(),
             no_report: args.no_report,
         };
-        return goldens::solidcraft::run_cases(&root, &opts);
+        return goldens::torno::run_cases(&root, &opts);
     }
 
     if args.ssi_corpus {

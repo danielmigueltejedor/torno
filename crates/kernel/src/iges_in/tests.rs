@@ -1,7 +1,7 @@
 use super::*;
 use crate::{Body, BoolOp, ExportBody, StepHeader, boolean, box_solid, cylinder, fillet, iges_export_bodies, measure, sphere, torus};
 use solidcore_record::Vec3;
-use solidcraft_geom::prelude::*;
+use torno_geom::prelude::*;
 
 fn rel(a: f64, b: f64) -> f64 {
     (a - b).abs() / b.abs().max(1e-9)
@@ -401,7 +401,7 @@ fn trim_pieces_that_miss_their_corner_are_closed_onto_it() {
     assert!(imp.warnings.is_empty(), "{:?}", imp.warnings);
     assert!(imp.bodies[0].closed);
     let body = &imp.bodies[0].body;
-    let check = body.smlib().unwrap().check(solidcraft_smlib::CheckLevel::All).unwrap();
+    let check = body.smlib().unwrap().check(torno_smlib::CheckLevel::All).unwrap();
     assert!(check.is_valid(), "{check}");
     for v in &body.record().vertices {
         assert!(v.tolerance <= body.record().tolerance, "a vertex {:?} kept a gap in its tolerance {}", v.point, v.tolerance);
@@ -605,5 +605,5 @@ fn a_curve_over_a_tiny_knot_span_still_bounds_its_faces() {
 #[test]
 fn the_global_sections_native_system_becomes_the_originating_system() {
     let imp = round_trip(&box_solid(Vec3::ZERO, Vec3::new(10.0, 20.0, 30.0)).unwrap());
-    assert_eq!(imp.system, "SolidCraft");
+    assert_eq!(imp.system, "Torno");
 }

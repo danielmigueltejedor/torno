@@ -137,7 +137,7 @@
   "ungraded": [],
   "what": "a body patterned 3 times along a half circle r20 with orientation path: each copy turns with the tangent",
   "why_not": [
-    "body \"Key (2)\" is no kernel operation's output nor an operand: SolidCraft built it or changed the kernel's record",
-    "body \"Key (3)\" is no kernel operation's output nor an operand: SolidCraft built it or changed the kernel's record"
+    "body \"Key (2)\" is no kernel operation's output nor an operand: Torno built it or changed the kernel's record",
+    "body \"Key (3)\" is no kernel operation's output nor an operand: Torno built it or changed the kernel's record"
   ]
 }

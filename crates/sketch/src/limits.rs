@@ -1,4 +1,4 @@
-//! The largest sketch SolidCraft builds (#10874). [`DEFAULT_POINTS`] is the limit sketches have
+//! The largest sketch Torno builds (#10874). [`DEFAULT_POINTS`] is the limit sketches have
 //! always had; the app may raise it (Preferences › Sketch › Largest sketch), never past
 //! [`CEILING_POINTS`]. Every place that adds points, curves or constraints asks [`max_points`],
 //! [`max_curves`] or [`max_constraints`] for the limit in force. Reading a sketch that is

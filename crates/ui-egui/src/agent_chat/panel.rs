@@ -6,11 +6,11 @@ use crate::ui_kit::BackingTooltipExt as _;
 use crate::ui_kit::type_face::RichTextExt as _;
 use crate::ui_kit::{Container, Edge, Surface};
 use egui::{Align, Align2, Color32, Id, Layout, Rect, RichText, Sense, Stroke, pos2, vec2};
-use solidcraft_engine::panels::Flow;
+use torno_engine::panels::Flow;
 
 use super::*;
 use crate::ui_kit;
-use solidcraft_theme::Tokens;
+use torno_theme::Tokens;
 
 pub const MIN_WIDTH: f32 = 280.0;
 pub const MAX_WIDTH: f32 = 760.0;
@@ -18,7 +18,7 @@ pub const MAX_WIDTH: f32 = 760.0;
 const STRIP: f32 = 30.0;
 
 /// Where the panel is and how it is folded: the panel's own preferences. The host keeps them (in
-/// SolidCraft, its Preferences, so they come back next time); the panel reads and changes this copy.
+/// Torno, its Preferences, so they come back next time); the panel reads and changes this copy.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct AgentPanelPrefs {
     /// Docked on the left edge (else the right).
@@ -258,7 +258,7 @@ pub struct PanelView {
 }
 
 impl PanelView {
-    /// The view of SolidCraft's state the panel draws from now.
+    /// The view of Torno's state the panel draws from now.
     pub fn of(app: &mut SolveApp, ctx: &egui::Context) -> Self {
         let current = agents::current(app);
         let permission_agent =
@@ -283,7 +283,7 @@ impl PanelView {
             tip: tip(app),
             toggle_keys: crate::keymap::keys(app, "ui.assistant"),
             capturing_keys: crate::keymap::capturing(app),
-            rtl: crate::i18n::panel_direction(&app.preferences.language) == solidcraft_engine::panels::Direction::Rtl,
+            rtl: crate::i18n::panel_direction(&app.preferences.language) == torno_engine::panels::Direction::Rtl,
             shared: crate::panel_runtime::shared_content_measurement(ctx),
             composer_height: crate::panel_runtime::shared_content_composer_height(ctx),
         }
@@ -368,12 +368,12 @@ const PREVIEW_MAX: (f32, f32) = (560.0, 380.0);
 
 /// Show or hide the panel (a folded panel unfolds first).
 pub fn toggle(app: &mut SolveApp) {
-    use solidcraft_engine::panels::{LayoutAction, Mutation};
+    use torno_engine::panels::{LayoutAction, Mutation};
 
     let mut prefs = AgentPanelPrefs::read(&app.preferences);
     let shared = app.panel_runtime().filter(|_| !prefs.popped).and_then(|runtime| {
         let layout = runtime.layout().layout();
-        let panel = layout.instances.iter().find(|panel| panel.kind.0 == "solidcraft.assistant")?;
+        let panel = layout.instances.iter().find(|panel| panel.kind.0 == "torno.assistant")?;
         let section = layout.containing(&panel.id).ok();
         let reveal = !app.agent_chat.open || !panel.requested_open || section.is_some_and(|section| section.collapsed || section.active != panel.id);
         let mutations = if reveal {
@@ -398,7 +398,7 @@ pub fn toggle(app: &mut SolveApp) {
         if let Err(reason) = app.dispatch_panel_layout(action) {
             app.agent_chat.open = was_open;
             let _ = crate::panel_runtime::refresh_production(app);
-            app.set_status(solidcraft_engine::panels::commands::error_text(reason), true);
+            app.set_status(torno_engine::panels::commands::error_text(reason), true);
         }
         return;
     }
@@ -545,7 +545,7 @@ pub fn draw(chat: &mut AgentChat, view: &PanelView, prefs: &mut AgentPanelPrefs,
         host.edge_frame(t.dialog_body),
         |ui| ui_kit::scope(ui, |ui| body(chat, view, ui, left, prefs)),
     );
-    solidcraft_ui_registry::publish_rect("agent_chat:panel", r.response.rect);
+    torno_ui_registry::publish_rect("agent_chat:panel", r.response.rect);
     chat.panel_rect = Some(r.response.rect);
     #[cfg(not(target_arch = "wasm32"))]
     gallery_window(chat, &ctx);
@@ -619,7 +619,7 @@ pub fn draw_content(chat: &mut AgentChat, view: &PanelView, prefs: &AgentPanelPr
     }
     chat.panel_rect = Some(rect);
     chat.drop_rect = Some(rect);
-    solidcraft_ui_registry::publish_rect("agent_chat:panel", rect);
+    torno_ui_registry::publish_rect("agent_chat:panel", rect);
     ui_kit::scope(ui, |ui| content(chat, view, ui, flow, prefs));
 }
 
@@ -707,7 +707,7 @@ fn floating(chat: &mut AgentChat, view: &PanelView, ui: &mut egui::Ui, prefs: &m
                 Rect::from_x_y_ranges(rect.left()..=rect.left() + t.space_4, rect.y_range())
             };
             let response = ui.interact(rail, Id::unique("sc_agent_chat_resize"), Sense::drag()).on_hover_cursor(egui::CursorIcon::ResizeHorizontal);
-            solidcraft_ui_registry::publish_handle("agent_chat:resize", rail.center());
+            torno_ui_registry::publish_handle("agent_chat:resize", rail.center());
             if response.dragged() {
                 let delta = ui.input(|i| i.pointer.delta().x) * if left { 1.0 } else { -1.0 };
                 if delta.is_finite() {
@@ -719,7 +719,7 @@ fn floating(chat: &mut AgentChat, view: &PanelView, ui: &mut egui::Ui, prefs: &m
         let rect = card.response.rect;
         chat.panel_rect = Some(rect);
         chat.drop_rect = Some(rect);
-        solidcraft_ui_registry::publish_rect("agent_chat:panel", rect);
+        torno_ui_registry::publish_rect("agent_chat:panel", rect);
     }
     #[cfg(not(target_arch = "wasm32"))]
     gallery_window(chat, &ctx);
@@ -811,7 +811,7 @@ fn context_chips(ui: &mut egui::Ui, context: &Context, gone: &[bool], handle: &s
                                     .inner
                                 })
                                 .response;
-                            solidcraft_ui_registry::publish_handle(&format!("{handle}:chip:{place}"), chip.rect.center());
+                            torno_ui_registry::publish_handle(&format!("{handle}:chip:{place}"), chip.rect.center());
                             // Hovering a chip lights its target in the model.
                             if chip.hovered() {
                                 events.hovered = Some(*place);
@@ -873,7 +873,7 @@ fn picture_strip(ui: &mut egui::Ui, n: usize, pictures: &[Picture]) -> Option<us
             };
             let size = fit(texture.size_vec2(), vec2(THUMB_MAX.0, THUMB_MAX.1));
             let thumb = ui.add(egui::Image::new((texture.id(), size)).corner_radius(t.radius_sm).sense(Sense::click()));
-            solidcraft_ui_registry::publish_handle(&format!("agent_chat:picture:{n}:{i}"), thumb.rect.center());
+            torno_ui_registry::publish_handle(&format!("agent_chat:picture:{n}:{i}"), thumb.rect.center());
             let hover_max = (ui.ctx().content_rect().size() * 0.5).min(vec2(PREVIEW_MAX.0, PREVIEW_MAX.1));
             let thumb = thumb.on_hover_cursor(egui::CursorIcon::PointingHand).backing_on_hover_ui(|ui| {
                 ui.add(egui::Image::new((texture.id(), fit(texture.size_vec2(), hover_max))).corner_radius(t.radius_sm));
@@ -912,9 +912,9 @@ fn gallery_window(chat: &mut AgentChat, ctx: &egui::Context) {
         ui.set_max_width(max.x);
         ui.horizontal(|ui| {
             let prev = ui_kit::button(ui, tr("ui.agent_chat_previous_picture"), ui_kit::Button::Enabled(count > 1));
-            solidcraft_ui_registry::publish_handle("agent_chat:gallery_prev", prev.rect.center());
+            torno_ui_registry::publish_handle("agent_chat:gallery_prev", prev.rect.center());
             let next = ui_kit::button(ui, tr("ui.agent_chat_next_picture"), ui_kit::Button::Enabled(count > 1));
-            solidcraft_ui_registry::publish_handle("agent_chat:gallery_next", next.rect.center());
+            torno_ui_registry::publish_handle("agent_chat:gallery_next", next.rect.center());
             if prev.clicked() {
                 step = -1;
             }
@@ -927,7 +927,7 @@ fn gallery_window(chat: &mut AgentChat, ctx: &egui::Context) {
             match picture.texture(ui.ctx()) {
                 Shown::Ready(texture) => {
                     let resp = ui.add(egui::Image::new((texture.id(), fit(texture.size_vec2(), max))).corner_radius(t.radius_sm));
-                    solidcraft_ui_registry::publish_rect("agent_chat:gallery_picture", resp.rect);
+                    torno_ui_registry::publish_rect("agent_chat:gallery_picture", resp.rect);
                 }
                 Shown::Loading => {
                     ui.add(egui::Spinner::new().size(t.space_24));
@@ -973,7 +973,7 @@ fn drop_hint(ctx: &egui::Context, area: Rect) {
     let text = painter.layout(tr("ui.agent_chat_drop_hint").to_string(), font, t.text, (zone.width() - 24.0).max(40.0));
     let at = zone.center() - text.size() / 2.0;
     painter.galley(at, text, t.text);
-    solidcraft_ui_registry::publish_rect("agent_chat:drop_hint", zone);
+    torno_ui_registry::publish_rect("agent_chat:drop_hint", zone);
 }
 
 /// New chat (when the chat has focus).
@@ -1051,7 +1051,7 @@ fn window(chat: &mut AgentChat, view: &PanelView, ctx: &egui::Context, prefs: &m
             // Floating inside the app: its handles are the main window's, as the panel's are. The
             // app's own drop handling sees the drops, so the window counts as the chat's place
             // (the hint is drawn by the caller).
-            solidcraft_ui_registry::publish_rect("agent_chat:window", r.response.rect);
+            torno_ui_registry::publish_rect("agent_chat:window", r.response.rect);
             chat.panel_rect = Some(r.response.rect);
             chat.drop_rect = Some(r.response.rect);
             return;
@@ -1131,8 +1131,8 @@ fn glyph_button(ui: &mut egui::Ui, kind: &str, tip: &str) -> egui::Response {
         }
         _ => {}
     }
-    solidcraft_ui_registry::publish_rect(&format!("agent_chat:{kind}"), r);
-    solidcraft_ui_registry::publish_handle(&format!("agent_chat:{kind}"), r.center());
+    torno_ui_registry::publish_rect(&format!("agent_chat:{kind}"), r);
+    torno_ui_registry::publish_handle(&format!("agent_chat:{kind}"), r.center());
     resp.backing_on_hover_text(tip)
 }
 
@@ -1152,7 +1152,7 @@ fn strip(chat: &mut AgentChat, view: &PanelView, ui: &mut egui::Ui, prefs: &mut 
     let r = ui.max_rect();
     let button = Rect::from_center_size(pos2(r.center().x, r.top() + 22.0), vec2(26.0, 26.0));
     let resp = ui.interact(button, Id::unique("sc_agent_chat_unfold"), Sense::click());
-    solidcraft_ui_registry::publish_handle("agent_chat:unfold", button.center());
+    torno_ui_registry::publish_handle("agent_chat:unfold", button.center());
     if resp.hovered() {
         ui.painter().rect_filled(button, t.radius_sm, t.hover);
     }
@@ -1189,7 +1189,7 @@ fn header(chat: &mut AgentChat, view: &PanelView, ui: &mut egui::Ui, left: bool,
                 grip.union(l.rect)
             };
             let waiting = chat.waiting();
-            // Ready without SolidCraft's tools can't reach the design: say so, and how to fix it (#12283).
+            // Ready without Torno's tools can't reach the design: say so, and how to fix it (#12283).
             let without_design = waiting == 0 && chat.without_design();
             let s = if waiting > 0 {
                 tr("ui.agent_chat_waiting").to_string()
@@ -1221,7 +1221,7 @@ fn header(chat: &mut AgentChat, view: &PanelView, ui: &mut egui::Ui, left: bool,
             // Drag the header across the window to dock on the other side.
             if !popped {
                 let drag = ui.interact(title, Id::unique("sc_agent_chat_grip"), Sense::drag());
-                solidcraft_ui_registry::publish_handle("agent_chat:grip", title.center());
+                torno_ui_registry::publish_handle("agent_chat:grip", title.center());
                 dock_drag(chat, view, ui, &drag, left, prefs);
             }
             ui.with_layout(Layout::right_to_left(Align::Center), |ui| {
@@ -1273,7 +1273,7 @@ fn dock_drag(chat: &mut AgentChat, view: &PanelView, ui: &egui::Ui, drag: &egui:
             let w = prefs.width.clamp(MIN_WIDTH, MAX_WIDTH).min(available.width());
             Rect::from_min_size(pos2(if to_left { available.left() } else { available.right() - w }, available.top()), vec2(w, available.height()))
         };
-        solidcraft_ui_registry::publish_rect("agent_chat:dock_hint", zone);
+        torno_ui_registry::publish_rect("agent_chat:dock_hint", zone);
         let t = Tokens::get();
         let painter = ui.ctx().layer_painter(egui::LayerId::new(egui::Order::Foreground, Id::unique("sc_agent_chat_dock_hint")));
         painter.rect(zone, t.radius_xl, t.accent.gamma_multiply(0.18), Stroke::new(2.0, t.accent), egui::StrokeKind::Inside);
@@ -1281,7 +1281,7 @@ fn dock_drag(chat: &mut AgentChat, view: &PanelView, ui: &egui::Ui, drag: &egui:
             zone.center(),
             Align2::CENTER_CENTER,
             tr(if to_left { "ui.agent_chat_dock_left" } else { "ui.agent_chat_dock_right" }),
-            egui::FontId::proportional(solidcraft_theme::Tokens::get().font_heading),
+            egui::FontId::proportional(torno_theme::Tokens::get().font_heading),
             t.text,
         );
     }
@@ -1366,7 +1366,7 @@ fn new_chat_confirmation(chat: &mut AgentChat, ui: &mut egui::Ui) {
                 ui_kit::text(ui, tr("ui.agent_chat_new_confirm"), ui_kit::Text::Report("new_chat", false));
                 ui.horizontal(|ui| {
                     let yes = ui_kit::button(ui, tr("ui.agent_chat_new"), ui_kit::Button::Normal);
-                    solidcraft_ui_registry::publish_target("agent_chat:new_confirm", yes.rect);
+                    torno_ui_registry::publish_target("agent_chat:new_confirm", yes.rect);
                     if yes.clicked() {
                         chat.actions.push(PanelAction::NewChat);
                     }
@@ -1410,7 +1410,7 @@ fn top_controls(chat: &mut AgentChat, view: &PanelView, ui: &mut egui::Ui, state
         .auto_shrink([false, true]);
     let provider_scroll = if reveal_confirmation { provider_scroll.vertical_scroll_offset(0.0) } else { provider_scroll };
     let picker = provider_scroll.show(ui, |ui| {
-        solidcraft_ui_registry::publish_rect("agent_chat:providers", ui.clip_rect());
+        torno_ui_registry::publish_rect("agent_chat:providers", ui.clip_rect());
         if shared {
             new_chat_confirmation(chat, ui);
             ui_kit::assistant_controls(ui, |ui| switcher(chat, view, ui));
@@ -1476,7 +1476,7 @@ fn composer(chat: &mut AgentChat, view: &PanelView, ui: &mut egui::Ui, state: St
                         pill_input(chat, view, ui, focused, tr(if busy { "ui.agent_chat_placeholder_busy" } else { "ui.agent_chat_placeholder" }))
                     })
                     .inner;
-                solidcraft_ui_registry::publish_rect("agent_chat:input", r.rect);
+                torno_ui_registry::publish_rect("agent_chat:input", r.rect);
                 chat.report.focus.push(r.clone());
                 // macOS shows a window's cursors only while it is the active window: over the text box of a
                 // chat window that isn't, the pointer stays an arrow. Coming from the main window, the chat
@@ -1515,8 +1515,8 @@ fn composer(chat: &mut AgentChat, view: &PanelView, ui: &mut egui::Ui, state: St
                             })
                             .inner;
                         let permissions = permissions.backing_on_hover_text(mode.label());
-                        solidcraft_ui_registry::publish_rect("agent_chat:permissions", permissions.rect);
-                        solidcraft_ui_registry::publish_handle("agent_chat:permissions", permissions.rect.center());
+                        torno_ui_registry::publish_rect("agent_chat:permissions", permissions.rect);
+                        torno_ui_registry::publish_handle("agent_chat:permissions", permissions.rect.center());
                         // A message waits for files still being read.
                         let reading = !chat.loading.is_empty();
                         ui.with_layout(Layout::right_to_left(Align::Center), |ui| {
@@ -1527,15 +1527,15 @@ fn composer(chat: &mut AgentChat, view: &PanelView, ui: &mut egui::Ui, state: St
                                 tr(if busy { "ui.agent_chat_stop_turn_tip" } else { "ui.agent_chat_send" }),
                             );
                             if busy {
-                                solidcraft_ui_registry::publish_handle("agent_chat:stopturn", action.rect.center());
+                                torno_ui_registry::publish_handle("agent_chat:stopturn", action.rect.center());
                                 stop_clicked = action.clicked();
                                 let queued = ui_kit::button(ui, tr("ui.agent_chat_queue"), ui_kit::Button::Enabled(!reading));
-                                solidcraft_ui_registry::publish_rect("agent_chat:send", queued.rect);
-                                solidcraft_ui_registry::publish_handle("agent_chat:send", queued.rect.center());
+                                torno_ui_registry::publish_rect("agent_chat:send", queued.rect);
+                                torno_ui_registry::publish_handle("agent_chat:send", queued.rect.center());
                                 send_clicked = queued.clicked();
                             } else {
-                                solidcraft_ui_registry::publish_rect("agent_chat:send", action.rect);
-                                solidcraft_ui_registry::publish_handle("agent_chat:send", action.rect.center());
+                                torno_ui_registry::publish_rect("agent_chat:send", action.rect);
+                                torno_ui_registry::publish_handle("agent_chat:send", action.rect.center());
                                 send_clicked = action.clicked();
                             }
                         });
@@ -1553,7 +1553,7 @@ fn composer(chat: &mut AgentChat, view: &PanelView, ui: &mut egui::Ui, state: St
                             .inner
                             .backing_on_hover_text(tr("ui.agent_chat_attach_view_tip"))
                             .backing_on_disabled_hover_text(tr("ui.agent_chat_no_images"));
-                        solidcraft_ui_registry::publish_handle("agent_chat:attach", attach.rect.center());
+                        torno_ui_registry::publish_handle("agent_chat:attach", attach.rect.center());
                         // What is selected in the model goes with the message: text for the agent,
                         // chips in the conversation.
                         let selected = view.selected;
@@ -1564,11 +1564,11 @@ fn composer(chat: &mut AgentChat, view: &PanelView, ui: &mut egui::Ui, state: St
                         };
                         let pick =
                             ui_kit::checkbox(ui, &label, &mut chat.attach_selection).backing_on_hover_text(tr("ui.agent_chat_attach_selection_tip"));
-                        solidcraft_ui_registry::publish_handle("agent_chat:attach_selection", pick.rect.center());
+                        torno_ui_registry::publish_handle("agent_chat:attach_selection", pick.rect.center());
                         // Choose faces, edges, features and bodies on purpose, then OK.
                         let picker = ui_kit::button(ui, tr("ui.agent_chat_pick_context"), ui_kit::Button::Enabled(!view.dialog_open))
                             .backing_on_hover_text(tr("ui.agent_chat_pick_context_tip"));
-                        solidcraft_ui_registry::publish_handle("agent_chat:pick_context", picker.rect.center());
+                        torno_ui_registry::publish_handle("agent_chat:pick_context", picker.rect.center());
                         pick_clicked = picker.clicked();
                         if let Some(turn) = &chat.turn {
                             let n = turn.changes.to_string();
@@ -1581,9 +1581,9 @@ fn composer(chat: &mut AgentChat, view: &PanelView, ui: &mut egui::Ui, state: St
                     },
                 );
             });
-            solidcraft_ui_registry::publish_rect("agent_chat:composer_box", boxed.response.rect);
+            torno_ui_registry::publish_rect("agent_chat:composer_box", boxed.response.rect);
         });
-        solidcraft_ui_registry::publish_rect("agent_chat:composer_footer", footer.response.rect);
+        torno_ui_registry::publish_rect("agent_chat:composer_footer", footer.response.rect);
         // The enclosing bottom panel can clamp its response to the remaining
         // viewport. Reserve the actual footer content on the next frame.
         footer.response.rect.height()
@@ -1614,7 +1614,7 @@ fn transcript_body(chat: &mut AgentChat, view: &PanelView, ui: &mut egui::Ui) ->
             // Last, so the scroll goes to this area and not to one nested in the conversation.
             scroll_while_selecting(ui);
         });
-    solidcraft_ui_registry::publish_rect("agent_chat:conversation", conversation.inner_rect);
+    torno_ui_registry::publish_rect("agent_chat:conversation", conversation.inner_rect);
     conversation.content_size.y
 }
 
@@ -1665,7 +1665,7 @@ fn switcher(chat: &mut AgentChat, view: &PanelView, ui: &mut egui::Ui) {
                     for e in all {
                         let sel = current.as_ref().is_some_and(|c| c.id == e.id);
                         let r = ui_kit::list_picker(ui, &e.id, &e.name, sel).backing_on_hover_text(format!("{} {}", e.detail(), e.login));
-                        solidcraft_ui_registry::publish_handle(&format!("agent_chat:agent:{}", e.id), r.rect.center());
+                        torno_ui_registry::publish_handle(&format!("agent_chat:agent:{}", e.id), r.rect.center());
                         if r.clicked() {
                             picked = Some(e.id.clone());
                         }
@@ -1680,8 +1680,8 @@ fn switcher(chat: &mut AgentChat, view: &PanelView, ui: &mut egui::Ui) {
                 })
             })
             .inner;
-        solidcraft_ui_registry::publish_rect("agent_chat:switcher", combo.rect);
-        solidcraft_ui_registry::publish_handle("agent_chat:switcher", combo.rect.center());
+        torno_ui_registry::publish_rect("agent_chat:switcher", combo.rect);
+        torno_ui_registry::publish_handle("agent_chat:switcher", combo.rect.center());
         combo.backing_on_hover_text(tr("ui.ai_switch_tip"));
         if add {
             chat.actions.push(PanelAction::AddAgent);
@@ -1708,8 +1708,8 @@ fn switcher(chat: &mut AgentChat, view: &PanelView, ui: &mut egui::Ui) {
                     })
                 })
                 .inner;
-            solidcraft_ui_registry::publish_rect("agent_chat:mode", r.rect);
-            solidcraft_ui_registry::publish_handle("agent_chat:mode", r.rect.center());
+            torno_ui_registry::publish_rect("agent_chat:mode", r.rect);
+            torno_ui_registry::publish_handle("agent_chat:mode", r.rect.center());
             r.backing_on_hover_text(tr("ui.ai_agent_mode_tip"));
             if let Some(m) = pick {
                 chat.actions.push(PanelAction::SetMode(m));
@@ -1767,18 +1767,18 @@ fn switcher(chat: &mut AgentChat, view: &PanelView, ui: &mut egui::Ui) {
             let label = if chat.state() == State::Failed { "ui.agent_chat_retry" } else { "ui.agent_chat_connect" };
             ui_kit::button(ui, tr(label), ui_kit::Button::Normal)
         };
-        solidcraft_ui_registry::publish_handle("agent_chat:connect", b.rect.center());
+        torno_ui_registry::publish_handle("agent_chat:connect", b.rect.center());
         if b.clicked() {
             chat.actions.push(if chat.state().running() { PanelAction::Disconnect } else { PanelAction::Connect });
         }
     });
     if let Some(a) = &chat.auth_status {
-        ui.label(RichText::new(a).color(t.text_dim).size(solidcraft_theme::Tokens::get().font_small));
+        ui.label(RichText::new(a).color(t.text_dim).size(torno_theme::Tokens::get().font_small));
     }
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-const FLATPAK_OVERRIDE: &str = "flatpak override --user io.tangencylabs.solidcraft --filesystem=~/.nvm:ro --filesystem=~/.local/bin:ro --filesystem=~/.local/share/claude:ro --filesystem=~/.claude --filesystem=~/.claude.json --share=network";
+const FLATPAK_OVERRIDE: &str = "flatpak override --user dev.danielmiguelt.Torno --filesystem=~/.nvm:ro --filesystem=~/.local/bin:ro --filesystem=~/.local/share/claude:ro --filesystem=~/.claude --filesystem=~/.claude.json --share=network";
 
 /// The strictly confined Snap can neither see nor start the agents installed on the computer, and
 /// no permission the user can grant changes that (#1458).
@@ -1813,7 +1813,7 @@ pub(super) fn no_agents(ui: &mut egui::Ui) {
     if flatpak {
         // The Copy button comes before the long command so it shows without scrolling.
         let copy = ui_kit::button(ui, tr("ui.agent_chat_copy"), ui_kit::Button::Small);
-        solidcraft_ui_registry::publish_handle("agent_chat:flatpak_override", copy.rect.center());
+        torno_ui_registry::publish_handle("agent_chat:flatpak_override", copy.rect.center());
         if copy.clicked() {
             ui.ctx().copy_text(FLATPAK_OVERRIDE.to_string());
         }
@@ -1927,12 +1927,12 @@ fn config_select(chat: &mut AgentChat, ui: &mut egui::Ui, option: &acp::ConfigOp
         picked = picker.inner;
         // Under the names every kind of agent's model picker goes by.
         let rows = format!("{handles}:");
-        for (name, at) in solidcraft_ui_registry::handles(&rows) {
+        for (name, at) in torno_ui_registry::handles(&rows) {
             if let Some(row) = name.strip_prefix(&rows) {
-                solidcraft_ui_registry::publish_handle(&format!("agent_chat:model:{row}"), at);
+                torno_ui_registry::publish_handle(&format!("agent_chat:model:{row}"), at);
             }
         }
-        solidcraft_ui_registry::publish_target("agent_chat:model", picker.response.rect);
+        torno_ui_registry::publish_target("agent_chat:model", picker.response.rect);
         picker.response
     } else {
         let response = ui
@@ -1956,7 +1956,7 @@ fn config_select(chat: &mut AgentChat, ui: &mut egui::Ui, option: &acp::ConfigOp
                                     .collect::<Vec<_>>()
                                     .join("\n"),
                             );
-                            solidcraft_ui_registry::publish_handle(&format!("{handles}:{}", choice.value), row.rect.center());
+                            torno_ui_registry::publish_handle(&format!("{handles}:{}", choice.value), row.rect.center());
                             if row.clicked() {
                                 picked = Some(ui_kit::Picked::Listed(choice.value.clone()));
                             }
@@ -1966,9 +1966,9 @@ fn config_select(chat: &mut AgentChat, ui: &mut egui::Ui, option: &acp::ConfigOp
                 .inner
             })
             .inner;
-        solidcraft_ui_registry::publish_target(&handles, response.rect);
+        torno_ui_registry::publish_target(&handles, response.rect);
         if option.category == "mode" {
-            solidcraft_ui_registry::publish_handle("agent_chat:mode", response.rect.center());
+            torno_ui_registry::publish_handle("agent_chat:mode", response.rect.center());
         }
         response
     };
@@ -2012,7 +2012,7 @@ mod config_ui_tests {
     }
 
     fn draw_switcher(app: &mut SolveApp, ctx: &egui::Context, width: f32) {
-        solidcraft_ui_registry::clear_handles();
+        torno_ui_registry::clear_handles();
         let screen = Rect::from_min_size(pos2(0.0, 0.0), vec2(width, 700.0));
         let view = PanelView::of(app, ctx);
         ctx.run_ui(egui::RawInput { screen_rect: Some(screen), ..Default::default() }, |ui| {
@@ -2027,7 +2027,7 @@ mod config_ui_tests {
     #[test]
     fn config_options_share_one_row_when_they_fit_and_wrap_without_legacy_duplicates() {
         assert_eq!(compact_text("Énergie très élevée", 7), "Énergie…");
-        let mut app = SolveApp::new(solidcraft_engine::Session::default(), crate::Services::default());
+        let mut app = SolveApp::new(torno_engine::Session::default(), crate::Services::default());
         // Make legacy provider/model pickers eligible so their absence is meaningful.
         app.agent_chat.state = Some(State::Ready);
         app.agent_chat.modes = vec![("legacy".into(), "Legacy mode".into())];
@@ -2048,7 +2048,7 @@ mod config_ui_tests {
         ]);
         let ctx = crate::fonts::test_context();
         draw_switcher(&mut app, &ctx, 760.0);
-        let at = |name| solidcraft_ui_registry::handle_at(name).expect("config picker handle");
+        let at = |name| torno_ui_registry::handle_at(name).expect("config picker handle");
         let agent = at("agent_chat:switcher");
         let model = at("agent_chat:config:engine");
         let effort = at("agent_chat:config:thought");
@@ -2057,11 +2057,11 @@ mod config_ui_tests {
         assert!(model.x < effort.x && effort.x < mode.x && mode.x < 760.0);
         assert_eq!(at("agent_chat:model"), model);
         assert_eq!(at("agent_chat:mode"), mode);
-        assert_eq!(solidcraft_ui_registry::handles("agent_chat:mode").iter().filter(|(name, _)| name == "agent_chat:mode").count(), 1);
-        assert_eq!(solidcraft_ui_registry::handles("agent_chat:model").iter().filter(|(name, _)| name == "agent_chat:model").count(), 1);
-        assert!(solidcraft_ui_registry::handle_at("agent_chat:provider").is_none());
-        assert!(solidcraft_ui_registry::handle_at("agent_chat:model:old").is_none());
-        assert!(solidcraft_ui_registry::handle_at("agent_chat:model:other").is_none());
+        assert_eq!(torno_ui_registry::handles("agent_chat:mode").iter().filter(|(name, _)| name == "agent_chat:mode").count(), 1);
+        assert_eq!(torno_ui_registry::handles("agent_chat:model").iter().filter(|(name, _)| name == "agent_chat:model").count(), 1);
+        assert!(torno_ui_registry::handle_at("agent_chat:provider").is_none());
+        assert!(torno_ui_registry::handle_at("agent_chat:model:old").is_none());
+        assert!(torno_ui_registry::handle_at("agent_chat:model:other").is_none());
 
         draw_switcher(&mut app, &ctx, 280.0);
         let model = at("agent_chat:config:engine");
@@ -2069,25 +2069,25 @@ mod config_ui_tests {
         let mode = at("agent_chat:config:workflow");
         assert!(model.y < effort.y && (effort.y - mode.y).abs() < 2.0, "only the long model needs its own line: {model:?}, {effort:?}, {mode:?}");
         for id in ["engine", "thought", "workflow"] {
-            let rect = solidcraft_ui_registry::rect_of(&format!("agent_chat:config:{id}")).expect("config control bounds");
+            let rect = torno_ui_registry::rect_of(&format!("agent_chat:config:{id}")).expect("config control bounds");
             assert!(rect.left() >= 0.0 && rect.right() <= 280.0, "{id} exceeds the narrow panel: {rect:?}");
         }
 
         app.agent_chat.config_options = Some(vec![option("engine", "model", &[("fast", "Fast", None)])]);
         app.agent_chat.config_pending = true;
         draw_switcher(&mut app, &ctx, 280.0);
-        assert!(solidcraft_ui_registry::handle_at("agent_chat:config:engine").is_some());
-        assert!(solidcraft_ui_registry::handle_at("agent_chat:config:thought").is_none());
-        assert!(solidcraft_ui_registry::handle_at("agent_chat:config:workflow").is_none());
-        assert!(solidcraft_ui_registry::handle_at("agent_chat:switcher").is_some());
+        assert!(torno_ui_registry::handle_at("agent_chat:config:engine").is_some());
+        assert!(torno_ui_registry::handle_at("agent_chat:config:thought").is_none());
+        assert!(torno_ui_registry::handle_at("agent_chat:config:workflow").is_none());
+        assert!(torno_ui_registry::handle_at("agent_chat:switcher").is_some());
 
         app.agent_chat.config_options = Some(vec![]);
         draw_switcher(&mut app, &ctx, 280.0);
-        assert!(solidcraft_ui_registry::handle_at("agent_chat:switcher").is_some());
-        assert!(solidcraft_ui_registry::handle_at("agent_chat:config:engine").is_none());
-        assert!(solidcraft_ui_registry::handle_at("agent_chat:mode").is_none());
-        assert!(solidcraft_ui_registry::handle_at("agent_chat:provider").is_none());
-        assert!(solidcraft_ui_registry::handle_at("agent_chat:model").is_none());
+        assert!(torno_ui_registry::handle_at("agent_chat:switcher").is_some());
+        assert!(torno_ui_registry::handle_at("agent_chat:config:engine").is_none());
+        assert!(torno_ui_registry::handle_at("agent_chat:mode").is_none());
+        assert!(torno_ui_registry::handle_at("agent_chat:provider").is_none());
+        assert!(torno_ui_registry::handle_at("agent_chat:model").is_none());
     }
 }
 
@@ -2131,7 +2131,7 @@ fn agent_list(chat: &mut AgentChat, view: &PanelView, ui: &mut egui::Ui) {
     for e in all {
         let selected = current.as_ref().is_some_and(|c| c.id == e.id);
         let resp = ui_kit::list_picker(ui, &e.id, &e.name, selected).backing_on_hover_text(format!("{} {}", e.detail(), e.login));
-        solidcraft_ui_registry::publish_handle(&format!("agent_chat:pick:{}", e.id), resp.rect.center());
+        torno_ui_registry::publish_handle(&format!("agent_chat:pick:{}", e.id), resp.rect.center());
         if resp.clicked() {
             chat.agent_id = Some(e.id.clone());
         }
@@ -2171,7 +2171,7 @@ fn auth_box(chat: &mut AgentChat, ui: &mut egui::Ui) {
             ui_kit::text(ui, tr("ui.agent_chat_auth_none"), ui_kit::Text::Note("auth_none"));
         }
         for m in methods {
-            ui.add_space(solidcraft_theme::Tokens::get().space_4);
+            ui.add_space(torno_theme::Tokens::get().space_4);
             let desc = m.description.trim();
             ui_kit::text(
                 ui,
@@ -2191,7 +2191,7 @@ fn auth_box(chat: &mut AgentChat, ui: &mut egui::Ui) {
                 }
                 acp::AuthKind::Agent => {
                     let b = ui_kit::button(ui, trf("ui.agent_chat_auth_agent", &[("name", &m.name)]), ui_kit::Button::Normal);
-                    solidcraft_ui_registry::publish_handle(&format!("agent_chat:auth:{}", m.id), b.rect.center());
+                    torno_ui_registry::publish_handle(&format!("agent_chat:auth:{}", m.id), b.rect.center());
                     if b.clicked() {
                         chat.authenticate(&m.id);
                     }
@@ -2201,7 +2201,7 @@ fn auth_box(chat: &mut AgentChat, ui: &mut egui::Ui) {
                 }
             }
         }
-        ui.add_space(solidcraft_theme::Tokens::get().space_4);
+        ui.add_space(torno_theme::Tokens::get().space_4);
         if ui_kit::button(ui, tr("ui.agent_chat_auth_retry"), ui_kit::Button::Normal).clicked() {
             chat.actions.push(PanelAction::Connect);
         }
@@ -2214,7 +2214,7 @@ fn auth_box(chat: &mut AgentChat, ui: &mut egui::Ui) {
 #[cfg(not(target_arch = "wasm32"))]
 fn copy_message_button(ui: &mut egui::Ui, n: usize, text: &str) {
     let b = ui_kit::button(ui, tr("ui.agent_chat_copy_message"), ui_kit::Button::Small);
-    solidcraft_ui_registry::publish_handle(&format!("agent_chat:copy:{n}"), b.rect.center());
+    torno_ui_registry::publish_handle(&format!("agent_chat:copy:{n}"), b.rect.center());
     if b.clicked() {
         ui.ctx().copy_text(text.to_owned());
     }
@@ -2226,7 +2226,7 @@ fn copy_message_button(ui: &mut egui::Ui, n: usize, text: &str) {
 /// right-click released over it rather than on a click the response itself would report.
 #[cfg(not(target_arch = "wasm32"))]
 fn copy_message_menu(ui: &egui::Ui, response: &egui::Response, n: usize, text: &str) {
-    solidcraft_ui_registry::publish_rect(&format!("agent_chat:msg:{n}"), response.rect);
+    torno_ui_registry::publish_rect(&format!("agent_chat:msg:{n}"), response.rect);
     let opened = ui
         .input(|i| i.pointer.button_released(egui::PointerButton::Secondary) && i.pointer.interact_pos().is_some_and(|p| response.rect.contains(p)));
     let mut copy = false;
@@ -2239,7 +2239,7 @@ fn copy_message_menu(ui: &egui::Ui, response: &egui::Response, n: usize, text: &
             ui_kit::Menu::show(ui, crate::ui_kit::LIST_W, |ui| {
                 let item = ui_kit::MenuItem::new("copy_message", tr("ui.agent_chat_copy_message"), "copy");
                 let row = item.show(ui);
-                solidcraft_ui_registry::publish_handle(&format!("agent_chat:copy_menu:{n}"), row.rect.center());
+                torno_ui_registry::publish_handle(&format!("agent_chat:copy_menu:{n}"), row.rect.center());
                 if row.clicked() {
                     copy = true;
                     ui.close();
@@ -2401,7 +2401,7 @@ fn conversation(chat: &mut AgentChat, view: &PanelView, ui: &mut egui::Ui) {
                                 } else {
                                     ui_kit::button(ui, &o.name, ui_kit::Button::Normal)
                                 };
-                                solidcraft_ui_registry::publish_handle(&format!("agent_chat:permission:{}", o.id), r.rect.center());
+                                torno_ui_registry::publish_handle(&format!("agent_chat:permission:{}", o.id), r.rect.center());
                                 if r.clicked() {
                                     answer = Some((n, Some(o.id.clone())));
                                 }
@@ -2409,7 +2409,7 @@ fn conversation(chat: &mut AgentChat, view: &PanelView, ui: &mut egui::Ui) {
                             ui.with_layout(Layout::left_to_right(Align::Center).with_main_wrap(true), |ui| {
                                 for o in options.iter().filter(|o| !matches!(o.kind.as_str(), "allow_once" | "allow_always")) {
                                     let r = ui_kit::button(ui, &o.name, ui_kit::Button::Normal);
-                                    solidcraft_ui_registry::publish_handle(&format!("agent_chat:permission:{}", o.id), r.rect.center());
+                                    torno_ui_registry::publish_handle(&format!("agent_chat:permission:{}", o.id), r.rect.center());
                                     if r.clicked() {
                                         answer = Some((n, Some(o.id.clone())));
                                     }
@@ -2441,9 +2441,9 @@ fn conversation(chat: &mut AgentChat, view: &PanelView, ui: &mut egui::Ui) {
                                         ui_kit::button(ui, tr("ui.agent_chat_deny"), ui_kit::Button::Normal)
                                     })
                                     .inner;
-                                solidcraft_ui_registry::publish_handle("agent_chat:allow", allow.rect.center());
-                                solidcraft_ui_registry::publish_handle("agent_chat:always", always.rect.center());
-                                solidcraft_ui_registry::publish_handle("agent_chat:deny", deny.rect.center());
+                                torno_ui_registry::publish_handle("agent_chat:allow", allow.rect.center());
+                                torno_ui_registry::publish_handle("agent_chat:always", always.rect.center());
+                                torno_ui_registry::publish_handle("agent_chat:deny", deny.rect.center());
                                 if allow.clicked() {
                                     approval = Some((*id, Some(true)));
                                 }
@@ -2461,13 +2461,13 @@ fn conversation(chat: &mut AgentChat, view: &PanelView, ui: &mut egui::Ui) {
             Item::Changes { steps, revision, undone } => {
                 ui.horizontal(|ui| {
                     let text = trf("ui.agent_chat_changes", &[("n", &steps.to_string())]);
-                    ui.label(RichText::new(text).color(t.text_dim).size(solidcraft_theme::Tokens::get().font_caption));
+                    ui.label(RichText::new(text).color(t.text_dim).size(torno_theme::Tokens::get().font_caption));
                     if *undone {
-                        ui.label(RichText::new(tr("ui.agent_chat_undone")).color(t.text_dim).size(solidcraft_theme::Tokens::get().font_caption));
+                        ui.label(RichText::new(tr("ui.agent_chat_undone")).color(t.text_dim).size(torno_theme::Tokens::get().font_caption));
                     } else if revision.same(current) {
                         let b =
                             ui_kit::button(ui, tr("ui.agent_chat_undo_changes"), ui_kit::Button::Normal).backing_on_hover_text(tr("ui.ai_undo_tip"));
-                        solidcraft_ui_registry::publish_handle("agent_chat:undo", b.rect.center());
+                        torno_ui_registry::publish_handle("agent_chat:undo", b.rect.center());
                         if b.clicked() {
                             undo = Some(n);
                         }
@@ -2500,16 +2500,16 @@ fn conversation(chat: &mut AgentChat, view: &PanelView, ui: &mut egui::Ui) {
             ui.set_width(ui.available_width());
             ui.horizontal(|ui| {
                 let tag = if stopped && !busy { "ui.agent_chat_queued_stopped" } else { "ui.agent_chat_queued" };
-                ui.label(RichText::new(tr(tag)).color(t.accent).semibold().size(solidcraft_theme::Tokens::get().font_small));
+                ui.label(RichText::new(tr(tag)).color(t.accent).semibold().size(torno_theme::Tokens::get().font_small));
                 ui.with_layout(Layout::right_to_left(Align::Center), |ui| {
                     let x = ui_kit::button(ui, "×", ui_kit::Button::Small).backing_on_hover_text(tr("ui.agent_chat_remove"));
-                    solidcraft_ui_registry::publish_handle(&format!("agent_chat:pending_remove:{n}"), x.rect.center());
+                    torno_ui_registry::publish_handle(&format!("agent_chat:pending_remove:{n}"), x.rect.center());
                     if x.clicked() {
                         remove = Some(n);
                     }
                     if editing.as_ref().is_none_or(|(i, _)| *i != n) {
                         let e = ui_kit::button(ui, tr("ui.agent_chat_edit"), ui_kit::Button::Small);
-                        solidcraft_ui_registry::publish_handle(&format!("agent_chat:pending_edit:{n}"), e.rect.center());
+                        torno_ui_registry::publish_handle(&format!("agent_chat:pending_edit:{n}"), e.rect.center());
                         if e.clicked() {
                             start_edit = Some((n, p.text.clone()));
                         }
@@ -2519,7 +2519,7 @@ fn conversation(chat: &mut AgentChat, view: &PanelView, ui: &mut egui::Ui) {
             match (&editing, edit_buf.as_mut()) {
                 (Some((i, _)), Some(buf)) if *i == n => {
                     let te = ui_kit::message_field(ui, Id::unique(("sc_agent_pending_input", n)), buf, "");
-                    solidcraft_ui_registry::publish_rect("agent_chat:pending_input", te.rect);
+                    torno_ui_registry::publish_rect("agent_chat:pending_input", te.rect);
                     chat.report.focus.push(te.clone());
                     ui.horizontal(|ui| {
                         if ui_kit::button(ui, tr("ui.agent_chat_save"), ui_kit::Button::Normal).clicked() {
@@ -2537,7 +2537,7 @@ fn conversation(chat: &mut AgentChat, view: &PanelView, ui: &mut egui::Ui) {
                         hovered = Some(Hovered::Group { sent: false, at: n, group });
                     }
                     if p.image {
-                        ui.label(RichText::new(tr("ui.agent_chat_view_attached")).color(t.text_dim).size(solidcraft_theme::Tokens::get().font_small));
+                        ui.label(RichText::new(tr("ui.agent_chat_view_attached")).color(t.text_dim).size(torno_theme::Tokens::get().font_small));
                     }
                     let (rest, rest_flags, places) = unplaced(&p.context, &[]);
                     if let Some(place) = context_chips(ui, &rest, &rest_flags, &format!("agent_chat:queued:{n}")).hovered
@@ -2555,11 +2555,11 @@ fn conversation(chat: &mut AgentChat, view: &PanelView, ui: &mut egui::Ui) {
             if busy {
                 let b =
                     ui_kit::button(ui, tr("ui.agent_chat_send_now"), ui_kit::Button::Normal).backing_on_hover_text(tr("ui.agent_chat_send_now_tip"));
-                solidcraft_ui_registry::publish_handle("agent_chat:send_now", b.rect.center());
+                torno_ui_registry::publish_handle("agent_chat:send_now", b.rect.center());
                 send_now_clicked = b.clicked();
             } else {
                 let b = ui_kit::primary_button(ui, tr("ui.agent_chat_send"));
-                solidcraft_ui_registry::publish_handle("agent_chat:send_queue", b.rect.center());
+                torno_ui_registry::publish_handle("agent_chat:send_queue", b.rect.center());
                 send_queue_clicked = b.clicked();
             }
         });
@@ -2677,7 +2677,7 @@ fn user_text(ui: &mut egui::Ui, text: &str, context: &Context, gone: &[bool], ha
     // Where each pill is, for tests and scripts.
     for span in pills::spans(text) {
         let row = galley.pos_from_cursor(egui::text::CCursor::new(span.start + 2));
-        solidcraft_ui_registry::publish_handle(&format!("{handle}:pill:{}", span.id), response.rect.min + row.center().to_vec2());
+        torno_ui_registry::publish_handle(&format!("{handle}:pill:{}", span.id), response.rect.min + row.center().to_vec2());
     }
     // The pointer on a pill: which one is read from the text layout, which starts at the label's corner.
     let pos = response.hover_pos()?;
@@ -2879,13 +2879,13 @@ fn loading_chip(ui: &mut egui::Ui, name: &str, importing: bool, i: usize, w: f32
                 let s = Stroke::new(1.3, if x.hovered() { t.text } else { t.text_dim });
                 ui.painter().line_segment([c + vec2(-3.5, -3.5), c + vec2(3.5, 3.5)], s);
                 ui.painter().line_segment([c + vec2(-3.5, 3.5), c + vec2(3.5, -3.5)], s);
-                solidcraft_ui_registry::publish_handle(&format!("agent_chat:file_loading_remove:{i}"), c);
+                torno_ui_registry::publish_handle(&format!("agent_chat:file_loading_remove:{i}"), c);
                 clicked =
                     x.backing_on_hover_text(tr(if importing { "ui.agent_chat_remove_imported" } else { "ui.agent_chat_remove_file" })).clicked();
             });
         },
     );
-    solidcraft_ui_registry::publish_handle(&format!("agent_chat:file_loading:{i}"), r.response.rect.center());
+    torno_ui_registry::publish_handle(&format!("agent_chat:file_loading:{i}"), r.response.rect.center());
     clicked
 }
 
@@ -2923,7 +2923,7 @@ fn chip(ui: &mut egui::Ui, thumbs: &mut std::collections::HashMap<u64, egui::Tex
                             r.center(),
                             Align2::CENTER_CENTER,
                             f.mark(),
-                            egui::FontId::proportional(solidcraft_theme::Tokens::get().font_micro),
+                            egui::FontId::proportional(torno_theme::Tokens::get().font_micro),
                             color,
                         );
                         r.width()
@@ -2941,12 +2941,12 @@ fn chip(ui: &mut egui::Ui, thumbs: &mut std::collections::HashMap<u64, egui::Tex
                 let s = Stroke::new(1.3, if x.hovered() { t.text } else { t.text_dim });
                 ui.painter().line_segment([c + vec2(-3.5, -3.5), c + vec2(3.5, 3.5)], s);
                 ui.painter().line_segment([c + vec2(-3.5, 3.5), c + vec2(3.5, -3.5)], s);
-                solidcraft_ui_registry::publish_handle(&format!("agent_chat:file_remove:{i}"), c);
+                torno_ui_registry::publish_handle(&format!("agent_chat:file_remove:{i}"), c);
                 clicked = x.backing_on_hover_text(remove_tip(f)).clicked();
             });
         },
     );
-    solidcraft_ui_registry::publish_target(&format!("agent_chat:file:{i}"), r.response.rect);
+    torno_ui_registry::publish_target(&format!("agent_chat:file:{i}"), r.response.rect);
     clicked
 }
 
@@ -2957,9 +2957,9 @@ fn add_menu(chat: &mut AgentChat, ui: &mut egui::Ui) {
     let (mut choose, mut paste) = (false, false);
     let r = ui_kit::action_menu(ui, "+", |ui| {
         let a = ui_kit::button(ui, tr("ui.agent_chat_add_file"), ui_kit::Button::Normal);
-        solidcraft_ui_registry::publish_handle("agent_chat:add_file", a.rect.center());
+        torno_ui_registry::publish_handle("agent_chat:add_file", a.rect.center());
         let b = ui_kit::button(ui, tr("ui.agent_chat_paste_picture"), ui_kit::Button::Normal);
-        solidcraft_ui_registry::publish_handle("agent_chat:paste_picture", b.rect.center());
+        torno_ui_registry::publish_handle("agent_chat:paste_picture", b.rect.center());
         if a.clicked() {
             choose = true;
             ui.close();
@@ -2969,7 +2969,7 @@ fn add_menu(chat: &mut AgentChat, ui: &mut egui::Ui) {
             ui.close();
         }
     });
-    solidcraft_ui_registry::publish_handle("agent_chat:add", r.response.rect.center());
+    torno_ui_registry::publish_handle("agent_chat:add", r.response.rect.center());
     r.response.backing_on_hover_text(tr("ui.agent_chat_add"));
     if choose {
         chat.actions.push(PanelAction::ChooseAttachment);
@@ -3037,7 +3037,7 @@ fn tool_card(ui: &mut egui::Ui, n: usize, call: &ToolCall) {
             });
         });
         let click = ui.interact(head.response.rect, id.with("head"), Sense::click());
-        solidcraft_ui_registry::publish_handle(&format!("agent_chat:tool:{n}"), head.response.rect.center());
+        torno_ui_registry::publish_handle(&format!("agent_chat:tool:{n}"), head.response.rect.center());
         if details && click.clicked() {
             state_.toggle(ui);
         }
@@ -3107,9 +3107,9 @@ mod tests {
 
     #[test]
     fn empty_discovery_explains_the_sandbox() {
-        const CHILD: &str = "SOLIDCRAFT_TEST_SANDBOX_MESSAGE";
+        const CHILD: &str = "TORNO_TEST_SANDBOX_MESSAGE";
         if let Ok(case) = std::env::var(CHILD) {
-            let mut app = SolveApp::new(solidcraft_engine::Session::default(), crate::Services::default());
+            let mut app = SolveApp::new(torno_engine::Session::default(), crate::Services::default());
             app.agent_chat.detection = Some(discover::Detection::default());
             assert!(agents::entries(&app).is_empty());
             let message = no_agents_message();
@@ -3125,7 +3125,7 @@ mod tests {
                     assert!(crate::test_support::text_shapes(&output).any(|text| text.galley.text() == FLATPAK_OVERRIDE));
                     output.textures_delta.clear();
                 }
-                let at = solidcraft_ui_registry::handle_at("agent_chat:flatpak_override").expect("copy override");
+                let at = torno_ui_registry::handle_at("agent_chat:flatpak_override").expect("copy override");
                 let mut copied = false;
                 for pressed in [true, false] {
                     let mut output = ctx.run_ui(egui::RawInput { events: crate::test_support::pointer(at, pressed), ..input.clone() }, |ui| {
@@ -3160,10 +3160,10 @@ mod tests {
             }
             return;
         }
-        // Another snap's variables (SolidCraft started from a confined editor's terminal) are not the Snap.
+        // Another snap's variables (Torno started from a confined editor's terminal) are not the Snap.
         let cases: [(&str, &[(&str, &str)]); 4] = [
-            ("flatpak", &[("FLATPAK_ID", "io.tangencylabs.solidcraft")]),
-            ("snap", &[("SNAP", "/snap/solidcraft/12"), ("SNAP_NAME", "solidcraft")]),
+            ("flatpak", &[("FLATPAK_ID", "dev.danielmiguelt.Torno")]),
+            ("snap", &[("SNAP", "/snap/torno/12"), ("SNAP_NAME", "torno")]),
             ("another snap", &[("SNAP", "/snap/code/200"), ("SNAP_NAME", "code")]),
             ("native", &[]),
         ];
@@ -3189,14 +3189,14 @@ mod tests {
     #[test]
     fn the_send_button_records_the_message_for_the_host_to_send() {
         let ctx = crate::fonts::test_context();
-        let mut app = SolveApp::new(solidcraft_engine::Session::default(), crate::Services::default());
+        let mut app = SolveApp::new(torno_engine::Session::default(), crate::Services::default());
         app.agent_chat.detection = Some(discover::Detection::default());
         app.agent_chat.picking = Some(false);
         app.agent_chat.state = Some(State::Ready);
         app.agent_chat.input = "Make a plate".to_string();
         let screen = Rect::from_min_size(egui::Pos2::ZERO, vec2(440.0, 720.0));
         let frame = |app: &mut SolveApp, events: Vec<egui::Event>| {
-            solidcraft_ui_registry::clear_handles();
+            torno_ui_registry::clear_handles();
             let input = egui::RawInput { screen_rect: Some(screen), focused: true, events, ..Default::default() };
             let mut output = ctx.run_ui(input, |ui| {
                 let prefs = AgentPanelPrefs::read(&app.preferences);
@@ -3209,7 +3209,7 @@ mod tests {
         for _ in 0..3 {
             frame(&mut app, Vec::new());
         }
-        let at = solidcraft_ui_registry::handle_at("agent_chat:send").expect("the send button is drawn");
+        let at = torno_ui_registry::handle_at("agent_chat:send").expect("the send button is drawn");
         for pressed in [true, false] {
             frame(&mut app, crate::test_support::pointer(at, pressed));
         }
@@ -3219,7 +3219,7 @@ mod tests {
 
     /// The composer of `app` drawn once with `events`, as the host draws it, its actions left unrun.
     fn composer_frame(ctx: &egui::Context, app: &mut SolveApp, events: Vec<egui::Event>) {
-        solidcraft_ui_registry::clear_handles();
+        torno_ui_registry::clear_handles();
         let screen = Rect::from_min_size(egui::Pos2::ZERO, vec2(440.0, 720.0));
         let input = egui::RawInput { screen_rect: Some(screen), focused: true, events, ..Default::default() };
         let mut output = ctx.run_ui(input, |ui| {
@@ -3232,7 +3232,7 @@ mod tests {
 
     /// A chat ready to take a message, with "Make a plate" in the box.
     fn ready_app() -> SolveApp {
-        let mut app = SolveApp::new(solidcraft_engine::Session::default(), crate::Services::default());
+        let mut app = SolveApp::new(torno_engine::Session::default(), crate::Services::default());
         app.agent_chat.detection = Some(discover::Detection::default());
         app.agent_chat.picking = Some(false);
         app.agent_chat.state = Some(State::Ready);
@@ -3251,7 +3251,7 @@ mod tests {
         for _ in 0..3 {
             composer_frame(&ctx, &mut app, Vec::new());
         }
-        let at = solidcraft_ui_registry::handle_at("agent_chat:pick_context").expect("the button is drawn");
+        let at = torno_ui_registry::handle_at("agent_chat:pick_context").expect("the button is drawn");
         for pressed in [true, false] {
             composer_frame(&ctx, &mut app, crate::test_support::pointer(at, pressed));
         }
@@ -3283,7 +3283,7 @@ mod tests {
             layout: ui_kit::LayoutMode::default(),
             history: None,
             document: "Plate".into(),
-            revision: Revision::of(&solidcraft_engine::Session::default().doc),
+            revision: Revision::of(&torno_engine::Session::default().doc),
             units: "mm".into(),
             decimals: 2,
             agents: Vec::new(),
@@ -3324,7 +3324,7 @@ mod tests {
         let mut prefs = AgentPanelPrefs { left: false, width: 420.0, minimized: false, popped: false, window: None };
         let screen = Rect::from_min_size(egui::Pos2::ZERO, vec2(1200.0, 800.0));
         let frame = |chat: &mut AgentChat, prefs: &mut AgentPanelPrefs, events: Vec<egui::Event>| {
-            solidcraft_ui_registry::clear_handles();
+            torno_ui_registry::clear_handles();
             let input = egui::RawInput { screen_rect: Some(screen), focused: true, events, ..Default::default() };
             let mut output = ctx.run_ui(input, |ui| draw(chat, &view, prefs, ui));
             output.textures_delta.clear();
@@ -3332,7 +3332,7 @@ mod tests {
         for _ in 0..3 {
             frame(&mut chat, &mut prefs, Vec::new());
         }
-        let at = solidcraft_ui_registry::handle_at("agent_chat:send").expect("the send button is drawn");
+        let at = torno_ui_registry::handle_at("agent_chat:send").expect("the send button is drawn");
         for pressed in [true, false] {
             frame(&mut chat, &mut prefs, crate::test_support::pointer(at, pressed));
         }
@@ -3362,7 +3362,7 @@ mod tests {
         let (drawn_on, _, height) = report.extent.expect("the height the content needs is kept");
         assert_eq!(Some(drawn_on), layer);
         assert!(height > 0.0);
-        let input = solidcraft_ui_registry::rect_of("agent_chat:input").expect("the text box is drawn");
+        let input = torno_ui_registry::rect_of("agent_chat:input").expect("the text box is drawn");
         assert_eq!(report.focus.iter().map(|r| r.rect).collect::<Vec<_>>(), [input], "the text box takes the keyboard");
         assert!(chat.actions.is_empty());
     }
@@ -3372,7 +3372,7 @@ mod tests {
     #[test]
     fn the_first_frame_after_opening_shows_the_agents_being_detected() {
         let ctx = crate::fonts::test_context();
-        let mut app = SolveApp::new(solidcraft_engine::Session::default(), crate::Services::default());
+        let mut app = SolveApp::new(torno_engine::Session::default(), crate::Services::default());
         app.ui.layout = ui_kit::LayoutMode::Docked;
         toggle(&mut app);
         assert!(app.agent_chat.open && app.agent_chat.detection.is_none() && app.agent_chat.detecting.is_none());
@@ -3410,7 +3410,7 @@ mod tests {
 
     #[test]
     fn the_shortcut_shows_folds_and_hides() {
-        let mut app = SolveApp::new(solidcraft_engine::Session::default(), crate::Services::default());
+        let mut app = SolveApp::new(torno_engine::Session::default(), crate::Services::default());
         toggle(&mut app);
         assert!(app.agent_chat.open);
         app.preferences.agent_chat_minimized = true;
@@ -3423,11 +3423,11 @@ mod tests {
     #[test]
     fn assistant_header_and_composer_keep_actions_inside_each_panel_width() {
         for dark in [false, true] {
-            solidcraft_theme::set_dark(dark);
+            torno_theme::set_dark(dark);
             for width in [280.0, 440.0, 760.0] {
                 let ctx = crate::fonts::test_context();
-                solidcraft_theme::apply(&ctx);
-                let mut app = SolveApp::new(solidcraft_engine::Session::default(), crate::Services::default());
+                torno_theme::apply(&ctx);
+                let mut app = SolveApp::new(torno_engine::Session::default(), crate::Services::default());
                 app.agent_chat.detection = Some(discover::Detection::default());
                 app.agent_chat.picking = Some(false);
                 app.agent_chat.state = Some(State::Ready);
@@ -3435,7 +3435,7 @@ mod tests {
                 let input =
                     egui::RawInput { screen_rect: Some(Rect::from_min_size(egui::Pos2::ZERO, vec2(width + 16.0, 720.0))), ..Default::default() };
                 for _ in 0..2 {
-                    solidcraft_ui_registry::clear_handles();
+                    torno_ui_registry::clear_handles();
                     let mut output = ctx.run_ui(input.clone(), |ui| {
                         ui.set_width(width);
                         ui_kit::scope(ui, |ui| {
@@ -3451,7 +3451,7 @@ mod tests {
                     .into_iter()
                     .map(|name| {
                         let key = format!("agent_chat:{name}");
-                        let rect = solidcraft_ui_registry::rect_of(&key).unwrap_or_else(|| panic!("missing {key}"));
+                        let rect = torno_ui_registry::rect_of(&key).unwrap_or_else(|| panic!("missing {key}"));
                         assert!(rect.left() >= 0.0 && rect.right() <= width + 16.0, "{key} outside {width}: {rect:?}");
                         rect
                     })
@@ -3469,7 +3469,7 @@ mod tests {
     fn assistant_permissions_keep_provider_choices_and_responsive_approval_actions() {
         for width in [280.0, 440.0, 760.0] {
             let ctx = crate::fonts::test_context();
-            let mut app = SolveApp::new(solidcraft_engine::Session::default(), crate::Services::default());
+            let mut app = SolveApp::new(torno_engine::Session::default(), crate::Services::default());
             app.agent_chat.items.push(Item::Permission {
                 key: 4,
                 title: "Run solid.fillet".into(),
@@ -3482,7 +3482,7 @@ mod tests {
                 ],
             });
             let input = egui::RawInput { screen_rect: Some(Rect::from_min_size(egui::Pos2::ZERO, vec2(width + 16.0, 720.0))), ..Default::default() };
-            solidcraft_ui_registry::clear_handles();
+            torno_ui_registry::clear_handles();
             let view = PanelView::of(&mut app, &ctx);
             let mut output = ctx.run_ui(input, |ui| {
                 ui.set_width(width);
@@ -3490,11 +3490,11 @@ mod tests {
             });
             output.textures_delta.clear();
             for id in ["reject", "remember", "once", "custom"] {
-                let at = solidcraft_ui_registry::handle_at(&format!("agent_chat:permission:{id}")).expect("provider option retained");
+                let at = torno_ui_registry::handle_at(&format!("agent_chat:permission:{id}")).expect("provider option retained");
                 assert!(at.x > 0.0 && at.x < width + 16.0, "choice outside {width}: {id} {at:?}");
             }
-            let once = solidcraft_ui_registry::handle_at("agent_chat:permission:once").expect("once");
-            let always = solidcraft_ui_registry::handle_at("agent_chat:permission:remember").expect("always");
+            let once = torno_ui_registry::handle_at("agent_chat:permission:once").expect("once");
+            let always = torno_ui_registry::handle_at("agent_chat:permission:remember").expect("always");
             assert!(once.x > always.x, "primary once choice remains on the right");
             assert_eq!(app.agent_chat.waiting(), 1, "drawing never answers an approval");
         }
@@ -3503,7 +3503,7 @@ mod tests {
     #[test]
     fn assistant_agent_mode_and_model_wrap_without_escaping_narrow_width() {
         let ctx = crate::fonts::test_context();
-        let mut app = SolveApp::new(solidcraft_engine::Session::default(), crate::Services::default());
+        let mut app = SolveApp::new(torno_engine::Session::default(), crate::Services::default());
         app.agent_chat.state = Some(State::Ready);
         app.agent_chat.detection = Some(discover::Detection::default());
         app.agent_chat.agent_id = Some("fixture".into());
@@ -3525,7 +3525,7 @@ mod tests {
         ];
         app.agent_chat.model = "model".into();
         let input = egui::RawInput { screen_rect: Some(Rect::from_min_size(egui::Pos2::ZERO, vec2(296.0, 720.0))), ..Default::default() };
-        solidcraft_ui_registry::clear_handles();
+        torno_ui_registry::clear_handles();
         let view = PanelView::of(&mut app, &ctx);
         let mut output = ctx.run_ui(input, |ui| {
             ui.set_width(280.0);
@@ -3535,7 +3535,7 @@ mod tests {
         let rects: Vec<_> = ["switcher", "mode", "model"]
             .into_iter()
             .map(|name| {
-                let rect = solidcraft_ui_registry::rect_of(&format!("agent_chat:{name}")).expect("picker retained");
+                let rect = torno_ui_registry::rect_of(&format!("agent_chat:{name}")).expect("picker retained");
                 assert!(rect.left() >= 0.0 && rect.right() <= 296.0, "{name} outside narrow panel: {rect:?}");
                 rect
             })

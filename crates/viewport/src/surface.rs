@@ -221,8 +221,8 @@ fn metal_multiple_scattering(color: Vec3, metallic: f64, roughness: f64, nv: f64
     Vec3::new(reflected(color.x), reflected(color.y), reflected(color.z))
 }
 
-/// Exact piecewise sRGB decoding of an existing 8-bit color channel ([`solidcraft_color::srgb::decode8`]).
-pub use solidcraft_color::srgb::decode8 as srgb8_to_linear;
+/// Exact piecewise sRGB decoding of an existing 8-bit color channel ([`torno_color::srgb::decode8`]).
+pub use torno_color::srgb::decode8 as srgb8_to_linear;
 
 /// Normalize finite directions without overflow or an arbitrary magnitude threshold.
 /// A GGX visible normal (Heitz 2018): the microfacet normal seen from `v` about the normal `n`,

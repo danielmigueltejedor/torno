@@ -93,7 +93,7 @@
       3951.8,
       3985.5
     ],
-    "what": "#616's lid (a 2.4 mm plate with R3 corners, a 3 mm skirt, three openings and four 1.6 mm ribs, all boxes) shelled 0.5 mm with a rib's outer side face open (action matrix (apps/solidcraft-cli/tests/action_matrix.rs): corpus/issue-616-lid-ribs, Lid/F8:-x face.shell)"
+    "what": "#616's lid (a 2.4 mm plate with R3 corners, a 3 mm skirt, three openings and four 1.6 mm ribs, all boxes) shelled 0.5 mm with a rib's outer side face open (action matrix (apps/torno-cli/tests/action_matrix.rs): corpus/issue-616-lid-ribs, Lid/F8:-x face.shell)"
   },
   "expressible": true,
   "operation_expressible": true,
@@ -205,6 +205,6 @@
     "shell"
   ],
   "ungraded": [],
-  "what": "#616's lid (a 2.4 mm plate with R3 corners, a 3 mm skirt, three openings and four 1.6 mm ribs, all boxes) shelled 0.5 mm with a rib's outer side face open (action matrix (apps/solidcraft-cli/tests/action_matrix.rs): corpus/issue-616-lid-ribs, Lid/F8:-x face.shell)",
+  "what": "#616's lid (a 2.4 mm plate with R3 corners, a 3 mm skirt, three openings and four 1.6 mm ribs, all boxes) shelled 0.5 mm with a rib's outer side face open (action matrix (apps/torno-cli/tests/action_matrix.rs): corpus/issue-616-lid-ribs, Lid/F8:-x face.shell)",
   "why_not": []
 }

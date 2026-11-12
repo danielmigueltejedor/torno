@@ -1,7 +1,7 @@
-//! Not upstream (SolidCraft's `leaves_cavity`, from the fork's `capi/src/smlib_ops.cpp`): the
+//! Not upstream (Torno's `leaves_cavity`, from the fork's `capi/src/smlib_ops.cpp`): the
 //! room test before an inward shell or a face offset inward.
 //!
-//! | Rust | SolidCraft |
+//! | Rust | Torno |
 //! |------|-----------|
 //! | [`shell_wall_room`] | `leaves_cavity` |
 //! | [`WallRoom`] | `leaves_cavity`'s `bool`, as a certified witness or none |

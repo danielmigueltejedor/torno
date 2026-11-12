@@ -156,7 +156,7 @@
     "blend_dropping"
   ],
   "ungraded": [
-    "continuity: SolidCraft computes it"
+    "continuity: Torno computes it"
   ],
   "what": "the top rim of a hole through a 10 mm plate chamfered 10: its leg uses the hole's whole wall, ending on the bottom rim, and it builds (a cone from the top to the bottom rim)",
   "why_not": []

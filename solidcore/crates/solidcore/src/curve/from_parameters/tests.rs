@@ -233,7 +233,7 @@ fn a_trim_runs_over_its_edges_kernel_interval() {
 }
 
 /// A kernel line goes to the record as the kernel holds it, its point and its point plus its
-/// vector, over the STEP parameters of its interval (#3137: as SolidCraft's flat export wrote
+/// vector, over the STEP parameters of its interval (#3137: as Torno's flat export wrote
 /// it), and back again unchanged.
 #[test]
 fn a_line_goes_back_as_the_kernel_holds_it() {

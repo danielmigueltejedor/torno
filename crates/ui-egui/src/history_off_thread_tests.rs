@@ -389,16 +389,16 @@ fn switching_from_a_sketch_to_a_feature_restores_partial_markers_and_sketch_chan
         let changed = h.app.session.doc.sketch(sketches[0]).unwrap().clone();
         until_settled(&mut h);
         assert!(h.app.dialog.is_some());
-        h.app.session.selection = vec![solidcraft_engine::Sel::Axis { name: "X".into() }];
+        h.app.session.selection = vec![torno_engine::Sel::Axis { name: "X".into() }];
         *h.app.session.model.cache.lock().unwrap() = Default::default();
-        let window = std::sync::Arc::new(solidcraft_engine::doc::progress::Progress::default());
-        solidcraft_engine::doc::progress::watch(window.clone(), || crate::dialogs::cancel(&mut h.app));
+        let window = std::sync::Arc::new(torno_engine::doc::progress::Progress::default());
+        torno_engine::doc::progress::watch(window.clone(), || crate::dialogs::cancel(&mut h.app));
         assert_eq!(window.features(), (0, 0), "Cancel uses the pinned matching model");
         assert_eq!(marker(&h), original_marker);
         assert_eq!(h.app.session.model.state().bodies.len(), bodies);
         assert_eq!(h.app.session.doc.sketch(sketches[0]).unwrap(), &changed);
         assert_eq!((h.app.session.undo.len(), h.app.session.redo.len()), history);
-        assert_eq!(h.app.session.selection, vec![solidcraft_engine::Sel::Axis { name: "X".into() }]);
+        assert_eq!(h.app.session.selection, vec![torno_engine::Sel::Axis { name: "X".into() }]);
     }
 }
 
@@ -485,7 +485,7 @@ fn switching_from_a_sketch_to_a_feature_preserves_the_marker_through_cancel_and_
                 crate::dialogs::cancel(&mut h.app);
             }
             _ => {
-                let other = solidcraft_engine::Session::new(Default::default());
+                let other = torno_engine::Session::new(Default::default());
                 crate::documents::open_tab(&mut h.app, other).unwrap();
                 if next == "tab" {
                     h.frames(10);
@@ -933,7 +933,7 @@ fn a_reading_on_a_copy_keeps_the_requests_param_check() {
         (&json!("warn"), &json!(["unknown key `operaton`; did you mean `operation`?"])),
         "{r}"
     );
-    assert_eq!(h.app.session.param_check, solidcraft_engine::schema::ParamCheck::Off, "the app's own level again");
+    assert_eq!(h.app.session.param_check, torno_engine::schema::ParamCheck::Off, "the app's own level again");
 }
 
 /// A clearance or interference check of every pair of bodies reads a copy off the window thread
@@ -1092,7 +1092,7 @@ fn the_timelines_delete_checks_off_the_window_thread() {
 fn delete_on_the_selection_checks_off_the_window_thread() {
     let mut h = block_boss_hole();
     let boss = feature_ids(&h)[1];
-    h.app.session.selection = vec![solidcraft_engine::Sel::Feature { id: boss }];
+    h.app.session.selection = vec![torno_engine::Sel::Feature { id: boss }];
     let params = crate::delete::selection_params(&h.app);
     crate::delete::request(&mut h.app, params);
     assert!(h.app.computing_since().is_some(), "checking");

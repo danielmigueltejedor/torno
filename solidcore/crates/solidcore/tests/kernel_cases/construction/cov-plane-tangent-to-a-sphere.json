@@ -76,7 +76,7 @@
     "make_sphere"
   ],
   "ungraded": [
-    "construction: SolidCraft computes it"
+    "construction: Torno computes it"
   ],
   "what": "the tangent plane to a sphere",
   "why_not": []

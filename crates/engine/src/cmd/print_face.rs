@@ -7,8 +7,8 @@
 
 use serde_json::Value;
 use solidcore_record::Vec3;
-use solidcraft_doc::{ModelState, PrintFace};
-use solidcraft_geom::prelude::*;
+use torno_doc::{ModelState, PrintFace};
+use torno_geom::prelude::*;
 
 use super::CommandSpec;
 use crate::params::{bad, str_};
@@ -41,7 +41,7 @@ fn print_face(s: &mut Session, p: &Value) -> Result<Value> {
             None
         }
         Some(point) => {
-            let index = solidcraft_doc::appearance::face_index_at(body, point).ok_or_else(|| bad(cmd, "no face of the body at `point`"))?;
+            let index = torno_doc::appearance::face_index_at(body, point).ok_or_else(|| bad(cmd, "no face of the body at `point`"))?;
             let target = s.doc.print_face_target(body, index).map_err(|e| bad(cmd, e.to_string()))?;
             let face = target.name.clone();
             s.doc_mut().print_faces.insert(key, target);
@@ -119,7 +119,7 @@ pub(super) fn lay_on_print_faces(s: &Session, state: &mut ModelState, bodies: &[
                 continue;
             }
         };
-        let centre = match solidcraft_kernel::measure_mass(&b.body) {
+        let centre = match torno_kernel::measure_mass(&b.body) {
             Ok(m) => m.centroid,
             Err(e) => {
                 laid.warnings.push(format!("`{}` was exported as it lies: no centre of mass ({e})", b.name));
@@ -130,7 +130,7 @@ pub(super) fn lay_on_print_faces(s: &Session, state: &mut ModelState, bodies: &[
     }
     for (i, m) in moves {
         let Some(b) = state.bodies.get_mut(i) else { continue };
-        match solidcraft_kernel::transform_matrix(&b.body, m) {
+        match torno_kernel::transform_matrix(&b.body, m) {
             Ok(body) => {
                 b.body = body;
                 laid.bodies.push(b.name.clone());
@@ -189,11 +189,11 @@ mod tests {
 
     /// Lay every body of `s` on its print face, as a slicer export does: Block's box and centre
     /// of mass afterwards, and what was reported.
-    fn laid(s: &Session) -> (solidcraft_geom::Aabb3, Vec3, Laid) {
+    fn laid(s: &Session) -> (torno_geom::Aabb3, Vec3, Laid) {
         let mut state = s.doc.painted(&s.world_state().unwrap());
         let laid = lay_on_print_faces(s, &mut state, &[], &[]);
         let block = state.bodies.iter().find(|b| b.name == "Block").expect("Block");
-        let m = solidcraft_kernel::measure_mass(&block.body).expect("measure");
+        let m = torno_kernel::measure_mass(&block.body).expect("measure");
         (m.bbox, m.centroid, laid)
     }
 
@@ -214,7 +214,7 @@ mod tests {
         assert_eq!(laid.warnings.len(), 1, "{:?}", laid.warnings);
         assert!(laid.warnings.first().is_some_and(|w| w.contains("Block") && w.contains("Bracket")), "{:?}", laid.warnings);
         let block = state.bodies.iter().find(|b| b.name == "Block").expect("Block");
-        let bbox = solidcraft_kernel::measure_mass(&block.body).expect("measure").bbox;
+        let bbox = torno_kernel::measure_mass(&block.body).expect("measure").bbox;
         assert!(near(bbox.min.x, 0.) && near(bbox.max.x, 20.) && near(bbox.max.z, 5.), "{bbox:?}");
     }
 
@@ -231,7 +231,7 @@ mod tests {
         assert!(near(centre.x, 0.) && near(centre.y, 0.) && near(centre.z, 10.), "{centre:?}");
         assert!(near((bbox.max.x - bbox.min.x) * (bbox.max.y - bbox.min.y), 50.), "{bbox:?}");
         // The design itself has not moved.
-        let m = solidcraft_kernel::measure_mass(&s.model.state().bodies[0].body).expect("measure");
+        let m = torno_kernel::measure_mass(&s.model.state().bodies[0].body).expect("measure");
         assert!(near(m.bbox.min.x, 0.) && near(m.bbox.max.x, 20.) && near(m.bbox.max.z, 5.), "{:?}", m.bbox);
     }
 
@@ -288,11 +288,11 @@ mod tests {
         run(&mut s, "body.print_face", json!({"body": "Block", "point": [10, 5, 5]}));
         let saved = serde_json::to_value(&*s.doc).expect("save");
         assert!(saved["print_faces"]["Block"].is_object(), "{}", saved["print_faces"]);
-        let opened: solidcraft_doc::Document = serde_json::from_value(saved.clone()).expect("open");
+        let opened: torno_doc::Document = serde_json::from_value(saved.clone()).expect("open");
         assert_eq!(opened.print_faces, s.doc.print_faces);
         let mut older = saved;
         older.as_object_mut().expect("object").remove("print_faces");
-        let opened: solidcraft_doc::Document = serde_json::from_value(older).expect("open");
+        let opened: torno_doc::Document = serde_json::from_value(older).expect("open");
         assert!(opened.print_faces.is_empty());
     }
 
@@ -306,7 +306,7 @@ mod tests {
     }
 
     /// Every body laid on its print face: (name, box, centre of mass) of those laid.
-    fn all_laid(s: &Session) -> Vec<(String, solidcraft_geom::Aabb3, Vec3)> {
+    fn all_laid(s: &Session) -> Vec<(String, torno_geom::Aabb3, Vec3)> {
         let mut state = s.doc.painted(&s.world_state().unwrap());
         let laid = lay_on_print_faces(s, &mut state, &[], &[]);
         assert!(laid.warnings.is_empty(), "{:?}", laid.warnings);
@@ -314,7 +314,7 @@ mod tests {
             .iter()
             .map(|name| {
                 let b = state.bodies.iter().find(|b| &b.name == name).expect("laid body");
-                let m = solidcraft_kernel::measure_mass(&b.body).expect("measure");
+                let m = torno_kernel::measure_mass(&b.body).expect("measure");
                 (name.clone(), m.bbox, m.centroid)
             })
             .collect()

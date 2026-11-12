@@ -40,6 +40,6 @@
   "ungraded": [],
   "what": "timeline.move_many of a folder into itself",
   "why_not": [
-    "the failure is SolidCraft's, not a kernel operation's: step 7 (timeline.move_many): invalid parameters for `timeline.move_many`: a folder cannot be moved into itself or one of its descendants"
+    "the failure is Torno's, not a kernel operation's: step 7 (timeline.move_many): invalid parameters for `timeline.move_many`: a folder cannot be moved into itself or one of its descendants"
   ]
 }

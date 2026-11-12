@@ -15,13 +15,13 @@
 //! wall comes from the profile segments its edges in the start plane lie along; a stitched or
 //! offset face carries the tag of the face it was made from through SMLib.
 
-use solidcraft_geom::prelude::*;
 use std::collections::BTreeSet;
+use torno_geom::prelude::*;
 
 use solidcore_record::brep::{self as b, Brep, Curve2};
 use solidcore_record::{Plane, Region2, Seg2, Vec2, Vec3};
-use solidcraft_geom::brep::eval::CurveEval;
-use solidcraft_geom::bspline::{HPoint, NurbsSurface};
+use torno_geom::brep::eval::CurveEval;
+use torno_geom::bspline::{HPoint, NurbsSurface};
 
 use crate::body::Body;
 use crate::history::{Change, EdgeOrigin, EdgeProv, FaceOrigin, FaceProv, History};
@@ -407,7 +407,7 @@ pub fn patch_region(plane: &Plane, region: &Region2) -> Result<Body> {
 /// A record tolerance for geometry spanning `points`: 10⁻⁶ of its size, at least 10⁻⁵ mm (the
 /// kernel's working tolerance).
 fn tolerance_of(points: impl Iterator<Item = Vec3>) -> f64 {
-    let mut bx = solidcraft_geom::Aabb3::EMPTY;
+    let mut bx = torno_geom::Aabb3::EMPTY;
     for p in points {
         bx.add(p);
     }
@@ -688,7 +688,7 @@ fn without_t_junctions(c: Canonical, offsets: &Offsets, tol: f64) -> Result<Cano
         return Ok(c);
     }
     let split =
-        solidcraft_geom::brep::split_edges(r, &splits).map_err(|e| failed(format!("stitch: splitting edges at the other sheets' vertices: {e}")))?;
+        torno_geom::brep::split_edges(r, &splits).map_err(|e| failed(format!("stitch: splitting edges at the other sheets' vertices: {e}")))?;
     let faces =
         split.faces.iter().map(|f| c.faces.get(*f as usize).copied().ok_or_else(|| failed("stitch: a face reference"))).collect::<Result<_>>()?;
     let edges =
@@ -1178,7 +1178,7 @@ pub fn loft_sheet_with_rails(sections: &[(Plane, Vec<Seg2>)], rails: &[Vec<Vec3>
     let count = matched.first().map_or(0, |s| s.curves.len());
     let pieces = (0..count)
         .map(|k| {
-            let column: Vec<&solidcraft_geom::bspline::CurveN<4>> = lofted.iter().filter_map(|s| s.get(k)).collect();
+            let column: Vec<&torno_geom::bspline::CurveN<4>> = lofted.iter().filter_map(|s| s.get(k)).collect();
             let r = imp::lofted(&column)?;
             let numbers: BTreeSet<usize> = matched.iter().filter_map(|s| s.numbers.get(k)).flatten().copied().collect();
             let h = vec![record::profile(numbers.iter()); r.faces.len()];
@@ -1232,12 +1232,12 @@ fn open_sections(sections: &[(Plane, Vec<Seg2>)]) -> Result<Vec<crate::loft_rail
 
 /// SMLib's side of this module.
 mod imp {
-    use solidcraft_smlib::sweeps::{Affine, Curve, Ends, SweepFrame};
-    use solidcraft_smlib::{Brep as SmBrep, CheckLevel};
+    use torno_smlib::sweeps::{Affine, Curve, Ends, SweepFrame};
+    use torno_smlib::{Brep as SmBrep, CheckLevel};
 
     use super::*;
 
-    fn sm(what: &'static str) -> impl Fn(solidcraft_smlib::Error) -> KernelError {
+    fn sm(what: &'static str) -> impl Fn(torno_smlib::Error) -> KernelError {
         move |e| KernelError::smlib(format!("SMLib {what}"), e)
     }
 
@@ -1327,7 +1327,7 @@ mod imp {
 
     pub(super) fn extruded(base: &Plane, chain: &[Numbered], n: Vec3, distance: f64) -> Result<Brep> {
         checked(
-            &SmBrep::extrude(&curves(base, chain)?, a3(n), distance, 0.0, solidcraft_smlib::sweeps::DraftCorner::default(), false)
+            &SmBrep::extrude(&curves(base, chain)?, a3(n), distance, 0.0, torno_smlib::sweeps::DraftCorner::default(), false)
                 .map_err(sm("surface extrude"))?,
             "surface extrude",
         )
@@ -1597,7 +1597,7 @@ mod imp {
 
     /// One column of a loft: its curve in each section (and station) in loft order, skinned by
     /// SMLib with no caps (`smlib_loft`), ruled between two, cubic through four or more.
-    pub(super) fn lofted(column: &[&solidcraft_geom::bspline::CurveN<4>]) -> Result<Brep> {
+    pub(super) fn lofted(column: &[&torno_geom::bspline::CurveN<4>]) -> Result<Brep> {
         let sections: Vec<Vec<Curve>> = column
             .iter()
             .map(|c| {

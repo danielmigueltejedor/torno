@@ -1,6 +1,6 @@
 use crate::test_support::run_all;
 use serde_json::json;
-use solidcraft_engine::Session;
+use torno_engine::Session;
 
 use super::*;
 use crate::Services;
@@ -199,7 +199,7 @@ fn inch_plastic_rule_edit_preserves_material_angles_and_stored_lengths() {
 #[test]
 fn optional_field_hints_have_messages() {
     crate::i18n::install();
-    let ja = solidcraft_ui_text::Locale::for_language("ja");
+    let ja = torno_ui_text::Locale::for_language("ja");
     for hint in ["no hole", "to the face", "from the rule", "none", "at the face", "solid"] {
         assert_ne!(ja.label(hint), hint, "`{hint}` has a Japanese message");
     }

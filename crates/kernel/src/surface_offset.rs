@@ -42,7 +42,7 @@ mod tests {
     use super::*;
     use crate::{box_solid, cylinder, measure, sphere};
     use solidcore_record::Vec3;
-    use solidcraft_geom::prelude::*;
+    use torno_geom::prelude::*;
 
     fn rel(a: f64, b: f64) -> f64 {
         (a - b).abs() / b.abs().max(1e-9)
@@ -114,7 +114,7 @@ mod tests {
         let rim = [Vec3::new(14.0, 0.0, z(14.0)), Vec3::new(0.0, 14.0, z(0.0)), Vec3::new(-14.0, 0.0, z(-14.0)), Vec3::new(0.0, -14.0, z(0.0))];
         let cover = crate::patch_edges(&cup, &rim).unwrap();
         let record = cover.record();
-        let s = solidcraft_geom::brep::eval::SurfaceEval::new(&record.faces[0].surface).unwrap();
+        let s = torno_geom::brep::eval::SurfaceEval::new(&record.faces[0].surface).unwrap();
         let out = offset_surface(&cover, &[0], 1.5, 0.01).unwrap();
         let mesh = out.mesh(&crate::MeshTolerance::chord(0.05)).unwrap();
         for p in mesh.positions.iter().step_by(7) {

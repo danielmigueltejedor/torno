@@ -1,5 +1,5 @@
 //! The Help menu (the ? button on the application bar): Documentation (the online book), About
-//! SolidCraft (version, commit, build date, licences, attributions, fonts), the keyboard shortcuts
+//! Torno (version, commit, build date, licences, attributions, fonts), the keyboard shortcuts
 //! (read only), Messages (every status message of the run, #2763), and Report an Issue, which
 //! opens a local editable report draft.
 
@@ -8,14 +8,14 @@ use crate::ui_kit;
 use crate::ui_kit::{Container, Surface};
 
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");
-pub const COMMIT: &str = env!("SOLIDCRAFT_COMMIT");
-pub const BUILD_DATE: &str = env!("SOLIDCRAFT_BUILD_DATE");
+pub const COMMIT: &str = env!("TORNO_COMMIT");
+pub const BUILD_DATE: &str = env!("TORNO_BUILD_DATE");
 /// The user and developer guide (docs/book, published by .github/workflows/pages.yml).
-pub const DOCS_URL: &str = "https://docs.solidcraft.io/";
+pub const DOCS_URL: &str = "https://getnodalia.github.io/torno/";
 const ATTRIBUTION: &str = include_str!("../../../ATTRIBUTION.md");
 /// ATTRIBUTION.md as Markdown, parsed once: its tables run to a thousand rows (#7776).
 static ATTRIBUTION_BLOCKS: std::sync::LazyLock<Vec<crate::update::Block>> = std::sync::LazyLock::new(|| crate::update::parse_markdown(ATTRIBUTION));
-use solidcraft_engine::licences::{LICENSE_APACHE, LICENSE_MIT, NOTICE, THIRD_PARTY};
+use torno_engine::licences::{LICENSE_APACHE, LICENSE_MIT, NOTICE, THIRD_PARTY};
 
 #[derive(Default)]
 pub struct HelpState {
@@ -32,7 +32,7 @@ pub fn diagnostics(app: &SolveApp) -> String {
     let renderer = if app.viewport.gpu.is_some() { "GPU" } else { "CPU" };
     let count = |n: usize, one: &str, many: &str| format!("{n} {}", if n == 1 { one } else { many });
     format!(
-        "SolidCraft {VERSION} ({COMMIT}, built {BUILD_DATE})\nOS: {} {}\nRenderer: {renderer}{}\nWindow: {}\nDesign: {} ({}, {})",
+        "Torno {VERSION} ({COMMIT}, built {BUILD_DATE})\nOS: {} {}\nRenderer: {renderer}{}\nWindow: {}\nDesign: {} ({}, {})",
         std::env::consts::OS,
         std::env::consts::ARCH,
         app.help.gpu.as_ref().map(|g| format!(", {g}")).unwrap_or_default(),
@@ -83,13 +83,13 @@ pub fn run(app: &mut SolveApp, ctx: &egui::Context, item: &str) {
     }
 }
 
-/// Add SolidCraft's MCP server to the AI assistants installed here (`solidcraft-cli mcp setup`),
-/// with the `solidcraft-cli` beside this program. One line per client.
+/// Add Torno's MCP server to the AI assistants installed here (`torno-cli mcp setup`),
+/// with the `torno-cli` beside this program. One line per client.
 #[cfg(not(target_arch = "wasm32"))]
 fn connect_assistants() -> Vec<String> {
-    use solidcraft_engine::agent_setup as setup;
+    use torno_engine::agent_setup as setup;
     let Some(cli) = crate::agent_chat::find_cli() else {
-        return vec!["solidcraft-cli was not found next to SolidCraft; run `solidcraft-cli mcp setup` from a terminal.".into()];
+        return vec!["torno-cli was not found next to Torno; run `torno-cli mcp setup` from a terminal.".into()];
     };
     let cli = cli.canonicalize().unwrap_or(cli).to_string_lossy().trim_start_matches(r"\\?\").to_owned();
     match setup::setup(&[], &setup::Env::from_process(), &cli) {
@@ -108,20 +108,17 @@ fn connect(app: &mut SolveApp, ctx: &egui::Context) {
     let Some(lines) = app.help.connect.clone() else {
         return;
     };
-    let (closed, action) =
-        ui_kit::Window::new(egui::Id::unique("sc_connect_assistants"), "help", solidcraft_ui_text::tr_label("Connect AI assistants"))
-            .cards(2.0)
-            .actions("", "Close", None)
-            .show(ctx, true, |ui| {
-                ui_kit::text(
-                    ui,
-                    solidcraft_ui_text::tr_label(
-                        "Restart each assistant to load the SolidCraft server. Each file was backed up as .bak before it changed.",
-                    ),
-                    ui_kit::Text::Note("connect_note"),
-                );
-                ui_kit::text(ui, &lines.join("\n"), ui_kit::Text::Report("connect", false));
-            });
+    let (closed, action) = ui_kit::Window::new(egui::Id::unique("sc_connect_assistants"), "help", torno_ui_text::tr_label("Connect AI assistants"))
+        .cards(2.0)
+        .actions("", "Close", None)
+        .show(ctx, true, |ui| {
+            ui_kit::text(
+                ui,
+                torno_ui_text::tr_label("Restart each assistant to load the Torno server. Each file was backed up as .bak before it changed."),
+                ui_kit::Text::Note("connect_note"),
+            );
+            ui_kit::text(ui, &lines.join("\n"), ui_kit::Text::Report("connect", false));
+        });
     if closed || action == ui_kit::Action::Cancel {
         app.help.connect = None;
     }
@@ -140,14 +137,14 @@ pub fn show(app: &mut SolveApp, ctx: &egui::Context, anchor: egui::Pos2) {
                 crate::ui_kit::menu::menu_frame(ui, |ui| {
                     for (id, label, icon) in [
                         ("docs", "Documentation", "library"),
-                        ("about", "About SolidCraft", "help"),
-                        ("updates", solidcraft_ui_text::tr("update.check_for_updates"), "update"),
+                        ("about", "About Torno", "help"),
+                        ("updates", torno_ui_text::tr("update.check_for_updates"), "update"),
                         ("shortcuts", "Keyboard Shortcuts", "list"),
                         ("messages", "Messages…", "list"),
                         ("report", "Report an Issue…", "bug_report"),
                         ("crashes", "Crash Reports…", "status_error"),
                         ("connect", "Connect AI assistants…", "settings"),
-                        ("install_cli", "Install solidcraft-cli command", "settings"),
+                        ("install_cli", "Install torno-cli command", "settings"),
                     ]
                     .into_iter()
                     .filter(|(id, ..)| *id != "install_cli" || cfg!(target_os = "macos"))
@@ -158,7 +155,7 @@ pub fn show(app: &mut SolveApp, ctx: &egui::Context, anchor: egui::Pos2) {
                         }
                         // A layout without the version in the application bar lists it here.
                         if id == "about" && app.header.version == crate::toolbar::VersionPlace::HelpMenu {
-                            let label = solidcraft_ui_text::format("help.version", &[("version", crate::update::current_version())]);
+                            let label = torno_ui_text::format("help.version", &[("version", crate::update::current_version())]);
                             if crate::ui_kit::menu::list_row(ui, &crate::ui_kit::Item::action("version", &label, "update")).is_some() {
                                 pick = Some("version");
                             }
@@ -186,46 +183,46 @@ fn about(app: &mut SolveApp, ctx: &egui::Context) {
     if !app.help.about {
         return;
     }
-    let (closed, action) = ui_kit::Window::new(egui::Id::unique("sc_about"), "help", solidcraft_ui_text::tr_label("About SolidCraft"))
+    let (closed, action) = ui_kit::Window::new(egui::Id::unique("sc_about"), "help", torno_ui_text::tr_label("About Torno"))
         .cards(2.0)
         .actions("", "Close", None)
         .show(ctx, true, |ui| {
             ui_kit::text(
                 ui,
-                &solidcraft_ui_text::format("help.build", &[("version", VERSION), ("commit", COMMIT), ("date", BUILD_DATE)]),
+                &torno_ui_text::format("help.build", &[("version", VERSION), ("commit", COMMIT), ("date", BUILD_DATE)]),
                 ui_kit::Text::Report("version", false),
             );
             ui_kit::text(
                 ui,
-                solidcraft_ui_text::tr_label("Open-source parametric 3D CAD in Rust. Licensed MIT OR Apache-2.0."),
+                torno_ui_text::tr_label("Open-source parametric 3D CAD in Rust. Licensed MIT OR Apache-2.0."),
                 ui_kit::Text::Note("description"),
             );
-            let copy = ui_kit::button(ui, solidcraft_ui_text::tr_label("Copy diagnostic information"), ui_kit::Button::Normal);
+            let copy = ui_kit::button(ui, torno_ui_text::tr_label("Copy diagnostic information"), ui_kit::Button::Normal);
             crate::scenario::publish_target("about:copy_diagnostics", copy.rect);
             if copy.clicked() {
                 ctx.copy_text(diagnostics(app));
             }
-            egui::ScrollArea::vertical().max_height(solidcraft_theme::Tokens::get().control_height * 15.0).show(ui, |ui| {
-                ui_kit::section(ui, "attributions", solidcraft_ui_text::tr("help.attributions"), false, |ui| {
-                    crate::update::markdown_blocks(ui, &ATTRIBUTION_BLOCKS, &solidcraft_theme::Tokens::get());
+            egui::ScrollArea::vertical().max_height(torno_theme::Tokens::get().control_height * 15.0).show(ui, |ui| {
+                ui_kit::section(ui, "attributions", torno_ui_text::tr("help.attributions"), false, |ui| {
+                    crate::update::markdown_blocks(ui, &ATTRIBUTION_BLOCKS, &torno_theme::Tokens::get());
                 });
-                ui_kit::section(ui, "fonts", solidcraft_ui_text::tr("help.fonts"), false, |ui| {
-                    ui_kit::text(ui, solidcraft_ui_text::tr("help.font_details"), ui_kit::Text::Report("fonts", false));
+                ui_kit::section(ui, "fonts", torno_ui_text::tr("help.fonts"), false, |ui| {
+                    ui_kit::text(ui, torno_ui_text::tr("help.font_details"), ui_kit::Text::Report("fonts", false));
                 });
-                ui_kit::section(ui, "licences", solidcraft_ui_text::tr("help.licences"), false, |ui| {
+                ui_kit::section(ui, "licences", torno_ui_text::tr("help.licences"), false, |ui| {
                     // Indented, so the licences read as the children of Licences (#14388).
-                    ui.spacing_mut().indent = solidcraft_theme::Tokens::get().space_14;
+                    ui.spacing_mut().indent = torno_theme::Tokens::get().space_14;
                     ui.indent("licence_list", |ui| {
                         for (id, title, text) in
                             [("notice", "help.notice", NOTICE), ("mit", "help.mit", LICENSE_MIT), ("apache", "help.apache", LICENSE_APACHE)]
                         {
-                            ui_kit::section(ui, id, solidcraft_ui_text::tr(title), false, |ui| {
+                            ui_kit::section(ui, id, torno_ui_text::tr(title), false, |ui| {
                                 ui_kit::text(ui, text, ui_kit::Text::Report(id, false));
                             });
                         }
-                        ui_kit::section(ui, "third_party", solidcraft_ui_text::tr("help.third_party"), false, |ui| {
-                            if ui_kit::button(ui, solidcraft_ui_text::tr_label("Copy all licences"), ui_kit::Button::Normal).clicked() {
-                                ctx.copy_text(solidcraft_engine::licences::all());
+                        ui_kit::section(ui, "third_party", torno_ui_text::tr("help.third_party"), false, |ui| {
+                            if ui_kit::button(ui, torno_ui_text::tr_label("Copy all licences"), ui_kit::Button::Normal).clicked() {
+                                ctx.copy_text(torno_engine::licences::all());
                             }
                             ui_kit::text_lines(ui, "sc_third_party", THIRD_PARTY);
                         });
@@ -272,15 +269,15 @@ mod tests {
         let mut h = crate::scenario::Harness::new();
         h.app.help.about = true;
         h.frames(2);
-        let key = |id: &str| format!("dialog:section:{}", solidcraft_ui_text::tr(id));
+        let key = |id: &str| format!("dialog:section:{}", torno_ui_text::tr(id));
         h.step(&serde_json::json!({"click": {"handle": key("help.licences")}})).unwrap();
         h.frames(2);
-        let left = |id: &str| solidcraft_ui_registry::rect_of(&key(id)).map(|r| r.left());
+        let left = |id: &str| torno_ui_registry::rect_of(&key(id)).map(|r| r.left());
         let parent = left("help.licences").expect("the Licences heading");
         assert_eq!(left("help.fonts"), Some(parent), "Fonts stays beside Licences");
         for child in ["help.notice", "help.mit", "help.apache", "help.third_party"] {
             let x = left(child).unwrap_or_else(|| panic!("{child} is not shown"));
-            assert!(x >= parent + solidcraft_theme::Tokens::get().space_14 - 0.5, "{child} at {x}, Licences at {parent}");
+            assert!(x >= parent + torno_theme::Tokens::get().space_14 - 0.5, "{child} at {x}, Licences at {parent}");
         }
     }
 
@@ -288,7 +285,7 @@ mod tests {
     fn about_knows_its_build_and_diagnostics_say_where_it_runs() {
         assert!(!COMMIT.is_empty() && BUILD_DATE.len() == 10, "{COMMIT} {BUILD_DATE}");
         assert!(ATTRIBUTION.contains("ATTRIBUTION") || ATTRIBUTION.contains("Attribution"));
-        let app = SolveApp::new(solidcraft_engine::Session::default(), Default::default());
+        let app = SolveApp::new(torno_engine::Session::default(), Default::default());
         let d = diagnostics(&app);
         assert!(d.contains(VERSION) && d.contains(std::env::consts::OS) && d.contains("Renderer: CPU"), "{d}");
     }
@@ -296,7 +293,7 @@ mod tests {
     /// One feature and one body are counted in the singular (#9085), more in the plural.
     #[test]
     fn diagnostics_count_one_feature_and_one_body_in_the_singular() {
-        let mut app = SolveApp::new(solidcraft_engine::Session::default(), Default::default());
+        let mut app = SolveApp::new(torno_engine::Session::default(), Default::default());
         assert!(diagnostics(&app).ends_with("(0 features, 0 bodies)"), "{}", diagnostics(&app));
         app.session.execute("solid.box", &serde_json::json!({"length": 10, "width": 10, "height": 10})).unwrap();
         assert!(diagnostics(&app).ends_with("(1 feature, 1 body)"), "{}", diagnostics(&app));

@@ -1,5 +1,5 @@
 use serde_json::{Value, json};
-use solidcraft_io::MAX_DRAWING_BYTES;
+use torno_io::MAX_DRAWING_BYTES;
 
 use super::{DrawingInserted, ExportDxfParams, ExportDxfResult, InsertDxfParams, InsertSvgParams};
 use crate::Session;
@@ -12,7 +12,7 @@ const DXF: &str = "0\nSECTION\n2\nENTITIES\n0\nLINE\n10\n0\n20\n0\n11\n30\n21\n0
 const SVG: &str = r#"<svg xmlns="http://www.w3.org/2000/svg" width="20mm" height="10mm" viewBox="0 0 20 10"><rect x="0" y="0" width="20" height="10"/><text x="2" y="5" font-size="3">Hi</text></svg>"#;
 
 fn temp_dir(tag: &str) -> std::path::PathBuf {
-    let dir = std::env::temp_dir().join(format!("solidcraft-12508-{tag}-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("torno-12508-{tag}-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
     dir
 }

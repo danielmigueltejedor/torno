@@ -373,7 +373,7 @@
     "blend_dropping"
   ],
   "ungraded": [
-    "continuity: SolidCraft computes it"
+    "continuity: Torno computes it"
   ],
   "what": "a plain box with all 12 edges chamfered, the edges listed in an order that was refused",
   "why_not": []

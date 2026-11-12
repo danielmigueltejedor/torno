@@ -949,11 +949,11 @@ pub enum SolveOutcome {
     Failed,
 }
 
-impl From<solidcraft_sketch::SolveStatus> for SolveOutcome {
-    fn from(status: solidcraft_sketch::SolveStatus) -> Self {
+impl From<torno_sketch::SolveStatus> for SolveOutcome {
+    fn from(status: torno_sketch::SolveStatus) -> Self {
         match status {
-            solidcraft_sketch::SolveStatus::Solved => SolveOutcome::Solved,
-            solidcraft_sketch::SolveStatus::Failed => SolveOutcome::Failed,
+            torno_sketch::SolveStatus::Solved => SolveOutcome::Solved,
+            torno_sketch::SolveStatus::Failed => SolveOutcome::Failed,
         }
     }
 }

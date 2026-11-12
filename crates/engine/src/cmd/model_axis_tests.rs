@@ -2,8 +2,8 @@
 //! Revolve, Circular Pattern and Plane at Angle turn about a circular edge's or a cylinder's
 //! axis, and follow it when a parameter moves the cylinder.
 
-use solidcraft_geom::prelude::*;
 use std::f64::consts::PI;
+use torno_geom::prelude::*;
 
 use serde_json::{Value, json};
 use solidcore_record::Vec3;
@@ -59,7 +59,7 @@ fn revolve_about_a_circular_edge_follows_the_cylinder() {
     assert!(rel(volume(&mut s), SHAFT + ring(6.5)) < 1e-4, "follows the shaft: {}", volume(&mut s));
     // Saved and opened again it still follows.
     let saved = s.doc.to_json();
-    let mut reopened = Session::new(solidcraft_doc::Document::from_json(&saved).unwrap());
+    let mut reopened = Session::new(torno_doc::Document::from_json(&saved).unwrap());
     assert!(rel(volume(&mut reopened), volume(&mut s)) < 1e-9);
     run(&mut reopened, "parameters.change", json!({"name": "cx", "expression": "40 mm"}));
     assert!(rel(volume(&mut reopened), SHAFT + ring(7.0)) < 1e-4);
@@ -71,10 +71,8 @@ fn revolve_about_a_cylinder_wall() {
     ring_profile(&mut s);
     run(&mut s, "solid.revolve", json!({"sketch": "Profile", "axis": {"face": [45, 0, 5]}, "operation": "new"}));
     assert!(rel(volume(&mut s), SHAFT + ring(7.0)) < 1e-4, "{}", volume(&mut s));
-    let Some(solidcraft_doc::Feature { kind: solidcraft_doc::FeatureKind::Revolve { axis, .. }, .. }) = s.doc.features.last() else {
-        panic!("no revolve")
-    };
-    assert!(matches!(axis, solidcraft_doc::AxisRef::Model { .. }), "kept as a reference: {axis:?}");
+    let Some(torno_doc::Feature { kind: torno_doc::FeatureKind::Revolve { axis, .. }, .. }) = s.doc.features.last() else { panic!("no revolve") };
+    assert!(matches!(axis, torno_doc::AxisRef::Model { .. }), "kept as a reference: {axis:?}");
 }
 
 #[test]
@@ -103,17 +101,13 @@ fn circular_pattern_about_a_boss_wall_follows_the_boss() {
         let body = &st.bodies[0].body;
         [(r, 0.0), (0.0, r), (-r, 0.0), (0.0, -r)]
             .iter()
-            .all(|(dx, dy)| body.classify_point(Vec3::new(cx + dx, 100.0 + dy, 2.5)).unwrap() == solidcraft_kernel::PointClass::Outside)
+            .all(|(dx, dy)| body.classify_point(Vec3::new(cx + dx, 100.0 + dy, 2.5)).unwrap() == torno_kernel::PointClass::Outside)
     };
     assert!(holes(&s, 100.0, 30.0), "four holes round the boss");
     run(&mut s, "parameters.change", json!({"name": "cx", "expression": "90 mm"}));
     assert!(holes(&s, 90.0, 40.0), "the copies turn about the boss where it is now");
     let st = s.world_state().unwrap();
-    assert_eq!(
-        st.bodies[0].body.classify_point(Vec3::new(100.0, 130.0, 2.5)).unwrap(),
-        solidcraft_kernel::PointClass::Inside,
-        "not where the boss was"
-    );
+    assert_eq!(st.bodies[0].body.classify_point(Vec3::new(100.0, 130.0, 2.5)).unwrap(), torno_kernel::PointClass::Inside, "not where the boss was");
 }
 
 #[test]
@@ -140,10 +134,10 @@ fn plane_at_angle_on_a_face_about_an_edge_follows_both() {
         json!({"base": {"face": [5, 5, 20]}, "axis": {"edge": [20, 0, 20]}, "angle": "45 deg", "name": "Slanted"}),
     );
     let feature = s.doc.find_feature("Slanted").unwrap();
-    let solidcraft_doc::FeatureKind::ConstructionPlane { plane: solidcraft_doc::PlaneRef::AtAngle { base, line, .. } } = &feature.kind else {
+    let torno_doc::FeatureKind::ConstructionPlane { plane: torno_doc::PlaneRef::AtAngle { base, line, .. } } = &feature.kind else {
         panic!("at_angle plane: {:?}", feature.kind)
     };
-    assert!(matches!(base.as_ref(), solidcraft_doc::PlaneRef::Face { anchor: Some(_), .. }), "{base:?}");
+    assert!(matches!(base.as_ref(), torno_doc::PlaneRef::Face { anchor: Some(_), .. }), "{base:?}");
     assert!(line.is_some(), "the edge is kept as a model reference");
     let plane = |s: &Session| construction_planes(s).into_iter().find(|p| p.1 == "Slanted").map(|p| p.2).unwrap();
     let half = 0.5_f64.sqrt();

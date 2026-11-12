@@ -1,12 +1,12 @@
 //! Sketch drawing exchange: Insert DXF, Insert SVG and sketch DXF export.
 
-use solidcraft_geom::prelude::*;
 use std::collections::HashMap;
+use torno_geom::prelude::*;
 
 use serde_json::{Value, json};
 use solidcore_record::Vec2;
-use solidcraft_io::{DxfEntity, DxfLayer, Geom2, MAX_DRAWING_BYTES};
-use solidcraft_sketch::{Analysis, CurveKind, LinkKind, LinkSource, Sketch};
+use torno_io::{DxfEntity, DxfLayer, Geom2, MAX_DRAWING_BYTES};
+use torno_sketch::{Analysis, CurveKind, LinkKind, LinkSource, Sketch};
 
 use super::CommandSpec;
 use super::sketch::{Left, edit_solved, ids_of};
@@ -71,9 +71,9 @@ fn source_text(p: &Value, cmd: &str, svg: bool) -> Result<String> {
         return Ok(t.to_string());
     }
     let path = str_(p, "path").filter(|x| !x.trim().is_empty() && x.len() < 4096).ok_or_else(|| bad(cmd, "give `path` or `text`"))?;
-    let bytes = solidcraft_io::vfs::read(path, MAX_DRAWING_BYTES).map_err(|e| EngineError::Other(format!("{path}: {e}")))?;
+    let bytes = torno_io::vfs::read(path, MAX_DRAWING_BYTES).map_err(|e| EngineError::Other(format!("{path}: {e}")))?;
     if svg {
-        return solidcraft_io::decode_svg(&bytes).map_err(|e| drawing_error(p, svg, e.to_string()));
+        return torno_io::decode_svg(&bytes).map_err(|e| drawing_error(p, svg, e.to_string()));
     }
     Ok(String::from_utf8_lossy(&bytes).to_string())
 }
@@ -96,7 +96,7 @@ pub(super) fn add_geometry(sk: &mut Sketch, geom: &[Geom2], f: &dyn Fn(Vec2) -> 
     // without searching the whole sketch, so the insert takes time in proportion to its size.
     let sk = &mut sk.batch();
     let mut map: HashMap<(i64, i64), Vec<(Vec2, usize)>> = HashMap::new();
-    let mut pt = |sk: &mut solidcraft_sketch::SketchBatch, p: Vec2| -> Result<usize> {
+    let mut pt = |sk: &mut torno_sketch::SketchBatch, p: Vec2| -> Result<usize> {
         let p = f(p);
         let key = ((p.x / q).floor() as i64, (p.y / q).floor() as i64);
         for dx in -1..=1 {
@@ -132,7 +132,7 @@ pub(super) fn add_geometry(sk: &mut Sketch, geom: &[Geom2], f: &dyn Fn(Vec2) -> 
             Geom2::Ellipse { c, major, minor } => Some(CurveKind::Ellipse { c: pt(sk, *c)?, m: pt(sk, *major)?, r: minor * k }),
             Geom2::Spline { pts, control, degree } => {
                 let mut idx = Vec::new();
-                for p in pts.iter().take(solidcraft_sketch::MAX_SPLINE_POINTS) {
+                for p in pts.iter().take(torno_sketch::MAX_SPLINE_POINTS) {
                     let i = pt(sk, *p)?;
                     if idx.last() != Some(&i) {
                         idx.push(i);
@@ -208,9 +208,9 @@ fn bounds_of(geom: &[Geom2]) -> Option<(Vec2, Vec2)> {
 /// (#9641).
 fn read_drawing(p: &Value, cmd: &str, svg: bool) -> Result<(Vec<Geom2>, (Vec2, Vec2))> {
     let text = source_text(p, cmd, svg)?;
-    let geom = if svg { solidcraft_io::read_svg(&text) } else { solidcraft_io::read_dxf(&text) }.map_err(|e| drawing_error(p, svg, e.to_string()))?;
+    let geom = if svg { torno_io::read_svg(&text) } else { torno_io::read_dxf(&text) }.map_err(|e| drawing_error(p, svg, e.to_string()))?;
     let Some(bounds) = bounds_of(&geom) else {
-        let why = if svg { solidcraft_io::svg_nothing_to_import(&text) } else { "the DXF has no entities SolidCraft reads".to_string() };
+        let why = if svg { torno_io::svg_nothing_to_import(&text) } else { "the DXF has no entities Torno reads".to_string() };
         return Err(drawing_error(p, svg, why));
     };
     Ok((geom, bounds))
@@ -270,8 +270,8 @@ fn insert(s: &mut Session, p: &Value, cmd: &str, svg: bool) -> Result<Value> {
     };
     // A dense SVG/DXF (a floorplan) can yield far more entities than a sketch takes; refuse
     // before adding so the message names the cap (#10874). Scale alone does not shrink the count.
-    if geom.len() > solidcraft_sketch::limits::max_points() {
-        return Err(solidcraft_sketch::SketchError::TooLarge.into());
+    if geom.len() > torno_sketch::limits::max_points() {
+        return Err(torno_sketch::SketchError::TooLarge.into());
     }
     // `sketch::edit`, but keeping the solve as a typed value for the reply.
     let target = sketch_store::target(s, p, cmd)?;
@@ -338,7 +338,7 @@ fn export_dxf(s: &mut Session, p: &Value) -> Result<Value> {
     let (insunits, scale) = match units_param.as_deref() {
         None => (4, 1.0),
         Some("design") => {
-            let doc_units = solidcraft_doc::expr::length_unit_or_mm(&s.doc.units);
+            let doc_units = torno_doc::expr::length_unit_or_mm(&s.doc.units);
             match doc_units.to_ascii_lowercase().as_str() {
                 "in" | "inch" => (1, 1.0 / 25.4),
                 "ft" => (2, 1.0 / 304.8),
@@ -410,7 +410,7 @@ fn export_dxf(s: &mut Session, p: &Value) -> Result<Value> {
             }
         }
         let count = geom.len();
-        (solidcraft_io::write_dxf(&geom), count)
+        (torno_io::write_dxf(&geom), count)
     } else if !join {
         let hole_keys: std::collections::HashSet<Vec<&str>> =
             ss.profiles.iter().flat_map(|p| p.hole_curves.iter().map(|h| sorted_curve_ids(h))).collect();
@@ -462,7 +462,7 @@ fn export_dxf(s: &mut Session, p: &Value) -> Result<Value> {
             }
         }
         let count = entities.len();
-        (solidcraft_io::write_dxf_entities(&entities, insunits), count)
+        (torno_io::write_dxf_entities(&entities, insunits), count)
     } else {
         // join: true -> emit closed loops as LWPOLYLINE with bulges for arcs
         let hole_keys: std::collections::HashSet<Vec<&str>> =
@@ -487,12 +487,12 @@ fn export_dxf(s: &mut Session, p: &Value) -> Result<Value> {
                 continue;
             }
             let outer_layer = if roles_layers { "OUTLINE" } else { base_layer };
-            let shape = solidcraft_io::loop_lwpolyline_scaled(&prof.region.outer, scale);
+            let shape = torno_io::loop_lwpolyline_scaled(&prof.region.outer, scale);
             entities.push(DxfEntity { layer: outer_layer.into(), shape });
 
             for hole in &prof.region.holes {
                 let hole_layer = if roles_layers { "CUT" } else { base_layer };
-                let shape = solidcraft_io::loop_lwpolyline_scaled(hole, scale);
+                let shape = torno_io::loop_lwpolyline_scaled(hole, scale);
                 entities.push(DxfEntity { layer: hole_layer.into(), shape });
             }
         }
@@ -503,11 +503,9 @@ fn export_dxf(s: &mut Session, p: &Value) -> Result<Value> {
             }
             let pt = |k: usize| sk.point(k).unwrap_or_default() * scale;
             match &c.kind {
-                CurveKind::Line { a, b } => {
-                    entities.push(DxfEntity { layer: base_layer.into(), shape: solidcraft_io::DxfShape::Line(pt(*a), pt(*b)) })
-                }
+                CurveKind::Line { a, b } => entities.push(DxfEntity { layer: base_layer.into(), shape: torno_io::DxfShape::Line(pt(*a), pt(*b)) }),
                 CurveKind::Circle { c, r } => {
-                    entities.push(DxfEntity { layer: base_layer.into(), shape: solidcraft_io::DxfShape::Circle { c: pt(*c), r: *r * scale } })
+                    entities.push(DxfEntity { layer: base_layer.into(), shape: torno_io::DxfShape::Circle { c: pt(*c), r: *r * scale } })
                 }
                 CurveKind::Arc { c, a, b } => {
                     let center = pt(*c);
@@ -516,12 +514,12 @@ fn export_dxf(s: &mut Session, p: &Value) -> Result<Value> {
                     let r = center.dist(pa);
                     let a0 = (pa - center).angle().to_degrees().rem_euclid(360.0);
                     let a1 = (pb - center).angle().to_degrees().rem_euclid(360.0);
-                    entities.push(DxfEntity { layer: base_layer.into(), shape: solidcraft_io::DxfShape::Arc { c: center, r, a0, a1 } });
+                    entities.push(DxfEntity { layer: base_layer.into(), shape: torno_io::DxfShape::Arc { c: center, r, a0, a1 } });
                 }
                 _ => {
                     let poly = sk.polyline(i);
                     let points: Vec<Vec2> = poly.into_iter().map(|p| p * scale).collect();
-                    entities.push(DxfEntity { layer: base_layer.into(), shape: solidcraft_io::DxfShape::Polyline { points } });
+                    entities.push(DxfEntity { layer: base_layer.into(), shape: torno_io::DxfShape::Polyline { points } });
                 }
             }
         }
@@ -542,11 +540,11 @@ fn export_dxf(s: &mut Session, p: &Value) -> Result<Value> {
             })
             .collect();
         let count = entities.len();
-        (solidcraft_io::write_dxf_drawing_units(&layers, &entities, insunits)?, count)
+        (torno_io::write_dxf_drawing_units(&layers, &entities, insunits)?, count)
     };
 
     if let Some(path) = str_(p, "path").filter(|x| !x.trim().is_empty()) {
-        solidcraft_io::vfs::write(path, text.as_bytes()).map_err(|e| EngineError::Other(format!("{path}: {e}")))?;
+        torno_io::vfs::write(path, text.as_bytes()).map_err(|e| EngineError::Other(format!("{path}: {e}")))?;
         let exported = DxfExported::Written { path: path.to_string(), entities: entity_count };
         return reply(cmd, ExportDxfResult { exported, param_warnings: Vec::new() });
     }
@@ -556,8 +554,8 @@ fn export_dxf(s: &mut Session, p: &Value) -> Result<Value> {
 #[cfg(test)]
 mod tests {
     use serde_json::json;
-    use solidcraft_geom::prelude::*;
-    use solidcraft_io::Geom2;
+    use torno_geom::prelude::*;
+    use torno_io::Geom2;
 
     use crate::Session;
 
@@ -598,7 +596,7 @@ mod tests {
         }
     }
 
-    /// A degree-9 SPLINE (solidcraft#5269) with fewer control points than its degree needs still
+    /// A degree-9 SPLINE (torno#5269) with fewer control points than its degree needs still
     /// comes in as one spline over all its points, which the sketch draws at the degree they allow.
     #[test]
     fn a_degree_nine_spline_with_few_control_points_comes_in_whole() {
@@ -620,7 +618,7 @@ mod tests {
     #[test]
     fn a_drawing_with_too_many_entities_names_the_sketch_cap() {
         let _turn = SKETCH_LIMIT.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-        let n = solidcraft_sketch::MAX_POINTS + 1;
+        let n = torno_sketch::MAX_POINTS + 1;
         let mut dxf = String::from("0\nSECTION\n2\nENTITIES\n");
         for i in 0..n {
             dxf.push_str(&format!("0\nLINE\n10\n{i}\n20\n0\n11\n{}\n21\n1\n", i + 1));
@@ -636,7 +634,7 @@ mod tests {
     /// limit goes into one sketch; back at the default it is refused again.
     #[test]
     fn a_raised_sketch_limit_takes_a_denser_drawing() {
-        use solidcraft_sketch::limits;
+        use torno_sketch::limits;
         let _turn = SKETCH_LIMIT.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
         let n = limits::DEFAULT_POINTS + 1;
         let mut dxf = String::from("0\nSECTION\n2\nENTITIES\n");
@@ -656,12 +654,12 @@ mod tests {
         assert!(e.contains("at most 20000"), "{e}");
     }
 
-    /// #9641: an SVG with nothing SolidCraft can draw (here only an embedded picture) is refused
+    /// #9641: an SVG with nothing Torno can draw (here only an embedded picture) is refused
     /// with a message naming the file and saying why, not "invalid parameters … no geometry"; a
     /// UTF-16 SVG file inserts.
     #[test]
     fn an_svg_with_nothing_to_import_says_why() {
-        let dir = std::env::temp_dir().join(format!("solidcraft-9641-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("torno-9641-{}", std::process::id()));
         std::fs::create_dir_all(&dir).unwrap();
         let picture = dir.join("logo.svg");
         std::fs::write(
@@ -703,7 +701,7 @@ mod tests {
         assert_eq!(r["curves"], 1, "{r}");
         let st = s.model.state();
         let sk = &st.sketch(r["sketch"].as_u64().unwrap()).unwrap().sketch;
-        assert!(matches!(sk.curves[0].kind, solidcraft_sketch::CurveKind::Conic { .. }), "{:?}", sk.curves[0].kind);
+        assert!(matches!(sk.curves[0].kind, torno_sketch::CurveKind::Conic { .. }), "{:?}", sk.curves[0].kind);
         // Every point the sketch draws it with lies on the ellipse.
         let worst = sk.polyline(0).iter().map(|p| ((p.x / 10.0).powi(2) + (p.y / 5.0).powi(2) - 1.0).abs()).fold(0.0, f64::max);
         assert!(worst < 1e-9, "{worst}");
@@ -780,16 +778,16 @@ mod tests {
             }
             let pt = |k: usize| sk.point(k).unwrap_or_default();
             match &c.kind {
-                solidcraft_sketch::CurveKind::Line { a, b } => geom.push(Geom2::Line(pt(*a), pt(*b))),
-                solidcraft_sketch::CurveKind::Circle { c, r } => geom.push(Geom2::Circle(pt(*c), *r)),
-                solidcraft_sketch::CurveKind::Arc { c, a, b } => geom.push(Geom2::Arc { c: pt(*c), a: pt(*a), b: pt(*b) }),
+                torno_sketch::CurveKind::Line { a, b } => geom.push(Geom2::Line(pt(*a), pt(*b))),
+                torno_sketch::CurveKind::Circle { c, r } => geom.push(Geom2::Circle(pt(*c), *r)),
+                torno_sketch::CurveKind::Arc { c, a, b } => geom.push(Geom2::Arc { c: pt(*c), a: pt(*a), b: pt(*b) }),
                 _ => {
                     let poly = sk.polyline(i);
                     geom.extend(poly.windows(2).map(|w| Geom2::Line(w[0], w[1])));
                 }
             }
         }
-        let expected = solidcraft_io::write_dxf(&geom);
+        let expected = torno_io::write_dxf(&geom);
         assert_eq!(text, expected, "default output must be byte-identical to previous write_dxf output");
 
         // Null options must be treated as omitted (default behavior)
@@ -914,7 +912,7 @@ mod tests {
         assert!(dxf.contains("3.000000000"));
 
         // Round-trip through read_dxf: reads $INSUNITS=1, scales by 25.4 to mm
-        let geom = solidcraft_io::read_dxf(dxf).unwrap();
+        let geom = torno_io::read_dxf(dxf).unwrap();
         let mut widths = Vec::new();
         let mut heights = Vec::new();
         for g in &geom {
@@ -942,7 +940,7 @@ mod tests {
         assert!(dxf_join.contains("LWPOLYLINE"));
         assert!(dxf_join.contains("\n$INSUNITS\n 70\n1\n") || dxf_join.contains("\n$INSUNITS\n70\n1\n"));
 
-        let geom_join = solidcraft_io::read_dxf(dxf_join).unwrap();
+        let geom_join = torno_io::read_dxf(dxf_join).unwrap();
         assert_eq!(geom_join.len(), 4);
         for g in &geom_join {
             if let Geom2::Line(a, b) = g {

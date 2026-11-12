@@ -10,8 +10,8 @@
 //! `κₙ = n · S_tt / |S_t|²` (the second fundamental form over the first, in that direction).
 
 use solidcore_record::Vec3;
-use solidcraft_geom::brep::eval::{CurveEval, SurfaceEval};
-use solidcraft_geom::prelude::*;
+use torno_geom::brep::eval::{CurveEval, SurfaceEval};
+use torno_geom::prelude::*;
 
 use crate::body::Body;
 use crate::iso::IsoLine;

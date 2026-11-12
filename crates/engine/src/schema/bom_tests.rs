@@ -40,7 +40,7 @@ fn schemas_and_the_key_check_agree() {
 
 #[test]
 fn strict_keeps_todays_errors() {
-    let file = std::env::temp_dir().join(format!("solidcraft-bom-schema-{}.csv", std::process::id()));
+    let file = std::env::temp_dir().join(format!("torno-bom-schema-{}.csv", std::process::id()));
     let file = file.to_string_lossy();
     assert_strict_keeps_todays_errors(&[
         ("assembly.bom", json!({"component": true})),
@@ -124,7 +124,7 @@ fn a_bill_of_materials_replies_with_its_schema() {
     assert_eq!((hinge["children"][0]["part_number"].as_str(), hinge["children"][0]["item"].is_string()), (Some("PN-040"), true), "{r}");
     let dir = std::env::temp_dir();
     for (name, format) in [("json", Value::Null), ("csv", json!("CSV"))] {
-        let path = dir.join(format!("solidcraft-bom-schema-{}.{name}", std::process::id())).to_string_lossy().into_owned();
+        let path = dir.join(format!("torno-bom-schema-{}.{name}", std::process::id())).to_string_lossy().into_owned();
         let r = run(&mut s, "assembly.bom", json!({"path": path, "format": format}));
         matches(&r, false);
         assert_eq!(r["format"], name, "{r}");

@@ -59,6 +59,6 @@
   "ungraded": [],
   "what": "a 10 x 10 sheet's edge x = 10 extended naturally by 5: the plane continued to 15 x 10",
   "why_not": [
-    "body \"Sheet\" is no kernel operation's output nor an operand: SolidCraft built it or changed the kernel's record"
+    "body \"Sheet\" is no kernel operation's output nor an operand: Torno built it or changed the kernel's record"
   ]
 }

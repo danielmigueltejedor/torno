@@ -3,8 +3,8 @@
 //! triangles describe (#358). Geometry is inferred from closed, manifold input, never from a
 //! display mesh.
 
-use solidcraft_geom::prelude::*;
 use std::collections::BTreeMap;
+use torno_geom::prelude::*;
 
 use solidcore_record::{Loop2, Plane, Region2, Vec2, Vec3};
 
@@ -94,7 +94,7 @@ fn weld(mesh: &crate::meshbody::TriMesh, tolerance: f64) -> Result<Body> {
     if mesh.positions.len() > MAX_TRIANGLES * 3 {
         return Err(invalid(&format!("the mesh has {} vertices, more than the {} conversion can take", mesh.positions.len(), MAX_TRIANGLES * 3)));
     }
-    let bounds = mesh.positions.iter().fold(solidcraft_geom::Aabb3::EMPTY, |mut b, p| {
+    let bounds = mesh.positions.iter().fold(torno_geom::Aabb3::EMPTY, |mut b, p| {
         b.add(*p);
         b
     });
@@ -175,7 +175,7 @@ fn weld(mesh: &crate::meshbody::TriMesh, tolerance: f64) -> Result<Body> {
 fn extrusion(mesh: &crate::meshbody::TriMesh, axis: Vec3, tolerance: f64) -> Result<Option<Body>> {
     let (lo, hi) = mesh.positions.iter().map(|p| p.dot(axis)).fold((f64::INFINITY, f64::NEG_INFINITY), |(lo, hi), h| (lo.min(h), hi.max(h)));
     let height = hi - lo;
-    let bounds = mesh.positions.iter().fold(solidcraft_geom::Aabb3::EMPTY, |mut b, p| {
+    let bounds = mesh.positions.iter().fold(torno_geom::Aabb3::EMPTY, |mut b, p| {
         b.add(*p);
         b
     });
@@ -341,7 +341,7 @@ fn extrusion(mesh: &crate::meshbody::TriMesh, axis: Vec3, tolerance: f64) -> Res
 /// along mesh edges, so the faces close into the same shell the mesh is and no surface the mesh
 /// does not describe is invented — unlike [`extrusion`], which certifies analytic cylinders.
 fn faceted_solid(mesh: &crate::meshbody::TriMesh) -> Result<Body> {
-    let bounds = mesh.positions.iter().fold(solidcraft_geom::Aabb3::EMPTY, |mut b, p| {
+    let bounds = mesh.positions.iter().fold(torno_geom::Aabb3::EMPTY, |mut b, p| {
         b.add(*p);
         b
     });
@@ -662,7 +662,7 @@ mod tests {
         assert!((crate::measure(&converted).unwrap().volume - crate::measure(&source).unwrap().volume).abs() < 1e-7);
         assert_eq!(crate::measure(&converted).unwrap().merged.face_types.get("cylinder"), Some(&1));
         assert!(converted.faces(0.01).unwrap().len() < 15);
-        let step = crate::step_export(&[&converted], "SolidCraft regression").unwrap();
+        let step = crate::step_export(&[&converted], "Torno regression").unwrap();
         let reopened = crate::step_import(&step).unwrap();
         assert!((fine_volume(&reopened.bodies[0].body) - expected).abs() < 0.02);
     }
@@ -751,7 +751,7 @@ mod tests {
         assert_eq!(converted.faces(0.01).unwrap().len(), 7);
         // The plane passes through the cube's centre, so the kept half is exactly half of it.
         assert!((crate::measure(&converted).unwrap().volume - 4000.).abs() < 1e-6);
-        let step = crate::step_export(&[&converted], "SolidCraft regression").unwrap();
+        let step = crate::step_export(&[&converted], "Torno regression").unwrap();
         let reopened = crate::step_import(&step).unwrap();
         assert!((crate::measure(&reopened.bodies[0].body).unwrap().volume - 4000.).abs() < 1e-6);
     }

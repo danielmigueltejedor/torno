@@ -1,13 +1,13 @@
 use egui::{Rect, pos2, vec2};
 use serde_json::json;
-use solidcraft_engine::geom::prelude::*;
+use torno_engine::geom::prelude::*;
 
 use crate::SolveApp;
 use crate::viewport::{Hit, pick, pick_all, projection};
 
 /// Overlapping bodies with flat and curved faces, filleted edges and seams.
 fn assembly() -> SolveApp {
-    let mut s = solidcraft_engine::Session::default();
+    let mut s = torno_engine::Session::default();
     s.execute("solid.box", &json!({"length": 40, "width": 30, "height": 20})).unwrap();
     s.execute("solid.fillet", &json!({"edges": [[40, 15, 20]], "radius": 4})).unwrap();
     s.execute("solid.cylinder", &json!({"radius": 8, "height": 35, "base": [10, 10, 0], "operation": "new_body"})).unwrap();
@@ -68,8 +68,8 @@ fn indexes_follow_the_model_state() {
     assert!(app.viewport.pick_index.len() <= 5);
 }
 
-/// Timing, not a check (`cargo test --release -p solidcraft-ui-egui --lib pick_timing -- --ignored
-/// --nocapture`; `SOLIDCRAFT_BENCH_MESH=part.stl` adds 25 placements of that mesh): picks over a
+/// Timing, not a check (`cargo test --release -p torno-ui-egui --lib pick_timing -- --ignored
+/// --nocapture`; `TORNO_BENCH_MESH=part.stl` adds 25 placements of that mesh): picks over a
 /// grid of a 1400 × 900 view, scanning every triangle and edge versus through the indexes, on many
 /// curved bodies, on one body with many curved faces, and on eight layers of bodies seen from
 /// above (rays passing near many hidden edges). Release, Apple M2 Max: tens of microseconds a
@@ -77,7 +77,7 @@ fn indexes_follow_the_model_state() {
 #[test]
 #[ignore]
 fn pick_timing_on_curved_models() {
-    let mut many = solidcraft_engine::Session::default();
+    let mut many = torno_engine::Session::default();
     for i in 0..12 {
         for j in 0..12 {
             let (x, y) = (f64::from(i) * 30.0, f64::from(j) * 30.0);
@@ -85,7 +85,7 @@ fn pick_timing_on_curved_models() {
             many.execute("solid.sphere", &json!({"radius": 8, "center": [x, y, 40], "operation": "new_body"})).unwrap();
         }
     }
-    let mut one = solidcraft_engine::Session::default();
+    let mut one = torno_engine::Session::default();
     one.execute("solid.box", &json!({"length": 340, "width": 340, "height": 10, "corner": [-15, -15, -5]})).unwrap();
     for i in 0..8 {
         for j in 0..8 {
@@ -93,7 +93,7 @@ fn pick_timing_on_curved_models() {
             one.execute("solid.cylinder", &json!({"radius": 14, "height": 30, "base": [x, y, 0], "operation": "join"})).unwrap();
         }
     }
-    let mut deep = solidcraft_engine::Session::default();
+    let mut deep = torno_engine::Session::default();
     for k in 0..8 {
         for i in 0..8 {
             for j in 0..8 {
@@ -107,8 +107,8 @@ fn pick_timing_on_curved_models() {
         ("one body", SolveApp::new(one, crate::Services::default()), 0.6),
     ];
     scenes.push(("eight layers", SolveApp::new(deep, crate::Services::default()), 1.2));
-    if let Some(path) = std::env::var_os("SOLIDCRAFT_BENCH_MESH") {
-        let mut app = SolveApp::new(solidcraft_engine::Session::default(), crate::Services::default());
+    if let Some(path) = std::env::var_os("TORNO_BENCH_MESH") {
+        let mut app = SolveApp::new(torno_engine::Session::default(), crate::Services::default());
         let component = app.run("file.insert_mesh", json!({"path": path.to_string_lossy()})).unwrap()["component"].clone();
         app.run("component.activate", json!({"component":"root"})).unwrap();
         let size = crate::open_meshing::session_world(&app.session).bodies[0].mesh_bounds().size();
@@ -122,9 +122,7 @@ fn pick_timing_on_curved_models() {
         app.set_origin_shown(false);
         (app.cam.yaw, app.cam.pitch) = (0.6, pitch);
         let st = app.session.world_state().unwrap();
-        app.cam.fit(&solidcraft_engine::render::view_bounds(
-            &st.bodies.iter().fold(solidcraft_engine::geom::Aabb3::EMPTY, |a, b| a.union(&b.mesh_bounds())),
-        ));
+        app.cam.fit(&torno_engine::render::view_bounds(&st.bodies.iter().fold(torno_engine::geom::Aabb3::EMPTY, |a, b| a.union(&b.mesh_bounds()))));
         let (tris, segs) = st
             .bodies
             .iter()
@@ -158,15 +156,15 @@ fn pick_timing_on_curved_models() {
 }
 
 /// Timing, not a check: mouse moves over a large sketch being edited, with no tool, with Trim and
-/// with Extend (`SOLIDCRAFT_BENCH_SKETCH=out/testdaten/hover-circles.json cargo test --release -p
-/// solidcraft-ui-egui --lib sketch_hover_timing -- --ignored --nocapture`; the scripts and how
+/// with Extend (`TORNO_BENCH_SKETCH=out/testdaten/hover-circles.json cargo test --release -p
+/// torno-ui-egui --lib sketch_hover_timing -- --ignored --nocapture`; the scripts and how
 /// they are made are in `out/testdaten/README.md`). Each move is one whole UI frame, as the window
 /// runs it; the profile lookup under the cursor and the Trim piece are also timed on their own.
 #[test]
 #[ignore]
 fn sketch_hover_timing() {
     use std::time::Instant;
-    let Some(path) = std::env::var_os("SOLIDCRAFT_BENCH_SKETCH") else { return };
+    let Some(path) = std::env::var_os("TORNO_BENCH_SKETCH") else { return };
     let script: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(&path).unwrap()).unwrap();
     let mut h = crate::scenario::Harness::new();
     let began = Instant::now();
@@ -187,7 +185,7 @@ fn sketch_hover_timing() {
     // Points on the lines (where Trim and Extend show something), then a grid over the sketch.
     let mut at: Vec<(String, solidcore_record::Vec2)> = Vec::new();
     for c in &ss.sketch.curves {
-        if let solidcraft_engine::sketch::CurveKind::Line { a, b } = c.kind
+        if let torno_engine::sketch::CurveKind::Line { a, b } = c.kind
             && at.len() < 60
         {
             let (p, q) = (ss.sketch.point(a).unwrap(), ss.sketch.point(b).unwrap());
@@ -196,7 +194,7 @@ fn sketch_hover_timing() {
             }
         }
     }
-    let bounds: solidcraft_engine::geom::Aabb2 = ss.sketch.points.iter().map(|p| p.pos).collect();
+    let bounds: torno_engine::geom::Aabb2 = ss.sketch.points.iter().map(|p| p.pos).collect();
     for j in 0..6 {
         for i in 0..10 {
             let size = bounds.max - bounds.min;
@@ -241,7 +239,7 @@ fn sketch_hover_timing() {
     let mut found = 0;
     for _ in 0..10 {
         for (_, q) in &at {
-            found += usize::from(std::hint::black_box(solidcraft_engine::sketch::profile_at_point(&ss.profiles, *q)).is_some());
+            found += usize::from(std::hint::black_box(torno_engine::sketch::profile_at_point(&ss.profiles, *q)).is_some());
         }
     }
     eprintln!("profile under the cursor: {:.4} ms a point ({found} found)", t.elapsed().as_secs_f64() * 100.0 / at.len() as f64);

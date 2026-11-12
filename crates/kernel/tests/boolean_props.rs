@@ -8,13 +8,13 @@
 //! (.config/nextest.toml, .github/workflows/ci.yml): its random inputs differ on every run, so a
 //! known kernel bug would turn main red at random. The nightly `property-tests` job runs it with
 //! more cases. A long local run:
-//! `PROPTEST_CASES=2000 cargo test -p solidcraft-kernel --test boolean_props`.
+//! `PROPTEST_CASES=2000 cargo test -p torno-kernel --test boolean_props`.
 //! proptest saves every failing seed in `tests/boolean_props.proptest-regressions`. Commit it, and
 //! copy the shrunk case into a `#[test]` below (ignored, with its issue, until the kernel is fixed).
 
 use proptest::prelude::*;
 use solidcore_record::Vec3;
-use solidcraft_kernel::{Body, BoolOp, boolean, box_solid, cylinder, measure, sphere, transform};
+use torno_kernel::{Body, BoolOp, boolean, box_solid, cylinder, measure, sphere, transform};
 
 /// Relative volume tolerance. The same 0.2 % that `fuzz::boolean_case` uses.
 const REL: f64 = 2e-3;
@@ -238,7 +238,7 @@ proptest! {
 }
 
 // Cases the property tests found, as plain tests. Ignored until the kernel bug is fixed: run them
-// with `cargo test -p solidcraft-kernel --test boolean_props -- --ignored`.
+// with `cargo test -p torno-kernel --test boolean_props -- --ignored`.
 
 /// The saved commutativity case: two boxes meeting only along an edge. Their union in either
 /// order is the two solids touching along it, 437.5 + 625 = 1062.5; they share no volume, and

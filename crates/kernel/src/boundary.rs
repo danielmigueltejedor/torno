@@ -18,7 +18,7 @@
 //! reason. Everything this module refuses is an error, never a quietly worse surface.
 
 use solidcore_record::Vec3;
-use solidcraft_geom::prelude::*;
+use torno_geom::prelude::*;
 
 use crate::body::Body;
 use crate::bridge::{Continuity, Frame, bridge};

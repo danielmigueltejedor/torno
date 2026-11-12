@@ -32,7 +32,7 @@
 //! | [`OffsetBrep`]                                              | what the unit reads from and writes to the two B-reps |
 //! | `VertexOffsetBrep` (private)                                | the vertex creator's topology/owned-geometry subset |
 //! | `FaceOffsetBrep` (private)                                   | the face creator's topology/owned-geometry subset |
-//! | `create_analytic_extension` (private)                       | the SolidCraft fork's `sm_CreateAnalyticExtension` (tangency-labs/smlib@fddc366, @98ab1b0; opt-in) |
+//! | `create_analytic_extension` (private)                       | the Torno fork's `sm_CreateAnalyticExtension` (tangency-labs/smlib@fddc366, @98ab1b0; opt-in) |
 //! | `exact_piece` (private)                                     | the fork's `sm_ExactPiece` (tangency-labs/smlib@fddc366; opt-in) |
 //! | [`make_edges_on_analytics_exact`]                          | the fork's `MakeEdgesOnAnalyticsExact` (tangency-labs/smlib@cd85d34; opt-in) |
 //! | [`OffsetGeometryCreation::default_tangency_tol_radians`]    | the constructor's `m_dTangencyTolRadians` (half a degree in the fork's tangency-labs/smlib@2e1bb8c; opt-in) |
@@ -143,7 +143,7 @@
 //!   dispatch on an `SmLine` (or other analytic) centre line as upstream does
 //!   (`SmFilletStandardSolver.cpp:3353-3384`).
 //! - **Opt-in fork fix.** With `Kernel::fixes.offset_analytic_mate_edges` (WR-495),
-//!   `mate_edges` runs the SolidCraft fork's exact-piece swap (tangency-labs/smlib@fddc366
+//!   `mate_edges` runs the Torno fork's exact-piece swap (tangency-labs/smlib@fddc366
 //!   with @98ab1b0) between the marched intersection and its trimming; off, it is
 //!   upstream's. `exact_piece` counts the whole turns it moves a conic angle by and
 //!   returns [`SolidError::NotConverged`] past `MAX_EXACT_PIECE_TURNS` (65536), where
@@ -3850,7 +3850,7 @@ impl OffsetGeometryCreation {
     /// UV curves and becomes the geometry of both offset edge uses
     /// (`ReplaceEdgeCurves`, oriented by the original edge uses).
     ///
-    /// With [`crate::kernel::UpstreamFixes::offset_analytic_mate_edges`] (the SolidCraft
+    /// With [`crate::kernel::UpstreamFixes::offset_analytic_mate_edges`] (the Torno
     /// fork's tangency-labs/smlib@fddc366 and @98ab1b0), each marched intersection
     /// piece that lies on an exact line or conic of analytic copies of the two face
     /// surfaces is first replaced by that curve, with UV curves dropped from it.

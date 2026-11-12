@@ -1,4 +1,4 @@
-//! SolidCraft #11360's `a_round_ending_in_an_earlier_round_matches_both_together` (#2364's
+//! Torno #11360's `a_round_ending_in_an_earlier_round_matches_both_together` (#2364's
 //! review): the arc-wall plate (the plate x 0..41 1/6, y -21..0 and the corner x 41 1/6..62 1/6
 //! less the cylinder r 21 about (62 1/6, -21), 10 high), a first edge rounded r 2, then the
 //! upright at the knife-edge tip (62 1/6, 0) rounded r 2 on that result. The first edge is
@@ -42,7 +42,7 @@ const BACK_TOP: Point3 = Point3::new(30.0, 0.0, 10.0);
 /// A point on the upright at the knife-edge tip.
 const TIP: Point3 = Point3::new(W + 21.0, 0.0, 5.0);
 
-/// SolidCraft's rig set: every fix but the four it leaves off.
+/// Torno's rig set: every fix but the four it leaves off.
 fn kernel() -> Kernel {
     let mut f = UpstreamFixes::all();
     f.cone_unbounded_parameterized_as_nurb = false;

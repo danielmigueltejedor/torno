@@ -18,7 +18,7 @@
 //! where the sweep has no end plane, the planar face left over) the end cap.
 
 use solidcore_record::{Plane, Region2, Seg2, Vec3};
-use solidcraft_geom::prelude::*;
+use torno_geom::prelude::*;
 
 use crate::body::Body;
 use crate::numbered::{NumberedLoop, NumberedRegion};
@@ -90,8 +90,8 @@ pub(crate) fn refuse(what: &str) -> KernelError {
 mod imp {
     use std::collections::BTreeSet;
 
-    use solidcraft_smlib::sweeps::{Affine, Curve, DraftCorner, Ends, SweepFrame};
-    use solidcraft_smlib::{Brep, CheckLevel};
+    use torno_smlib::sweeps::{Affine, Curve, DraftCorner, Ends, SweepFrame};
+    use torno_smlib::{Brep, CheckLevel};
 
     use solidcore_record::Vec2;
 
@@ -291,10 +291,10 @@ mod imp {
         (body.size() * 1e-6).max(1e-6)
     }
 
-    fn curves_error(what: &str, e: solidcraft_smlib::Error) -> KernelError {
+    fn curves_error(what: &str, e: torno_smlib::Error) -> KernelError {
         match e {
-            solidcraft_smlib::Error::Empty => KernelError::Invalid(format!("{what}: no curve on the face")),
-            solidcraft_smlib::Error::NoMatch { .. } => KernelError::Invalid(format!("{what}: no face of the body at the point")),
+            torno_smlib::Error::Empty => KernelError::Invalid(format!("{what}: no curve on the face")),
+            torno_smlib::Error::NoMatch { .. } => KernelError::Invalid(format!("{what}: no face of the body at the point")),
             e => failed(what, e),
         }
     }
@@ -493,7 +493,7 @@ mod imp {
             let prism = Brep::extrude(&c, p(dir), foot, 0.0, DraftCorner::default(), true).map_err(|e| failed("extrude", e))?;
             let slope =
                 Brep::extrude(&curves(&knee, pieces)?, p(dir), distance - foot, lean, corner(d.corner), true).map_err(|e| failed("extrude", e))?;
-            let brep = prism.boolean(&slope, solidcraft_smlib::BooleanOp::Union).map_err(|e| failed("extrude", e))?;
+            let brep = prism.boolean(&slope, torno_smlib::BooleanOp::Union).map_err(|e| failed("extrude", e))?;
             let brep = brep.ok_or_else(|| failed("extrude", "nothing is left"))?;
             let body = body_of(brep, "extrude")?;
             // The caps and the foot's walls from the base; the sloping walls (and the foot's again)
@@ -544,7 +544,7 @@ mod imp {
                 Brep::extrude(&curves(&base, pieces)?, p(dir), d.foot, 0.0, DraftCorner::default(), true).map_err(|e| failed("extrude", e))?;
             let slope =
                 Brep::extrude(&curves(&knee, pieces)?, p(dir), distance - d.foot, lean, corner(d.corner), true).map_err(|e| failed("extrude", e))?;
-            let brep = prism.boolean(&slope, solidcraft_smlib::BooleanOp::Union).map_err(|e| failed("extrude", e))?;
+            let brep = prism.boolean(&slope, torno_smlib::BooleanOp::Union).map_err(|e| failed("extrude", e))?;
             return brep.ok_or_else(|| failed("extrude", "nothing is left"));
         }
         Brep::extrude(&curves(&base, pieces)?, p(dir), distance, -d.taper, corner(d.corner), true).map_err(|e| failed("extrude", e))
@@ -571,7 +571,7 @@ mod imp {
         for h in holes {
             let cutter = drafted_loop(plane, h, from, distance, sign, Draft { taper: -draft.taper, ..draft })?;
             brep = brep
-                .boolean(&cutter, solidcraft_smlib::BooleanOp::Subtract)
+                .boolean(&cutter, torno_smlib::BooleanOp::Subtract)
                 .map_err(|e| failed("extrude", e))?
                 .ok_or_else(|| KernelError::Invalid("the draft leaves nothing of the profile".into()))?;
         }
@@ -829,7 +829,7 @@ mod imp {
         Brep::extrude(&square, p(normal), size, 0.0, DraftCorner::default(), true).map_err(|e| failed("mitre", e))
     }
 
-    fn combined(a: &Brep, b: &Brep, op: solidcraft_smlib::BooleanOp, what: &str) -> Result<Brep> {
+    fn combined(a: &Brep, b: &Brep, op: torno_smlib::BooleanOp, what: &str) -> Result<Brep> {
         a.boolean(b, op).map_err(|e| failed(what, e))?.ok_or_else(|| failed(what, "nothing is left"))
     }
 
@@ -932,16 +932,16 @@ mod imp {
                     Seed { at, piece }
                 }));
                 if let Some((at, toward, _)) = entry {
-                    piece = combined(&piece, &half_space(at, -toward, size)?, solidcraft_smlib::BooleanOp::Subtract, "sweep mitre")?;
+                    piece = combined(&piece, &half_space(at, -toward, size)?, torno_smlib::BooleanOp::Subtract, "sweep mitre")?;
                 }
                 if let Some((m, _)) = exit {
-                    piece = combined(&piece, &half_space(b1, m, size)?, solidcraft_smlib::BooleanOp::Subtract, "sweep mitre")?;
+                    piece = combined(&piece, &half_space(b1, m, size)?, torno_smlib::BooleanOp::Subtract, "sweep mitre")?;
                 }
                 (piece, moved_plane(&placed(&from, &last), t1 * -post))
             };
             body = Some(match body {
                 None => piece,
-                Some(b) => combined(&b, &piece, solidcraft_smlib::BooleanOp::Union, "sweep corner")?,
+                Some(b) => combined(&b, &piece, torno_smlib::BooleanOp::Union, "sweep corner")?,
             });
             // The profile at the run's end, then turned through the corner onto the next run.
             pose = at_end;
@@ -1393,7 +1393,7 @@ mod imp {
                     Curve::Arc { center: p(from), axis: p(k), reference: p(plane.x), radius: *radius, start: 0.0, end: std::f64::consts::TAU };
                 let bore =
                     Brep::extrude(&[circle], p(k), length + 2.0 * past, 0.0, DraftCorner::default(), true).map_err(|e| failed("sweep bore", e))?;
-                brep = combined(&brep, &bore, solidcraft_smlib::BooleanOp::Subtract, "sweep bore")?;
+                brep = combined(&brep, &bore, torno_smlib::BooleanOp::Subtract, "sweep bore")?;
             }
         }
         Ok((body_of(brep, "sweep")?, st, size, closed))
@@ -1562,18 +1562,18 @@ mod imp {
                 if let Some((at, m, turn)) = entry {
                     let pre = mitre_lead(&offsets, reach, turn, false);
                     let lead = prism(affine_moved(&first_map, t0 * -pre), t0, pre)?;
-                    piece = combined(&piece, &lead, solidcraft_smlib::BooleanOp::Union, "sweep corner")?;
-                    piece = combined(&piece, &half_space(at, -m, size)?, solidcraft_smlib::BooleanOp::Subtract, "sweep mitre")?;
+                    piece = combined(&piece, &lead, torno_smlib::BooleanOp::Union, "sweep corner")?;
+                    piece = combined(&piece, &half_space(at, -m, size)?, torno_smlib::BooleanOp::Subtract, "sweep mitre")?;
                 }
                 if let Some((m, turn)) = exit {
                     let tail = prism(end_map, t1, mitre_lead(&offsets, reach, turn, true))?;
-                    piece = combined(&piece, &tail, solidcraft_smlib::BooleanOp::Union, "sweep corner")?;
-                    piece = combined(&piece, &half_space(b1, m, size)?, solidcraft_smlib::BooleanOp::Subtract, "sweep mitre")?;
+                    piece = combined(&piece, &tail, torno_smlib::BooleanOp::Union, "sweep corner")?;
+                    piece = combined(&piece, &half_space(b1, m, size)?, torno_smlib::BooleanOp::Subtract, "sweep mitre")?;
                 }
             }
             body = Some(match body {
                 None => piece,
-                Some(b) => combined(&b, &piece, solidcraft_smlib::BooleanOp::Union, "sweep corner")?,
+                Some(b) => combined(&b, &piece, torno_smlib::BooleanOp::Union, "sweep corner")?,
             });
             // The section at the run's end, turned through the corner onto the next run.
             at_start = end_map;
@@ -1842,7 +1842,7 @@ mod imp {
         let c = curves(plane, pieces)?;
         let tolerance = (pitch.abs() * 1e-4).clamp(1e-6, 1e-2);
         let options =
-            solidcraft_smlib::sweeps::ScrewSweepOptions { law: (!law.is_empty()).then_some(law), join_spline_walls: continuous_flanks, tolerance };
+            torno_smlib::sweeps::ScrewSweepOptions { law: (!law.is_empty()).then_some(law), join_spline_walls: continuous_flanks, tolerance };
         let brep =
             Brep::screw_sweep_with_options(&c, p(origin), p(axis), pitch, turns, options).map_err(|e| failed("screw sweep with a radial law", e))?;
         let body = body_of(brep, "screw sweep")?;

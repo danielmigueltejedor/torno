@@ -9,14 +9,14 @@
 //! about; both are `ui_kit::Window` cards. While the card is open, [`overlay`] marks the centre
 //! of mass in the view with the principal axes standing out of it.
 
-use solidcraft_engine::geom::prelude::*;
 use std::sync::Arc;
+use torno_engine::geom::prelude::*;
 
 use egui::{Align2, FontId, Stroke};
 use serde_json::{Map, Value, json};
 use solidcore_record::Vec3;
-use solidcraft_engine::doc::metadata::{DESCRIPTION, Owner, keys};
-use solidcraft_engine::doc::progress::Progress;
+use torno_engine::doc::metadata::{DESCRIPTION, Owner, keys};
+use torno_engine::doc::progress::Progress;
 
 use crate::SolveApp;
 use crate::ui_kit;
@@ -29,7 +29,7 @@ const OTHERS_ROWS: f32 = 6.0;
 
 /// What is being typed; the properties themselves live in the document.
 pub struct DesignProperties {
-    /// Each of SolidCraft's design properties' text when the window opened, in
+    /// Each of Torno's design properties' text when the window opened, in
     /// `keys(Owner::Design)` order.
     pub opened: Vec<String>,
     /// The fields as edited.
@@ -99,10 +99,10 @@ pub fn show(app: &mut SolveApp, ctx: &egui::Context) {
         d.refused = None;
     }
     let metadata = app.session.doc.metadata.clone();
-    let title = solidcraft_ui_text::tr_label("Design Properties");
+    let title = torno_ui_text::tr_label("Design Properties");
     let (closed, action) = ui_kit::Window::new(egui::Id::unique("sc_design_properties"), "settings", title).fields().show(ctx, true, |ui| {
         for (i, k) in keys(Owner::Design).enumerate() {
-            let (key, label) = (k.name, solidcraft_ui_text::tr(k.label));
+            let (key, label) = (k.name, torno_ui_text::tr(k.label));
             let Some(field) = d.fields.get_mut(i) else { continue };
             if key == DESCRIPTION {
                 ui_kit::multiline_text_field(ui, label, egui::Id::unique(("sc_design_properties", key)), field);
@@ -111,15 +111,15 @@ pub fn show(app: &mut SolveApp, ctx: &egui::Context) {
             }
             // Saved by another tool as something other than text: kept unless typed over.
             if metadata.get(key).is_some() && metadata.text(key).is_none() && d.opened.get(i).is_some_and(String::is_empty) {
-                ui_kit::caption(ui, label, solidcraft_ui_text::tr("ui.design_properties.not_text"));
+                ui_kit::caption(ui, label, torno_ui_text::tr("ui.design_properties.not_text"));
             }
         }
-        ui_kit::text(ui, solidcraft_ui_text::tr("ui.design_properties.exports"), ui_kit::Text::Note("exports"));
+        ui_kit::text(ui, torno_ui_text::tr("ui.design_properties.exports"), ui_kit::Text::Note("exports"));
         let others: Vec<(&String, &Value)> = metadata.others().collect();
         if !others.is_empty() {
-            let heading = format!("{} ({})", solidcraft_ui_text::tr("ui.design_properties.others"), others.len());
+            let heading = format!("{} ({})", torno_ui_text::tr("ui.design_properties.others"), others.len());
             ui_kit::section(ui, "sc_design_properties_others", &heading, false, |ui| {
-                ui_kit::text(ui, solidcraft_ui_text::tr("ui.design_properties.others_note"), ui_kit::Text::Note("others"));
+                ui_kit::text(ui, torno_ui_text::tr("ui.design_properties.others_note"), ui_kit::Text::Note("others"));
                 egui::ScrollArea::vertical().max_height(ui_kit::row_height() * OTHERS_ROWS).show(ui, |ui| {
                     for (key, value) in others {
                         ui_kit::row(ui, key, |ui| ui_kit::text(ui, &preview(value), ui_kit::Text::Cell));
@@ -218,7 +218,7 @@ fn opened(app: &mut SolveApp, reply: Result<Value, String>, fallback: String) {
 /// channel once `hold` returns (which only tests make wait).
 #[cfg(not(target_arch = "wasm32"))]
 fn measure_beside(
-    mut copy: solidcraft_engine::Session,
+    mut copy: torno_engine::Session,
     command: &str,
     params: &Value,
     progress: Arc<Progress>,
@@ -229,7 +229,7 @@ fn measure_beside(
     std::thread::Builder::new()
         .name("properties".into())
         .spawn(move || {
-            let reply = solidcraft_engine::doc::progress::watch(progress, || copy.execute(&command, &params));
+            let reply = torno_engine::doc::progress::watch(progress, || copy.execute(&command, &params));
             hold();
             let _ = tx.send(reply.map_err(|e| e.to_string()));
         })
@@ -240,7 +240,7 @@ fn measure_beside(
 /// No threads on the web: measured here.
 #[cfg(target_arch = "wasm32")]
 fn measure_beside(
-    _copy: solidcraft_engine::Session,
+    _copy: torno_engine::Session,
     _command: &str,
     _params: &Value,
     _progress: Arc<Progress>,
@@ -263,9 +263,7 @@ fn show_measuring(app: &mut SolveApp, ctx: &egui::Context) {
     let bodies = m.bodies();
     let heading = app.tr("ui.properties").to_string();
     let text = match bodies {
-        Some((done, total)) => {
-            solidcraft_ui_text::format("ui.properties.measuring_bodies", &[("done", &done.to_string()), ("total", &total.to_string())])
-        }
+        Some((done, total)) => torno_ui_text::format("ui.properties.measuring_bodies", &[("done", &done.to_string()), ("total", &total.to_string())]),
         None => app.tr("ui.properties.measuring").to_string(),
     };
     let (closed, action) = ui_kit::Window::new(egui::Id::unique("sc_props"), "settings", &heading).actions("", "Close", None).show(ctx, true, |ui| {
@@ -286,9 +284,7 @@ fn show_measuring(app: &mut SolveApp, ctx: &egui::Context) {
 /// active component (at the root, the whole design).
 pub fn open_selected(app: &mut SolveApp) {
     let (command, params) = match app.session.selection.as_slice() {
-        [solidcraft_engine::Sel::Occurrence { path }] if !path.is_empty() => {
-            ("occurrence.properties", json!({"occurrence": path.last(), "path": path}))
-        }
+        [torno_engine::Sel::Occurrence { path }] if !path.is_empty() => ("occurrence.properties", json!({"occurrence": path.last(), "path": path})),
         _ => ("component.properties", json!({})),
     };
     open_object(app, command, &params, String::new());
@@ -357,7 +353,7 @@ fn inertia_rows(app: &SolveApp, total: &Value) -> Vec<(String, Vec<String>)> {
     }
     for (n, axis) in total["principal_axes"].as_array().into_iter().flatten().enumerate() {
         let Some(e) = point(axis) else { continue };
-        let label = solidcraft_ui_text::format("ui.properties.principal_axis", &[("number", &(n + 1).to_string())]);
+        let label = torno_ui_text::format("ui.properties.principal_axis", &[("number", &(n + 1).to_string())]);
         rows.push((label, [e.x, e.y, e.z].map(|x| format!("{:.4}", if x.abs() < 5e-5 { 0.0 } else { x })).to_vec()));
     }
     rows
@@ -367,9 +363,9 @@ fn inertia_rows(app: &SolveApp, total: &Value) -> Vec<(String, Vec<String>)> {
 /// file's), else with the name of the component, placement or bodies it measured.
 fn window_title(title: &str, v: &Value) -> String {
     if v["component"].as_u64() == Some(0) {
-        solidcraft_ui_text::tr("ui.properties").to_string()
+        torno_ui_text::tr("ui.properties").to_string()
     } else {
-        solidcraft_ui_text::format("properties.title", &[("name", title)])
+        torno_ui_text::format("properties.title", &[("name", title)])
     }
 }
 
@@ -390,7 +386,7 @@ fn centre_and_axes(v: &Value) -> Option<(Vec3, Vec<Vec3>, f64)> {
 pub fn overlay(app: &SolveApp, painter: &egui::Painter, proj: &Proj) {
     let Some((centre, axes, reach)) = app.menu.props.as_ref().and_then(|(_, v)| centre_and_axes(v)) else { return };
     let Some(at) = proj.to_screen(centre) else { return };
-    let tk = solidcraft_theme::Tokens::view();
+    let tk = torno_theme::Tokens::view();
     for (n, (axis, colour)) in axes.iter().zip(tk.axes()).enumerate() {
         let Some(tip) = proj.to_screen(centre + *axis * reach) else { continue };
         painter.line_segment([at, tip], Stroke::new(2.0, colour));
@@ -419,7 +415,7 @@ pub fn show_object(app: &mut SolveApp, ctx: &egui::Context) {
         rows.push(("Density", format!("{:.3} g/cm³", number(b, "density_g_cm3"))));
     }
     if !bodies.is_empty() && skipped == bodies.len() as u64 {
-        rows.push(("", solidcraft_ui_text::tr_label("Open surface — no volume").to_string()));
+        rows.push(("", torno_ui_text::tr_label("Open surface — no volume").to_string()));
     } else {
         rows.push(("Mass", format!("{:.3} g", number(total, "mass_g"))));
         rows.push(("Volume", crate::prefs::show_mm(app, number(total, "volume_mm3"), 3)));
@@ -449,7 +445,7 @@ pub fn show_object(app: &mut SolveApp, ctx: &egui::Context) {
         format!("({}) g·{unit}", m.join(", "))
     });
     let inertia = inertia_rows(app, total);
-    let note = solidcraft_ui_text::format("ui.properties.inertia_note", &[("unit", unit)]);
+    let note = torno_ui_text::format("ui.properties.inertia_note", &[("unit", unit)]);
     // A component's closed bodies have mass, but a mesh that would not close gave no tensor.
     let unavailable =
         inertia.is_empty() && total["inertia_g_mm2"].is_null() && number(total, "mass_g") > 0.0 && total.get("first_moment_g_mm").is_some();
@@ -466,7 +462,7 @@ pub fn show_object(app: &mut SolveApp, ctx: &egui::Context) {
     let (closed, action) = ui_kit::Window::new(egui::Id::unique("sc_props"), "settings", &heading).actions("", "Close", None).show(ctx, true, |ui| {
         // Each value copies itself as shown, unit and all, when clicked (#12218).
         for (label, value) in &rows {
-            let label = solidcraft_ui_text::tr_label(label);
+            let label = torno_ui_text::tr_label(label);
             let name = format!("{label}: {value}");
             ui_kit::row(ui, label, |ui| copied |= ui_kit::copy_cell(ui, value, &name, false, &copy_hint));
         }
@@ -507,7 +503,7 @@ pub fn show_object(app: &mut SolveApp, ctx: &egui::Context) {
         }
     });
     if copied {
-        app.set_status(solidcraft_ui_text::tr("ui.properties.value_copied"), false);
+        app.set_status(torno_ui_text::tr("ui.properties.value_copied"), false);
     }
     if closed || action == ui_kit::Action::Cancel {
         close_object(app);
@@ -517,7 +513,7 @@ pub fn show_object(app: &mut SolveApp, ctx: &egui::Context) {
 #[cfg(test)]
 mod tests {
     use serde_json::json;
-    use solidcraft_engine::geom::prelude::*;
+    use torno_engine::geom::prelude::*;
 
     use crate::scenario::Harness;
 
@@ -614,14 +610,14 @@ mod tests {
     #[test]
     fn each_field_is_labelled_from_the_table_of_keys() {
         crate::i18n::install();
-        use solidcraft_engine::doc::metadata::{KEYS, Owner, keys};
-        let english = solidcraft_ui_text::Locale::for_language("en");
+        use torno_engine::doc::metadata::{KEYS, Owner, keys};
+        let english = torno_ui_text::Locale::for_language("en");
         for k in KEYS {
             assert_ne!(english.text(k.label), k.label, "`{}`'s label is in the English catalog", k.name);
         }
         let mut h = Harness::new();
         h.app.preferences.language = "en".into();
-        // A key a newer SolidCraft might read: kept as another tool's data, never labelled as one of ours.
+        // A key a newer Torno might read: kept as another tool's data, never labelled as one of ours.
         h.app.session.doc_mut().metadata.0.insert("future_key".into(), json!("kept"));
         h.step(&json!({"start": "document.metadata"})).unwrap();
         h.frames(2);
@@ -700,7 +696,7 @@ mod tests {
         let c = h.app.run("component.create", json!({"name": "Pin", "grounded": false})).unwrap();
         h.app.run("solid.cylinder", json!({"radius": 4, "height": 10, "base": [50, 0, 0]})).unwrap();
         let occurrence = c["occurrence"].as_u64().unwrap();
-        h.app.session.selection = vec![solidcraft_engine::Sel::Occurrence { path: vec![occurrence] }];
+        h.app.session.selection = vec![torno_engine::Sel::Occurrence { path: vec![occurrence] }];
         h.step(&json!({"start": "component.properties"})).unwrap();
         let (title, v) = h.app.menu.props.clone().expect("the window opens on the placement");
         assert_eq!((title.as_str(), v["occurrence"].as_u64()), ("Pin:1", Some(occurrence)), "{v}");
@@ -743,10 +739,10 @@ mod tests {
         // worker rather than leaving it to measure on for minutes.
         let (_tx, rx) = std::sync::mpsc::channel::<Result<serde_json::Value, String>>();
         super::close_object(&mut h.app);
-        let progress = std::sync::Arc::new(solidcraft_engine::doc::progress::Progress::default());
+        let progress = std::sync::Arc::new(torno_engine::doc::progress::Progress::default());
         h.app.menu.props_measuring = Some(super::Measuring { fallback: String::new(), rx, progress: progress.clone() });
-        solidcraft_engine::doc::progress::watch(progress.clone(), || {
-            if let Some(w) = solidcraft_engine::kernel::watch::current() {
+        torno_engine::doc::progress::watch(progress.clone(), || {
+            if let Some(w) = torno_engine::kernel::watch::current() {
                 w.progress("measuring", 3, 10);
             }
         });

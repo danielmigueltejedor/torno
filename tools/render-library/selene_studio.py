@@ -36,16 +36,16 @@ class RenderMcp(NativeMcp):
         self.transcript = (directory / "native.rpc.jsonl").open("x", encoding="utf-8")
         env = os.environ.copy()
         for key in list(env):
-            if key.startswith(("SOLIDCRAFT_", "SOLVECRAFT_", "WGPU_")):
+            if key.startswith(("TORNO_", "SOLVECRAFT_", "WGPU_")):
                 env.pop(key)
         for name in ("temporary", "recovery", "crash", "control"):
             (directory / name).mkdir()
-        env.update(RAYON_NUM_THREADS="2", SOLIDCRAFT_GPU="hardware", SOLIDCRAFT_REQUIRE_GPU="1",
-                   WGPU_BACKEND="vulkan", RUST_LOG="solidcraft_gpu::path=info,wgpu_core=warn",
+        env.update(RAYON_NUM_THREADS="2", TORNO_GPU="hardware", TORNO_REQUIRE_GPU="1",
+                   WGPU_BACKEND="vulkan", RUST_LOG="torno_gpu::path=info,wgpu_core=warn",
                    TEMP=str(directory / "temporary"), TMP=str(directory / "temporary"),
-                   SOLIDCRAFT_RECOVERY_DIR=str(directory / "recovery"),
-                   SOLIDCRAFT_CRASH_DIR=str(directory / "crash"),
-                   SOLIDCRAFT_CONTROL_DIR=str(directory / "control"))
+                   TORNO_RECOVERY_DIR=str(directory / "recovery"),
+                   TORNO_CRASH_DIR=str(directory / "crash"),
+                   TORNO_CONTROL_DIR=str(directory / "control"))
         self.process = subprocess.Popen(
             [str(cli), "mcp", "--in", str(model), "--render-gpu", "--allow-path", str(directory)],
             cwd=ROOT, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=self.stderr, env=env)

@@ -1,4 +1,4 @@
-//! WR-598 (the SolidCraft fork's tangency-labs/smlib@829b982): `DeleteTopologicalVertex`
+//! WR-598 (the Torno fork's tangency-labs/smlib@829b982): `DeleteTopologicalVertex`
 //! between a line edge and an edge whose curve is a curve on a B-spline surface along a
 //! UV line of constant u (the seam an extrusion leaves on its wall). Upstream casts the
 //! `SmCrvOnSurf` copy to `SmBSplineCurve` and dereferences the null; the port leaves the

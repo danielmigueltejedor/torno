@@ -2,7 +2,7 @@
 //! (0,0,0) 60 x 40 x 10 minus box (15,10,5) 30 x 20 x 6, so the pocket is 5 deep) with
 //! leg 5.5, straight on the Boolean's direct body, fails with error code 3 "Fillet Corner
 //! Error: Corner Edge Computation Failure" when `keep_operand_uv_trims` (WR-361) is on
-//! together with the fillet fixes SolidCraft runs with (`fillet_refuse_rails_leaving_faces`,
+//! together with the fillet fixes Torno runs with (`fillet_refuse_rails_leaving_faces`,
 //! `fillet_trace_reaches_rails`, `fillet_rail_end_on_continued_surface`,
 //! `fillet_cliff_overflow`, `fillet_mitre_concave_face_corners`).
 //!
@@ -41,7 +41,7 @@ fn expected() -> f64 {
     21000.0 - (50.0 * D * D + 4.0 / 3.0 * D * D * D)
 }
 
-/// SolidCraft's fillet flag set, with `keep_operand_uv_trims` and the WR-654 fix as given.
+/// Torno's fillet flag set, with `keep_operand_uv_trims` and the WR-654 fix as given.
 fn kernel(keep_operand_uv_trims: bool, run_on_bspline_trims: bool) -> Kernel {
     let mut k = Kernel::default();
     k.fixes.fillet_refuse_rails_leaving_faces = true;

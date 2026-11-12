@@ -5,9 +5,9 @@
 //! is refused before anything is built.
 
 use serde_json::Value;
-use solidcraft_doc::{BodyName, FeatureKind, NetworkCurve, Operation, Position, SketchId};
-use solidcraft_geom::prelude::*;
-use solidcraft_kernel::{Construction, Continuity};
+use torno_doc::{BodyName, FeatureKind, NetworkCurve, Operation, Position, SketchId};
+use torno_geom::prelude::*;
+use torno_kernel::{Construction, Continuity};
 
 use super::CommandSpec;
 use super::features::{add_feature, feature_sketch, sketch_id};
@@ -18,11 +18,11 @@ use crate::schema::{TypedContract, output_schema_for};
 use crate::{Result, Session};
 
 /// The stations a boundary carries by default (the patch's resolution along the loop).
-const DEFAULT_SAMPLES: usize = solidcraft_doc::BOUNDARY_SAMPLES;
+const DEFAULT_SAMPLES: usize = torno_doc::BOUNDARY_SAMPLES;
 const CONTRACT: TypedContract<BoundaryParams> = TypedContract::new();
 /// The most sketch curves one network curve may chain, and points picking one chain of edges
 /// (the kernel's own caps).
-use solidcraft_kernel::{MAX_CHAIN_CURVES as MAX_CHAIN, MAX_EDGE_PICKS as MAX_PICKS};
+use torno_kernel::{MAX_CHAIN_CURVES as MAX_CHAIN, MAX_EDGE_PICKS as MAX_PICKS};
 
 pub static COMMANDS: &[CommandSpec] = &[CommandSpec::new("surface.boundary", "Boundary Surface", crate::checked!("surface.boundary", boundary))
     .at("SURFACE", "CREATE")
@@ -102,7 +102,7 @@ fn loop_patch(s: &mut Session, p: &Value) -> Result<Value> {
         None | Some(Value::Null) => 0.0,
         Some(v) => v
             .as_f64()
-            .filter(|x| x.is_finite() && (solidcraft_geom::fill::MIN_CROWN..=solidcraft_geom::fill::MAX_CROWN).contains(x))
+            .filter(|x| x.is_finite() && (torno_geom::fill::MIN_CROWN..=torno_geom::fill::MAX_CROWN).contains(x))
             .ok_or_else(|| bad(cmd, "`crown` must be a number between -0.9 and 3"))?,
     };
     let samples = match p.get("samples") {

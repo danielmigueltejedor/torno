@@ -1,5 +1,5 @@
 use super::*;
-use solidcraft_engine::sketch::CurveKind;
+use torno_engine::sketch::CurveKind;
 
 #[test]
 fn three_point_arc_follows_its_snapped_through_point_after_dimension_change() {
@@ -84,7 +84,7 @@ fn clicked_periodic_fit_closes_at_start_and_right_click_keeps_natural() {
     assert_eq!(sk.curves.len(), 1, "{:?}", h.app.status);
     assert!(matches!(sk.curves[0].kind, CurveKind::Spline { periodic: true, .. }));
     sk.validate_periodic_splines().unwrap();
-    assert_eq!(solidcraft_engine::sketch::find_profiles(&sk).len(), 1);
+    assert_eq!(torno_engine::sketch::find_profiles(&sk).len(), 1);
     assert!(h.app.tool.as_ref().unwrap().pts.is_empty());
     for point in [[15, 2, 0], [20, 2, 0], [20, 6, 0]] {
         h.step(&json!({"click":{"world":point}})).unwrap();
@@ -101,9 +101,7 @@ fn dialog_curves(h: &crate::scenario::Harness) -> Vec<String> {
         .dialog
         .as_ref()
         .and_then(|d| d.inputs.first())
-        .map(|i| {
-            i.items.iter().filter_map(|x| if let solidcraft_engine::Sel::SketchCurve { id, .. } = x { Some(id.clone()) } else { None }).collect()
-        })
+        .map(|i| i.items.iter().filter_map(|x| if let torno_engine::Sel::SketchCurve { id, .. } = x { Some(id.clone()) } else { None }).collect())
         .unwrap_or_default()
 }
 
@@ -145,7 +143,7 @@ fn offset_window_distance_and_flip_offset_an_ellipse_exactly_and_undo_restores()
     assert_eq!(sk.freeform_offsets.len(), 2, "{:?}", h.app.status);
     assert!((sk.freeform_offsets[1].distance + 0.5).abs() < 1e-4, "{:?}", sk.freeform_offsets[1].distance);
     assert!(sk.freeform_offsets.iter().all(|r| r.certificate == 2));
-    assert_eq!(solidcraft_engine::sketch::find_profiles(&sk).len(), 3);
+    assert_eq!(torno_engine::sketch::find_profiles(&sk).len(), 3);
     let last = sk.curve_index(&sk.freeform_offsets[1].output).unwrap();
     assert!(sk.exact_segs(last).unwrap()[0].point_at(0.0).dist(Vec2::new(11.5, 0.0)) < 1e-4);
     h.app.run("edit.undo", json!({})).unwrap();
@@ -193,7 +191,7 @@ fn derived_offset_context_action_releases_geometry_and_undo_restores() {
     h.app.run("sketch.ellipse", json!({"center":[0,0],"major":[10,0],"minor_radius":5})).unwrap();
     let out = h.app.run("sketch.offset", json!({"curves":["e1"],"distance":-1,"chain":false})).unwrap();
     let id = out["curves"][0].as_str().unwrap().to_string();
-    h.app.session.selection = vec![solidcraft_engine::Sel::SketchCurve { id: id.clone(), sketch: None }];
+    h.app.session.selection = vec![torno_engine::Sel::SketchCurve { id: id.clone(), sketch: None }];
     let items = crate::context_menu::items(&h.app, &crate::context_menu::Target::Viewport);
     let item = items.iter().find(|item| item.id == "sketch.offset.break").unwrap();
     assert_eq!(item.params, Some(json!({"curve":id})));
@@ -426,7 +424,7 @@ fn fillet_window_reads_design_units_and_preserves_explicit_units_and_parameters(
             retype(&mut h, "dialog:Radius", text);
             apply(&mut h);
             assert!(h.app.dialog.is_none(), "{units}, {text}, lines {lines}: {:?}", h.app.status);
-            let check = |session: &solidcraft_engine::Session, expected: f64| {
+            let check = |session: &torno_engine::Session, expected: f64| {
                 let state = session.world_state().unwrap();
                 let ss = state.sketch(1).unwrap();
                 let arc = ss
@@ -451,7 +449,7 @@ fn fillet_window_reads_design_units_and_preserves_explicit_units_and_parameters(
                 h.app.run("parameters.change", json!({"name":"rounding", "expression":"4 mm"})).unwrap();
                 check(&h.app.session, 4.0);
             }
-            let reopened = solidcraft_engine::Session::new(solidcraft_engine::doc::Document::from_json(&h.app.session.doc.to_json()).unwrap());
+            let reopened = torno_engine::Session::new(torno_engine::doc::Document::from_json(&h.app.session.doc.to_json()).unwrap());
             check(&reopened, if text == "rounding" { 4.0 } else { radius });
         }
     }
@@ -845,7 +843,7 @@ fn trim_and_extend_hovers_follow_the_cursor_and_a_changed_sketch() {
     let piece = trim_hover_piece(&h.app, sid, &line).unwrap();
     assert!(near(ends(&piece), [24.0, 30.0]), "the new line cuts: {piece:?}");
     let at = h.app.tool.as_ref().and_then(|t| t.hover.as_ref()).map(|h| h.0).unwrap();
-    let fresh = solidcraft_engine::cmd::trim_piece(&h.app.session.world_state().unwrap().sketch(sid).unwrap().sketch, &line, at);
+    let fresh = torno_engine::cmd::trim_piece(&h.app.session.world_state().unwrap().sketch(sid).unwrap().sketch, &line, at);
     assert_eq!(Some(piece), fresh, "the kept cuts are those of the sketch as it is");
     h.step(&json!({"key":"Escape"})).unwrap();
 
@@ -935,13 +933,9 @@ fn centre_circle_clicked_through_a_line_end_stays_on_it() {
     let sk = h.app.session.model.state().sketch(sid).unwrap().sketch.clone();
     let circle = sk.curves.iter().position(|c| matches!(c.kind, CurveKind::Circle { .. })).unwrap();
     let end = sk.resolve_point("l1.end").unwrap();
+    assert!(sk.constraints.iter().any(|k| matches!(k.kind, torno_engine::sketch::ConstraintKind::Midpoint { l: 0, .. })), "{:?}", sk.constraints);
     assert!(
-        sk.constraints.iter().any(|k| matches!(k.kind, solidcraft_engine::sketch::ConstraintKind::Midpoint { l: 0, .. })),
-        "{:?}",
-        sk.constraints
-    );
-    assert!(
-        sk.constraints.iter().any(|k| k.kind == solidcraft_engine::sketch::ConstraintKind::PointOnCurve { p: end, c: circle }),
+        sk.constraints.iter().any(|k| k.kind == torno_engine::sketch::ConstraintKind::PointOnCurve { p: end, c: circle }),
         "the circle stays on the line's end: {:?}",
         sk.constraints
     );
@@ -952,7 +946,7 @@ fn centre_circle_clicked_through_a_line_end_stays_on_it() {
 /// as its centre.
 #[test]
 fn centre_arc_on_an_existing_point_is_tied_by_a_coincident() {
-    use solidcraft_engine::sketch::ConstraintKind;
+    use torno_engine::sketch::ConstraintKind;
     let mut h = crate::scenario::Harness::new();
     h.app.run("sketch.create", json!({"plane":"XY"})).unwrap();
     h.app.run("sketch.rectangle.two_point", json!({"p0":[10,10],"p1":[40,30]})).unwrap();
@@ -995,7 +989,7 @@ fn a_point_clicked_on_a_line_midpoint_is_held_there() {
     let sid = h.app.session.active_sketch.unwrap();
     let state = h.app.session.model.state();
     let sk = &state.sketch(sid).unwrap().sketch;
-    let held = sk.constraints.iter().any(|c| matches!(c.kind, solidcraft_engine::sketch::ConstraintKind::Midpoint { .. }));
+    let held = sk.constraints.iter().any(|c| matches!(c.kind, torno_engine::sketch::ConstraintKind::Midpoint { .. }));
     assert!(held, "no MidPoint constraint: {:?}", sk.constraints.iter().map(|c| &c.kind).collect::<Vec<_>>());
 }
 
@@ -1004,7 +998,7 @@ fn a_point_clicked_on_a_line_midpoint_is_held_there() {
 /// deleted), not by quietly sharing the corner as its centre.
 #[test]
 fn centre_circle_on_an_existing_point_is_tied_by_a_coincident() {
-    use solidcraft_engine::sketch::ConstraintKind;
+    use torno_engine::sketch::ConstraintKind;
     let mut h = crate::scenario::Harness::new();
     h.app.run("sketch.create", json!({"plane":"XY"})).unwrap();
     h.app.run("sketch.rectangle.two_point", json!({"p0":[10,10],"p1":[40,30]})).unwrap();

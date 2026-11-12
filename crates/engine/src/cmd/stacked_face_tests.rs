@@ -4,8 +4,8 @@
 #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 use crate::Session;
 use serde_json::{Value, json};
-use solidcraft_doc::FaceAttachmentStatus;
-use solidcraft_geom::prelude::*;
+use torno_doc::FaceAttachmentStatus;
+use torno_geom::prelude::*;
 
 fn run(s: &mut Session, command: &str, params: Value) -> Value {
     s.execute(command, &params).unwrap_or_else(|e| panic!("{command} {params}: {e}"))
@@ -116,11 +116,11 @@ fn three_stacked_extrudes_follow_an_edit_of_the_first() {
     for (name, z) in [("S2", 25.), ("S3", 35.), ("S4", 45.)] {
         assert!((healthy(&s, name).origin.z - z).abs() < 1e-9, "{name} after edit");
     }
-    let volume: f64 = s.model.state().bodies.iter().map(|b| solidcraft_kernel::measure(&b.body).unwrap().volume).sum();
+    let volume: f64 = s.model.state().bodies.iter().map(|b| torno_kernel::measure(&b.body).unwrap().volume).sum();
     assert!((volume - 40. * 40. * 45.).abs() < 1e-6, "{volume}");
 
     // Saved and reopened, every attachment still resolves.
-    let mut reopened = Session::new(solidcraft_doc::Document::from_json(&s.doc.to_json()).unwrap());
+    let mut reopened = Session::new(torno_doc::Document::from_json(&s.doc.to_json()).unwrap());
     reopened.refresh();
     no_errors(&reopened);
     assert!((healthy(&reopened, "S4").origin.z - 45.).abs() < 1e-9);

@@ -3,7 +3,7 @@
 
 use serde::{Deserialize, Serialize};
 use solidcore_record::Vec3;
-use solidcraft_geom::prelude::*;
+use torno_geom::prelude::*;
 
 use crate::math::{Mat3, Quat};
 use crate::{DynamicsError, Result};

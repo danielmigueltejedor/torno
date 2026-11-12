@@ -2,8 +2,8 @@
 
 use serde_json::{Value, json};
 use solidcore_record::Vec2;
-use solidcraft_geom::prelude::*;
-use solidcraft_sketch::CurveKind;
+use torno_geom::prelude::*;
+use torno_sketch::CurveKind;
 
 use crate::Session;
 
@@ -29,7 +29,7 @@ fn near(got: f64, want: f64, rel: f64) {
 }
 
 /// The evaluated sketch `S`.
-fn solved(s: &Session) -> solidcraft_sketch::Sketch {
+fn solved(s: &Session) -> torno_sketch::Sketch {
     let f = s.doc.find_feature("S").unwrap().id;
     s.model.state().sketch(f).unwrap().sketch.clone()
 }
@@ -81,7 +81,7 @@ fn a_wave_from_a_formula_extrudes_and_follows_its_parameter() {
     near(volume(&mut s), 100.0 * 20.0 * 10.0, 1e-4);
     // The design file keeps the formulas, and a reopened design follows them.
     assert!(s.doc.to_json().contains("\"equations\""));
-    let mut r = Session::new(solidcraft_doc::Document::from_json(&s.doc.to_json()).unwrap());
+    let mut r = Session::new(torno_doc::Document::from_json(&s.doc.to_json()).unwrap());
     no_trouble(&r);
     near(volume(&mut r), 100.0 * 20.0 * 10.0, 1e-4);
 }
@@ -146,7 +146,7 @@ fn an_edit_changes_the_formulas_and_keeps_the_joined_ends() {
     run(&mut s, "sketch.edit", json!({"sketch": "S"}));
     let f = s.doc.find_feature("S").unwrap().id;
     let before = s.doc.sketch(f).unwrap().clone();
-    let ends = |sk: &solidcraft_sketch::Sketch| {
+    let ends = |sk: &torno_sketch::Sketch| {
         let c = sk.curves.iter().find(|c| c.id == id).unwrap();
         let (a, b) = c.kind.ends().unwrap();
         (sk.points[a].id.clone(), sk.points[b].id.clone())
@@ -156,7 +156,7 @@ fn an_edit_changes_the_formulas_and_keeps_the_joined_ends() {
     assert!(r["deviation"].as_f64().unwrap() <= 0.002, "{r}");
     let after = s.doc.sketch(f).unwrap().clone();
     assert_eq!(ends(&before), ends(&after));
-    let count = |sk: &solidcraft_sketch::Sketch| sk.curves.iter().find(|c| c.id == id).unwrap().kind.point_ids().len();
+    let count = |sk: &torno_sketch::Sketch| sk.curves.iter().find(|c| c.id == id).unwrap().kind.point_ids().len();
     assert!(count(&after) > count(&before), "{} vs {}", count(&after), count(&before));
     assert_eq!(r["points"].as_u64(), Some(count(&after) as u64));
     let eq = after.equation_of(&id).unwrap();
@@ -348,22 +348,22 @@ fn a_hostile_saved_flag_or_range_is_an_error_not_a_crash() {
     let saved = s.doc.to_json();
     assert!(saved.contains("3 * a") && saved.contains("\"range\""), "{saved}");
     let angle = saved.replace("3 * a", "90 deg");
-    let r = Session::new(solidcraft_doc::Document::from_json(&angle).unwrap());
+    let r = Session::new(torno_doc::Document::from_json(&angle).unwrap());
     let res = r.model.results.iter().find(|r| r.name == "S").unwrap();
     assert!(res.error.as_deref().is_some_and(|e| e.contains("equation curve") && e.contains("must both be lengths")), "{:?}", res.error);
-    assert!(solidcraft_doc::Document::from_json(&saved.replace("\"range\"", "\"furlong\"")).is_err());
+    assert!(torno_doc::Document::from_json(&saved.replace("\"range\"", "\"furlong\"")).is_err());
 }
 
 #[test]
 fn an_edit_keeps_the_flag_until_told_and_a_saved_design_keeps_it() {
-    use solidcraft_sketch::VariableUnit;
+    use torno_sketch::VariableUnit;
     let mut s = Session::default();
     let id = range_unit_curve(&mut s);
     let f = s.doc.find_feature("S").unwrap().id;
     // The file says it, and reopening follows it.
     let saved = s.doc.to_json();
     assert!(saved.contains("variable_unit"), "not saved");
-    let mut r = Session::new(solidcraft_doc::Document::from_json(&saved).unwrap());
+    let mut r = Session::new(torno_doc::Document::from_json(&saved).unwrap());
     no_trouble(&r);
     assert_eq!(r.doc.sketch(f).unwrap().equation_of(&id).unwrap().variable_unit, VariableUnit::Range);
     assert_parabola(&r, &id, 10.0);
@@ -396,11 +396,11 @@ fn a_design_saved_without_the_flag_reopens_the_same() {
     assert!((*want.last().unwrap() - Vec2::new(40.0, 80.0)).len() < 1e-9);
     // The format before this change, as the last release wrote it.
     let mut old: Value = serde_json::from_str(&saved).unwrap();
-    old["format"] = json!(solidcraft_doc::format::format_string(solidcraft_doc::format::FORMAT - 1));
+    old["format"] = json!(torno_doc::format::format_string(torno_doc::format::FORMAT - 1));
     if let Some(o) = old.as_object_mut() {
         o.remove("format_pending");
     }
-    let r = Session::new(solidcraft_doc::Document::from_json(&old.to_string()).unwrap());
+    let r = Session::new(torno_doc::Document::from_json(&old.to_string()).unwrap());
     no_trouble(&r);
     assert_eq!(curve_points(&r, &id), want);
 }

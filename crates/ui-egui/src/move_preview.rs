@@ -3,13 +3,13 @@
 //! the move's transform. The preview from a scratch design evaluated the move and meshed the
 //! bodies again for every change, so while the triad was dragged the part trailed the arrow by
 //! one evaluation, longer for a larger part.
-use solidcraft_engine::geom::prelude::*;
 use std::sync::Arc;
+use torno_engine::geom::prelude::*;
 
 use serde_json::Value;
 use solidcore_record::Vec3;
-use solidcraft_engine::doc::{Document, Mat, apply_point, apply_vector, expr::Kind, rigid};
-use solidcraft_engine::geom::{Aabb3, Mesh};
+use torno_engine::doc::{Document, Mat, apply_point, apply_vector, expr::Kind, rigid};
+use torno_engine::geom::{Aabb3, Mesh};
 
 use crate::{
     SolveApp,
@@ -166,7 +166,7 @@ mod tests {
     use super::*;
     use crate::{Services, SolveApp};
     use serde_json::json;
-    use solidcraft_engine::Session;
+    use torno_engine::Session;
 
     fn app() -> SolveApp {
         let mut s = Session::default();
@@ -176,7 +176,7 @@ mod tests {
 
     fn colors(app: &SolveApp) -> Colors {
         let _ = app;
-        Colors::from_tokens(&solidcraft_theme::Tokens::get())
+        Colors::from_tokens(&torno_theme::Tokens::get())
     }
 
     fn near(a: Vec3, b: Vec3) -> bool {

@@ -4,14 +4,14 @@
 //! component into its frame, and every evaluation wrote every imported STEP file out again to
 //! fingerprint it, so each sketch command took longer the more parts were inserted.
 
-use solidcraft_geom::prelude::*;
 use std::cell::Cell;
 use std::collections::BTreeMap;
 use std::sync::Arc;
+use torno_geom::prelude::*;
 
 use solidcore_record::{Plane, Vec2, Vec3};
-use solidcraft_kernel as kernel;
-use solidcraft_sketch::Sketch;
+use torno_kernel as kernel;
+use torno_sketch::Sketch;
 
 use crate::eval::{PlacementReads, body_world, hash_placement, placement_digest};
 use crate::*;
@@ -307,7 +307,7 @@ fn a_sketch_on_a_face_still_sees_the_placed_bodies() {
 /// evaluated once: the design, its model, the plate's component, the sketch, its anchor and the
 /// face picked.
 fn sketch_on_a_turned_occurrence() -> (Document, Model, u64, u64, FaceAnchor, Plane) {
-    use solidcraft_sketch::{LinkKind, LinkSource};
+    use torno_sketch::{LinkKind, LinkSource};
 
     let mut doc = Document::new("turned face");
     let comp = doc.add_component(Some("Plate"), 0).unwrap();
@@ -1196,7 +1196,7 @@ fn placed_parts(comps: usize, bodies: usize, sketches: usize, taps: usize, copie
                 pitch: 1.0,
                 internal: true,
                 axis_point: Vec3::new(1.0, 1.0, 0.0),
-                axis: solidcraft_geom::UnitVec3::Z,
+                axis: torno_geom::UnitVec3::Z,
                 start: 0.0,
                 end: 4.0,
                 form: Default::default(),
@@ -1955,7 +1955,7 @@ fn an_added_and_deleted_sketch_entity_keeps_its_fingerprint() {
 
 #[test]
 fn a_hole_skips_the_parts_its_line_cannot_reach() {
-    use solidcraft_geom::Aabb3;
+    use torno_geom::Aabb3;
     let unit = Aabb3 { min: Vec3::ZERO, max: Vec3::new(1.0, 1.0, 1.0) };
     // Down through the box, from above and from below (the line runs both ways).
     assert!(super::line_meets_box(Vec3::new(0.5, 0.5, 5.0), Vec3::new(0.0, 0.0, -1.0), &unit));

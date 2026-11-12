@@ -5,7 +5,7 @@ pub use super::preferences_figure_ops::paint_colour_vision;
 use super::{metrics::dimension, text::paint_text};
 use crate::BackingTooltipExt as _;
 use egui::{Color32, FontId, Pos2, Rect, Response, Sense, Stroke, Ui, pos2, vec2};
-use solidcraft_theme::Tokens;
+use torno_theme::Tokens;
 
 pub(super) const PAGE_SCROLL_GUTTER: &str = "sc_page_scroll_gutter";
 
@@ -33,7 +33,7 @@ pub fn blur_cost_meter(ui: &mut Ui, radius: f32, tip: &str) {
             ui.painter().rect_filled(bar, t.radius_sm, if i < filled { t.form_primary } else { t.dialog_rule });
         }
     }
-    solidcraft_ui_registry::publish_rect("prefs:blur_cost", rect);
+    torno_ui_registry::publish_rect("prefs:blur_cost", rect);
     response.backing_on_hover_text(tip);
 }
 
@@ -46,15 +46,15 @@ pub fn theme_option_notice(ui: &mut Ui, id: &str, text: &str, dismiss_label: &st
         let t = Tokens::get();
         let actions = super::ContentWidth::button(ui, dismiss_label)
             + t.space_8
-            + if can_undo { super::ContentWidth::button(ui, solidcraft_ui_text::tr("ui.undo")) + t.space_8 } else { 0.0 };
+            + if can_undo { super::ContentWidth::button(ui, torno_ui_text::tr("ui.undo")) + t.space_8 } else { 0.0 };
         let mut draw_actions = |ui: &mut Ui| {
             if can_undo {
-                let response = super::text_button(ui, solidcraft_ui_text::tr("ui.undo"), true);
-                solidcraft_ui_registry::publish_target("prefs:theme_notice_undo:guard", response.rect);
+                let response = super::text_button(ui, torno_ui_text::tr("ui.undo"), true);
+                torno_ui_registry::publish_target("prefs:theme_notice_undo:guard", response.rect);
                 undo = response.clicked();
             }
             let response = super::text_button(ui, dismiss_label, true);
-            solidcraft_ui_registry::publish_target(&format!("prefs:theme_notice_dismiss:{id}"), response.rect);
+            torno_ui_registry::publish_target(&format!("prefs:theme_notice_dismiss:{id}"), response.rect);
             dismiss = response.clicked();
         };
         let width = dimension(ui.available_width());
@@ -78,7 +78,7 @@ pub fn theme_option_notice(ui: &mut Ui, id: &str, text: &str, dismiss_label: &st
             });
         }
     });
-    solidcraft_ui_registry::publish_rect(&format!("prefs:theme_notice:{id}"), response.response.rect);
+    torno_ui_registry::publish_rect(&format!("prefs:theme_notice:{id}"), response.response.rect);
     (undo, dismiss)
 }
 
@@ -178,7 +178,7 @@ pub fn theme_options_list(
     use super::preferences_layout::{Entry, Width, choice_width, layout};
     use crate::theme_files::OptionKind;
     // Label/help/choice text is already resolved, including the theme's English fallback.
-    let _labels = solidcraft_ui_text::resolved_labels();
+    let _labels = torno_ui_text::resolved_labels();
     if options.is_empty() {
         return false;
     }
@@ -230,11 +230,11 @@ pub fn theme_options_list(
         super::settings_inline_note(ui, &(text.count)(options.len()));
         if options.iter().any(|option| values.get(&option.definition.id).is_some_and(|v| *v != option.definition.default_value())) {
             let response = super::text_button(ui, text.reset, true);
-            solidcraft_ui_registry::publish_target("prefs:theme_options_reset", response.rect);
+            torno_ui_registry::publish_target("prefs:theme_options_reset", response.rect);
             reset = response.clicked();
         }
     });
-    solidcraft_ui_registry::publish_rect("prefs:theme_options_header", header.response.rect);
+    torno_ui_registry::publish_rect("prefs:theme_options_header", header.response.rect);
     let mut draw_rows = |ui: &mut Ui, rows: &[Vec<usize>]| {
         let mut section = None;
         for row in rows {
@@ -278,10 +278,7 @@ pub fn theme_options_list(
                             }
                         });
                         if let Some(option) = cell.first().and_then(|i| options.get(*i)) {
-                            solidcraft_ui_registry::publish_rect(
-                                &format!("prefs:theme_option_cell:{}", option.definition.id),
-                                response.response.rect,
-                            );
+                            torno_ui_registry::publish_rect(&format!("prefs:theme_option_cell:{}", option.definition.id), response.response.rect);
                         }
                     });
                 }
@@ -293,8 +290,8 @@ pub fn theme_options_list(
         if plan.more_count > 0 {
             let title = (text.more)(plan.more_count);
             super::section(ui, "more", &title, false, |ui| draw_rows(ui, &plan.more));
-            if let Some(rect) = solidcraft_ui_registry::rect_of(&format!("dialog:section:{title}")) {
-                solidcraft_ui_registry::publish_target("prefs:theme_options_more", rect);
+            if let Some(rect) = torno_ui_registry::rect_of(&format!("dialog:section:{title}")) {
+                torno_ui_registry::publish_target("prefs:theme_options_more", rect);
             }
         }
     });
@@ -367,7 +364,7 @@ pub fn theme_option_control(
                                         super::text(ui, &label, super::Text::Inline);
                                     },
                                 );
-                                solidcraft_ui_registry::publish_rect(&format!("prefs:theme_option_readout:{}", def.id), readout.response.rect);
+                                torno_ui_registry::publish_rect(&format!("prefs:theme_option_readout:{}", def.id), readout.response.rect);
                                 if option.blur {
                                     blur_cost_meter(ui, *n, text.blur_cost);
                                 }
@@ -394,10 +391,10 @@ pub fn theme_option_control(
         .response
     });
     let response = response.inner.backing_on_hover_text(&option.help);
-    solidcraft_ui_registry::publish_target(&format!("prefs:theme_option:{}", def.id), response.rect);
+    torno_ui_registry::publish_target(&format!("prefs:theme_option:{}", def.id), response.rect);
     if let Some(reason) = &option.reason {
         let note = ui.horizontal(|ui| super::settings_inline_note(ui, reason));
-        solidcraft_ui_registry::publish_rect(&format!("prefs:theme_option_reason:{}", def.id), note.response.rect);
+        torno_ui_registry::publish_rect(&format!("prefs:theme_option_reason:{}", def.id), note.response.rect);
     }
     if active && value != before {
         values.insert(def.id.clone(), value);
@@ -418,7 +415,7 @@ pub fn theme_option_switch(ui: &mut Ui, label: &str, on: &mut bool) {
         ui.painter().rect_stroke(rect, t.control_radius, Stroke::new(t.space_2, t.form_primary), egui::StrokeKind::Inside);
     }
     response.widget_info(|| egui::WidgetInfo::selected(egui::Role::CheckBox, ui.is_enabled(), *on, label));
-    solidcraft_ui_registry::publish_target(&format!("prefs:theme_option_switch:{label}"), response.rect);
+    torno_ui_registry::publish_target(&format!("prefs:theme_option_switch:{label}"), response.rect);
 }
 
 /// Page scroller keeps content aligned while centring its bar in the window's right inset.
@@ -494,7 +491,7 @@ pub fn settings_heading_with_tag(ui: &mut Ui, title: &str, description: &str, ta
         super::text(ui, description, super::Text::Hint("settings_heading"));
     });
     if page {
-        solidcraft_ui_registry::publish_rect("prefs:page_heading", heading.response.rect);
+        torno_ui_registry::publish_rect("prefs:page_heading", heading.response.rect);
     }
 }
 
@@ -563,14 +560,14 @@ fn settings_section_count_spaced<R>(
         ui.spacing_mut().item_spacing.y = t.space_10;
     }
     let result = super::section_count(ui, key, title, true, count, |ui| {
-        if let Some(rect) = solidcraft_ui_registry::rect_of(&format!("dialog:section:{title}")) {
-            solidcraft_ui_registry::publish_rect(&format!("prefs:section:{key}"), rect);
+        if let Some(rect) = torno_ui_registry::rect_of(&format!("dialog:section:{title}")) {
+            torno_ui_registry::publish_rect(&format!("prefs:section:{key}"), rect);
         }
         ui.spacing_mut().item_spacing.y = if page { t.space_14 } else { t.space_8 };
         let start = ui.next_widget_position();
         let result = add(ui);
         if page {
-            solidcraft_ui_registry::publish_rect(&format!("prefs:section:{key}:body"), Rect::from_min_max(start, ui.min_rect().max));
+            torno_ui_registry::publish_rect(&format!("prefs:section:{key}:body"), Rect::from_min_max(start, ui.min_rect().max));
         }
         result
     });
@@ -632,7 +629,7 @@ pub fn settings_badge(ui: &mut Ui, text: &str, warning: bool) {
         return;
     }
     let ink =
-        if warning { if solidcraft_theme::contrast_ratio(t.warning, t.dialog_body) >= 4.5 { t.warning } else { t.form_ink } } else { t.form_success };
+        if warning { if torno_theme::contrast_ratio(t.warning, t.dialog_body) >= 4.5 { t.warning } else { t.form_ink } } else { t.form_success };
     let fill = if warning { t.warning.gamma_multiply(0.1) } else { t.form_success_fill };
     let galley = ui.painter().layout_no_wrap(text.to_owned(), crate::type_face::semibold(t.font_small), ink);
     let (r, _) = ui.allocate_exact_size(vec2(galley.size().x + t.space_16, t.space_24), Sense::hover());
@@ -741,7 +738,7 @@ pub fn option_card(ui: &mut Ui, label: &str, note: Option<&str>, selected: bool,
         ui.painter().line_segment([centre + vec2(-t.space_2, t.space_2), centre + vec2(t.space_4, -t.space_3)], Stroke::new(2.0, ink));
     }
     response.widget_info(|| egui::WidgetInfo::selected(egui::Role::RadioButton, enabled, selected, label));
-    solidcraft_ui_registry::publish_target(&format!("prefs:option:{label}"), rect);
+    torno_ui_registry::publish_target(&format!("prefs:option:{label}"), rect);
     let response = response.backing_on_hover_text(label);
     if enabled { response.on_hover_cursor(egui::CursorIcon::PointingHand) } else { response }
 }

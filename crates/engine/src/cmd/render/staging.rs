@@ -3,13 +3,13 @@ use crate::schema::TypedContract;
 use crate::schema::render_stage::{BackdropKind, BackdropParams, ClearParams, GroundParams, StageSaved};
 use crate::{Result, Session, params::bad};
 use serde_json::Value;
-use solidcraft_doc::render_settings::{RenderJob, RenderSetup};
-use solidcraft_render::{
+use std::sync::Arc;
+use torno_doc::render_settings::{RenderJob, RenderSetup};
+use torno_render::{
     ProductScene,
     job::CancelToken,
     stage::{Stage, StagePanel},
 };
-use std::sync::Arc;
 
 pub(super) const GROUND_CONTRACT: TypedContract<GroundParams> = TypedContract::new();
 pub(super) const BACKDROP_CONTRACT: TypedContract<BackdropParams> = TypedContract::new();

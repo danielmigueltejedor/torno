@@ -22,7 +22,7 @@
 #[cfg(test)]
 mod fixtures;
 mod mesh;
-// SolidCraft's mesher, moved here (RFC 0003, item 1.1) and kept in SolidCraft's formatting so it
+// Torno's mesher, moved here (RFC 0003, item 1.1) and kept in Torno's formatting so it
 // reads the same as its history.
 #[rustfmt::skip]
 mod mesher;

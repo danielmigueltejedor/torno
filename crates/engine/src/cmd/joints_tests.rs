@@ -1,5 +1,5 @@
-use solidcraft_geom::prelude::*;
 use std::f64::consts::FRAC_PI_2;
+use torno_geom::prelude::*;
 
 use serde_json::{Value, json};
 use solidcore_record::Vec3;
@@ -19,7 +19,7 @@ pub(super) fn occ(s: &Session, component: &str) -> u64 {
 }
 
 pub(super) fn place(s: &Session, component: &str, p: Vec3) -> Vec3 {
-    solidcraft_doc::apply_point(&solidcraft_doc::joints::occurrence_world(&s.doc, occ(s, component)), p)
+    torno_doc::apply_point(&torno_doc::joints::occurrence_world(&s.doc, occ(s, component)), p)
 }
 
 fn near(a: Vec3, b: Vec3) -> bool {
@@ -38,7 +38,7 @@ fn deleted_joint_ids_are_not_reused_after_reopening() {
         };
         let first = run(&mut s, command, params.clone())["joint"].as_u64().unwrap();
         run(&mut s, "joint.delete", json!({"joint": first}));
-        let doc = solidcraft_doc::Document::from_json(&s.doc.to_json()).unwrap();
+        let doc = torno_doc::Document::from_json(&s.doc.to_json()).unwrap();
         *s.doc_mut() = doc;
         let second = run(&mut s, command, params)["joint"].as_u64().unwrap();
         assert!(second > first, "{command}: deleted joint {first} was reused as {second}");
@@ -80,8 +80,8 @@ fn circle_given_by_its_centre_takes_that_round_end() {
     // and the face its end opens onto, so it follows them.
     run(&mut s, "joint.origin", json!({"occurrence": "Knob", "circle": [0, 0, 16], "name": "Top"}));
     let top = s.doc.assembly.origins.iter().find(|o| o.name == "Top").map(|o| o.origin.clone()).unwrap();
-    assert!(matches!(&top.snap, solidcraft_doc::joints::Snap::CircleCenter { face: Some(_), end: Some(_), .. }), "{top:?}");
-    let m = solidcraft_doc::joints::resolve_origin(&s.doc, &s.model.state(), &top).unwrap();
+    assert!(matches!(&top.snap, torno_doc::joints::Snap::CircleCenter { face: Some(_), end: Some(_), .. }), "{top:?}");
+    let m = torno_doc::joints::resolve_origin(&s.doc, &s.model.state(), &top).unwrap();
     assert!(near(Vec3::new(m[3][0], m[3][1], m[3][2]), Vec3::new(0.0, 0.0, 16.0)) && near(Vec3::new(m[2][0], m[2][1], m[2][2]), Vec3::Z), "{m:?}");
     // Off the axis is still refused; a coupling size given by a centre is that round face's
     // radius (it follows the face).
@@ -110,9 +110,9 @@ fn revolute_hinge_turns_about_the_knuckle() {
     assert_eq!(dof, 1, "{l}");
     // Drive 90°: B turns about the knuckle axis (through (0, 33, 4), along the frame's z = −X).
     run(&mut s, "joint.drive", json!({"joint": "Hinge", "value": 90}));
-    let want = solidcraft_doc::rigid(Vec3::ZERO, Vec3::new(0.0, 33.0, 4.0), Vec3::new(-1.0, 0.0, 0.0), FRAC_PI_2);
+    let want = torno_doc::rigid(Vec3::ZERO, Vec3::new(0.0, 33.0, 4.0), Vec3::new(-1.0, 0.0, 0.0), FRAC_PI_2);
     let p = Vec3::new(20.0, 0.0, 0.0);
-    assert!(near(place(&s, "LeafB", p), solidcraft_doc::apply_point(&want, p)), "{:?}", place(&s, "LeafB", p));
+    assert!(near(place(&s, "LeafB", p), torno_doc::apply_point(&want, p)), "{:?}", place(&s, "LeafB", p));
     assert!(near(place(&s, "LeafB", p), Vec3::new(20.0, 29.0, 37.0)));
     // LeafA did not move; the knuckle axis is fixed.
     assert!(near(place(&s, "LeafA", p), p));
@@ -184,7 +184,7 @@ fn slider_limits_clamp() {
         .doc
         .features
         .iter()
-        .find(|f| matches!(f.kind, solidcraft_doc::FeatureKind::Box { .. }))
+        .find(|f| matches!(f.kind, torno_doc::FeatureKind::Box { .. }))
         .and_then(|f| f.param_names.get(2).cloned())
         .unwrap_or_default();
     run(&mut s, "parameters.change", json!({"name": h, "expression": "15"}));
@@ -268,7 +268,7 @@ fn interference_lists_a_pair_it_could_not_check() {
     // A quarter ring revolved round z through the post, brought in as an imported mesh (an STL
     // of it): a mesh body has no exact surfaces to intersect, so its pair with the post is listed
     // as not checked, with the reason, rather than read as clear.
-    let dir = std::env::temp_dir().join(format!("solidcraft-unchecked-pair-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("torno-unchecked-pair-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&dir);
     std::fs::create_dir_all(&dir).unwrap();
     let stl = dir.join("arc.stl");
@@ -325,7 +325,7 @@ fn motion_links_and_interference() {
     run(&mut s, "joint.drive", json!({"joint": "Screw", "values": [0, 3]}));
     assert!(near(place(&s, "D", Vec3::new(65.0, 5.0, 0.0)), Vec3::new(5.0, 5.0, 16.0)), "{:?}", place(&s, "D", Vec3::new(65.0, 5.0, 0.0)));
     // Saved and reopened, joints come back.
-    let back = solidcraft_doc::Document::from_json(&s.doc.to_json()).unwrap();
+    let back = torno_doc::Document::from_json(&s.doc.to_json()).unwrap();
     assert_eq!(back.assembly, s.doc.assembly);
     let mut t = Session::new(back);
     let l = run(&mut t, "joint.list", json!({}));
@@ -412,7 +412,7 @@ fn moving_a_side_places_the_part_as_create_would() {
         for b in b_faces {
             let mut edited = two_cubes();
             run(&mut edited, "joint.create", json!({"type": "rigid", "name": "J", "a": {"face": [5, 5, 10]}, "b": {"face": [25, 5, 0]}}));
-            let mut created = Session::new(solidcraft_doc::Document::from_json(&edited.doc.to_json()).unwrap());
+            let mut created = Session::new(torno_doc::Document::from_json(&edited.doc.to_json()).unwrap());
             // The new sides in world coordinates, where B is before the move.
             let (aw, bw) = (Vec3::new(a[0] as f64, a[1] as f64, a[2] as f64), place(&edited, "B", Vec3::new(b[0] as f64, b[1] as f64, b[2] as f64)));
             let side = |occurrence: &str, p: Vec3| json!({"occurrence": occurrence, "face": [p.x, p.y, p.z]});
@@ -472,14 +472,14 @@ fn a_feature_reading_a_jointed_parts_placement_follows_the_solve() {
     ] {
         s.execute(cmd, &p).unwrap_or_else(|e| panic!("{cmd}: {e}"));
     }
-    let boxes = |st: &solidcraft_doc::ModelState| {
+    let boxes = |st: &torno_doc::ModelState| {
         st.bodies
             .iter()
             .map(|b| (b.name.clone(), b.body.outline_bounds()))
             .map(|(n, bb)| format!("{n} {:.6?} {:.6?}", bb.min, bb.max))
             .collect::<Vec<_>>()
     };
-    let mut fresh = solidcraft_doc::Model::new();
+    let mut fresh = torno_doc::Model::new();
     fresh.no_cache = true;
     fresh.evaluate(&s.doc);
     assert_eq!(boxes(&s.model.state()), boxes(&fresh.state()));
@@ -526,7 +526,7 @@ fn interference_checks_designs_with_more_than_200_bodies() {
 /// pair finds (touching boxes count), and reports how many it left out past its limit.
 #[test]
 fn interference_box_sweep_matches_every_pair_check() {
-    use solidcraft_geom::Aabb3;
+    use torno_geom::Aabb3;
     let cube = |x: f64, y: f64, z: f64, e: f64| Aabb3 { min: Vec3::new(x, y, z), max: Vec3::new(x + e, y + e, z + e) };
     // A deterministic scatter: overlapping, touching, and apart in only one axis.
     let boxes: Vec<Aabb3> = (0..60)
@@ -768,7 +768,7 @@ fn a_second_planar_joint_turns_its_part_a_half_turn_to_meet() {
             assert_eq!(r["conflicts"].as_array().map(Vec::len), Some(0), "{label}: {r}");
             assert!(place(&s, "Red", Vec3::ZERO).dist(expected) < 1e-6, "{label}: {:?}", place(&s, "Red", Vec3::ZERO));
             assert_eq!(dof_of(&mut s, "Red"), 1, "{label}");
-            let axes = solidcraft_doc::joints::motion_axes(&s.doc, &s.model.state(), occ(&s, "Red"));
+            let axes = torno_doc::joints::motion_axes(&s.doc, &s.model.state(), occ(&s, "Red"));
             assert!(axes.len() == 1 && !axes.iter().any(|a| a.angular), "{label}: {axes:?}");
         }
     }
@@ -1425,7 +1425,7 @@ fn a_part_at_a_dead_point_of_its_loop_keeps_its_mobility() {
 
 /// A design file path in a fresh temporary folder (removed by the caller).
 fn temp_design(tag: &str, ext: &str) -> (std::path::PathBuf, String) {
-    let dir = std::env::temp_dir().join(format!("solidcraft-joint-visibility-{tag}-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("torno-joint-visibility-{tag}-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&dir);
     std::fs::create_dir_all(&dir).unwrap();
     let path = dir.join(format!("design.{ext}")).to_string_lossy().to_string();
@@ -1606,7 +1606,7 @@ fn joint_visibility_lookup_cost_by_hidden_joint_count() {
 fn older_designs_show_every_joint_and_new_joints_start_shown() {
     let (dir, path) = temp_design("legacy", "json");
     let mut s = hinged();
-    let mut legacy: Value = serde_json::from_slice(&solidcraft_io::write_design(&s.doc)).unwrap();
+    let mut legacy: Value = serde_json::from_slice(&torno_io::write_design(&s.doc)).unwrap();
     legacy["format"] = json!("solidcraft/19");
     legacy["visibility"] =
         json!({"hidden_bodies": [], "hidden_occurrences": [], "hidden_origin": ["XY"], "hidden_sketches": [], "shown_sketches": []});
@@ -1827,7 +1827,7 @@ fn a_link_offset_is_in_the_linked_values_units() {
     assert!((s.doc.assembly.links[0].offset - 10f64.to_radians()).abs() < 1e-12);
     // A design saved before offsets took degrees stored 0.1 rad, and opens turning Gear 5.73° past Dial.
     s.doc_mut().assembly.links[0].offset = 0.1;
-    let (dir, path) = temp_design("link-offset", "solidcraft");
+    let (dir, path) = temp_design("link-offset", "torno");
     run(&mut s, "file.save", json!({"path": path}));
     run(&mut s, "file.new", json!({}));
     run(&mut s, "doc.open", json!({"path": path}));
@@ -2064,7 +2064,7 @@ fn associative_trace_follows_a_study_and_survives_serialization() {
     );
     assert_eq!(kept_trace_fit(&s, id).len(), 37);
     assert_ne!(kept_trace_fit(&s, id), original);
-    let doc: solidcraft_doc::Document = serde_json::from_value(serde_json::to_value(&*s.doc).unwrap()).unwrap();
+    let doc: torno_doc::Document = serde_json::from_value(serde_json::to_value(&*s.doc).unwrap()).unwrap();
     let mut opened = Session::new(doc);
     run(&mut opened, "motion.trace.edit", json!({"sketch":id,"samples":25}));
     assert_eq!(kept_trace_fit(&opened, id).len(), 25);
@@ -2096,8 +2096,7 @@ fn associative_trace_follows_a_resized_picked_face_and_keeps_downstream_paths_cu
     let pipe_before = s.model.state().body("TracePipe").unwrap().outline_bounds();
     let comp = s.doc.find_component("B").unwrap();
     let height =
-        s.doc.features.iter().find(|f| f.component == comp && matches!(f.kind, solidcraft_doc::FeatureKind::Box { .. })).unwrap().param_names[2]
-            .clone();
+        s.doc.features.iter().find(|f| f.component == comp && matches!(f.kind, torno_doc::FeatureKind::Box { .. })).unwrap().param_names[2].clone();
     let count = s.motion_traces.recomputations;
     run(&mut s, "parameters.change", json!({"name":height,"expression":"15 mm"}));
     let updated = kept_trace_fit(&s, id);
@@ -2579,8 +2578,8 @@ fn joint_inspect_reads_only() {
 /// report is optional: loop stops, errors and the resulting pose must not depend on it.
 #[test]
 fn placement_analysis_preserves_held_loop_constraints_and_diagnostics() {
-    use solidcraft_doc::joints::{self, Analysis};
     use std::collections::BTreeMap;
+    use torno_doc::joints::{self, Analysis};
 
     let (s, _, _) = four_bar();
     let rocker = s.doc.assembly.joints.iter().find(|j| j.name == "Rocker").unwrap().id;
@@ -2605,7 +2604,7 @@ fn placement_analysis_preserves_held_loop_constraints_and_diagnostics() {
     }
     // A degenerate origin remains an error even in a placement-only trial.
     let mut broken = (*s.doc).clone();
-    broken.assembly.joints[0].b.snap = solidcraft_doc::joints::Snap::Point { point: Vec3::ZERO, z: Some(Vec3::ZERO), x: None };
+    broken.assembly.joints[0].b.snap = torno_doc::joints::Snap::Point { point: Vec3::ZERO, z: Some(Vec3::ZERO), x: None };
     let full = joints::solve(&broken, &s.model.state());
     let placement = joints::solve_holding_with_analysis(&broken, &s.model.state(), &BTreeMap::new(), Analysis::Placement);
     assert!(!full.errors.is_empty());
@@ -2624,7 +2623,7 @@ fn joint_drive_and_refresh_do_not_repeat_dof_analysis() {
         let (all, full) = super::solve_counts::take();
         assert!(all > full, "placement trials must still run");
         assert_eq!(full, usize::from(!quiet), "only a published DOF report needs full analysis");
-        let expected = super::sol_json(&solidcraft_doc::joints::solve(&s.doc, &s.model.state()), &json!({"quiet":quiet}));
+        let expected = super::sol_json(&torno_doc::joints::solve(&s.doc, &s.model.state()), &json!({"quiet":quiet}));
         for key in ["dof", "fixed", "errors", "conflicts"] {
             assert_eq!(r.get(key), expected.get(key), "{key}: {r}");
         }
@@ -2812,7 +2811,7 @@ fn a_joint_origin_on_a_repeated_sub_assembly_stays_on_the_copy_it_was_picked_on(
         let top = s.doc.assembly.origins.iter().find(|o| o.name == "Top").map(|o| o.origin.clone()).unwrap();
         // On the second Board, reaching its header: the copy it was picked on, its face by name.
         assert_eq!((top.occurrence, top.inside.clone()), (second, vec![header]), "{how}: {top:?}");
-        assert!(matches!(&top.snap, solidcraft_doc::joints::Snap::FaceCenter { face: Some(_), .. }), "{how}: {top:?}");
+        assert!(matches!(&top.snap, torno_doc::joints::Snap::FaceCenter { face: Some(_), .. }), "{how}: {top:?}");
         run(&mut s, "joint.create", json!({"type": "rigid", "a": "Top", "b": {"occurrence": "Probe", "face": [1, 1, 0]}}));
         assert!(near(probe_centre(&s), Vec3::new(95.0, 25.0, 11.0)), "{how}: {:?}", probe_centre(&s));
         // joint.inspect lists the occurrences inside the copy; a side with none leaves the key out.
@@ -2822,7 +2821,7 @@ fn a_joint_origin_on_a_repeated_sub_assembly_stays_on_the_copy_it_was_picked_on(
         // It follows that copy when it moves, and keeps it through saving and opening again.
         run(&mut s, "occurrence.move", json!({"occurrence": second, "translate": [0, 20, 0], "move_grounded": true}));
         assert!(near(probe_centre(&s), Vec3::new(95.0, 45.0, 11.0)), "{how}: {:?}", probe_centre(&s));
-        let doc = solidcraft_doc::Document::from_json(&s.doc.to_json()).unwrap();
+        let doc = torno_doc::Document::from_json(&s.doc.to_json()).unwrap();
         *s.doc_mut() = doc;
         run(&mut s, "joint.list", json!({}));
         let reopened = s.doc.assembly.origins.iter().find(|o| o.name == "Top").map(|o| o.origin.clone()).unwrap();
@@ -3332,7 +3331,7 @@ fn datum_sides_stay_distinct_across_repeated_components() {
         "joint.create",
         json!({"type": "rigid", "a": {"occurrence": part2, "plane": key}, "b": {"occurrence": 0, "plane": "XY"}, "name": "J2"}),
     );
-    let origin_of = |o: u64| solidcraft_doc::apply_point(&solidcraft_doc::joints::occurrence_world(&s.doc, o), Vec3::ZERO);
+    let origin_of = |o: u64| torno_doc::apply_point(&torno_doc::joints::occurrence_world(&s.doc, o), Vec3::ZERO);
     let p1 = origin_of(part);
     let p2 = origin_of(part2);
     // Each side reads the shared anchor datum through its own occurrence: the part (created at
@@ -3395,8 +3394,8 @@ fn cloned_joints_remap_datum_paths_into_the_copy() {
     let j = cloned[0];
     let new_inner = j.a.occurrence;
     match &j.a.snap {
-        solidcraft_doc::joints::Snap::Plane { plane, .. } => match plane.as_ref() {
-            solidcraft_doc::PlaneRef::Datum { datum } => {
+        torno_doc::joints::Snap::Plane { plane, .. } => match plane.as_ref() {
+            torno_doc::PlaneRef::Datum { datum } => {
                 assert_eq!(datum.path, vec![new_asm, new_inner], "the datum path names the copy's own nested placement");
             }
             other => panic!("expected a datum plane side, got {other:?}"),

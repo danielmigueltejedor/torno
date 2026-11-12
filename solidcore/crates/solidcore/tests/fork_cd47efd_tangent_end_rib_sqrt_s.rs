@@ -1,4 +1,4 @@
-//! The SolidCraft fork's tangency-labs/smlib@cd47efd (WR-600, the blend corner's End): a G2
+//! The Torno fork's tangency-labs/smlib@cd47efd (WR-600, the blend corner's End): a G2
 //! blend's end rib at a tangent end
 //! is a B-spline in `t = sqrt(s)`, with zero speed there.
 //!

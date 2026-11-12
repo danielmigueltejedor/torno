@@ -15,12 +15,12 @@
 //! Consumers retain geometric normals for ray spawning and optical boundaries.
 //! No shading-normal energy correction, multiple scattering or transmission is modeled.
 
-use solidcraft_geom::prelude::*;
 use std::f64::consts::{PI, TAU};
+use torno_geom::prelude::*;
 
 use solidcore_record::Vec3;
 
-use solidcraft_viewport::surface::{MIN_ROUGHNESS, OpaqueSurface, SurfaceError, unit_direction};
+use torno_viewport::surface::{MIN_ROUGHNESS, OpaqueSurface, SurfaceError, unit_direction};
 
 /// Admission or finite-arithmetic failure in the anisotropic numerical contract.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]

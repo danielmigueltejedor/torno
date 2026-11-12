@@ -1,7 +1,7 @@
 //! Shared labelled settings blocks and compact explanatory specimens.
 use crate::BackingTooltipExt as _;
 use egui::{Align, FontId, Layout, Rect, Sense, Stroke, Ui, pos2, vec2};
-use solidcraft_theme::Tokens;
+use torno_theme::Tokens;
 
 const SETTINGS_PAGE: &str = "sc_settings_page";
 pub(super) const ROW_HELP: &str = "sc_settings_row_help";
@@ -75,14 +75,14 @@ pub fn settings_profile_button(ui: &mut Ui, label: &str, name: &str, edited: boo
         let value = Rect::from_min_max(pos2(text_left, overline.bottom()), pos2(text_right, rect.center().y + t.space_16));
         super::text::paint_text(ui, overline, &label.to_uppercase(), crate::type_face::semibold(t.font_panel), t.form_dim, true);
         super::text::paint_text(ui, value, name, crate::type_face::semibold(t.font_label), t.form_ink, false);
-        solidcraft_ui_registry::publish_rect("prefs:profile:icon", icon);
-        solidcraft_ui_registry::publish_rect("prefs:profile:label", overline);
-        solidcraft_ui_registry::publish_rect("prefs:profile:name", value);
-        solidcraft_ui_registry::publish_rect("prefs:profile:chevron", chevron);
+        torno_ui_registry::publish_rect("prefs:profile:icon", icon);
+        torno_ui_registry::publish_rect("prefs:profile:label", overline);
+        torno_ui_registry::publish_rect("prefs:profile:name", value);
+        torno_ui_registry::publish_rect("prefs:profile:chevron", chevron);
         if edited {
             let dot = Rect::from_min_size(pos2(text_right + t.space_6, value.center().y - t.space_4), vec2(t.space_8, t.space_8));
             let response = ui.scope_builder(egui::UiBuilder::new().max_rect(dot), |ui| settings_change_dot(ui, changed_hint)).inner;
-            solidcraft_ui_registry::publish_target("prefs:profile:edited", response.rect);
+            torno_ui_registry::publish_target("prefs:profile:edited", response.rect);
         }
     });
     let response = ui.interact(card.response.rect, ui.make_persistent_id("profile_card"), Sense::click());
@@ -101,7 +101,7 @@ pub fn settings_profile_button(ui: &mut Ui, label: &str, name: &str, edited: boo
         ui.ctx().set_cursor_icon(egui::CursorIcon::PointingHand);
     }
     response.widget_info(|| egui::WidgetInfo::labeled(egui::Role::Button, ui.is_enabled(), name));
-    solidcraft_ui_registry::publish_rect("prefs:profile:sidebar_card", response.rect);
+    torno_ui_registry::publish_rect("prefs:profile:sidebar_card", response.rect);
     response.backing_on_hover_text(label)
 }
 
@@ -264,7 +264,7 @@ pub fn settings_block_body<R>(ui: &mut Ui, label: &str, hint: Option<&str>, labe
         )
         .inner
     });
-    solidcraft_ui_registry::publish_rect(&format!("dialog:row:{label}"), response.response.rect);
+    torno_ui_registry::publish_rect(&format!("dialog:row:{label}"), response.response.rect);
     (response.inner, response.response.rect)
 }
 

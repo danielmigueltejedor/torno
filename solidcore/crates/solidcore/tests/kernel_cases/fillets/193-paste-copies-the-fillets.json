@@ -275,7 +275,7 @@
     "blend_dropping"
   ],
   "ungraded": [
-    "continuity: SolidCraft computes it"
+    "continuity: Torno computes it"
   ],
   "what": "a block with two R2 top edges rounded, copied and pasted 40 mm over: the copy must carry its own fillets",
   "why_not": []

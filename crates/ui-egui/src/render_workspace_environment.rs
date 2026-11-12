@@ -3,9 +3,9 @@ use super::{ImageMethod, Stage, cpu, hdr, setups, studio};
 use crate::ui_kit::BackingTooltipExt as _;
 use crate::{SolveApp, ui_kit};
 use serde_json::{Value, json};
-use solidcraft_engine::doc::render_settings::{RenderJob, RenderSetup};
-use solidcraft_theme::Tokens;
 use std::sync::{Arc, Weak};
+use torno_engine::doc::render_settings::{RenderJob, RenderSetup};
+use torno_theme::Tokens;
 
 #[derive(Clone, Debug, Default)]
 pub(super) struct RingView {
@@ -24,7 +24,7 @@ pub(super) struct Ring {
 struct RingDrag {
     ring: Ring,
     viewport: egui::Rect,
-    document: Weak<solidcraft_engine::doc::Document>,
+    document: Weak<torno_engine::doc::Document>,
     revision: u64,
     name: String,
     start: f64,
@@ -71,7 +71,7 @@ fn ring_geometry(app: &SolveApp, viewport: egui::Rect) -> Option<Ring> {
     let bounds = crate::viewport::body_bounds(app, &world)
         .iter()
         .filter(|(name, _)| app.session.body_visible(name))
-        .fold(solidcraft_engine::geom::Aabb3::EMPTY, |a, (_, b)| a.union(b));
+        .fold(torno_engine::geom::Aabb3::EMPTY, |a, (_, b)| a.union(b));
     if bounds.is_empty() {
         return None;
     }
@@ -422,10 +422,10 @@ fn source(app: &mut SolveApp, ui: &mut egui::Ui) {
             if method == ImageMethod::CpuRaytrace && app.render_workspace.view.raytrace.path.is_none() {
                 note(app, ui, "render.cpu_constant_direct_help");
                 let sampling = app.render_workspace.view.raytrace.progressive.unwrap_or_default();
-                let detail = solidcraft_ui_text::format(
+                let detail = torno_ui_text::format(
                     "render.cpu_constant_enable_indirect_plan",
                     &[
-                        ("depth", &solidcraft_engine::render::job::CpuPathOptions::default().max_depth.to_string()),
+                        ("depth", &torno_engine::render::job::CpuPathOptions::default().max_depth.to_string()),
                         ("spp", &sampling.samples_per_pixel.to_string()),
                         ("seed", &sampling.seed.to_string()),
                     ],
@@ -612,7 +612,7 @@ fn edit<T: Clone + PartialEq + Send + Sync + 'static>(
 }
 
 fn backdrop(app: &mut SolveApp, ui: &mut egui::Ui) {
-    use solidcraft_engine::render::job::finishing::BackdropMode;
+    use torno_engine::render::job::finishing::BackdropMode;
     let title = app.tr("render.env_backdrop").to_string();
     ui_kit::section(ui, "render_environment_backdrop", &title, true, |ui| {
         let raytrace = app.render_workspace.view.method != ImageMethod::Raster;
@@ -730,11 +730,7 @@ fn backdrop(app: &mut SolveApp, ui: &mut egui::Ui) {
     });
 }
 
-pub(super) fn commit_gradient(
-    app: &mut SolveApp,
-    enabled: bool,
-    gradient: solidcraft_engine::render::job::finishing::Backdrop,
-) -> Result<(), String> {
+pub(super) fn commit_gradient(app: &mut SolveApp, enabled: bool, gradient: torno_engine::render::job::finishing::Backdrop) -> Result<(), String> {
     let mut setup = setups::snapshot(app)?;
     match &mut setup.job {
         Some(RenderJob::GpuPath { options, .. }) => options.backdrop = enabled.then_some(gradient),
@@ -757,7 +753,7 @@ fn ground_values(app: &SolveApp, setup: &RenderSetup) -> Ground {
     let mut value = Ground { margin: 0.25, gap: 0.1, color: [0.18; 3] };
     if let Some(panel) = setup.stage.iter().find(|panel| matches!(panel.id.as_str(), "ground" | "studio_ground")) {
         value.color = panel.reflectance_linear;
-        if let Ok(scene) = solidcraft_engine::product_scene::extract(&app.session)
+        if let Ok(scene) = torno_engine::product_scene::extract(&app.session)
             && !scene.bounds.is_empty()
         {
             let bounds = scene.bounds;
@@ -790,7 +786,7 @@ struct GroundForm {
 
 #[derive(Clone)]
 struct StageRemoval {
-    document: Weak<solidcraft_engine::doc::Document>,
+    document: Weak<torno_engine::doc::Document>,
     revision: u64,
     name: String,
     set: RenderSetup,
@@ -826,7 +822,7 @@ pub(super) fn stage_confirmation(app: &mut SolveApp, ctx: &egui::Context) {
     let title = app.tr("render.environment.remove_confirm").to_string();
     let remove = app.tr("render.environment.remove").to_string();
     let cancel = app.tr("render.environment.keep").to_string();
-    let detail = solidcraft_ui_text::Locale::for_language(&app.preferences.language)
+    let detail = torno_ui_text::Locale::for_language(&app.preferences.language)
         .format("render.environment.remove_note", &[("count", &pending.set.stage.len().to_string())]);
     let (closed, action) =
         ui_kit::Confirm::new(id, "delete", &title).tone(ui_kit::Tone::Danger).actions(&remove, &cancel, None).show(ctx, true, |ui| {
@@ -899,7 +895,7 @@ fn ground(app: &mut SolveApp, ui: &mut egui::Ui) {
             let count = app.render_workspace.view.draft.stage.len();
             ui_kit::text(
                 ui,
-                &solidcraft_ui_text::Locale::for_language(&app.preferences.language)
+                &torno_ui_text::Locale::for_language(&app.preferences.language)
                     .format("render.environment.saved_panels", &[("count", &count.to_string())]),
                 ui_kit::Text::Inline,
             );
@@ -939,7 +935,7 @@ pub(super) fn validate_atmosphere(app: &SolveApp) -> Result<(), String> {
     validate_volume_value(app, app.render_workspace.view.studio.volume)
 }
 
-fn validate_volume_value(app: &SolveApp, value: Option<solidcraft_engine::render::job::volume::HomogeneousVolume>) -> Result<(), String> {
+fn validate_volume_value(app: &SolveApp, value: Option<torno_engine::render::job::volume::HomogeneousVolume>) -> Result<(), String> {
     let view = &app.render_workspace.view;
     let Some(volume) = value else { return Ok(()) };
     volume.validate().map_err(|error| error.to_string())?;
@@ -975,7 +971,7 @@ fn validate_volume_value(app: &SolveApp, value: Option<solidcraft_engine::render
 
 /// Change only the volume intent through one non-camera numerical transaction.
 /// Corrective removal never needs an invalid previous volume to validate.
-pub(super) fn commit_atmosphere(app: &mut SolveApp, volume: Option<solidcraft_engine::render::job::volume::HomogeneousVolume>) -> Result<(), String> {
+pub(super) fn commit_atmosphere(app: &mut SolveApp, volume: Option<torno_engine::render::job::volume::HomogeneousVolume>) -> Result<(), String> {
     if app.render_workspace.view.method == ImageMethod::Raster {
         return Err(app.tr("render.output_raytrace_only").into());
     }
@@ -1126,10 +1122,10 @@ pub(super) fn atmosphere(app: &mut SolveApp, ui: &mut egui::Ui) {
             note(app, ui, "render.cpu_volume_help");
             if !path {
                 let sampling = app.render_workspace.view.raytrace.progressive.unwrap_or_default();
-                let detail = solidcraft_ui_text::format(
+                let detail = torno_ui_text::format(
                     "render.cpu_volume_enable_path_plan",
                     &[
-                        ("depth", &solidcraft_engine::render::job::CpuPathOptions::default().max_depth.to_string()),
+                        ("depth", &torno_engine::render::job::CpuPathOptions::default().max_depth.to_string()),
                         ("spp", &sampling.samples_per_pixel.to_string()),
                         ("seed", &sampling.seed.to_string()),
                     ],

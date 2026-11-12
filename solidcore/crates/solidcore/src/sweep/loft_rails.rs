@@ -2,20 +2,20 @@
 //! moved so the points the rails guide land on them, skinned, with every guided edge certified
 //! within the caller's tolerance of its rail.
 //!
-//! Upstream: none (not in SMLib). The station maps are SolidCraft's (`crates/kernel/src/
+//! Upstream: none (not in SMLib). The station maps are Torno's (`crates/kernel/src/
 //! loft_rails.rs` at 52afe21: `railed`, `station_map`, `rail`, `centroid`), moved into the
 //! kernel so no application builds them; the certificate and the placement of the stations are
 //! new (tangency-labs/solidcore#3140, its hull case).
 //!
 //! | Rust                 | Upstream |
 //! |----------------------|----------|
-//! | [`loft_rails`]       | (none; SolidCraft's `railed`, then the loft) |
-//! | [`RailSection`]      | (none; SolidCraft's `Section`) |
+//! | [`loft_rails`]       | (none; Torno's `railed`, then the loft) |
+//! | [`RailSection`]      | (none; Torno's `Section`) |
 //! | [`RailLoftOptions`]  | (none) |
-//! | `station_map` (private) | (none; SolidCraft's `station_map`) |
+//! | `station_map` (private) | (none; Torno's `station_map`) |
 //! | [`certificate`]      | (none) |
 //!
-//! **The stations (SolidCraft's construction, carried over).** The sections are at loft
+//! **The stations (Torno's construction, carried over).** The sections are at loft
 //! parameters in proportion to the mean distance between their curves' starts. The plain loft
 //! at a parameter `v` moves each control point of each section curve along the curve through
 //! its counterparts in every section (a line between two sections; the kernel's interpolation
@@ -32,7 +32,7 @@
 //! shifted along the loft as far as the rail leads or lags; with two it moves with the first,
 //! turns and sizes with the line between them, and leans to follow the second. The loft's
 //! direction at a station is the central difference of the plain loft's middles over `1e-4`
-//! of the loft parameter, SolidCraft's convention.
+//! of the loft parameter, Torno's convention.
 //!
 //! **Where the stations go, and the certificate.** Each span between two sections starts with
 //! one station at its middle. The stations and sections are skinned
@@ -50,15 +50,15 @@
 //!
 //! **Refused**, naming why: no section or one, no rail or more than two; sections whose curves
 //! do not pair (counts, degrees, knots or weights differing by more than `1e-9` relative,
-//! SolidCraft's convention); two sections on top of each other; a rail not crossing a section's
+//! Torno's convention); two sections on top of each other; a rail not crossing a section's
 //! plane exactly once, or crossing it farther than the body tolerance from its curves; two
 //! rails at one point of a section; a rail through the stations' middle, or two rails meeting
-//! (the station shrinks to nothing, within `1e-6` of the loft's size, SolidCraft's convention);
+//! (the station shrinks to nothing, within `1e-6` of the loft's size, Torno's convention);
 //! a tolerance not finite and positive.
 //!
-//! Deviations: SolidCraft crosses a rail's polyline from the previous crossing on; here a rail
+//! Deviations: Torno crosses a rail's polyline from the previous crossing on; here a rail
 //! is a kernel curve crossed exactly ([`crate::sweep::stations`]), so a rail crossing a station's
-//! or section's plane more than once is refused instead of taking the next crossing. SolidCraft
+//! or section's plane more than once is refused instead of taking the next crossing. Torno
 //! places a fixed count of stations evenly and does not bound the skin between them; here they
 //! are placed where the certificate asks. No recursion: the refinement is a loop.
 
@@ -197,7 +197,7 @@ impl Plain {
         }
     }
 
-    /// Whether `other` pairs with it (SolidCraft's `pairs`): the same degree, counts, and
+    /// Whether `other` pairs with it (Torno's `pairs`): the same degree, counts, and
     /// knots and weights within `1e-9` relative.
     fn pairs(&self, other: &Self) -> bool {
         let near = |x: f64, y: f64| (x - y).abs() <= 1e-9 * (1.0 + x.abs());
@@ -277,7 +277,7 @@ fn unique(knots: &[f64]) -> (Vec<f64>, Vec<usize>) {
     (values, mults)
 }
 
-/// The eight-point Gauss-Legendre rule on `[-1, 1]` (SolidCraft's centroid's).
+/// The eight-point Gauss-Legendre rule on `[-1, 1]` (Torno's centroid's).
 const GAUSS_8: [(f64, f64); 8] = [
     (-0.960_289_856_497_536_3, 0.101_228_536_290_376_26),
     (-0.796_666_477_413_626_7, 0.222_381_034_453_374_47),
@@ -290,7 +290,7 @@ const GAUSS_8: [(f64, f64); 8] = [
 ];
 
 /// The middle of a station (its curves): the centroid of its curves by length, each knot
-/// span by eight-point Gauss-Legendre (SolidCraft's `centroid`).
+/// span by eight-point Gauss-Legendre (Torno's `centroid`).
 fn centroid(curves: &[(Plain, NurbCurve)]) -> Result<Point3> {
     let (mut sum, mut length) = (Vec3::ZERO, 0.0);
     for (plain, nurb) in curves {
@@ -328,7 +328,7 @@ fn centroid(curves: &[(Plain, NurbCurve)]) -> Result<Point3> {
 }
 
 /// A wire parameter `f` of the way from `g0` to `g1`; round a closed wire of `n` curves the
-/// shorter way (SolidCraft's `interpolate_g`).
+/// shorter way (Torno's `interpolate_g`).
 fn interpolate_g(g0: f64, g1: f64, f: f64, n: usize, closed: bool) -> f64 {
     #[allow(clippy::cast_precision_loss)] // at most MAX_CURVES
     let n = n as f64;
@@ -372,7 +372,7 @@ impl Affine {
 
 /// The move putting a station's guided points on the rails (`pairs`: each guided point with
 /// its rail's point), about the station's middle `middle`, the loft's unit direction there
-/// `dir`, `size` the loft's size (SolidCraft's `station_map`; module docs).
+/// `dir`, `size` the loft's size (Torno's `station_map`; module docs).
 fn station_map(
     pairs: &[(Point3, Point3)],
     middle: Point3,
@@ -651,7 +651,7 @@ impl<'a> Loft<'a> {
         Ok(out)
     }
 
-    /// The plain loft's middle at `v` and its unit direction there (SolidCraft's central
+    /// The plain loft's middle at `v` and its unit direction there (Torno's central
     /// difference over `1e-4`).
     fn middle(&self, v: f64) -> Result<(Point3, Vec3)> {
         let h = 1e-4;

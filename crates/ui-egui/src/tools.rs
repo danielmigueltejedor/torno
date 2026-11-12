@@ -4,12 +4,12 @@
 use egui::{Pos2, Stroke};
 use serde_json::{Value, json};
 use solidcore_record::Vec2;
-use solidcraft_engine::geom::prelude::*;
+use torno_engine::geom::prelude::*;
 
 use crate::SolveApp;
 use crate::tool_modifiers::{Audit, Scope, ToolModifiers};
 use crate::viewport::{Hit, Proj, pick_for_tool as pick, sketch_point_at};
-use solidcraft_ui_text::tr;
+use torno_ui_text::tr;
 
 const DRAW_SCOPES: &[Scope] = &[Scope::SketchDraw, Scope::SketchDrag];
 
@@ -208,7 +208,7 @@ fn midpoint_at(app: &SolveApp, proj: &Proj, pos: Pos2, radius: f32) -> Option<(V
             return None;
         }
         let l = ss.sketch.curve_index(&id)?;
-        let solidcraft_engine::sketch::Shape::Line { a, b } = ss.sketch.shape(l)? else { return None };
+        let torno_engine::sketch::Shape::Line { a, b } = ss.sketch.shape(l)? else { return None };
         let mid = (a + b) * 0.5;
         let screen = proj.to_screen(ss.plane.to_world(mid))?;
         (screen.distance(pos) <= radius).then_some((mid, id))
@@ -376,7 +376,7 @@ pub fn on_click(app: &mut SolveApp, proj: &Proj, pos: Pos2, shift: bool) {
                 let ss = app.session.active_sketch.and_then(|sid| state.sketch(sid))?;
                 let point = ss.sketch.resolve_point(&id)?;
                 ss.sketch.constraints.iter().find_map(|c| match c.kind {
-                    solidcraft_engine::sketch::ConstraintKind::Midpoint { p, l } if !c.driven && p == point => {
+                    torno_engine::sketch::ConstraintKind::Midpoint { p, l } if !c.driven && p == point => {
                         ss.sketch.curves.get(l).map(|c| format!("mid:{}", c.id))
                     }
                     _ => None,
@@ -388,10 +388,10 @@ pub fn on_click(app: &mut SolveApp, proj: &Proj, pos: Pos2, shift: bool) {
                     .active_sketch
                     .and_then(|sid| state.sketch(sid))
                     .is_some_and(|ss| {
-                        ss.sketch.curve_index(line).is_some_and(|l| solidcraft_engine::view::sketch_curve_visible(&ss.sketch, l))
+                        ss.sketch.curve_index(line).is_some_and(|l| torno_engine::view::sketch_curve_visible(&ss.sketch, l))
                             // A circle/arc and a line still measure their edge-to-edge gap.
                             && tool.picks.first().is_none_or(|first| {
-                                ss.sketch.curve_index(first).is_none_or(|l| matches!(ss.sketch.shape(l), Some(solidcraft_engine::sketch::Shape::Line { .. })))
+                                ss.sketch.curve_index(first).is_none_or(|l| matches!(ss.sketch.shape(l), Some(torno_engine::sketch::Shape::Line { .. })))
                             })
                     })
             });
@@ -597,7 +597,7 @@ pub fn place(app: &mut SolveApp, p: (Vec2, Option<String>)) {
 /// committing here once their creators are listed there.
 pub(crate) fn draw(app: &mut SolveApp, t: &Tool, params: Value) -> Result<Value, String> {
     let dimensions = crate::sketch_dims::dimensions(t);
-    let as_drawn = app.preferences.sketch_auto_dimensions && solidcraft_engine::dimension_roles(t.cmd).is_some();
+    let as_drawn = app.preferences.sketch_auto_dimensions && torno_engine::dimension_roles(t.cmd).is_some();
     let locate = as_drawn && app.preferences.sketch_auto_locate;
     if !as_drawn && dimensions.as_object().is_none_or(|values| values.is_empty()) {
         app.run(t.cmd, params)
@@ -694,21 +694,21 @@ fn run_shape(app: &mut SolveApp, t: &Tool) -> Result<Vec<String>, String> {
 /// #617: Aligning a point with a straight line (a circle's centre with a square's edge) aligns
 /// the point with the line's midpoint, in the mode the line's dominant axis suggests. None when
 /// the curve is not a line.
-pub(crate) fn point_line_alignment(sk: &solidcraft_engine::sketch::Sketch, point: &Value, line: &str) -> Option<Value> {
+pub(crate) fn point_line_alignment(sk: &torno_engine::sketch::Sketch, point: &Value, line: &str) -> Option<Value> {
     let points = point_line_points(sk, point, line)?;
     let mode = line_axis_mode(sk, line)?;
     Some(json!({"points": points, "mode": mode}))
 }
 
 /// The `points` pair aligning `point` with the midpoint of `line`; None when `line` is not a line.
-pub(crate) fn point_line_points(sk: &solidcraft_engine::sketch::Sketch, point: &Value, line: &str) -> Option<[Value; 2]> {
+pub(crate) fn point_line_points(sk: &torno_engine::sketch::Sketch, point: &Value, line: &str) -> Option<[Value; 2]> {
     let l = sk.curve_index(line)?;
-    matches!(sk.shape(l)?, solidcraft_engine::sketch::Shape::Line { .. }).then(|| [point.clone(), json!({"midpoint": line})])
+    matches!(sk.shape(l)?, torno_engine::sketch::Shape::Line { .. }).then(|| [point.clone(), json!({"midpoint": line})])
 }
 
 /// The axis a straight line is closest to: the alignment mode when a point is aligned with it (#617).
-fn line_axis_mode(sk: &solidcraft_engine::sketch::Sketch, line: &str) -> Option<&'static str> {
-    let solidcraft_engine::sketch::Shape::Line { a, b } = sk.shape(sk.curve_index(line)?)? else { return None };
+fn line_axis_mode(sk: &torno_engine::sketch::Sketch, line: &str) -> Option<&'static str> {
+    let torno_engine::sketch::Shape::Line { a, b } = sk.shape(sk.curve_index(line)?)? else { return None };
     let d = b - a;
     Some(if d.x.abs() >= d.y.abs() { "horizontal" } else { "vertical" })
 }
@@ -716,10 +716,10 @@ fn line_axis_mode(sk: &solidcraft_engine::sketch::Sketch, line: &str) -> Option<
 /// Only consume a complete, unambiguous selection; command validation owns geometry.
 pub(crate) fn constraint_preselection(
     command: &str,
-    selection: &[solidcraft_engine::Sel],
-    sketch: Option<&solidcraft_engine::sketch::Sketch>,
+    selection: &[torno_engine::Sel],
+    sketch: Option<&torno_engine::sketch::Sketch>,
 ) -> Option<Value> {
-    use solidcraft_engine::Sel::{SketchCurve, SketchPoint};
+    use torno_engine::Sel::{SketchCurve, SketchPoint};
     let selected_ids = |curves_only: bool, minimum: usize| -> Option<Vec<&str>> {
         if !(minimum..=200).contains(&selection.len()) {
             return None;
@@ -780,8 +780,8 @@ pub(crate) fn constraint_preselection(
 /// also takes its dimensions and constraint icons; those cannot be fixed and are passed over, so
 /// the geometry boxed with them is still fixed at once. Anything else selected (a body, a
 /// midpoint, a curve of another sketch) leaves the choice to the pick tool. As many entities as the command takes.
-fn fix_preselection(selection: &[solidcraft_engine::Sel]) -> Option<Vec<&str>> {
-    use solidcraft_engine::Sel::{SketchConstraint, SketchCurve, SketchPoint};
+fn fix_preselection(selection: &[torno_engine::Sel]) -> Option<Vec<&str>> {
+    use torno_engine::Sel::{SketchConstraint, SketchCurve, SketchPoint};
     const MAX_ENTITIES: usize = 10_000;
     let mut ids = Vec::new();
     let mut seen = std::collections::BTreeSet::new();
@@ -800,8 +800,8 @@ fn fix_preselection(selection: &[solidcraft_engine::Sel]) -> Option<Vec<&str>> {
     (1..=MAX_ENTITIES).contains(&ids.len()).then_some(ids)
 }
 
-pub(crate) fn projection_preselection(selection: &[solidcraft_engine::Sel]) -> Option<Vec<Value>> {
-    use solidcraft_engine::Sel;
+pub(crate) fn projection_preselection(selection: &[torno_engine::Sel]) -> Option<Vec<Value>> {
+    use torno_engine::Sel;
     // The projection command processes at most 1000 references; never consume a subset.
     if selection.is_empty() || selection.len() > 1000 {
         return None;
@@ -856,7 +856,7 @@ pub(crate) fn sketch_axis_of(app: &SolveApp, name: &str) -> Option<&'static str>
 /// Symmetry's arguments from three picked sketch ids in any order (#1796): with two points and
 /// a line, the line; with three lines, the only construction line or centerline among them (the
 /// line drawn between the two it mirrors); otherwise the last pick, as before.
-fn symmetry_args(picks: &[Value], sketch: Option<&solidcraft_engine::sketch::Sketch>) -> Option<Value> {
+fn symmetry_args(picks: &[Value], sketch: Option<&torno_engine::sketch::Sketch>) -> Option<Value> {
     let curve = |v: &Value| match v.as_str() {
         Some(id) => sketch.and_then(|sk| sk.curve_index(id).and_then(|i| sk.curves.get(i))),
         None => None,
@@ -1022,7 +1022,7 @@ pub fn finish(app: &mut SolveApp) {
 
 /// Rubber-band preview of the shape being drawn.
 pub(crate) fn paint_preview_curve(
-    mut sketch: solidcraft_engine::sketch::Sketch,
+    mut sketch: torno_engine::sketch::Sketch,
     plane: &solidcore_record::Plane,
     painter: &egui::Painter,
     proj: &Proj,
@@ -1030,12 +1030,12 @@ pub(crate) fn paint_preview_curve(
     mode: u8,
 ) {
     for curve in &mut sketch.curves {
-        let line = matches!(curve.kind, solidcraft_engine::sketch::CurveKind::Line { .. });
+        let line = matches!(curve.kind, torno_engine::sketch::CurveKind::Line { .. });
         curve.centerline = mode == 2 && line;
         curve.infinite = mode == 3 && line;
         curve.construction |= mode != 0 && !curve.centerline;
     }
-    let mut budget = solidcraft_engine::render::SamplingBudget::new(4096, 65_536);
+    let mut budget = torno_engine::render::SamplingBudget::new(4096, 65_536);
     for index in 0..sketch.curves.len() {
         paint_curve(&sketch, index, plane, painter, proj, stroke, &mut budget);
     }
@@ -1050,7 +1050,7 @@ pub(crate) fn paint_sketch_path(points: &[solidcore_record::Vec3], mode: u8, pai
         }
         return;
     }
-    let unit = solidcraft_engine::view::grid_step(proj.cam.half_height()).0;
+    let unit = torno_engine::view::grid_step(proj.cam.half_height()).0;
     for (a, b) in crate::viewport::sketch_segments(points, mode, unit) {
         if let (Some(a), Some(b)) = (proj.to_screen(a), proj.to_screen(b)) {
             painter.line_segment([a, b], stroke);
@@ -1059,13 +1059,13 @@ pub(crate) fn paint_sketch_path(points: &[solidcore_record::Vec3], mode: u8, pai
 }
 
 pub(crate) fn paint_curve(
-    sketch: &solidcraft_engine::sketch::Sketch,
+    sketch: &torno_engine::sketch::Sketch,
     index: usize,
     plane: &solidcore_record::Plane,
     painter: &egui::Painter,
     proj: &Proj,
     stroke: Stroke,
-    budget: &mut solidcraft_engine::render::SamplingBudget,
+    budget: &mut torno_engine::render::SamplingBudget,
 ) {
     for part in crate::sketch_display::curve_with_budget(sketch, index, plane, proj, painter.ctx().pixels_per_point(), budget).parts {
         let mode = sketch.curves.get(index).map_or(0, |c| if c.centerline { 2 } else { u8::from(c.construction) });
@@ -1081,9 +1081,9 @@ pub(crate) fn preview_curve(
     sweep: Option<f64>,
     rho: Option<f64>,
     slot_width: Option<f64>,
-) -> Option<solidcraft_engine::sketch::Sketch> {
-    use solidcraft_engine::sketch::{CurveKind, Sketch};
-    if !hover.is_finite() || t.pts.len() >= solidcraft_engine::sketch::MAX_SPLINE_POINTS || t.pts.iter().any(|p| !p.0.is_finite()) {
+) -> Option<torno_engine::sketch::Sketch> {
+    use torno_engine::sketch::{CurveKind, Sketch};
+    if !hover.is_finite() || t.pts.len() >= torno_engine::sketch::MAX_SPLINE_POINTS || t.pts.iter().any(|p| !p.0.is_finite()) {
         return None;
     }
     let mut sk = Sketch::new();
@@ -1300,7 +1300,7 @@ pub fn preview(app: &SolveApp, t: &Tool, painter: &egui::Painter, proj: &Proj) {
     let Some(ss) = st.sketch(sid) else { return };
     let to = |p: Vec2| proj.to_screen(ss.plane.to_world(p));
     // Drawn straight onto the view: its side's colours (#4146).
-    let tk = solidcraft_theme::Tokens::view();
+    let tk = torno_theme::Tokens::view();
     let stroke = Stroke::new(1.5, tk.sketch_accent);
     if let Some((hp, snap)) = &t.hover
         && let Some(sp) = to(*hp)
@@ -1317,7 +1317,7 @@ pub fn preview(app: &SolveApp, t: &Tool, painter: &egui::Painter, proj: &Proj) {
                 crate::tool_cursor::readout_at(painter, proj.rect, sp),
                 egui::Align2::LEFT_TOP,
                 crate::sketch_cursor_readout::text(app, *hp),
-                egui::FontId::proportional(solidcraft_theme::Tokens::get().font_small),
+                egui::FontId::proportional(torno_theme::Tokens::get().font_small),
                 tk.text_dim,
             );
             crate::scenario::publish_rect("viewport:readout", readout);
@@ -1328,7 +1328,7 @@ pub fn preview(app: &SolveApp, t: &Tool, painter: &egui::Painter, proj: &Proj) {
             let midpoint = target.get("midpoint").and_then(Value::as_str).or_else(|| target.as_str().and_then(|id| id.strip_prefix("mid:")));
             let point = if let Some(id) = midpoint {
                 ss.sketch.curve_index(id).and_then(|l| match ss.sketch.shape(l)? {
-                    solidcraft_engine::sketch::Shape::Line { a, b } => Some((a + b) * 0.5),
+                    torno_engine::sketch::Shape::Line { a, b } => Some((a + b) * 0.5),
                     _ => None,
                 })
             } else {
@@ -1376,7 +1376,7 @@ pub fn preview(app: &SolveApp, t: &Tool, painter: &egui::Painter, proj: &Proj) {
                     m + g,
                     egui::Align2::CENTER_CENTER,
                     if horizontal { "H" } else { "V" },
-                    egui::FontId::proportional(solidcraft_theme::Tokens::get().font_micro),
+                    egui::FontId::proportional(torno_theme::Tokens::get().font_micro),
                     tk.sketch_accent,
                 );
             }

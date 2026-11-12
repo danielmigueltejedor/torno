@@ -1,5 +1,5 @@
 //! #2111: the offset of a trimmed B-spline patch sheet (two lines and two R40 arcs at
-//! +-14 on a plain B-spline surface, written by SolidCraft) checked at `Level2`.
+//! +-14 on a plain B-spline surface, written by Torno) checked at `Level2`.
 //!
 //! Upstream (the pinned C++, difftest `topology.assert_valid`, `copy_offset_patch_sheet.json`)
 //! reports `SmBrep` list-2 Bad Gaps (edge/vertex gap over half the vertex tolerance) at d =

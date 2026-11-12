@@ -1,5 +1,5 @@
 //! The vector measures the mesher works with, on the record's plain [`Vec3`] and the kernel's: the formulas, bit
-//! for bit, the planner was built and measured with (SolidCraft's geometry traits), so its plans
+//! for bit, the planner was built and measured with (Torno's geometry traits), so its plans
 //! do not move with the move into solidcore.
 
 use solidcore_record::Vec3;

@@ -4,8 +4,8 @@
 
 use super::{DecodedHdr, HdrError, HdrErrorCode, MAX_HDR_HEIGHT, MAX_HDR_PIXELS, MAX_HDR_WIDTH, Result};
 use solidcore_record::Vec3;
-use solidcraft_geom::prelude::*;
 use std::f64::consts::{PI, TAU};
+use torno_geom::prelude::*;
 
 fn invalid(message: &str) -> HdrError {
     HdrError::new(HdrErrorCode::InvalidInput, message)
@@ -135,7 +135,7 @@ impl<'a> Environment<'a> {
     pub fn direct_sample_linear_srgb(
         &self,
         u: [f64; 2],
-        surface: solidcraft_viewport::surface::OpaqueSurface,
+        surface: torno_viewport::surface::OpaqueSurface,
         shading_normal: Vec3,
         geometric_normal: Vec3,
         view: Vec3,

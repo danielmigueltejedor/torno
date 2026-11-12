@@ -18,7 +18,7 @@
 //! the caller's context body and a transferred result are never released. The path
 //! plane normal is computed only at a mitre (a straight path needs none). A failed
 //! mitre intersection search (`BrepIntersect`, `GlobalCurveSolve`) is returned too,
-//! as the SolidCraft fork does (tangency-labs/smlib c8f6a31, #2009; earlier the
+//! as the Torno fork does (tangency-labs/smlib c8f6a31, #2009; earlier the
 //! search fell back to the independently built cutting line). Off by default, failed B-reps stay with the access, as upstream.
 //! Not upstream
 //! (WR-400, tangency-labs/solidcore#837): `SweepProfilesAlongPath` asks for caps only for a profile that closes. No recursion.

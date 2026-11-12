@@ -1,8 +1,8 @@
 //! Stable browser data, indexed once for an evaluated document and borrowed on redraw.
 use super::*;
-use solidcraft_engine::doc::{Document, ModelState};
 use std::collections::{BTreeMap, HashMap};
 use std::sync::{Arc, Weak};
+use torno_engine::doc::{Document, ModelState};
 
 #[derive(Default)]
 struct Component {
@@ -72,7 +72,7 @@ pub(super) struct Folder {
     pub key: String,
     pub rows: Vec<Row>,
     /// The top-level rows as drawn: the order a drop among them keeps.
-    pub top_order: Vec<solidcraft_engine::doc::BrowserEntry>,
+    pub top_order: Vec<torno_engine::doc::BrowserEntry>,
     /// How many items the folder holds, groups included.
     pub count: usize,
 }
@@ -123,7 +123,7 @@ impl Cache {
         self.root = Node {
             name: component_name(app, 0),
             key: "c0".into(),
-            children: self.children(app, 0, &[], solidcraft_engine::doc::MAX_PLACEMENTS),
+            children: self.children(app, 0, &[], torno_engine::doc::MAX_PLACEMENTS),
             ..Default::default()
         };
         self.scheduled = self.root.children.len();
@@ -175,7 +175,7 @@ impl Cache {
             tooltip.push_str(&doc.occurrences.get(*self.ids.get(id)?)?.name);
         }
         tooltip.push_str("\nGeometry edits apply to every instance of this component.");
-        let children = self.children(app, component, path, solidcraft_engine::doc::MAX_PLACEMENTS.saturating_sub(self.scheduled));
+        let children = self.children(app, component, path, torno_engine::doc::MAX_PLACEMENTS.saturating_sub(self.scheduled));
         self.scheduled += children.len();
         Some((
             path.to_vec(),
@@ -241,8 +241,8 @@ impl Cache {
         let top_order = rows
             .iter()
             .map(|r| match r {
-                Row::Item(e) => solidcraft_engine::doc::BrowserEntry::item(&e.key),
-                Row::Group(g) => solidcraft_engine::doc::BrowserEntry::Group(g.id),
+                Row::Item(e) => torno_engine::doc::BrowserEntry::item(&e.key),
+                Row::Group(g) => torno_engine::doc::BrowserEntry::Group(g.id),
             })
             .collect();
         let count = rows.iter().map(Row::count).sum();

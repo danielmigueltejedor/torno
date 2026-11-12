@@ -11,7 +11,7 @@
 
 use crate::{BackingTooltipExt as _, HistoryChip, HistoryStyle, HistoryTransport, PlayLabels};
 use egui::{Painter, Pos2, Rect, Sense, UiBuilder, pos2, vec2};
-use solidcraft_theme::{TabAccent, Tokens};
+use torno_theme::{TabAccent, Tokens};
 
 /// Where the bar publishes its parts in the widget registry.
 #[derive(Clone, Copy, Debug)]
@@ -169,7 +169,7 @@ pub fn header(ui: &mut egui::Ui, bar: &Bar, rect: Rect) -> HeaderOut {
         x += heading.width();
     }
     let grip = ui.interact(drag_rect, ui.scope_id().with(("history_bar_grip", bar.handles.grip)), Sense::drag());
-    solidcraft_ui_registry::publish_handle(bar.handles.grip, drag_rect.center());
+    torno_ui_registry::publish_handle(bar.handles.grip, drag_rect.center());
     let mut actions = Vec::new();
     for &control in HistoryTransport::shown(bar.play) {
         let br = Rect::from_center_size(pos2(x + t.space_24 / 2.0, rect.center().y), vec2(t.space_24, t.space_24));
@@ -273,7 +273,7 @@ fn lay_out(ui: &mut egui::Ui, bar: Bar, rect: Rect, contents: &mut dyn Contents)
     }
     // The history marker: drag it to roll the model back or forward.
     if let Some(mr) = marker_rect {
-        solidcraft_ui_registry::publish_rect(bar.handles.marker, mr);
+        torno_ui_registry::publish_rect(bar.handles.marker, mr);
         let resp = ui.interact(mr.expand2(vec2(3.0, 0.0)), ui.scope_id().with("tl_marker"), Sense::drag());
         if resp.drag_started() {
             drag = Some(Drag::Marker);
@@ -394,7 +394,7 @@ impl Strip<'_, '_> {
         self.xs.push(self.x);
         let br = Rect::from_min_size(pos2(self.x, self.rect.top() + 6.0), vec2(28.0, 28.0));
         self.x += 32.0;
-        solidcraft_ui_registry::publish_handle(&format!("{}{}", self.bar.handles.step, step.label), br.center());
+        torno_ui_registry::publish_handle(&format!("{}{}", self.bar.handles.step, step.label), br.center());
         let ui = &mut *self.ui;
         let chip_id = ui.scope_id().with(("feat", step.id));
         let dragged = self.drag == Some(Drag::Step(step.id));

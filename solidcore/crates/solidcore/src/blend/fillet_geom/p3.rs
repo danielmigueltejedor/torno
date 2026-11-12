@@ -56,7 +56,7 @@
 //! - **Analytic fillets.** `CalcConeFilletGeom` / `CalcTorusFilletGeom`
 //!   (`blend.fillet_solver_p2`) read copies of the sorted vertex uses' points
 //!   (`SmTArray<SmTsectPnt*>` upstream; the builders only read them).
-//!   With `fixes.fillet_exact_round_classes` (WR-669, the SolidCraft fork's
+//!   With `fixes.fillet_exact_round_classes` (WR-669, the Torno fork's
 //!   tangency-labs/smlib@b5f2867 and 7ac037e) they are `ClassifyExactBlend` and
 //!   `CalcExactFilletGeom(.., TRUE)` instead (`blend::fillet_exact`), with errors passed on,
 //!   and only when there are points.
@@ -1228,7 +1228,7 @@ impl FilletBrep {
             && geom_type != FilletGeomType::TangentRollover
             && !tsect_pnts.is_empty()
         {
-            // Not upstream (WR-669, the SolidCraft fork's tangency-labs/smlib@b5f2867 and
+            // Not upstream (WR-669, the Torno fork's tangency-labs/smlib@b5f2867 and
             // 7ac037e): rebuilt exactly by the round's class (`ClassifyExactBlend`,
             // `CalcExactFilletGeom(.., this, TRUE)`); errors are passed on
             let tsects = with_ends(

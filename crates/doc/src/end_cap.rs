@@ -7,14 +7,14 @@ use crate::expr::{Kind, Value};
 use crate::{DocError, Document, Feature, FeatureKind, ModelBody, ModelState, PlaneRef, Result};
 use serde::{Deserialize, Serialize};
 use solidcore_record::{Loop2, Plane, Region2, Seg2, Vec2};
-use solidcraft_geom::prelude::*;
-use solidcraft_kernel::{self as kernel, BoolOp};
+use torno_geom::prelude::*;
+use torno_kernel::{self as kernel, BoolOp};
 
 /// Most end faces one end cap feature closes.
 pub const MAX_FACES: usize = 256;
 
 /// The member a capped face belongs to: its feature and line, which outlive body renames.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, solidcraft_derive::Walk)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, torno_derive::Walk)]
 #[serde(deny_unknown_fields)]
 pub struct Member {
     pub feature: crate::FeatureId,
@@ -22,7 +22,7 @@ pub struct Member {
 }
 
 /// One capped end: the member's planar end face and the member it belongs to.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, solidcraft_derive::Walk)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, torno_derive::Walk)]
 #[serde(deny_unknown_fields)]
 pub struct End {
     pub plane: PlaneRef,
@@ -30,7 +30,7 @@ pub struct End {
 }
 
 /// Which way the cap goes from the end face.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, solidcraft_derive::Walk)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, torno_derive::Walk)]
 #[serde(rename_all = "snake_case")]
 pub enum Direction {
     /// Past the end: the frame gets longer by the thickness.
@@ -573,7 +573,7 @@ pub(crate) fn cap_outline(outer: &Loop2) -> Loop2 {
     if lp.signed_area() > 0.0 && lp.is_closed(tol) && !crosses_itself(&lp) { lp } else { rect }
 }
 
-fn one(mut bodies: Vec<solidcraft_kernel::Body>) -> Result<solidcraft_kernel::Body> {
+fn one(mut bodies: Vec<torno_kernel::Body>) -> Result<torno_kernel::Body> {
     let body = bodies.pop().ok_or_else(|| invalid("the end cap is not one solid"))?;
     if !bodies.is_empty() {
         return Err(invalid("the end cap is not one solid"));

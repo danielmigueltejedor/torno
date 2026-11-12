@@ -1,13 +1,13 @@
 //! Registered panel arrangements, edited live under the Preferences snapshot.
 use egui::{Align2, FontId, Id, Rect, Response, Sense, Stroke, Ui, UiBuilder, pos2, vec2};
 use serde_json::json;
-use solidcraft_engine::panels::{Layout, SectionLocation, Zone, commands};
+use torno_engine::panels::{Layout, SectionLocation, Zone, commands};
 
 use crate::SolveApp;
 use crate::panel_runtime::{LayoutPreferenceEntry, LayoutPreferencesView};
 use crate::ui_kit::{self, BackingTooltipExt as _, Container, Surface};
-use solidcraft_theme::Tokens;
 use std::sync::Arc;
+use torno_theme::Tokens;
 
 const STATE: &str = "sc_preferences_panel_layout";
 const TILE_WIDTH: f32 = 96.0;
@@ -101,8 +101,8 @@ pub(super) fn show(app: &mut SolveApp, ui: &mut Ui) {
 }
 
 fn panel_system(app: &mut SolveApp, ui: &mut Ui) {
-    ui_kit::checkbox(ui, solidcraft_ui_text::tr("prefs.shared_panel_layout"), &mut app.preferences.shared_panel_layout)
-        .backing_on_hover_text(solidcraft_ui_text::tr("prefs.shared_panel_layout_help"));
+    ui_kit::checkbox(ui, torno_ui_text::tr("prefs.shared_panel_layout"), &mut app.preferences.shared_panel_layout)
+        .backing_on_hover_text(torno_ui_text::tr("prefs.shared_panel_layout_help"));
 }
 
 fn workspace_selector(app: &mut SolveApp, ui: &mut Ui, view: &LayoutPreferencesView) {
@@ -168,7 +168,7 @@ fn workspace_selector(app: &mut SolveApp, ui: &mut Ui, view: &LayoutPreferencesV
                 });
                 let response = reset_button(ui, reset_label, !view.default_matches);
                 let workspace = labels.get(current).map(String::as_str).unwrap_or_default();
-                let hint = solidcraft_ui_text::format("ui.panel_layout.reset_hint", &[("workspace", workspace)]);
+                let hint = torno_ui_text::format("ui.panel_layout.reset_hint", &[("workspace", workspace)]);
                 response.widget_info(|| egui::WidgetInfo::labeled(egui::Role::Button, response.enabled(), &hint));
                 crate::scenario::publish_target("prefs:panel_layout:reset", response.rect);
                 reset = response.backing_on_hover_text(hint).clicked();
@@ -414,7 +414,7 @@ fn tile(app: &SolveApp, ui: &mut Ui, item: Tile<'_>, view: &LayoutPreferencesVie
     let kind = if matches!(item, Tile::Saved(entry) if entry.user) { app.tr("ui.panel_layout.your_layout") } else { "" };
     let hint = if custom {
         let source = state.source_name.as_deref().unwrap_or(app.tr("ui.panel_layout.current"));
-        solidcraft_ui_text::format("ui.panel_layout.custom_hint", &[("name", source)])
+        torno_ui_text::format("ui.panel_layout.custom_hint", &[("name", source)])
     } else {
         name.to_owned()
     };
@@ -479,7 +479,7 @@ fn tile_menu(app: &SolveApp, ui: &mut Ui, state: &mut State, tile: &Response, en
 
 fn open_save(ctx: &egui::Context, state: &mut State, tile: &Response, view: &LayoutPreferencesView) {
     let name = (1..=2 * commands::MAX_USER_PRESETS + 1)
-        .map(|n| solidcraft_ui_text::format("ui.panel_layout.suggested_name", &[("n", &n.to_string())]))
+        .map(|n| torno_ui_text::format("ui.panel_layout.suggested_name", &[("n", &n.to_string())]))
         .find(|name| {
             !view.entries.iter().any(|entry| commands::preset_names_equal(&entry.name, name))
                 && !view.builtin_names.iter().any(|builtin| commands::preset_names_equal(builtin, name))
@@ -598,7 +598,7 @@ fn popover(app: &mut SolveApp, ui: &mut Ui, view: &LayoutPreferencesView, state:
                             }
                         }
                         PopoverKind::Replace { name } => {
-                            let question = solidcraft_ui_text::format("ui.panel_layout.confirm_replace", &[("name", name)]);
+                            let question = torno_ui_text::format("ui.panel_layout.confirm_replace", &[("name", name)]);
                             ui.label(egui::RichText::new(question).size(t.font_label).color(t.form_ink));
                             ui.horizontal_wrapped(|ui| {
                                 let cancel = ui_kit::button(ui, app.tr("ui.panel_layout.cancel"), ui_kit::Button::Ghost);
@@ -674,7 +674,7 @@ fn save_field(
         let (enter, response) = ui_kit::text_field_reserving(ui, name, "", t.space_24 * 2.0);
         ids.push(response.id);
         response.widget_info(|| {
-            let mut info = egui::WidgetInfo::labeled(egui::Role::TextInput, ui.is_enabled(), solidcraft_ui_text::tr("ui.panel_layout.save_as"));
+            let mut info = egui::WidgetInfo::labeled(egui::Role::TextInput, ui.is_enabled(), torno_ui_text::tr("ui.panel_layout.save_as"));
             info.current_text_value = Some(name.clone());
             info
         });
@@ -787,7 +787,7 @@ fn run(app: &mut SolveApp, command: &str, params: serde_json::Value, applied: Op
                     .find(|workspace| workspace.id == view.selected_workspace)
                     .map(|workspace| app.tr(&workspace.title_key))
                     .unwrap_or_default();
-                app.set_status(solidcraft_ui_text::format("ui.panel_layout.applied", &[("name", name), ("workspace", workspace)]), false);
+                app.set_status(torno_ui_text::format("ui.panel_layout.applied", &[("name", name), ("workspace", workspace)]), false);
             }
             true
         }
@@ -804,9 +804,8 @@ fn thumbnail(painter: &egui::Painter, rect: Rect, layout: &Layout) {
     painter.rect(rect, 3, t.figure_accent.gamma_multiply(0.16), Stroke::new(0.7, t.figure_accent.gamma_multiply(0.5)), egui::StrokeKind::Inside);
     let sx = rect.width() / 1000.0;
     let sy = rect.height() / 700.0;
-    let shown = |section: &&solidcraft_engine::panels::Section| {
-        section.tabs.iter().any(|id| layout.instance(id).is_ok_and(|instance| instance.requested_open))
-    };
+    let shown =
+        |section: &&torno_engine::panels::Section| section.tabs.iter().any(|id| layout.instance(id).is_ok_and(|instance| instance.requested_open));
     let bottom = layout
         .sections
         .iter()

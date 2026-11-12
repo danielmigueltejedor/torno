@@ -1,11 +1,11 @@
 //! Original public-command wood fixture and cold offline CPU render acceptance.
 use serde_json::json;
-use solidcraft_engine::{
+use std::{error::Error, fs, path::Path, time::Duration};
+use torno_engine::{
     Session,
     doc::Document,
     render::job::{CpuHost, Phase},
 };
-use std::{error::Error, fs, path::Path, time::Duration};
 
 fn render(document: Document, output: &Path) -> Result<(), Box<dyn Error>> {
     let mut session = Session::new(document);
@@ -29,7 +29,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     let args: Vec<_> = std::env::args_os().skip(1).collect();
     if args.len() == 3 && args.first().is_some_and(|value| value == "--reopen") {
         let bytes = fs::read(Path::new(&args[1]))?;
-        return render(solidcraft_io::read_design(&bytes)?, Path::new(&args[2]));
+        return render(torno_io::read_design(&bytes)?, Path::new(&args[2]));
     }
     let output = args.first().map(Path::new).ok_or("usage: wood_texture_workflow NEW_OUTPUT_DIRECTORY [TEXTURE_DIRECTORY] | --reopen DESIGN PNG")?;
     let source = args.get(1).map(Path::new);
@@ -38,7 +38,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     let provenance = if let Some(source) = source {
         serde_json::from_slice::<serde_json::Value>(&fs::read(source.join("provenance.json"))?)?
     } else {
-        json!({"author":"SolidCraft contributors","source":"Original SURF-027 procedural wood illustration; repository ATTRIBUTION.md","license":"MIT OR Apache-2.0"})
+        json!({"author":"Torno contributors","source":"Original SURF-027 procedural wood illustration; repository ATTRIBUTION.md","license":"MIT OR Apache-2.0"})
     };
     fs::create_dir(output)?;
     let mut session = Session::default();
@@ -72,7 +72,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     }
     let json = session.doc.to_json();
     fs::write(output.join("wood.json"), &json)?;
-    fs::write(output.join("wood.sc"), solidcraft_io::write_design_container(&session.doc)?)?;
+    fs::write(output.join("wood.sc"), torno_io::write_design_container(&session.doc)?)?;
     fs::remove_file(map)?;
     fs::remove_file(normal)?;
     fs::remove_file(roughness)?;

@@ -2,20 +2,20 @@
 //! grid and the origin. Used by the headless snapshot renderer; the GPU viewport draws the same
 //! content.
 
-use solidcraft_geom::prelude::*;
 use std::sync::Arc;
+use torno_geom::prelude::*;
 
 use solidcore_record::{Plane, Vec2, Vec3};
-use solidcraft_color::AnalysisColors;
-use solidcraft_geom::Aabb3;
-use solidcraft_sketch::Sketch;
-use solidcraft_viewport::{Camera, Rgb, Scene, SceneAnalysis, SceneLine, SceneMesh};
+use torno_color::AnalysisColors;
+use torno_geom::Aabb3;
+use torno_sketch::Sketch;
+use torno_viewport::{Camera, Rgb, Scene, SceneAnalysis, SceneLine, SceneMesh};
 
 use crate::{Result, Sel, Session};
 
 /// Colours (shared with the GPU viewport).
 pub mod colors {
-    use solidcraft_viewport::Rgb;
+    use torno_viewport::Rgb;
     pub const BODY: Rgb = Rgb(176, 186, 198);
     pub const BODY_SELECTED: Rgb = Rgb(110, 170, 235);
     pub const EDGE: Rgb = Rgb(40, 44, 52);
@@ -43,11 +43,11 @@ pub mod colors {
     pub const BG_TOP: Rgb = Rgb(240, 243, 247);
     pub const BG_BOTTOM: Rgb = Rgb(203, 210, 221);
     /// What the section cap is tinted toward.
-    pub const SECTION_CAP: Rgb = solidcraft_viewport::SECTION_CAP;
+    pub const SECTION_CAP: Rgb = torno_viewport::SECTION_CAP;
 }
 
 /// The colours a headless scene is drawn in. [`Palette::DEFAULT`] is [`colors`], the light
-/// theme's look, which `solidcraft-cli snapshot`, MCP screenshots and thumbnails keep; the app
+/// theme's look, which `torno-cli snapshot`, MCP screenshots and thumbnails keep; the app
 /// passes its theme's for `ui.render` and its CPU viewport, so they match the window. Only these
 /// defaults change: a body's appearance and a face's own look are the design's, drawn as they are.
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -102,7 +102,7 @@ impl Palette {
         sketch_centerline: colors::SKETCH_CENTERLINE,
         axes: [colors::AXIS_X, colors::AXIS_Y, colors::AXIS_Z],
         cap: colors::SECTION_CAP,
-        hatch: solidcraft_viewport::SECTION_HATCH,
+        hatch: torno_viewport::SECTION_HATCH,
         isocurve: colors::ISOCURVE,
         analysis: AnalysisColors::DEFAULT,
     };
@@ -126,19 +126,19 @@ pub fn bounds(s: &Session) -> Result<Aabb3> {
 pub const POINT_CLOUDS_FOLDER: &str = "c0/point_clouds";
 
 /// The point clouds drawn now: shown, in a shown folder.
-pub fn shown_point_clouds(s: &Session) -> impl Iterator<Item = &solidcraft_doc::point_cloud::PointCloud> {
+pub fn shown_point_clouds(s: &Session) -> impl Iterator<Item = &torno_doc::point_cloud::PointCloud> {
     let folder = !s.folder_hidden(POINT_CLOUDS_FOLDER);
     s.doc.point_clouds.iter().filter(move |c| folder && c.visible)
 }
 
 /// [`bounds`] without meshing anything: a body not meshed yet counts with its outline
-/// ([`solidcraft_kernel::Body::outline_bounds`]), which a face curving out past all of its edges
+/// ([`torno_kernel::Body::outline_bounds`]), which a face curving out past all of its edges
 /// can exceed. Frames a design whose bodies are still being meshed.
 pub fn unmeshed_bounds(s: &Session) -> Result<Aabb3> {
     bounds_by(s, |body| body.cached_mesh().map(|m| m.bounds()).unwrap_or_else(|| body.outline_bounds()))
 }
 
-fn bounds_by(s: &Session, of: impl Fn(&solidcraft_doc::ModelBody) -> Aabb3) -> Result<Aabb3> {
+fn bounds_by(s: &Session, of: impl Fn(&torno_doc::ModelBody) -> Aabb3) -> Result<Aabb3> {
     let st = s.world_state()?;
     let mut b = Aabb3::EMPTY;
     for body in st.bodies.iter().filter(|x| s.body_visible(&x.name)) {
@@ -773,7 +773,7 @@ impl<'a> SketchPointVisibility<'a> {
             .links
             .iter()
             .filter(|l| seen.insert(l.id.as_str()))
-            .filter(|l| l.kind == solidcraft_sketch::LinkKind::Text)
+            .filter(|l| l.kind == torno_sketch::LinkKind::Text)
             .map(|l| l.id.as_str())
             .collect();
         let mut hidden: std::collections::HashSet<&str> =
@@ -786,7 +786,7 @@ impl<'a> SketchPointVisibility<'a> {
         Self { hidden }
     }
 
-    pub fn takes(&self, point: &solidcraft_sketch::SPoint) -> bool {
+    pub fn takes(&self, point: &torno_sketch::SPoint) -> bool {
         !self.hidden.contains(point.id.as_str())
     }
 }
@@ -1020,7 +1020,7 @@ fn build_scene(
         // A see-through appearance is drawn see-through, as the viewport draws it; a selected
         // body is drawn solid, so the selection colour reads.
         let opacity = if selected { 1.0 } else { s.doc.model_body_opacity(body) as f32 };
-        let cut_solid = section.is_some() && body.is_closed() && opacity >= solidcraft_viewport::SEE_THROUGH;
+        let cut_solid = section.is_some() && body.is_closed() && opacity >= torno_viewport::SEE_THROUGH;
         sc.meshes.push(SceneMesh { mesh: Arc::clone(&mesh), color, face_colors, opacity, closed: body.is_closed(), hatch: Default::default() });
         let at = sc.meshes.len() - 1;
         if cosmetic_threads
@@ -1045,14 +1045,14 @@ fn build_scene(
                 sc.lines.push(SceneLine { points: vec![*a, *b], color: p.edge, alpha: 1.0, width: 1.6, on_top: false });
             }
             if cut_solid && !segments.is_empty() {
-                cuts.push((at, solidcraft_viewport::hatch::seed(&body.name), segments));
+                cuts.push((at, torno_viewport::hatch::seed(&body.name), segments));
             }
         }
     }
     if let Some((_, n)) = section {
-        let parts: Vec<solidcraft_viewport::hatch::CutPart> =
-            cuts.iter().map(|(_, seed, segments)| solidcraft_viewport::hatch::CutPart { seed: *seed, segments }).collect();
-        for ((at, _, _), hatch) in cuts.iter().zip(solidcraft_viewport::hatch::hatches(&parts, n)) {
+        let parts: Vec<torno_viewport::hatch::CutPart> =
+            cuts.iter().map(|(_, seed, segments)| torno_viewport::hatch::CutPart { seed: *seed, segments }).collect();
+        for ((at, _, _), hatch) in cuts.iter().zip(torno_viewport::hatch::hatches(&parts, n)) {
             if let Some(m) = sc.meshes.get_mut(*at) {
                 m.hatch = hatch;
             }
@@ -1076,7 +1076,7 @@ fn build_scene(
 
 /// Where the plane through `o` with normal `n` cuts a mesh: one segment per crossed triangle,
 /// nudged a hair to the kept side (so the clip leaves them drawn).
-pub fn section_segments(m: &solidcraft_geom::Mesh, o: Vec3, n: Vec3) -> Vec<(Vec3, Vec3)> {
+pub fn section_segments(m: &torno_geom::Mesh, o: Vec3, n: Vec3) -> Vec<(Vec3, Vec3)> {
     let eps = section_nudge(m);
     let mut out = Vec::new();
     for t in &m.triangles {
@@ -1086,12 +1086,12 @@ pub fn section_segments(m: &solidcraft_geom::Mesh, o: Vec3, n: Vec3) -> Vec<(Vec
 }
 
 /// How far [`section_segments`] nudges the cut to the kept side.
-fn section_nudge(m: &solidcraft_geom::Mesh) -> f64 {
+fn section_nudge(m: &torno_geom::Mesh) -> f64 {
     1e-4 * (1.0 + m.bounds().diagonal())
 }
 
 /// The segment where the plane through `o` with normal `n` crosses triangle `t`, if it does.
-fn cut_triangle(m: &solidcraft_geom::Mesh, t: &[u32; 3], o: Vec3, n: Vec3, eps: f64, out: &mut Vec<(Vec3, Vec3)>) {
+fn cut_triangle(m: &torno_geom::Mesh, t: &[u32; 3], o: Vec3, n: Vec3, eps: f64, out: &mut Vec<(Vec3, Vec3)>) {
     let Some(p) = m.tri(t) else { return };
     let d = p.map(|q| n.dot(q - o));
     let mut pts = Vec::with_capacity(2);
@@ -1129,7 +1129,7 @@ const SECTION_CELL_WIDTHS: f64 = 4.0;
 const SECTION_GRID: usize = 1 << 22;
 
 impl SectionIndex {
-    pub fn new(m: &solidcraft_geom::Mesh) -> SectionIndex {
+    pub fn new(m: &torno_geom::Mesh) -> SectionIndex {
         let finite_tri = |t: &[u32; 3]| m.tri(t).filter(|p| p.iter().all(|q| q.is_finite()));
         let mut always = Vec::new();
         let mut centres = Aabb3::EMPTY;
@@ -1217,7 +1217,7 @@ impl SectionIndex {
 
     /// [`section_segments`] of `m` (the mesh this index was made from) at the plane through
     /// `o` with normal `n`; nothing for a plane that is not finite.
-    pub fn segments(&self, m: &solidcraft_geom::Mesh, o: Vec3, n: Vec3) -> Vec<(Vec3, Vec3)> {
+    pub fn segments(&self, m: &torno_geom::Mesh, o: Vec3, n: Vec3) -> Vec<(Vec3, Vec3)> {
         if !(o.is_finite() && n.is_finite()) {
             return Vec::new();
         }
@@ -1264,7 +1264,7 @@ pub fn sketch_shown(s: &Session, id: u64) -> bool {
         .marker
         .and_then(|position| position.checked_sub(1))
         .and_then(|index| s.doc.features.get(index))
-        .is_some_and(|f| f.id == id && matches!(f.kind, solidcraft_doc::FeatureKind::Sketch { .. }))
+        .is_some_and(|f| f.id == id && matches!(f.kind, torno_doc::FeatureKind::Sketch { .. }))
     {
         return true;
     }
@@ -1293,13 +1293,13 @@ pub fn sketch_consumed(s: &Session, id: u64) -> bool {
 /// place (`Arc::make_mut`) moves it to an allocation of its own, so a set is never asked about
 /// a design it was not read from.
 pub(crate) struct ConsumedSketches {
-    doc: std::sync::Weak<solidcraft_doc::Document>,
+    doc: std::sync::Weak<torno_doc::Document>,
     ids: std::collections::HashSet<u64>,
 }
 
 /// The sketches the features of a design use (see [`sketch_consumed`]), once per use.
-fn consumed_sketches(doc: &solidcraft_doc::Document) -> impl Iterator<Item = u64> + '_ {
-    use solidcraft_doc::{FeatureKind, SketchPoints};
+fn consumed_sketches(doc: &torno_doc::Document) -> impl Iterator<Item = u64> + '_ {
+    use torno_doc::{FeatureKind, SketchPoints};
     sketch_work::add(doc.features.len() as u64);
     doc.features.iter().filter_map(|f| match &f.kind {
         FeatureKind::Extrude { sketch, .. }
@@ -1339,7 +1339,7 @@ pub fn home_camera(s: &Session) -> Result<Camera> {
     let mut c = Camera::default();
     let b = bounds(s)?;
     if !b.is_empty() {
-        c.fit(&solidcraft_render::view_bounds(&b));
+        c.fit(&torno_render::view_bounds(&b));
     } else {
         c.distance = 150.0;
     }
@@ -1351,7 +1351,7 @@ pub fn construction_planes(s: &Session) -> Vec<(u64, String, Plane)> {
     constructs(s)
         .into_iter()
         .filter_map(|(id, name, g)| match g {
-            solidcraft_doc::construct::ConstructGeom::Plane(p) => Some((id, name, p)),
+            torno_doc::construct::ConstructGeom::Plane(p) => Some((id, name, p)),
             _ => None,
         })
         .collect()
@@ -1362,7 +1362,7 @@ pub fn construction_axes(s: &Session) -> Vec<(u64, String, Vec3, Vec3)> {
     constructs(s)
         .into_iter()
         .filter_map(|(id, name, g)| match g {
-            solidcraft_doc::construct::ConstructGeom::Axis { origin, dir } => Some((id, name, origin, dir)),
+            torno_doc::construct::ConstructGeom::Axis { origin, dir } => Some((id, name, origin, dir)),
             _ => None,
         })
         .collect()
@@ -1373,25 +1373,25 @@ pub fn construction_points(s: &Session) -> Vec<(u64, String, Vec3)> {
     constructs(s)
         .into_iter()
         .filter_map(|(id, name, g)| match g {
-            solidcraft_doc::construct::ConstructGeom::Point(p) => Some((id, name, p)),
+            torno_doc::construct::ConstructGeom::Point(p) => Some((id, name, p)),
             _ => None,
         })
         .collect()
 }
 
 /// Construction geometry of unsuppressed features, shown where its component is placed.
-fn constructs(s: &Session) -> Vec<(u64, String, solidcraft_doc::construct::ConstructGeom)> {
-    use solidcraft_doc::construct::ConstructGeom;
+fn constructs(s: &Session) -> Vec<(u64, String, torno_doc::construct::ConstructGeom)> {
+    use torno_doc::construct::ConstructGeom;
     let st = s.model.state();
     st.construct
         .iter()
         .filter_map(|c| {
             let f = s.doc.feature(c.feature).filter(|f| !f.suppressed)?;
             let m = s.doc.component_transform(f.component);
-            if solidcraft_doc::is_identity(&m) {
+            if torno_doc::is_identity(&m) {
                 return Some((c.feature, c.name.clone(), c.geom.clone()));
             }
-            let (pt, v) = (|p: Vec3| solidcraft_doc::apply_point(&m, p), |d: Vec3| solidcraft_doc::apply_vector(&m, d));
+            let (pt, v) = (|p: Vec3| torno_doc::apply_point(&m, p), |d: Vec3| torno_doc::apply_vector(&m, d));
             let g = match &c.geom {
                 ConstructGeom::Plane(p) => ConstructGeom::Plane(Plane::new(pt(p.origin), v(p.x), v(p.y)).unwrap_or(*p)),
                 ConstructGeom::Axis { origin, dir } => ConstructGeom::Axis { origin: pt(*origin), dir: v(*dir) },
@@ -1409,7 +1409,7 @@ mod tests {
     use super::*;
 
     /// Headless pictures show appearances as the viewport does: a body's colour and faces with
-    /// looks of their own (the picture itself: `solidcraft-gpu`'s capture tests).
+    /// looks of their own (the picture itself: `torno-gpu`'s capture tests).
     #[test]
     fn snapshot_scene_carries_appearances() {
         let mut s = Session::default();
@@ -1483,7 +1483,7 @@ mod tests {
     }
 
     /// A section cuts the headless scene: the clip plane and the cap colour, and the outline
-    /// where the plane cuts each body (the picture: `solidcraft-gpu`'s capture tests).
+    /// where the plane cuts each body (the picture: `torno-gpu`'s capture tests).
     #[test]
     fn the_section_cuts_the_scene() {
         let mut s = Session::default();
@@ -1507,17 +1507,17 @@ mod tests {
         assert!(scene(&s, &cam).unwrap().analysis.is_none());
         s.analysis = Some(crate::SurfaceAnalysis::Curvature { radius: 5.0 });
         let a = scene(&s, &cam).unwrap().analysis.unwrap();
-        assert_eq!((a.mode, a.colors), (solidcraft_viewport::AnalysisMode::Curvature { radius: 5.0 }, Palette::DEFAULT.analysis));
+        assert_eq!((a.mode, a.colors), (torno_viewport::AnalysisMode::Curvature { radius: 5.0 }, Palette::DEFAULT.analysis));
     }
 
-    /// The CPU rasterizer (the last tier of headless pictures, `SOLIDCRAFT_GPU=cpu` or no adapter
+    /// The CPU rasterizer (the last tier of headless pictures, `TORNO_GPU=cpu` or no adapter
     /// under `auto`): curved surfaces get a dark silhouette line where they turn away.
     #[test]
     fn cpu_pictures_draw_silhouettes_on_curved_surfaces() {
         let mut s = Session::default();
         s.execute("solid.sphere", &json!({"diameter": 20})).unwrap();
         let cam = home_camera(&s).unwrap();
-        let img = solidcraft_viewport::render(&scene(&s, &cam).unwrap(), &cam, 400, 400);
+        let img = torno_viewport::render(&scene(&s, &cam).unwrap(), &cam, 400, 400);
         let dark = img.rgba.chunks(4).filter(|p| p[0] < 70 && p[1] < 70 && p[2] < 75).count();
         assert!(dark > 40, "silhouette pixels: {dark}");
     }
@@ -1528,11 +1528,11 @@ mod tests {
         let mut s = Session::default();
         s.execute("solid.box", &json!({"length": 40, "width": 30, "height": 20})).unwrap();
         let cam = home_camera(&s).unwrap();
-        let whole = solidcraft_viewport::render(&scene(&s, &cam).unwrap(), &cam, 200, 140).rgba;
+        let whole = torno_viewport::render(&scene(&s, &cam).unwrap(), &cam, 200, 140).rgba;
         s.execute("inspect.section", &json!({"plane": {"origin": [0, 15, 0], "normal": [0, -1, 0]}})).unwrap();
         let sc = scene(&s, &cam).unwrap();
         assert!(sc.clip.is_some());
-        let cut = solidcraft_viewport::render(&sc, &cam, 200, 140).rgba;
+        let cut = torno_viewport::render(&sc, &cam, 200, 140).rgba;
         let changed = whole.chunks(4).zip(cut.chunks(4)).filter(|(a, b)| a != b).count();
         assert!(changed > 500, "{changed} pixels changed");
     }
@@ -1562,7 +1562,7 @@ mod tests {
                 width: 3.0,
                 on_top: false,
             });
-            let img = solidcraft_viewport::render(&sc, &cam, 300, 220);
+            let img = torno_viewport::render(&sc, &cam, 300, 220);
             let px = || img.rgba.chunks(4);
             let marker = px().filter(|p| p[0] > 200 && p[1] < 60 && p[2] < 60).count();
             assert_eq!(marker, 0, "fov {fov}: the inside shows through the cut face");
@@ -1583,7 +1583,7 @@ mod tests {
         let mut picture = |hatch: bool| {
             let plane = json!({"origin": [0, 15, 0], "normal": [0, -1, 0]});
             s.execute("inspect.section", &json!({"plane": plane, "hatch": hatch})).unwrap();
-            solidcraft_viewport::render(&scene(&s, &cam).unwrap(), &cam, 300, 220).rgba
+            torno_viewport::render(&scene(&s, &cam).unwrap(), &cam, 300, 220).rgba
         };
         // Pixels in the body's exact colour: only a plain cut has them (lit faces are shaded).
         let solid = |img: &[u8]| img.chunks(4).filter(|p| p[..3] == [40, 160, 90]).count();
@@ -1596,7 +1596,7 @@ mod tests {
 
     /// A post standing on a plate, cut through: the post's cut is its own (blue) cap down to the
     /// plate, whichever body came first; the plate's top (the same plane as the post's bottom,
-    /// seen through the cut) does not show through it (the viewport: `solidcraft-gpu`'s depth tests).
+    /// seen through the cut) does not show through it (the viewport: `torno-gpu`'s depth tests).
     #[test]
     fn cpu_picture_a_body_standing_on_another_keeps_its_own_cap() {
         let plate = ("solid.box", json!({"length": 80, "width": 50, "height": 10, "body_name": "Plate"}));
@@ -1618,7 +1618,7 @@ mod tests {
                     oblique(&mut cam);
                 }
                 let sc = scene(&s, &cam).unwrap();
-                let img = solidcraft_viewport::render(&sc, &cam, 400, 400);
+                let img = torno_viewport::render(&sc, &cam, 400, 400);
                 let vp = cam.view_proj(1.0, sc.radius);
                 let mut wrong = Vec::new();
                 for x in (10..=30).map(f64::from) {
@@ -1659,13 +1659,13 @@ mod tests {
         assert_eq!(sketch_work::take(), s.doc.features.len() as u64, "one walk of the features for 40 questions");
         s.execute("solid.extrude", &json!({"sketch": sketches[1], "distance": 5, "operation": "new"})).unwrap();
         assert_eq!(shown(&s), [false, false, false, true], "an Extrude added uses its sketch");
-        let at = s.doc.features.iter().position(|f| matches!(f.kind, solidcraft_doc::FeatureKind::Extrude { .. })).unwrap();
+        let at = s.doc.features.iter().position(|f| matches!(f.kind, torno_doc::FeatureKind::Extrude { .. })).unwrap();
         Arc::make_mut(&mut s.doc).features.remove(at);
         assert_eq!(shown(&s), [true, false, false, true], "a design edited in place is read again");
         // `doc_mut` edits in place (the crash journal follows the document's address, #7502):
         // the set held on the design does not move it.
         let address = Arc::as_ptr(&s.doc);
-        s.doc_mut().features.retain(|f| !matches!(f.kind, solidcraft_doc::FeatureKind::Extrude { .. }));
+        s.doc_mut().features.retain(|f| !matches!(f.kind, torno_doc::FeatureKind::Extrude { .. }));
         assert_eq!(Arc::as_ptr(&s.doc), address, "doc_mut still edits in place");
         assert_eq!(shown(&s), [true; 4], "an edit through doc_mut is read again");
     }

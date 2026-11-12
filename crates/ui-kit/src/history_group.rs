@@ -4,7 +4,7 @@
 //! reaches from the chip to its last item.
 use crate::icons;
 use egui::{Painter, Pos2, Rect, Stroke, pos2, vec2};
-use solidcraft_theme::{TabAccent, Tokens};
+use torno_theme::{TabAccent, Tokens};
 
 /// The arrow's square well at the chip's right end.
 pub const GROUP_ARROW_WELL: f32 = 20.0;

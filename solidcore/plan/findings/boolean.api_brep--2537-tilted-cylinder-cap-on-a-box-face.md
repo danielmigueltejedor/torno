@@ -11,8 +11,8 @@
   exactly half the tool is inside the box; the bottom cap centre sits 1.995 mm below
   z = -55, its whole disc 1.436 mm below it, so the box's bottom face does the cutting
   there.
-- **What the issue reports.** Through Torno (`solidcraft-cli mcp --headless`,
-  `SOLIDCRAFT_KERNEL=solidcore`, solidcore pinned at 2dbd88b and still at 8ddce90) the
+- **What the issue reports.** Through Torno (`torno-cli mcp --headless`,
+  `TORNO_KERNEL=solidcore`, solidcore pinned at 2dbd88b and still at 8ddce90) the
   result check refuses the cut with `SmFace::Test #36` ("Face Surface Seam has
   suspicious Edge near seam") twice; the C++ fork refuses it with eight `Bad Gap`
   failures (9.0232843e-06 and 1e-05 against a 7.5e-06 tolerance) and the same two #36.

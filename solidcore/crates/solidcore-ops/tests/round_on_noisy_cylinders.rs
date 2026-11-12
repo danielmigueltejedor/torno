@@ -1,4 +1,4 @@
-//! SolidCraft's raked wedge (#1617 there): `data/raked_wedge_noisy_cylinders.json` is the body it
+//! Torno's raked wedge (#1617 there): `data/raked_wedge_noisy_cylinders.json` is the body it
 //! hands the last round of `box_intersect_splits_the_end_off_a_raked_wedge_after_its_end_rounds`,
 //! its earlier rounds read back as cylinders with rounding in their frames (radius
 //! 1.500000000000035, an axis 1.3e-13 off square to the end plane). The exact class is read within

@@ -138,7 +138,7 @@
     "extrude"
   ],
   "ungraded": [
-    "results: SolidCraft computes it"
+    "results: Torno computes it"
   ],
   "what": "an arm hinged on a grounded base written by Export URDF, and the base's mesh read back",
   "why_not": []

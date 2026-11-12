@@ -1,8 +1,8 @@
 use serde_json::json;
 use solidcore_record::Vec2;
-use solidcraft_engine::geom::prelude::*;
-use solidcraft_engine::{Sel, sketch::ConstraintKind};
-use solidcraft_ui_egui::scenario::Harness;
+use torno_engine::geom::prelude::*;
+use torno_engine::{Sel, sketch::ConstraintKind};
+use torno_ui_egui::scenario::Harness;
 
 fn setup() -> Harness {
     let mut h = Harness::new();
@@ -158,7 +158,7 @@ fn centre_then_delete_glyph(h: &mut Harness) {
     h.step(&json!({"key":"Escape"})).unwrap();
     let ids = midpoint_ids(h);
     assert!(ids.len() >= 2, "one point at the middle of both lines");
-    let glyphs: Vec<_> = solidcraft_ui_egui::sketch_tools::glyph_positions().into_iter().filter(|(id, _)| ids.contains(id)).collect();
+    let glyphs: Vec<_> = torno_ui_egui::sketch_tools::glyph_positions().into_iter().filter(|(id, _)| ids.contains(id)).collect();
     assert_eq!(glyphs.len(), 1, "one MidPoint glyph for both lines: {glyphs:?}");
     let at = glyphs[0].1;
     h.step(&json!({"click":[at.x, at.y]})).unwrap();

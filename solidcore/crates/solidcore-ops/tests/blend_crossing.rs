@@ -1,4 +1,4 @@
-//! Rounds that overlap where a wall is thinner than both (SolidCraft #871): a plate with a
+//! Rounds that overlap where a wall is thinner than both (Torno #871): a plate with a
 //! narrower block on top and a window through both, rounded along every edge of both end faces.
 #![allow(clippy::unwrap_used, clippy::indexing_slicing, clippy::panic)] // test helpers
 
@@ -60,7 +60,7 @@ fn end_edges(b: &Body) -> Vec<usize> {
 
 /// Radius 1 on both the window's edges and the block's sides: the wall between them is 1.26
 /// thick, so the rounds would overlap and the end faces' boundaries cross. The kernel refuses
-/// it before building (its bands overlap). Below half the wall the rounds fit (SolidCraft's
+/// it before building (its bands overlap). Below half the wall the rounds fit (Torno's
 /// closed form: each end face's outline and window, 107.6 long together, give up
 /// r^2 (1 - pi/4) per length at both ends, the mitred corners cancelling), and the rounds' faces
 /// and their neighbours cross nowhere (`rounds_cross` passes, the check finds nothing).

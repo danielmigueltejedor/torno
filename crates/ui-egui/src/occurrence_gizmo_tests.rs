@@ -5,8 +5,8 @@ use crate::{
 };
 use serde_json::json;
 use solidcore_record::Vec3;
-use solidcraft_engine::geom::prelude::*;
-use solidcraft_engine::{Sel, doc};
+use torno_engine::geom::prelude::*;
+use torno_engine::{Sel, doc};
 
 #[test]
 fn occurrence_gizmo_drag_matches_numeric_input_and_preserves_joints_capture_and_undo() {

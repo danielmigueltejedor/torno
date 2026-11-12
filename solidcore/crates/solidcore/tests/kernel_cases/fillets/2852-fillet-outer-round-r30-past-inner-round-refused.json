@@ -86,6 +86,6 @@
   "ungraded": [],
   "what": "a 3 mm U shell (60 x 20 x 50) whose inside top edges are rounded R15: its outside edges rounded R30 would cross into the hollow and cut the top plate off the walls, so it is refused, naming the largest radius that fits",
   "why_not": [
-    "the failure is SolidCraft's, not a kernel operation's: step 4 (solid.fillet): not supported yet: the round of radius 30 mm on the edge at (0.000, 10.000, 50.000) would cut through the material behind it into the hollow at (7.393, 10.000, 42.607) and open the part; the largest radius that fits is 25.24 mm"
+    "the failure is Torno's, not a kernel operation's: step 4 (solid.fillet): not supported yet: the round of radius 30 mm on the edge at (0.000, 10.000, 50.000) would cut through the material behind it into the hollow at (7.393, 10.000, 42.607) and open the part; the largest radius that fits is 25.24 mm"
   ]
 }

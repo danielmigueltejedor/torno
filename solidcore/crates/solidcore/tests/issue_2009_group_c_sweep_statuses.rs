@@ -1,5 +1,5 @@
 //! #2009 group C: statuses the sweeps, extrusions and their topology sweep drop in SMLib
-//! and the SolidCraft fork passes on (tangency-labs/smlib c8f6a31), behind
+//! and the Torno fork passes on (tangency-labs/smlib c8f6a31), behind
 //! `UpstreamFixes::sweep_statuses_pass_on` (WR-662). Each test fails one callee and
 //! checks that its status reaches the caller with the flag on and is dropped with it
 //! off.

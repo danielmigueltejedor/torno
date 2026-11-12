@@ -4,7 +4,7 @@
 
 use serde_json::{Value, json};
 use solidcore_record::Vec3;
-use solidcraft_geom::tess::EvaluateMesh as _;
+use torno_geom::tess::EvaluateMesh as _;
 
 use super::run;
 use crate::*;
@@ -48,7 +48,7 @@ fn a_moved_components_body_is_mirrored_where_it_is_shown() {
     run(&mut s, "occurrence.move", json!({"occurrence": occurrence, "space": "world", "translate": [0, 200, 0]}));
     assert_box(world_box(&s, &copy), mirrored_yz(&s, "ArmBody"));
     // It survives a save and reopen.
-    let t = Session::new(solidcraft_doc::Document::from_json(&s.doc.to_json()).unwrap());
+    let t = Session::new(torno_doc::Document::from_json(&s.doc.to_json()).unwrap());
     assert_box(world_box(&t, &copy), mirrored_yz(&t, "ArmBody"));
 }
 
@@ -99,7 +99,7 @@ fn bodies_in_place_keep_no_placement() {
     run(&mut s, "solid.box", json!({"length": 10, "width": 10, "height": 10, "body_name": "Base"}));
     run(&mut s, "solid.mirror", json!({"bodies": ["Base"], "plane": "YZ"}));
     let f = s.doc.features.last().unwrap();
-    assert!(matches!(&f.kind, solidcraft_doc::FeatureKind::Mirror { placements, .. } if placements.is_empty()), "{:?}", f.kind);
+    assert!(matches!(&f.kind, torno_doc::FeatureKind::Mirror { placements, .. } if placements.is_empty()), "{:?}", f.kind);
 }
 
 #[test]
@@ -118,7 +118,7 @@ fn a_copy_goes_beside_its_source_in_that_component() {
         let mut s = Session::default();
         let (component, occurrence) = moved_arm(&mut s);
         if !moved {
-            run(&mut s, "occurrence.move", json!({"occurrence": occurrence, "base_transform": solidcraft_doc::IDENTITY}));
+            run(&mut s, "occurrence.move", json!({"occurrence": occurrence, "base_transform": torno_doc::IDENTITY}));
         }
         let copy = created(&run(&mut s, "solid.mirror", json!({"bodies": ["ArmBody"], "plane": "YZ"})));
         let st = s.model.state();
@@ -134,7 +134,7 @@ fn a_copy_goes_beside_its_source_in_that_component() {
 /// keeps mirroring them (their copies vanished: the names led to the second insert's components).
 #[test]
 fn inserting_the_same_file_again_keeps_the_mirrored_copies() {
-    let dir = std::env::temp_dir().join(format!("solidcraft-mirror-placed-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("torno-mirror-placed-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
     let file = dir.join("nested.step").to_string_lossy().replace('\\', "/");
     let mut s = Session::default();
@@ -224,7 +224,7 @@ fn a_placement_leading_to_another_component_is_reported_lost() {
     let copy = created(&run(&mut s, "solid.mirror", json!({"bodies": ["ArmBody"], "plane": "YZ"})));
     let mirror = s.doc.features.last().unwrap().id;
     if let Some(f) = std::sync::Arc::make_mut(&mut s.doc).feature_mut(mirror)
-        && let solidcraft_doc::FeatureKind::Mirror { placements, .. } = &mut f.kind
+        && let torno_doc::FeatureKind::Mirror { placements, .. } = &mut f.kind
     {
         *placements = vec![vec![other]];
     }
@@ -249,7 +249,7 @@ fn curved_part(s: &mut Session) -> (u64, Vec<String>) {
 /// The shown bodies drawn, as a viewport does, and the tessellation that took.
 fn drawn(s: &Session) -> f64 {
     let world = s.world_state().unwrap();
-    let (_, work) = solidcraft_kernel::profile::capture(|| {
+    let (_, work) = torno_kernel::profile::capture(|| {
         for b in &world.bodies {
             b.mesh_in_place();
             b.display_plan();
@@ -262,11 +262,11 @@ fn drawn(s: &Session) -> f64 {
 /// What the viewport shows is what a fresh evaluation of the design shows: where the triangles
 /// are, which way they face and which faces and edges they belong to.
 fn assert_as_evaluated_afresh(s: &Session) {
-    let mut fresh = solidcraft_doc::Model::new();
+    let mut fresh = torno_doc::Model::new();
     fresh.no_cache = true;
     fresh.evaluate(&s.doc);
     assert!(fresh.results.iter().all(|r| r.error.is_none()));
-    let (shown, want) = (s.world_state().unwrap(), solidcraft_doc::world_state(&s.doc, &fresh.state()).unwrap());
+    let (shown, want) = (s.world_state().unwrap(), torno_doc::world_state(&s.doc, &fresh.state()).unwrap());
     assert_eq!(shown.bodies.len(), want.bodies.len());
     for (a, b) in shown.bodies.iter().zip(&want.bodies) {
         assert_eq!(a.name, b.name);
@@ -287,8 +287,8 @@ fn assert_as_evaluated_afresh(s: &Session) {
 
 /// Two meshes of one surface, facing the same way. Their points can differ: a revolved face is
 /// turned by where it stands when it is made, which only moves where the surface is sampled.
-fn assert_same_surface(x: &solidcraft_geom::Mesh, y: &solidcraft_geom::Mesh, name: &str) {
-    let enclosed = |m: &solidcraft_geom::Mesh| {
+fn assert_same_surface(x: &torno_geom::Mesh, y: &torno_geom::Mesh, name: &str) {
+    let enclosed = |m: &torno_geom::Mesh| {
         m.triangles.iter().fold((0.0, 0.0), |(v, s), t| {
             let [a, b, c] = t.map(|i| m.positions[i as usize]);
             (v + a.dot(b.cross(c)) / 6.0, s + (b - a).cross(c - a).len() / 2.0)
@@ -374,7 +374,7 @@ fn a_cut_added_after_a_mirror_finds_its_copies_readied() {
         v["total"]["volume_mm3"].as_f64().unwrap()
     };
     let volume = measured(&s);
-    let reopened = Session::new(solidcraft_doc::Document::from_json(&s.doc.to_json()).unwrap());
+    let reopened = Session::new(torno_doc::Document::from_json(&s.doc.to_json()).unwrap());
     assert_eq!(measured(&reopened), volume, "what evaluates here is what opens");
 }
 
@@ -382,7 +382,7 @@ fn a_cut_added_after_a_mirror_finds_its_copies_readied() {
 /// insert again gives the same solids, and meshing them was as slow as meshing the copies.
 #[test]
 fn an_insert_after_a_mirror_keeps_its_meshes_through_a_drag() {
-    let dir = std::env::temp_dir().join(format!("solidcraft-mirror-insert-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("torno-mirror-insert-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
     let file = dir.join("insert.step").to_string_lossy().replace('\\', "/");
     let mut part = Session::default();
@@ -406,7 +406,7 @@ fn an_insert_after_a_mirror_keeps_its_meshes_through_a_drag() {
 /// and reference mesh. Not the shown meshes: a copy's display triangles can tie differently by
 /// the pose they were made at, with or without reuse (as in the drag test above).
 fn assert_model_as_evaluated_afresh(s: &Session) {
-    let mut fresh = solidcraft_doc::Model::new();
+    let mut fresh = torno_doc::Model::new();
     fresh.no_cache = true;
     fresh.evaluate(&s.doc);
     let errors: Vec<_> = fresh.results.iter().filter_map(|r| r.error.as_ref()).collect();
@@ -485,8 +485,7 @@ fn a_joint_drive_keeps_a_combined_mirror_inside_the_part_it_moves() {
             run(&mut s, "component.activate", json!({"component": component}));
         }
         run(&mut s, "solid.mirror", json!({"bodies": ["ArmBody"], "plane": "YZ", "combine": true}));
-        let placed =
-            s.doc.features.iter().any(|f| matches!(&f.kind, solidcraft_doc::FeatureKind::Mirror { placements, .. } if !placements.is_empty()));
+        let placed = s.doc.features.iter().any(|f| matches!(&f.kind, torno_doc::FeatureKind::Mirror { placements, .. } if !placements.is_empty()));
         assert!(placed, "the mirror keeps the placement it picked the body at");
         if inside {
             run(
@@ -529,7 +528,7 @@ fn an_adopted_model_mirrors_at_the_designs_own_pose() {
     let saved = s.model.saved(&s.doc).unwrap();
     run(&mut s, "joint.drive", json!({"joint": "Pan", "value": 40, "quiet": true}));
     // As opening installs it, before any evaluation; and once evaluated.
-    s.model = solidcraft_doc::Model::adopt(&s.doc, &saved).unwrap();
+    s.model = torno_doc::Model::adopt(&s.doc, &saved).unwrap();
     assert_model_as_evaluated_afresh(&s);
     let before = s.model.recomputed;
     s.model.evaluate(&s.doc);

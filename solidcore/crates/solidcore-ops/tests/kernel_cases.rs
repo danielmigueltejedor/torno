@@ -1,6 +1,6 @@
 //! The kernel rig's corpus (`crates/solidcore/tests/kernel_cases/`, its README), replayed
 //! through this crate's public operations and graded against each case's `rig` values: what
-//! SolidCraft's kernel rig measured at the corpus's pin.
+//! Torno's kernel rig measured at the corpus's pin.
 //!
 //! Each case is one of:
 //! - **pass**: every operation refused or ran as the rig's trace says, and the final bodies'
@@ -20,7 +20,7 @@
 //! The corpus's rules: `transform` is a copy, then the copy moved in place; `tagged` changes no
 //! geometry and its history is not graded; picks are record indices, passed to the operations
 //! with the body's record [`Order`] (the one face index convention).
-//! Shell, face offset, thicken and stitch copy their inputs before editing, as SolidCraft does.
+//! Shell, face offset, thicken and stitch copy their inputs before editing, as Torno does.
 //! A copy gets its own entity IDs; an existing pick order follows the kernel's copy map.
 //!
 //! The test is `#[ignore]`d, out of the workspace run: run it with `--ignored`.
@@ -978,7 +978,7 @@ fn call_with_copy(
             in_place(Slot { order: None, ..s }, r)
         }
         "blend_dropping" => {
-            // a trace older than SolidCraft's turn names none: its rounds turned mitred
+            // a trace older than Torno's turn names none: its rounds turned mitred
             let turn = match p.get("turn").map(Value::as_str) {
                 None | Some(Some("mitre")) => Turn::Mitre,
                 Some(Some("swept")) => Turn::Swept,
@@ -1004,7 +1004,7 @@ fn call_with_copy(
             if !(one_size || sizes.len() == edges.len()) {
                 return Err(bad("sizes"));
             }
-            // SolidCraft validates every supplied size before its picker retains the first
+            // Torno validates every supplied size before its picker retains the first
             // point for each edge. A bad later size must not disappear with its duplicate.
             if sizes.iter().any(|&size| {
                 !size.is_finite() || size <= 0.0 || size > solidcore_ops::blend::MAX_SIZE
@@ -1503,7 +1503,7 @@ fn seam_gaps_are_limited_independently_of_stored_tolerances() {
     let body = solidcore_ops::make_box([0.0; 3], [10.0; 3]).unwrap();
     let (mut record, _) = body.to_record().unwrap();
     // every stored tolerance inflated, not the body's alone: the import keeps each edge's and
-    // vertex's own and takes the body's as the least of them (#3187, as SolidCraft's flat
+    // vertex's own and takes the body's as the least of them (#3187, as Torno's flat
     // import does), so a body tolerance alone no longer reaches the edges the grade reads
     record.tolerance = 0.01;
     for edge in &mut record.edges {
@@ -1795,7 +1795,7 @@ fn repeated_blend_picks_do_not_hide_invalid_later_sizes() {
 }
 
 /// A traced turn is read as the operation takes it: absent (a trace older than the turn) or
-/// "mitre" the mitre, "swept" the swept turn, which SolidCraft refuses for a chamfer before the
+/// "mitre" the mitre, "swept" the swept turn, which Torno refuses for a chamfer before the
 /// kernel; any other value is bad replay data, never a refusal.
 #[test]
 fn blend_replay_reads_the_traced_turn() {
@@ -2415,7 +2415,7 @@ fn filled_setback_duplicate_picks_keep_first_values_without_hiding_refusals() {
     assert!(call(&no_room, &mut [input]).unwrap().is_err());
 }
 
-/// The recorded operations already passed in SolidCraft; replay must reach their existing
+/// The recorded operations already passed in Torno; replay must reach their existing
 /// kernel construction instead of skipping the variable-radius request.
 #[test]
 fn variable_fillet_replays_all_five_captured_laws() {

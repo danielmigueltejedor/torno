@@ -9,7 +9,7 @@ allow-unwrap-in-tests = true
 allow-expect-in-tests = true
 allow-panic-in-tests = true
 allow-indexing-slicing-in-tests = true
-doc-valid-idents = ["SMLib", "NLib", "NVIDIA", "SolidCraft", "OpenUSD", ".."]
+doc-valid-idents = ["SMLib", "NLib", "NVIDIA", "Torno", "OpenUSD", ".."]
 disallowed-methods = [
     { path = "f64::sqrt", reason = "ops computes no geometry (docs/layers.md §4)" },
     { path = "f64::cbrt", reason = "ops computes no geometry (docs/layers.md §4)" },

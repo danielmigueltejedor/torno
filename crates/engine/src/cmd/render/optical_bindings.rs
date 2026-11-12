@@ -4,12 +4,12 @@ use crate::schema::TypedContract;
 use crate::schema::render_bindings::{OpticsBindParams, OpticsBindingSaved, OpticsUnbindParams, OpticsUnbound};
 use crate::{Result, Session, params::bad};
 use serde_json::{Value, json};
-use solidcraft_doc::{
+use std::{collections::BTreeMap, sync::Arc};
+use torno_doc::{
     render_optics::{OpticalBindings, OpticalMaterial, SavedOptics},
     render_settings::RenderJob,
 };
-use solidcraft_render::ProductScene;
-use std::{collections::BTreeMap, sync::Arc};
+use torno_render::ProductScene;
 
 fn resolve_each<T>(
     s: &Session,
@@ -46,7 +46,7 @@ pub(super) fn resolve_cpu(
     scene: &ProductScene,
     bindings: &OpticalBindings,
     command: &str,
-) -> Result<Vec<solidcraft_render::job::DielectricOptions>> {
+) -> Result<Vec<torno_render::job::DielectricOptions>> {
     resolve_cpu_path(s, scene, bindings, false, command)
 }
 pub(super) fn resolve_cpu_path(
@@ -55,7 +55,7 @@ pub(super) fn resolve_cpu_path(
     bindings: &OpticalBindings,
     path: bool,
     command: &str,
-) -> Result<Vec<solidcraft_render::job::DielectricOptions>> {
+) -> Result<Vec<torno_render::job::DielectricOptions>> {
     bindings.validate_for_cpu_path(path).map_err(|e| bad(command, e.to_string()))?;
     resolve_each(s, scene, bindings, command, |index, name, optics| {
         optics.to_cpu_for_path(index, name, path).map_err(|e| bad(command, e.to_string()))
@@ -155,7 +155,7 @@ mod tests {
         let saved = s.doc.to_json();
         assert_eq!(s.doc.features, geometry);
         assert_eq!(s.doc.materials, physical);
-        let reopened = solidcraft_doc::Document::from_json(&saved).unwrap();
+        let reopened = torno_doc::Document::from_json(&saved).unwrap();
         assert_eq!(reopened.render, s.doc.render);
         let scene = crate::product_scene::extract(&s).unwrap();
         assert_eq!(resolve(&s, &scene, &s.doc.render.setups["Studio"].optics, "check").unwrap().len(), 1);
@@ -205,12 +205,12 @@ mod tests {
         let cpu = resolve_cpu(&s, &scene, &s.doc.render.setups["CPU glass"].optics, "check").unwrap();
         assert_eq!(cpu[0].body_name, "Optics");
         assert_eq!(cpu[0].ior, 1.51);
-        assert_eq!(cpu[0].boundary, solidcraft_render::job::DielectricBoundary::ClosedBox);
+        assert_eq!(cpu[0].boundary, torno_render::job::DielectricBoundary::ClosedBox);
         assert_eq!(
             s.doc.render.setups["CPU glass"].optics.iter().next().unwrap().optics.boundary,
-            solidcraft_doc::render_optics::OpticalBoundary::ClosedMesh
+            torno_doc::render_optics::OpticalBoundary::ClosedMesh
         );
-        let reopened = solidcraft_doc::Document::from_json(&s.doc.to_json()).unwrap();
+        let reopened = torno_doc::Document::from_json(&s.doc.to_json()).unwrap();
         assert_eq!(reopened.render, s.doc.render);
         s.execute("edit.undo", &json!({})).unwrap();
         assert_eq!(*s.doc, *before);

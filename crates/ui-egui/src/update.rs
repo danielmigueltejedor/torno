@@ -4,9 +4,9 @@
 //! appears in the application bar beside Report a bug; it opens a small window with the version,
 //! the release notes and Download, Skip this version and Remind me later.
 //!
-//! A launcher (ArtCraft Launcher) can manage this copy: `SOLIDCRAFT_MANAGED_BY=<its name>`, or its
+//! A launcher (ArtCraft Launcher) can manage this copy: `TORNO_MANAGED_BY=<its name>`, or its
 //! `installed.json` records this installation. The checks run as before, but the window only says
-//! to update SolidCraft in that launcher: no Update now, no AppImage replacement, no Download.
+//! to update Torno in that launcher: no Update now, no AppImage replacement, no Download.
 //!
 //! The request is the only thing sent: no identifiers, no usage data. A short timeout keeps it
 //! from hanging, a failed check (offline, rate limited) stays silent and is retried later, and
@@ -27,7 +27,7 @@ use serde_json::Value;
 
 use crate::SolveApp;
 use crate::ui_kit;
-use solidcraft_theme::Tokens;
+use torno_theme::Tokens;
 
 /// The repository releases come from.
 pub const REPO: &str = "getnodalia/torno";
@@ -61,7 +61,7 @@ const MAX_ASSETS: usize = 400;
 const TAB_ROOM: f32 = 300.0;
 
 /// The Linux app ID (Flatpak, desktop files).
-pub const APP_ID: &str = "io.tangencylabs.solidcraft";
+pub const APP_ID: &str = "dev.danielmiguelt.Torno";
 
 /// Why a check failed. Automatic checks never show it; Check now does.
 #[derive(Clone, Debug, PartialEq)]
@@ -88,7 +88,7 @@ pub type HttpGet = Arc<dyn Fn(&str) -> Result<Vec<u8>, FetchError> + Send + Sync
 
 // ---- versions ---------------------------------------------------------------------------------
 
-/// A version as SolidCraft's tags and builds spell it: `0.10.0`, `v0.11.0-rc.1`,
+/// A version as Torno's tags and builds spell it: `0.10.0`, `v0.11.0-rc.1`,
 /// `0.9.0-nightly.20261014.36.1`.
 pub fn parse_version(v: &str) -> Option<semver::Version> {
     let v = v.trim();
@@ -125,21 +125,21 @@ pub fn is_newer(latest: &str, current: &str) -> bool {
     latest.pre.is_empty() && latest > comparable(&current)
 }
 
-/// This build's version: the release workflow's `SOLIDCRAFT_VERSION` (with any nightly suffix)
+/// This build's version: the release workflow's `TORNO_VERSION` (with any nightly suffix)
 /// when it built this binary, else the crate version.
 pub fn current_version() -> &'static str {
-    option_env!("SOLIDCRAFT_VERSION").filter(|v| !v.is_empty()).unwrap_or(env!("CARGO_PKG_VERSION"))
+    option_env!("TORNO_VERSION").filter(|v| !v.is_empty()).unwrap_or(env!("CARGO_PKG_VERSION"))
 }
 
-/// The release workflow built this binary (`SOLIDCRAFT_VERSION` is set there). Anything else is a
+/// The release workflow built this binary (`TORNO_VERSION` is set there). Anything else is a
 /// development build, which never checks for updates.
 pub fn release_build() -> bool {
-    option_env!("SOLIDCRAFT_VERSION").is_some_and(|v| !v.is_empty()) && !cfg!(debug_assertions)
+    option_env!("TORNO_VERSION").is_some_and(|v| !v.is_empty()) && !cfg!(debug_assertions)
 }
 
 // ---- installations ----------------------------------------------------------------------------
 
-/// How this copy of SolidCraft was installed: decides which file Download fetches and whether
+/// How this copy of Torno was installed: decides which file Download fetches and whether
 /// the system's package manager is the way to update.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum InstallKind {
@@ -163,9 +163,9 @@ pub enum InstallKind {
     WindowsMsi,
     /// The portable `.zip`, unpacked somewhere.
     WindowsPortable,
-    /// The lone `SolidCraft-<version>-windows-x64.exe`.
+    /// The lone `Torno-<version>-windows-x64.exe`.
     WindowsExe,
-    /// `SolidCraft.app`, at this path (the bundle).
+    /// `Torno.app`, at this path (the bundle).
     MacApp(PathBuf),
     /// A release build in a place none of the above explains (FreeBSD, a copied binary).
     Other,
@@ -180,7 +180,7 @@ pub struct Probe<'a> {
     /// The running executable.
     pub exe: Option<PathBuf>,
     pub exists: &'a dyn Fn(&Path) -> bool,
-    /// Where the Windows installer put SolidCraft (`HKLM\Software\SolidCraft`, `InstallDir`): a
+    /// Where the Windows installer put Torno (`HKLM\Software\Torno`, `InstallDir`): a
     /// folder chosen in its wizard can be anywhere, not only under Program Files (#1870).
     pub msi_dir: Option<PathBuf>,
 }
@@ -208,7 +208,7 @@ pub fn detect(p: &Probe) -> InstallKind {
             }
             if exe.starts_with("/usr") {
                 // nfpm installs both packages under /usr; dpkg keeps a file list per package.
-                if (p.exists)(Path::new("/var/lib/dpkg/info/solidcraft.list")) {
+                if (p.exists)(Path::new("/var/lib/dpkg/info/torno.list")) {
                     return InstallKind::Deb;
                 }
                 if (p.exists)(Path::new("/var/lib/rpm")) || (p.exists)(Path::new("/usr/lib/sysimage/rpm")) {
@@ -224,7 +224,7 @@ pub fn detect(p: &Probe) -> InstallKind {
             if installed || under("ProgramFiles") || under("ProgramW6432") || under("ProgramFiles(x86)") {
                 return InstallKind::WindowsMsi;
             }
-            if exe.parent().is_some_and(|d| (p.exists)(&d.join("solidcraft-cli.exe"))) {
+            if exe.parent().is_some_and(|d| (p.exists)(&d.join("torno-cli.exe"))) {
                 return InstallKind::WindowsPortable;
             }
             InstallKind::WindowsExe
@@ -234,10 +234,10 @@ pub fn detect(p: &Probe) -> InstallKind {
     }
 }
 
-/// The SolidCraft Snap is running: `SNAP` is set and `SNAP_NAME`, when set, is ours. SolidCraft
+/// The Torno Snap is running: `SNAP` is set and `SNAP_NAME`, when set, is ours. Torno
 /// started from a terminal inside another snap (a confined editor) sees that snap's variables.
 pub(crate) fn is_snap(env: &dyn Fn(&str) -> Option<String>) -> bool {
-    env("SNAP").is_some() && env("SNAP_NAME").is_none_or(|n| n.starts_with("solidcraft"))
+    env("SNAP").is_some() && env("SNAP_NAME").is_none_or(|n| n.starts_with("torno"))
 }
 
 /// `path` is inside `dir` (Windows paths: case-insensitive).
@@ -277,10 +277,10 @@ pub fn this_install() -> InstallKind {
     }
 }
 
-/// The folder the Windows installer recorded (solidcraft.wxs writes it for upgrades), if any.
+/// The folder the Windows installer recorded (torno.wxs writes it for upgrades), if any.
 #[cfg(windows)]
 fn msi_install_dir() -> Option<PathBuf> {
-    let key = winreg::RegKey::predef(winreg::enums::HKEY_LOCAL_MACHINE).open_subkey(r"Software\SolidCraft").ok()?;
+    let key = winreg::RegKey::predef(winreg::enums::HKEY_LOCAL_MACHINE).open_subkey(r"Software\Torno").ok()?;
     key.get_value::<String, _>("InstallDir").ok().map(PathBuf::from)
 }
 
@@ -293,13 +293,13 @@ fn msi_install_dir() -> Option<PathBuf> {
 
 /// Set by a launcher that installed and updates this copy; the value is its display name
 /// ("ArtCraft Launcher"). The window then points to it instead of replacing files itself.
-pub const MANAGED_ENV: &str = "SOLIDCRAFT_MANAGED_BY";
+pub const MANAGED_ENV: &str = "TORNO_MANAGED_BY";
 
 /// The ArtCraft Launcher's name, shown when its install record (not the variable) says it manages this copy.
 const LAUNCHER_NAME: &str = "ArtCraft Launcher";
 
-/// The key the launcher files SolidCraft under in its `installed.json`.
-const LAUNCHER_APP_ID: &str = "solidcraft";
+/// The key the launcher files Torno under in its `installed.json`.
+const LAUNCHER_APP_ID: &str = "torno";
 
 /// The longest manager name shown (the variable is untrusted text).
 const MAX_MANAGER_NAME: usize = 64;
@@ -323,7 +323,7 @@ fn same_or_inside(a: &Path, b: &Path, ignore_case: bool) -> bool {
     !b.is_empty() && !b.ends_with(':') && (a == b || a.strip_prefix(&b).is_some_and(|rest| rest.starts_with('/')))
 }
 
-/// Whether the launcher's `installed.json` (`bytes`) records this installation: its `solidcraft`
+/// Whether the launcher's `installed.json` (`bytes`) records this installation: its `torno`
 /// entry's `path` (the exe, the AppImage, the `.app`, or the folder of an unpacked tarball) is one
 /// of `places` or contains one.
 pub fn record_matches(bytes: &[u8], places: &[PathBuf], ignore_case: bool) -> bool {
@@ -371,7 +371,7 @@ pub fn managed_by(
         places.push(p.clone());
     }
     // The launcher runs an unpacked tarball with its own HOME, so the usual place is out of reach:
-    // `<launcher data>/apps/solidcraft/…` has the record two levels up.
+    // `<launcher data>/apps/torno/…` has the record two levels up.
     let beside_apps = exe.into_iter().flat_map(Path::ancestors).find(|a| a.file_name().is_some_and(|n| n == "apps")).and_then(Path::parent);
     let records = beside_apps.map(|d| d.join("installed.json")).into_iter().chain(launcher_record_path(os, env));
     let ignore_case = matches!(os, "windows" | "macos");
@@ -432,19 +432,17 @@ impl InstallKind {
     pub fn update_command(&self, asset: Option<&str>) -> Option<String> {
         match self {
             InstallKind::Flatpak(id) => Some(format!("flatpak update {id}")),
-            InstallKind::Snap { store: true } => Some("sudo snap refresh solidcraft".into()),
-            InstallKind::Snap { store: false } => {
-                Some(format!("sudo snap install --dangerous ./{}", asset.unwrap_or("solidcraft-linux-x86_64.snap")))
-            }
-            InstallKind::Deb => Some(format!("sudo apt install ./{}", asset.unwrap_or("solidcraft-linux-x86_64.deb"))),
-            InstallKind::Rpm => Some(format!("sudo dnf install ./{}", asset.unwrap_or("solidcraft-linux-x86_64.rpm"))),
+            InstallKind::Snap { store: true } => Some("sudo snap refresh torno".into()),
+            InstallKind::Snap { store: false } => Some(format!("sudo snap install --dangerous ./{}", asset.unwrap_or("torno-linux-x86_64.snap"))),
+            InstallKind::Deb => Some(format!("sudo apt install ./{}", asset.unwrap_or("torno-linux-x86_64.deb"))),
+            InstallKind::Rpm => Some(format!("sudo dnf install ./{}", asset.unwrap_or("torno-linux-x86_64.rpm"))),
             _ => None,
         }
     }
 }
 
 /// The release asset that installs or replaces this installation, by its fixed name
-/// (docs/releasing.md: `solidcraft-windows-x64.msi`, `solidcraft-linux-x86_64.AppImage`, …), or
+/// (docs/releasing.md: `torno-windows-x64.msi`, `torno-linux-x86_64.AppImage`, …), or
 /// the versioned name for the packages without one. `arch` is `std::env::consts::ARCH`.
 pub fn asset_name(kind: &InstallKind, arch: &str, version: &str) -> Option<String> {
     let linux = match arch {
@@ -459,18 +457,18 @@ pub fn asset_name(kind: &InstallKind, arch: &str, version: &str) -> Option<Strin
     };
     let version = version.trim_start_matches('v');
     Some(match kind {
-        InstallKind::AppImage(_) => format!("solidcraft-linux-{}.AppImage", linux?),
-        InstallKind::Flatpak(_) => format!("solidcraft-linux-{}.flatpak", linux?),
-        InstallKind::Snap { .. } => format!("solidcraft-linux-{}.snap", linux?),
-        InstallKind::Deb => format!("solidcraft-linux-{}.deb", linux?),
-        InstallKind::Rpm => format!("solidcraft-linux-{}.rpm", linux?),
-        InstallKind::LinuxTarball => format!("solidcraft-{version}-linux-{}.tar.gz", linux?),
-        InstallKind::WindowsMsi => format!("solidcraft-windows-{}.msi", windows?),
-        InstallKind::WindowsPortable => format!("solidcraft-windows-{}-portable.zip", windows?),
+        InstallKind::AppImage(_) => format!("torno-linux-{}.AppImage", linux?),
+        InstallKind::Flatpak(_) => format!("torno-linux-{}.flatpak", linux?),
+        InstallKind::Snap { .. } => format!("torno-linux-{}.snap", linux?),
+        InstallKind::Deb => format!("torno-linux-{}.deb", linux?),
+        InstallKind::Rpm => format!("torno-linux-{}.rpm", linux?),
+        InstallKind::LinuxTarball => format!("torno-{version}-linux-{}.tar.gz", linux?),
+        InstallKind::WindowsMsi => format!("torno-windows-{}.msi", windows?),
+        InstallKind::WindowsPortable => format!("torno-windows-{}-portable.zip", windows?),
         // Only x64 has the lone .exe; elsewhere the portable zip is the same thing.
-        InstallKind::WindowsExe if windows == Some("x64") => format!("SolidCraft-{version}-windows-x64.exe"),
-        InstallKind::WindowsExe => format!("solidcraft-windows-{}-portable.zip", windows?),
-        InstallKind::MacApp(_) => "solidcraft-macos-universal.dmg".into(),
+        InstallKind::WindowsExe if windows == Some("x64") => format!("Torno-{version}-windows-x64.exe"),
+        InstallKind::WindowsExe => format!("torno-windows-{}-portable.zip", windows?),
+        InstallKind::MacApp(_) => "torno-macos-universal.dmg".into(),
         InstallKind::Dev | InstallKind::Web | InstallKind::Other => return None,
     })
 }
@@ -534,13 +532,7 @@ impl Release {
                 is_release_url(&url).then(|| Asset { name, url, size: a.get("size").and_then(Value::as_u64).unwrap_or(0) })
             })
             .collect();
-        Ok(Release {
-            name: Some(s("name")).filter(|n| !n.trim().is_empty()).unwrap_or_else(|| format!("SolidCraft {tag}")),
-            tag,
-            notes,
-            page,
-            assets,
-        })
+        Ok(Release { name: Some(s("name")).filter(|n| !n.trim().is_empty()).unwrap_or_else(|| format!("Torno {tag}")), tag, notes, page, assets })
     }
 
     /// The version without the `v`.
@@ -584,7 +576,7 @@ pub struct Memo {
 }
 
 impl Memo {
-    /// An automatic check is due. `launch`: no automatic check has run since SolidCraft started,
+    /// An automatic check is due. `launch`: no automatic check has run since Torno started,
     /// so one is due whatever the daily schedule says (someone who started yesterday's version
     /// this morning hears about today's release at the next start). GitHub's rate limit always
     /// holds. A clock set back by more than a day counts as due.
@@ -646,7 +638,7 @@ pub enum Status {
 pub struct Updater {
     /// The installation, looked up at the first frame.
     pub kind: Option<InstallKind>,
-    /// What manages this copy (`SOLIDCRAFT_MANAGED_BY`, or a launcher's record), looked up with
+    /// What manages this copy (`TORNO_MANAGED_BY`, or a launcher's record), looked up with
     /// the installation: Some(None) is "nothing does".
     pub managed: Option<Option<String>>,
     pub status: Status,
@@ -659,17 +651,17 @@ pub struct Updater {
     started: bool,
     /// An automatic check has started since launch (until then one is due at once).
     launch_checked: bool,
-    /// `SOLIDCRAFT_UPDATE_CHECK=0`: no checks at all.
+    /// `TORNO_UPDATE_CHECK=0`: no checks at all.
     off: bool,
     /// When Check now was last pressed (Unix seconds).
     last_manual: f64,
-    /// A release given by `SOLIDCRAFT_UPDATE_FEED` (a file), for tests and screenshots.
+    /// A release given by `TORNO_UPDATE_FEED` (a file), for tests and screenshots.
     feed: Option<PathBuf>,
     /// The one-click update in progress (`install`).
     job: Option<(Receiver<Result<install::Outcome, String>>, Arc<install::Progress>)>,
     /// The last one-click update's result.
     pub installed: Option<Result<install::Outcome, String>>,
-    /// A program for the host to start as SolidCraft exits (restart, installer).
+    /// A program for the host to start as Torno exits (restart, installer).
     launch: Option<(PathBuf, Vec<String>)>,
     /// The host should drop process-local graphics fallback overrides for this restart.
     graphics_restart: bool,
@@ -716,11 +708,11 @@ pub fn tick(app: &mut SolveApp, ctx: &egui::Context) {
         #[cfg(not(target_arch = "wasm32"))]
         {
             install::clean_up_after_update(std::env::current_exe().ok().as_deref());
-            if std::env::var("SOLIDCRAFT_UPDATE_CHECK").is_ok_and(|v| v == "0") {
+            if std::env::var("TORNO_UPDATE_CHECK").is_ok_and(|v| v == "0") {
                 app.updater.off = true;
                 return;
             }
-            app.updater.feed = std::env::var_os("SOLIDCRAFT_UPDATE_FEED").map(PathBuf::from);
+            app.updater.feed = std::env::var_os("TORNO_UPDATE_FEED").map(PathBuf::from);
         }
     }
     poll(app);
@@ -878,7 +870,7 @@ pub fn start_install(app: &mut SolveApp, ctx: &egui::Context) {
     #[cfg(not(target_arch = "wasm32"))]
     {
         let ctx = ctx.clone();
-        let staging = std::env::temp_dir().join("solidcraft-update");
+        let staging = std::env::temp_dir().join("torno-update");
         let net = install::Net { get, download, feed };
         let spawned = std::thread::Builder::new().name("update-install".into()).spawn(move || {
             let result = install::run(&release, &kind, &method, std::env::consts::ARCH, &net, &staging, &progress);
@@ -917,7 +909,7 @@ fn poll_install(app: &mut SolveApp) {
     }
     match &result {
         Ok(install::Outcome::Installer(program, args)) => {
-            // The installer replaces this program: start it once SolidCraft has closed. On
+            // The installer replaces this program: start it once Torno has closed. On
             // Windows the installer is followed by the new version (see install::relaunch_after).
             app.updater.launch = Some(match std::env::current_exe() {
                 #[cfg(windows)]
@@ -964,7 +956,7 @@ pub fn take_graphics_restart(app: &mut SolveApp) -> bool {
     std::mem::take(&mut app.updater.graphics_restart) && app.updater.launch.is_some()
 }
 
-/// For the host, as SolidCraft exits: the program to start (the new version, an installer).
+/// For the host, as Torno exits: the program to start (the new version, an installer).
 pub fn take_launch(app: &mut SolveApp) -> Option<(PathBuf, Vec<String>)> {
     app.updater.launch.take()
 }
@@ -977,10 +969,10 @@ pub fn button(app: &mut SolveApp, ui: &mut egui::Ui, span: egui::Rect, labeled: 
     let version = offered(app)?.version().to_string();
     // "Update to 0.14.0" while the document tabs keep room; a short "Update" when they would be
     // squeezed; the icon alone in a narrow bar.
-    let full = solidcraft_ui_text::format("update.button_version", &[("version", &version)]);
-    let labels = [full.as_str(), solidcraft_ui_text::tr("update.button")];
+    let full = torno_ui_text::format("update.button_version", &[("version", &version)]);
+    let labels = [full.as_str(), torno_ui_text::tr("update.button")];
     let (rect, response) = crate::toolbar::offer_pill(ui, span, labeled, &labels, TAB_ROOM, "update", "titlebar:update")?;
-    if response.backing_on_hover_text(solidcraft_ui_text::format("update.available", &[("version", &version)])).clicked() {
+    if response.backing_on_hover_text(torno_ui_text::format("update.available", &[("version", &version)])).clicked() {
         app.updater.open = !app.updater.open;
     }
     Some(rect)
@@ -1013,36 +1005,32 @@ pub fn show(app: &mut SolveApp, ctx: &egui::Context) {
         _ => State::Offer,
     };
     let primary = match (&install, one_click) {
-        (Some(install::Method::Msi), true) => solidcraft_ui_text::tr("update.install_msi"),
-        (Some(install::Method::Dmg), true) => solidcraft_ui_text::tr("update.download_open"),
-        (Some(_), true) => solidcraft_ui_text::tr("update.update_now"),
-        _ if kind.system_managed() => solidcraft_ui_text::tr("update.release_page"),
-        _ => solidcraft_ui_text::tr("update.download"),
+        (Some(install::Method::Msi), true) => torno_ui_text::tr("update.install_msi"),
+        (Some(install::Method::Dmg), true) => torno_ui_text::tr("update.download_open"),
+        (Some(_), true) => torno_ui_text::tr("update.update_now"),
+        _ if kind.system_managed() => torno_ui_text::tr("update.release_page"),
+        _ => torno_ui_text::tr("update.download"),
     };
-    let download = if kind.system_managed() { solidcraft_ui_text::tr("update.release_page") } else { solidcraft_ui_text::tr("update.download") };
+    let download = if kind.system_managed() { torno_ui_text::tr("update.release_page") } else { torno_ui_text::tr("update.download") };
     let (ok, cancel, apply) = match state {
-        State::Downloading => ("", solidcraft_ui_text::tr("ui.cancel"), None),
-        State::Restart => (solidcraft_ui_text::tr("update.restart"), solidcraft_ui_text::tr("update.restart_later"), None),
-        State::Started => ("", solidcraft_ui_text::tr("ui.close"), None),
+        State::Downloading => ("", torno_ui_text::tr("ui.cancel"), None),
+        State::Restart => (torno_ui_text::tr("update.restart"), torno_ui_text::tr("update.restart_later"), None),
+        State::Started => ("", torno_ui_text::tr("ui.close"), None),
         // Managed: nothing here installs or downloads; the launcher does.
-        State::Offer if managed.is_some() => ("", solidcraft_ui_text::tr("update.later"), Some(solidcraft_ui_text::tr("update.skip"))),
-        State::Offer => (primary, solidcraft_ui_text::tr("update.later"), Some(solidcraft_ui_text::tr("update.skip"))),
+        State::Offer if managed.is_some() => ("", torno_ui_text::tr("update.later"), Some(torno_ui_text::tr("update.skip"))),
+        State::Offer => (primary, torno_ui_text::tr("update.later"), Some(torno_ui_text::tr("update.skip"))),
     };
     let id = egui::Id::unique("sc_update");
     let mut also_download = false;
     let (closed, answer) =
-        ui_kit::Window::new(id, "update", solidcraft_ui_text::tr("update.title")).cards(1.7).actions(ok, cancel, apply).show(ctx, true, |ui| {
-            ui_kit::text(
-                ui,
-                &solidcraft_ui_text::format("update.available", &[("version", release.version())]),
-                ui_kit::Text::Report("available", false),
-            );
-            ui_kit::text(ui, &solidcraft_ui_text::format("update.you_have", &[("version", current_version())]), ui_kit::Text::Note("have"));
+        ui_kit::Window::new(id, "update", torno_ui_text::tr("update.title")).cards(1.7).actions(ok, cancel, apply).show(ctx, true, |ui| {
+            ui_kit::text(ui, &torno_ui_text::format("update.available", &[("version", release.version())]), ui_kit::Text::Report("available", false));
+            ui_kit::text(ui, &torno_ui_text::format("update.you_have", &[("version", current_version())]), ui_kit::Text::Note("have"));
             ui_kit::list_frame(ui, "release_notes", |ui| {
                 ui.set_width(ui.available_width());
                 egui::ScrollArea::vertical().max_height(260.0).auto_shrink([false, true]).show(ui, |ui| {
                     if release.notes.trim().is_empty() {
-                        ui_kit::text(ui, solidcraft_ui_text::tr("update.no_notes"), ui_kit::Text::Note("no_notes"));
+                        ui_kit::text(ui, torno_ui_text::tr("update.no_notes"), ui_kit::Text::Note("no_notes"));
                     } else {
                         markdown(ui, &release.notes, &t);
                     }
@@ -1050,20 +1038,20 @@ pub fn show(app: &mut SolveApp, ctx: &egui::Context) {
             });
             let asset = release.asset_for(&kind, arch).map(|a| a.name.clone());
             if let Some(manager) = &managed {
-                ui_kit::text(ui, &solidcraft_ui_text::format("update.managed", &[("manager", manager)]), ui_kit::Text::Report("managed", false));
+                ui_kit::text(ui, &torno_ui_text::format("update.managed", &[("manager", manager)]), ui_kit::Text::Report("managed", false));
             } else if let Some(cmd) = kind.update_command(asset.as_deref()) {
                 let how = match kind {
                     InstallKind::Deb | InstallKind::Rpm | InstallKind::Snap { store: false } => "update.package_hint",
                     _ => "update.system_hint",
                 };
-                ui_kit::text(ui, &solidcraft_ui_text::format(how, &[("kind", kind.label())]), ui_kit::Text::Report("how", false));
+                ui_kit::text(ui, &torno_ui_text::format(how, &[("kind", kind.label())]), ui_kit::Text::Report("how", false));
                 ui_kit::label_actions(ui, &cmd, |ui| {
-                    if ui_kit::button(ui, solidcraft_ui_text::tr("update.copy"), ui_kit::Button::Small).clicked() {
+                    if ui_kit::button(ui, torno_ui_text::tr("update.copy"), ui_kit::Button::Small).clicked() {
                         ui.ctx().copy_text(cmd.clone());
                     }
                 });
             } else if let Some(name) = asset.as_ref().filter(|_| app.updater.installed.as_ref().is_none_or(|r| r.is_err())) {
-                ui_kit::text(ui, &solidcraft_ui_text::format("update.file", &[("file", name)]), ui_kit::Text::Note("file"));
+                ui_kit::text(ui, &torno_ui_text::format("update.file", &[("file", name)]), ui_kit::Text::Note("file"));
             }
             match (&state, &app.updater.installed, &app.updater.job) {
                 (State::Downloading, _, Some((_, progress))) => {
@@ -1073,7 +1061,7 @@ pub fn show(app: &mut SolveApp, ctx: &egui::Context) {
                     let mb = |b: u64| format!("{:.1}", b as f64 / 1_048_576.0);
                     ui_kit::text(
                         ui,
-                        &solidcraft_ui_text::format("update.downloading", &[("done", &mb(done)), ("total", &mb(total))]),
+                        &torno_ui_text::format("update.downloading", &[("done", &mb(done)), ("total", &mb(total))]),
                         ui_kit::Text::Report("downloading", false),
                     );
                     ui_kit::progress(ui, "download", done as f32 / total as f32);
@@ -1082,18 +1070,18 @@ pub fn show(app: &mut SolveApp, ctx: &egui::Context) {
                 (State::Restart, ..) => {
                     ui_kit::text(
                         ui,
-                        &solidcraft_ui_text::format("update.installed", &[("version", release.version())]),
+                        &torno_ui_text::format("update.installed", &[("version", release.version())]),
                         ui_kit::Text::Report("installed", false),
                     );
                 }
                 (_, Some(Ok(install::Outcome::Installer(..))), _) => {
-                    ui_kit::text(ui, solidcraft_ui_text::tr("update.installer_started"), ui_kit::Text::Report("installer", false));
+                    ui_kit::text(ui, torno_ui_text::tr("update.installer_started"), ui_kit::Text::Report("installer", false));
                 }
                 (_, Some(Ok(install::Outcome::Opened(_))), _) => {
-                    ui_kit::text(ui, solidcraft_ui_text::tr("update.dmg_opened"), ui_kit::Text::Report("dmg", false));
+                    ui_kit::text(ui, torno_ui_text::tr("update.dmg_opened"), ui_kit::Text::Report("dmg", false));
                 }
                 (_, Some(Err(e)), _) => {
-                    ui_kit::text(ui, &solidcraft_ui_text::format("update.install_failed", &[("error", e)]), ui_kit::Text::Report("failed", true));
+                    ui_kit::text(ui, &torno_ui_text::format("update.install_failed", &[("error", e)]), ui_kit::Text::Report("failed", true));
                 }
                 _ => {}
             }
@@ -1150,22 +1138,22 @@ pub fn show(app: &mut SolveApp, ctx: &egui::Context) {
 /// Manual checks also have a visible result when no update can be offered.
 fn show_check_status(app: &mut SolveApp, ctx: &egui::Context) {
     let (message, warning) = if !available(app) {
-        (solidcraft_ui_text::tr("update.check_unavailable").to_string(), false)
+        (torno_ui_text::tr("update.check_unavailable").to_string(), false)
     } else {
         match &app.updater.status {
-            Status::Checking => (solidcraft_ui_text::tr("update.checking").to_string(), false),
-            Status::UpToDate => (solidcraft_ui_text::tr("update.up_to_date").to_string(), false),
-            Status::Failed(error) => (solidcraft_ui_text::format("update.failed", &[("error", error)]), true),
-            Status::Idle => (solidcraft_ui_text::tr("update.check_unavailable").to_string(), false),
+            Status::Checking => (torno_ui_text::tr("update.checking").to_string(), false),
+            Status::UpToDate => (torno_ui_text::tr("update.up_to_date").to_string(), false),
+            Status::Failed(error) => (torno_ui_text::format("update.failed", &[("error", error)]), true),
+            Status::Idle => (torno_ui_text::tr("update.check_unavailable").to_string(), false),
         }
     };
     let id = egui::Id::unique("sc_update");
-    let (closed, action) = ui_kit::Window::new(id, "update", solidcraft_ui_text::tr("update.check_for_updates"))
+    let (closed, action) = ui_kit::Window::new(id, "update", torno_ui_text::tr("update.check_for_updates"))
         .cards(1.7)
-        .actions("", solidcraft_ui_text::tr("ui.close"), None)
+        .actions("", torno_ui_text::tr("ui.close"), None)
         .show(ctx, true, |ui| {
             ui_kit::text(ui, &message, ui_kit::Text::Report("check_status", warning));
-            ui_kit::text(ui, &solidcraft_ui_text::format("update.you_have", &[("version", current_version())]), ui_kit::Text::Note("have"));
+            ui_kit::text(ui, &torno_ui_text::format("update.you_have", &[("version", current_version())]), ui_kit::Text::Note("have"));
         });
     if let Some(area) = ctx.memory(|m| m.area_rect(id)) {
         crate::scenario::publish_rect("update:window", area);
@@ -1193,23 +1181,23 @@ pub fn prefs_rows(app: &mut SolveApp, ui: &mut egui::Ui) {
     let can = available(app);
     let kind = app.updater.kind().clone();
     let note = if kind == InstallKind::Web {
-        solidcraft_ui_text::tr("update.prefs_web").to_string()
+        torno_ui_text::tr("update.prefs_web").to_string()
     } else if can && let Some(manager) = app.updater.managed_by().map(str::to_string) {
-        solidcraft_ui_text::format("update.prefs_managed", &[("version", current_version()), ("manager", &manager)])
+        torno_ui_text::format("update.prefs_managed", &[("version", current_version()), ("manager", &manager)])
     } else if can {
-        solidcraft_ui_text::format("update.prefs_note", &[("version", current_version()), ("kind", kind.label())])
+        torno_ui_text::format("update.prefs_note", &[("version", current_version()), ("kind", kind.label())])
     } else if let InstallKind::Flatpak(id) = &kind {
-        solidcraft_ui_text::format("update.prefs_flatpak", &[("version", current_version()), ("command", &format!("flatpak update {id}"))])
+        torno_ui_text::format("update.prefs_flatpak", &[("version", current_version()), ("command", &format!("flatpak update {id}"))])
     } else {
-        solidcraft_ui_text::format("update.prefs_dev", &[("version", current_version())])
+        torno_ui_text::format("update.prefs_dev", &[("version", current_version())])
     };
     ui.horizontal_wrapped(|ui| {
         if can {
             let (status, warning) = match (&app.updater.status, offered_or_newer(app)) {
-                (Status::Checking, _) => (solidcraft_ui_text::tr("update.checking").to_string(), false),
-                (Status::Failed(e), _) => (solidcraft_ui_text::format("update.failed", &[("error", e)]), true),
-                (_, Some(v)) => (solidcraft_ui_text::format("update.available", &[("version", &v)]), false),
-                (Status::UpToDate, None) => (solidcraft_ui_text::tr("update.up_to_date").to_string(), false),
+                (Status::Checking, _) => (torno_ui_text::tr("update.checking").to_string(), false),
+                (Status::Failed(e), _) => (torno_ui_text::format("update.failed", &[("error", e)]), true),
+                (_, Some(v)) => (torno_ui_text::format("update.available", &[("version", &v)]), false),
+                (Status::UpToDate, None) => (torno_ui_text::tr("update.up_to_date").to_string(), false),
                 (Status::Idle, None) => (String::new(), false),
             };
             if !status.is_empty() {
@@ -1217,15 +1205,15 @@ pub fn prefs_rows(app: &mut SolveApp, ui: &mut egui::Ui) {
             }
             let last = app.preferences.update.last_check;
             if last.is_finite() && last > 0.0 {
-                let time = solidcraft_engine::crash::utc(last as u64);
-                let checked = solidcraft_ui_text::format("prefs.general.last_check", &[("time", &time)]);
+                let time = torno_engine::crash::utc(last as u64);
+                let checked = torno_ui_text::format("prefs.general.last_check", &[("time", &time)]);
                 ui_kit::settings_inline_note(ui, &checked);
             }
         } else {
-            ui_kit::settings_inline_note(ui, solidcraft_ui_text::tr("update.check_unavailable"));
+            ui_kit::settings_inline_note(ui, torno_ui_text::tr("update.check_unavailable"));
         }
         let busy = app.updater.status == Status::Checking;
-        let r = ui_kit::button(ui, solidcraft_ui_text::tr("update.check_now"), ui_kit::Button::Enabled(can && !busy));
+        let r = ui_kit::button(ui, torno_ui_text::tr("update.check_now"), ui_kit::Button::Enabled(can && !busy));
         crate::scenario::publish_target("prefs:check_now", r.rect);
         if can && r.clicked() {
             let ctx = ui.ctx().clone();
@@ -1235,12 +1223,12 @@ pub fn prefs_rows(app: &mut SolveApp, ui: &mut egui::Ui) {
         crate::scenario::publish_target("prefs:updates_help", help.rect);
     });
     ui.add_enabled_ui(can, |ui| {
-        let check = ui_kit::checkbox(ui, solidcraft_ui_text::tr("update.check_automatically"), &mut app.preferences.check_updates);
+        let check = ui_kit::checkbox(ui, torno_ui_text::tr("update.check_automatically"), &mut app.preferences.check_updates);
         crate::scenario::publish_target("prefs:check_updates", check.rect);
     });
     if let Some(v) = offered_or_newer(app)
         && offered(app).is_none()
-        && ui_kit::button(ui, solidcraft_ui_text::format("update.show", &[("version", &v)]), ui_kit::Button::Normal).clicked()
+        && ui_kit::button(ui, torno_ui_text::format("update.show", &[("version", &v)]), ui_kit::Button::Normal).clicked()
     {
         app.updater.open = true;
     }
@@ -1490,7 +1478,7 @@ pub fn markdown_blocks(ui: &mut egui::Ui, blocks: &[Block], t: &Tokens) {
                 let indent = 6.0 + 12.0 * (*depth).min(4) as f32;
                 ui.horizontal_top(|ui| {
                     ui.add_space(indent);
-                    ui.label(RichText::new("•").size(solidcraft_theme::Tokens::get().font_label));
+                    ui.label(RichText::new("•").size(torno_theme::Tokens::get().font_label));
                     ui.add(egui::Label::new(job(spans, t.font_label, false, width - indent - 14.0)).wrap());
                 });
                 links(ui, spans, indent + 14.0);

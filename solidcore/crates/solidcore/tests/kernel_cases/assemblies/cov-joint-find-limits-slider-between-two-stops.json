@@ -303,7 +303,7 @@
     "extrude"
   ],
   "ungraded": [
-    "results: SolidCraft computes it"
+    "results: Torno computes it"
   ],
   "what": "joint.find_limits of a slider whose block runs into a stop at each end",
   "why_not": []

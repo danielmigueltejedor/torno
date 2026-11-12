@@ -221,7 +221,7 @@
     "chamfer_sides"
   ],
   "ungraded": [
-    "continuity: SolidCraft computes it"
+    "continuity: Torno computes it"
   ],
   "what": "a rectangular pocket's rim edges chamfered by two distances: 2 along the top (facing up) and 1 down the walls",
   "why_not": []

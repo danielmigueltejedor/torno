@@ -1,8 +1,8 @@
 //! Snap points (#5881): the centres, middles and ends edges and faces offer. Every expected
 //! point is worked out by hand from the part's dimensions.
 
-use solidcraft_geom::prelude::*;
 use std::f64::consts::{FRAC_1_SQRT_2, PI};
+use torno_geom::prelude::*;
 
 use serde_json::{Value, json};
 use solidcore_record::Vec3;

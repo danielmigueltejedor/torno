@@ -33,7 +33,7 @@
 //! are computed from, so a construction far from the origin behaves like the same one near it.
 
 use solidcore_record::Vec2;
-use solidcraft_geom::prelude::*;
+use torno_geom::prelude::*;
 
 use crate::model::{ConstraintKind, CurveKind, MAX_COORD, Sketch, in_range, radius_in_range};
 use crate::union_find::{find, union};

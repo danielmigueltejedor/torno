@@ -7,11 +7,11 @@
 //! meet across smooth edges, so a pick of one wall chains the four walls and not the caps. A
 //! box's edges and faces all meet square: a pick chains itself alone.
 //!
-//! Ported from SolidCraft (`crates/kernel/tests/chamfer_curved_holder.rs`,
+//! Ported from Torno (`crates/kernel/tests/chamfer_curved_holder.rs`,
 //! `one_chamfer_pick_follows_the_tangent_chain_at_any_part_size`, its #2672): a plate of side
 //! 140, 145 and 250, 10 thick, with a 50 x 10 stadium boss 10 tall on top. One pick on the
 //! boss's top straight edge chains the boss's whole top rim, its four edges at z = 20, at
-//! every plate size (SolidCraft's walk once stopped at the straight edge past a 200 mm part).
+//! every plate size (Torno's walk once stopped at the straight edge past a 200 mm part).
 #![allow(
     clippy::unwrap_used,
     clippy::expect_used,
@@ -27,7 +27,7 @@ use solidcore_record::brep::{Brep as Record, Surface};
 use std::f64::consts::{FRAC_PI_2, PI};
 
 const H: f64 = 4.0;
-/// SolidCraft's smooth-edge angle, the caller's: half a degree.
+/// Torno's smooth-edge angle, the caller's: half a degree.
 const ANGLE: f64 = 0.5 * PI / 180.0;
 
 fn stadium() -> Body {

@@ -180,7 +180,7 @@
     "extrude"
   ],
   "ungraded": [
-    "continuity: SolidCraft computes it"
+    "continuity: Torno computes it"
   ],
   "what": "the G2 case built one order short (blend continuity g1): it must read G1, not G2",
   "why_not": []

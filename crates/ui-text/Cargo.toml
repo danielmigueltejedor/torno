@@ -1,5 +1,5 @@
 [package]
-name = "solidcraft-ui-text"
+name = "torno-ui-text"
 description = "Translated interface text: message catalogs the host installs, lookup by stable id, labels, substitution, the language choice and right-to-left display order"
 version.workspace = true
 edition.workspace = true

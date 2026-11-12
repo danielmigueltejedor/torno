@@ -59,6 +59,6 @@ A boolean result's `SmSurfOfExtrusion` faces carry no base NURB, and the port's
 upstream's `GetOrCreateGwNurbPointer` makes the NURB. So `SmBrep::CalculateBoundingBox`
 (and the volume integrator that plans its sampling with it) fails on any boolean result
 with a swept face — including a control pair of disjoint walls that never merge. The
-`--solidcraft-cases` harness makes the missing NURBs explicitly before measuring
-(`make_missing_nurbs` in `crates/difftest/src/solidcraft.rs`); the port itself still fails.
+`--torno-cases` harness makes the missing NURBs explicitly before measuring
+(`make_missing_nurbs` in `crates/difftest/src/torno.rs`); the port itself still fails.
 Recorded in `plan/findings/query.brep--boolean-results-need-their-analytic-nurbs.md`.

@@ -1,15 +1,15 @@
 //! Explicit assembly Move: only the selected part's allowed joint axes are shown. Distances
 //! and angles are relative to the current drag, and each drag is one cancellable undo step.
 use solidcore_record::Vec3;
-use solidcraft_engine::geom::prelude::*;
 use std::{
     collections::{BTreeMap, BTreeSet},
     sync::Arc,
 };
+use torno_engine::geom::prelude::*;
 
 use egui::{Pos2, Shape, Stroke, vec2};
 use serde_json::json;
-use solidcraft_engine::{
+use torno_engine::{
     Sel,
     doc::{Document, apply_point, joints, mat_inverse, mat_mul},
 };
@@ -19,7 +19,7 @@ use crate::{
     ui_kit::{Container, Surface},
     viewport::Proj,
 };
-use solidcraft_theme::Tokens;
+use torno_theme::Tokens;
 
 #[derive(Clone, Debug)]
 pub(crate) struct Mode {
@@ -35,8 +35,8 @@ pub(crate) struct Mode {
 struct Drag {
     axis: joints::MotionAxis,
     initial: f64,
-    world: solidcraft_engine::doc::Mat,
-    last_world: solidcraft_engine::doc::Mat,
+    world: torno_engine::doc::Mat,
+    last_world: torno_engine::doc::Mat,
     start: f64,
     last: f64,
     raw: f64,
@@ -248,7 +248,7 @@ impl Blocked {
         if self.conflicts.is_empty() {
             app.tr("joint_move.fixed").to_string()
         } else {
-            solidcraft_ui_text::format("joint_move.conflict", &[("joint", &self.conflicts.join(", "))])
+            torno_ui_text::format("joint_move.conflict", &[("joint", &self.conflicts.join(", "))])
         }
     }
 }
@@ -565,7 +565,7 @@ pub(crate) fn to(app: &mut SolveApp, proj: &Proj, p: Pos2) {
             if let Some(inv) = mat_inverse(&d.last_world) {
                 let delta = mat_mul(&now, &inv);
                 let (u, v) = basis(d.axis.axis).unwrap_or((Vec3::X, Vec3::Y));
-                let turn = solidcraft_engine::doc::apply_vector(&delta, u);
+                let turn = torno_engine::doc::apply_vector(&delta, u);
                 d.actual += turn.dot(v).atan2(turn.dot(u));
             }
         } else {
@@ -747,11 +747,7 @@ mod tests {
         let (mut h, _) = assembly("revolute", Vec3::Z, false);
         assert!(!visible(&h.app));
         assert!(
-            crate::workspace::layout("ASSEMBLE", "POSITION", &solidcraft_engine::command_specs())
-                .unwrap()
-                .0
-                .iter()
-                .any(|c| c.id == "occurrence.move")
+            crate::workspace::layout("ASSEMBLE", "POSITION", &torno_engine::command_specs()).unwrap().0.iter().any(|c| c.id == "occurrence.move")
         );
         let selection = h.app.session.selection.clone();
         h.step(&json!({"click":{"handle":"tab:ASSEMBLE"}})).unwrap();

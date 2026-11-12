@@ -1,6 +1,6 @@
 //! Surface/surface intersection (`capi/include/smlib.h`, "Surface/surface intersection"): two
 //! surfaces described in plain numbers, intersected by one of SMLib's SSI entry points, each
-//! intersection curve exactly as SMLib holds it: schema 4 B-splines (`solidcraft_geom::brep`).
+//! intersection curve exactly as SMLib holds it: schema 4 B-splines (`torno_geom::brep`).
 //!
 //! The constructors take exactly the fields of an SSI corpus case (`tests/ssi-corpus`), angles in
 //! degrees. Each surface's UV domain is SMLib's natural one ([`Surface::domain`]): (u, v) itself
@@ -406,7 +406,7 @@ mod tests {
             let r = intersect(&plane, &sphere, method, 1e-6).unwrap();
             assert!(!r.curves.is_empty(), "{method:?}");
             for c in &r.curves {
-                let eval = solidcraft_geom::brep::eval::CurveEval::new(&c.curve).unwrap();
+                let eval = torno_geom::brep::eval::CurveEval::new(&c.curve).unwrap();
                 let [t0, t1] = c.interval;
                 for k in 0..=100 {
                     let p = eval.point(t0 + (t1 - t0) * f64::from(k) / 100.0).unwrap();

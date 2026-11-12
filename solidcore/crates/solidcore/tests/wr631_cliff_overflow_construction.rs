@@ -224,8 +224,8 @@ fn a_round_just_past_a_box_side_is_subtracted() {
     assert_no_room(&blend(false, box_40_20_10, a, b, 10.05, false));
 }
 
-/// A 40 x 20 x 10 block with a through hole of radius 3 at (20, 14.5) (#422, SolidCraft
-/// rig 324, `fixtures/solidcraft/324-round-beside-through-hole.json`).
+/// A 40 x 20 x 10 block with a through hole of radius 3 at (20, 14.5) (#422, Torno
+/// rig 324, `fixtures/torno/324-round-beside-through-hole.json`).
 fn block_with_hole(k: &mut Kernel) -> Brep {
     let block = create_box(k, Point3::ZERO, 40.0, 20.0, 10.0).unwrap();
     let drill = create_cylinder(k, p(20.0, 14.5, -1.0), 3.0, 12.0).unwrap();

@@ -2,7 +2,7 @@ use super::*;
 use crate::scenario::{Harness, rect_of};
 use crate::toolbar;
 use serde_json::json;
-use solidcraft_engine::panels::ActionSink as _;
+use torno_engine::panels::ActionSink as _;
 
 /// Inspect existing caches; never warm/evaluate geometry as part of an assertion.
 fn assert_panel_host_preserves_design(h: &mut Harness, exercise: impl FnOnce(&mut Harness)) {
@@ -80,7 +80,7 @@ fn universal_panel_host_is_opt_in_and_each_specimen_preserves_design_and_prefere
 #[test]
 fn surface_fixture_routes_real_input_through_short_panel_gaps_at_both_scales_and_directions() {
     use crate::panel_runtime::egui_rect;
-    use solidcraft_engine::panels::{PanelSurface, Point, Zone};
+    use torno_engine::panels::{PanelSurface, Point, Zone};
     for scale in [1.0, 2.0] {
         for language in ["en", "ar"] {
             let mut h = Harness::new();
@@ -209,7 +209,7 @@ fn host_keeps_legacy_canvas_cloud_and_attachment_drafts_with_only_visible_footpr
     png.extend(400u32.to_be_bytes());
     png.extend(200u32.to_be_bytes());
     png.extend([8, 6, 0, 0, 0, 0, 0, 0, 0]);
-    let data = solidcraft_engine::doc::canvas::base64_encode(&png);
+    let data = torno_engine::doc::canvas::base64_encode(&png);
     let canvas = h.app.run("canvas.insert", json!({"data":data,"plane":"XY","width":80})).unwrap()["canvas"].as_u64().unwrap();
     let path = h.dir.join("legacy-editor.xyz");
     std::fs::write(&path, "0 0 0 255 0 0\n1 0 0 0 255 0\n").unwrap();
@@ -391,11 +391,7 @@ fn panel_host_point(h: &Harness, target: crate::panel_runtime::HostPointerTarget
     egui::pos2(bounds.origin.x + bounds.size.width * 0.5, bounds.origin.y + bounds.size.height * 0.5)
 }
 
-fn panel_host_drop_point(
-    h: &Harness,
-    instance: &solidcraft_engine::panels::InstanceId,
-    target: &crate::panel_runtime::HostDropTargetId,
-) -> egui::Pos2 {
+fn panel_host_drop_point(h: &Harness, instance: &torno_engine::panels::InstanceId, target: &crate::panel_runtime::HostDropTargetId) -> egui::Pos2 {
     let frame = h.app.universal_panel_frame().unwrap();
     let targets = crate::panel_runtime::host_drop_targets(h.app.panel_runtime().unwrap().layout(), &frame.layout, instance).unwrap();
     let bounds =
@@ -445,7 +441,7 @@ fn assert_panel_host_landing(h: &Harness, shown: &crate::panel_runtime::HostLayo
 }
 
 fn warm_empty_universal_canvas_before_cold_cards(h: &mut Harness) {
-    use solidcraft_engine::panels::{Layout, LayoutAction};
+    use torno_engine::panels::{Layout, LayoutAction};
     if h.app.universal_panel_frame().is_none() {
         let capacity = crate::panel_runtime::logical_rect(h.ctx.content_rect());
         let app = &mut h.app;
@@ -466,7 +462,7 @@ fn warm_empty_universal_canvas_before_cold_cards(h: &mut Harness) {
 #[test]
 fn actual_tabs_preset_raw_widget_drag_retains_the_inactive_editor_identity_and_draft() {
     use crate::panel_runtime::{HostControlTarget, HostEvent, HostPointerTarget, enable_host_specimen, inspect_host_specimen};
-    use solidcraft_engine::panels::{Destination, InstanceId, Point, SectionId};
+    use torno_engine::panels::{Destination, InstanceId, Point, SectionId};
     fn editor_probe(observation: &serde_json::Value) -> &serde_json::Value {
         observation["runtime"]["probe"]["controllers"].as_array().unwrap().iter().find(|controller| controller["instance"] == "specimen-0").unwrap()
     }
@@ -634,7 +630,7 @@ fn actual_tabs_preset_raw_widget_drag_retains_the_inactive_editor_identity_and_d
 #[test]
 fn actual_clamped_floating_resize_preserves_session_provider_controller_and_camera_invariants() {
     use crate::panel_runtime::{HostEvent, HostPointerTarget, HostResizeEdge, enable_host_specimen, inspect_host_specimen};
-    use solidcraft_engine::panels::{LayoutAction, Mutation, Point, SectionId, Size};
+    use torno_engine::panels::{LayoutAction, Mutation, Point, SectionId, Size};
     for scale in [1.0, 2.0] {
         let mut h = Harness::new();
         h.app.home.open = false;
@@ -665,7 +661,7 @@ fn actual_clamped_floating_resize_preserves_session_provider_controller_and_came
             let outer = layout.sections.iter().find(|section| section.section == section_id).unwrap().outer;
             assert_eq!(outer.origin.x, layout.capacity.origin.x + layout.capacity.size.width - 280.0 - layout.allocation_environment.scroll.x);
             assert_eq!(outer.size, Size { width: 280.0, height: 240.0 });
-            let expected = solidcraft_engine::panels::LogicalRect { origin: outer.origin, size: Size { width: 250.0, height: 240.0 } };
+            let expected = torno_engine::panels::LogicalRect { origin: outer.origin, size: Size { width: 250.0, height: 240.0 } };
             let start = panel_host_point(h, HostPointerTarget::Resize { section: section_id.clone(), edge: HostResizeEdge::BottomRight });
             h.frame_with(vec![egui::Event::PointerMoved(start)]);
             panel_host_pointer(h, start, true);
@@ -713,7 +709,7 @@ fn actual_clamped_floating_resize_preserves_session_provider_controller_and_came
 #[test]
 fn actual_host_raw_pointer_threshold_preview_escape_and_drop_preserve_the_design_at_both_scales() {
     use crate::panel_runtime::HostPointerTarget;
-    use solidcraft_engine::panels::{InstanceId, Zone};
+    use torno_engine::panels::{InstanceId, Zone};
     for scale in [1.0, 2.0] {
         for zone in [Zone::Left, Zone::Right, Zone::Bottom] {
             let mut h = Harness::new();
@@ -773,7 +769,7 @@ fn actual_host_raw_pointer_threshold_preview_escape_and_drop_preserve_the_design
 #[test]
 fn host_full_canvas_and_same_pass_controls_follow_actual_sizing_footprints_without_moving_the_model() {
     use crate::panel_runtime::{enable_host_specimen, logical_rect};
-    use solidcraft_engine::panels::{LayoutAction, Mutation, Point, Size};
+    use torno_engine::panels::{LayoutAction, Mutation, Point, Size};
     for scale in [1.0, 2.0] {
         for mode in [LayoutMode::Docked, LayoutMode::Floating] {
             for preset in ["docks", "floating", "collapsed"] {
@@ -833,10 +829,7 @@ fn host_full_canvas_and_same_pass_controls_follow_actual_sizing_footprints_witho
                             assert_eq!(rect_of(name), Some(bounds), "the published control and final same-pass metadata agree");
                             assert!(frame.layout.usable.contains_rect(logical_rect(bounds)));
                             assert!(frame.layout.usable.obstacles.iter().all(|obstacle| {
-                                !bounds
-                                    .expand(solidcraft_theme::Tokens::get().space_4)
-                                    .intersect(crate::panel_runtime::egui_rect(*obstacle))
-                                    .is_positive()
+                                !bounds.expand(torno_theme::Tokens::get().space_4).intersect(crate::panel_runtime::egui_rect(*obstacle)).is_positive()
                             }));
                         } else {
                             assert!(rect_of(name).is_none());
@@ -861,7 +854,7 @@ fn host_full_canvas_and_same_pass_controls_follow_actual_sizing_footprints_witho
 
 #[test]
 fn first_invisible_host_sizing_pass_allows_real_wheel_navigation_and_the_visible_card_blocks_it() {
-    use solidcraft_engine::panels::{LayoutAction, Mutation, Point, Size};
+    use torno_engine::panels::{LayoutAction, Mutation, Point, Size};
     for scale in [1.0, 2.0] {
         for mode in [LayoutMode::Docked, LayoutMode::Floating] {
             let mut h = Harness::new();
@@ -919,8 +912,8 @@ fn first_invisible_host_sizing_pass_allows_real_wheel_navigation_and_the_visible
 fn actual_host_fit_and_centring_respect_the_measured_sketch_palette_at_both_scales() {
     use crate::panel_runtime::{HostControlTarget, HostPointerTarget, egui_rect, enable_host_specimen, logical_rect};
     use solidcore_record::Vec3;
-    use solidcraft_engine::geom::{Aabb3, Vec3Geom as _};
-    use solidcraft_engine::panels::{InstanceId, LayoutAction, Mutation};
+    use torno_engine::geom::{Aabb3, Vec3Geom as _};
+    use torno_engine::panels::{InstanceId, LayoutAction, Mutation};
     fn projected_extent(h: &Harness, bounds: Aabb3) -> egui::Rect {
         let domain = h.app.viewport.rect.unwrap();
         let projection = crate::viewport::projection(&h.app, domain);
@@ -946,7 +939,7 @@ fn actual_host_fit_and_centring_respect_the_measured_sketch_palette_at_both_scal
         for (name, control) in [("nav:outer", layout.navigation), ("axis_view:outer", layout.axis_view)] {
             if control.is_positive() {
                 assert_eq!(rect_of(name), Some(control), "published controls must match the actual same-pass footprint");
-                assert!(!control.expand(solidcraft_theme::Tokens::get().space_4).intersect(palette).is_positive());
+                assert!(!control.expand(torno_theme::Tokens::get().space_4).intersect(palette).is_positive());
                 assert!(effective.contains_rect(logical_rect(control)));
                 assert!(frame.layout.usable.obstacles.iter().all(|obstacle| !control.intersect(egui_rect(*obstacle)).is_positive()));
             } else {
@@ -985,7 +978,7 @@ fn actual_host_fit_and_centring_respect_the_measured_sketch_palette_at_both_scal
             h.settle();
             assert_eq!(h.app.viewport.rect, Some(domain), "explicit fitting preserves the full render domain");
             let footprint = projected_extent(&h, bounds);
-            let padded = footprint.expand(solidcraft_theme::Tokens::get().space_8 - 0.01);
+            let padded = footprint.expand(torno_theme::Tokens::get().space_8 - 0.01);
             assert!(
                 h.app.viewport.layout.as_ref().unwrap().usable.as_ref().unwrap().contains_rect(logical_rect(padded)),
                 "{scale}x {mode:?}: the full 100 mm line and its clearance must avoid the palette, host and controls: {padded:?}"
@@ -1057,7 +1050,7 @@ fn actual_host_fit_and_centring_respect_the_measured_sketch_palette_at_both_scal
 #[test]
 fn actual_host_full_header_restore_preserves_weights_and_leaves_gaps_for_navigation() {
     use crate::panel_runtime::HostPointerTarget;
-    use solidcraft_engine::panels::{InstanceId, Point};
+    use torno_engine::panels::{InstanceId, Point};
     for scale in [1.0, 2.0] {
         let mut h = Harness::new();
         h.app.home.open = false;
@@ -1094,7 +1087,7 @@ fn actual_host_full_header_restore_preserves_weights_and_leaves_gaps_for_navigat
 #[test]
 fn actual_host_document_switch_and_lost_pointer_cancel_pending_drag() {
     use crate::panel_runtime::HostPointerTarget;
-    use solidcraft_engine::panels::InstanceId;
+    use torno_engine::panels::InstanceId;
     for switch_document in [false, true] {
         let mut h = Harness::new();
         h.app.home.open = false;
@@ -1107,7 +1100,7 @@ fn actual_host_document_switch_and_lost_pointer_cancel_pending_drag() {
         h.frame_with(vec![egui::Event::PointerMoved(drop)]);
         assert!(h.app.universal_panel_frame().unwrap().preview.is_some());
         if switch_document {
-            crate::documents::open_tab(&mut h.app, solidcraft_engine::Session::default()).unwrap();
+            crate::documents::open_tab(&mut h.app, torno_engine::Session::default()).unwrap();
             h.app.home.open = false;
             h.frames(2);
         } else {
@@ -1127,7 +1120,7 @@ struct ShellPanelServices {
     models: crate::panel_runtime::FakeModels,
 }
 impl crate::panel_runtime::AppPanelServices for ShellPanelServices {
-    fn refresh_read_only(&mut self, _: &solidcraft_engine::Session) -> solidcraft_engine::panels::PanelResult<()> {
+    fn refresh_read_only(&mut self, _: &torno_engine::Session) -> torno_engine::panels::PanelResult<()> {
         Ok(())
     }
     fn services(&mut self) -> crate::panel_runtime::ContentServices<'_> {
@@ -1138,7 +1131,7 @@ impl crate::panel_runtime::AppPanelServices for ShellPanelServices {
 #[test]
 fn enabling_generic_runtime_alone_keeps_legacy_workspace_placement_until_host_enablement() {
     use crate::panel_runtime::*;
-    use solidcraft_engine::panels::*;
+    use torno_engine::panels::*;
     let mut h = Harness::new();
     h.app.home.open = false;
     h.frames(3);
@@ -1212,7 +1205,7 @@ fn universal_host_scenarios_drive_real_shared_actions_and_leave_the_fixture_disa
 #[test]
 fn actual_host_resize_reset_header_collapse_restore_and_tab_join_preserve_document_cache_and_camera() {
     use crate::panel_runtime::{HostControlTarget, HostPointerTarget, HostSharedAction};
-    use solidcraft_engine::panels::InstanceId;
+    use torno_engine::panels::InstanceId;
     let mut h = Harness::new();
     h.app.home.open = false;
     h.app.run("solid.box", json!({"length":40,"width":30,"height":20})).unwrap();
@@ -1255,17 +1248,17 @@ fn actual_host_resize_reset_header_collapse_restore_and_tab_join_preserve_docume
         h.frame_with(vec![egui::Event::PointerMoved(end)]);
         let shown = h.app.universal_panel_frame().unwrap().preview.as_ref().unwrap();
         assert!(shown.rejection.is_none());
-        let Some(solidcraft_engine::panels::LayoutAction::Apply { mutations, .. }) = shown.action.as_ref() else {
+        let Some(torno_engine::panels::LayoutAction::Apply { mutations, .. }) = shown.action.as_ref() else {
             panic!("the actual tab append must show a prepared atomic landing");
         };
         assert_eq!(
             mutations,
             &vec![
-                solidcraft_engine::panels::Mutation::Move {
+                torno_engine::panels::Mutation::Move {
                     instance: editor.clone(),
-                    destination: solidcraft_engine::panels::Destination::JoinTab { section: destination_id.clone(), index: insertion },
+                    destination: torno_engine::panels::Destination::JoinTab { section: destination_id.clone(), index: insertion },
                 },
-                solidcraft_engine::panels::Mutation::Activate { instance: editor.clone() },
+                torno_engine::panels::Mutation::Activate { instance: editor.clone() },
             ]
         );
         let projected = shown.projected.clone().unwrap();
@@ -1929,7 +1922,7 @@ fn compact_chrome_is_flush_and_browser_hugs_content_in_both_themes() {
         assert!(browser.height() < h.app.viewport.rect.unwrap().height() / 2.0, "Browser hugs its contents");
         let compact = crate::ui_kit::Container::new(&h.ctx, crate::ui_kit::Surface::Panel);
         assert_eq!(compact.gap(), 0.0);
-        let frame = compact.frame(&h.ctx, solidcraft_theme::Tokens::get().panel, crate::frame::Side::Left);
+        let frame = compact.frame(&h.ctx, torno_theme::Tokens::get().panel, crate::frame::Side::Left);
         assert_eq!(frame.shadow, egui::Shadow::NONE);
         assert_eq!(frame.corner_radius, egui::CornerRadius::ZERO);
         h.app.start("solid.extrude");
@@ -1942,7 +1935,7 @@ fn compact_chrome_is_flush_and_browser_hugs_content_in_both_themes() {
         let moved = h.app.viewport.dialog_rect.unwrap();
         assert!(moved.right() < before.right() - 100.0, "compact tool sheets detach from the right edge");
         let feature = crate::ui_kit::Container::new(&h.ctx, crate::ui_kit::Surface::Feature);
-        assert_eq!(feature.frame(&h.ctx, solidcraft_theme::Tokens::get().dialog_body, crate::frame::Side::Right).shadow, egui::Shadow::NONE);
+        assert_eq!(feature.frame(&h.ctx, torno_theme::Tokens::get().dialog_body, crate::frame::Side::Right).shadow, egui::Shadow::NONE);
         h.app.run("view.layout", json!({"mode":"floating"})).unwrap();
         h.settle();
         assert_eq!(rect_of("browser:card").unwrap().left(), SHELL_GAP);
@@ -2111,7 +2104,7 @@ fn a_host_keeps_the_design_and_gives_it_back_with_its_timeline() {
 /// beside it, and OK, Cancel or Esc bring the column back exactly as it was.
 #[test]
 fn a_dialog_in_the_left_column_takes_the_place_of_browser_and_history() {
-    let card = solidcraft_theme::Tokens::get().form_card_width;
+    let card = torno_theme::Tokens::get().form_card_width;
     for mode in [LayoutMode::Floating, LayoutMode::Docked] {
         for (dock, close) in [("bottom", "Cancel"), ("left", "Escape"), ("under_browser", "OK")] {
             let what = format!("{mode:?}, History {dock}, {close}");
@@ -2168,7 +2161,7 @@ fn a_dialog_in_the_left_column_takes_the_place_of_browser_and_history() {
 /// the left column docks at the left edge at its own width, above the bottom History strip.
 #[test]
 fn without_a_left_column_a_dialog_docks_at_the_left_edge_at_its_own_width() {
-    let card = solidcraft_theme::Tokens::get().form_card_width;
+    let card = torno_theme::Tokens::get().form_card_width;
     for (mode, browser) in [(LayoutMode::Floating, "hidden"), (LayoutMode::Docked, "hidden"), (LayoutMode::Floating, "translucent")] {
         let what = format!("{mode:?}, browser {browser}");
         let mut h = Harness::new();
@@ -2440,7 +2433,7 @@ fn the_design_tree_over_the_view_gives_features_and_bodies_to_the_dialog() {
     assert!(crate::scenario::handle_at("timeline:Extrude1").is_some_and(|p| tree.contains(p)), "the History's row is in the tree");
     h.step(&json!({"click":{"handle":"timeline:Extrude1"}})).unwrap();
     let d = h.app.dialog.as_ref().expect("Mirror stays open");
-    assert_eq!(d.inputs[0].items, vec![solidcraft_engine::Sel::Feature { id: extrude }], "the feature fills Features");
+    assert_eq!(d.inputs[0].items, vec![torno_engine::Sel::Feature { id: extrude }], "the feature fills Features");
     h.step(&json!({"widget":"Cancel"})).unwrap();
     h.settle();
     h.step(&json!({"start":"solid.combine"})).unwrap();
@@ -2449,7 +2442,7 @@ fn the_design_tree_over_the_view_gives_features_and_bodies_to_the_dialog() {
     h.settle();
     h.step(&json!({"click":{"browser":"Body1"}})).unwrap();
     let d = h.app.dialog.as_ref().expect("Combine stays open");
-    assert!(d.inputs.iter().any(|i| i.items.contains(&solidcraft_engine::Sel::Body { name: "Body1".into() })), "a body picked in the tree");
+    assert!(d.inputs.iter().any(|i| i.items.contains(&torno_engine::Sel::Body { name: "Body1".into() })), "a body picked in the tree");
 }
 
 /// Every text the last frame painted.
@@ -2567,7 +2560,7 @@ fn status_bar_names_what_is_edited_and_the_sketch_state_and_replaces_the_views_c
     assert!(h.app.dialog.as_ref().is_some_and(|d| d.editing.is_some()));
     assert_eq!(crate::status_bar::contents(&h.app).editing.as_deref(), Some("Editing Extrude1"));
     // In another language the text is translated, and so is a default feature name.
-    let _ja = solidcraft_ui_text::scope("ja");
+    let _ja = torno_ui_text::scope("ja");
     assert_eq!(crate::status_bar::contents(&h.app).editing, Some(format!("編集中: {}", crate::i18n::tr_name("Extrude1"))));
     assert_eq!(crate::i18n::tr_name("Sketch1"), "スケッチ1");
 }

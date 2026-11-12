@@ -1,6 +1,6 @@
-//! Split Face and Split Body against closed forms (moved from SolidCraft's split tests): face,
+//! Split Face and Split Body against closed forms (moved from Torno's split tests): face,
 //! edge and vertex counts, volumes and areas, how many faces each chosen face became; and the
-//! corpus's cases (`crates/solidcore/tests/kernel_cases/`) against the values SolidCraft's rig
+//! corpus's cases (`crates/solidcore/tests/kernel_cases/`) against the values Torno's rig
 //! measured.
 // The closed forms use pi and square roots; the tests compute them, not ops.
 #![allow(
@@ -68,7 +68,7 @@ fn cylinder_3() -> Tool {
     cylinder([5.0, 5.0, 0.0], X, Y, 3.0, [0.0, 360.0], [-1.0, 11.0])
 }
 
-/// The corpus's tool (SolidCraft's spec of it, angles in degrees) as a record tool: a plane's
+/// The corpus's tool (Torno's spec of it, angles in degrees) as a record tool: a plane's
 /// axes are unit in every case, so its parameters are the record's.
 fn corpus_tool(t: &serde_json::Value) -> Tool {
     let v3 = |v: &serde_json::Value| -> [f64; 3] { [0, 1, 2].map(|i| v[i].as_f64().unwrap()) };

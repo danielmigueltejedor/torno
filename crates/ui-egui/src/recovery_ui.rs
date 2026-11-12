@@ -1,10 +1,10 @@
 //! Autosave ticks and the "Recover unsaved design?" window shown at launch.
 
 use serde_json::json;
-use solidcraft_engine::recovery::{self, Autosaver, Entry};
-use solidcraft_engine::{Result, Session};
 use std::path::{Path, PathBuf};
 use std::time::{Duration, Instant};
+use torno_engine::recovery::{self, Autosaver, Entry};
+use torno_engine::{Result, Session};
 
 use crate::SolveApp;
 use crate::ui_kit;
@@ -121,10 +121,10 @@ pub(crate) fn ago(secs: u64) -> String {
 pub fn ago_between(now: u64, secs: u64) -> String {
     let d = now.saturating_sub(secs);
     match d {
-        0..=59 => solidcraft_ui_text::tr("recovery.just_now").to_string(),
-        60..=3599 => solidcraft_ui_text::format("recovery.min_ago", &[("count", &(d / 60).to_string())]),
-        3600..=86_399 => solidcraft_ui_text::format("recovery.hours_ago", &[("count", &(d / 3600).to_string())]),
-        _ => solidcraft_ui_text::format("recovery.days_ago", &[("count", &(d / 86_400).to_string())]),
+        0..=59 => torno_ui_text::tr("recovery.just_now").to_string(),
+        60..=3599 => torno_ui_text::format("recovery.min_ago", &[("count", &(d / 60).to_string())]),
+        3600..=86_399 => torno_ui_text::format("recovery.hours_ago", &[("count", &(d / 3600).to_string())]),
+        _ => torno_ui_text::format("recovery.days_ago", &[("count", &(d / 86_400).to_string())]),
     }
 }
 
@@ -140,43 +140,42 @@ pub fn show(app: &mut SolveApp, ctx: &egui::Context) {
     }
     let mut act: Option<(Entry, bool)> = None;
     let mut discard_all = false;
-    let (closed, action) =
-        ui_kit::Window::new(egui::Id::unique("sc_recover_prompt"), "restore", solidcraft_ui_text::tr_label("Recover unsaved design?"))
-            .actions("", solidcraft_ui_text::tr_label("Later"), None)
-            .show_with_left(
-                ctx,
-                true,
-                |ui| {
-                    ui_kit::text(
-                        ui,
-                        solidcraft_ui_text::tr_label("SolidCraft closed before these designs were saved. Their last autosave can be opened."),
-                        ui_kit::Text::Report("intro", false),
+    let (closed, action) = ui_kit::Window::new(egui::Id::unique("sc_recover_prompt"), "restore", torno_ui_text::tr_label("Recover unsaved design?"))
+        .actions("", torno_ui_text::tr_label("Later"), None)
+        .show_with_left(
+            ctx,
+            true,
+            |ui| {
+                ui_kit::text(
+                    ui,
+                    torno_ui_text::tr_label("Torno closed before these designs were saved. Their last autosave can be opened."),
+                    ui_kit::Text::Report("intro", false),
+                );
+                for (index, e) in app.recoverable.iter().take(20).enumerate() {
+                    ui_kit::divider(ui, &format!("entry:{index}"));
+                    ui_kit::label_actions(ui, &e.name, |ui| {
+                        if ui_kit::button(ui, torno_ui_text::tr_label("Recover"), ui_kit::Button::Normal).clicked() {
+                            act = Some((e.clone(), true));
+                        }
+                        if ui_kit::button(ui, torno_ui_text::tr_label("Discard"), ui_kit::Button::Normal).clicked() {
+                            act = Some((e.clone(), false));
+                        }
+                    });
+                    let file = e.path.clone().unwrap_or_else(|| torno_ui_text::tr("recovery.never_saved").to_string());
+                    let detail = torno_ui_text::format(
+                        "recovery.detail",
+                        &[("file", &file), ("features", &e.features.to_string()), ("when", &ago(e.saved_at))],
                     );
-                    for (index, e) in app.recoverable.iter().take(20).enumerate() {
-                        ui_kit::divider(ui, &format!("entry:{index}"));
-                        ui_kit::label_actions(ui, &e.name, |ui| {
-                            if ui_kit::button(ui, solidcraft_ui_text::tr_label("Recover"), ui_kit::Button::Normal).clicked() {
-                                act = Some((e.clone(), true));
-                            }
-                            if ui_kit::button(ui, solidcraft_ui_text::tr_label("Discard"), ui_kit::Button::Normal).clicked() {
-                                act = Some((e.clone(), false));
-                            }
-                        });
-                        let file = e.path.clone().unwrap_or_else(|| solidcraft_ui_text::tr("recovery.never_saved").to_string());
-                        let detail = solidcraft_ui_text::format(
-                            "recovery.detail",
-                            &[("file", &file), ("features", &e.features.to_string()), ("when", &ago(e.saved_at))],
-                        );
-                        ui_kit::text(ui, &detail, ui_kit::Text::Note(&format!("detail:{index}")));
-                    }
-                },
-                // Away from Later: it asks first, then discards every listed autosave (#9299).
-                |ui| {
-                    let response = ui_kit::button(ui, solidcraft_ui_text::tr("recovery.discard_all"), ui_kit::Button::Normal);
-                    crate::scenario::publish_target("recovery:discard_all", response.rect);
-                    discard_all = response.clicked();
-                },
-            );
+                    ui_kit::text(ui, &detail, ui_kit::Text::Note(&format!("detail:{index}")));
+                }
+            },
+            // Away from Later: it asks first, then discards every listed autosave (#9299).
+            |ui| {
+                let response = ui_kit::button(ui, torno_ui_text::tr("recovery.discard_all"), ui_kit::Button::Normal);
+                crate::scenario::publish_target("recovery:discard_all", response.rect);
+                discard_all = response.clicked();
+            },
+        );
     if discard_all {
         app.recovery_discard_all = true;
         return;
@@ -212,27 +211,27 @@ pub enum CopyAnswer {
 /// for every copy, each with Restore, Open saved version (when it has a file) and Discard, in the
 /// same words as the desktop's recovery window. Answers which copy and what was chosen.
 pub fn browser_copies_window(ctx: &egui::Context, language: &str, copies: &[BrowserCopy]) -> Option<(usize, CopyAnswer)> {
-    let _language = solidcraft_ui_text::scope(language);
+    let _language = torno_ui_text::scope(language);
     copies.first()?;
     let title = match copies {
-        [one] => solidcraft_ui_text::format("recovery.restore_title_one", &[("name", &crate::i18n::tr_name(one.name)), ("when", &one.when)]),
-        _ => solidcraft_ui_text::tr("recovery.restore_title").to_string(),
+        [one] => torno_ui_text::format("recovery.restore_title_one", &[("name", &crate::i18n::tr_name(one.name)), ("when", &one.when)]),
+        _ => torno_ui_text::tr("recovery.restore_title").to_string(),
     };
     let mut act = None;
     let _ = ui_kit::Window::new(egui::Id::unique("sc_browser_keep_restore"), "restore", &title).required().show_body(ctx, |ui| {
-        ui_kit::text(ui, solidcraft_ui_text::tr("recovery.restore_intro"), ui_kit::Text::Report("intro", false));
+        ui_kit::text(ui, torno_ui_text::tr("recovery.restore_intro"), ui_kit::Text::Report("intro", false));
         for (index, c) in copies.iter().enumerate() {
             if copies.len() > 1 {
                 ui_kit::divider(ui, &format!("entry:{index}"));
-                let row = solidcraft_ui_text::format("recovery.restore_row", &[("name", &crate::i18n::tr_name(c.name)), ("when", &c.when)]);
+                let row = torno_ui_text::format("recovery.restore_row", &[("name", &crate::i18n::tr_name(c.name)), ("when", &c.when)]);
                 ui_kit::text(ui, &row, ui_kit::Text::Report(&format!("row:{index}"), false));
             }
             ui.horizontal(|ui| {
-                let mut answers = vec![(CopyAnswer::Restore, solidcraft_ui_text::tr("recovery.restore"))];
+                let mut answers = vec![(CopyAnswer::Restore, torno_ui_text::tr("recovery.restore"))];
                 if c.open_saved {
-                    answers.push((CopyAnswer::OpenSaved, solidcraft_ui_text::tr("recovery.open_saved")));
+                    answers.push((CopyAnswer::OpenSaved, torno_ui_text::tr("recovery.open_saved")));
                 }
-                answers.push((CopyAnswer::Discard, solidcraft_ui_text::tr_label("Discard")));
+                answers.push((CopyAnswer::Discard, torno_ui_text::tr_label("Discard")));
                 for (answer, text) in answers {
                     if ui_kit::button(ui, text, ui_kit::Button::Normal).clicked() {
                         act = Some((index, answer));
@@ -248,15 +247,15 @@ pub fn browser_copies_window(ctx: &egui::Context, language: &str, copies: &[Brow
 fn confirm_discard_all(app: &mut SolveApp, ctx: &egui::Context) {
     let count = app.recoverable.len();
     let title = if count == 1 {
-        solidcraft_ui_text::tr("recovery.discard_all_title_one").to_string()
+        torno_ui_text::tr("recovery.discard_all_title_one").to_string()
     } else {
-        solidcraft_ui_text::format("recovery.discard_all_title", &[("count", &count.to_string())])
+        torno_ui_text::format("recovery.discard_all_title", &[("count", &count.to_string())])
     };
     let (closed, action) = ui_kit::Confirm::new(egui::Id::unique("sc_recover_discard_all"), "delete", &title)
         .tone(ui_kit::Tone::Danger)
-        .actions(solidcraft_ui_text::tr("recovery.discard_all"), solidcraft_ui_text::tr("ui.cancel"), None)
+        .actions(torno_ui_text::tr("recovery.discard_all"), torno_ui_text::tr("ui.cancel"), None)
         .show(ctx, true, |ui| {
-            ui_kit::text(ui, solidcraft_ui_text::tr("recovery.discard_all_detail"), ui_kit::Text::Report("discard_all", false));
+            ui_kit::text(ui, torno_ui_text::tr("recovery.discard_all_detail"), ui_kit::Text::Report("discard_all", false));
         });
     match action {
         ui_kit::Action::Ok => {
@@ -302,7 +301,7 @@ mod tests {
     use std::fs;
 
     fn app(tag: &str, interval: Duration) -> (SolveApp, PathBuf) {
-        let dir = std::env::temp_dir().join(format!("solidcraft-recovery-tabs-{tag}-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("torno-recovery-tabs-{tag}-{}", std::process::id()));
         let _ = fs::remove_dir_all(&dir);
         let mut app = SolveApp::new(Session::default(), Services::default());
         start(&mut app, &dir, interval);

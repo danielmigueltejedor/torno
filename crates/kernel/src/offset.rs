@@ -5,7 +5,7 @@
 
 use solidcore_record::Vec3;
 use solidcore_record::brep::{Brep, Frame, Loop, Surface};
-use solidcraft_geom::prelude::*;
+use torno_geom::prelude::*;
 
 use crate::body::Body;
 

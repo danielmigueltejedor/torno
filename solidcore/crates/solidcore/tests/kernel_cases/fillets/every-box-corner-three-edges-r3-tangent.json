@@ -190,7 +190,7 @@
     "blend_dropping"
   ],
   "ungraded": [
-    "continuity: SolidCraft computes it"
+    "continuity: Torno computes it"
   ],
   "what": "the three edges at one corner of a box rounded r3 together, rolling-ball (Tangent) corner: three quarter-cylinder rounds and a sphere octant",
   "why_not": []

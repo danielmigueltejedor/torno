@@ -1,4 +1,4 @@
-//! The theme system's glue on the token contract (`solidcraft_theme`): a theme file applied for its base with its icon
+//! The theme system's glue on the token contract (`torno_theme`): a theme file applied for its base with its icon
 //! palette, its per-tab surfaces resolved, faded and published each frame, the blur it offers, and the 3D view's
 //! colours preference. Theme files themselves are `theme_files`, their options `theme_options`.
 
@@ -6,7 +6,7 @@ use std::collections::BTreeMap;
 
 use egui::Color32;
 use serde::{Deserialize, Serialize};
-use solidcraft_theme::{
+use torno_theme::{
     AccentRamp, Custom, Environment, Fade, PublishedTab, Surfaces, TabAccent, Tokens, is_dark, set_custom, set_published, viewport_dark, vision,
 };
 
@@ -185,8 +185,8 @@ pub struct FilePalette {
     pub icons: Option<crate::icon_svg::Palette>,
 }
 
-/// Apply a theme file's palettes ([`solidcraft_theme::set_custom`] and the icon renderer's), or the built-in ones (`None`). Returns
-/// whether that changed anything (the visuals follow on the next [`solidcraft_theme::apply`]). The app applies a theme
+/// Apply a theme file's palettes ([`torno_theme::set_custom`] and the icon renderer's), or the built-in ones (`None`). Returns
+/// whether that changed anything (the visuals follow on the next [`torno_theme::apply`]). The app applies a theme
 /// through this only: `set_custom` alone would keep the previous theme's icon colours.
 pub fn set_file_palette(file: Option<FilePalette>) -> bool {
     let tokens = set_custom(file.map(|f| Custom { dark: f.dark, tokens: f.tokens }));
@@ -204,7 +204,7 @@ pub(crate) fn scoped_file(file: &crate::theme_files::ThemeFile) -> impl Drop {
             crate::icon_svg::set_theme_palette(self.1);
         }
     }
-    let restore = Restore(solidcraft_theme::custom(), crate::icon_svg::theme_palette_state());
+    let restore = Restore(torno_theme::custom(), crate::icon_svg::theme_palette_state());
     let values = BTreeMap::new();
     let tokens = crate::theme_files::resolve_with(file, &values);
     set_file_palette(Some(FilePalette { dark: is_dark(), tokens, icons: crate::theme_files::resolve_icon_palette(file, &values) }));
@@ -277,7 +277,7 @@ impl ViewportTheme {
         }
     }
 
-    /// The view's own dark or light, or `None` to draw it as the window ([`solidcraft_theme::set_viewport_dark`]).
+    /// The view's own dark or light, or `None` to draw it as the window ([`torno_theme::set_viewport_dark`]).
     pub fn dark(self) -> Option<bool> {
         match self {
             ViewportTheme::Theme => None,
@@ -287,7 +287,7 @@ impl ViewportTheme {
     }
 }
 
-/// From saved preferences: an unknown value is Theme, as [`solidcraft_theme::ColorVision`]'s is Off.
+/// From saved preferences: an unknown value is Theme, as [`torno_theme::ColorVision`]'s is Off.
 impl<'de> Deserialize<'de> for ViewportTheme {
     fn deserialize<D: serde::Deserializer<'de>>(d: D) -> Result<Self, D::Error> {
         let v = serde_json::Value::deserialize(d)?;
@@ -305,7 +305,7 @@ mod tests {
     use std::cell::Cell;
 
     use super::*;
-    use solidcraft_theme::{ColorVision, apply, composite, contrast_ratio, set_dark, set_viewport_background, set_viewport_dark, set_vision};
+    use torno_theme::{ColorVision, apply, composite, contrast_ratio, set_dark, set_viewport_background, set_viewport_dark, set_vision};
 
     fn tabs_state(base: &str, overrides: BTreeMap<String, crate::theme_files::OptionValue>) -> TabThemeState {
         let file = crate::test_support::tab_fixture(base);
@@ -486,7 +486,7 @@ mod tests {
             let mut out = ctx.run_ui(egui::RawInput { time: Some(time), ..Default::default() }, |ui| {
                 publish_tab("SKETCH", false, false, ui.ctx());
                 let t = Tokens::get();
-                solidcraft_viewport_egui::paint_background(ui.painter(), ui.max_rect(), t.viewport_top, t.viewport_bottom);
+                torno_viewport_egui::paint_background(ui.painter(), ui.max_rect(), t.viewport_top, t.viewport_bottom);
             });
             let colors: Vec<_> = out
                 .shapes
@@ -581,7 +581,7 @@ mod tests {
             prepare(&file, Some(true));
             apply(&ctx);
             let before = ctx.global_style().visuals.clone();
-            let base_custom = solidcraft_theme::custom();
+            let base_custom = torno_theme::custom();
             publish("MODEL", 0.0);
             assert_eq!(ctx.global_style().visuals, before);
             publish("SKETCH", 1.0);
@@ -598,7 +598,7 @@ mod tests {
             assert_eq!(ctx.global_style().visuals, animated);
 
             assert!(!prepare(&file, Some(false)), "toggling surfaces does not change the base Custom tokens");
-            assert_eq!(solidcraft_theme::custom(), base_custom);
+            assert_eq!(torno_theme::custom(), base_custom);
             // Deliberately omit apply(): a full restyle would conceal stale animated fills.
             publish("SKETCH", 1.13);
             assert_eq!(ctx.global_style().visuals, before, "turning surfaces off must restore both base fills");
@@ -610,7 +610,7 @@ mod tests {
             plain.tabs.clear();
             plain.options.clear();
             assert!(!prepare(&plain, None), "a no-option theme can retain the exact same base tokens");
-            assert_eq!(solidcraft_theme::custom(), base_custom);
+            assert_eq!(torno_theme::custom(), base_custom);
             publish("SKETCH", 2.1);
             assert_eq!(ctx.global_style().visuals, before, "restoring a no-option theme must release the surface fills");
         }

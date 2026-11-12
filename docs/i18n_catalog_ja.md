@@ -26,7 +26,7 @@
 | 3D Spline | 3D スプライン | `cmd.sketch_spline3d` |
 | A new configuration, a copy of the active one | アクティブな構成をコピーして新しい構成を作成 | `A new configuration, a copy of the active one` |
 | About | Torno について | `ui.about` |
-| About Torno | Torno について | `About SolidCraft` |
+| About Torno | Torno について | `About Torno` |
 | Accessibility Analysis | アクセシビリティ解析 | `cmd.inspect_accessibility` |
 | Activate | アクティブ化 | `ui.activate` |
 | Activate Component | コンポーネントをアクティブ化 | `cmd.component_activate` |
@@ -333,7 +333,7 @@
 | Feature Options | フィーチャーオプション | `ui.feature_options` |
 | Features | フィーチャー | `ui.features` |
 | File | ファイル | `ui.file` |
-| Files from many CAD programs have Y up, so they open lying on their back here (Z up). | 多くのCADではY軸を上向きとしているため、Z軸を上向きとするSolidCraftでは、読み込んだモデルが横倒しの向きで表示されることがあります。 | `Files from many CAD programs have Y up, so they open lying on their back here (Z up).` |
+| Files from many CAD programs have Y up, so they open lying on their back here (Z up). | 多くのCADではY軸を上向きとしているため、Z軸を上向きとするTornoでは、読み込んだモデルが横倒しの向きで表示されることがあります。 | `Files from many CAD programs have Y up, so they open lying on their back here (Z up).` |
 | Fillet | フィレット | `ui.fillet` |
 | FILLET | フィレット | `ui.heading_fillet` |
 | Filter | フィルター | `Filter` |
@@ -743,7 +743,7 @@
 | Snap Fit | スナップ フィット | `cmd.plastic_snap_fit` |
 | Snap Inference | スナップ推論 | `cmd.sketch_snap` |
 | SOLID | ソリッド | `ui.heading_solid` |
-| Torno closed before these designs were saved. Their last autosave can be opened. | これらのデザインが保存される前にSolidCraftが終了しました。最後の自動保存ファイルを開くことができます。 | `SolidCraft closed before these designs were saved. Their last autosave can be opened.` |
+| Torno closed before these designs were saved. Their last autosave can be opened. | これらのデザインが保存される前にTornoが終了しました。最後の自動保存ファイルを開くことができます。 | `Torno closed before these designs were saved. Their last autosave can be opened.` |
 | Solve Joints | ジョイントを解決 | `cmd.joint_solve` |
 | Solve Sketch | スケッチを解決 | `cmd.sketch_solve` |
 | Speed | 速度 | `Speed` |

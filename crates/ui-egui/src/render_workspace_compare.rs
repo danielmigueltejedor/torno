@@ -1,7 +1,7 @@
 //! Result comparison composition. The kit owns controls, chips and the divider.
 use super::*;
 use crate::ui_kit;
-use solidcraft_engine::render::job::JobId;
+use torno_engine::render::job::JobId;
 
 #[derive(Clone, Debug, serde::Serialize)]
 pub(super) struct View {
@@ -76,9 +76,7 @@ pub(super) fn controls(app: &mut SolveApp, ui: &mut egui::Ui) {
         return;
     }
     let mut labels = vec![app.tr("render.compare_live").to_owned()];
-    labels.extend(
-        results.iter().map(|result| solidcraft_ui_text::format("render.compare_render", &[("number", &result.frame.job.serial.to_string())])),
-    );
+    labels.extend(results.iter().map(|result| torno_ui_text::format("render.compare_render", &[("number", &result.frame.job.serial.to_string())])));
     let mut targets = vec!["render:compare:live".to_string()];
     targets.extend(results.iter().enumerate().map(|(index, _)| format!("render:compare:result:{index}")));
     let choices: Vec<_> = std::iter::once(None).chain(results.iter().map(|result| Some(result.frame.job))).collect();
@@ -157,7 +155,7 @@ fn texture(app: &mut SolveApp, ctx: &egui::Context, job: JobId) -> Result<egui::
         let frame = handle.frame().map_err(|error| error.to_string())?.ok_or("comparison image is not completed")?;
         let captured = handle.status().map_err(|error| error.to_string())?;
         let limits = if frame.info.executor.as_str() == "gpu-path" {
-            solidcraft_engine::render::job::GPU_PATH_LIMITS
+            torno_engine::render::job::GPU_PATH_LIMITS
         } else {
             captured_image_limits(&captured.request)
         };
@@ -172,11 +170,11 @@ fn label(app: &SolveApp, side: Option<JobId>) -> String {
     side.and_then(|job| app.render_workspace.view.retained.iter().find(|result| result.frame.job == job)).map_or_else(
         || app.tr("render.compare_live_preview").to_owned(),
         |result| {
-            solidcraft_ui_text::format(
+            torno_ui_text::format(
                 "render.compare_side",
                 &[
                     ("number", &result.frame.job.serial.to_string()),
-                    ("shot", result.shot.as_deref().unwrap_or_else(|| solidcraft_ui_text::tr("render.results_unnamed"))),
+                    ("shot", result.shot.as_deref().unwrap_or_else(|| torno_ui_text::tr("render.results_unnamed"))),
                 ],
             )
         },
@@ -188,10 +186,10 @@ pub(super) fn summary(app: &SolveApp, ui: &mut egui::Ui) {
     let Some(reference) = app.render_workspace.view.retained.iter().find(|result| result.frame.job == view.reference) else { return };
     let stale = app.render_workspace.view.retained.iter().any(|result| [view.left, view.right].contains(&Some(result.frame.job)) && result.stale);
     ui_kit::completion_text(ui, app.tr(if stale { "render.image_stale" } else { "render.result_current" }), !stale);
-    let summary = solidcraft_ui_text::format(
+    let summary = torno_ui_text::format(
         "render.compare_summary",
         &[
-            ("shot", reference.shot.as_deref().unwrap_or_else(|| solidcraft_ui_text::tr("render.results_unnamed"))),
+            ("shot", reference.shot.as_deref().unwrap_or_else(|| torno_ui_text::tr("render.results_unnamed"))),
             ("width", &reference.frame.width.to_string()),
             ("height", &reference.frame.height.to_string()),
             ("seconds", &format!("{:.0}", reference.seconds)),

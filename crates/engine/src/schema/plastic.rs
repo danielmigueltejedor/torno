@@ -17,8 +17,8 @@ use serde::de::Error as _;
 use serde::{Deserialize, Deserializer, Serialize};
 use serde_json::Value;
 use solidcore_record::Vec3;
-use solidcraft_doc::plastic::{PlasticRule, PlasticValues};
-use solidcraft_geom::Vec3Geom as _;
+use torno_doc::plastic::{PlasticRule, PlasticValues};
+use torno_geom::Vec3Geom as _;
 
 use super::check::whole;
 use super::config::NameList;

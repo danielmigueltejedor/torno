@@ -40,6 +40,6 @@
   "ungraded": [],
   "what": "config.activate of a row the table does not have",
   "why_not": [
-    "the failure is SolidCraft's, not a kernel operation's: step 6 (config.activate): invalid parameters for `config.activate`: unknown configuration `Nope`"
+    "the failure is Torno's, not a kernel operation's: step 6 (config.activate): invalid parameters for `config.activate`: unknown configuration `Nope`"
   ]
 }

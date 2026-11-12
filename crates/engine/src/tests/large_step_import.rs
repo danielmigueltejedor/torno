@@ -4,7 +4,7 @@
 use std::sync::Arc;
 
 use serde_json::json;
-use solidcraft_doc::{FeatureKind, progress::Progress};
+use torno_doc::{FeatureKind, progress::Progress};
 
 use crate::*;
 
@@ -12,11 +12,11 @@ fn step_file(name: &str, count: usize) -> String {
     let bodies: Vec<_> = (0..count)
         .map(|i| {
             let at = solidcore_record::Vec3::new((i % 32) as f64 * 12.0, (i / 32) as f64 * 12.0, 0.0);
-            solidcraft_kernel::box_solid(at, at + solidcore_record::Vec3::new(10.0, 10.0, 10.0)).unwrap()
+            torno_kernel::box_solid(at, at + solidcore_record::Vec3::new(10.0, 10.0, 10.0)).unwrap()
         })
         .collect();
-    let text = solidcraft_kernel::step_export(&bodies.iter().collect::<Vec<_>>(), name).unwrap();
-    let path = std::env::temp_dir().join(format!("solidcraft-883-{}-{name}.step", std::process::id()));
+    let text = torno_kernel::step_export(&bodies.iter().collect::<Vec<_>>(), name).unwrap();
+    let path = std::env::temp_dir().join(format!("torno-883-{}-{name}.step", std::process::id()));
     std::fs::write(&path, text).unwrap();
     path.to_string_lossy().to_string()
 }
@@ -68,7 +68,7 @@ fn cancelled_import_stops_and_leaves_the_design_alone() {
             progress.cancel();
         })
     };
-    let r = solidcraft_doc::progress::watch(progress.clone(), || s.execute("file.insert_step", &json!({"path": path})));
+    let r = torno_doc::progress::watch(progress.clone(), || s.execute("file.insert_step", &json!({"path": path})));
     canceller.join().unwrap();
     let err = r.unwrap_err().to_string();
     assert!(err.contains("cancelled"), "{err}");
@@ -103,7 +103,7 @@ fn a_cancelled_preview_import_leaves_no_failure_in_the_shared_cache() {
             progress.cancel();
         })
     };
-    let _ = solidcraft_doc::progress::watch(progress.clone(), || scratch.execute("timeline.redefine", &redefine));
+    let _ = torno_doc::progress::watch(progress.clone(), || scratch.execute("timeline.redefine", &redefine));
     canceller.join().unwrap();
     let (_, done, total) = progress.work().unwrap();
     assert!(done < total, "the preview's import stopped part way ({done} of {total})");
@@ -118,7 +118,7 @@ fn a_cancelled_preview_import_leaves_no_failure_in_the_shared_cache() {
 /// preference, or `--max-file-size` for one run, which wins) the same reads go ahead.
 #[test]
 fn raised_file_limits_let_larger_step_and_design_files_be_read() {
-    use solidcraft_io::limits::{self, FileLimits, GB, Kind, MB};
+    use torno_io::limits::{self, FileLimits, GB, Kind, MB};
     /// Puts the defaults back however the test ends.
     struct Defaults;
     impl Drop for Defaults {
@@ -128,7 +128,7 @@ fn raised_file_limits_let_larger_step_and_design_files_be_read() {
         }
     }
     let _defaults = Defaults;
-    let dir = std::env::temp_dir().join(format!("solidcraft-4086-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("torno-4086-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
     // Sparse files: nothing is written, and a refusal reads nothing either.
     let sparse = |name: &str, len: u64| {

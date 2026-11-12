@@ -11,9 +11,9 @@
 
 use serde_json::{Value, json};
 use solidcore_record::Vec2;
-use solidcraft_doc::canvas::{Canvas, base64_decode, image_info};
-use solidcraft_geom::prelude::*;
-use solidcraft_io::Geom2;
+use torno_doc::canvas::{Canvas, base64_decode, image_info};
+use torno_geom::prelude::*;
+use torno_io::Geom2;
 
 use super::CommandSpec;
 use crate::params::{bad, str_};
@@ -570,7 +570,7 @@ fn segments(l: &Loop, o: &Opts, straight: f64) -> Vec<Seg> {
 #[cfg(test)]
 mod tests {
     use serde_json::json;
-    use solidcraft_doc::canvas::base64_encode;
+    use torno_doc::canvas::base64_encode;
 
     use crate::Session;
 

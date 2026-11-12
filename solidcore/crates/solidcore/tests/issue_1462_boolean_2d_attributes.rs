@@ -1,4 +1,4 @@
-//! tangency-labs/solidcore#1462 (SolidCraft's boolean2d history): `boolean_2d` carries
+//! tangency-labs/solidcore#1462 (Torno's boolean2d history): `boolean_2d` carries
 //! the primary operand's attributes through the Boolean, as upstream's live on the
 //! objects `SmPrimitiveCreation::Boolean2D` splits, glues and keeps: A - B keeps the
 //! face's mark, and both pieces of a split edge keep theirs.

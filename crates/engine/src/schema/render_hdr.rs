@@ -9,7 +9,7 @@
 use schemars::{JsonSchema, Schema, SchemaGenerator, json_schema};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
-use solidcraft_doc::render_resources::HdrId;
+use torno_doc::render_resources::HdrId;
 
 use super::render_settings::{SETUP_FIELDS, setup_patch_schema};
 

@@ -47,6 +47,6 @@
   "ungraded": [],
   "what": "an L section 2 mm thick with its bend modelled round (inner r2, outer r4), converted to sheet metal with the bend picked: refused ('the face across the bend can't be a face of the sheet: curved faces in a converted sheet')",
   "why_not": [
-    "body \"Angle\" is no kernel operation's output nor an operand: SolidCraft built it or changed the kernel's record"
+    "body \"Angle\" is no kernel operation's output nor an operand: Torno built it or changed the kernel's record"
   ]
 }

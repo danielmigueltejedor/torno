@@ -198,7 +198,7 @@
     "blend_dropping"
   ],
   "ungraded": [
-    "refusal \"the fillet is larger than the faces beside its edges allow\": SolidCraft's wording of the kernel's error"
+    "refusal \"the fillet is larger than the faces beside its edges allow\": Torno's wording of the kernel's error"
   ],
   "what": "rounds r5 and r3 on the two top edges at a corner, the r3 on its edge alone (Tangent chain off, so it ends where the edge runs on into the r5 round's end arc), then r7 on the vertical edge under them: refused, the r7 cannot exist",
   "why_not": []

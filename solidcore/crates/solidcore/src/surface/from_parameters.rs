@@ -4,7 +4,7 @@
 //! into the kernel's [`Surface`], for every layer that holds records (the conversion of a
 //! body's faces, an intersection's tools).
 //!
-//! Not upstream: SolidCraft's composition (its SSI tool constructors and their record
+//! Not upstream: Torno's composition (its SSI tool constructors and their record
 //! entry), moved into the kernel so the record, conversion and modelling layers compute no
 //! geometry (docs/layers.md §1). Every geometric step of it is here: angles from the record's
 //! radians to the kernel's degrees, a plane's parameters scaled by its axes' lengths, a

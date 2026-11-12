@@ -2,7 +2,7 @@
 //! sphere's centre and radius. Every point of its net is on that sphere, so its offset
 //! is exact: the net scaled about the centre onto the concentric sphere.
 //!
-//! Not in the pinned upstream: the SolidCraft fork's `source/SMLib/inc/SmBallPatch.h`,
+//! Not in the pinned upstream: the Torno fork's `source/SMLib/inc/SmBallPatch.h`,
 //! `source/SMLib/src/SmBallPatch.cpp`, `SmSurfTypes.h`, `SmSurface::ReadFromDB`'s
 //! dispatch and `SmDatabaseIO::IsValidType` (tangency-labs/smlib@f8e6709, smlib#79 step
 //! 4c). The blend corner's Ball ([`crate::blend::blend_corner::ball`]) makes one (WR-697),

@@ -32,6 +32,6 @@
   "ungraded": [],
   "what": "timeline.suppress of a feature the design does not have",
   "why_not": [
-    "the failure is SolidCraft's, not a kernel operation's: step 2 (timeline.suppress): invalid parameters for `timeline.suppress`: no feature `Nope`"
+    "the failure is Torno's, not a kernel operation's: step 2 (timeline.suppress): invalid parameters for `timeline.suppress`: no feature `Nope`"
   ]
 }

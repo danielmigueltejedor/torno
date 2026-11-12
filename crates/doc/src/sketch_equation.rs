@@ -5,11 +5,11 @@
 //! between the points, up to the most a spline takes. When the parameters change, the same
 //! number of points is placed again (`Document::apply_equation_values`), before every solve.
 
-use solidcraft_geom::prelude::*;
 use std::collections::BTreeMap;
+use torno_geom::prelude::*;
 
 use solidcore_record::Vec2;
-use solidcraft_sketch::{EquationCurve, MAX_COORD, MAX_EQUATION_TEXT, MAX_SPLINE_POINTS, Sketch, VariableUnit, fit_beziers_mode};
+use torno_sketch::{EquationCurve, MAX_COORD, MAX_EQUATION_TEXT, MAX_SPLINE_POINTS, Sketch, VariableUnit, fit_beziers_mode};
 
 use crate::expr::{self, Defaults, Kind, Value};
 use crate::{DocError, Result};
@@ -284,7 +284,7 @@ impl crate::Document {
         for k in 0..sk.equations.len() {
             let Some(eq) = sk.equations.get(k).cloned() else { continue };
             let Some(ci) = sk.curve_index(&eq.curve) else { continue };
-            let Some(solidcraft_sketch::CurveKind::Spline { pts, control: false, periodic, .. }) = sk.curves.get(ci).map(|c| &c.kind) else {
+            let Some(torno_sketch::CurveKind::Spline { pts, control: false, periodic, .. }) = sk.curves.get(ci).map(|c| &c.kind) else {
                 continue;
             };
             let (count, closed) = (pts.len(), *periodic);

@@ -45,19 +45,19 @@
 //!   and replies once the command has run (`"animate": false` skips that one call)
 //! - `ui.resize {width, height}`, `app.quit`
 
-use solidcraft_engine::geom::prelude::*;
+use torno_engine::geom::prelude::*;
 
 use serde_json::{Value, json};
-use solidcraft_engine::io::vfs;
-use solidcraft_engine::schema::ParamCheck;
-use solidcraft_engine::{batch_params, timing};
-use solidcraft_viewport::{Camera, StandardView};
+use torno_engine::io::vfs;
+use torno_engine::schema::ParamCheck;
+use torno_engine::{batch_params, timing};
+use torno_viewport::{Camera, StandardView};
 
 use crate::SolveApp;
 
 // The request, its reply and the design watch are the shared control channel's
-// (`solidcraft_control`); SolidCraft's handlers below answer them.
-pub(crate) use solidcraft_control::{ControlRequest, ControlResponse, DOCUMENT_WATCH, DocumentWatch, cancelled_chat_response, chat_turn_cancelled};
+// (`torno_control`); Torno's handlers below answer them.
+pub(crate) use torno_control::{ControlRequest, ControlResponse, DOCUMENT_WATCH, DocumentWatch, cancelled_chat_response, chat_turn_cancelled};
 
 /// Publish the active design for subscribed connections ([`DocumentWatch`]). Called at the end of
 /// each frame's logic (which runs while the window is hidden too) and of its drawing, so a
@@ -80,7 +80,7 @@ fn ok(v: Value) -> Outcome {
 fn err(e: impl std::fmt::Display) -> Outcome {
     let text = e.to_string();
     let mut reply = json!({"ok": false, "error": text});
-    if let Some(reason) = solidcraft_engine::panels::commands::structured_error(&text) {
+    if let Some(reason) = torno_engine::panels::commands::structured_error(&text) {
         reply["panel_error"] = reason;
     }
     Outcome::Done(reply)
@@ -173,7 +173,7 @@ fn key_from(name: &str) -> Option<egui::Key> {
 /// Run one command as `engine.execute` does: through `app.run`, then the first-body fit and the
 /// camera the command asked for.
 fn execute(app: &mut SolveApp, id: &str, params: Value) -> Result<Value, String> {
-    if solidcraft_engine::panels::commands::is_command(id) {
+    if torno_engine::panels::commands::is_command(id) {
         // No first-body meshing, camera-follow or fit tail for application layout.
         return app.run(id, params);
     }
@@ -185,9 +185,7 @@ fn execute(app: &mut SolveApp, id: &str, params: Value) -> Result<Value, String>
             for row in rows.iter_mut().filter_map(Value::as_object_mut) {
                 let key = row.get("id").and_then(Value::as_str).and_then(|id| crate::keymap::effective(app, id));
                 row.insert("shortcut".into(), json!(key));
-                if let Some(action) =
-                    row.get("id").and_then(Value::as_str).and_then(solidcraft_engine::panels::ContextualPanelAction::from_command_id)
-                {
+                if let Some(action) = row.get("id").and_then(Value::as_str).and_then(torno_engine::panels::ContextualPanelAction::from_command_id) {
                     let reason = app.panel_contextual_disabled_reason(action);
                     row.insert("enabled".into(), json!(reason.is_none()));
                     row.insert("disabled_reason".into(), json!(reason));
@@ -204,7 +202,7 @@ fn execute(app: &mut SolveApp, id: &str, params: Value) -> Result<Value, String>
         return crate::view_pick::pick_command(app, &params);
     }
     // Eligibility follows the same case-insensitive IDs as the engine.
-    let fit_id = solidcraft_engine::find_command(id).map_or(id, |spec| spec.id);
+    let fit_id = torno_engine::find_command(id).map_or(id, |spec| spec.id);
     let fit_command = !matches!(
         fit_id,
         "view.fit"
@@ -281,7 +279,7 @@ const SWITCHES_DESIGN: [&str; 4] = ["component.edit_in_place", "component.finish
 
 /// `command` names the command `id`, in any of the spellings the engine takes.
 fn is_command(command: Option<&str>, id: &str) -> bool {
-    command.and_then(solidcraft_engine::find_command).is_some_and(|spec| spec.id == id)
+    command.and_then(torno_engine::find_command).is_some_and(|spec| spec.id == id)
 }
 
 /// The command of `step` when it goes to another design's tab.
@@ -306,7 +304,7 @@ pub(crate) fn batch_step_command(step: &Value) -> Option<&str> {
 
 /// `engine.batch {commands, rollback?, timings?, profile?}`: the steps in one request, so in one
 /// frame (#743). With `timings` the reply adds each step's time and `total_ms`, with `profile`
-/// each step's kernel share too (`solidcraft_engine::timing`, #1833). Each
+/// each step's kernel share too (`torno_engine::timing`, #1833). Each
 /// step runs as `engine.execute` runs it; the first failure stops the batch and, with
 /// `rollback` (the default), the design goes back to its checkpoint. Step failures are part of
 /// the reply; refusals (`engine.batch unavailable: …`) come before anything runs, so the client
@@ -315,23 +313,23 @@ fn batch(app: &mut SolveApp, p: &Value) -> Outcome {
     let Some(steps) = p.get("commands").and_then(Value::as_array).filter(|s| s.len() <= MAX_BATCH) else {
         return err(format!("engine.batch: commands must be an array of at most {MAX_BATCH} steps"));
     };
-    let panels = steps.iter().filter(|step| command(step).is_some_and(solidcraft_engine::panels::commands::is_command)).count();
+    let panels = steps.iter().filter(|step| command(step).is_some_and(torno_engine::panels::commands::is_command)).count();
     if panels > 0 {
         if let Some(why) = batch_refusal(steps) {
             return err(why);
         }
         let rollback = p.get("rollback").and_then(Value::as_bool).unwrap_or(true);
-        if let Some(refusal) = solidcraft_engine::batch_preflight::check(steps, app.session.param_check, &["view.pick"]) {
+        if let Some(refusal) = torno_engine::batch_preflight::check(steps, app.session.param_check, &["view.pick"]) {
             return ok(refusal.reply(steps.len(), rollback));
         }
         if rollback {
             if panels != steps.len() {
-                return err(solidcraft_engine::panels::commands::error_text(solidcraft_engine::panels::error(
-                    solidcraft_engine::panels::Rule::Capability,
+                return err(torno_engine::panels::commands::error_text(torno_engine::panels::error(
+                    torno_engine::panels::Rule::Capability,
                     "atomic mixed document/layout batches are unavailable; use rollback:false or separate transactions",
                 )));
             }
-            return wrap(app.run_panel_batch(steps).map_err(solidcraft_engine::panels::commands::error_text));
+            return wrap(app.run_panel_batch(steps).map_err(torno_engine::panels::commands::error_text));
         }
         // Explicit sequential mode has per-command atomicity and no document
         // checkpoint; previous application changes are truthfully retained.
@@ -340,7 +338,7 @@ fn batch(app: &mut SolveApp, p: &Value) -> Outcome {
             let result = command(step).ok_or_else(|| "missing command".to_string()).and_then(|id| execute(app, id, step_params(step)));
             match result {
                 Ok(result) => results.push(result),
-                Err(error) => return ok(solidcraft_engine::panels::commands::sequential_failure(i, command(step), error, results)),
+                Err(error) => return ok(torno_engine::panels::commands::sequential_failure(i, command(step), error, results)),
             }
         }
         return ok(json!({"completed":results.len(),"results":results,"undone":0}));
@@ -352,7 +350,7 @@ fn batch(app: &mut SolveApp, p: &Value) -> Outcome {
     }
     let rollback = p.get("rollback").and_then(Value::as_bool).unwrap_or(true);
     // A step the batch would refuse at its turn refuses it now, before anything runs (#5853).
-    if let Some(refusal) = solidcraft_engine::batch_preflight::check(steps, app.session.param_check, &["view.pick"]) {
+    if let Some(refusal) = torno_engine::batch_preflight::check(steps, app.session.param_check, &["view.pick"]) {
         return ok(refusal.reply(steps.len(), rollback));
     }
     let profile = p.get("profile").and_then(Value::as_bool).unwrap_or(false);
@@ -413,14 +411,14 @@ fn batch(app: &mut SolveApp, p: &Value) -> Outcome {
 /// and the steps before it stay. Its words are the engine script's, or the panel error when a step
 /// is a panel command.
 fn script(app: &mut SolveApp, p: &Value) -> Outcome {
-    let steps = match solidcraft_engine::script_steps(p) {
+    let steps = match torno_engine::script_steps(p) {
         Ok(steps) => steps,
         Err(e) => return err(e),
     };
     if let Some(c) = steps.iter().find_map(switches_design) {
         return err(format!("engine.script unavailable: {c} switches to another design (send it on its own)"));
     }
-    let panels = steps.iter().any(|step| command(step).is_some_and(solidcraft_engine::panels::commands::is_command));
+    let panels = steps.iter().any(|step| command(step).is_some_and(torno_engine::panels::commands::is_command));
     let mut results = Vec::with_capacity(steps.len());
     for (i, step) in steps.iter().enumerate() {
         let Some(id) = command(step) else {
@@ -434,7 +432,7 @@ fn script(app: &mut SolveApp, p: &Value) -> Outcome {
             Ok(result) => results.push(result),
             Err(error) if panels => {
                 let mut reply = json!({"ok": false, "error": error, "step": i + 1});
-                if let Some(reason) = solidcraft_engine::panels::commands::structured_error(&error) {
+                if let Some(reason) = torno_engine::panels::commands::structured_error(&error) {
                     reply["panel_error"] = reason;
                 }
                 return Outcome::Done(reply);
@@ -470,7 +468,7 @@ pub fn request_scope(app: &SolveApp, params: &Value) -> Result<Option<vfs::PathS
             .ok_or_else(|| format!("`design_folders` must be a list of at most {} folders", vfs::MAX_DESIGN_FOLDERS))?,
     };
     // Plus the app's own recovery folder and, when it is a safe one, the open design's folder.
-    let roots = roots.into_iter().chain(solidcraft_engine::recovery::default_dir());
+    let roots = roots.into_iter().chain(torno_engine::recovery::default_dir());
     let scope = designs.iter().fold(vfs::PathScope::new(roots), |s, d| s.with_design_folder(d));
     Ok(Some(scope.with_design(app.session.path.as_deref())))
 }
@@ -478,17 +476,17 @@ pub fn request_scope(app: &SolveApp, params: &Value) -> Result<Option<vfs::PathS
 /// What a picture of the view shows: the model as the window shows it (theme and colour vision
 /// mode, the section the viewport shows: an open Section Analysis dialog's preview, a sketch's
 /// Slice), with the grid and the origin's axes as `guides` says.
-pub(crate) fn view_scene(app: &SolveApp, guides: solidcraft_engine::view::Guides) -> Result<solidcraft_viewport::Scene, String> {
+pub(crate) fn view_scene(app: &SolveApp, guides: torno_engine::view::Guides) -> Result<torno_viewport::Scene, String> {
     let mut palette = crate::viewport::scene_palette(app.viewport_dark(), app.preferences.color_vision);
     // The view's own background colour (#7688).
     if let Some([r, g, b]) = app.preferences.viewport_background {
-        palette.background = (solidcraft_viewport::Rgb(r, g, b), solidcraft_viewport::Rgb(r, g, b));
+        palette.background = (torno_viewport::Rgb(r, g, b), torno_viewport::Rgb(r, g, b));
     }
-    let mut scene = solidcraft_engine::view::scene_with_thread_markings(
+    let mut scene = torno_engine::view::scene_with_thread_markings(
         &app.session,
         &app.cam,
         crate::viewport::section_plane(app),
-        solidcraft_engine::view::world_curve_parts,
+        torno_engine::view::world_curve_parts,
         &palette,
         guides,
         app.preferences.cosmetic_threads,
@@ -502,8 +500,8 @@ pub(crate) fn view_scene(app: &SolveApp, guides: solidcraft_engine::view::Guides
 }
 
 /// The grid and the origin's axes as the window shows them (the Grid and Origin switches).
-pub(crate) fn window_guides(app: &SolveApp) -> solidcraft_engine::view::Guides {
-    solidcraft_engine::view::Guides {
+pub(crate) fn window_guides(app: &SolveApp) -> torno_engine::view::Guides {
+    torno_engine::view::Guides {
         grid: (app.session.active_sketch.is_some() || app.ui.show_grid) && !crate::viewport::active_view(app).hide_grid,
         axes: app.origin_visible(),
     }
@@ -512,13 +510,13 @@ pub(crate) fn window_guides(app: &SolveApp) -> solidcraft_engine::view::Guides {
 /// A picture of the view as the window shows it, RGBA, drawn on the GPU with the viewport's
 /// pipelines (the renderer the app installs).
 pub(crate) fn view_rgba(app: &SolveApp, w: u32, h: u32) -> Result<Vec<u8>, String> {
-    solidcraft_engine::capture::rgba(&view_scene(app, window_guides(app))?, &app.cam, w, h).map(|p| p.rgba)
+    torno_engine::capture::rgba(&view_scene(app, window_guides(app))?, &app.cam, w, h).map(|p| p.rgba)
 }
 
 /// [`view_rgba`] as PNG.
 pub fn view_png(app: &SolveApp, w: u32, h: u32) -> Result<Vec<u8>, String> {
     let rgba = view_rgba(app, w, h)?;
-    solidcraft_viewport::png(w as usize, h as usize, rgba).ok_or_else(|| "PNG encoding failed".to_string())
+    torno_viewport::png(w as usize, h as usize, rgba).ok_or_else(|| "PNG encoding failed".to_string())
 }
 
 pub fn handle(app: &mut SolveApp, ctx: &egui::Context, req: &ControlRequest) -> Outcome {
@@ -603,9 +601,9 @@ fn switch_checked(app: &mut SolveApp, ctx: &egui::Context, method: &str, p: &Val
 /// session at `level` (one that switches design, one the file loader runs): `Err` refuses the
 /// call, `Ok` holds the warnings for its result.
 pub(crate) fn contract_check_before_run(id: &str, params: &Value, level: ParamCheck) -> Result<Vec<String>, String> {
-    let issues: Vec<String> = solidcraft_engine::schema::issues(id, params).into_iter().map(|i| i.message).collect();
+    let issues: Vec<String> = torno_engine::schema::issues(id, params).into_iter().map(|i| i.message).collect();
     match (level, issues.first()) {
-        (ParamCheck::Strict, Some(first)) => Err(solidcraft_engine::params::bad(id, first.as_str()).to_string()),
+        (ParamCheck::Strict, Some(first)) => Err(torno_engine::params::bad(id, first.as_str()).to_string()),
         (ParamCheck::Warn, _) => Ok(issues),
         _ => Ok(Vec::new()),
     }
@@ -828,7 +826,7 @@ fn dispatch(app: &mut SolveApp, ctx: &egui::Context, method: &str, p: &Value) ->
             if let Some(sample) = p.get("sample") {
                 // The index is checked here: `open_sample` drops an index that names no sample
                 // and says nothing, so the request would look like it had worked (#9087).
-                let count = solidcraft_engine::sample::samples().len();
+                let count = torno_engine::sample::samples().len();
                 let Some(index) = sample.as_i64() else {
                     return err(format!("`sample` must be an index from 0 to {}", count - 1));
                 };
@@ -873,7 +871,7 @@ fn dispatch(app: &mut SolveApp, ctx: &egui::Context, method: &str, p: &Value) ->
                 Ok(s) => s,
                 Err(e) => return err(e),
             };
-            match (serde_json::from_value::<crate::UiState>(cur), serde_json::from_value::<solidcraft_engine::Visibility>(vis)) {
+            match (serde_json::from_value::<crate::UiState>(cur), serde_json::from_value::<torno_engine::Visibility>(vis)) {
                 (Ok(mut u), Ok(mut v)) => {
                     if let Some(shown) = sketches {
                         v.hidden_folders.retain(|k| k != SKETCHES_FOLDER);
@@ -1368,7 +1366,7 @@ fn dispatch(app: &mut SolveApp, ctx: &egui::Context, method: &str, p: &Value) ->
             Ok(()) => ok(json!({"custom_titlebar": app.custom_titlebar, "maximized": ctx.input(|i| i.viewport().maximized)})),
             Err(e) => err(e),
         },
-        "ui.resize" => wrap(solidcraft_control_egui::window::resize(ctx, p)),
+        "ui.resize" => wrap(torno_control_egui::window::resize(ctx, p)),
         "ui.screenshot" => match s("path").map(vfs::check) {
             Some(Err(e)) => err(e),
             _ => Outcome::Screenshot { path: s("path").map(str::to_string) },
@@ -1379,7 +1377,7 @@ fn dispatch(app: &mut SolveApp, ctx: &egui::Context, method: &str, p: &Value) ->
             // As the window shows it (`view_scene`). The grid and the axes as the window shows
             // them, unless the request says: `grid` and `axes` leave them out or put them in.
             let shown = window_guides(app);
-            let guides = solidcraft_engine::view::Guides {
+            let guides = torno_engine::view::Guides {
                 grid: p.get("grid").and_then(Value::as_bool).unwrap_or(shown.grid),
                 axes: p.get("axes").and_then(Value::as_bool).unwrap_or(shown.axes),
             };
@@ -1391,12 +1389,12 @@ fn dispatch(app: &mut SolveApp, ctx: &egui::Context, method: &str, p: &Value) ->
                 Ok(scene) => scene,
                 Err(e) => return err(e),
             };
-            let png = match solidcraft_engine::capture::png(&scene, &app.cam, w, h) {
+            let png = match torno_engine::capture::png(&scene, &app.cam, w, h) {
                 Ok(png) => png,
                 Err(e) => return err(format!("render failed: {e}")),
             };
             // What drew it (gpu, gpu-software or cpu), and the warning a CPU render carries.
-            let (renderer, warning) = (png.renderer, solidcraft_engine::capture::warning(png.renderer));
+            let (renderer, warning) = (png.renderer, torno_engine::capture::warning(png.renderer));
             match s("path") {
                 Some(path) => match vfs::check(path).and_then(|()| std::fs::write(path, &png.bytes)) {
                     Ok(()) => ok(json!({"path": path, "bytes": png.bytes.len(), "renderer": renderer, "warning": warning})),
@@ -1503,7 +1501,7 @@ fn drawn(app: &SolveApp) -> Camera {
 }
 
 /// An occurrence by id or name (or a component's name: its first occurrence); 0 is the root.
-fn occurrence(s: &solidcraft_engine::Session, v: &Value) -> Result<u64, String> {
+fn occurrence(s: &torno_engine::Session, v: &Value) -> Result<u64, String> {
     let key = match v {
         Value::Number(n) => n.to_string(),
         Value::String(x) => x.clone(),
@@ -1525,7 +1523,7 @@ fn occurrence(s: &solidcraft_engine::Session, v: &Value) -> Result<u64, String> 
 /// the browser keeps it in memory: std's would panic there).
 pub fn save_screenshot(image: &egui::ColorImage, path: Option<&str>) -> Value {
     let [w, h] = image.size;
-    let path = path.map(str::to_string).unwrap_or_else(|| vfs::temp_dir().join("solidcraft-shot.png").to_string_lossy().to_string());
+    let path = path.map(str::to_string).unwrap_or_else(|| vfs::temp_dir().join("torno-shot.png").to_string_lossy().to_string());
     match write_screenshot(image, &path) {
         Ok(()) => json!({"ok": true, "result": {"path": path, "width": w, "height": h}}),
         Err(e) => json!({"ok": false, "error": e}),
@@ -1536,7 +1534,7 @@ pub fn save_screenshot(image: &egui::ColorImage, path: Option<&str>) -> Value {
 /// [`vfs`] like every other save: the disk natively, a download or browser storage in the web
 /// app (#7192).
 pub(crate) fn write_screenshot(image: &egui::ColorImage, path: &str) -> Result<(), String> {
-    let bytes = solidcraft_control_egui::screenshot::encode(image, path)?;
+    let bytes = torno_control_egui::screenshot::encode(image, path)?;
     vfs::write(path, &bytes).map_err(|e| e.to_string())
 }
 
@@ -1545,8 +1543,8 @@ mod tests {
     fn panel_command_app() -> crate::SolveApp {
         use crate::panel_runtime::*;
         let h = PanelMountHarness::new(false).unwrap();
-        let catalogue = solidcraft_engine::panels::fixture_command_catalogue(h.runtime.layout().registry()).unwrap();
-        let mut app = crate::SolveApp::new(solidcraft_engine::Session::default(), Default::default());
+        let catalogue = torno_engine::panels::fixture_command_catalogue(h.runtime.layout().registry()).unwrap();
+        let mut app = crate::SolveApp::new(torno_engine::Session::default(), Default::default());
         app.enable_panel_runtime(h.runtime, Box::<FakeAppPanelServices>::default()).unwrap();
         app.panel_runtime_mut().unwrap().set_command_adapters(Box::new(catalogue), Box::new(FakeNativeAdapter::new(false))).unwrap();
         app.enable_universal_panel_host(HostOptions::default()).unwrap();
@@ -1554,7 +1552,7 @@ mod tests {
         app
     }
     fn prepare_panel_commands(app: &mut crate::SolveApp) {
-        use solidcraft_engine::panels::{LogicalRect, Point, Size};
+        use torno_engine::panels::{LogicalRect, Point, Size};
         let capacity = LogicalRect { origin: Point { x: 0.0, y: 0.0 }, size: Size { width: 1400.0, height: 1000.0 } };
         app.panel_runtime.as_mut().unwrap().prepare_host(&app.session, capacity).unwrap();
     }
@@ -1574,7 +1572,7 @@ mod tests {
     }
     #[test]
     fn panel_control_single_atomic_batch_and_script_share_live_runtime_without_geometry_or_camera_work() {
-        use solidcraft_engine::panels::ActionSink;
+        use torno_engine::panels::ActionSink;
         let mut single = panel_command_app();
         let mut batch = panel_command_app();
         let mut script = panel_command_app();
@@ -1614,8 +1612,8 @@ mod tests {
     }
     #[test]
     fn panel_control_reports_structured_missing_capability_unknown_fields_and_lifecycle_batch_errors() {
-        use solidcraft_engine::panels::ActionSink;
-        let mut disabled = crate::SolveApp::new(solidcraft_engine::Session::default(), Default::default());
+        use torno_engine::panels::ActionSink;
+        let mut disabled = crate::SolveApp::new(torno_engine::Session::default(), Default::default());
         let reply = panel_control(&mut disabled, "engine.execute", json!({"command":"layout.get"}));
         assert_eq!(reply["ok"], false);
         assert_eq!(reply["panel_error"]["rule"], "capability");
@@ -1776,8 +1774,8 @@ mod tests {
     }
 
     use serde_json::json;
-    use solidcraft_engine::panels::ActionSink;
-    use solidcraft_engine::{Sel, Session};
+    use torno_engine::panels::ActionSink;
+    use torno_engine::{Sel, Session};
 
     use super::*;
     use crate::Services;
@@ -1792,7 +1790,7 @@ mod tests {
             let evaluations = app.session.evaluation_count();
             let undo = app.session.undo.len();
             let before = crate::panel_runtime::inspect_host_specimen(app).unwrap();
-            let command = solidcraft_engine::find_command("panel.focus.next").unwrap();
+            let command = torno_engine::find_command("panel.focus.next").unwrap();
             let interactive = crate::render_workspace::interactive_command_info(app, command);
             let commands = execute(app, "engine.commands", json!({})).unwrap();
             let row = commands.as_array().unwrap().iter().find(|row| row["id"] == "panel.focus.next").unwrap();
@@ -1841,9 +1839,9 @@ mod tests {
         let section = h.app.universal_panel_frame().unwrap().layout.sections[0].section.clone();
         let stale_revision = h.app.universal_panel_frame().unwrap().layout.revision;
         h.app
-            .dispatch_panel_layout(solidcraft_engine::panels::LayoutAction::Apply {
+            .dispatch_panel_layout(torno_engine::panels::LayoutAction::Apply {
                 expected_revision: Some(stale_revision),
-                mutations: vec![solidcraft_engine::panels::Mutation::Collapse { section, collapsed: true }],
+                mutations: vec![torno_engine::panels::Mutation::Collapse { section, collapsed: true }],
             })
             .unwrap();
         assert_ne!(h.app.panel_runtime().unwrap().layout().inspect().revision, stale_revision);
@@ -2136,7 +2134,7 @@ mod tests {
             local: crate::panel_runtime::FakeLocalServices,
         }
         impl crate::panel_runtime::AppPanelServices for Provider {
-            fn refresh_read_only(&mut self, _: &Session) -> solidcraft_engine::panels::PanelResult<()> {
+            fn refresh_read_only(&mut self, _: &Session) -> torno_engine::panels::PanelResult<()> {
                 Ok(())
             }
             fn services(&mut self) -> crate::panel_runtime::ContentServices<'_> {
@@ -2450,7 +2448,7 @@ mod tests {
         let mut s = Session::default();
         s.execute("solid.box", &json!({"length": 40, "width": 30, "height": 20})).unwrap();
         let mut app = SolveApp::new(s, Services::default());
-        let dir = std::env::temp_dir().join(format!("solidcraft-render-theme-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("torno-render-theme-{}", std::process::id()));
         std::fs::create_dir_all(&dir).unwrap();
         use crate::theme::ViewportTheme;
         for (window, view) in
@@ -2468,7 +2466,7 @@ mod tests {
                 *counts.entry(img.get_pixel(x, 0).0).or_insert(0) += 1;
             }
             let top = counts.into_iter().max_by_key(|(_, n)| *n).map(|(c, _)| c).unwrap();
-            let want = if dark { solidcraft_theme::Tokens::dark() } else { solidcraft_theme::Tokens::light() }.viewport_top;
+            let want = if dark { torno_theme::Tokens::dark() } else { torno_theme::Tokens::light() }.viewport_top;
             let near = top.iter().zip([want.r(), want.g(), want.b()]).all(|(a, b)| a.abs_diff(b) <= 2);
             assert!(near, "{theme}: the render's top row is {top:?}, the view's background {want:?}");
         }
@@ -2485,7 +2483,7 @@ mod tests {
         let mut s = Session::default();
         s.execute("solid.box", &json!({"length": 40, "width": 30, "height": 20})).unwrap();
         let mut app = SolveApp::new(s, Services::default());
-        let dir = std::env::temp_dir().join(format!("solidcraft-render-section-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("torno-render-section-{}", std::process::id()));
         std::fs::create_dir_all(&dir).unwrap();
         let whole = render(&mut app, &dir.join("whole.png"));
         app.session.selection = vec![Sel::Plane { name: "XZ".into() }];
@@ -2555,8 +2553,8 @@ mod tests {
         let mut s = Session::default();
         s.execute("solid.box", &json!({"length": 40, "width": 30, "height": 20, "corner": [10, -15, -10]})).unwrap();
         let mut app = SolveApp::new(s, Services::default());
-        app.cam.set_view(solidcraft_viewport::StandardView::Front);
-        let dir = std::env::temp_dir().join(format!("solidcraft-render-guides-{}", std::process::id()));
+        app.cam.set_view(torno_viewport::StandardView::Front);
+        let dir = std::env::temp_dir().join(format!("torno-render-guides-{}", std::process::id()));
         std::fs::create_dir_all(&dir).unwrap();
         let path = dir.join("shot.png");
         // Every picture is compared byte for byte, so each must come from the same renderer.
@@ -2582,7 +2580,7 @@ mod tests {
             if got == *want {
                 return;
             }
-            let kept = std::env::temp_dir().join(format!("solidcraft-render-guides-failed-{}", std::process::id()));
+            let kept = std::env::temp_dir().join(format!("torno-render-guides-failed-{}", std::process::id()));
             let _ = std::fs::create_dir_all(&kept);
             let _ = std::fs::write(kept.join(format!("{step}-got.png")), &got);
             let _ = std::fs::write(kept.join(format!("{step}-want.png")), want);
@@ -2915,7 +2913,7 @@ mod tests {
         assert_eq!((after["bodies"].clone(), after["undo"].clone()), (before["bodies"].clone(), before["undo"].clone()), "nothing ran: {after}");
         // Strict checking refuses a broken contract up front too; off, the step runs (and the
         // box command reads what it knows).
-        h.app.session.param_check = solidcraft_engine::schema::ParamCheck::Strict;
+        h.app.session.param_check = torno_engine::schema::ParamCheck::Strict;
         let steps = json!([
             {"command": "solid.sphere", "params": {"radius": 3}},
             {"command": "solid.box", "params": {"lenght": 10, "width": 10, "height": 10}},
@@ -2925,7 +2923,7 @@ mod tests {
         assert!(v["result"]["failed"]["error"].as_str().is_some_and(|e| e.contains("lenght")), "{v}");
         assert_eq!(inspect(&mut h)["bodies"], before["bodies"], "nothing ran");
         // `view.pick` is answered by the app, outside the command registry: not refused.
-        h.app.session.param_check = solidcraft_engine::schema::ParamCheck::Off;
+        h.app.session.param_check = torno_engine::schema::ParamCheck::Off;
         let v = batch(&mut h, json!({"commands": [{"command": "view.pick", "params": {"x": 1, "y": 1}}]}));
         assert!(!v["result"]["failed"]["error"].as_str().is_some_and(|e| e.starts_with("unknown command")), "{v}");
     }
@@ -2935,7 +2933,7 @@ mod tests {
     /// afterwards. A command that switches designs keeps the app's level.
     #[test]
     fn a_request_carries_its_own_param_check_level() {
-        use solidcraft_engine::schema::ParamCheck;
+        use torno_engine::schema::ParamCheck;
         let mut h = crate::scenario::Harness::new();
         let before = inspect(&mut h);
         let warning = "unknown key `operaton`; did you mean `operation`?";
@@ -3041,7 +3039,7 @@ mod tests {
     #[test]
     fn engine_batch_stays_inside_allow_paths() {
         let mut h = crate::scenario::Harness::new();
-        let base = vfs::temp_dir().join(format!("solidcraft-batch-scope-{}", std::process::id()));
+        let base = vfs::temp_dir().join(format!("torno-batch-scope-{}", std::process::id()));
         let (root, out) = (base.join("root"), base.join("out"));
         std::fs::create_dir_all(&root).unwrap();
         std::fs::create_dir_all(&out).unwrap();
@@ -3066,14 +3064,14 @@ mod tests {
     #[test]
     fn file_loads_stay_inside_allow_paths() {
         let mut h = crate::scenario::Harness::new();
-        let base = vfs::temp_dir().join(format!("solidcraft-load-scope-{}", std::process::id()));
+        let base = vfs::temp_dir().join(format!("torno-load-scope-{}", std::process::id()));
         let (root, out) = (base.join("root"), base.join("out"));
         std::fs::create_dir_all(&root).unwrap();
         std::fs::create_dir_all(&out).unwrap();
         let mut s = Session::default();
         s.execute("solid.box", &json!({"length": 10, "width": 10, "height": 10})).unwrap();
         for d in [&root, &out] {
-            std::fs::write(d.join("part.solidcraft"), solidcraft_engine::io::write_design(&s.doc)).unwrap();
+            std::fs::write(d.join("part.solidcraft"), torno_engine::io::write_design(&s.doc)).unwrap();
         }
         s.execute("file.export", &json!({"path": out.join("part.step").to_string_lossy()})).unwrap();
         let load = |command: &str, d: &std::path::Path, file: &str| json!({"command": command, "params": {"path": d.join(file).to_string_lossy()}, "allow_paths": [root.to_string_lossy()]});
@@ -3263,7 +3261,7 @@ mod tests {
         let mut s = Session::default();
         s.execute("solid.box", &json!({"length": 10, "width": 10, "height": 10})).unwrap();
         let mut app = SolveApp::new(s, Services::default());
-        let base = vfs::temp_dir().join(format!("solidcraft-control-scope-{}", std::process::id()));
+        let base = vfs::temp_dir().join(format!("torno-control-scope-{}", std::process::id()));
         let (root, out) = (base.join("root"), base.join("out"));
         std::fs::create_dir_all(&root).unwrap();
         std::fs::create_dir_all(&out).unwrap();
@@ -3319,7 +3317,7 @@ mod tests {
     /// in a later frame, outside the request's scope, as before.)
     #[test]
     fn screenshots_are_written_through_vfs_with_the_same_reply() {
-        let base = vfs::temp_dir().join(format!("solidcraft-shot-scope-{}", std::process::id()));
+        let base = vfs::temp_dir().join(format!("torno-shot-scope-{}", std::process::id()));
         let (root, out) = (base.join("root"), base.join("out"));
         std::fs::create_dir_all(&root).unwrap();
         std::fs::create_dir_all(&out).unwrap();
@@ -3340,7 +3338,7 @@ mod tests {
     #[test]
     fn a_screenshot_without_a_path_goes_to_the_vfs_temporary_folder() {
         let image = egui::ColorImage::new([4, 3], vec![egui::Color32::GREEN; 12]);
-        let path = vfs::temp_dir().join("solidcraft-shot.png");
+        let path = vfs::temp_dir().join("torno-shot.png");
         let reply = save_screenshot(&image, None);
         assert_eq!(reply, json!({"ok": true, "result": {"path": path.to_string_lossy(), "width": 4, "height": 3}}));
         assert!(path.is_file());
@@ -3355,7 +3353,7 @@ mod tests {
         let mut s = Session::default();
         s.execute("solid.box", &json!({"length": 10, "width": 10, "height": 10})).unwrap();
         let mut app = SolveApp::new(s, Services::default());
-        let base = vfs::temp_dir().join(format!("solidcraft-control-design-folders-{}", std::process::id()));
+        let base = vfs::temp_dir().join(format!("torno-control-design-folders-{}", std::process::id()));
         let (root, proj, out) = (base.join("root"), base.join("proj"), base.join("out"));
         for d in [&root, &proj.join(".git"), &out] {
             std::fs::create_dir_all(d).unwrap();
@@ -3584,7 +3582,7 @@ mod tests {
     #[test]
     fn ui_home_refuses_a_sample_index_that_names_no_sample() {
         let mut h = crate::scenario::Harness::new();
-        let count = solidcraft_engine::sample::samples().len();
+        let count = torno_engine::sample::samples().len();
         for bad in [json!({"sample": count}), json!({"sample": 99}), json!({"sample": -1})] {
             let r = h.call("ui.home", bad.clone());
             assert_eq!(r["ok"], false, "{bad}: {r}");

@@ -1,18 +1,18 @@
 //! Built-in authored resources and explicit runtime projections. The source catalogs
 //! retain their original authoring status; unsupported concepts never become fake presets.
-use solidcraft_geom::MeshGeom;
 use std::{
     collections::BTreeMap,
     sync::{Arc, OnceLock},
 };
+use torno_geom::MeshGeom;
 
 use serde::Deserialize;
 use serde_json::{Value, json};
-use solidcraft_doc::{
+use torno_doc::{
     render_resources::{CpuHdrEnvironment, GpuHdrEnvironment, HdrId, HdrResource},
     render_settings::{CpuJob, RenderJob, RenderSetup},
 };
-use solidcraft_render::{
+use torno_render::{
     job::{AreaLight, AreaLights, RectangleLightOptions, StudioLighting, Sun},
     texture_input::MapRole,
 };
@@ -229,7 +229,7 @@ pub(super) fn targets(s: &mut Session, params: &Value) -> Result<Value> {
         || input.query.chars().any(char::is_control)
         || input.limit == 0
         || input.limit > 128
-        || input.offset > solidcraft_render::job::MAX_CPU_BODIES
+        || input.offset > torno_render::job::MAX_CPU_BODIES
     {
         return Err(bad(command, "bounded target search and page size 1..128 required"));
     }
@@ -361,7 +361,7 @@ pub(super) fn owns_sun(id: &str, command: &str) -> Result<bool> {
 
 pub(super) fn hdr_resource(id: &str, command: &str) -> Result<HdrResource> {
     item("hdr", id, command)?;
-    HdrResource::new(asset_bytes(id, solidcraft_render::lighting::MAX_HDR_BYTES as u64, command)?).map_err(|e| bad(command, e.to_string()))
+    HdrResource::new(asset_bytes(id, torno_render::lighting::MAX_HDR_BYTES as u64, command)?).map_err(|e| bad(command, e.to_string()))
 }
 
 pub(super) fn hdr_rotation(author_rotation: f64, command: &str) -> Result<f64> {
@@ -402,7 +402,7 @@ pub(super) fn apply_appearance(s: &mut Session, params: &Value) -> Result<Value>
         let value = item("surfaces", &input.id, command)?;
         let lo = triple(&value["base_linear_low"], command)?;
         let hi = triple(&value["base_linear_high"], command)?;
-        let color = std::array::from_fn::<_, 3, _>(|i| solidcraft_color::srgb::encode8((lo[i] + hi[i]) * 0.5));
+        let color = std::array::from_fn::<_, 3, _>(|i| torno_color::srgb::encode8((lo[i] + hi[i]) * 0.5));
         (
             value,
             LibraryLook {
@@ -467,7 +467,7 @@ struct EnvironmentApply {
     replace_environment: bool,
 }
 
-fn has_environment(setup: &solidcraft_doc::render_settings::RenderSetup) -> bool {
+fn has_environment(setup: &torno_doc::render_settings::RenderSetup) -> bool {
     match &setup.job {
         Some(RenderJob::CpuRaytrace { options, .. }) => options.hdr.is_some() || options.environment.is_some() || options.sky.is_some(),
         Some(RenderJob::GpuPath { options, .. }) => options.hdr.is_some() || options.environment.is_some(),
@@ -599,7 +599,7 @@ pub(super) fn prepare_surface(s: &mut Session, params: &Value) -> Result<Value> 
     }
     let center = body.mesh.bounds().center();
     let origin = input.origin.unwrap_or([center.x, center.y, center.z]);
-    let frame = solidcraft_render::job::textures::PlanarFrame { origin, u, v };
+    let frame = torno_render::job::textures::PlanarFrame { origin, u, v };
     frame.validate().map_err(|e| bad(command, e.to_string()))?;
     let manifest = item("surface_manifest", &input.id, command)?;
     let map = |role: &str| format!("builtin://{}/{role}", input.id);
@@ -727,14 +727,14 @@ pub(super) fn rig_lighting(input: &RigInput, command: &str) -> Result<(StudioLig
     Ok((lighting, reply(command, projection)?))
 }
 
-pub(super) fn rig_stage(input: &RigInput, command: &str) -> Result<solidcraft_render::stage::Stage> {
-    use solidcraft_render::stage::{Stage, StagePanel};
+pub(super) fn rig_stage(input: &RigInput, command: &str) -> Result<torno_render::stage::Stage> {
+    use torno_render::stage::{Stage, StagePanel};
     if input.variant != "complete" {
         return Ok(Stage::default());
     }
     let source = item("rigs", &input.id, command)?;
     let modifiers = source["modifiers"].as_array().ok_or_else(|| bad(command, "rig modifier array missing"))?;
-    if modifiers.len() > solidcraft_render::stage::MAX_STAGE_PANELS {
+    if modifiers.len() > torno_render::stage::MAX_STAGE_PANELS {
         return Err(bad(command, "too many rig cards"));
     }
     let scale = input.subject_extent_mm / 1000.0;
@@ -765,9 +765,9 @@ pub(super) fn rig_stage(input: &RigInput, command: &str) -> Result<solidcraft_re
     }
     Stage::new(panels).map_err(|e| bad(command, e.to_string()))
 }
-pub(super) fn rig_clearance(scene: &solidcraft_render::ProductScene, lighting: &StudioLighting, command: &str) -> Result<()> {
+pub(super) fn rig_clearance(scene: &torno_render::ProductScene, lighting: &StudioLighting, command: &str) -> Result<()> {
     for (i, light) in lighting.area_lights.iter().enumerate() {
-        let panel = solidcraft_render::stage::StagePanel {
+        let panel = torno_render::stage::StagePanel {
             id: format!("emitter_{i}"),
             center_mm: light.center,
             half_u_mm: light.u,

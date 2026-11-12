@@ -1,4 +1,4 @@
-//! The band's room through ops (SolidCraft's taper cases): a wedge whose top face closes to a
+//! The band's room through ops (Torno's taper cases): a wedge whose top face closes to a
 //! point, from either end; the kernel's refusals as [`Error`]s; a radius law refused where it
 //! runs out of room.
 #![allow(clippy::unwrap_used, clippy::indexing_slicing, clippy::panic)] // test helpers

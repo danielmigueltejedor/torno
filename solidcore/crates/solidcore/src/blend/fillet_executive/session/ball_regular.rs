@@ -2,7 +2,7 @@
 //! encloses the ball, and every point of its section is progressive; where it is not,
 //! the radius that works.
 //!
-//! Upstream: not in SMLib at the pinned commit. SolidCraft's fork (tangency-labs/smlib#79,
+//! Upstream: not in SMLib at the pinned commit. Torno's fork (tangency-labs/smlib#79,
 //! merged at 5e8c9c1) adds `SmBallStation` and `SmFilletSolver::JudgeBallAt` /
 //! `BallIsRegular` (`SmFilletSolver.cpp`, `SmFilletSolver.h`) and the virtuals
 //! `GetBallLaw`, `SetBallRadius` and `RollsABall` (`SmFilletStandardSolver.h/.cpp`) in

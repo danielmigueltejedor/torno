@@ -4,8 +4,8 @@
 
 use crate::scenario::Harness;
 use serde_json::json;
-use solidcraft_engine::geom::prelude::*;
-use solidcraft_engine::sketch::CurveKind;
+use torno_engine::geom::prelude::*;
+use torno_engine::sketch::CurveKind;
 
 fn harness(command: &str) -> Harness {
     let mut h = Harness::new();
@@ -84,7 +84,7 @@ fn a_short_drag_starts_a_rectangle_circle_or_polygon_by_clicks() {
         let sid = h.app.session.active_sketch.unwrap();
         let sk = h.app.session.model.state().sketch(sid).unwrap().sketch.clone();
         let far = solidcore_record::Vec2::new(second[0], second[1]);
-        let circle = |c: &solidcraft_engine::sketch::Curve| matches!(c.kind, CurveKind::Circle { r, .. } if (r - far.len()).abs() < 0.5);
+        let circle = |c: &torno_engine::sketch::Curve| matches!(c.kind, CurveKind::Circle { r, .. } if (r - far.len()).abs() < 0.5);
         let on_shape = sk.points.iter().any(|p| (p.pos - far).len() < 0.5) || sk.curves.iter().any(circle);
         assert!(on_shape, "{command}: the second click wasn't where it was let go");
     }
@@ -104,7 +104,7 @@ fn lines(h: &Harness) -> Vec<[solidcore_record::Vec2; 2]> {
     let sk = h.app.session.model.state().sketch(sid).unwrap().sketch.clone();
     (0..sk.curves.len())
         .filter_map(|i| match sk.shape(i) {
-            Some(solidcraft_engine::sketch::Shape::Line { a, b }) => Some([a, b]),
+            Some(torno_engine::sketch::Shape::Line { a, b }) => Some([a, b]),
             _ => None,
         })
         .collect()
@@ -133,7 +133,7 @@ fn a_line_drag_draws_one_line_with_the_preference() {
     let sid = h.app.session.active_sketch.unwrap();
     let sk = h.app.session.model.state().sketch(sid).unwrap().sketch.clone();
     assert!(
-        sk.constraints.iter().any(|c| matches!(c.kind, solidcraft_engine::sketch::ConstraintKind::Vertical { .. })),
+        sk.constraints.iter().any(|c| matches!(c.kind, torno_engine::sketch::ConstraintKind::Vertical { .. })),
         "the nearly vertical drag lined up as a click does: {:?}",
         sk.constraints
     );
@@ -177,7 +177,7 @@ fn the_line_drag_preference_saves_and_follows_the_sketch_page() {
     h.frames(2);
     assert!(h.app.preferences.line_drag_draws_one, "the checkbox turns it on");
     control(&mut h.app, &json!({"button": "apply"})).unwrap();
-    let mut other = crate::SolveApp::new(solidcraft_engine::Session::default(), Default::default());
+    let mut other = crate::SolveApp::new(torno_engine::Session::default(), Default::default());
     other.load_prefs(&h.app.prefs());
     assert!(other.preferences.line_drag_draws_one, "saved");
     control(&mut h.app, &json!({"button": "defaults"})).unwrap();
@@ -240,13 +240,13 @@ fn leave_and_rest(h: &mut Harness, on: [f64; 2], frames: usize) {
 /// A rest long enough for the switch: about half a second (it takes 0.35 s).
 const REST: usize = 30;
 
-fn sketch(h: &Harness) -> solidcraft_engine::sketch::Sketch {
+fn sketch(h: &Harness) -> torno_engine::sketch::Sketch {
     let sid = h.app.session.active_sketch.unwrap();
     h.app.session.model.state().sketch(sid).unwrap().sketch.clone()
 }
 
 /// The arc last drawn: centre, radius and where it starts and ends as drawn.
-fn last_arc(sk: &solidcraft_engine::sketch::Sketch) -> (solidcore_record::Vec2, f64, solidcore_record::Vec2, solidcore_record::Vec2) {
+fn last_arc(sk: &torno_engine::sketch::Sketch) -> (solidcore_record::Vec2, f64, solidcore_record::Vec2, solidcore_record::Vec2) {
     let (index, curve) = sk.curves.iter().enumerate().rfind(|(_, c)| matches!(c.kind, CurveKind::Arc { .. })).expect("an arc");
     let CurveKind::Arc { c, a, b } = curve.kind else { panic!("not an arc: {curve:?}") };
     let centre = sk.point(c).unwrap();
@@ -291,7 +291,7 @@ fn a_rest_on_the_last_point_makes_the_next_click_a_tangent_arc_and_back_to_a_lin
     let shared = sk.resolve_point(&format!("{}.end", line.id)) == sk.resolve_point(&format!("{}.start", arc.id));
     assert!(shared, "the arc starts on the line's own end");
     assert!(
-        sk.constraints.iter().any(|c| matches!(c.kind, solidcraft_engine::sketch::ConstraintKind::Tangent { a: 0, b: 1 })),
+        sk.constraints.iter().any(|c| matches!(c.kind, torno_engine::sketch::ConstraintKind::Tangent { a: 0, b: 1 })),
         "tangent to the line: {:?}",
         sk.constraints
     );
@@ -338,7 +338,7 @@ fn a_rounded_corner_outline_closes_in_one_line_session() {
     click_at(&mut h, [-20.0, -20.0]);
     let sk = sketch(&h);
     assert_eq!(sk.curves.len(), 8, "{:?}", h.app.status);
-    let tangents = sk.constraints.iter().filter(|c| matches!(c.kind, solidcraft_engine::sketch::ConstraintKind::Tangent { .. })).count();
+    let tangents = sk.constraints.iter().filter(|c| matches!(c.kind, torno_engine::sketch::ConstraintKind::Tangent { .. })).count();
     assert!(tangents >= 4, "every arc is tangent to the line before it: {tangents}");
     let first = sk.resolve_point(&format!("{}.start", sk.curves[0].id));
     let last = sk.resolve_point(&format!("{}.end", sk.curves[7].id));
@@ -484,7 +484,7 @@ fn the_tangent_arc_preference_saves_and_follows_the_sketch_page() {
     h.frames(2);
     assert!(h.app.preferences.line_hover_tangent_arc, "the checkbox turns it on");
     control(&mut h.app, &json!({"button": "apply"})).unwrap();
-    let mut other = crate::SolveApp::new(solidcraft_engine::Session::default(), Default::default());
+    let mut other = crate::SolveApp::new(torno_engine::Session::default(), Default::default());
     other.load_prefs(&h.app.prefs());
     assert!(other.preferences.line_hover_tangent_arc, "saved");
     control(&mut h.app, &json!({"button": "defaults"})).unwrap();
@@ -514,7 +514,7 @@ fn arcs_follow_one_another_each_tangent_to_the_last_and_a_pause_after_one_switch
         "from {start:?} to {end:?}"
     );
     assert!(
-        sk.constraints.iter().any(|c| matches!(c.kind, solidcraft_engine::sketch::ConstraintKind::Tangent { a: 1, b: 2 })),
+        sk.constraints.iter().any(|c| matches!(c.kind, torno_engine::sketch::ConstraintKind::Tangent { a: 1, b: 2 })),
         "tangent to the arc before it: {:?}",
         sk.constraints
     );

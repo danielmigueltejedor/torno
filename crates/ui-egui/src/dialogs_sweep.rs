@@ -6,9 +6,9 @@ use crate::selection::SelectionExt as _;
 use crate::ui_kit::{choice_row, expr_row};
 use serde_json::{Value, json};
 use solidcore_record::Vec3;
-use solidcraft_engine::Sel;
-use solidcraft_engine::doc::{Expr, Mat, RailFit, SweepOrientation, SweepRail};
-use solidcraft_engine::geom::prelude::*;
+use torno_engine::Sel;
+use torno_engine::doc::{Expr, Mat, RailFit, SweepOrientation, SweepRail};
+use torno_engine::geom::prelude::*;
 
 use crate::SolveApp;
 use crate::selection::{AXES, CURVES, EDGES, SelInput};
@@ -66,7 +66,7 @@ impl SweepOpts {
             SweepOrientation::Parallel => o.orientation = 1,
             SweepOrientation::Direction(d) => {
                 o.orientation = DIRECTION;
-                let world = solidcraft_engine::doc::apply_vector(frame, d.0);
+                let world = torno_engine::doc::apply_vector(frame, d.0);
                 match world.normalized().and_then(world_axis) {
                     Some(name) => pick = Some(Sel::Axis { name: name.into() }),
                     None => o.direction = Some(world),

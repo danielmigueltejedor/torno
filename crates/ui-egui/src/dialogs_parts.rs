@@ -7,12 +7,12 @@
 use crate::ui_kit::{choice_row, text_row};
 use egui::vec2;
 use serde_json::{Value, json};
-use solidcraft_engine::{Sel, Session};
+use torno_engine::{Sel, Session};
 
 use crate::SolveApp;
 use crate::dialogs::{Kind, combo, form_row};
 use crate::selection::{EDGES, FACES, SelInput};
-use solidcraft_theme::Tokens;
+use torno_theme::Tokens;
 
 /// One family of the library.
 #[derive(Clone, Debug, PartialEq)]
@@ -58,7 +58,7 @@ pub fn families(v: &Value) -> Vec<Family> {
 /// name for a family the catalogs don't know.
 pub(crate) fn family_name(f: &Family) -> String {
     let id = format!("parts.family.{}", f.id);
-    match solidcraft_ui_text::tr(&id) {
+    match torno_ui_text::tr(&id) {
         shown if shown == id => f.name.clone(),
         shown => shown.to_string(),
     }
@@ -129,7 +129,7 @@ pub fn insert_params(lib: &[Family], k: &Pt, holes: &[Sel]) -> Result<Value, Str
 /// A length (mm) of a part of the family: in fractional inches for an inch family, in the
 /// design's units otherwise.
 pub(crate) fn length_label(app: &SolveApp, family: &str, mm: f64) -> String {
-    solidcraft_engine::cmd::part_length_label(family, mm).unwrap_or_else(|| crate::prefs::show_mm(app, mm, 1))
+    torno_engine::cmd::part_length_label(family, mm).unwrap_or_else(|| crate::prefs::show_mm(app, mm, 1))
 }
 
 /// Where the Length list opens for a size: the index of the length an insert of it gets when
@@ -170,11 +170,7 @@ pub fn rows(app: &mut SolveApp, ui: &mut egui::Ui, k: &mut Pt, inputs: &[SelInpu
     };
     if lib.is_empty() {
         ui.vertical(|ui| {
-            crate::ui_kit::text(
-                ui,
-                solidcraft_ui_text::tr_label("the parts library is not available"),
-                crate::ui_kit::Text::Note("parts_unavailable"),
-            );
+            crate::ui_kit::text(ui, torno_ui_text::tr_label("the parts library is not available"), crate::ui_kit::Text::Note("parts_unavailable"));
         });
         return false;
     }
@@ -226,7 +222,7 @@ pub fn rows(app: &mut SolveApp, ui: &mut egui::Ui, k: &mut Pt, inputs: &[SelInpu
             k.length = Some(i);
         });
     }
-    text_row(ui, "Name", &mut k.name, solidcraft_ui_text::tr("parts.automatic_name"));
+    text_row(ui, "Name", &mut k.name, torno_ui_text::tr("parts.automatic_name"));
     // The part, and its table values.
     let key = (k.family, k.size, k.length);
     let tex_id = egui::Id::unique("sc_part_picture");
@@ -248,7 +244,7 @@ pub fn rows(app: &mut SolveApp, ui: &mut egui::Ui, k: &mut Pt, inputs: &[SelInpu
             ui.add(egui::Image::new(&tx).fit_to_exact_size(vec2(180.0, 112.0)).corner_radius(t.radius_sm));
         }
         None => {
-            crate::ui_kit::text(ui, solidcraft_ui_text::tr_label("no picture"), crate::ui_kit::Text::Note("parts_picture"));
+            crate::ui_kit::text(ui, torno_ui_text::tr_label("no picture"), crate::ui_kit::Text::Note("parts_picture"));
         }
     });
     if let Some((_, row)) = f.sizes.get(k.size)
@@ -268,7 +264,7 @@ pub fn rows(app: &mut SolveApp, ui: &mut egui::Ui, k: &mut Pt, inputs: &[SelInpu
     }
     if inputs.first().is_some_and(|i| i.items.is_empty()) {
         ui.vertical(|ui| {
-            crate::ui_kit::text(ui, solidcraft_ui_text::tr("parts.placement_hint"), crate::ui_kit::Text::Note("parts_placement"));
+            crate::ui_kit::text(ui, torno_ui_text::tr("parts.placement_hint"), crate::ui_kit::Text::Note("parts_placement"));
         });
     }
     false
@@ -282,7 +278,7 @@ pub fn commands(app: &SolveApp, k: &Pt, inputs: &[SelInput]) -> Result<Vec<(Stri
     };
     let p = insert_params(&lib, k, inputs.first().map_or(&[][..], |i| &i.items))?;
     // The toolbar's command when the engine has it (same parameters).
-    let id = if solidcraft_engine::find_command("parts.fastener").is_some() { "parts.fastener" } else { "parts.insert" };
+    let id = if torno_engine::find_command("parts.fastener").is_some() { "parts.fastener" } else { "parts.insert" };
     Ok(vec![(id.into(), p)])
 }
 
@@ -335,9 +331,9 @@ mod tests {
     #[test]
     fn family_names_follow_the_language() {
         crate::i18n::install();
-        let l = families(&solidcraft_engine::Session::default().execute("parts.library", &json!({})).unwrap());
+        let l = families(&torno_engine::Session::default().execute("parts.library", &json!({})).unwrap());
         assert!(l.len() >= 7, "{}", l.len());
-        let _german = solidcraft_ui_text::scope("de");
+        let _german = torno_ui_text::scope("de");
         for f in &l {
             assert_ne!(family_name(f), f.name, "{}", f.id);
         }
@@ -415,13 +411,13 @@ mod tests {
     #[test]
     fn every_library_dimension_has_a_label_in_words() {
         crate::i18n::install();
-        let mut s = solidcraft_engine::Session::default();
+        let mut s = torno_engine::Session::default();
         let l = families(&s.execute("parts.library", &json!({})).unwrap());
         assert!(l.len() >= 7, "{}", l.len());
         for f in &l {
             for (size, row) in &f.sizes {
                 for key in row.as_object().into_iter().flat_map(|o| o.keys()).filter(|k| !matches!(k.as_str(), "size" | "default_length")) {
-                    let label = dimension_label(key).map(solidcraft_ui_text::tr);
+                    let label = dimension_label(key).map(torno_ui_text::tr);
                     assert!(
                         label.is_some_and(|l| l.starts_with(char::is_uppercase) && !l.contains('_') && !l.starts_with("parts.")),
                         "{} {size}: {key} is labelled {label:?}",

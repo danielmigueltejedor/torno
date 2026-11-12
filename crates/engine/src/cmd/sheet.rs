@@ -3,13 +3,13 @@
 
 use serde_json::{Value, json};
 use solidcore_record::{Vec2, Vec3};
-use solidcraft_doc::expr::Kind;
-use solidcraft_doc::sheet::{self, SheetBody, SheetRule};
-use solidcraft_doc::{BodyName, SketchId};
-use solidcraft_doc::{FacePick, Position};
-use solidcraft_doc::{FeatureKind, FlangeEdge, FlangeSegment};
-use solidcraft_geom::prelude::*;
-use solidcraft_geom::{Aabb2, Ring};
+use torno_doc::expr::Kind;
+use torno_doc::sheet::{self, SheetBody, SheetRule};
+use torno_doc::{BodyName, SketchId};
+use torno_doc::{FacePick, Position};
+use torno_doc::{FeatureKind, FlangeEdge, FlangeSegment};
+use torno_geom::prelude::*;
+use torno_geom::{Aabb2, Ring};
 
 use super::CommandSpec;
 use super::features::{add_feature, check_expr, feature_sketch, profiles, sketch_id};
@@ -184,7 +184,7 @@ const MAX_THEN: usize = 16;
 
 /// One further bend of an edge flange: its angle, its height and, if it has its own, which way
 /// it turns (`flip`; the flange's own otherwise).
-pub(crate) type ThenStep = (solidcraft_doc::Expr, solidcraft_doc::Expr, Option<bool>);
+pub(crate) type ThenStep = (torno_doc::Expr, torno_doc::Expr, Option<bool>);
 
 /// The further bends of an edge flange (`then`): each an angle and a height, made one after
 /// the other, every one on the far edge of the flange before it.
@@ -291,7 +291,7 @@ pub(crate) fn flange_edge(i: usize, v: &Value) -> std::result::Result<FlangeEdge
         return Err(format!("edges[{i}]: unknown key `{k}` (an edge takes point, angle, height and segments)"));
     }
     let point = o.get("point").and_then(vec3).ok_or_else(|| format!("edges[{i}]: `point` must be [x, y, z]"))?;
-    let own = |k: &str| -> std::result::Result<Option<solidcraft_doc::Expr>, String> {
+    let own = |k: &str| -> std::result::Result<Option<torno_doc::Expr>, String> {
         if o.get(k).is_none_or(Value::is_null) {
             return Ok(None);
         }
@@ -343,7 +343,7 @@ pub(crate) fn flange_segments(i: usize, v: &Value) -> std::result::Result<Vec<Fl
             Some(v) => Some(v.as_bool().ok_or_else(|| format!("edges[{i}].segments[{j}].flip must be true or false"))?),
             None => None,
         };
-        let own = |k: &str| -> std::result::Result<Option<solidcraft_doc::Expr>, String> {
+        let own = |k: &str| -> std::result::Result<Option<torno_doc::Expr>, String> {
             if o.get(k).is_none_or(Value::is_null) {
                 return Ok(None);
             }
@@ -469,7 +469,7 @@ fn flange(s: &mut Session, p: &Value) -> Result<Value> {
             let corner_relief_shape = match p.get("corner_relief_shape").filter(|v| !v.is_null()) {
                 Some(v) => Some(
                     v.as_str()
-                        .and_then(solidcraft_doc::sheet::ReliefShape::parse)
+                        .and_then(torno_doc::sheet::ReliefShape::parse)
                         .map(|shape| shape.name().to_string())
                         .ok_or_else(|| bad(cmd, "`corner_relief_shape` must be notch, round, rectangular or tear"))?,
                 ),
@@ -761,7 +761,7 @@ fn rules(s: &mut Session, p: &Value) -> Result<Value> {
         }
     }
     if let Some(shape) = p.get("corner_relief_shape").filter(|v| !v.is_null()) {
-        let shape = shape.as_str().and_then(solidcraft_doc::sheet::ReliefShape::parse);
+        let shape = shape.as_str().and_then(torno_doc::sheet::ReliefShape::parse);
         rule.corner_relief_shape = shape.ok_or_else(|| bad(cmd, "`corner_relief_shape` must be notch, round, rectangular or tear"))?.name().into();
     }
     if let Some(display) = p.get("angle_display").filter(|v| !v.is_null()) {
@@ -995,8 +995,8 @@ pub struct DxfOptions {
 /// The layer of a role: its AutoCAD colour index (1 red, 2 yellow, 3 green, 4 cyan, 5 blue,
 /// 6 magenta, 7 white or black, 8 grey) and, for the bend lines, a dashed line. The pocket layers
 /// and PERFORATION are green.
-fn dxf_layer(name: &str) -> solidcraft_io::DxfLayer {
-    use solidcraft_io::DxfLayer;
+fn dxf_layer(name: &str) -> torno_io::DxfLayer {
+    use torno_io::DxfLayer;
     match name {
         "OUTLINE" => DxfLayer::new(name, 7),
         "CUT" => DxfLayer::new(name, 4),
@@ -1019,7 +1019,7 @@ fn compact(v: f64) -> String {
 /// The note beside a bend line, `B1 UP 90%%d R2.5` (number, direction, angle as `display` reads
 /// it, inner radius): as high as `height`, centred half a height beside the middle of the line,
 /// parallel to it and readable from below or from the right. (`%%d` is AutoCAD's degree sign.)
-fn bend_note(b: &solidcraft_doc::sheet::BendInfo, height: f64, display: sheet::AngleDisplay) -> solidcraft_io::DxfShape {
+fn bend_note(b: &torno_doc::sheet::BendInfo, height: f64, display: sheet::AngleDisplay) -> torno_io::DxfShape {
     let along = (b.end - b.start).normalized().unwrap_or(Vec2::X);
     let mut angle = along.angle().to_degrees();
     if angle > 90.0 + 1e-9 {
@@ -1028,7 +1028,7 @@ fn bend_note(b: &solidcraft_doc::sheet::BendInfo, height: f64, display: sheet::A
         angle += 180.0;
     }
     let beside = Vec2::from_angle(angle.to_radians()).perp();
-    solidcraft_io::DxfShape::Text {
+    torno_io::DxfShape::Text {
         at: (b.start + b.end) * 0.5 + beside * (height * 0.5),
         height,
         angle_deg: angle,
@@ -1042,11 +1042,11 @@ fn bend_note(b: &solidcraft_doc::sheet::BendInfo, height: f64, display: sheet::A
 /// per pocket depth and PERFORATION. Inner contours are written before the outline, so a program
 /// that follows the file's order cuts inside-out. Free-form curves as `o.curves` says.
 pub fn flat_dxf(sh: &SheetBody, o: &DxfOptions) -> Result<String> {
-    use solidcraft_io::{DxfEntity, DxfShape};
+    use torno_io::{DxfEntity, DxfShape};
     let regions = sh.flat_regions()?;
     let pockets = sh.machining()?;
     let letters = sh.letters();
-    let pocket_layer = |p: &solidcraft_doc::sheet::SheetPocket| {
+    let pocket_layer = |p: &torno_doc::sheet::SheetPocket| {
         let side = if p.z0 == 0.0 {
             "BOTTOM"
         } else if p.z1 == sh.t {
@@ -1122,14 +1122,14 @@ pub fn flat_dxf(sh: &SheetBody, o: &DxfOptions) -> Result<String> {
         let h = match o.curves {
             DxfCurves::Arcs if !h.is_line_arc() => {
                 fitted = h
-                    .fit_arcs(solidcraft_kernel::PLANAR_FIT_TOL)
+                    .fit_arcs(torno_kernel::PLANAR_FIT_TOL)
                     .ok_or_else(|| EngineError::Other("a flat-pattern curve could not be written as arcs".into()))?;
                 &fitted
             }
             _ => h,
         };
         // A whole ellipse is one ELLIPSE; every other segment is an entity of its own.
-        entities.extend(solidcraft_io::loop_shapes(h).into_iter().map(|shape| DxfEntity { layer: layer.clone(), shape }));
+        entities.extend(torno_io::loop_shapes(h).into_iter().map(|shape| DxfEntity { layer: layer.clone(), shape }));
     }
     for b in sh.bends() {
         if !o.no_bend_lines {
@@ -1147,13 +1147,13 @@ pub fn flat_dxf(sh: &SheetBody, o: &DxfOptions) -> Result<String> {
         for e in &mut entities {
             e.layer = "0".into();
         }
-        return Ok(solidcraft_io::write_dxf_drawing(&[], &entities)?);
+        return Ok(torno_io::write_dxf_drawing(&[], &entities)?);
     }
     // The four layers of every flat pattern, and those the rest is on.
     let mut names: std::collections::BTreeSet<String> = ["OUTLINE", "CUT", "BEND_UP", "BEND_DOWN"].map(String::from).into();
     names.extend(entities.iter().map(|e| e.layer.clone()));
     let layers: Vec<_> = names.iter().map(|name| dxf_layer(name)).collect();
-    Ok(solidcraft_io::write_dxf_drawing(&layers, &entities)?)
+    Ok(torno_io::write_dxf_drawing(&layers, &entities)?)
 }
 
 /// What a `sheet.export_dxf` call asks for; a value it cannot use is refused.
@@ -1254,7 +1254,7 @@ fn export_dxf(s: &mut Session, p: &Value) -> Result<Value> {
         for (i, (sh, text)) in sheets.iter().zip(&texts).enumerate() {
             let bends = sh.bends().len();
             if let Some(file) = paths.as_ref().and_then(|paths| paths.get(i)) {
-                solidcraft_io::vfs::write(file, text.as_bytes()).map_err(|e| EngineError::Other(format!("{file}: {e}")))?;
+                torno_io::vfs::write(file, text.as_bytes()).map_err(|e| EngineError::Other(format!("{file}: {e}")))?;
                 files.push(json!({"body": sh.body, "path": file, "bends": bends}));
             } else {
                 files.push(json!({"body": sh.body, "dxf": text, "bends": bends}));
@@ -1266,7 +1266,7 @@ fn export_dxf(s: &mut Session, p: &Value) -> Result<Value> {
     sh.flat_matches_body()?;
     let text = flat_dxf(&sh, &options)?;
     if let Some(path) = path {
-        solidcraft_io::vfs::write(path, text.as_bytes()).map_err(|e| EngineError::Other(format!("{path}: {e}")))?;
+        torno_io::vfs::write(path, text.as_bytes()).map_err(|e| EngineError::Other(format!("{path}: {e}")))?;
         return Ok(json!({"path": path, "bends": sh.bends().len()}));
     }
     Ok(json!({"dxf": text, "bends": sh.bends().len()}))
@@ -1292,7 +1292,7 @@ fn export_bend_table(s: &mut Session, p: &Value) -> Result<Value> {
     } else {
         // Always quote text fields: body/rule names may include commas, quotes or newlines, or start
         // as a spreadsheet formula does.
-        let quote = solidcraft_doc::csv::quoted;
+        let quote = torno_doc::csv::quoted;
         let mut csv =
             "body,rule,thickness_mm,k_factor,bend,angle_deg,direction,radius_mm,allowance_mm,length_mm,start_x_mm,start_y_mm,end_x_mm,end_y_mm,included_angle_deg\r\n"
                 .to_string();
@@ -1320,7 +1320,7 @@ fn export_bend_table(s: &mut Session, p: &Value) -> Result<Value> {
     };
     let bends = sh.bends().len();
     let reply = if let Some(path) = str_(p, "path").filter(|x| !x.trim().is_empty()) {
-        solidcraft_io::vfs::write(path, text.as_bytes()).map_err(|e| EngineError::Other(format!("{path}: {e}")))?;
+        torno_io::vfs::write(path, text.as_bytes()).map_err(|e| EngineError::Other(format!("{path}: {e}")))?;
         BendTableResult::Written { path: path.to_string(), format, bends, param_warnings: Vec::new() }
     } else {
         BendTableResult::Text { format, text, bends, param_warnings: Vec::new() }

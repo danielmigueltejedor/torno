@@ -2,8 +2,8 @@
 //! control points) and conics (rational quadratic Béziers). Evaluation works on positions so
 //! the solver can use it with trial values.
 
-use solidcraft_geom::prelude::*;
 use std::f64::consts::TAU;
+use torno_geom::prelude::*;
 
 use solidcore_record::Vec2;
 

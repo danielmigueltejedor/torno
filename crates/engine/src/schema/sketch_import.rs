@@ -22,7 +22,7 @@ use schemars::{JsonSchema, Schema, SchemaGenerator, json_schema};
 use serde::de::Error as _;
 use serde::{Deserialize, Deserializer, Serialize};
 use serde_json::Value;
-use solidcraft_io::MAX_DRAWING_BYTES;
+use torno_io::MAX_DRAWING_BYTES;
 
 use super::check::{located, whole};
 use super::sketch_ends::SketchTarget;

@@ -19,7 +19,7 @@ use serde::de::Error as _;
 use serde::{Deserialize, Deserializer};
 use serde_json::Value;
 use solidcore_record::Vec3;
-use solidcraft_doc::FlangeEdge;
+use torno_doc::FlangeEdge;
 
 use super::check::whole;
 use super::types::{AngleExpr, FaceRef, FeatureCommon, IdOrName, LengthExpr, Point3, ProfilesParam, SketchRef, StringList, feature_common, present};
@@ -229,13 +229,13 @@ word!(
 /// A corner relief's shape: notch, round, rectangular or tear, in any case and with blanks
 /// around it (read by `ReliefShape::parse`).
 #[derive(Clone, Debug, PartialEq)]
-pub struct ReliefShapeParam(pub solidcraft_doc::sheet::ReliefShape);
+pub struct ReliefShapeParam(pub torno_doc::sheet::ReliefShape);
 
 impl<'de> Deserialize<'de> for ReliefShapeParam {
     fn deserialize<D: Deserializer<'de>>(d: D) -> Result<Self, D::Error> {
         Value::deserialize(d)?
             .as_str()
-            .and_then(solidcraft_doc::sheet::ReliefShape::parse)
+            .and_then(torno_doc::sheet::ReliefShape::parse)
             .map(ReliefShapeParam)
             .ok_or_else(|| D::Error::custom("must be notch, round, rectangular or tear"))
     }
@@ -257,13 +257,13 @@ impl JsonSchema for ReliefShapeParam {
 /// Where an edge flange's height is measured from: outer, inner or tangent, in any case and with
 /// blanks around it (read by `HeightFrom::parse`).
 #[derive(Clone, Copy, Debug, PartialEq)]
-pub struct HeightFromParam(pub solidcraft_doc::sheet::HeightFrom);
+pub struct HeightFromParam(pub torno_doc::sheet::HeightFrom);
 
 impl<'de> Deserialize<'de> for HeightFromParam {
     fn deserialize<D: Deserializer<'de>>(d: D) -> Result<Self, D::Error> {
         Value::deserialize(d)?
             .as_str()
-            .and_then(solidcraft_doc::sheet::HeightFrom::parse)
+            .and_then(torno_doc::sheet::HeightFrom::parse)
             .map(HeightFromParam)
             .ok_or_else(|| D::Error::custom("must be outer, inner or tangent"))
     }
@@ -645,13 +645,13 @@ impl JsonSchema for RuleName {
 
 /// A rule's bend-note angle display, checked by the same parser as the handler.
 #[derive(Debug)]
-pub struct AngleDisplayParam(pub solidcraft_doc::sheet::AngleDisplay);
+pub struct AngleDisplayParam(pub torno_doc::sheet::AngleDisplay);
 
 impl<'de> Deserialize<'de> for AngleDisplayParam {
     fn deserialize<D: Deserializer<'de>>(d: D) -> Result<Self, D::Error> {
         Value::deserialize(d)?
             .as_str()
-            .and_then(solidcraft_doc::sheet::AngleDisplay::parse)
+            .and_then(torno_doc::sheet::AngleDisplay::parse)
             .map(AngleDisplayParam)
             .ok_or_else(|| D::Error::custom("must be bend or included"))
     }
@@ -684,8 +684,8 @@ pub struct RuleReply {
     pub angle_display: String,
 }
 
-impl From<&solidcraft_doc::sheet::SheetRule> for RuleReply {
-    fn from(r: &solidcraft_doc::sheet::SheetRule) -> Self {
+impl From<&torno_doc::sheet::SheetRule> for RuleReply {
+    fn from(r: &torno_doc::sheet::SheetRule) -> Self {
         Self {
             name: r.name.clone(),
             thickness: r.thickness.clone(),
@@ -717,8 +717,8 @@ pub struct RuleValuesReply {
     pub angle_display: String,
 }
 
-impl From<solidcraft_doc::sheet::RuleValues> for RuleValuesReply {
-    fn from(r: solidcraft_doc::sheet::RuleValues) -> Self {
+impl From<torno_doc::sheet::RuleValues> for RuleValuesReply {
+    fn from(r: torno_doc::sheet::RuleValues) -> Self {
         Self {
             thickness: r.thickness,
             k_factor: r.k_factor,

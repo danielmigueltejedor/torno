@@ -8,11 +8,11 @@ use crate::{
 };
 use egui::Color32;
 use serde_json::json;
-use solidcraft_engine::{
+use torno_engine::{
     Sel,
     doc::{ModelBody, appearance::Look},
 };
-use solidcraft_theme::Tokens;
+use torno_theme::Tokens;
 
 #[derive(Default)]
 pub(crate) struct Decoration {
@@ -37,7 +37,7 @@ pub(crate) fn decoration(app: &SolveApp, names: &[String]) -> Decoration {
         count: if count == 0 {
             String::new()
         } else {
-            solidcraft_ui_text::format(if count == 1 { "render.tree_face_one" } else { "render.tree_face_count" }, &[("count", &count.to_string())])
+            torno_ui_text::format(if count == 1 { "render.tree_face_one" } else { "render.tree_face_count" }, &[("count", &count.to_string())])
         },
     }
 }
@@ -62,7 +62,7 @@ fn look_name(app: &SolveApp, look: Option<&Look>) -> String {
 }
 fn look_color(app: &SolveApp, body: &ModelBody, look: Option<&Look>) -> Color32 {
     let color = look.map(|l| l.color).or_else(|| app.session.doc.body_color(body).map(|c| c.map(|v| (v.clamp(0.0, 1.0) * 255.0).round() as u8)));
-    color.map_or(Tokens::get().body, |rgb| solidcraft_theme::srgb(rgb.map(|channel| f32::from(channel) / 255.0)))
+    color.map_or(Tokens::get().body, |rgb| torno_theme::srgb(rgb.map(|channel| f32::from(channel) / 255.0)))
 }
 
 fn section(app: &mut SolveApp, ui: &mut egui::Ui, key: &str) -> bool {
@@ -133,11 +133,11 @@ pub(crate) fn light_types(app: &SolveApp) -> Vec<&'static str> {
         .unwrap_or_default()
         .iter()
         .map(|light| match light.geometry {
-            solidcraft_engine::schema::render_lights::Geometry::Directional { angular_radius_rad: Some(_), .. } => "render.tree_sun",
-            solidcraft_engine::schema::render_lights::Geometry::Directional { .. } => "render.tree_directional",
-            solidcraft_engine::schema::render_lights::Geometry::Point { .. } => "render.tree_point",
-            solidcraft_engine::schema::render_lights::Geometry::Spot { .. } => "render.tree_spot",
-            solidcraft_engine::schema::render_lights::Geometry::Area { .. } => "render.tree_rectangle",
+            torno_engine::schema::render_lights::Geometry::Directional { angular_radius_rad: Some(_), .. } => "render.tree_sun",
+            torno_engine::schema::render_lights::Geometry::Directional { .. } => "render.tree_directional",
+            torno_engine::schema::render_lights::Geometry::Point { .. } => "render.tree_point",
+            torno_engine::schema::render_lights::Geometry::Spot { .. } => "render.tree_spot",
+            torno_engine::schema::render_lights::Geometry::Area { .. } => "render.tree_rectangle",
         })
         .collect()
 }
@@ -172,7 +172,7 @@ pub(crate) fn environment(app: &SolveApp) -> (String, String) {
     };
     (
         name,
-        solidcraft_ui_text::format(
+        torno_ui_text::format(
             "render.tree_environment_values",
             &[("rotation", &format!("{:.0}", rotation.to_degrees())), ("intensity", &format!("{intensity:.2}"))],
         ),
@@ -375,7 +375,7 @@ pub(crate) fn wear_subtitle(app: &SolveApp) -> String {
     if count == 0 {
         app.tr("render.wear_no_layers").into()
     } else {
-        solidcraft_ui_text::format(if count == 1 { "render.wear_layer_one" } else { "render.wear_layer_count" }, &[("count", &count.to_string())])
+        torno_ui_text::format(if count == 1 { "render.wear_layer_one" } else { "render.wear_layer_count" }, &[("count", &count.to_string())])
     }
 }
 
@@ -421,7 +421,7 @@ pub(crate) fn objects(app: &mut SolveApp, ui: &mut egui::Ui, hover_bodies: &mut 
         }
         let open = browser::is_open(app, &key, true);
         let label = look_name(app, group.look.as_ref());
-        let count = solidcraft_ui_text::format(
+        let count = torno_ui_text::format(
             if group.objects.len() == 1 { "render.tree_user_one" } else { "render.tree_users" },
             &[("count", &group.objects.len().to_string())],
         );
@@ -435,7 +435,7 @@ pub(crate) fn objects(app: &mut SolveApp, ui: &mut egui::Ui, hover_bodies: &mut 
                 fold: Some(open),
                 count: &count,
                 swatch: Some(
-                    group.look.as_ref().map_or(Tokens::get().body, |l| solidcraft_theme::srgb(l.color.map(|channel| f32::from(channel) / 255.0))),
+                    group.look.as_ref().map_or(Tokens::get().body, |l| torno_theme::srgb(l.color.map(|channel| f32::from(channel) / 255.0))),
                 ),
                 ..Default::default()
             },

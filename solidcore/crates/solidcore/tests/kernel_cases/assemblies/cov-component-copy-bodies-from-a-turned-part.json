@@ -131,7 +131,7 @@
   "ungraded": [],
   "what": "the body of an arm turned 90 degrees copied to the root",
   "why_not": [
-    "body \"ArmBox (2)\" is no kernel operation's output nor an operand: SolidCraft built it or changed the kernel's record",
-    "body \"ArmBox\" is no kernel operation's output nor an operand: SolidCraft built it or changed the kernel's record"
+    "body \"ArmBox (2)\" is no kernel operation's output nor an operand: Torno built it or changed the kernel's record",
+    "body \"ArmBox\" is no kernel operation's output nor an operand: Torno built it or changed the kernel's record"
   ]
 }

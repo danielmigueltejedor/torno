@@ -513,12 +513,12 @@ fn a_curve_that_refers_to_itself_is_an_error_never_a_crash() {
     assert!(e.contains("surface #10"), "{e}");
 }
 
-/// Every edge curve and face surface of every STEP file in `SOLIDCRAFT_STEP_CORPUS` (the
+/// Every edge curve and face surface of every STEP file in `TORNO_STEP_CORPUS` (the
 /// tangency-labs/models files): read, written, read back. Run with `--ignored`.
 #[test]
-#[ignore = "needs SOLIDCRAFT_STEP_CORPUS"]
+#[ignore = "needs TORNO_STEP_CORPUS"]
 fn corpus_geometry_reads_and_round_trips() {
-    let Ok(dir) = std::env::var("SOLIDCRAFT_STEP_CORPUS") else { return };
+    let Ok(dir) = std::env::var("TORNO_STEP_CORPUS") else { return };
     let mut paths: Vec<_> = std::fs::read_dir(&dir).into_iter().flatten().flatten().map(|e| e.path()).collect();
     paths.sort();
     let mut failed = 0;

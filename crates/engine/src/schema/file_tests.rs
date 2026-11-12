@@ -39,7 +39,7 @@ fn open_values_are_read_as_the_handler_reads_them() {
     assert!(!ok(json!({"path": "a.ply", "max_points": 1.5})));
     assert!(!ok(json!({"path": "x".repeat(4096)})));
     assert!(ok(json!({"path": "x".repeat(4095)})));
-    let units: Vec<&str> = solidcraft_doc::point_cloud::UNITS.iter().map(|(u, _)| *u).collect();
+    let units: Vec<&str> = torno_doc::point_cloud::UNITS.iter().map(|(u, _)| *u).collect();
     let schema = input_schema_for::<OpenParams>();
     assert_eq!(schema.as_value()["$defs"]["CloudUnits"]["enum"], json!(units));
     // The same words as pointcloud.insert says them.
@@ -53,7 +53,7 @@ fn open_values_are_read_as_the_handler_reads_them() {
 }
 
 fn dir(tag: &str) -> std::path::PathBuf {
-    let d = std::env::temp_dir().join(format!("solidcraft-open-schemas-{tag}-{}", std::process::id()));
+    let d = std::env::temp_dir().join(format!("torno-open-schemas-{tag}-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&d);
     std::fs::create_dir_all(&d).unwrap_or_else(|e| panic!("{e}"));
     d
@@ -150,7 +150,7 @@ fn replies_match_the_output_schema() {
         param_warnings: Vec::new(),
     };
     matches(output_schema_for::<OpenResult>(), "doc.open", &serde_json::to_value(OpenResult::Design(busy)).unwrap_or_default());
-    // A design a newer SolidCraft saved: the notice and what wasn't read.
+    // A design a newer Torno saved: the notice and what wasn't read.
     let newer = OpenedDesign {
         path: "a.sc".into(),
         features: 0,
@@ -163,9 +163,9 @@ fn replies_match_the_output_schema() {
             reads_up_to: 50,
             unknown_changes: vec!["gyroid_lattice".into()],
             not_understood: vec!["feature 3".into()],
-            notice: "Saved by a newer SolidCraft".into(),
+            notice: "Saved by a newer Torno".into(),
         }),
-        warnings: Some(vec!["Saved by a newer SolidCraft".into(), "Not read: feature 3. Saving keeps it.".into()]),
+        warnings: Some(vec!["Saved by a newer Torno".into(), "Not read: feature 3. Saving keeps it.".into()]),
         param_warnings: Vec::new(),
     };
     matches(output_schema_for::<OpenResult>(), "doc.open", &serde_json::to_value(OpenResult::Design(newer)).unwrap_or_default());
@@ -210,7 +210,7 @@ fn replies_match_the_output_schema() {
 
 #[test]
 fn bad_calls_say_what_is_wrong_and_write_nothing() {
-    let dir = std::env::temp_dir().join(format!("solidcraft-export-schemas-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("torno-export-schemas-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&dir);
     std::fs::create_dir_all(&dir).unwrap_or_else(|e| panic!("{e}"));
     let mut s = Session::default();
@@ -234,7 +234,7 @@ fn bad_calls_say_what_is_wrong_and_write_nothing() {
 
 /// A fresh folder for one test's files.
 fn folder(tag: &str) -> std::path::PathBuf {
-    let dir = std::env::temp_dir().join(format!("solidcraft-export-schema-{tag}-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("torno-export-schema-{tag}-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&dir);
     std::fs::create_dir_all(&dir).unwrap_or_else(|e| panic!("{e}"));
     dir

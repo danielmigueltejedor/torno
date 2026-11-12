@@ -1,5 +1,5 @@
 //! #2906: rounds and chamfers on the rim of a shallow loft cut, refused (1001, or an unported
-//! trim cache) since the End's trace seeds (#2500). SolidCraft's operand
+//! trim cache) since the End's trace seeds (#2500). Torno's operand
 //! (`data/issue_2906_slab_less_loft.smb`, its failing blend's dump): a 900 x 480 x 160 slab less
 //! a loft from a 556.68 x 99 rectangle on its top face down 4 mm to an 80 x 80 square. The loft's
 //! sides are ruled patches whose rows fan out, so a first-order step across a side lands far
@@ -27,7 +27,7 @@ fn slab_less_loft() -> f64 {
     900.0 * 480.0 * 160.0 - 4.0 / 6.0 * (top + 4.0 * middle + bottom)
 }
 
-/// SolidCraft's set: every fix but one.
+/// Torno's set: every fix but one.
 fn fixes() {
     let off = ["fillet_round_ends_on_outline"];
     let on = solidcore::kernel::UpstreamFixes::NAMES
@@ -54,7 +54,7 @@ fn blended(kind: Blend, p: [f64; 3]) -> f64 {
     volume(&b)
 }
 
-/// SolidCraft's `loft_cut_beside_round_hole`: the same cut from a pocket's floor, a hole beside it.
+/// Torno's `loft_cut_beside_round_hole`: the same cut from a pocket's floor, a hole beside it.
 fn beside_a_hole() -> Body {
     Body::from_smb(
         include_bytes!("data/issue_2906_loft_cut_beside_hole.smb").to_vec(),

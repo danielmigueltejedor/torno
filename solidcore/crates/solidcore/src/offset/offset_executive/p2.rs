@@ -176,7 +176,7 @@ pub struct ShellOptions {
     pub create_offset_solid: bool,
     /// Opt-in (default `false`, SMLib's behaviour): when a sheet is thickened
     /// (`create_offset_solid` on a non-manifold input), consecutive side walls that lie
-    /// on one plane come back as one face, as the SolidCraft fork does
+    /// on one plane come back as one face, as the Torno fork does
     /// (tangency-labs/solidcore#978): the edges between two walls are removed after the
     /// stitch, each planar wall first going onto an exact plane. The sheet's own splits
     /// and their offsets stay.
@@ -2188,7 +2188,7 @@ fn collapse_offset_status<T>(result: Result<T>) -> Result<T> {
     })
 }
 
-/// The SolidCraft fork's sheet-thicken wall merge (`ShellBrep`'s sheet branch after the
+/// The Torno fork's sheet-thicken wall merge (`ShellBrep`'s sheet branch after the
 /// stitch, tangency-labs/solidcore#978; opt-in [`ShellOptions::merge_sheet_side_walls`]):
 /// the walls are the faces other than the sheet's own (`sheet_faces`, the sheet's copies)
 /// along an edge of the sheet; every topological edge between two walls goes (the others,

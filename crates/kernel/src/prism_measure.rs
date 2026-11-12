@@ -3,9 +3,9 @@
 use crate::prism_curve::{Run, segment};
 use solidcore_record::brep::{Brep, Curve, Loop, Shell, Surface};
 use solidcore_record::{Plane, Seg2, Vec2, Vec3};
-use solidcraft_geom::Ring;
-use solidcraft_geom::brep::eval::CurveEval;
-use solidcraft_geom::prelude::*;
+use torno_geom::Ring;
+use torno_geom::brep::eval::CurveEval;
+use torno_geom::prelude::*;
 
 fn v3(p: [f64; 3]) -> Vec3 {
     Vec3::new(p[0], p[1], p[2])

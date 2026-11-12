@@ -1,8 +1,8 @@
 //! Atomic timeline ownership changes, preserving the selected world geometry.
 use super::*;
 use crate::schema::component::{BodyComponent, FromBodiesResult, MoveBodiesResult};
-use solidcraft_doc::BodyName;
 use std::collections::{BTreeMap, BTreeSet};
+use torno_doc::BodyName;
 
 type UniqueFrames = BTreeMap<u64, Option<(Vec<u64>, Mat)>>;
 
@@ -12,8 +12,8 @@ fn unique_frames(s: &Session, cmd: &str) -> Result<UniqueFrames> {
     for occurrence in &doc.occurrences {
         children.entry(occurrence.parent).or_default().push(occurrence);
     }
-    let mut frames = BTreeMap::from([(0, Some((Vec::new(), solidcraft_doc::IDENTITY)))]);
-    let mut stack = vec![(0, Vec::new(), solidcraft_doc::IDENTITY)];
+    let mut frames = BTreeMap::from([(0, Some((Vec::new(), torno_doc::IDENTITY)))]);
+    let mut stack = vec![(0, Vec::new(), torno_doc::IDENTITY)];
     let mut work = 0usize;
     while let Some((component, path, matrix)) = stack.pop() {
         for occurrence in children.get(&component).into_iter().flatten() {
@@ -23,7 +23,7 @@ fn unique_frames(s: &Session, cmd: &str) -> Result<UniqueFrames> {
             }
             let mut child_path = path.clone();
             child_path.push(occurrence.id);
-            let frame = solidcraft_doc::mat_mul(&matrix, &occurrence.transform);
+            let frame = torno_doc::mat_mul(&matrix, &occurrence.transform);
             frames.entry(occurrence.component).and_modify(|entry| *entry = None).or_insert_with(|| Some((child_path.clone(), frame)));
             stack.push((occurrence.component, child_path, frame));
         }
@@ -71,10 +71,10 @@ fn transfer(s: &mut Session, name: &str, to: u64, frames: &UniqueFrames, cmd: &s
         None => unique(from)?,
     };
     let destination = unique(to)?;
-    let old = doc.model_body_offset(body).map(|offset| solidcraft_doc::mat_mul(&source.1, offset)).unwrap_or(source.1);
-    let inv = solidcraft_doc::mat_inverse(&destination.1).ok_or_else(|| bad(cmd, "destination frame is not invertible"))?;
-    let transform = solidcraft_doc::mat_mul(&inv, &old);
-    if !solidcraft_doc::valid_transfer_matrix(&transform) {
+    let old = doc.model_body_offset(body).map(|offset| torno_doc::mat_mul(&source.1, offset)).unwrap_or(source.1);
+    let inv = torno_doc::mat_inverse(&destination.1).ok_or_else(|| bad(cmd, "destination frame is not invertible"))?;
+    let transform = torno_doc::mat_mul(&inv, &old);
+    if !torno_doc::valid_transfer_matrix(&transform) {
         return Err(bad(cmd, "body transfer exceeds supported rigid coordinate range"));
     }
     let inherited = (!s.doc.appearances.bodies.contains_key(name)).then(|| s.doc.appearances.components.get(&from).cloned()).flatten();
@@ -82,7 +82,7 @@ fn transfer(s: &mut Session, name: &str, to: u64, frames: &UniqueFrames, cmd: &s
     let uncaptured = s.uncaptured_moves();
     let captures: Vec<_> = paths.into_iter().filter_map(|id| uncaptured.get(&id).map(|transform| (id, *transform))).collect();
     drop(uncaptured);
-    if captures.iter().any(|(_, transform)| !solidcraft_doc::valid_transfer_matrix(transform)) {
+    if captures.iter().any(|(_, transform)| !torno_doc::valid_transfer_matrix(transform)) {
         return Err(bad(cmd, "pending transfer position is not a supported rigid transform"));
     }
     drop(doc);

@@ -1,0 +1,132 @@
+# What `scripts/rebrand.py` renames: upstream's SolidCraft becomes Torno, in file contents and in
+# paths. The weekly upstream sync applies the same rules to upstream's tree before merging it, so
+# a rule added here applies to everything upstream sends from then on.
+#
+# Replacements are literal and case-sensitive, applied in order: put the longer, more specific
+# ones first. Keep spans are found before any replacement, so a replacement never reaches inside
+# one.
+
+# Left as they are wherever they appear (in file contents and in paths).
+keep = [
+    # Links to upstream's issues, pull requests, files and other repositories (smlib,
+    # solidcore...): history, not branding. Its release downloads are renamed below instead.
+    "(https?://)?(github\\.com|raw\\.githubusercontent\\.com)/tangency-labs/(?!solidcraft/releases)[^\\s)\\]\"'<>`]*",
+    # Upstream's repository named without a link (the sync workflow, docs/upstream.md, `#123` refs).
+    "tangency-labs/solidcraft(?!/releases)[\\w.#-]*",
+    # Upstream's earlier home: links to its issues and pull requests.
+    "(https?://)?github\\.com/bherbruck/solidcraft/(issues|pull|commit|blob|tree)/[^\\s)\\]\"'<>`]*",
+    # Other people's repositories and forks.
+    "https?://(github\\.com|raw\\.githubusercontent\\.com)/(?!tangency-labs|bherbruck|getnodalia|danielmigueltejedor)[^\\s)\\]\"'<>`]*",
+    # App ids of releases long before Torno, read by the migration shims (docs/compatibility.md).
+    "ai\\.storyteller\\.(solidcraft|solvecraft)[\\w.-]*",
+    # The `.solidcraft` design extension: files saved under it still open, and the test corpus
+    # keeps designs saved by earlier releases under that name.
+    "(?<!tangencylabs)(?<!storyteller)(?<!docs)(?<!app)(?<!mcp_servers)(?<!indow)(?<!mcp)(?<![^\\w]io)\\.solidcraft\\b(?![.-])",
+    # File format tags (`solidcraft/40`, `solidcraft-theme/1`...): they are written into designs,
+    # themes, libraries and profiles, so changing them would stop Torno opening its own earlier
+    # files and upstream's. A format tag is a file signature, not a name anyone reads.
+    "(?<=[\"'`])solidcraft(-(theme|library|profile|container|shortcuts|crash|drawing|preview))?/(?=\\d|N\\b|\\{|[\"'`])",
+    # Credit for work done upstream.
+    "SolidCraft contributors(?=\\.|,|$| and)",
+]
+
+# Files left alone entirely.
+skip = [
+    ".github/rebrand.toml",
+    "scripts/rebrand.py",
+    # Licence notices and legal text keep upstream's names, which the licences require.
+    "NOTICE",
+    "LICENSE-*",
+    "DISCLAIMER.md",
+    # The record of what came from upstream, and upstream's own README kept for reference.
+    "docs/upstream.md",
+    "docs/upstream-readme.md",
+    # The disk image background and its generator are this project's own (a Nodalia design).
+    "assets/platforms/macos/dmg/make_background.py",
+    "assets/platforms/macos/dmg/background.*",
+    "assets/platforms/macos/dmg/layout.json",
+]
+
+# Run after renaming: shorter names change how rustfmt wraps lines and sorts imports, and renamed
+# message ids change the order of the message catalogs.
+after = [["cargo", "fmt", "--all"], ["cargo", "xtask", "lists", "--fix"]]
+
+# Lines that keep this app's value when upstream's tree is rebranded (the sync passes --pin-from).
+[[pin]]
+file = "Cargo.toml"
+pattern = '^version = "[^"]*"'
+
+# Identity: app id, publisher, web addresses, installer GUIDs (a product of its own).
+[[replace]]
+from = "io.tangencylabs.solidcraft"
+to = "dev.danielmiguelt.Torno"
+
+[[replace]]
+from = "tangency-labs/solidcraft/releases"
+to = "getnodalia/torno/releases"
+
+[[replace]]
+from = "bherbruck/solidcraft"
+to = "getnodalia/torno"
+
+[[replace]]
+from = '<developer id="io.github.bherbruck">'
+to = '<developer id="dev.danielmiguelt">'
+
+[[replace]]
+from = "https://docs.solidcraft.io"
+to = "https://getnodalia.github.io/torno"
+
+[[replace]]
+from = "https://app.solidcraft.io"
+to = "https://getnodalia.github.io/torno/app"
+
+[[replace]]
+from = "https://solidcraft.io"
+to = "https://getnodalia.github.io/torno"
+
+[[replace]]
+from = "docs.solidcraft.io"
+to = "getnodalia.github.io/torno"
+
+[[replace]]
+from = "app.solidcraft.io"
+to = "getnodalia.github.io/torno/app"
+
+[[replace]]
+from = 'Manufacturer="SolidCraft contributors"'
+to = 'Manufacturer="Nodalia"'
+
+[[replace]]
+from = "vendor: SolidCraft contributors"
+to = "vendor: Nodalia"
+
+# Windows installer: the upgrade code, then the two component GUIDs.
+[[replace]]
+from = "6A145FD6-D285-428D-AE84-A69570CDF4DB"
+to = "C45EE96B-824D-4A3E-A908-320EFDD78AAE"
+
+[[replace]]
+from = "A379D509-D776-4B34-A3A4-71FBF5724971"
+to = "28B64010-90A0-4888-BD32-470EF2426231"
+
+[[replace]]
+from = "CDEDEE8D-4BE9-4872-A2EA-EE623A6C7E91"
+to = "B0889465-EEEB-4951-9CA7-7D0A62FFCD31"
+
+# The name, in every casing upstream uses.
+[[replace]]
+from = "SolidCraft"
+to = "Torno"
+
+[[replace]]
+from = "Solidcraft"
+to = "Torno"
+
+[[replace]]
+from = "solidcraft"
+to = "torno"
+
+[[replace]]
+from = "SOLIDCRAFT"
+to = "TORNO"

@@ -4,7 +4,7 @@
 //!
 //! Upstream: none (solidcore's STEP reader, #2578). The rules follow ISO 10303-42
 //! (`EDGE_CURVE.same_sense`; a closed curve's parameter is periodic) and take the
-//! idea of SolidCraft's reader (`crates/step/src/topology.rs` `map_edge`, `conic`,
+//! idea of Torno's reader (`crates/step/src/topology.rs` `map_edge`, `conic`,
 //! `open_conic`, `open_or_closed`, `project`, `angle_of`, `turn`, and
 //! `topology/swept.rs` `open_conic_params`, at a5b71ca2; MIT OR Apache-2.0). The
 //! computations are the kernel's own: [`Curve::step_inversion`] for lines, conics,
@@ -12,7 +12,7 @@
 //! [`crate::topology::brep_constructor::BrepConstructor::set_limits`] for the other
 //! kinds.
 //!
-//! | Rust                       | SolidCraft (`crates/step`)                                |
+//! | Rust                       | Torno (`crates/step`)                                |
 //! |----------------------------|-----------------------------------------------------------|
 //! | [`edge_interval`]          | `map_edge` (its parameters and direction; no curve copy)  |
 //! | [`EdgeVertices`]           | `map_edge`'s `ps`, `pe` and `closed`                      |

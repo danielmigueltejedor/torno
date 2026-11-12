@@ -17,7 +17,7 @@ use egui::{Color32, FontId, Rect, Sense, pos2, vec2};
 use crate::SolveApp;
 use crate::context_menu::Target;
 use crate::ui_kit::{Container, Edge, Surface};
-use solidcraft_theme::Tokens;
+use torno_theme::Tokens;
 
 /// The bar's height (logical pixels).
 pub(crate) const HEIGHT: f32 = 24.0;
@@ -41,7 +41,7 @@ pub(crate) enum SketchState {
 }
 
 impl SketchState {
-    pub(crate) fn of(ss: &solidcraft_engine::doc::SolvedSketch) -> SketchState {
+    pub(crate) fn of(ss: &torno_engine::doc::SolvedSketch) -> SketchState {
         if !ss.report.ok() {
             SketchState::Conflict
         } else if !crate::sketch_palette::has_geometry(&ss.sketch) {
@@ -55,10 +55,10 @@ impl SketchState {
 
     pub(crate) fn text(self) -> String {
         match self {
-            SketchState::Conflict => solidcraft_ui_text::tr("ui.constraints_conflict").to_string(),
-            SketchState::Empty => solidcraft_ui_text::tr("ui.no_geometry_yet").to_string(),
-            SketchState::Full => solidcraft_ui_text::tr("ui.fully_constrained").to_string(),
-            SketchState::Under(dof) => solidcraft_ui_text::format(
+            SketchState::Conflict => torno_ui_text::tr("ui.constraints_conflict").to_string(),
+            SketchState::Empty => torno_ui_text::tr("ui.no_geometry_yet").to_string(),
+            SketchState::Full => torno_ui_text::tr("ui.fully_constrained").to_string(),
+            SketchState::Under(dof) => torno_ui_text::format(
                 if dof == 1 { "status.under_constrained_one" } else { "status.under_constrained" },
                 &[("count", &dof.to_string())],
             ),
@@ -103,7 +103,7 @@ pub(crate) fn contents(app: &SolveApp) -> Contents {
         .or(app.session.active_sketch)
         .and_then(|id| app.session.doc.feature(id).map(|f| f.name.clone()).or_else(|| st.sketch(id).map(|ss| ss.name.clone())));
     Contents {
-        editing: edited.map(|name| solidcraft_ui_text::format("status.editing", &[("name", &crate::i18n::tr_name(&name))])),
+        editing: edited.map(|name| torno_ui_text::format("status.editing", &[("name", &crate::i18n::tr_name(&name))])),
         sketch: sketch.map(SketchState::of),
         units: app.session.doc.units.clone(),
         navigation: crate::prefs::nav_preset(&app.preferences.nav).translated_label().to_string(),
@@ -139,10 +139,10 @@ fn paint(app: &mut SolveApp, ui: &mut egui::Ui, contents: &Contents) {
     let mut right = r.right() - t.space_6;
 
     // The units, then the mouse mapping: flat buttons that open their menus.
-    let units = solidcraft_ui_text::format("browser.units", &[("units", &contents.units)]);
-    let button = menu_button(app, ui, right, Target::Units, &contents.units, &units, solidcraft_ui_text::tr("status.units_tip"));
-    let navigation = solidcraft_ui_text::format("status.navigation", &[("mapping", &contents.navigation)]);
-    let tip = solidcraft_ui_text::tr("status.navigation_tip");
+    let units = torno_ui_text::format("browser.units", &[("units", &contents.units)]);
+    let button = menu_button(app, ui, right, Target::Units, &contents.units, &units, torno_ui_text::tr("status.units_tip"));
+    let navigation = torno_ui_text::format("status.navigation", &[("mapping", &contents.navigation)]);
+    let tip = torno_ui_text::tr("status.navigation_tip");
     let button = menu_button(app, ui, button.left() - t.space_4, Target::Navigation, &contents.navigation, &navigation, tip);
     right = button.left() - t.space_6;
 
@@ -224,7 +224,7 @@ mod tests {
         // Each state's text reads on the bar in both themes.
         for t in [Tokens::light(), Tokens::dark()] {
             for state in [SketchState::Under(2), SketchState::Full, SketchState::Conflict, SketchState::Empty] {
-                let ratio = solidcraft_theme::contrast_ratio(state.colour(&t), t.toolbar);
+                let ratio = torno_theme::contrast_ratio(state.colour(&t), t.toolbar);
                 assert!(ratio >= 3.0, "{state:?} on the bar: contrast {ratio:.2}");
             }
         }

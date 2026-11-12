@@ -13,8 +13,8 @@ fn bar(steps: usize, marker: usize, play: bool) -> Bar<'static> {
         play,
         playing: false,
         play_labels: crate::PlayLabels { play: "Play", stop: "Stop" },
-        accent: solidcraft_theme::TabAccent::for_ramp(&t, solidcraft_theme::AccentRamp::Main),
-        drag_accent: solidcraft_theme::TabAccent::for_ramp(&t, solidcraft_theme::AccentRamp::Sketch),
+        accent: torno_theme::TabAccent::for_ramp(&t, torno_theme::AccentRamp::Main),
+        drag_accent: torno_theme::TabAccent::for_ramp(&t, torno_theme::AccentRamp::Sketch),
         marker,
         steps,
         floating: false,
@@ -36,7 +36,7 @@ impl Contents for Steps {
         while let Some(label) = self.labels.get(slot).copied() {
             if let Some((start, end)) = self.folded.filter(|(start, _)| *start == slot) {
                 strip.chip(start, end, false, 0, |ui, _, at| {
-                    solidcraft_ui_registry::publish_handle("test:folded", at + vec2(20.0, 14.0));
+                    torno_ui_registry::publish_handle("test:folded", at + vec2(20.0, 14.0));
                     let _ = ui;
                     40.0
                 });
@@ -95,7 +95,7 @@ impl Rig {
 
     /// A frame's actions and what it painted.
     fn output(&self, events: Vec<Event>, modifiers: Modifiers) -> (Vec<Action>, egui::FullOutput) {
-        solidcraft_ui_registry::clear_handles();
+        torno_ui_registry::clear_handles();
         self.time.set(self.time.get() + 1.0 / 60.0);
         let mut actions = Vec::new();
         let events = std::iter::once(Event::ModifiersChanged(modifiers)).chain(events).collect();
@@ -123,12 +123,12 @@ impl Rig {
     }
 
     fn at(&self, name: &str) -> Pos2 {
-        solidcraft_ui_registry::handle_at(name).unwrap_or_else(|| panic!("{name} is drawn"))
+        torno_ui_registry::handle_at(name).unwrap_or_else(|| panic!("{name} is drawn"))
     }
 
     /// The marker's centre (it is published as a rect).
     fn marker(&self) -> Pos2 {
-        solidcraft_ui_registry::rect_of("test:marker").map(|r| r.center()).unwrap_or_else(|| panic!("the marker is drawn"))
+        torno_ui_registry::rect_of("test:marker").map(|r| r.center()).unwrap_or_else(|| panic!("the marker is drawn"))
     }
 
     fn press(&self, at: Pos2, button: PointerButton, pressed: bool, modifiers: Modifiers) -> Vec<Action> {
@@ -225,7 +225,7 @@ fn a_folded_chip_of_the_apps_own_takes_its_slots_and_the_marker_inside_it_goes_a
     rig.folded = Some((1, 3));
     rig.frame(Vec::new());
     let (a, folded, d) = (rig.at("test:A"), rig.at("test:folded"), rig.at("test:D"));
-    assert!(solidcraft_ui_registry::handle_at("test:B").is_none(), "folded steps have no chip");
+    assert!(torno_ui_registry::handle_at("test:B").is_none(), "folded steps have no chip");
     let marker = rig.marker();
     assert!(folded.x < marker.x && marker.x < d.x, "the marker inside a folded chip is drawn after it");
     assert_eq!(rig.drag(a, folded), vec![Action::Reorder { step: 1, slot: 1, before: true }], "a drop on a folded chip lands before it");
@@ -253,7 +253,7 @@ fn without_play_the_controls_close_up_and_a_narrow_bar_leaves_the_title_out() {
     let mut rig = Rig::new(&["A"], 1);
     rig.bar.play = false;
     rig.frame(Vec::new());
-    assert!(solidcraft_ui_registry::handle_at("test:ctl:play").is_none());
+    assert!(torno_ui_registry::handle_at("test:ctl:play").is_none());
     assert_eq!(rig.click(rig.at("test:ctl:forward")), vec![Action::Seek(Seek::Forward)]);
     let grip = rig.at("test:grip");
     rig.rect = Rect::from_min_size(rig.rect.min, vec2(100.0, 40.0));

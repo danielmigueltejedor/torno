@@ -7,19 +7,19 @@
 //! against the other's mesh) the pair is clear without a boolean. The pairs left are intersected
 //! exactly and measured, in parallel on desktop (one after another in the browser), the slowest
 //! first, under a time budget: pairs not finished when it runs out are listed as not checked
-//! rather than holding the call. The shared part is measured as `solidcraft_kernel::measure`
+//! rather than holding the call. The shared part is measured as `torno_kernel::measure`
 //! measures it (its mass properties alone).
 
-use solidcraft_geom::MeshGeom;
 use std::collections::{HashMap, HashSet};
 use std::sync::Arc;
+use torno_geom::MeshGeom;
 
 use serde_json::Value;
 use solidcore_record::Vec3;
-use solidcraft_geom::mesh_distance::TriangleSet;
-use solidcraft_geom::{Aabb3, Mesh};
-use solidcraft_kernel::Body;
-use solidcraft_kernel::profile::KernelTimes;
+use torno_geom::mesh_distance::TriangleSet;
+use torno_geom::{Aabb3, Mesh};
+use torno_kernel::Body;
+use torno_kernel::profile::KernelTimes;
 
 use crate::params::{bad, num, string_list};
 use crate::schema::clearance::{Overlap, OverlapBounds, Unchecked};
@@ -82,13 +82,13 @@ pub(super) fn interference(s: &mut Session, p: &Value) -> Result<Value> {
     if let Some(n) = want.iter().find(|n| st.body(n).is_none()) {
         return Err(bad(cmd, super::no_body(n, st.bodies.iter().map(|b| b.name.as_str()))));
     }
-    let (meshes_left, bodies): (Vec<&solidcraft_doc::ModelBody>, Vec<&solidcraft_doc::ModelBody>) =
+    let (meshes_left, bodies): (Vec<&torno_doc::ModelBody>, Vec<&torno_doc::ModelBody>) =
         st.bodies.iter().filter(|b| want.is_empty() || want.contains(&b.name)).partition(|b| b.body.is_mesh());
 
     // The bodies' display meshes, made once (in parallel) and kept on the bodies: a design open
     // in the app has them already.
     let meshes: Vec<Arc<Mesh>> = {
-        let made = solidcraft_kernel::map_with_local_pools(&bodies, usize::MAX, |b| Ok(b.mesh()));
+        let made = torno_kernel::map_with_local_pools(&bodies, usize::MAX, |b| Ok(b.mesh()));
         made.into_iter().map(|m| m.unwrap_or_default()).collect()
     };
     // Prune by bounding boxes first (sort and sweep), so the cost follows the pairs that can
@@ -138,7 +138,7 @@ pub(super) fn interference(s: &mut Session, p: &Value) -> Result<Value> {
     };
     let sets: Vec<Option<TriangleSet>> = {
         let idx: Vec<usize> = (0..bodies.len()).filter(|&i| used.get(i).copied().unwrap_or(false)).collect();
-        let made = solidcraft_kernel::map_with_local_pools(&idx, usize::MAX, |&i| Ok(meshes.get(i).map(|m| TriangleSet::new(m))));
+        let made = torno_kernel::map_with_local_pools(&idx, usize::MAX, |&i| Ok(meshes.get(i).map(|m| TriangleSet::new(m))));
         let mut out: Vec<Option<TriangleSet>> = std::iter::repeat_with(|| None).take(bodies.len()).collect();
         for (&i, set) in idx.iter().zip(made) {
             if let (Some(slot), Ok(set)) = (out.get_mut(i), set) {
@@ -147,7 +147,7 @@ pub(super) fn interference(s: &mut Session, p: &Value) -> Result<Value> {
         }
         out
     };
-    let need_exact = solidcraft_kernel::map_with_local_pools(&pairs, usize::MAX, |&(i, j)| {
+    let need_exact = torno_kernel::map_with_local_pools(&pairs, usize::MAX, |&(i, j)| {
         let (Some(Some(sa)), Some(Some(sb)), Some(ma), Some(mb)) = (sets.get(i), sets.get(j), meshes.get(i), meshes.get(j)) else {
             return Ok(true);
         };
@@ -210,7 +210,7 @@ pub(super) fn interference(s: &mut Session, p: &Value) -> Result<Value> {
     // already).
     if threads > 0 && boolean_ms + tessellate_ms > 0.0 {
         let share = (waited_ms / (boolean_ms + tessellate_ms)).min(1.0);
-        solidcraft_kernel::profile::credit(KernelTimes { boolean_ms: boolean_ms * share, tessellate_ms: tessellate_ms * share });
+        torno_kernel::profile::credit(KernelTimes { boolean_ms: boolean_ms * share, tessellate_ms: tessellate_ms * share });
     }
     timed.sort_by(|x, y| y.0.total_cmp(&x.0));
     let slowest: Vec<PairTime> = timed.into_iter().take(SLOWEST).map(|t| t.1).collect();
@@ -305,19 +305,19 @@ fn any_inside(points: &[Vec3], outer: &Mesh) -> bool {
 /// The exact check of one pair: the bodies' intersection, measured.
 fn check(job: &Job) -> Done {
     let started = web_time::Instant::now();
-    let (outcome, kernel) = solidcraft_kernel::profile::capture(|| check_pair(&job.a, &job.b, &job.names));
+    let (outcome, kernel) = torno_kernel::profile::capture(|| check_pair(&job.a, &job.b, &job.names));
     Done { outcome, ms: started.elapsed().as_secs_f64() * 1000.0, kernel }
 }
 
 fn check_pair(a: &Body, b: &Body, (na, nb): &(String, String)) -> Outcome {
     let threshold = 1e-9 * a.size().max(1.0).powi(3);
     // A pair whose shared part can't be worked out is reported, not passed as clear.
-    let shared = match solidcraft_kernel::boolean(a, b, solidcraft_kernel::BoolOp::Intersect) {
+    let shared = match torno_kernel::boolean(a, b, torno_kernel::BoolOp::Intersect) {
         Ok(Some(o)) => o,
         Ok(None) => return Outcome::Clear,
         Err(e) => return Outcome::Unchecked(e.to_string()),
     };
-    let m = match solidcraft_kernel::measure_mass(&shared) {
+    let m = match torno_kernel::measure_mass(&shared) {
         Ok(m) => m,
         Err(e) => return Outcome::Unchecked(e.to_string()),
     };
@@ -368,7 +368,7 @@ fn run_ordered(jobs: Vec<Job>, budget: std::time::Duration) -> (Vec<Option<Done>
     let mut threads = 0;
     for _ in 0..want {
         let (jobs, next, stop, tx) = (jobs.clone(), next.clone(), stop.clone(), tx.clone());
-        let spawned = solidcraft_kernel::kernel_thread("solidcraft-interference").spawn(move || {
+        let spawned = torno_kernel::kernel_thread("torno-interference").spawn(move || {
             while !stop.load(Ordering::Relaxed) {
                 let k = next.fetch_add(1, Ordering::Relaxed);
                 let Some(job) = jobs.get(k) else { break };
@@ -435,7 +435,7 @@ enum Side {
 const MAX_EXCLUDED: usize = 10_000;
 
 /// `exclude_pairs`: `[[a, b]…]`, each a body's world name or an occurrence's id or name (#5963).
-fn excluded_pairs(s: &Session, p: &Value, st: &solidcraft_doc::ModelState, cmd: &str) -> Result<Vec<(Side, Side)>> {
+fn excluded_pairs(s: &Session, p: &Value, st: &torno_doc::ModelState, cmd: &str) -> Result<Vec<(Side, Side)>> {
     let list = match p.get("exclude_pairs") {
         None | Some(Value::Null) => return Ok(Vec::new()),
         Some(Value::Array(list)) if list.len() <= MAX_EXCLUDED => list,

@@ -259,13 +259,13 @@ fn render_library_commands_reply_with_their_schemas() {
     assert_eq!(without_stable["items"][0].get("stable_target"), Some(&Value::Null), "an unavailable identity stays an explicit null");
     matches(&targets, &without_stable);
     let authority =
-        solidcraft_doc::render_surface::RenderBodyTarget { definition: "Part".into(), feature: 7, component: 3, occurrence_path: vec![11, 3, 6] };
+        torno_doc::render_surface::RenderBodyTarget { definition: "Part".into(), feature: 7, component: 3, occurrence_path: vec![11, 3, 6] };
     authority.validate().unwrap();
     let mut nested = r.clone();
     nested["items"][0]["stable_target"] = serde_json::to_value(StableRenderTarget::from(&authority)).unwrap();
     matches(&targets, &nested);
     assert_eq!(
-        serde_json::from_value::<solidcraft_doc::render_surface::RenderBodyTarget>(nested["items"][0]["stable_target"].clone()).unwrap(),
+        serde_json::from_value::<torno_doc::render_surface::RenderBodyTarget>(nested["items"][0]["stable_target"].clone()).unwrap(),
         authority
     );
     nested["items"][0]["stable_target"]["occurrence_path"] = json!([11, "not an occurrence id", 6]);

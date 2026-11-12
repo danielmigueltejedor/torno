@@ -1,4 +1,4 @@
-//! Keep features on the live session (not upstream): the SolidCraft fork's
+//! Keep features on the live session (not upstream): the Torno fork's
 //! `source/SMLib/src/SmFilletKeepFeatures.cpp` (tangency-labs/smlib `eb883ad`, WR-703). A
 //! feature standing inside a round's band (the strip
 //! of face the round takes, from the edge to its contact line) stays: a boss or a cut whose

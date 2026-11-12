@@ -2,9 +2,9 @@
 //! filling the disk (docs/crash-reports.md).
 //!
 //! - **Panics** are caught by a hook. One inside a command becomes a report with the design as
-//!   it was before the command and the command itself, so `solidcraft-cli run replay.json --in
+//!   it was before the command and the command itself, so `torno-cli run replay.json --in
 //!   design.sc` reproduces it. Panics the vendored kernel raises (and
-//!   `solidcraft_kernel::guard` turns into errors) are reported the same way, marked recovered.
+//!   `torno_kernel::guard` turns into errors) are reported the same way, marked recovered.
 //!   A panic on a Rayon worker does not see this thread's command scope. While a command is
 //!   running it is held and reported with that command when the command ends. It is marked
 //!   recovered when that worker was inside `guard`, or when the command failed with a kernel
@@ -43,7 +43,7 @@ use std::sync::atomic::{AtomicBool, AtomicU64, AtomicUsize, Ordering};
 use std::sync::{Mutex, OnceLock};
 
 use serde_json::{Value, json};
-use solidcraft_doc::Document;
+use torno_doc::Document;
 
 use crate::Session;
 
@@ -92,7 +92,7 @@ pub struct Summary {
     pub command: Option<String>,
     /// Times it happened.
     pub count: u64,
-    /// The version of SolidCraft it happened in.
+    /// The version of Torno it happened in.
     pub version: String,
     /// The report's folder.
     pub path: String,
@@ -168,16 +168,16 @@ pub fn enabled() -> bool {
     STATE.get().is_some()
 }
 
-/// The crash folder, next to the recovery folder. `SOLIDCRAFT_CRASH_DIR` overrides it.
+/// The crash folder, next to the recovery folder. `TORNO_CRASH_DIR` overrides it.
 pub fn default_dir() -> Option<PathBuf> {
     if let Some(s) = STATE.get() {
         return Some(s.dir.clone());
     }
     // Tests never touch the user's real crash folder.
     if cfg!(test) {
-        return Some(std::env::temp_dir().join(format!("solidcraft-test-crashes-{}", std::process::id())));
+        return Some(std::env::temp_dir().join(format!("torno-test-crashes-{}", std::process::id())));
     }
-    if let Some(d) = solidcraft_geom::env::var_os("CRASH_DIR").filter(|d| !d.is_empty()) {
+    if let Some(d) = torno_geom::env::var_os("CRASH_DIR").filter(|d| !d.is_empty()) {
         return Some(PathBuf::from(d));
     }
     crate::recovery::default_dir().and_then(|d| d.parent().map(|p| p.join("crashes")))
@@ -289,7 +289,7 @@ struct Panic {
     thread: String,
     backtrace: Vec<String>,
     recovered: bool,
-    /// The panic ran on a Rayon worker. That thread is not inside [`solidcraft_kernel::guard`],
+    /// The panic ran on a Rayon worker. That thread is not inside [`torno_kernel::guard`],
     /// so `recovered` is decided when the command ends.
     on_pool: bool,
     signature: u64,
@@ -494,15 +494,15 @@ fn hook(info: &std::panic::PanicHookInfo<'_>) -> bool {
     if graphics_device_lost(&message, &location) {
         // What met the loss survives it (the window's painter, a command), and the app starts
         // again as for any lost device: not a crash to report.
-        eprintln!("SolidCraft graphics: the device was lost during GPU work ({location}); starting again");
+        eprintln!("Torno graphics: the device was lost during GPU work ({location}); starting again");
         IN_HOOK.store(false, Ordering::SeqCst);
         return true;
     }
     let sig = signature(&location, &message);
-    let recovered = solidcraft_kernel::guarded();
+    let recovered = torno_kernel::guarded();
     let in_command = IN_COMMAND.with(Cell::get) > 0;
     // A pool worker does not inherit this thread's command scope or guard flag.
-    let on_pool = !in_command && solidcraft_kernel::on_pool_thread();
+    let on_pool = !in_command && torno_kernel::on_pool_thread();
     let command_open = on_pool && with_pool_panics(|g| g.commands > 0);
     let quiet = recovered || in_command || command_open;
     // Already reported (this run or before): count it, nothing else. A panic outside commands
@@ -544,12 +544,12 @@ fn hook(info: &std::panic::PanicHookInfo<'_>) -> bool {
                 q.push(p);
             }
         });
-        solidcraft_geom::note!("SolidCraft: internal error caught in a command; a crash report will be written");
+        torno_geom::note!("Torno: internal error caught in a command; a crash report will be written");
         true
     } else if on_pool {
         match hold_pool_panic(p) {
             PoolHold::Kept => {
-                solidcraft_geom::note!("SolidCraft: internal error caught in a command; a crash report will be written");
+                torno_geom::note!("Torno: internal error caught in a command; a crash report will be written");
                 true
             }
             PoolHold::Now(p) => {
@@ -593,7 +593,7 @@ enum PoolHold {
 fn write_panic_now(state: &State, p: &Panic) {
     let kind = if p.recovered { "kernel_panic_recovered" } else { "panic" };
     if let Some(id) = write_from_journal(state, kind, Some(p)) {
-        solidcraft_geom::note!("SolidCraft: internal error; crash report {}", state.dir.join(&id).display());
+        torno_geom::note!("Torno: internal error; crash report {}", state.dir.join(&id).display());
         if !p.recovered
             && let Ok(mut j) = state.journal.try_lock()
         {
@@ -604,7 +604,7 @@ fn write_panic_now(state: &State, p: &Panic) {
 
 /// A panic inside wgpu that unwraps the driver's `Lost`: a graphics device reset (Windows' TDR)
 /// met first by a queue write or a present, which wgpu-core unwraps instead of losing the device
-/// (`PendingWrites::activate`, #10240). It is the device loss, not a SolidCraft bug.
+/// (`PendingWrites::activate`, #10240). It is the device loss, not a Torno bug.
 fn graphics_device_lost(message: &str, location: &str) -> bool {
     location.contains("wgpu-core") && message.ends_with(": Lost")
 }
@@ -718,7 +718,7 @@ pub(crate) fn command_done(
             p.recovered = true;
         }
         let kind = if p.recovered { "kernel_panic_recovered" } else { "command_panic" };
-        let design = solidcraft_io::write_design(before);
+        let design = torno_io::write_design(before);
         let replay = json!({ "commands": [{ "command": id, "params": params }] });
         let recent = if journaled { read_live_journal(state).recent } else { Vec::new() };
         let extra = Extra {
@@ -1008,14 +1008,14 @@ fn unclean_exit(dir: &Path, build: &Build, journal: &Path) {
                 frames.extend(walk.iter().filter_map(Value::as_str).take(MAX_FRAMES).map(|f| limited(f, 300)));
             }
             (
-                format!("SolidCraft {was} (started {when}) crashed with {name} ({code}) in {at} {during}"),
+                format!("Torno {was} (started {when}) crashed with {name} ({code}) in {at} {during}"),
                 format!("native exception in {at}"),
                 format!("{code} {short} {}", starting.as_ref().map_or(doing.unwrap_or("idle"), |(p, _)| p.as_str())),
                 frames,
             )
         }
         None => (
-            format!("SolidCraft {was} (started {when}) ended without a clean exit {during}"),
+            format!("Torno {was} (started {when}) ended without a clean exit {during}"),
             match (&starting, doing) {
                 (Some((p, _)), _) => format!("unclean exit during startup: {p}"),
                 (None, c) => format!("unclean exit in {}", c.unwrap_or("(between commands)")),
@@ -1166,13 +1166,13 @@ fn write_report(state: &State, kind: &str, p: Option<&Panic>, extra: Extra) -> O
         fs::create_dir_all(&folder).ok()?;
         let mut files = serde_json::Map::new();
         let mut notes = extra.notes;
-        if let Some(call) = solidcraft_kernel::native_call_in_flight() {
+        if let Some(call) = torno_kernel::native_call_in_flight() {
             notes.push(format!("native kernel call in flight: {call}"));
         }
         if let Some(d) = &extra.design {
             if d.len() <= MAX_DESIGN_BYTES {
-                let name = format!("design.{}", solidcraft_io::DESIGN_EXT);
-                if solidcraft_io::write_atomic(&folder.join(&name), d, false).is_ok() {
+                let name = format!("design.{}", torno_io::DESIGN_EXT);
+                if torno_io::write_atomic(&folder.join(&name), d, false).is_ok() {
                     files.insert("design".into(), json!(name));
                 }
             } else {
@@ -1181,7 +1181,7 @@ fn write_report(state: &State, kind: &str, p: Option<&Panic>, extra: Extra) -> O
         }
         if let Some(r) = &extra.replay
             && let Ok(b) = serde_json::to_vec_pretty(r)
-            && solidcraft_io::write_atomic(&folder.join("replay.json"), &b, false).is_ok()
+            && torno_io::write_atomic(&folder.join("replay.json"), &b, false).is_ok()
         {
             files.insert("replay".into(), json!("replay.json"));
         }
@@ -1192,8 +1192,8 @@ fn write_report(state: &State, kind: &str, p: Option<&Panic>, extra: Extra) -> O
             }
         }
         let reproduce = match (files.contains_key("replay"), files.contains_key("design")) {
-            (true, true) => Some(format!("solidcraft-cli crashes replay {id}")),
-            (true, false) => Some(format!("solidcraft-cli crashes replay {id}  (starts from a new design)")),
+            (true, true) => Some(format!("torno-cli crashes replay {id}")),
+            (true, false) => Some(format!("torno-cli crashes replay {id}  (starts from a new design)")),
             _ => None,
         };
         let environment = state.environment.lock().map(|e| e.clone()).unwrap_or_default();
@@ -1225,7 +1225,7 @@ fn write_report(state: &State, kind: &str, p: Option<&Panic>, extra: Extra) -> O
             }
         }
         let bytes = serde_json::to_vec_pretty(&report).ok()?;
-        solidcraft_io::write_atomic(&folder.join("report.json"), &bytes, false).ok()?;
+        torno_io::write_atomic(&folder.join("report.json"), &bytes, false).ok()?;
         prune(&state.dir, t);
         return Some(id);
     }
@@ -1243,7 +1243,7 @@ fn bump(dir: &Path, id: &str, n: u64) {
     v["count"] = json!(count);
     v["last_seen"] = json!(utc(now()));
     if let Ok(b) = serde_json::to_vec_pretty(&v) {
-        let _ = solidcraft_io::write_atomic(&path, &b, false);
+        let _ = torno_io::write_atomic(&path, &b, false);
     }
 }
 
@@ -1349,7 +1349,7 @@ pub fn read(dir: &Path, id: &str) -> std::result::Result<Value, String> {
     let mut v = read_report_file(&folder.join("report.json")).ok_or_else(|| format!("no crash report `{id}`"))?;
     v["path"] = json!(folder.to_string_lossy());
     // Reports from earlier releases hold `design.solidcraft`.
-    if let Some(design) = solidcraft_io::DESIGN_EXTS.iter().map(|ext| folder.join(format!("design.{ext}"))).find(|p| p.is_file()) {
+    if let Some(design) = torno_io::DESIGN_EXTS.iter().map(|ext| folder.join(format!("design.{ext}"))).find(|p| p.is_file()) {
         v["design_path"] = json!(design.to_string_lossy());
     }
     for (k, f) in [("replay_path", "replay.json"), ("minidump_path", "minidump.dmp")] {

@@ -1,5 +1,5 @@
-//! The host part of the interface type: SolidCraft's bundled IBM Plex faces (from its look,
-//! `solidcraft_look::fonts`), user overrides, and language-specific system fallbacks (CJK, Hangul,
+//! The host part of the interface type: Torno's bundled IBM Plex faces (from its look,
+//! `torno_look::fonts`), user overrides, and language-specific system fallbacks (CJK, Hangul,
 //! Thai, Hebrew), installed under the names the kit's type API gives (see [`crate::ui_kit::type_face`]).
 //! The same definitions are used on desktop and web; the web shell adds Japanese and Chinese
 //! faces on demand.
@@ -9,7 +9,7 @@ use std::sync::Arc;
 use egui::{FontDefinitions, FontFamily};
 
 use crate::ui_kit::type_face::{CHINESE_FALLBACK, CJK_FALLBACK, HANGUL_FALLBACK, UI_FONT, fallback_order, needs_cjk_font, sans_families};
-use solidcraft_look::fonts::{self as look, with_symbol_fallback};
+use torno_look::fonts::{self as look, with_symbol_fallback};
 // The Thai, Hebrew and Arabic faces come only from the desktop's system font search (and the tests).
 #[cfg(any(test, not(target_arch = "wasm32")))]
 use crate::ui_kit::type_face::{ARABIC_FALLBACK, HEBREW_FALLBACK, THAI_FALLBACK};
@@ -21,7 +21,7 @@ fn all_families() -> impl Iterator<Item = FontFamily> {
 // Keep pending definitions too: set_fonts takes effect on the next frame, while the web
 // fetch and preference update can both finish before that frame starts.
 fn installed_fonts_id() -> egui::Id {
-    egui::Id::unique("solidcraft_interface_fonts")
+    egui::Id::unique("torno_interface_fonts")
 }
 
 fn install(ctx: &egui::Context, fonts: FontDefinitions) {
@@ -42,7 +42,7 @@ pub fn ui_font(name: &str) -> Option<egui::FontData> {
     if name.is_empty() {
         return None;
     }
-    let data = solidcraft_engine::sketch::font_data(Some(name)).ok()?;
+    let data = torno_engine::sketch::font_data(Some(name)).ok()?;
     ttf_parser::Face::parse(data.bytes(), data.index).ok()?;
     let mut font = egui::FontData::from_owned(data.bytes().to_vec());
     font.index = data.index;
@@ -429,7 +429,7 @@ fn scan_dir_for_font_where(dir: &std::path::Path, depth_remaining: usize, matche
     None
 }
 
-/// The font folders named by `SOLIDCRAFT_FONT_DIRS` (a path list), or else by the single folder
+/// The font folders named by `TORNO_FONT_DIRS` (a path list), or else by the single folder
 /// in `CRAFT_FONTS_DIR` (the craft-fonts pack).
 #[cfg(not(target_arch = "wasm32"))]
 fn font_override_dirs(dirs: Option<std::ffi::OsString>, pack: Option<std::ffi::OsString>) -> Vec<std::path::PathBuf> {
@@ -440,11 +440,11 @@ fn font_override_dirs(dirs: Option<std::ffi::OsString>, pack: Option<std::ffi::O
     }
 }
 
-/// Find a CJK fallback font on the local system or in SOLIDCRAFT_FONT_DIRS / CRAFT_FONTS_DIR.
+/// Find a CJK fallback font on the local system or in TORNO_FONT_DIRS / CRAFT_FONTS_DIR.
 #[cfg(not(target_arch = "wasm32"))]
 fn find_system_cjk_font() -> Option<Vec<u8>> {
     // 1. Check the font folders the user named.
-    for dir in font_override_dirs(std::env::var_os("SOLIDCRAFT_FONT_DIRS"), std::env::var_os("CRAFT_FONTS_DIR")) {
+    for dir in font_override_dirs(std::env::var_os("TORNO_FONT_DIRS"), std::env::var_os("CRAFT_FONTS_DIR")) {
         let names = ["BIZUDPGothic-Regular.ttf", "BIZ-UDGothicR.ttc", "NotoSansCJK-Regular.ttc", "NotoSansJP-Regular.ttf"];
         for name in names {
             if let Some(bytes) = try_read_font(&dir.join(name)) {
@@ -788,7 +788,7 @@ mod tests {
     use crate::ui_kit::type_face::{RichTextExt as _, SYMBOL_FALLBACK, bold, medium, semibold};
     use egui::{FontId, RichText};
 
-    /// `SOLIDCRAFT_FONT_DIRS` wins and may list several folders; `CRAFT_FONTS_DIR` is the fallback.
+    /// `TORNO_FONT_DIRS` wins and may list several folders; `CRAFT_FONTS_DIR` is the fallback.
     #[cfg(not(target_arch = "wasm32"))]
     #[test]
     fn cjk_font_folders_from_the_environment() -> Result<(), std::env::JoinPathsError> {
@@ -861,7 +861,7 @@ mod tests {
         // #1290: the chosen font leads the Proportional family; the default face stays after it.
         assert!(ui_font("").is_none());
         assert!(ui_font("No Such Font 1290").is_none());
-        let font = ui_font(solidcraft_engine::sketch::DEFAULT_FONT_FAMILY).expect("the built-in sketch font reads");
+        let font = ui_font(torno_engine::sketch::DEFAULT_FONT_FAMILY).expect("the built-in sketch font reads");
         let defaults = look::definitions();
         let fonts = with_ui_font(defaults.clone(), font.clone());
         let again = with_ui_font(fonts, font);
@@ -877,7 +877,7 @@ mod tests {
     #[test]
     fn semibold_has_distinct_metrics_and_rich_text_preserves_size_and_colour() {
         let h = crate::scenario::Harness::new();
-        let ink = solidcraft_theme::Tokens::get().accent;
+        let ink = torno_theme::Tokens::get().accent;
         let (regular, heavier) = h.ctx.fonts_mut(|f| {
             let regular = f.layout_no_wrap("Chamfer Revolve New Sketch".into(), FontId::proportional(16.0), ink);
             let heavier = f.layout_no_wrap("Chamfer Revolve New Sketch".into(), semibold(16.0), ink);
@@ -901,7 +901,7 @@ mod tests {
     #[test]
     fn web_download_and_preference_changes_compose_without_losing_plex_or_japanese() {
         let ctx = test_context();
-        let chosen = solidcraft_engine::sketch::DEFAULT_FONT_FAMILY;
+        let chosen = torno_engine::sketch::DEFAULT_FONT_FAMILY;
         install(&ctx, web_font_definitions(chosen, None));
         // Both installations happen before the first frame, like a fast cached web fetch.
         assert!(install_cjk_font_for(
@@ -964,7 +964,7 @@ mod tests {
     fn default_ui_language_follows_the_system() {
         // A first start follows the system (#10138); English, the fallback it lands on when
         // nothing matches, needs no CJK face.
-        assert_eq!(crate::prefs::Prefs::default().language, solidcraft_ui_text::SYSTEM);
+        assert_eq!(crate::prefs::Prefs::default().language, torno_ui_text::SYSTEM);
         assert!(!needs_cjk_font("en"));
     }
 
@@ -1050,7 +1050,7 @@ mod tests {
         assert!(hebrew(with_fallback(look::definitions(), HEBREW_FALLBACK, bytes).unwrap()), "Hebrew draws with the fallback");
     }
 
-    /// What a Hebrew interface shows depends on egui's own shaping as much as on `solidcraft_ui_text::bidi::visual`:
+    /// What a Hebrew interface shows depends on egui's own shaping as much as on `torno_ui_text::bidi::visual`:
     /// lay messages out with a real Hebrew font and read the glyphs left to right, as they land on
     /// screen. They must come out in the order the line has on screen (#3457).
     #[test]
@@ -1071,9 +1071,9 @@ mod tests {
         };
         for text in ["עץ התכן", "שמירה בשם", "יחידות: mm", "ייצוא STEP", "פרמטרים (5)", "עומק 20.5 mm", "לשמור את השינויים ב־Bracket?"]
         {
-            assert_eq!(on_screen(&solidcraft_ui_text::bidi::visual(text)), solidcraft_ui_text::bidi::screen_order(text), "{text}");
+            assert_eq!(on_screen(&torno_ui_text::bidi::visual(text)), torno_ui_text::bidi::screen_order(text), "{text}");
         }
-        let he = solidcraft_ui_text::Locale::for_language("he");
+        let he = torno_ui_text::Locale::for_language("he");
         for id in ["ui.preferences", "ui.new_design", "ui.feature_history", "ui.needs_design"] {
             let logical = he.text(id).to_owned();
             assert_eq!(
@@ -1118,7 +1118,7 @@ mod tests {
         }
         // Read right to left, the screen shows the sentence's words in reading order.
         for text in ["حفظ باسم", "تحليل خطوط المعامِل", "إعادة تعيين الكل", "تصدير STEP"] {
-            let mut read = words_left_to_right(&solidcraft_ui_text::bidi::visual(text));
+            let mut read = words_left_to_right(&torno_ui_text::bidi::visual(text));
             read.reverse();
             let expected: Vec<Vec<char>> = text.split(' ').map(|word| char_set(word.chars().collect())).collect();
             assert_eq!(read, expected, "{text}");
@@ -1232,7 +1232,7 @@ mod tests {
 
     impl FontFolder {
         fn new(name: &str) -> FontFolder {
-            let dir = std::env::temp_dir().join(format!("solidcraft-ui-font-tests-{}-{name}", std::process::id()));
+            let dir = std::env::temp_dir().join(format!("torno-ui-font-tests-{}-{name}", std::process::id()));
             let _ = std::fs::remove_dir_all(&dir);
             std::fs::create_dir_all(&dir).unwrap();
             FontFolder(dir)
@@ -1309,7 +1309,7 @@ mod tests {
     }
 }
 
-/// The kit's CJK font loader over SolidCraft's languages (the catalogs decide which are CJK).
+/// The kit's CJK font loader over Torno's languages (the catalogs decide which are CJK).
 #[cfg(test)]
 mod cjk_loader_tests {
     use crate::ui_kit::type_face::*;

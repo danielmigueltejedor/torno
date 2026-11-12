@@ -28,7 +28,7 @@ def main():
     root = design.parents[3]
     path = f'crates/look/icons/design/svg/{args.family}/{args.name}.svg'
     attribution = root / 'ATTRIBUTION.md'
-    row = f'| {path} | SolidCraft contributors | original icon master (64 grid) | MIT OR Apache-2.0 |\n'
+    row = f'| {path} | Torno contributors | original icon master (64 grid) | MIT OR Apache-2.0 |\n'
     text = attribution.read_text()
     if '| ' + path + ' |' not in text:
         anchor = '| crates/look/icons/design/svg/model/placeholder.svg'

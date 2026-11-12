@@ -1,6 +1,6 @@
 //! Two writers on one design (#5467): the desktop app keeps a lock file next to every design it
-//! has open (`solidcraft_engine::io::design_lock`), says so when a design it opens is open in
-//! another SolidCraft (on another computer, or in another window here), and asks before a Save
+//! has open (`torno_engine::io::design_lock`), says so when a design it opens is open in
+//! another Torno (on another computer, or in another window here), and asks before a Save
 //! replaces a file that another program or computer changed since it was opened.
 //!
 //! Only interactive actions ask. A control-channel or script `doc.open` opens and reports
@@ -10,7 +10,7 @@
 use std::collections::{BTreeMap, BTreeSet};
 
 use serde_json::json;
-use solidcraft_engine::io::design_lock::{self, Lock};
+use torno_engine::io::design_lock::{self, Lock};
 
 use crate::SolveApp;
 use crate::file_load::Request;
@@ -45,7 +45,7 @@ fn wanted(app: &SolveApp) -> BTreeSet<String> {
         .chain(app.docs.background())
         .filter(|s| !s.read_only)
         .filter_map(|s| s.path.clone())
-        .filter(|p| solidcraft_engine::io::is_design_path(p))
+        .filter(|p| torno_engine::io::is_design_path(p))
         .collect()
 }
 
@@ -95,7 +95,7 @@ pub fn close(app: &mut SolveApp) {
     }
 }
 
-/// Before an interactive Open of a design: when another SolidCraft has it open, hold the request
+/// Before an interactive Open of a design: when another Torno has it open, hold the request
 /// and ask (`None`); otherwise hand it back to be opened. Insert Design only reads the file, so
 /// it never asks.
 #[cfg_attr(target_arch = "wasm32", allow(dead_code))]
@@ -103,7 +103,7 @@ pub(crate) fn check_open(app: &mut SolveApp, request: Request) -> Option<Request
     if app.locks.is_none()
         || request.reply.is_some()
         || request.kind == crate::file_load::Kind::InsertDesign
-        || !solidcraft_engine::io::is_design_path(&request.path)
+        || !torno_engine::io::is_design_path(&request.path)
     {
         return Some(request);
     }
@@ -121,7 +121,7 @@ pub(crate) fn check_open(app: &mut SolveApp, request: Request) -> Option<Request
 /// question is under way instead.
 pub(crate) fn check_save(app: &mut SolveApp) -> bool {
     if app.session.read_only {
-        app.set_status(solidcraft_ui_text::tr("document.read_only_save"), false);
+        app.set_status(torno_ui_text::tr("document.read_only_save"), false);
         crate::toolbar::save_copy(app);
         return false;
     }
@@ -139,7 +139,7 @@ fn file_name(path: &str) -> String {
 
 /// The "open elsewhere" and "changed on disk" questions, when one is waiting.
 pub fn show(app: &mut SolveApp, ctx: &egui::Context) {
-    let _language = solidcraft_ui_text::scope(&app.preferences.language);
+    let _language = torno_ui_text::scope(&app.preferences.language);
     show_lock_prompt(app, ctx);
     show_disk_prompt(app, ctx);
 }
@@ -149,18 +149,14 @@ fn show_lock_prompt(app: &mut SolveApp, ctx: &egui::Context) {
     let name = file_name(&prompt.request.path);
     let lock = &prompt.lock;
     let who = if lock.user.is_empty() { lock.host.clone() } else { format!("{} ({})", lock.host, lock.user) };
-    let title = solidcraft_ui_text::format("document.open_elsewhere", &[("name", &name)]);
-    let detail = solidcraft_ui_text::format(
+    let title = torno_ui_text::format("document.open_elsewhere", &[("name", &name)]);
+    let detail = torno_ui_text::format(
         "document.open_elsewhere_detail",
         &[("name", &name), ("who", &who), ("when", &crate::recovery_ui::ago(lock.opened)), ("app", &lock.app)],
     );
     let (closed, action) = ui_kit::Confirm::new(egui::Id::unique("sc_open_elsewhere"), "status_warning", &title)
         .tone(ui_kit::Tone::Warning)
-        .actions(
-            solidcraft_ui_text::tr("document.open_read_only"),
-            solidcraft_ui_text::tr("ui.cancel"),
-            Some(solidcraft_ui_text::tr("document.open_anyway")),
-        )
+        .actions(torno_ui_text::tr("document.open_read_only"), torno_ui_text::tr("ui.cancel"), Some(torno_ui_text::tr("document.open_anyway")))
         .selected(ui_kit::Action::Ok)
         .show(ctx, true, |ui| {
             ui_kit::text(ui, &detail, ui_kit::Text::Report("open_elsewhere", false));
@@ -226,15 +222,11 @@ fn show_disk_prompt(app: &mut SolveApp, ctx: &egui::Context) {
         return;
     }
     let name = app.session.path.as_deref().map(file_name).unwrap_or_default();
-    let title = solidcraft_ui_text::format("document.changed_on_disk", &[("name", &name)]);
-    let detail = solidcraft_ui_text::format("document.changed_on_disk_detail", &[("name", &name)]);
+    let title = torno_ui_text::format("document.changed_on_disk", &[("name", &name)]);
+    let detail = torno_ui_text::format("document.changed_on_disk_detail", &[("name", &name)]);
     let (closed, action) = ui_kit::Confirm::new(egui::Id::unique("sc_changed_on_disk"), "status_warning", &title)
         .tone(ui_kit::Tone::Warning)
-        .actions(
-            solidcraft_ui_text::tr("document.save_copy"),
-            solidcraft_ui_text::tr("ui.cancel"),
-            Some(solidcraft_ui_text::tr("document.overwrite")),
-        )
+        .actions(torno_ui_text::tr("document.save_copy"), torno_ui_text::tr("ui.cancel"), Some(torno_ui_text::tr("document.overwrite")))
         .selected(ui_kit::Action::Ok)
         .show(ctx, true, |ui| {
             ui_kit::text(ui, &detail, ui_kit::Text::Report("changed_on_disk", false));

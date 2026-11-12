@@ -1,4 +1,4 @@
-//! The SolidCraft fork's tangency-labs/smlib@856b54e (WR-600, the blend corner's End): a
+//! The Torno fork's tangency-labs/smlib@856b54e (WR-600, the blend corner's End): a
 //! blend whose side face runs tangent
 //! into the end face across a side edge (a tangent seam T) ends where its rail crosses
 //! T, and its end rib is solved from that tangent end outward.

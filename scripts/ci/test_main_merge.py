@@ -49,10 +49,10 @@ class SamePullRequest(unittest.TestCase):
         self.assertFalse(main_merge.same_pull_request({"pull_requests": [{"number": 8}]}, 7, "x/y", "b"))
 
     def test_fork_run_matches_by_head_repository_and_branch(self):
-        run = {"pull_requests": [], "head_repository": {"full_name": "fork/solidcraft"}, "head_branch": "fix"}
-        self.assertTrue(main_merge.same_pull_request(run, 7, "fork/solidcraft", "fix"))
-        self.assertFalse(main_merge.same_pull_request(run, 7, "fork/solidcraft", "other"))
-        self.assertFalse(main_merge.same_pull_request(run, 7, "someone/solidcraft", "fix"))
+        run = {"pull_requests": [], "head_repository": {"full_name": "fork/torno"}, "head_branch": "fix"}
+        self.assertTrue(main_merge.same_pull_request(run, 7, "fork/torno", "fix"))
+        self.assertFalse(main_merge.same_pull_request(run, 7, "fork/torno", "other"))
+        self.assertFalse(main_merge.same_pull_request(run, 7, "someone/torno", "fix"))
 
 
 class MergeOfMain(unittest.TestCase):

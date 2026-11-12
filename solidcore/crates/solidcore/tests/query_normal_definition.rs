@@ -35,8 +35,8 @@ use solidcore::{Brep, Kernel, SolidError};
 /// `TWIST_TAN`: tan 30 degrees.
 const TWIST_TAN: f64 = 0.577_350_269_189_625_76;
 
-/// The kernel SolidCraft runs: every fix on but `geometric_g2_continuity`.
-fn solidcraft_kernel() -> Kernel {
+/// The kernel Torno runs: every fix on but `geometric_g2_continuity`.
+fn torno_kernel() -> Kernel {
     let mut k = Kernel::new(&KernelOptions::default());
     let mut f = UpstreamFixes::default();
     for &name in UpstreamFixes::NAMES {
@@ -166,7 +166,7 @@ fn points(s: &Surface) -> Vec<Point2> {
 
 #[test]
 fn a_round_by_its_definition_is_certified_on_s_and_its_net_measured_against_s() {
-    let mut k = solidcraft_kernel();
+    let mut k = torno_kernel();
     let s = rounded_wedge(&mut k);
     let SurfaceKind::ProceduralBlend(pb) = s.kind() else {
         unreachable!()
@@ -228,7 +228,7 @@ fn a_round_by_its_definition_is_certified_on_s_and_its_net_measured_against_s() 
 
 #[test]
 fn a_definition_off_its_net_s_domain_is_refused() {
-    let mut k = solidcraft_kernel();
+    let mut k = torno_kernel();
     let s = rounded_wedge(&mut k);
     let SurfaceKind::ProceduralBlend(pb) = s.kind() else {
         unreachable!()
@@ -253,7 +253,7 @@ fn a_definition_off_its_net_s_domain_is_refused() {
 /// since #14405's feet (the feet over a piece are bounded by Taylor models too).
 #[test]
 fn every_station_and_every_point_between_is_enclosed() {
-    let mut k = solidcraft_kernel();
+    let mut k = torno_kernel();
     let s = rounded_wedge(&mut k);
     let SurfaceKind::ProceduralBlend(pb) = s.kind() else {
         unreachable!()

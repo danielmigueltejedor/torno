@@ -7,7 +7,7 @@ use serde_json::json;
 
 use crate::ribbon::{self, BUTTON_MIN_WIDTH, ButtonSize, GROUP_HEIGHT, ICON_GROUP_HEIGHT};
 use crate::{SolveApp, app_bar, icons};
-use solidcraft_theme::Tokens;
+use torno_theme::Tokens;
 
 pub use crate::workspace::TABS;
 
@@ -36,9 +36,9 @@ pub(crate) fn ribbon_height(labels: bool) -> f32 {
 /// The commands a panel's drop-down (or its » submenu) lists: its own, then any button moved
 /// into it from another panel.
 fn menu_commands(
-    cmds: &[&'static solidcraft_engine::CommandSpec],
-    shown: &[&'static solidcraft_engine::CommandSpec],
-) -> Vec<&'static solidcraft_engine::CommandSpec> {
+    cmds: &[&'static torno_engine::CommandSpec],
+    shown: &[&'static torno_engine::CommandSpec],
+) -> Vec<&'static torno_engine::CommandSpec> {
     let mut out = cmds.to_vec();
     for c in shown {
         if !out.iter().any(|o| o.id == c.id) {
@@ -181,7 +181,7 @@ pub(crate) fn search_in_header(app: &SolveApp) -> bool {
     app.header.search == SearchPlace::Header && !app.embedded && !app.embed_editor
 }
 
-/// Where SolidCraft's application bar publishes its parts (scripts and scenarios use these names;
+/// Where Torno's application bar publishes its parts (scripts and scenarios use these names;
 /// `appbar:folder` and `tab:home` are kept for scripts written against the former folder button
 /// and Home tab).
 const APP_BAR_HANDLES: app_bar::Handles<'static> = app_bar::Handles {
@@ -213,7 +213,7 @@ pub fn app_bar(app: &mut SolveApp, ui: &mut egui::Ui) {
             let shown = design_shown(app) && idle;
             let tip = |id: &str, key: &str| {
                 let label = app.tr(id);
-                if shown { format!("{label} ({key})") } else { solidcraft_ui_text::format("ui.needs_design", &[("command", label)]) }
+                if shown { format!("{label} ({key})") } else { torno_ui_text::format("ui.needs_design", &[("command", label)]) }
             };
             let (save_tip, undo_tip, redo_tip) = (tip("ui.save", "Ctrl+S"), tip("ui.undo", "Ctrl+Z"), tip("ui.redo", "Ctrl+Y"));
             let prefs_tip = if cfg!(target_os = "macos") {
@@ -224,13 +224,13 @@ pub fn app_bar(app: &mut SolveApp, ui: &mut egui::Ui) {
             let version = format!("v{}", crate::update::current_version());
             let url = crate::update::release_notes_url(crate::update::current_version(), crate::update::release_build());
             let file_open = ui.ctx().data(|d| d.get_temp::<bool>(egui::Id::unique("sc_file_menu")).unwrap_or(false));
-            let quick = app.toolbar_custom.quick_access.iter().filter(|id| solidcraft_engine::find_command(id).is_some()).count();
+            let quick = app.toolbar_custom.quick_access.iter().filter(|id| torno_engine::find_command(id).is_some()).count();
             let action = |id, icon, tip, enabled, wide_only| app_bar::BarButton { id, icon, tip, enabled, narrow: true, wide_only };
             let palette_shortcut = crate::keymap::display_for(app, "ui.palette");
             // Narrow windows retain Save; Undo and Redo remain available from their shortcuts and menus.
             let bar = app_bar::AppBar {
-                mark: &|painter, at| solidcraft_look::glyphs::brand_mark(painter, at),
-                name: "SolidCraft",
+                mark: &|painter, at| torno_look::glyphs::brand_mark(painter, at),
+                name: "Torno",
                 home: app_bar::BarButton { id: "home", icon: "home", tip: app.tr("ui.start_page"), enabled: idle, narrow: false, wide_only: false },
                 file: app.tr("ui.file"),
                 file_open,
@@ -243,8 +243,8 @@ pub fn app_bar(app: &mut SolveApp, ui: &mut egui::Ui) {
                 help: app_bar::BarButton { id: "help", icon: "help", tip: app.tr("ui.help"), enabled: true, narrow: false, wide_only: false },
                 settings: app_bar::BarButton { id: "settings", icon: "settings", tip: &prefs_tip, enabled: true, narrow: false, wide_only: false },
                 report: app_bar::Report {
-                    label: solidcraft_ui_text::tr("ui.report_a_bug"),
-                    tip: solidcraft_ui_text::tr_label("Report a bug — review a screenshot and open a GitHub draft"),
+                    label: torno_ui_text::tr("ui.report_a_bug"),
+                    tip: torno_ui_text::tr_label("Report a bug — review a screenshot and open a GitHub draft"),
                     icon_only: app.header.report == ReportButton::Icon,
                 },
                 search: search_in_header(app) && design_shown(app),
@@ -489,9 +489,9 @@ fn file_rows(app: &SolveApp) -> Vec<app_bar::FileRow> {
     rows.push(FileRow::Separator);
     rows.push(row("document.metadata", &format!("{}…", app.tr_label("Design Properties")), "", "settings", shown));
     rows.push(FileRow::Separator);
-    // The browser can install SolidCraft as an app (`install`): only while it offers to.
+    // The browser can install Torno as an app (`install`): only while it offers to.
     if crate::install::offered(app).is_some() {
-        rows.push(button("install", solidcraft_ui_text::tr("install.menu"), "new", Some(solidcraft_ui_text::tr("install.button_tip"))));
+        rows.push(button("install", torno_ui_text::tr("install.menu"), "new", Some(torno_ui_text::tr("install.button_tip"))));
     }
     rows.push(row("settings", &format!("{}…", app.tr("ui.preferences")), "", "settings", true));
     rows.push(row("shortcuts", &format!("{}…", app.tr("ui.keyboard_shortcuts")), "", "list", true));
@@ -566,13 +566,13 @@ pub fn save(app: &mut SolveApp) {
 }
 
 pub(crate) fn save_as(app: &mut SolveApp) {
-    save_as_with_extension(app, solidcraft_engine::io::DESIGN_EXT);
+    save_as_with_extension(app, torno_engine::io::DESIGN_EXT);
 }
 
 /// Save As offering a copy's name ("Bracket copy"), so the file it is a copy of is kept.
 pub(crate) fn save_copy(app: &mut SolveApp) {
-    let name = solidcraft_ui_text::format("document.copy_name", &[("name", &app.session.save_as_name())]);
-    save_as_named(app, &name, solidcraft_engine::io::DESIGN_EXT);
+    let name = torno_ui_text::format("document.copy_name", &[("name", &app.session.save_as_name())]);
+    save_as_named(app, &name, torno_engine::io::DESIGN_EXT);
 }
 
 /// Save As offers the open file's own name, not the name stored in the design (#8329).
@@ -589,7 +589,7 @@ pub(crate) fn save_as_named(app: &mut SolveApp, name: &str, extension: &str) {
         return;
     }
     let name = format!("{name}.{extension}");
-    app.pick_save(&name, &[solidcraft_engine::io::DESIGN_EXT, "json"], |app, path| {
+    app.pick_save(&name, &[torno_engine::io::DESIGN_EXT, "json"], |app, path| {
         // A save under way answers a closing tab when it ends.
         if let Some(path) = path
             && crate::save_job::start(app, "file.save_as", json!({"path": path}))
@@ -606,10 +606,10 @@ pub(crate) fn download_design(app: &mut SolveApp) {
         app.tree.capture_prompt = Some(crate::browser::DOWNLOAD.into());
         return;
     }
-    let name = format!("{}.{}", app.session.doc.name, solidcraft_engine::io::DESIGN_EXT);
+    let name = format!("{}.{}", app.session.doc.name, torno_engine::io::DESIGN_EXT);
     let result = app
         .session
-        .design_container(solidcraft_engine::io::DesignCompression::Fast, false, false)
+        .design_container(torno_engine::io::DesignCompression::Fast, false, false)
         .map_err(|e| e.to_string())
         .and_then(|bytes| app.services.download_design.as_ref().map_or(Ok(()), |download| download(&name, &bytes)));
     match result {
@@ -696,23 +696,23 @@ pub(crate) fn persistent_pressed(app: &SolveApp, id: &str) -> bool {
         }
 }
 
-pub(crate) fn persistent_button_name(app: &SolveApp, command: &solidcraft_engine::CommandSpec) -> String {
+pub(crate) fn persistent_button_name(app: &SolveApp, command: &torno_engine::CommandSpec) -> String {
     let info = crate::render_workspace::interactive_command_info(app, command);
     let label = crate::workspace::ribbon_button_label(command);
     app.tr_label(if label == command.label { info.label } else { label }).to_string()
 }
 
-fn persistent_hint(app: &SolveApp, command: &solidcraft_engine::CommandSpec, enabled: bool) -> Option<String> {
+fn persistent_hint(app: &SolveApp, command: &torno_engine::CommandSpec, enabled: bool) -> Option<String> {
     (enabled && command.id != COMPONENT_COLORS && persistent_pressed(app, command.id)).then(|| {
         let name = persistent_button_name(app, command);
-        solidcraft_ui_text::Locale::for_language(&app.preferences.language).format("ui.viewport_status_clear_hint", &[("name", &name)])
+        torno_ui_text::Locale::for_language(&app.preferences.language).format("ui.viewport_status_clear_hint", &[("name", &name)])
     })
 }
 
 /// A ribbon button or grid icon whose command has a persistent effect, painted after every
 /// command of the pass ran ([`ribbon::paint_deferred`]). These records never survive the frame.
 struct PersistentRibbonPaint {
-    command: &'static solidcraft_engine::CommandSpec,
+    command: &'static torno_engine::CommandSpec,
     deferred: ribbon::Deferred,
     label: Option<String>,
     enabled: bool,
@@ -780,7 +780,7 @@ fn tab_aliases(tab: &str) -> &'static [&'static str] {
     }
 }
 
-/// Where SolidCraft's tab row publishes its parts (scripts and scenarios use these names).
+/// Where Torno's tab row publishes its parts (scripts and scenarios use these names).
 const TAB_HANDLES: ribbon::TabHandles<'static> =
     ribbon::TabHandles { tab: "tab:", tab_rect: "toolbar_tab:", add: "ribbon:add_tab", action: "ribbon:" };
 
@@ -985,11 +985,11 @@ fn open_ribbon(app: &mut SolveApp, ui: &mut egui::Ui, available: Rect, folded: R
     }
 }
 
-/// One ribbon button as SolidCraft sees it: the command pinned there, the one a click runs (a
+/// One ribbon button as Torno sees it: the command pinned there, the one a click runs (a
 /// family's chosen variant), and the component's data for it.
 struct PanelButton {
-    pinned: &'static solidcraft_engine::CommandSpec,
-    selected: &'static solidcraft_engine::CommandSpec,
+    pinned: &'static torno_engine::CommandSpec,
+    selected: &'static torno_engine::CommandSpec,
     /// The family whose first variant is pinned here: its variants' menu hangs under the button.
     family: Option<&'static crate::sketch_families::Family>,
     /// The commands the button stands for in its panel's drop-down.
@@ -1072,8 +1072,8 @@ impl RibbonPanels {
                 let panel: &'static str = panel;
                 let sketch_create = tab == "SKETCH" && panel == "CREATE";
                 let finish = (tab == "SKETCH" && panel == "FINISH SKETCH") || (tab == "MODEL" && panel == "FINISH EDITING");
-                let in_gallery = |c: &&'static solidcraft_engine::CommandSpec| app.toolbar_custom.in_gallery(tab, panel, c.id);
-                let button = |c: &'static solidcraft_engine::CommandSpec| {
+                let in_gallery = |c: &&'static torno_engine::CommandSpec| app.toolbar_custom.in_gallery(tab, panel, c.id);
+                let button = |c: &'static torno_engine::CommandSpec| {
                     // Only the family's default pin follows the part's choice. Explicitly pinned
                     // variants remain exact commands, including in customised toolbars.
                     let family = crate::sketch_families::family(c.id).filter(|f| sketch_create && f.commands.first().copied() == Some(c.id));
@@ -1110,7 +1110,7 @@ impl RibbonPanels {
                         split_name: family.map(|f| app.tr_label(f.label).to_string()).unwrap_or_default(),
                     }
                 };
-                let cell = |c: &'static solidcraft_engine::CommandSpec| {
+                let cell = |c: &'static torno_engine::CommandSpec| {
                     let info = crate::render_workspace::interactive_command_info(app, c);
                     PanelButton {
                         pinned: c,
@@ -1173,13 +1173,7 @@ impl RibbonPanels {
         RibbonPanels { panels, exit, running: if app.preferences.ribbon_reveal { running } else { None } }
     }
 
-    fn row<'a>(
-        &'a self,
-        accent: solidcraft_theme::TabAccent,
-        labels: bool,
-        reveal: Option<ribbon::Reveal<'a>>,
-        more_tip: &'a str,
-    ) -> ribbon::Row<'a> {
+    fn row<'a>(&'a self, accent: torno_theme::TabAccent, labels: bool, reveal: Option<ribbon::Reveal<'a>>, more_tip: &'a str) -> ribbon::Row<'a> {
         ribbon::Row {
             groups: self
                 .panels
@@ -1232,7 +1226,7 @@ impl RibbonPanels {
     }
 }
 
-/// Where SolidCraft's ribbon publishes its parts (scripts and scenarios use these names).
+/// Where Torno's ribbon publishes its parts (scripts and scenarios use these names).
 const RIBBON_HANDLES: ribbon::Handles<'static> = ribbon::Handles {
     button: &["toolbar:", "button:"],
     button_rect: "button:",
@@ -1254,7 +1248,7 @@ const RIBBON_HANDLES: ribbon::Handles<'static> = ribbon::Handles {
 };
 
 /// One panel of a tab: its name, every command and the buttons it shows.
-type PanelList = (&'static str, Vec<&'static solidcraft_engine::CommandSpec>, Vec<&'static solidcraft_engine::CommandSpec>);
+type PanelList = (&'static str, Vec<&'static torno_engine::CommandSpec>, Vec<&'static torno_engine::CommandSpec>);
 
 /// One pass of the ribbon in `shape`. Returns `Some(already shown)` when a tab was clicked.
 fn ribbon_contents(app: &mut SolveApp, ui: &mut egui::Ui, shape: RibbonShape) -> Option<bool> {
@@ -1269,7 +1263,7 @@ fn ribbon_contents(app: &mut SolveApp, ui: &mut egui::Ui, shape: RibbonShape) ->
         if floating {
             for card in [ws, cards.ribbon] {
                 let fill =
-                    if crate::render_workspace::active(app) && card == ws { solidcraft_theme::TabAccent::current(ui.ctx()).soft } else { t.toolbar };
+                    if crate::render_workspace::active(app) && card == ws { torno_theme::TabAccent::current(ui.ctx()).soft } else { t.toolbar };
                 let frame = host.frame(ui.ctx(), fill, crate::frame::Side::Left);
                 host.paint_background(ui.painter(), frame, card);
                 // Blank card space owns clicks as well as its buttons.
@@ -1299,7 +1293,7 @@ fn ribbon_contents(app: &mut SolveApp, ui: &mut egui::Ui, shape: RibbonShape) ->
             labels,
             folded,
             stage: render,
-            accent: if render { solidcraft_theme::TabAccent::current(ui.ctx()).color } else { t.accent },
+            accent: if render { torno_theme::TabAccent::current(ui.ctx()).color } else { t.accent },
             handle_rect: "workspace_switcher",
             handle_target: "ribbon:workspace",
         };
@@ -1359,7 +1353,7 @@ fn ribbon_contents(app: &mut SolveApp, ui: &mut egui::Ui, shape: RibbonShape) ->
                     promote
                 };
                 if !app.preferences.sketch_construction_lines {
-                    cmds.retain(|c| solidcraft_engine::cmd::construction_line_mode(c.id).is_none());
+                    cmds.retain(|c| torno_engine::cmd::construction_line_mode(c.id).is_none());
                 }
                 let mut shown = crate::toolbar_custom::buttons(app, &tab, panel, &cmds, promote);
                 // Gallery cells are painted together after the large buttons, in reading order.
@@ -1383,7 +1377,7 @@ fn ribbon_contents(app: &mut SolveApp, ui: &mut egui::Ui, shape: RibbonShape) ->
             crate::scenario::publish_handle("ribbon:tabs_hidden", at);
         }
         let panels = RibbonPanels::new(app, ui, &tab, &lists, &painter, running.clone());
-        let more_tip = solidcraft_ui_text::tr_label("More toolbar panels");
+        let more_tip = torno_ui_text::tr_label("More toolbar panels");
         let accent = crate::workspace::tab_accent(&t, &tab);
         let row = panels.row(accent, labels, reveal.as_ref().map(|r| ribbon::Reveal { id: r.id, preview: r.preview, strength: pulse }), more_tip);
         let mut out = {
@@ -1413,7 +1407,7 @@ fn ribbon_contents(app: &mut SolveApp, ui: &mut egui::Ui, shape: RibbonShape) ->
                         reveal_tooltip(app, ui, d.whole, b.pinned, egui::RectAlign::BOTTOM_START);
                     }
                 } else if (r.id == b.pinned.id || r.id == b.selected.id || b.family.is_some_and(|f| f.commands.contains(&r.id)))
-                    && let Some(command) = solidcraft_engine::find_command(r.id)
+                    && let Some(command) = torno_engine::find_command(r.id)
                 {
                     reveal_tooltip(app, ui, d.whole, command, egui::RectAlign::BOTTOM_START);
                 }
@@ -1431,7 +1425,7 @@ fn ribbon_contents(app: &mut SolveApp, ui: &mut egui::Ui, shape: RibbonShape) ->
             }
             if let (Some(arrow), Some(f)) = (&d.split, b.family) {
                 Container::new(ui.ctx(), Surface::Popup).menu(arrow).show(|ui| {
-                    let variants: Vec<_> = f.commands.iter().filter_map(|id| solidcraft_engine::find_command(id)).collect();
+                    let variants: Vec<_> = f.commands.iter().filter_map(|id| torno_engine::find_command(id)).collect();
                     dropdown_keys(app, ui, &variants);
                     let width = dropdown_width(app, ui, &variants);
                     sketch_menu_rows(app, ui, &variants, width, &mut menu, &mut toggle);
@@ -1443,7 +1437,7 @@ fn ribbon_contents(app: &mut SolveApp, ui: &mut egui::Ui, shape: RibbonShape) ->
         for action in std::mem::take(&mut out.actions) {
             match action {
                 ribbon::Action::Run { id, rect, place } => {
-                    let Some(command) = solidcraft_engine::find_command(&id) else { continue };
+                    let Some(command) = torno_engine::find_command(&id) else { continue };
                     match place {
                         ribbon::Place::Button => {
                             if persistent_available(app, command.id)
@@ -1465,7 +1459,7 @@ fn ribbon_contents(app: &mut SolveApp, ui: &mut egui::Ui, shape: RibbonShape) ->
                     }
                 }
                 ribbon::Action::Menu { id, at } => {
-                    if let Some(command) = solidcraft_engine::find_command(&id) {
+                    if let Some(command) = torno_engine::find_command(&id) {
                         menu = Some((at, command.id));
                     }
                 }
@@ -1524,7 +1518,7 @@ fn ribbon_contents(app: &mut SolveApp, ui: &mut egui::Ui, shape: RibbonShape) ->
                             if *panel == "SELECT" {
                                 selection_filter(app, ui);
                             } else if cmds.is_empty() {
-                                ui.label(egui::RichText::new(solidcraft_ui_text::tr_label("Not available yet")).color(t.text_dim));
+                                ui.label(egui::RichText::new(torno_ui_text::tr_label("Not available yet")).color(t.text_dim));
                             }
                             if sketch_create && app.preferences.ribbon_icon_grid && !cmds.is_empty() {
                                 let mut paints = Vec::new();
@@ -1538,7 +1532,7 @@ fn ribbon_contents(app: &mut SolveApp, ui: &mut egui::Ui, shape: RibbonShape) ->
                                 let row_w = dropdown_width(app, ui, &cmds);
                                 ui.set_width(row_w);
                                 sketch_create_menu(app, ui, &cmds, row_w, &mut menu, &mut toggle);
-                                ribbon::section_footer(ui, solidcraft_ui_text::tr("ui.ribbon_pin_footer"));
+                                ribbon::section_footer(ui, torno_ui_text::tr("ui.ribbon_pin_footer"));
                                 return;
                             }
                             let grouped = if *panel == "CONSTRUCT" && !app.preferences.construct_menu_groups {
@@ -1603,7 +1597,7 @@ fn ribbon_contents(app: &mut SolveApp, ui: &mut egui::Ui, shape: RibbonShape) ->
                                     }
                                 }
                             });
-                            ribbon::section_footer(ui, solidcraft_ui_text::tr("ui.ribbon_pin_footer"));
+                            ribbon::section_footer(ui, torno_ui_text::tr("ui.ribbon_pin_footer"));
                         });
                     });
                 popup_rect = Some(area.response.rect);
@@ -1653,7 +1647,7 @@ fn ribbon_contents(app: &mut SolveApp, ui: &mut egui::Ui, shape: RibbonShape) ->
 
         // Dragging a command: its icon follows the pointer; a toolbar button dragged off the
         // toolbar (or into the open drop-down) shows it will be removed.
-        let icon_of = |id: &str| solidcraft_engine::find_command(id).map(|c| c.info(&app.session).icon.to_string());
+        let icon_of = |id: &str| torno_engine::find_command(id).map(|c| c.info(&app.session).icon.to_string());
         if let Some(id) = ribbon::drag_end(ui, r, popup_rect, drop.is_some(), &icon_of, &RIBBON_HANDLES) {
             crate::toolbar_custom::remove(app, &tab, &id);
         }
@@ -1681,8 +1675,8 @@ struct QuickAccessDrag(String);
 /// reorders the buttons. They start at `x`, `step` apart ([`app_bar::BarOut::quick`]).
 fn quick_access_bar(app: &mut SolveApp, ui: &mut egui::Ui, bar: Rect, mut x: f32, step: f32, shown: bool) {
     let t = Tokens::get();
-    let ids: Vec<&'static solidcraft_engine::CommandSpec> =
-        app.toolbar_custom.quick_access.iter().filter_map(|id| solidcraft_engine::find_command(id)).collect();
+    let ids: Vec<&'static torno_engine::CommandSpec> =
+        app.toolbar_custom.quick_access.iter().filter_map(|id| torno_engine::find_command(id)).collect();
     if ids.is_empty() {
         return;
     }
@@ -1713,7 +1707,7 @@ fn quick_access_bar(app: &mut SolveApp, ui: &mut egui::Ui, bar: Rect, mut x: f32
             Some(key) if !key.is_empty() => format!("{label} ({key})"),
             _ => label.clone(),
         };
-        let tip = if shown { tip } else { solidcraft_ui_text::format("ui.needs_design", &[("command", &label)]) };
+        let tip = if shown { tip } else { torno_ui_text::format("ui.needs_design", &[("command", &label)]) };
         if resp.backing_on_hover_text(tip).clicked() && enabled {
             start = Some((c.id, br));
         }
@@ -1768,11 +1762,11 @@ fn assistant_button(app: &mut SolveApp, ui: &mut egui::Ui, at: Rect) {
     }
 }
 
-/// SolidCraft's group menus: the search's accent, its pin tips and where rows publish.
+/// Torno's group menus: the search's accent, its pin tips and where rows publish.
 fn menu_style(app: &SolveApp) -> ribbon::MenuStyle<'static> {
     ribbon::MenuStyle {
-        pin_tip: solidcraft_ui_text::tr_label("Pin to Toolbar"),
-        unpin_tip: solidcraft_ui_text::tr_label("Remove from Toolbar"),
+        pin_tip: torno_ui_text::tr_label("Pin to Toolbar"),
+        unpin_tip: torno_ui_text::tr_label("Remove from Toolbar"),
         accent: crate::workspace::tab_accent(&Tokens::get(), &app.ui.tab),
         focus: egui::Id::unique("dropdown_row"),
         entry: &["toolbar:", "dropdown:"],
@@ -1795,7 +1789,7 @@ struct RowData {
 }
 
 impl RowData {
-    fn new(app: &SolveApp, c: &'static solidcraft_engine::CommandSpec) -> Self {
+    fn new(app: &SolveApp, c: &'static torno_engine::CommandSpec) -> Self {
         let info = crate::render_workspace::interactive_command_info(app, c);
         let label = app.tr_label(info.label).to_string();
         let mut checked = None;
@@ -1819,7 +1813,7 @@ impl RowData {
         RowData { label, shortcut, checked, enabled: info.enabled, icon: info.icon, tip, help, hint }
     }
 
-    fn entry<'a>(&'a self, c: &'static solidcraft_engine::CommandSpec, pinned: bool) -> ribbon::MenuEntry<'a> {
+    fn entry<'a>(&'a self, c: &'static torno_engine::CommandSpec, pinned: bool) -> ribbon::MenuEntry<'a> {
         ribbon::MenuEntry {
             id: c.id,
             label: &self.label,
@@ -1843,7 +1837,7 @@ impl RowData {
 fn dropdown_row(
     app: &SolveApp,
     ui: &mut egui::Ui,
-    c: &'static solidcraft_engine::CommandSpec,
+    c: &'static torno_engine::CommandSpec,
     width: f32,
     pinned: bool,
     revealed: Option<f32>,
@@ -1857,13 +1851,13 @@ fn dropdown_row(
 }
 
 /// Up and Down through these commands' enabled rows ([`ribbon::list_keys`]).
-fn dropdown_keys(app: &SolveApp, ui: &egui::Ui, cmds: &[&'static solidcraft_engine::CommandSpec]) {
+fn dropdown_keys(app: &SolveApp, ui: &egui::Ui, cmds: &[&'static torno_engine::CommandSpec]) {
     let enabled: Vec<&str> = cmds.iter().filter(|c| crate::render_workspace::interactive_command_info(app, c).enabled).map(|c| c.id).collect();
     ribbon::list_keys(ui, &enabled, &menu_style(app));
 }
 
 /// How wide a panel drop-down's rows are: the widest label and shortcut, at least 200.
-fn dropdown_width(app: &SolveApp, ui: &egui::Ui, cmds: &[&'static solidcraft_engine::CommandSpec]) -> f32 {
+fn dropdown_width(app: &SolveApp, ui: &egui::Ui, cmds: &[&'static torno_engine::CommandSpec]) -> f32 {
     let rows: Vec<(String, String)> = cmds
         .iter()
         .map(|c| (app.tr_label(c.info(&app.session).label).to_string(), crate::keymap::display_for(app, c.id).unwrap_or_default()))
@@ -1878,7 +1872,7 @@ fn dropdown_grid(
     app: &SolveApp,
     ui: &mut egui::Ui,
     tab: &str,
-    grouped: &[(Option<&'static str>, &'static solidcraft_engine::CommandSpec)],
+    grouped: &[(Option<&'static str>, &'static torno_engine::CommandSpec)],
     loose: &[&str],
     paints: &mut Vec<PersistentRibbonPaint>,
 ) -> Option<(&'static str, ribbon::MenuAction)> {
@@ -1900,7 +1894,7 @@ fn dropdown_grid(
 }
 
 /// Command `c` as a grid icon.
-fn grid_entry<'a>(app: &SolveApp, c: &'static solidcraft_engine::CommandSpec, label: &'a str, pinned: bool) -> ribbon::MenuEntry<'a> {
+fn grid_entry<'a>(app: &SolveApp, c: &'static torno_engine::CommandSpec, label: &'a str, pinned: bool) -> ribbon::MenuEntry<'a> {
     ribbon::MenuEntry {
         id: c.id,
         label,
@@ -1914,12 +1908,12 @@ fn grid_entry<'a>(app: &SolveApp, c: &'static solidcraft_engine::CommandSpec, la
     }
 }
 
-/// SolidCraft's part of a grid icon: it drags onto the toolbar, and its tooltip or its deferred
+/// Torno's part of a grid icon: it drags onto the toolbar, and its tooltip or its deferred
 /// persistent paint.
 fn grid_cell_extras(
     app: &SolveApp,
     ui: &egui::Ui,
-    c: &'static solidcraft_engine::CommandSpec,
+    c: &'static torno_engine::CommandSpec,
     cell: ribbon::GridCell,
     paints: &mut Vec<PersistentRibbonPaint>,
 ) {
@@ -1942,7 +1936,7 @@ use ribbon::ROW_H;
 
 /// Registry parameter syntax is not a user-facing description. Reuse existing catalog prose
 /// where present; other commands intentionally show only their name and registered shortcut.
-fn ribbon_tooltip(app: &SolveApp, response: egui::Response, command: &solidcraft_engine::CommandSpec, disabled: Option<&str>) -> egui::Response {
+fn ribbon_tooltip(app: &SolveApp, response: egui::Response, command: &torno_engine::CommandSpec, disabled: Option<&str>) -> egui::Response {
     if let Some(hint) = persistent_hint(app, command, disabled.is_none() && response.enabled() && command.info(&app.session).enabled) {
         return response.backing_on_hover_text(hint);
     }
@@ -1951,12 +1945,12 @@ fn ribbon_tooltip(app: &SolveApp, response: egui::Response, command: &solidcraft
         let name = app.tr_label(crate::render_workspace::interactive_command_info(app, command).label);
         let name_width = ui
             .painter()
-            .layout_no_wrap(name.to_string(), crate::ui_kit::type_face::semibold(solidcraft_theme::Tokens::get().font_heading), t.text)
+            .layout_no_wrap(name.to_string(), crate::ui_kit::type_face::semibold(torno_theme::Tokens::get().font_heading), t.text)
             .size()
             .x;
         let key_width = crate::keymap::display_for(app, command.id)
             .map(|key| {
-                ui.painter().layout_no_wrap(key.to_string(), FontId::monospace(solidcraft_theme::Tokens::get().font_body), t.text_dim).size().x + 24.0
+                ui.painter().layout_no_wrap(key.to_string(), FontId::monospace(torno_theme::Tokens::get().font_body), t.text_dim).size().x + 24.0
             })
             .unwrap_or(0.0);
         ui.set_width(280.0_f32.max(name_width + key_width + 12.0));
@@ -2006,7 +2000,7 @@ fn ribbon_tooltip(app: &SolveApp, response: egui::Response, command: &solidcraft
 }
 
 /// A revealed command's tooltip, open without the pointer on it (#7287).
-fn reveal_tooltip(app: &SolveApp, ui: &egui::Ui, rect: Rect, command: &solidcraft_engine::CommandSpec, align: egui::RectAlign) {
+fn reveal_tooltip(app: &SolveApp, ui: &egui::Ui, rect: Rect, command: &torno_engine::CommandSpec, align: egui::RectAlign) {
     let mut tip = egui::Tooltip::always_open(ui.ctx().clone(), ui.layer_id(), egui::Id::unique(("ribbon_reveal", command.id)), rect);
     tip.popup = tip.popup.align(align);
     // The same text as a drop-down row's own tooltip: name and shortcut, its help, and why it is
@@ -2032,7 +2026,7 @@ fn reveal_tooltip(app: &SolveApp, ui: &egui::Ui, rect: Rect, command: &solidcraf
 
 /// A group heading's text: its name in the interface language, as written.
 fn group_heading_text(label: &str) -> String {
-    if label.starts_with("ui.") { solidcraft_ui_text::tr(label) } else { solidcraft_ui_text::tr_label(label) }.to_string()
+    if label.starts_with("ui.") { torno_ui_text::tr(label) } else { torno_ui_text::tr_label(label) }.to_string()
 }
 
 /// Take up what was done in a grid drop-down, as for a list row: start the command (and close
@@ -2057,7 +2051,7 @@ fn grid_action(
 
 /// Sketch › Create in the grid: each family of variants under its own heading (Line, Rectangle,
 /// Circle…), then the other tools under "More". The list keeps its family sub-menus.
-fn sketch_create_grouped(cmds: &[&'static solidcraft_engine::CommandSpec]) -> Vec<(Option<&'static str>, &'static solidcraft_engine::CommandSpec)> {
+fn sketch_create_grouped(cmds: &[&'static torno_engine::CommandSpec]) -> Vec<(Option<&'static str>, &'static torno_engine::CommandSpec)> {
     let mut out = Vec::new();
     for f in crate::sketch_families::FAMILIES {
         let mut heading = Some(f.label);
@@ -2076,7 +2070,7 @@ fn sketch_create_grouped(cmds: &[&'static solidcraft_engine::CommandSpec]) -> Ve
 
 /// A drop-down's commands without those the ribbon shows as buttons (`ribbon_menus_skip_pinned`),
 /// unless that leaves none.
-fn skip_on_ribbon(cmds: Vec<&'static solidcraft_engine::CommandSpec>, on_ribbon: &[&str]) -> Vec<&'static solidcraft_engine::CommandSpec> {
+fn skip_on_ribbon(cmds: Vec<&'static torno_engine::CommandSpec>, on_ribbon: &[&str]) -> Vec<&'static torno_engine::CommandSpec> {
     let rest: Vec<_> = cmds.iter().copied().filter(|c| !on_ribbon.contains(&c.id)).collect();
     if rest.is_empty() { cmds } else { rest }
 }
@@ -2086,7 +2080,7 @@ fn skip_on_ribbon(cmds: Vec<&'static solidcraft_engine::CommandSpec>, on_ribbon:
 fn sketch_create_menu(
     app: &mut SolveApp,
     ui: &mut egui::Ui,
-    cmds: &[&'static solidcraft_engine::CommandSpec],
+    cmds: &[&'static torno_engine::CommandSpec],
     width: f32,
     menu: &mut Option<(egui::Pos2, &'static str)>,
     toggle: &mut Option<&'static str>,
@@ -2117,7 +2111,7 @@ fn sketch_create_menu(
 fn sketch_menu_rows(
     app: &mut SolveApp,
     ui: &mut egui::Ui,
-    cmds: &[&'static solidcraft_engine::CommandSpec],
+    cmds: &[&'static torno_engine::CommandSpec],
     width: f32,
     menu: &mut Option<(egui::Pos2, &'static str)>,
     toggle: &mut Option<&'static str>,
@@ -2142,7 +2136,7 @@ fn sketch_menu_rows(
 /// The SELECT panel: what a click in the view picks.
 pub(crate) fn selection_filter(app: &mut SolveApp, ui: &mut egui::Ui) {
     let t = Tokens::get();
-    ui.label(egui::RichText::new(solidcraft_ui_text::tr_label("Selection filter")).color(t.text_dim).size(t.font_small));
+    ui.label(egui::RichText::new(torno_ui_text::tr_label("Selection filter")).color(t.text_dim).size(t.font_small));
     for (mode, label) in [("body", app.tr_label("Select bodies (a face picks its body)")), ("component", app.tr("ui.select_components_by_face"))] {
         let mut on = app.ui.pick_mode() == mode;
         if ui_kit::checkbox(ui, label, &mut on).changed() {
@@ -2163,7 +2157,7 @@ pub(crate) fn selection_filter(app: &mut SolveApp, ui: &mut egui::Ui) {
         ("constraints", "Sketch constraints"),
     ] {
         let mut on = !app.ui.pick_off.iter().any(|x| x == k);
-        if crate::ui_kit::checkbox(ui, solidcraft_ui_text::tr_label(label), &mut on).changed() {
+        if crate::ui_kit::checkbox(ui, torno_ui_text::tr_label(label), &mut on).changed() {
             app.ui.pick_off.retain(|x| x != k);
             if !on {
                 app.ui.pick_off.push(k.to_string());
@@ -2465,7 +2459,7 @@ use app_bar::{CLUSTER_BUTTONS, REPORT_TEXT_X, RIGHT_GROUP, SEARCH_GAP as HEADER_
 
 /// A grid drop-down's commands as the grid lays them out: their ids under their headings.
 #[cfg(test)]
-fn grid_ids(grouped: &[(Option<&'static str>, &'static solidcraft_engine::CommandSpec)]) -> Vec<(Option<&'static str>, &'static str)> {
+fn grid_ids(grouped: &[(Option<&'static str>, &'static torno_engine::CommandSpec)]) -> Vec<(Option<&'static str>, &'static str)> {
     grouped.iter().map(|(heading, c)| (*heading, c.id)).collect()
 }
 
@@ -2474,7 +2468,7 @@ fn grid_ids(grouped: &[(Option<&'static str>, &'static solidcraft_engine::Comman
 fn dropdown_cell(
     app: &SolveApp,
     ui: &mut egui::Ui,
-    c: &'static solidcraft_engine::CommandSpec,
+    c: &'static torno_engine::CommandSpec,
     rect: Rect,
     pinned: bool,
     paints: &mut Vec<PersistentRibbonPaint>,
@@ -2519,7 +2513,7 @@ mod header_report_tests {
         let mut h = crate::scenario::Harness::new();
         h.app.home.open = false;
         h.app.run("parameters.change", json!({"name":"width","expression":"10 mm"})).unwrap();
-        h.app.session.selection = vec![solidcraft_engine::Sel::Plane { name: "XY".into() }];
+        h.app.session.selection = vec![torno_engine::Sel::Plane { name: "XY".into() }];
         h.step(&json!({"start":"parameters.change"})).unwrap();
         let before = (h.app.session.doc.to_json(), h.app.session.undo.len(), h.app.session.selection.clone());
         h.step(&json!({"click":{"handle":"appbar:file"}})).unwrap();
@@ -2654,7 +2648,7 @@ mod header_report_tests {
     /// New designs are saved as `.sc`. A design opened from a `.solidcraft` file is saved back to
     /// that file by Save (no rename behind the user's back); Save As offers `.sc` and leaves it.
     #[test]
-    fn save_offers_sc_and_keeps_an_opened_solidcraft_file() {
+    fn save_offers_sc_and_keeps_an_opened_torno_file() {
         let mut h = crate::scenario::Harness::new();
         let offered = std::rc::Rc::new(std::cell::RefCell::new(Vec::<(String, Vec<String>)>::new()));
         let (seen, dir) = (offered.clone(), h.dir.clone());
@@ -2683,7 +2677,7 @@ mod header_report_tests {
         assert_eq!(offered.borrow().len(), asked, "Save writes the opened file without asking");
         assert_eq!(h.app.session.path.as_deref(), Some(old.to_string_lossy().as_ref()));
         assert!(!h.app.session.is_dirty());
-        assert_eq!(solidcraft_engine::io::read_design(&std::fs::read(&old).unwrap()).unwrap().features.len(), 2);
+        assert_eq!(torno_engine::io::read_design(&std::fs::read(&old).unwrap()).unwrap().features.len(), 2);
         assert!(!h.dir.join("Old.sc").exists() && !h.dir.join("Bracket.sc").exists(), "nothing renamed");
 
         FileAction::SaveAs.run(&mut h.app);
@@ -2818,8 +2812,8 @@ mod header_report_tests {
         h.settle();
         let saved = h.app.session.path.clone().unwrap();
         let bytes = std::fs::read(&saved).unwrap();
-        assert!(!solidcraft_engine::io::is_design_container(&bytes));
-        assert_eq!(solidcraft_engine::io::read_design(&bytes).unwrap(), *h.app.session.doc);
+        assert!(!torno_engine::io::is_design_container(&bytes));
+        assert_eq!(torno_engine::io::read_design(&bytes).unwrap(), *h.app.session.doc);
         h.app.session.doc_mut().name = "Exported copy".into();
         h.frames(3);
         h.step(&json!({"click":{"handle":"appbar:folder"}})).unwrap();
@@ -2827,7 +2821,7 @@ mod header_report_tests {
         assert_eq!(h.app.session.path.as_deref(), Some(saved.as_str()));
         assert!(h.dir.join("Exported copy.json").is_file());
         h.app.run("file.save", json!({})).unwrap();
-        assert!(!solidcraft_engine::io::is_design_container(&std::fs::read(saved).unwrap()), "subsequent Save keeps a .json choice");
+        assert!(!torno_engine::io::is_design_container(&std::fs::read(saved).unwrap()), "subsequent Save keeps a .json choice");
     }
 
     /// File › Export STL… and Export 3MF… both open the Save as mesh dialog with their format
@@ -2870,7 +2864,7 @@ mod header_report_tests {
         let got = got.borrow();
         assert_eq!(got.len(), 1);
         assert_eq!(got[0].0, "Plate.sc");
-        assert!(solidcraft_engine::io::is_design_container(&got[0].1));
+        assert!(torno_engine::io::is_design_container(&got[0].1));
         assert!(h.app.session.path.is_none(), "a download is no save: the design keeps no file");
     }
 
@@ -2891,7 +2885,7 @@ mod header_report_tests {
         assert_eq!(h.app.session.path.as_deref(), h.dir.join("Copy.sc").to_str(), "Ctrl+Shift+S must open Save As, not save over the current file");
         assert_eq!(std::fs::read(&source).unwrap(), bytes, "Save As keeps the file the design came from");
         // The File menu shows the shortcut of the command it runs.
-        let spec = solidcraft_engine::find_command("file.save_as").expect("file.save_as is a command");
+        let spec = torno_engine::find_command("file.save_as").expect("file.save_as is a command");
         assert_eq!(spec.shortcut, Some("Ctrl+Shift+S"), "the File menu shows the shortcut of Save As");
         h.frames(3);
         h.step(&json!({"click":{"handle":"appbar:file"}})).unwrap();
@@ -2907,7 +2901,7 @@ mod header_report_tests {
     #[test]
     fn panel_accents_share_the_tab_mapping_but_constraints_keep_their_role() {
         for dark in [false, true] {
-            for vision in solidcraft_theme::ColorVision::ALL {
+            for vision in torno_theme::ColorVision::ALL {
                 let t = Tokens::themed(dark, vision);
                 for tab in TABS.iter().copied().chain(["SKETCH", "FORM", "RENDER"]) {
                     assert_eq!(panel_accent(&t, tab, "CREATE"), crate::workspace::tab_accent(&t, tab).color);
@@ -3075,8 +3069,8 @@ mod header_report_tests {
         assert!(crate::scenario::handle_at("titlebar:version").is_some(), "the version is in the bar");
         h.step(&json!({"click":{"handle":"appbar:help"}})).unwrap();
         assert!(h.app.help.menu);
-        let version = solidcraft_ui_text::format("help.version", &[("version", crate::update::current_version())]);
-        assert!(h.widget("About SolidCraft").is_some());
+        let version = torno_ui_text::format("help.version", &[("version", crate::update::current_version())]);
+        assert!(h.widget("About Torno").is_some());
         assert!(h.widget(&version).is_none(), "the Help menu has no version row");
     }
 
@@ -3114,8 +3108,8 @@ mod header_report_tests {
         // The version is a Help menu row, right after About.
         h.step(&json!({"click":{"handle":"appbar:help"}})).unwrap();
         assert!(h.app.help.menu);
-        let version = solidcraft_ui_text::format("help.version", &[("version", crate::update::current_version())]);
-        let [_, about] = h.widget("About SolidCraft").unwrap();
+        let version = torno_ui_text::format("help.version", &[("version", crate::update::current_version())]);
+        let [_, about] = h.widget("About Torno").unwrap();
         let [_, row] = h.widget(&version).expect("the Help menu lists the version");
         let [_, shortcuts] = h.widget("Keyboard Shortcuts").unwrap();
         assert!(about < row && row < shortcuts, "between About and Keyboard Shortcuts");
@@ -3265,7 +3259,7 @@ mod home_tests {
             h.app.run("solid.box", json!({"length": 10, "width": 10, "height": 10, "body_name": "Main"})).unwrap();
             h.app.run("solid.box", json!({"length": 5, "width": 5, "height": 5, "corner": [20, 0, 0]})).unwrap();
             h.app.run("edit.undo", json!({})).unwrap();
-            h.app.session.selection = vec![solidcraft_engine::Sel::Body { name: "Main".into() }];
+            h.app.session.selection = vec![torno_engine::Sel::Body { name: "Main".into() }];
             let rev = h.app.session.revision;
             h.app.home.show(rev);
             h.frames(2);
@@ -3365,10 +3359,10 @@ mod home_tests {
     #[test]
     fn needs_design_tooltip_is_translated() {
         crate::i18n::install();
-        let english = solidcraft_ui_text::Locale::for_language("en").text("ui.needs_design");
+        let english = torno_ui_text::Locale::for_language("en").text("ui.needs_design");
         assert!(english.contains("{command}"));
         for catalog in crate::i18n::LOCALES.iter().filter(|c| !matches!(c.id, "en" | "en-GB")) {
-            let text = solidcraft_ui_text::Locale::for_language(catalog.id).text("ui.needs_design");
+            let text = torno_ui_text::Locale::for_language(catalog.id).text("ui.needs_design");
             assert!(text != english && text.contains("{command}"), "{} must translate ui.needs_design", catalog.id);
         }
     }
@@ -3417,7 +3411,7 @@ mod dropdown_tests {
     fn sketch_create_family_rows_paint_the_first_variants_icons() {
         let mut h = crate::scenario::Harness::new();
         h.app.run("sketch.create", json!({"plane":"XY"})).unwrap();
-        let cmds: Vec<_> = solidcraft_engine::command_specs().into_iter().filter(|c| c.tab == "SKETCH" && c.panel == "CREATE").collect();
+        let cmds: Vec<_> = torno_engine::command_specs().into_iter().filter(|c| c.tab == "SKETCH" && c.panel == "CREATE").collect();
         crate::icon_svg::audit::start();
         let mut output = h.ctx.run_ui(egui::RawInput::default(), |ui| {
             sketch_create_menu(&mut h.app, ui, &cmds, 200.0, &mut None, &mut None);
@@ -3426,7 +3420,7 @@ mod dropdown_tests {
         let requested = crate::icon_svg::audit::take();
         crate::icon_svg::audit::stop();
         for family in crate::sketch_families::FAMILIES {
-            let first = solidcraft_engine::find_command(family.commands[0]).unwrap();
+            let first = torno_engine::find_command(family.commands[0]).unwrap();
             assert!(!first.icon.is_empty());
             assert!(requested.iter().any(|icon| icon.name == first.icon && !icon.placeholder), "{} must paint {}", family.label, first.icon);
         }
@@ -3518,7 +3512,7 @@ mod dropdown_tests {
                 output = Some(drawn);
             }
             let output = output.unwrap();
-            if let Ok(dir) = std::env::var("SOLIDCRAFT_CONSTRUCT_EVIDENCE") {
+            if let Ok(dir) = std::env::var("TORNO_CONSTRUCT_EVIDENCE") {
                 let bounds = crate::scenario::rect_of("toolbar_dropdown").unwrap().expand(8.);
                 let image = crate::ui_kit::test_raster(&h.ctx, output.shapes.clone(), output.pixels_per_point, bounds, &textures);
                 std::fs::create_dir_all(&dir).unwrap();
@@ -3537,7 +3531,7 @@ mod dropdown_tests {
                     "{heading} in grid={grid}, grouped={grouped}"
                 );
             }
-            let (cmds, _) = crate::workspace::layout("MODEL", "CONSTRUCT", &solidcraft_engine::command_specs()).unwrap();
+            let (cmds, _) = crate::workspace::layout("MODEL", "CONSTRUCT", &torno_engine::command_specs()).unwrap();
             let prefix = "dropdown:";
             if !grouped {
                 let mut positions: Vec<_> = cmds.iter().map(|c| (c.id, crate::scenario::handle_at(&format!("{prefix}{}", c.id)).unwrap())).collect();
@@ -3560,7 +3554,7 @@ mod dropdown_tests {
     /// them over the enabled icons only, wrapping at the ends (#4739).
     #[test]
     fn grid_rows_break_at_headings_and_arrow_keys_skip_disabled_icons() {
-        let c = |id| solidcraft_engine::find_command(id).unwrap();
+        let c = |id| torno_engine::find_command(id).unwrap();
         let grouped = [
             (Some("Primitives"), c("solid.box")),
             (None, c("solid.cylinder")),
@@ -3609,11 +3603,11 @@ mod dropdown_tests {
     /// under the group before (Bodies) (#4739).
     #[test]
     fn a_command_in_no_group_stays_apart_when_a_group_is_left_out() {
-        let specs = solidcraft_engine::command_specs();
+        let specs = torno_engine::command_specs();
         let (cmds, _) = crate::workspace::layout("MODEL", "MODIFY", &specs).unwrap();
         let loose = crate::workspace::ungrouped("MODEL", "MODIFY", &cmds);
         assert_eq!(loose, ["timeline.delete"]);
-        let column_of = |cmds: &[&'static solidcraft_engine::CommandSpec], id: &str| {
+        let column_of = |cmds: &[&'static torno_engine::CommandSpec], id: &str| {
             let grouped = crate::workspace::grouped_commands("MODEL", "MODIFY", cmds);
             let layout = ribbon::grid_layout(&grid_ids(&grouped), &loose, 4000.0);
             let x = |id: &str| grouped.iter().position(|(_, c)| c.id == id).and_then(|i| layout.cells.get(i)).map(|(r, _)| r.left());
@@ -3656,8 +3650,8 @@ mod dropdown_tests {
             }
         }
         // A window too narrow for the width wraps into more rows instead of running off it.
-        let c = |id| solidcraft_engine::find_command(id).unwrap();
-        let many: Vec<_> = solidcraft_engine::command_specs().into_iter().take(30).map(|c| (None, c)).collect();
+        let c = |id| torno_engine::find_command(id).unwrap();
+        let many: Vec<_> = torno_engine::command_specs().into_iter().take(30).map(|c| (None, c)).collect();
         let narrow = ribbon::grid_layout(&grid_ids(&many), &[], 4.0 * ribbon::GRID_CELL);
         assert!(narrow.size.x <= 4.0 * ribbon::GRID_CELL && rows(&narrow) > ribbon::GRID_ROWS);
         let few = [(None, c("solid.box")), (None, c("solid.sphere"))];
@@ -3843,9 +3837,8 @@ mod dropdown_tests {
         {
             assert!(cells.iter().any(|c| *c == format!("dropdown:{id}")), "{id} is an icon of the grid: {cells:?}");
         }
-        let grouped = sketch_create_grouped(
-            &solidcraft_engine::command_specs().into_iter().filter(|c| c.id.starts_with("sketch.rectangle")).collect::<Vec<_>>(),
-        );
+        let grouped =
+            sketch_create_grouped(&torno_engine::command_specs().into_iter().filter(|c| c.id.starts_with("sketch.rectangle")).collect::<Vec<_>>());
         assert_eq!(grouped.first().and_then(|(h, _)| *h), Some("Rectangle"));
         assert!(grouped.iter().skip(1).all(|(h, _)| h.is_none()), "one heading per family");
         h.step(&json!({"click":{"handle":"dropdown:sketch.rectangle.center"}})).unwrap();
@@ -3891,7 +3884,7 @@ mod dropdown_tests {
             let folded = rows(&mut h, panel);
             assert!(folded.iter().any(|id| id == "dropdown:solid.extrude"), "grid {grid}: Extrude, off the ribbon, is listed: {folded:?}");
         }
-        let box_ = solidcraft_engine::find_command("solid.box").unwrap();
+        let box_ = torno_engine::find_command("solid.box").unwrap();
         assert_eq!(skip_on_ribbon(vec![box_], &["solid.box"]).len(), 1, "a drop-down is never left empty");
     }
 }
@@ -4014,7 +4007,7 @@ mod dropdown_toggle_tests {
     /// grid ends the same way. With the preference off, the click starts the tool again.
     #[test]
     fn a_second_click_on_a_running_tools_button_ends_it() {
-        use solidcraft_engine::Sel;
+        use torno_engine::Sel;
         let mut h = Harness::new();
         h.app.home.open = false;
         h.app.set_origin_shown(false);
@@ -4067,7 +4060,7 @@ mod dropdown_toggle_tests {
         h.step(&json!({"click": {"handle": "button:sketch.ellipse"}})).unwrap();
         assert_eq!(h.app.tool.as_ref().map(|t| t.cmd), Some("sketch.ellipse"), "the click starts the tool");
         h.frames(3);
-        let soft = crate::workspace::tab_accent(&solidcraft_theme::Tokens::get(), "SKETCH").soft;
+        let soft = crate::workspace::tab_accent(&torno_theme::Tokens::get(), "SKETCH").soft;
         let pressed = |h: &Harness, id: &str| {
             let r = rect_of(&format!("button:{id}")).unwrap();
             let mut all = Vec::new();
@@ -4218,7 +4211,7 @@ mod app_bar_tests {
             (a.max(b) + 0.05) / (a.min(b) + 0.05)
         }
         for dark in [false, true] {
-            for vision in solidcraft_theme::ColorVision::ALL {
+            for vision in torno_theme::ColorVision::ALL {
                 let t = Tokens::themed(dark, vision);
                 for fill in [t.app_bar_hover, t.app_bar_hover_subtle, t.app_bar_hover_button, t.app_bar_hover_strong] {
                     let channel = |fg: u8, bg: u8| fg.saturating_add((u16::from(bg) * u16::from(255 - fill.a()) / 255) as u8);
@@ -4256,7 +4249,7 @@ mod app_bar_tests {
         h.step(&json!({"click":{"handle":"titlebar:save"}})).unwrap();
         wait_for_save(&mut h);
         assert_eq!(h.app.session.path.as_deref(), Some(path.as_str()));
-        let saved = solidcraft_engine::io::read_design(&std::fs::read(path).unwrap()).unwrap();
+        let saved = torno_engine::io::read_design(&std::fs::read(path).unwrap()).unwrap();
         assert_eq!(saved, *h.app.session.doc);
     }
 }
@@ -4301,7 +4294,7 @@ mod ribbon_label_tests {
         crate::test_support::host_data();
         let mut themes = Vec::new();
         for dark in [false, true] {
-            for vision in solidcraft_theme::ColorVision::ALL {
+            for vision in torno_theme::ColorVision::ALL {
                 themes.push(Tokens::themed(dark, vision));
             }
         }
@@ -4325,11 +4318,11 @@ mod ribbon_label_tests {
                             ..ribbon::tab_style(&t, crate::workspace::tab_accent(&t, tab), false, false, hovered)
                         }
                     );
-                    assert!(solidcraft_theme::contrast_ratio(active.ink, active.fill) >= 4.5, "{tab}: selected text must remain readable");
+                    assert!(torno_theme::contrast_ratio(active.ink, active.fill) >= 4.5, "{tab}: selected text must remain readable");
                     // The selected contextual tab is the solid pill; the unselected one never is.
                     assert!(
-                        solidcraft_theme::contrast_ratio(active.fill, t.toolbar)
-                            > solidcraft_theme::contrast_ratio(if hovered { t.hover } else { t.toolbar }, t.toolbar),
+                        torno_theme::contrast_ratio(active.fill, t.toolbar)
+                            > torno_theme::contrast_ratio(if hovered { t.hover } else { t.toolbar }, t.toolbar),
                         "{tab}: the selected tab must be the more prominent one"
                     );
                 }
@@ -4393,12 +4386,12 @@ mod ribbon_label_tests {
         let mut two_lines = 0;
         let mut output = ctx.run_ui(egui::RawInput::default(), |ui| {
             let painter = ui.painter().clone();
-            let specs = solidcraft_engine::command_specs();
+            let specs = torno_engine::command_specs();
             for section in crate::workspace::SECTIONS {
                 let (commands, count) = crate::workspace::layout(section.tab, section.panel, &specs).unwrap();
                 for command in commands.iter().take(count) {
                     for catalog in crate::i18n::LOCALES {
-                        let locale = solidcraft_ui_text::Locale::for_language(catalog.id);
+                        let locale = torno_ui_text::Locale::for_language(catalog.id);
                         let label = locale.label(crate::workspace::ribbon_button_label(command));
                         let whole = Rect::from_min_size(pos2(40.0, 2.0), vec2(ribbon::button_width(&painter, label), ribbon::BUTTON_HEIGHT));
                         let galley = ribbon::button_galley(&painter, label, whole.width() - ribbon::BUTTON_LABEL_PADDING, Color32::WHITE);
@@ -4425,18 +4418,18 @@ mod ribbon_label_tests {
         let ctx = crate::fonts::test_context();
         let mut output = ctx.run_ui(egui::RawInput::default(), |ui| {
             let painter = ui.painter().clone();
-            let specs = solidcraft_engine::command_specs();
+            let specs = torno_engine::command_specs();
             for section in crate::workspace::SECTIONS {
                 let (commands, count) = crate::workspace::layout(section.tab, section.panel, &specs).unwrap();
                 for command in commands.iter().take(count) {
                     for catalog in crate::i18n::LOCALES {
-                        let locale = solidcraft_ui_text::Locale::for_language(catalog.id);
+                        let locale = torno_ui_text::Locale::for_language(catalog.id);
                         let label = locale.label(crate::workspace::ribbon_button_label(command));
                         let width = ribbon::button_width(&painter, label) - ribbon::BUTTON_LABEL_PADDING;
                         let galley = ribbon::button_galley(&painter, label, width, Color32::WHITE);
                         assert!(galley.rows.len() <= 2, "{}: {label}", command.id);
                         assert!(galley.size().x <= width + 0.01, "{}: {label}: {} > {width}", command.id, galley.size().x);
-                        if solidcraft_ui_text::bidi::has_rtl(label) {
+                        if torno_ui_text::bidi::has_rtl(label) {
                             // epaint adds zero-width glyphs to right-to-left rows, so their text
                             // is not the source text: check the lines the galley is built from.
                             let lines = ribbon::button_lines(&painter, label, width);
@@ -4482,7 +4475,7 @@ mod ribbon_label_tests {
                 assert_eq!(ribbon::button_lines(&painter, label, width - ribbon::BUTTON_LABEL_PADDING), vec![label]);
                 assert!((BUTTON_MIN_WIDTH..=ribbon::BUTTON_MAX_WIDTH).contains(&width));
             }
-            let finish = solidcraft_engine::find_command("sketch.finish").unwrap();
+            let finish = torno_engine::find_command("sketch.finish").unwrap();
             let label = crate::workspace::ribbon_button_label(finish);
             let width = ribbon::button_width(&painter, label);
             assert_eq!(ribbon::button_lines(&painter, label, width - ribbon::BUTTON_LABEL_PADDING), vec!["Finish", "Sketch"]);
@@ -4506,13 +4499,13 @@ mod ribbon_label_tests {
             let lines = ribbon::button_lines(&painter, "長い日本語のラベル 続き", 50.0);
             assert_eq!(lines.len(), 2);
             assert!(lines[0].ends_with('…'));
-            // Hebrew comes in display order (`solidcraft_ui_text::bidi::visual`): the reader starts at the right end,
+            // Hebrew comes in display order (`torno_ui_text::bidi::visual`): the reader starts at the right end,
             // so "סקיצה חדשה" (New Sketch, stored as "חדשה סקיצה") puts סקיצה on the first line.
-            let label = solidcraft_ui_text::bidi::visual("סקיצה חדשה").into_owned();
+            let label = torno_ui_text::bidi::visual("סקיצה חדשה").into_owned();
             let width = ribbon::label_width(&painter, "סקיצה").max(ribbon::label_width(&painter, "חדשה")) + 1.0;
             assert!(ribbon::label_width(&painter, &label) > width);
             assert_eq!(ribbon::button_lines(&painter, &label, width), vec!["סקיצה", "חדשה"]);
-            let lines = ribbon::button_lines(&painter, &solidcraft_ui_text::bidi::visual("אחת שתיים שלוש ארבע חמש"), 50.0);
+            let lines = ribbon::button_lines(&painter, &torno_ui_text::bidi::visual("אחת שתיים שלוש ארבע חמש"), 50.0);
             assert_eq!(lines.len(), 2);
             assert!(lines[1].starts_with('…'), "{lines:?}");
         });
@@ -4525,7 +4518,7 @@ mod ribbon_label_tests {
         ctx.run_ui(egui::RawInput::default(), |_| {}).textures_delta.clear();
         let mut output = ctx.run_ui(egui::RawInput::default(), |ui| {
             let painter = ui.painter().clone();
-            let ja = solidcraft_ui_text::Locale::for_language("ja");
+            let ja = torno_ui_text::Locale::for_language("ja");
             for (id, expected) in [
                 ("sketch.create", vec!["新規", "スケッチ"]),
                 ("config.table", vec!["構成", "テーブル"]),
@@ -4536,12 +4529,12 @@ mod ribbon_label_tests {
                 ("joint.origin", vec!["ジョイント", "原点"]),
                 ("joint.drive", vec!["ジョイントを", "駆動"]),
             ] {
-                let command = solidcraft_engine::find_command(id).unwrap();
+                let command = torno_engine::find_command(id).unwrap();
                 let label = ja.label(crate::workspace::ribbon_button_label(command));
                 let width = ribbon::button_width(&painter, label) - ribbon::BUTTON_LABEL_PADDING;
                 assert_eq!(ribbon::button_lines(&painter, label, width), expected, "{id}");
             }
-            let comp = solidcraft_engine::find_command("component.create").unwrap();
+            let comp = torno_engine::find_command("component.create").unwrap();
             assert_eq!(ja.label(comp.label), "新規コンポーネント");
         });
         output.textures_delta.clear();
@@ -5059,7 +5052,7 @@ mod persistent_ribbon_tests {
             "{id} grid fill"
         );
         assert_eq!(drawn.iter().any(|shape| matches!(shape, egui::Shape::LineSegment { points, stroke } if stroke.width == 2.0 && stroke.color == t.accent && points[0].y == rect.bottom() - t.space_4 && rect.contains(points[0]))), selected, "{id} grid underline");
-        let command = solidcraft_engine::find_command(id).unwrap();
+        let command = torno_engine::find_command(id).unwrap();
         let label = if toggled.is_some() { persistent_button_name(&h.app, command) } else { h.app.tr_label(command.label).to_string() };
         let node = h
             .output
@@ -5104,7 +5097,7 @@ mod persistent_ribbon_tests {
                         .show(ui, |ui| {
                             ui.spacing_mut().item_spacing.y = 0.0;
                             for id in ["inspect.section", "inspect.zebra", "inspect.draft"] {
-                                let command = solidcraft_engine::find_command(id).unwrap();
+                                let command = torno_engine::find_command(id).unwrap();
                                 let (rect, _) = ui.allocate_exact_size(vec2(ribbon::GRID_CELL, ribbon::GRID_CELL), Sense::hover());
                                 let clip = ui.clip_rect().intersect(rect);
                                 let _ = dropdown_cell(&h.app, ui, command, rect, false, &mut paints);
@@ -5204,7 +5197,7 @@ mod persistent_ribbon_tests {
         assert_status_grid(&h, "inspect.section", true, Some(egui::accesskit::Toggled::True));
         h.step(&json!({"move":{"handle":"dropdown:inspect.section"}})).unwrap();
         h.frames(100);
-        let command = solidcraft_engine::find_command("inspect.section").unwrap();
+        let command = torno_engine::find_command("inspect.section").unwrap();
         let hint = persistent_hint(&h.app, command, true).unwrap();
         let mut drawn = Vec::new();
         for shape in &h.shapes {
@@ -5246,7 +5239,7 @@ mod persistent_ribbon_tests {
             );
             assert!(!drawn.iter().any(|shape| matches!(shape, egui::Shape::LineSegment { points, stroke } if stroke.width == 2.0 && stroke.color == t.accent && points[0].y == rect.bottom() - t.space_4 && rect.contains(points[0]))), "{id} has no persistent underline on release");
             assert!(scenario::rect_of(&format!("ribbon_grid:pressed:{id}")).is_none(), "{id} has no published pressed identity on release");
-            let command = solidcraft_engine::find_command(id).unwrap();
+            let command = torno_engine::find_command(id).unwrap();
             let label = persistent_button_name(&h.app, command);
             let node = h
                 .output
@@ -5281,7 +5274,7 @@ mod persistent_ribbon_tests {
         h.app.preferences.viewport_section_status = false;
         h.frame();
         assert_paint(&h, "inspect.section", false);
-        assert!(persistent_hint(&h.app, solidcraft_engine::find_command("inspect.section").unwrap(), true).is_none());
+        assert!(persistent_hint(&h.app, torno_engine::find_command("inspect.section").unwrap(), true).is_none());
         assert!(h.app.session.section.is_some());
         h.app.preferences.viewport_section_status = true;
         h.app.preferences.persistent_ribbon_pressed = false;
@@ -5339,7 +5332,7 @@ mod persistent_ribbon_tests {
                 for c in PERSISTENT_COMMANDS {
                     assert_paint(&h, c, *c == id);
                 }
-                let c = solidcraft_engine::find_command(id).unwrap();
+                let c = torno_engine::find_command(id).unwrap();
                 assert_eq!(
                     persistent_hint(&h.app, c, true),
                     Some(format!("Turn off {} · Esc", h.app.tr_label(crate::workspace::ribbon_button_label(c))))
@@ -5372,7 +5365,7 @@ mod persistent_ribbon_tests {
             assert_paint(&h, id, false);
         }
         assert_eq!(h.app.session.status_items(), before);
-        let label = h.app.tr_label(solidcraft_engine::find_command("inspect.zebra").unwrap().info(&h.app.session).label);
+        let label = h.app.tr_label(torno_engine::find_command("inspect.zebra").unwrap().info(&h.app.session).label);
         let old_node = h
             .output
             .accesskit_update
@@ -5381,7 +5374,7 @@ mod persistent_ribbon_tests {
             .map(|(_, n)| n)
             .expect("old neutral accessible button label");
         assert_eq!(old_node.toggled(), None, "the old presentation makes no false inactive-effect announcement");
-        assert!(persistent_hint(&h.app, solidcraft_engine::find_command("inspect.zebra").unwrap(), true).is_none());
+        assert!(persistent_hint(&h.app, torno_engine::find_command("inspect.zebra").unwrap(), true).is_none());
         h.app.preferences.persistent_ribbon_pressed = true;
         h.frame();
         assert_paint(&h, "inspect.zebra", true);
@@ -5389,7 +5382,7 @@ mod persistent_ribbon_tests {
         h.app.last_command = Some(("inspect.draft".into(), "Draft".into()));
         h.frame();
         assert_paint(&h, "inspect.draft", false);
-        assert!(persistent_hint(&h.app, solidcraft_engine::find_command("inspect.zebra").unwrap(), false).is_none());
+        assert!(persistent_hint(&h.app, torno_engine::find_command("inspect.zebra").unwrap(), false).is_none());
     }
 
     #[test]
@@ -5443,9 +5436,9 @@ mod persistent_ribbon_tests {
         h.app.session.execute("inspect.zebra", &json!({})).unwrap();
         for language in ["en", "de", "ja"] {
             h.call("ui.prefs", json!({"language":language}));
-            let command = solidcraft_engine::find_command("inspect.zebra").unwrap();
+            let command = torno_engine::find_command("inspect.zebra").unwrap();
             let name = h.app.tr_label(crate::workspace::ribbon_button_label(command));
-            let expected = solidcraft_ui_text::Locale::for_language(language).format("ui.viewport_status_clear_hint", &[("name", name)]);
+            let expected = torno_ui_text::Locale::for_language(language).format("ui.viewport_status_clear_hint", &[("name", name)]);
             assert_eq!(persistent_hint(&h.app, command, true), Some(expected.clone()));
             let at = scenario::handle_at("button:inspect.zebra").unwrap();
             h.frame_with(vec![egui::Event::PointerMoved(at)]);
@@ -5460,7 +5453,7 @@ mod persistent_ribbon_tests {
         h.frame_with(vec![egui::Event::PointerMoved(egui::Pos2::ZERO)]);
         h.frame_with(vec![egui::Event::PointerMoved(scenario::handle_at("button:inspect.zebra").unwrap())]);
         h.frames(100);
-        assert!(persistent_hint(&h.app, solidcraft_engine::find_command("inspect.zebra").unwrap(), true).is_none());
+        assert!(persistent_hint(&h.app, torno_engine::find_command("inspect.zebra").unwrap(), true).is_none());
         assert_paint(&h, "inspect.zebra", false);
     }
 

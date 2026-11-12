@@ -115,7 +115,7 @@ fn a_network_of_3d_lines_is_a_hyperbolic_paraboloid() {
     // cent of the body); the measuring mesh is refined onto the surface.
     assert!((face - want).abs() < 1e-2 * want && (total - want).abs() < 1e-3 * want, "{face} / {total} vs {want}");
     let st = s.world_state().unwrap();
-    let mesh = st.body(&body).map(|b| b.body.mesh(&solidcraft_kernel::MeshTolerance::chord(0.01))).and_then(Result::ok).unwrap_or_default();
+    let mesh = st.body(&body).map(|b| b.body.mesh(&torno_kernel::MeshTolerance::chord(0.01))).and_then(Result::ok).unwrap_or_default();
     assert!(!mesh.positions.is_empty());
     for p in &mesh.positions {
         assert!((p.z - p.x * p.y / 10.0).abs() < 1e-6, "{p:?} is off the paraboloid");
@@ -258,10 +258,10 @@ fn an_edit_turns_a_loop_into_a_network_and_back() {
     let network = json!({"sketch": "Square", "u": [sides[0], sides[2]], "v": [sides[1], sides[3]]});
     run(&mut s, "timeline.redefine", json!({"feature": "Patch", "command": "surface.boundary", "params": network}));
     let kind = |s: &Session| s.doc.find_feature("Patch").map(|f| f.kind.clone());
-    assert!(matches!(kind(&s), Some(solidcraft_doc::FeatureKind::SurfaceNetwork { .. })), "{:?}", kind(&s));
+    assert!(matches!(kind(&s), Some(torno_doc::FeatureKind::SurfaceNetwork { .. })), "{:?}", kind(&s));
     let body = s.world_state().unwrap().bodies.first().map(|b| b.name.clone()).unwrap_or_default();
     assert!((areas(&mut s, &body).0 - 100.0).abs() < 1e-6);
     run(&mut s, "timeline.redefine", json!({"feature": "Patch", "command": "surface.boundary", "params": {"sketch": "Square", "curves": sides}}));
-    assert!(matches!(kind(&s), Some(solidcraft_doc::FeatureKind::SurfaceBoundary { .. })), "{:?}", kind(&s));
+    assert!(matches!(kind(&s), Some(torno_doc::FeatureKind::SurfaceBoundary { .. })), "{:?}", kind(&s));
     assert!((areas(&mut s, &body).0 - 100.0).abs() < 1e-6);
 }

@@ -3,7 +3,7 @@
 use crate::dialogs::{Dialog, Kind};
 use crate::scenario::Harness;
 use serde_json::json;
-use solidcraft_engine::geom::prelude::*;
+use torno_engine::geom::prelude::*;
 
 const JOIN: usize = 1;
 const CUT: usize = 2;
@@ -24,7 +24,7 @@ fn bounds_z(h: &Harness) -> (f64, f64) {
 
 fn volume(h: &Harness) -> f64 {
     let st = h.app.session.world_state().unwrap();
-    st.bodies.iter().map(|b| solidcraft_engine::doc::kernel::measure(&b.body).unwrap().volume).sum()
+    st.bodies.iter().map(|b| torno_engine::doc::kernel::measure(&b.body).unwrap().volume).sum()
 }
 
 /// A sketch on XY extruded from the top view goes up, and from the bottom view goes down.
@@ -137,7 +137,7 @@ fn a_new_start_object_decides_the_operation_again() {
     let b = st.bodies.first().expect("the box");
     let bottom =
         (0..64).find(|i| b.body.planar_face(*i).is_some_and(|p| p.normal().z < -0.99 && p.origin.z.abs() < 1e-9)).expect("the box's bottom face");
-    let face = solidcraft_engine::Sel::Face { body: b.name.clone(), index: bottom, point: solidcore_record::Vec3::new(10.0, 10.0, 0.0) };
+    let face = torno_engine::Sel::Face { body: b.name.clone(), index: bottom, point: solidcore_record::Vec3::new(10.0, 10.0, 0.0) };
     if let Some(d) = &mut h.app.dialog {
         let mut from = crate::selection::SelInput::new("From Object", crate::selection::FACES | crate::selection::VERTICES, false);
         from.items.push(face);
@@ -165,13 +165,13 @@ fn press_pull_drags_a_hole_wall() {
     h.step(&json!({"call":"ui.view","params":{"view":"fit"}})).unwrap();
     h.settle();
     let p = solidcore_record::Vec3::new(25.0, 15.0, 10.0);
-    h.app.session.selection = vec![solidcraft_engine::Sel::Face { body: "Body1".into(), index: wall, point: p }];
+    h.app.session.selection = vec![torno_engine::Sel::Face { body: "Body1".into(), index: wall, point: p }];
     h.step(&json!({"start":"solid.press_pull"})).unwrap();
     h.frames(2);
     h.step(&json!({"drag":[{"handle":"arrow"},{"world":[23,15,10]}]})).unwrap();
     h.frames(2);
     let Some(Dialog { kind: Kind::OffsetFaces { distance }, .. }) = &h.app.dialog else { panic!("offset dialog: {:?}", h.app.dialog) };
-    let d = h.app.session.doc.eval(distance, solidcraft_engine::doc::expr::Kind::Length).unwrap();
+    let d = h.app.session.doc.eval(distance, torno_engine::doc::expr::Kind::Length).unwrap();
     assert!((d - 2.0).abs() < 0.05, "{distance}");
     h.step(&json!({"key":"Enter"})).unwrap();
     assert!(h.app.dialog.is_none());

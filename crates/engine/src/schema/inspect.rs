@@ -255,9 +255,9 @@ pub enum ThreadForm {
     Npt,
 }
 
-impl From<&solidcraft_doc::ThreadInfo> for ModelThread {
-    fn from(t: &solidcraft_doc::ThreadInfo) -> Self {
-        use solidcraft_doc::thread_forms::{ThreadForm as Form, ThreadHand as Hand};
+impl From<&torno_doc::ThreadInfo> for ModelThread {
+    fn from(t: &torno_doc::ThreadInfo) -> Self {
+        use torno_doc::thread_forms::{ThreadForm as Form, ThreadHand as Hand};
         ModelThread {
             feature: t.feature,
             body: t.body.clone(),
@@ -555,11 +555,11 @@ pub enum SketchStatus {
     Failed,
 }
 
-impl From<solidcraft_sketch::SolveStatus> for SketchStatus {
-    fn from(s: solidcraft_sketch::SolveStatus) -> Self {
+impl From<torno_sketch::SolveStatus> for SketchStatus {
+    fn from(s: torno_sketch::SolveStatus) -> Self {
         match s {
-            solidcraft_sketch::SolveStatus::Solved => SketchStatus::Solved,
-            solidcraft_sketch::SolveStatus::Failed => SketchStatus::Failed,
+            torno_sketch::SolveStatus::Solved => SketchStatus::Solved,
+            torno_sketch::SolveStatus::Failed => SketchStatus::Failed,
         }
     }
 }

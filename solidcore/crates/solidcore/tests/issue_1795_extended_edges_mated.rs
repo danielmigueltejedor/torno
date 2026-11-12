@@ -1,5 +1,5 @@
 //! tangency-labs/solidcore#1795 under `Kernel::fixes.offset_extended_edges_mated` (WR-344):
-//! the #1528 drilled plate shelled 2 inward, open at its top (z = 27.5), as SolidCraft's
+//! the #1528 drilled plate shelled 2 inward, open at its top (z = 27.5), as Torno's
 //! `smlib_shell` calls it (extended convex edges, self-intersections handled, the offset
 //! solid made). `EdgeuseOffset` cannot mate the offsets of the closed hole/arc edge (inset,
 //! the hole's tube r 7 passes out through the arc's offset r 8, so `MateEdges` finds no

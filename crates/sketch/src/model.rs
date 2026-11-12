@@ -1,8 +1,8 @@
 use serde::{Deserialize, Serialize};
 use solidcore_record::{Plane, Seg2, Vec2, Vec3};
-use solidcraft_geom::Aabb2;
-use solidcraft_geom::prelude::*;
 use std::collections::{BTreeMap, HashSet};
+use torno_geom::Aabb2;
+use torno_geom::prelude::*;
 
 use crate::link::{LinkGeom, LinkKind, LinkSource, sketch_axis_geom};
 use crate::union_find::{find, union};
@@ -1906,7 +1906,7 @@ impl Sketch {
             CurveKind::Spline { pts, control: true, degree, nurbs: None, .. } if (*degree as usize) <= solidcore_record::MAX_BEZIER_DEGREE => {
                 let p: Vec<Vec2> = pts.iter().map(pt).collect::<Option<_>>()?;
                 let k = (*degree as usize).min(p.len().saturating_sub(1)).max(1);
-                Some(crate::curves::bspline_beziers(&p, k).iter().filter_map(|c| solidcraft_geom::bezier(c)).collect())
+                Some(crate::curves::bspline_beziers(&p, k).iter().filter_map(|c| torno_geom::bezier(c)).collect())
             }
             _ => None,
         }

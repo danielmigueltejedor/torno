@@ -7,7 +7,7 @@ use crate::{
     ui_kit::{IconSegment, choice_row, expr_row, row, segmented_icons},
 };
 use serde_json::{Map, Value, json};
-use solidcraft_engine::{
+use torno_engine::{
     Sel,
     doc::{FeatureKind, end_cap::Direction, expr::Kind as ValueKind},
 };
@@ -110,7 +110,7 @@ pub fn commands(app: &SolveApp, c: &EndCap, inputs: &[SelInput], extra: &Map<Str
 pub fn for_feature(app: &SolveApp, kind: &FeatureKind) -> Option<(Kind, Vec<SelInput>, Map<String, Value>)> {
     let FeatureKind::FrameEndCap { ends, thickness, offset, ratio, chamfer, direction } = kind else { return None };
     let (_, mut inputs) = start(app, "frame.end_cap")?;
-    let length = |e: &solidcraft_engine::doc::Expr| shown_expr(e, ValueKind::Length);
+    let length = |e: &torno_engine::doc::Expr| shown_expr(e, ValueKind::Length);
     let mut c = EndCap {
         thickness: length(thickness),
         direction: usize::from(*direction == Direction::Inward),
@@ -126,7 +126,7 @@ pub fn for_feature(app: &SolveApp, kind: &FeatureKind) -> Option<(Kind, Vec<SelI
     let mut items = Vec::new();
     for (k, end) in ends.iter().enumerate() {
         let found = items.len();
-        if let Some(anchor) = solidcraft_engine::doc::face_anchor::plane_face_anchor(&end.plane)
+        if let Some(anchor) = torno_engine::doc::face_anchor::plane_face_anchor(&end.plane)
             && let Some(body) = state.body(&anchor.target.body)
         {
             let name = app.session.doc.world_body_name(&state, &body.name, anchor.component, &anchor.path);

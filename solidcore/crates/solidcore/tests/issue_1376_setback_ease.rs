@@ -2,7 +2,7 @@
 //! `SmFilletCorner::SetEaseDist` and `SmFilletExecutive::EaseSetBackSections`,
 //! tangency-labs/smlib `e74bbd3`). The corner (40, 40, 40) of a 40 mm box, its three edges
 //! rounded r 8 and set back 12 (the fork's `corner_setback_eased` test in
-//! `capi/tests/ops_kernel.cpp`, `56f6e81`; SolidCraft ladder 07/015). Over the ease of 4
+//! `capi/tests/ops_kernel.cpp`, `56f6e81`; Torno ladder 07/015). Over the ease of 4
 //! before the setback each round's section eases from the circle into the
 //! curvature-continuous quintic: on the top face's contact line of the round along X, at 16
 //! and more from the vertex the cross curvature is the circle's 1/8, at 12 (the setback) 0,

@@ -35,7 +35,7 @@ fn directional(_: &mut Session, params: &Value) -> Result<Value> {
         .ok_or_else(|| bad(cmd, "direction: expected exactly three numeric components"))?;
     let component = |i| direction.get(i).and_then(Value::as_f64).ok_or_else(|| bad(cmd, "direction: expected numeric components"));
     let direction = [component(0)?, component(1)?, component(2)?];
-    let card = solidcraft_doc::physical_material::admit_card(value).map_err(|e| bad(cmd, e.to_string()))?;
+    let card = torno_doc::physical_material::admit_card(value).map_err(|e| bad(cmd, e.to_string()))?;
     let response = card.directional_modulus(direction).map_err(|e| bad(cmd, e.to_string()))?;
     serde_json::to_value(CardModulus::from(response)).map_err(|e| bad(cmd, e.to_string()))
 }
@@ -46,7 +46,7 @@ fn validate(_: &mut Session, params: &Value) -> Result<Value> {
         .filter(|o| o.len() == 1 && o.contains_key("card"))
         .ok_or_else(|| bad("material.properties.validate", "expected {card: ...}"))?;
     let card = object.get("card").ok_or_else(|| bad("material.properties.validate", "missing card"))?;
-    let result = solidcraft_doc::physical_material::validate_card(card).map_err(|e| bad("material.properties.validate", e.to_string()))?;
+    let result = torno_doc::physical_material::validate_card(card).map_err(|e| bad("material.properties.validate", e.to_string()))?;
     let reply = CardValidated { valid: true, validation: result.into(), param_warnings: Vec::new() };
     serde_json::to_value(reply).map_err(|e| bad("material.properties.validate", e.to_string()))
 }
@@ -93,8 +93,8 @@ mod tests {
         assert_eq!(loaded.materials, s.doc.materials);
         assert_eq!(loaded.format, crate::doc::format::format_string(crate::doc::format::FORMAT));
         assert!(!loaded.format_pending.iter().any(|name| name == "physical-material-cards"));
-        let bytes = solidcraft_io::write_design_container(&loaded).unwrap();
-        let reopened = solidcraft_io::read_design(&bytes).unwrap();
+        let bytes = torno_io::write_design_container(&loaded).unwrap();
+        let reopened = torno_io::read_design(&bytes).unwrap();
         assert_eq!(reopened, loaded);
         let mut session = Session::new(reopened);
         assert_eq!(session.execute("component.properties", &json!({})).unwrap(), mass);
@@ -104,7 +104,7 @@ mod tests {
     fn material_inspection_preserves_legacy_entries_and_reports_unknowns_and_density_separately() {
         let mut s = fixture();
         let built_in = s.execute("material.list", &json!({})).unwrap();
-        for &(name, density) in solidcraft_doc::MATERIALS {
+        for &(name, density) in torno_doc::MATERIALS {
             let row = built_in["materials"].as_array().unwrap().iter().find(|m| m["name"] == name).unwrap();
             assert_eq!(*row, json!({"name":name,"density_g_cm3":density}));
             let inspected = s.execute("material.inspect", &json!({"material":name.to_lowercase()})).unwrap();

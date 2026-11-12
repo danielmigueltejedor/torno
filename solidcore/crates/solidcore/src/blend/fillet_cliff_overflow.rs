@@ -2,7 +2,7 @@
 //! they roll on across cliffs (an opening's rim, the body's outline) is built as if those
 //! faces went on past the cliffs, and the material it removes is subtracted from the body.
 //!
-//! Not upstream: the SolidCraft fork's `source/SMLib/src/SmFilletCliffOverflow.cpp`
+//! Not upstream: the Torno fork's `source/SMLib/src/SmFilletCliffOverflow.cpp`
 //! (tangency-labs/smlib `8ba4667` and `ae2a6de`, rev `68fb9162`; `eddf0ed` and `bba9914`,
 //! branch `replay/1.0.1`), behind `fixes.fillet_cliff_overflow` (WR-631, WR-638, WR-635,
 //! WR-636). The executive computes the fillet on the

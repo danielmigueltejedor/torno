@@ -2,7 +2,7 @@
 //! extrude to, and the extent turns to To Object without the Extent Type choice.
 use serde_json::json;
 use solidcore_record::Vec3;
-use solidcraft_engine::Sel;
+use torno_engine::Sel;
 
 use crate::dialogs::{Dialog, Kind, apply_commands, face_sel};
 use crate::scenario::Harness;
@@ -79,13 +79,13 @@ fn face_off_the_profile_plane_turns_the_extent_to_that_face() {
     let commands = apply_commands(&h.app, d).unwrap();
     let params = &commands[0].1;
     assert!(params.get("to").is_some());
-    let reach = solidcraft_engine::extrude_reach(&h.app.session, params).unwrap();
+    let reach = torno_engine::extrude_reach(&h.app.session, params).unwrap();
     assert!((reach - 20.0).abs() < 1e-9, "{reach}");
     // OK builds the extrude up to the face.
     h.step(&json!({"widget": "OK"})).unwrap();
     h.frames(4);
     let state = crate::open_meshing::session_world(&h.app.session);
-    let volume: f64 = state.bodies.iter().filter_map(|b| solidcraft_engine::doc::kernel::measure(&b.body).ok()).map(|m| m.volume).sum();
+    let volume: f64 = state.bodies.iter().filter_map(|b| torno_engine::doc::kernel::measure(&b.body).ok()).map(|m| m.volume).sum();
     // The box, the cylinder and the 10 x 10 x 20 extrude.
     let expected = 8000.0 + std::f64::consts::PI * 25.0 * 30.0 + 2000.0;
     assert!((volume - expected).abs() < 1.0, "{volume}");
@@ -205,7 +205,7 @@ fn manual_to_object_accepts_a_parallel_plane_with_automatic_switching_off() {
     assert!(click(&mut h, |_| Hit::Plane { name: "Lid".into(), point: Vec3::new(5.0, 5.0, 25.0) }));
     let commands = apply_commands(&h.app, dialog(&h)).unwrap();
     assert_eq!(commands[0].1["to"], json!([0.0, 0.0, 25.0]));
-    assert!((solidcraft_engine::extrude_reach(&h.app.session, &commands[0].1).unwrap() - 25.0).abs() < 1e-9);
+    assert!((torno_engine::extrude_reach(&h.app.session, &commands[0].1).unwrap() - 25.0).abs() < 1e-9);
 }
 
 #[test]
@@ -231,7 +231,7 @@ fn face_profile_then_the_opposite_face_is_the_target() {
     assert_eq!(d.inputs[0].items.len(), 1, "the top face stays the only profile");
     let commands = apply_commands(&h.app, d).unwrap();
     assert!(commands[0].1.get("to").is_some());
-    let reach = solidcraft_engine::extrude_reach(&h.app.session, &commands[0].1).unwrap();
+    let reach = torno_engine::extrude_reach(&h.app.session, &commands[0].1).unwrap();
     assert!((reach + 20.0).abs() < 1e-9, "{reach}: 20 mm down through the body");
 }
 

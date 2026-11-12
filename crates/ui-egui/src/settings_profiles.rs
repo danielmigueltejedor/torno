@@ -19,8 +19,8 @@
 //! parameters, and [`command`] does the rest after `SolveApp::run`.
 
 use serde_json::{Map, Value, json};
-use solidcraft_engine::io::vfs;
-use solidcraft_engine::{MAX_PROFILE_NAME, profile_name};
+use torno_engine::io::vfs;
+use torno_engine::{MAX_PROFILE_NAME, profile_name};
 
 use crate::ui_kit::BackingTooltipExt as _;
 use crate::{SolveApp, prefs, theme_files, ui_kit};
@@ -293,9 +293,9 @@ fn theme_id(id: &str) -> Option<&str> {
 /// name are required; unknown keys, preferences this version can't read, and themes that fail
 /// their checks are dropped; lists and texts are capped.
 pub fn sanitize(v: &Value) -> Result<Value, String> {
-    let o = v.as_object().ok_or("not a SolidCraft settings profile")?;
+    let o = v.as_object().ok_or("not a Torno settings profile")?;
     if o.get("format").and_then(Value::as_str) != Some(FORMAT) {
-        return Err(format!("not a SolidCraft settings profile: `format` must be \"{FORMAT}\""));
+        return Err(format!("not a Torno settings profile: `format` must be \"{FORMAT}\""));
     }
     let name = o
         .get("name")
@@ -371,7 +371,7 @@ pub fn sanitize(v: &Value) -> Result<Value, String> {
         }
     }
     if let Some(layout) = o.get("panel_layout") {
-        crate::panel_runtime::validate_profile_value(layout).map_err(solidcraft_engine::panels::commands::error_text)?;
+        crate::panel_runtime::validate_profile_value(layout).map_err(torno_engine::panels::commands::error_text)?;
         if let Some(d) = doc.as_object_mut() {
             d.insert("panel_layout".into(), layout.clone());
         }
@@ -470,7 +470,7 @@ fn apply(app: &mut SolveApp, doc: &Value) -> Vec<String> {
     if let Some(layout) = doc.get("panel_layout")
         && let Err(reason) = crate::panel_runtime::apply_profile_value(app, layout)
     {
-        log::warn!("settings profile: panel layout keeps its current value: {}", solidcraft_engine::panels::commands::error_text(reason));
+        log::warn!("settings profile: panel layout keeps its current value: {}", torno_engine::panels::commands::error_text(reason));
         skipped.push("panel_layout".into());
     }
     skipped
@@ -585,8 +585,8 @@ fn act(app: &mut SolveApp, id: &str, params: Value, done: &'static str) {
 
 /// General's saved profiles and row actions. All mutations still use settings.profile.*.
 pub(crate) fn section(app: &mut SolveApp, ui: &mut egui::Ui) {
-    let t = solidcraft_theme::Tokens::get();
-    let count = solidcraft_ui_text::format("prefs.reports_saved", &[("n", &app.settings_profiles.list.len().to_string())]);
+    let t = torno_theme::Tokens::get();
+    let count = torno_ui_text::format("prefs.reports_saved", &[("n", &app.settings_profiles.list.len().to_string())]);
     ui_kit::settings_section_count(ui, "profiles", app.tr("ui.profiles"), Some(&count), |ui| {
         let names = app.settings_profiles.names();
         ui.scope(|ui| {
@@ -641,7 +641,7 @@ pub(crate) fn section(app: &mut SolveApp, ui: &mut egui::Ui) {
                                 match action {
                                     "export" => {
                                         let name = name.clone();
-                                        app.pick_save(&format!("{name}.solidcraft-profile.json"), &["json"], move |app, path| {
+                                        app.pick_save(&format!("{name}.torno-profile.json"), &["json"], move |app, path| {
                                             if let Some(path) = path {
                                                 act(app, "settings.profile.export", json!({ "name": name, "path": path }), "prefs.profile_exported");
                                             }
@@ -736,7 +736,7 @@ pub(crate) fn section(app: &mut SolveApp, ui: &mut egui::Ui) {
                 crate::scenario::publish_rect(&format!("prefs:profiles:{key}:row"), row.response.rect);
             }
         });
-        let locale = solidcraft_ui_text::Locale::for_language(&app.preferences.language);
+        let locale = torno_ui_text::Locale::for_language(&app.preferences.language);
         match &app.settings_profiles.message {
             Some(Outcome::Done(id)) => {
                 ui_kit::text(ui, locale.text(id), ui_kit::Text::Note("profile_message"));
@@ -845,9 +845,9 @@ pub(crate) fn sidebar(ui: &mut egui::Ui, app: &mut SolveApp) {
 pub(crate) fn tag(ui: &mut egui::Ui) {
     let response = ui_kit::settings_chip(
         ui,
-        solidcraft_ui_text::tr("prefs.structure.in_profile"),
+        torno_ui_text::tr("prefs.structure.in_profile"),
         ui_kit::SettingsChip { icon: Some("settings_profile"), compact: true, ..Default::default() },
     )
-    .backing_on_hover_text(solidcraft_ui_text::tr("prefs.structure.profile_hover"));
+    .backing_on_hover_text(torno_ui_text::tr("prefs.structure.profile_hover"));
     crate::scenario::publish_target("prefs:in_profile", response.rect);
 }

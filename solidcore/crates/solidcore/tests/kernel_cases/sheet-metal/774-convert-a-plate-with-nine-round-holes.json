@@ -275,6 +275,6 @@
   "ungraded": [],
   "what": "a 30 x 30 x 2 plate with nine 4 mm holes converted to sheet metal (refused as not a plate of even thickness: the holes were read as polygons)",
   "why_not": [
-    "body \"Plate\" is no kernel operation's output nor an operand: SolidCraft built it or changed the kernel's record"
+    "body \"Plate\" is no kernel operation's output nor an operand: Torno built it or changed the kernel's record"
   ]
 }

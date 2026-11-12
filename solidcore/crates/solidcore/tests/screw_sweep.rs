@@ -1,4 +1,4 @@
-//! `sweep::screw` (the SolidCraft fork's `smlib_screw_sweep`, #1162, #1163): a profile in
+//! `sweep::screw` (the Torno fork's `smlib_screw_sweep`, #1162, #1163): a profile in
 //! the half-plane `y = 0, x > 0` carried about `+z` through the origin.
 //!
 //! - Every B-spline wall, sampled five points across each knot span both ways, lies within
@@ -187,7 +187,7 @@ fn volume(k: &Kernel, b: &mut Brep) -> f64 {
     brep_volume(k, b, 1e-6, &attrs).unwrap()
 }
 
-/// SolidCraft's coil of case 2552: a 0.9 square from r 4.1 to 5, pitch 1.5, 10 high.
+/// Torno's coil of case 2552: a 0.9 square from r 4.1 to 5, pitch 1.5, 10 high.
 fn coil() -> Meridian {
     Meridian::Polygon(vec![(4.1, 0.0), (5.0, 0.0), (5.0, 0.9), (4.1, 0.9)])
 }

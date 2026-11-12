@@ -8,7 +8,7 @@
 
 use egui::Pos2;
 use solidcore_record::{Plane, Vec2, Vec3};
-use solidcraft_engine::geom::prelude::*;
+use torno_engine::geom::prelude::*;
 
 use crate::SolveApp;
 use crate::viewport::Proj;
@@ -47,7 +47,7 @@ pub(crate) fn idle_point(app: &SolveApp, proj: &Proj, pointer: Pos2) -> Option<V
     // The nearest shown point under the pointer, from the sketch as drawn this frame: not the
     // selection hover, which a selection filter can turn off and which can hold a dragged
     // point's place from before the drag.
-    let visible = solidcraft_engine::view::SketchPointVisibility::new(&ss.sketch);
+    let visible = torno_engine::view::SketchPointVisibility::new(&ss.sketch);
     let near = ss
         .sketch
         .points
@@ -75,8 +75,8 @@ pub(crate) fn show(app: &SolveApp, painter: &egui::Painter, proj: &Proj, at: Opt
         at + crate::tool_cursor::READOUT,
         egui::Align2::LEFT_TOP,
         text(app, p),
-        egui::FontId::proportional(solidcraft_theme::Tokens::get().font_small),
-        solidcraft_theme::Tokens::view().text_dim,
+        egui::FontId::proportional(torno_theme::Tokens::get().font_small),
+        torno_theme::Tokens::view().text_dim,
     );
     crate::scenario::publish_rect("viewport:cursor_readout", rect);
 }

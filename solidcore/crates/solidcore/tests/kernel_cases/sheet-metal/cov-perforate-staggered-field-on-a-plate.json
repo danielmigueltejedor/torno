@@ -69,11 +69,11 @@
   "sources": [],
   "traced_ops": [],
   "ungraded": [
-    "files: SolidCraft computes it",
-    "results: SolidCraft computes it"
+    "files: Torno computes it",
+    "results: Torno computes it"
   ],
   "what": "sheet.perforate, a staggered (60 degree) field of 1 mm holes at 3 mm pitch, 1 mm margin, over a 20 x 10 x 1 plate, exported to DXF",
   "why_not": [
-    "body \"Body1\" is no kernel operation's output nor an operand: SolidCraft built it or changed the kernel's record"
+    "body \"Body1\" is no kernel operation's output nor an operand: Torno built it or changed the kernel's record"
   ]
 }

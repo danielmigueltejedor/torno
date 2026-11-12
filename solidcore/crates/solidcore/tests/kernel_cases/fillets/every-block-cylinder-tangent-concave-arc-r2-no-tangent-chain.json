@@ -165,7 +165,7 @@
     "blend_dropping"
   ],
   "ungraded": [
-    "continuity: SolidCraft computes it"
+    "continuity: Torno computes it"
   ],
   "what": "the concave half circle where a block as wide as the cylinder's diameter meets the cylinder's wall above its top, rounded r2 with its tangent chain: the half circle's pieces, ending where it runs on into the block's convex top-side edges",
   "why_not": []

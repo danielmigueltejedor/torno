@@ -1,6 +1,6 @@
 # scx: a script-first "hybrid" MCP server for Torno
 
-scx lets a language model build CAD parts in [Torno](https://github.com/tangency-labs/solidcraft) by
+scx lets a language model build CAD parts in [Torno](https://github.com/getnodalia/torno) by
 writing short Python scripts in Torno's own words (`box`, `cylinder`, `sketch`, `hole`, `fillet`,
 `part`, ...) instead of calling dozens of separate tools. Every script runs at once in Torno, and every
 reply ends with a short list of what changed, with volumes and bounding boxes, so the model can check its
@@ -59,7 +59,7 @@ combine(target, [tools], op=)   move(bodies, by=, rotate=('Z', deg), copy=False)
 remove(bodies)   rename(body, new)
 with part('Name'): ...
 measure()   edges(body)   faces(body)
-cmd('command.id', **params)   # any SolidCraft command; commands('word') finds ids
+cmd('command.id', **params)   # any Torno command; commands('word') finds ids
 ```
 
 A whole part is usually one call:
@@ -100,23 +100,23 @@ already expects, one observed failure at a time:
 
 ## Setup
 
-You need Python 3.10+ and Torno 0.40 (built and tested on 0.40.0-rc). `solidcraft-cli` must be on PATH,
+You need Python 3.10+ and Torno 0.40 (built and tested on 0.40.0-rc). `torno-cli` must be on PATH,
 or set `SCX_CLI` to its path.
 
 Against a running Torno window (you watch the model work):
 
 ```bash
-solidcraft --control 7879
+torno --control 7879
 ```
 
 ```json
-{ "mcpServers": { "solidcraft": { "command": "python", "args": ["-I", "/path/to/scx.py", "--port", "7879"] } } }
+{ "mcpServers": { "torno": { "command": "python", "args": ["-I", "/path/to/scx.py", "--port", "7879"] } } }
 ```
 
-Headless, for scripts and benchmarks (scx starts its own Torno through `solidcraft-cli`):
+Headless, for scripts and benchmarks (scx starts its own Torno through `torno-cli`):
 
 ```json
-{ "mcpServers": { "solidcraft": { "command": "python", "args": ["-I", "/path/to/scx.py", "--headless"] } } }
+{ "mcpServers": { "torno": { "command": "python", "args": ["-I", "/path/to/scx.py", "--headless"] } } }
 ```
 
 Add `--text-only` for clients that cannot show images. Some clients turn image blocks into text, and one

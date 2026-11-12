@@ -150,10 +150,10 @@
     "extrude"
   ],
   "ungraded": [
-    "results: SolidCraft computes it"
+    "results: Torno computes it"
   ],
   "what": "occurrence.align of a block's end face onto another part's top face",
   "why_not": [
-    "body \"PegBox\" is no kernel operation's output nor an operand: SolidCraft built it or changed the kernel's record"
+    "body \"PegBox\" is no kernel operation's output nor an operand: Torno built it or changed the kernel's record"
   ]
 }

@@ -3,9 +3,9 @@
 use crate::geom::Aabb3;
 use crate::render::{FaceAppearance, ProductMesh, ProductScene};
 use crate::{EngineError, Result, Session};
-use solidcraft_geom::MeshGeom;
+use torno_geom::MeshGeom;
 
-pub const MAX_PRODUCT_BODIES: usize = solidcraft_render::job::MAX_CPU_BODIES;
+pub const MAX_PRODUCT_BODIES: usize = torno_render::job::MAX_CPU_BODIES;
 
 /// Extract authoritative, visible geometry. Does not settle a live gesture implicitly.
 /// `render.scene` is the explicit model-reading command for that boundary.
@@ -59,8 +59,8 @@ mod tests {
     use crate::render::*;
     use serde_json::json;
     use solidcore_record::Vec3;
-    use solidcraft_viewport::{Camera, UpAxis};
     use std::sync::Arc;
+    use torno_viewport::{Camera, UpAxis};
 
     #[test]
     fn product_scene_keeps_placed_appearances_and_meshes_without_design_overlays() {

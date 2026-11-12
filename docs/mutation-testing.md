@@ -16,7 +16,7 @@ nobody would notice, and solidcore could get the same thing wrong without anyone
 
 `.cargo/mutants.toml` judges mutants by the black-box suites only:
 
-- `oracle_suite` (`apps/solidcraft-cli/tests/oracle_cases.rs`): every case in `tests/oracle` with
+- `oracle_suite` (`apps/torno-cli/tests/oracle_cases.rs`): every case in `tests/oracle` with
   expected values and no `known_failure` must pass, as `cargo xtask oracle` requires. It is
   `#[ignore]`d so CI doesn't replay the oracle twice.
 
@@ -29,7 +29,7 @@ the black-box suites would miss once the kernel is swapped.
 cargo install cargo-mutants --locked
 CARGO_TARGET_DIR=$PWD/target cargo mutants --in-place \
   -f crates/kernel/src/measure.rs \
-  --test-package solidcraft-cli --test-package solidcraft-engine \
+  --test-package torno-cli --test-package torno-engine \
   --baseline skip --timeout 900 --build-timeout 900
 ```
 

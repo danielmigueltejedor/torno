@@ -6,7 +6,7 @@
 //! even–odd hold of a point decided exactly or refused, the checks a profile must pass, the split
 //! of a loop where it passes a point twice, and a segment made the kernel's curve on a frame.
 //!
-//! Not upstream (SolidCraft's planar regions, moved into the kernel so the layers above compute
+//! Not upstream (Torno's planar regions, moved into the kernel so the layers above compute
 //! no geometry, docs/layers.md §1).
 //!
 //! References: Piegl & Tiller, *The NURBS Book* (2nd ed.), §1.4 (de Casteljau), §7.3 (the

@@ -93,7 +93,7 @@ fn strict_keeps_todays_errors() {
 /// message. (A call the handler accepts but the contract refused would fail one of the three.)
 #[test]
 fn the_types_read_each_key_as_the_handlers_do() {
-    let dir = std::env::temp_dir().join(format!("solidcraft-dxf-schema-read-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("torno-dxf-schema-read-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap_or_else(|e| panic!("{e}"));
     let file = dir.join("read.dxf");
     let named = |extra: Value| {
@@ -230,7 +230,7 @@ fn the_check_names_what_is_wrong_with_a_key() {
 }
 
 fn folder() -> PathBuf {
-    let dir = std::env::temp_dir().join(format!("solidcraft-silhouette-schema-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("torno-silhouette-schema-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&dir);
     std::fs::create_dir_all(&dir).unwrap_or_else(|e| panic!("{e}"));
     dir

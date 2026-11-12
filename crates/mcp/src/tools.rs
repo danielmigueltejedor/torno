@@ -4,10 +4,10 @@
 use std::sync::atomic::{AtomicU64, Ordering};
 
 use serde_json::{Map, Value, json};
-use solidcraft_engine::io::vfs;
-use solidcraft_engine::timing;
+use torno_engine::io::vfs;
+use torno_engine::timing;
 
-use solidcraft_mcp_server::{Effect, object, string, tool};
+use torno_mcp_server::{Effect, object, string, tool};
 
 use crate::backend::{Backend, STILL_RUNNING};
 use crate::options::Options;
@@ -154,7 +154,7 @@ pub fn tool_definitions_with(opts: Options) -> Vec<Value> {
                         "items": {"type": "object", "properties": {"command": {"type": "string"}, "params": {"type": "object"}}, "required": ["command"]},
                     },
                     "path": string("Instead of `commands`: a JSON file holding the steps, an array or {\"commands\": [...]} (as \
-                     `solidcraft-cli run` takes and `solidcraft-cli script` writes), read by this server within the folders the \
+                     `torno-cli run` takes and `torno-cli script` writes), read by this server within the folders the \
                      agent may use; the steps run as if they had been sent here"),
                     "rollback": {"type": "boolean", "description": "Undo completed steps when one fails (default true)"},
                     "coalesce_parameters": {"type": "boolean", "description": "Set each run of consecutive plain parameter edits (parameters.change or set_parameter with a name and a value, or changes) together, rebuilding the design once for the run instead of once per edit; a run that is refused goes step by step, naming the refused step. Other steps still see the design up to date. Each step keeps its own result; the run is one undo step (default false)"},
@@ -333,11 +333,11 @@ pub fn tool_definitions_with(opts: Options) -> Vec<Value> {
         tool(
             "crash_reports",
             "Crash reports",
-            "SolidCraft's crash reports on this computer (the app's when connected to it). Without `id`: the list, newest \
+            "Torno's crash reports on this computer (the app's when connected to it). Without `id`: the list, newest \
              first (id, kind, time, message, command, count, version, path, replayable). With `id`: the whole report: \
              message, location, backtrace, app version and commit, system, the command that crashed and the recent ones, \
-             and design_path / replay_path when it can be replayed: `solidcraft-cli crashes replay <id>`, or \
-             `solidcraft-cli run <replay_path> --in <design_path>`. Reports never leave this computer.",
+             and design_path / replay_path when it can be replayed: `torno-cli crashes replay <id>`, or \
+             `torno-cli run <replay_path> --in <design_path>`. Reports never leave this computer.",
             object(
                 json!({
                     "id": string("A report id from the list"),
@@ -401,7 +401,7 @@ pub fn tool_definitions_with(opts: Options) -> Vec<Value> {
             "Save the design",
             "Save the design to `path` or its current file (a design opened as .solidcraft keeps that name). New designs are .sc files. The default is a design container; a .json path selects plain JSON. Set format to container or json to override the path. \
              By default the path must lie in one of the agent's folders: the folder of a design opened or saved in this session (not its hidden files), \
-             SolidCraft's recovery folder, or a folder this server was started with `--allow-path DIR`. For a folder outside them, ask the user \
+             Torno's recovery folder, or a folder this server was started with `--allow-path DIR`. For a folder outside them, ask the user \
              to add `--allow-path` and that folder to this server's arguments in their MCP client configuration.",
             object(
                 json!({"path": string("Path to save to, e.g. part.sc (default: the current file)"), "format": {"type": "string", "enum": ["container", "json"], "description": "Design encoding (default: JSON for .json, container otherwise)"}}),
@@ -412,12 +412,12 @@ pub fn tool_definitions_with(opts: Options) -> Vec<Value> {
         tool(
             "skill_reference",
             "Skill reference",
-            "Read a document of SolidCraft's bundled agent skills (solidcraft-modeling, solidcraft-mechanisms, \
-             solidcraft-editing, solidcraft-checking) from the copy built into SolidCraft. `file` defaults to reference.md; \
+            "Read a document of Torno's bundled agent skills (torno-modeling, torno-mechanisms, \
+             torno-editing, torno-checking) from the copy built into Torno. `file` defaults to reference.md; \
              each skill also has SKILL.md. Unknown skills or files are refused with the available ones.",
             object(
                 json!({
-                    "skill": string("Skill name, such as solidcraft-modeling"),
+                    "skill": string("Skill name, such as torno-modeling"),
                     "file": {"type": "string", "description": "Document of that skill", "default": "reference.md"},
                 }),
                 &["skill"],
@@ -485,11 +485,11 @@ fn text_result(v: &Value, is_error: bool, opts: Options) -> Value {
         Value::String(s) => s.clone(),
         v => opts.json_text(v),
     };
-    let mut r = solidcraft_mcp_server::text_result(text, is_error);
+    let mut r = torno_mcp_server::text_result(text, is_error);
     if is_error
         && let Some(reason) = v
             .as_str()
-            .and_then(solidcraft_engine::panels::commands::structured_error)
+            .and_then(torno_engine::panels::commands::structured_error)
             .or_else(|| v.get("failed").and_then(|failed| failed.get("panel_error")).cloned())
     {
         r["structuredContent"] = json!({"panel_error":reason});
@@ -755,7 +755,7 @@ fn command_error(command: &str, error: String) -> String {
         return error;
     }
     let words: Vec<_> = id.split(|c: char| !c.is_ascii_alphanumeric()).filter(|s| !s.is_empty()).collect();
-    let mut closest: Vec<_> = solidcraft_engine::command_specs()
+    let mut closest: Vec<_> = torno_engine::command_specs()
         .into_iter()
         .filter_map(|spec| {
             let candidate = normalize(spec.id);
@@ -1385,8 +1385,8 @@ fn layout_step(step: &Value) -> bool {
     command.split('.').next().is_some_and(|area| area.eq_ignore_ascii_case("panel") || area.eq_ignore_ascii_case("layout"))
 }
 
-fn atomic_layout_refusal(count: usize, rule: solidcraft_engine::panels::Rule, detail: &str) -> (Value, bool) {
-    use solidcraft_engine::panels::{commands, error};
+fn atomic_layout_refusal(count: usize, rule: torno_engine::panels::Rule, detail: &str) -> (Value, bool) {
+    use torno_engine::panels::{commands, error};
     let mut reply = commands::sequential_failure(0, None, commands::error_text(error(rule, detail)), Vec::new());
     reply["ok"] = json!(false);
     reply["applied"] = json!([]);
@@ -1410,7 +1410,7 @@ fn batch_run(b: &mut dyn Backend, a: &Map<String, Value>) -> (Value, bool) {
     };
     if steps.len() > MAX_BATCH {
         if a.get("rollback").and_then(Value::as_bool).unwrap_or(true) && steps.iter().any(layout_step) {
-            return atomic_layout_refusal(steps.len(), solidcraft_engine::panels::Rule::CollectionLimit, "atomic layout batch step count cap");
+            return atomic_layout_refusal(steps.len(), torno_engine::panels::Rule::CollectionLimit, "atomic layout batch step count cap");
         }
         return (json!(format!("batch too long ({} steps, at most {MAX_BATCH})", steps.len())), true);
     }
@@ -1427,7 +1427,7 @@ fn batch_run(b: &mut dyn Backend, a: &Map<String, Value>) -> (Value, bool) {
         // batch's later steps and its rollback would land in the wrong design.
         let step_result = batch_step(step).and_then(|(command, params, narrow)| {
             let id = if command.is_empty() { step.get("command").or_else(|| step.get("id")).and_then(Value::as_str).unwrap_or("") } else { &command };
-            match solidcraft_engine::find_command(id).map(|spec| spec.id) {
+            match torno_engine::find_command(id).map(|spec| spec.id) {
                 Some(c @ ("component.edit_in_place" | "component.finish_edit")) => {
                     Err(format!("`{c}` goes to another design's tab: send it on its own, not in a batch"))
                 }
@@ -1468,7 +1468,7 @@ fn batch_run(b: &mut dyn Backend, a: &Map<String, Value>) -> (Value, bool) {
     // Only where the commands run in this process: a running app may be another version, with
     // commands this one lacks, and checks the batch against its own registry when it gets it.
     if b.in_process()
-        && let Some(refusal) = solidcraft_engine::batch_preflight::check(steps, b.param_check(), &[])
+        && let Some(refusal) = torno_engine::batch_preflight::check(steps, b.param_check(), &[])
     {
         let mut reply = refusal.reply(steps.len(), rollback);
         if let Some(o) = reply.as_object_mut() {
@@ -1498,7 +1498,7 @@ fn batch_run(b: &mut dyn Backend, a: &Map<String, Value>) -> (Value, bool) {
         o.insert("timings".into(), Value::Bool(true));
         o.insert("profile".into(), Value::Bool(profile));
     }
-    let fits_transport = params.to_string().len().saturating_add(64 * 1024) <= solidcraft_engine::MAX_LINE;
+    let fits_transport = params.to_string().len().saturating_add(64 * 1024) <= torno_engine::MAX_LINE;
     if fits_transport {
         match b.call("engine.batch", params) {
             Ok(mut r) => {
@@ -1514,7 +1514,7 @@ fn batch_run(b: &mut dyn Backend, a: &Map<String, Value>) -> (Value, bool) {
             }
             // Older apps and the headless session, or the app wants the steps one by one.
             Err(e) if e.starts_with("unknown method") || e.starts_with("engine.batch unavailable") => {}
-            Err(e) if solidcraft_engine::panels::commands::structured_error(&e).is_some() => return (Value::String(e), true),
+            Err(e) if torno_engine::panels::commands::structured_error(&e).is_some() => return (Value::String(e), true),
             // Never sent: no app to send it to. Or sent and still running (it was not cancelled):
             // the `pending` tool gets its result.
             Err(e) if e.starts_with(crate::backend::NOT_RUNNING) || e.starts_with(STILL_RUNNING) => {
@@ -1533,7 +1533,7 @@ fn batch_run(b: &mut dyn Backend, a: &Map<String, Value>) -> (Value, bool) {
     if atomic_layout {
         return atomic_layout_refusal(
             steps.len(),
-            if fits_transport { solidcraft_engine::panels::Rule::Capability } else { solidcraft_engine::panels::Rule::CollectionLimit },
+            if fits_transport { torno_engine::panels::Rule::Capability } else { torno_engine::panels::Rule::CollectionLimit },
             if fits_transport {
                 "authoritative atomic layout batch capability is unavailable"
             } else {
@@ -1549,17 +1549,17 @@ fn batch_run(b: &mut dyn Backend, a: &Map<String, Value>) -> (Value, bool) {
     let profile = profile && b.in_process();
     // With `coalesce_parameters`, each run of plain parameter edits as one edit (#5822); a run
     // whose combined edit is refused goes step by step.
-    for run in solidcraft_engine::batch_params::plan(steps, coalesce) {
+    for run in torno_engine::batch_params::plan(steps, coalesce) {
         let singles = match run {
-            solidcraft_engine::batch_params::BatchRun::Step(i) => vec![i],
-            solidcraft_engine::batch_params::BatchRun::Params { steps: indices, changes } => {
-                let (r, took) = timing::time(profile, || exec(b, "parameters.change", solidcraft_engine::batch_params::combined_params(&changes)));
+            torno_engine::batch_params::BatchRun::Step(i) => vec![i],
+            torno_engine::batch_params::BatchRun::Params { steps: indices, changes } => {
+                let (r, took) = timing::time(profile, || exec(b, "parameters.change", torno_engine::batch_params::combined_params(&changes)));
                 match r {
                     Ok(v) => {
                         if timed {
                             rows.push(took.to_json(indices.first().copied().unwrap_or(0), "parameters.change"));
                         }
-                        let rows = solidcraft_engine::batch_params::step_results(steps, &indices, &v);
+                        let rows = torno_engine::batch_params::step_results(steps, &indices, &v);
                         results.extend(rows.into_iter().map(|v| if verbose { v } else { compact(v) }));
                         continue;
                     }
@@ -1982,7 +1982,7 @@ fn try_parameters(b: &mut dyn Backend, changes: &Map<String, Value>, reports: &[
 /// name instead; any other refusal (an expression that does not evaluate) is the error. Returns
 /// each parameter's value now and the features rebuilt.
 fn apply_parameters(b: &mut dyn Backend, changes: &Map<String, Value>) -> Result<(Map<String, Value>, Value), String> {
-    let combined = solidcraft_engine::batch_params::combined_params(changes);
+    let combined = torno_engine::batch_params::combined_params(changes);
     match exec(b, "parameters.change", combined) {
         Ok(v) => Ok((v["changed"].as_object().cloned().unwrap_or_default(), v["recomputed"].clone())),
         Err(e) if e.contains("`name`") || e.contains("`changes`") => {
@@ -2080,7 +2080,7 @@ static SHOT: AtomicU64 = AtomicU64::new(0);
 /// `screenshot`: render or capture to a file, return it as an MCP image content block.
 fn screenshot(b: &mut dyn Backend, a: &Map<String, Value>) -> Value {
     match capture(b, a) {
-        Ok((png, info)) => solidcraft_mcp_server::image_result(&png, "image/png", info.to_string()),
+        Ok((png, info)) => torno_mcp_server::image_result(&png, "image/png", info.to_string()),
         Err(e) => text_result(&Value::String(e), true, Options::default()),
     }
 }

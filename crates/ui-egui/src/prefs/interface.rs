@@ -9,7 +9,7 @@ pub(super) fn appearance(app: &mut SolveApp, ui: &mut egui::Ui, t: &Tokens) {
             app.tr("prefs.structure.appearance_note"),
             Some(crate::settings_profiles::tag),
         );
-        let count = solidcraft_ui_text::format("prefs.appearance.theme_count", &[("count", &theme_choices(app).len().to_string())]);
+        let count = torno_ui_text::format("prefs.appearance.theme_count", &[("count", &theme_choices(app).len().to_string())]);
         ui_kit::settings_section_count(ui, "theme", app.tr("ui.theme"), Some(&count), |ui| {
             theme_row(app, ui);
             theme_options_row(app, ui);
@@ -19,7 +19,7 @@ pub(super) fn appearance(app: &mut SolveApp, ui: &mut egui::Ui, t: &Tokens) {
             ui_kit::settings_form(ui, t.space_24 * 6.0 + t.space_6, |ui| {
                 // The view's background: the theme's gradient, or one colour of the user's (#7688).
                 let label = app.tr("prefs.viewport_background");
-                let labels = [solidcraft_ui_text::tr("prefs.viewport_background_theme"), solidcraft_ui_text::tr("prefs.viewport_background_colour")];
+                let labels = [torno_ui_text::tr("prefs.viewport_background_theme"), torno_ui_text::tr("prefs.viewport_background_colour")];
                 let segments_width = (labels.iter().map(|label| ui_kit::ContentWidth::name(ui, label)).fold(0.0, f32::max) + t.space_16) * 2.0;
                 let label_width = (t.space_24 * 6.0 + t.space_6).min(ui.available_width() * 0.6);
                 let available = (ui.available_width() - label_width - t.space_14).max(0.0);
@@ -105,7 +105,7 @@ pub(super) fn appearance(app: &mut SolveApp, ui: &mut egui::Ui, t: &Tokens) {
                 // The logo in the theme's own logo colours or in its accent.
                 let label = app.tr("prefs.logo");
                 ui_kit::row(ui, label, |ui| {
-                    let labels = [solidcraft_ui_text::tr("prefs.logo_theme"), solidcraft_ui_text::tr("prefs.logo_accent")];
+                    let labels = [torno_ui_text::tr("prefs.logo_theme"), torno_ui_text::tr("prefs.logo_accent")];
                     let mut selected = usize::from(app.preferences.logo_accent);
                     if ui_kit::settings_segments(ui, label, &mut selected, &labels) {
                         app.preferences.logo_accent = selected == 1;
@@ -134,7 +134,7 @@ pub(super) fn appearance(app: &mut SolveApp, ui: &mut egui::Ui, t: &Tokens) {
                         });
                     });
                     ui.horizontal_wrapped(|ui| {
-                        let locale = solidcraft_ui_text::Locale::for_language(&app.preferences.language);
+                        let locale = torno_ui_text::Locale::for_language(&app.preferences.language);
                         for value in [0.75, 1.0, 1.1, 1.25, 1.5, 2.0] {
                             let percent = format!("{:.0}", value * 100.0);
                             let chip = ui_kit::button(
@@ -154,7 +154,7 @@ pub(super) fn appearance(app: &mut SolveApp, ui: &mut egui::Ui, t: &Tokens) {
             );
             ui_kit::divider(ui, "scale_font");
             if !cfg!(target_arch = "wasm32") {
-                ui_kit::settings_font_row(ui, solidcraft_ui_text::tr("prefs.font"), |ui, part| {
+                ui_kit::settings_font_row(ui, torno_ui_text::tr("prefs.font"), |ui, part| {
                     if part == 0 {
                         ui_font_row(app, ui);
                         return;
@@ -165,7 +165,7 @@ pub(super) fn appearance(app: &mut SolveApp, ui: &mut egui::Ui, t: &Tokens) {
                                 if crate::fonts::ui_font(&path).is_some() {
                                     app.preferences.ui_font = path;
                                 } else {
-                                    app.set_status(solidcraft_ui_text::tr("prefs.font_unreadable"), true);
+                                    app.set_status(torno_ui_text::tr("prefs.font_unreadable"), true);
                                 }
                             }
                         });
@@ -181,8 +181,8 @@ pub(super) fn appearance(app: &mut SolveApp, ui: &mut egui::Ui, t: &Tokens) {
             let mode = app.preferences.color_vision;
             ui_kit::settings_form(ui, t.form_label_width, |ui| {
                 ui_kit::settings_row_help(ui, app.tr("ui.colour_vision_mode"), app.tr("prefs.appearance.colour_vision_help"), |ui| {
-                    let modes = solidcraft_theme::ColorVision::ALL;
-                    let labels: Vec<_> = modes.iter().map(|m| solidcraft_ui_text::tr(m.label_id())).collect();
+                    let modes = torno_theme::ColorVision::ALL;
+                    let labels: Vec<_> = modes.iter().map(|m| torno_ui_text::tr(m.label_id())).collect();
                     let mut selected = modes.iter().position(|m| *m == mode).unwrap_or(0);
                     if ui_kit::settings_segments(ui, app.tr("ui.colour_vision_mode"), &mut selected, &labels)
                         && let Some(mode) = modes.get(selected)
@@ -192,7 +192,7 @@ pub(super) fn appearance(app: &mut SolveApp, ui: &mut egui::Ui, t: &Tokens) {
                     if let Some(rect) = crate::scenario::rect_of(&format!("dialog:segments:{}", app.tr("ui.colour_vision_mode"))) {
                         crate::scenario::publish_target("prefs:color_vision", rect);
                     }
-                    for mode in solidcraft_theme::ColorVision::ALL {
+                    for mode in torno_theme::ColorVision::ALL {
                         if let Some(at) =
                             crate::scenario::handle_at(&format!("dialog:{}:{}", app.tr("ui.colour_vision_mode"), app.tr(mode.label_id())))
                         {
@@ -204,7 +204,7 @@ pub(super) fn appearance(app: &mut SolveApp, ui: &mut egui::Ui, t: &Tokens) {
             super::figures::status_palette_sample(ui, app.preferences.color_vision);
             // What the modes recolour, in the mode being chosen (#7152): the status chips above keep
             // their colours in every mode.
-            super::figures::colour_vision_sample(ui, &solidcraft_theme::Tokens::get_in(app.preferences.color_vision));
+            super::figures::colour_vision_sample(ui, &torno_theme::Tokens::get_in(app.preferences.color_vision));
             if app.preferences.color_vision != mode {
                 ui.ctx().request_repaint();
             }
@@ -233,7 +233,7 @@ pub(super) fn layout(app: &mut SolveApp, ui: &mut egui::Ui) {
                             if ui_kit::segmented(
                                 ui,
                                 &mut selected,
-                                &[solidcraft_ui_text::tr("ui.layout_floating"), solidcraft_ui_text::tr("ui.layout_compact")],
+                                &[torno_ui_text::tr("ui.layout_floating"), torno_ui_text::tr("ui.layout_compact")],
                                 ui_kit::Segments { intrinsic: true, ..Default::default() },
                             ) {
                                 let _ = app.run("view.layout", json!({"mode": if selected == 1 { "compact" } else { "floating" }}));
@@ -300,7 +300,7 @@ pub(super) fn layout(app: &mut SolveApp, ui: &mut egui::Ui) {
                         dialog_left: app.preferences.dialog_place == crate::dialog_column::DialogPlace::LeftColumn,
                     }
                 },
-                |ui, state| ui_kit::layout_preview(ui, state, solidcraft_ui_text::tr("prefs.layout_note")),
+                |ui, state| ui_kit::layout_preview(ui, state, torno_ui_text::tr("prefs.layout_note")),
             );
             layout_check(
                 ui,

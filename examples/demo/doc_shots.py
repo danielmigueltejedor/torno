@@ -6,7 +6,7 @@ real app, so every figure can be made again with one command when the UI changes
     python3 examples/demo/doc_shots.py ui-tour/window        # one shot
     python3 examples/demo/doc_shots.py --list
 
-Each shot starts a fresh SolidCraft (its own settings folder, so your preferences never show) in
+Each shot starts a fresh Torno (its own settings folder, so your preferences never show) in
 an Xvfb screen, drives it over the control channel the way a person would (enclosure_ui_mcp.py's
 Demo: the pointer glides to a button and clicks it, values are typed), and writes
 docs/book/src/media/<page>/<name>.png (a still, with numbered callouts where the shot asks for
@@ -16,7 +16,7 @@ the stills again in the light theme, as <name>.light.png; the book shows the one
 own theme (docs/book/theme/media.css).
 
 Needs Xvfb, ffmpeg (x11grab) and Pillow, and a release build of the app (`--app`, default
-$CARGO_TARGET_DIR/release/solidcraft, else target/release/solidcraft). Every new file needs an
+$CARGO_TARGET_DIR/release/torno, else target/release/torno). Every new file needs an
 ATTRIBUTION row (attribution/pending/).
 """
 
@@ -72,22 +72,22 @@ def free_port():
 
 
 class App:
-    """A fresh SolidCraft on DISPLAY with its own settings, the control channel on a free port."""
+    """A fresh Torno on DISPLAY with its own settings, the control channel on a free port."""
 
     def __init__(self, exe, display, start, work):
         self.port = free_port()
         self.token = secrets.token_hex(32)
-        os.environ["SOLIDCRAFT_CONTROL_TOKEN"] = self.token
+        os.environ["TORNO_CONTROL_TOKEN"] = self.token
         settings = Path(work) / "settings"
         settings.mkdir(parents=True, exist_ok=True)
         env = dict(
             os.environ,
             DISPLAY=display,
-            SOLIDCRAFT_SETTINGS_DIR=str(settings),
+            TORNO_SETTINGS_DIR=str(settings),
             XDG_DATA_HOME=str(Path(work) / "data"),
             XDG_CONFIG_HOME=str(Path(work) / "config"),
             XDG_CACHE_HOME=str(Path(work) / "cache"),
-            SOLIDCRAFT_RENDERER="cpu",
+            TORNO_RENDERER="cpu",
             LANG="en_US.UTF-8",
         )
         argv = [exe, "--control", str(self.port)] + (["--sample"] if start == "sample" else [])
@@ -1072,7 +1072,7 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("shots", nargs="*", help="shot names, or a page (ui-tour); default every shot")
     ap.add_argument("--list", action="store_true")
-    ap.add_argument("--app", default=str(Path(os.environ.get("CARGO_TARGET_DIR") or ROOT / "target") / "release/solidcraft"))
+    ap.add_argument("--app", default=str(Path(os.environ.get("CARGO_TARGET_DIR") or ROOT / "target") / "release/torno"))
     ap.add_argument("--display", default=":97", help="the Xvfb display to start (or use, with --no-xvfb)")
     ap.add_argument("--no-xvfb", action="store_true", help="use a display that is already running")
     ap.add_argument("--keep", action="store_true", help="keep each shot's work folder")
