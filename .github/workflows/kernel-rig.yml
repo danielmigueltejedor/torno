@@ -19,8 +19,7 @@
 # them (the UI, docs, packaging) starts no runner at all, and a new area needs no edit here: the
 # plan finds the areas from the folders. Merge groups run the areas their batch's diff reaches, like a
 # pull request. Pushes to main and develop on the same paths, the release gate (release-gate.yml, workflow_call) and a run by hand run
-# every area; those pushes also commit the compiler cache (a Blacksmith sticky disk) that every
-# other run mounts read-only.
+# every area.
 name: Kernel rig
 
 on:
@@ -83,7 +82,7 @@ jobs:
     name: Select the rig areas
     # Draft pull requests run no CI, as in ci.yml.
     if: github.event_name != 'pull_request' || !github.event.pull_request.draft
-    runs-on: blacksmith-2vcpu-ubuntu-2404
+    runs-on: ubuntu-24.04
     timeout-minutes: 5
     outputs:
       # The shard matrix (JSON list of areas and the ladder; [] when nothing is selected).
@@ -118,7 +117,7 @@ jobs:
     name: Build the CLI
     needs: plan
     if: needs.plan.outputs.build == 'true'
-    runs-on: blacksmith-8vcpu-ubuntu-2404
+    runs-on: ubuntu-24.04
     timeout-minutes: 60
     env:
       CARGO_INCREMENTAL: "0"
@@ -130,15 +129,6 @@ jobs:
       - name: Size parallel compiles to the job's memory
         run: scripts/ci/build-jobs.sh
       - uses: dtolnay/rust-toolchain@stable
-      # Only pushes to main and develop commit the cache; pull requests, merge groups and forks
-      # mount a clone and never write back.
-      - name: Mount the compiler cache
-        uses: useblacksmith/stickydisk@3f6be1451e3cad893b778bc93495c80452a5da26 # v1.7.2
-        continue-on-error: true
-        with:
-          key: ${{ github.repository }}-sccache-kernel-rig
-          path: /home/runner/.cache/sccache
-          commit: ${{ github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop') && 'on-change' || 'false' }}
       - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
         with:
           key: kernel-rig
@@ -181,7 +171,7 @@ jobs:
     name: Kernel rig (${{ matrix.shard }})
     needs: [plan, build]
     if: needs.plan.outputs.shards != '[]'
-    runs-on: blacksmith-4vcpu-ubuntu-2404
+    runs-on: ubuntu-24.04
     timeout-minutes: 30
     strategy:
       fail-fast: false
@@ -222,7 +212,7 @@ jobs:
     name: kernel-rig
     needs: [plan, build, shard]
     if: always() && (github.event_name != 'pull_request' || !github.event.pull_request.draft)
-    runs-on: blacksmith-2vcpu-ubuntu-2404
+    runs-on: ubuntu-24.04
     steps:
       # A skipped build or shard counts as passed only when the plan selected none.
       - name: Every selected job passed
