@@ -857,6 +857,7 @@ Original Torno drawings, Open for owner review; no runtime assignments.
 | crates/look/icons/design/svg/model/end_cap_inward.svg | Torno contributors | original icon master (64 grid) | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
 | crates/look/icons/design/svg/model/end_cap_outward.svg | Torno contributors | original icon master (64 grid) | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
 | assets/locales/lv.json | Torno contributors | Original Latvian translation of Torno's English catalog; no commercial CAD text used | MIT OR Apache-2.0 |
+| assets/platforms/macos/dmg/background.svg | @danielmigueltejedor | original disk image window background, drawn by tools/dmg-background/draw_background.py in getnodalia/nodalia-design: flat shapes only, text is outlined Sora glyph paths (OFL-1.1); no third-party artwork | MIT OR Apache-2.0 |
 
 ## Code adapted from sibling projects
 
