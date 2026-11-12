@@ -32,7 +32,7 @@ new elliptical-chamfer picture is preserved.
 | Input | Revision |
 |---|---|
 | solidcore and its corpus | `85bf36811a32670e20c0e147c326129213d42cca` |
-| SolidCraft base | `871014f955a76fd308ce156e68c93e6372906005` |
+| Torno base | `871014f955a76fd308ce156e68c93e6372906005` |
 | Published consumer adapter | `2e8847512baf43c91ab4e2c407750d6f896b6053` in [the kernel-pin update](https://github.com/tangency-labs/solidcraft/pull/12413) |
 | Complete local consumer diff, including Cargo.lock | SHA-256 `3b304405a8da353efbd7e7badaca077a2c9e5b49466239387e85f0fcda44fe99` |
 | Measured CLI | SHA-256 `c209307a0383e3a70cf83be6a05dbd4703cdeccfc61304c9231e0cb8b948fae9` |
@@ -40,9 +40,9 @@ new elliptical-chamfer picture is preserved.
 | SMLib fork main/release checked, not measured | `8eac63c439b2670ecffcc2d7beaf2242849463bf`, `prebuilt-8eac63c439b2670ecffcc2d7beaf2242849463bf` |
 | Legacy reading reference, not executed | `scripts/upstream-pin.env`, `3fd5b9548d19aa8c12c29bc9637a96d42a06f8a5` |
 
-SolidCraft main's older kernel API does not compile directly against this solidcore revision.
+Torno main's older kernel API does not compile directly against this solidcore revision.
 The temporary consumer applies the published adapter's four source files (`core.rs`,
-`core/offset.rs`, `core/trim.rs`, `lib.rs`) to the SolidCraft base, then removes assignments to
+`core/offset.rs`, `core/trim.rs`, `lib.rs`) to the Torno base, then removes assignments to
 these additional retired flags, whose fields no longer exist:
 
 ```text

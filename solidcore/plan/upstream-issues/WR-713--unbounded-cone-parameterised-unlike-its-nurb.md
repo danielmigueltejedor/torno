@@ -8,7 +8,7 @@
 - **Trigger:** placement at the origin, Z axis, the point `(0.6 r, 0.8 r, 1)` with `r = GetRadius(1)`, tolerance 1e-3 (#2313):
   - bottom radius 1, semi-angle 10, inside out: upstream's circle is at height 1234562.33, radius 217687.65; the circle through the point is at height 1, radius 1.17633.
   - bottom radius 2, semi-angle −15, inside out or not: upstream returns no circle; the cone's circle at height 1 has radius 1.73205.
-- **How found:** SolidCraft's check of `cone_iso_circle_at_axial_height` (WR-704) on unbounded cones (#2313). The results are the same with that flag on and off.
+- **How found:** Torno's check of `cone_iso_circle_at_axial_height` (WR-704) on unbounded cones (#2313). The results are the same with that flag on and off.
 - **Confirmed:** against the pinned C++ build: the `surface.cone_p1` difftest fixtures `fixtures/surface.cone_p1/issue_2313.json` (both cones, inside out or not, swapped or not, at height 1, next to the apex and 1e4 from it) agree exactly with the C++ with the flag off, including the circle at 1234562.33 and the missing circles. The fork (tangency-labs/smlib `5e8c9c1`) has the same constructor and conversions.
 - **Rust port:** opt-in `Kernel::fixes.cone_unbounded_parameterized_as_nurb`, off by default. With it on:
   - the unbounded constructor rotates the generator for `|semi-angle| > SM_EFF_ZERO`, and a cone of negative semi-angle runs from `-SM_INFINITE_PARAMETER` to its apex;

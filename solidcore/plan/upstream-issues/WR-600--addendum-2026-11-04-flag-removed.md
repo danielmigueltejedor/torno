@@ -9,7 +9,7 @@ With the blend corner always on (tangency-labs/solidcore#2400, WR-697's addendum
 run-on past the corner's vertex in `fillet_solver/p2.rs`, the tangent end rib and the cap edge
 along the seam in `fillet_geom/p5.rs`) take the fix's side unconditionally.
 
-- **Results:** none change. SolidCraft's set had the flag on; the default had the blend corner,
+- **Results:** none change. Torno's set had the flag on; the default had the blend corner,
   which turned the same reads on.
 - **Tests:** the unit test of the side edge's convexity keeps its flag-on case alone;
   `issue_2089_tangent_tracer_crease_round` and the other tests that set the flag drop the setting.

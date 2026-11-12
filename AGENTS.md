@@ -1,6 +1,6 @@
-# SolidCraft: instructions for agents
+# Torno: instructions for agents
 
-SolidCraft is a clean-room, pure-Rust parametric 3D CAD app (sketch solver, feature timeline, B-rep kernel, an egui UI that agents drive). This file is a router: the hard rules, then the skill to read for your task. Humans: CONTRIBUTING.md.
+Torno is a clean-room, pure-Rust parametric 3D CAD app (sketch solver, feature timeline, B-rep kernel, an egui UI that agents drive). This file is a router: the hard rules, then the skill to read for your task. Humans: CONTRIBUTING.md.
 
 ## Start here
 Work: ROADMAP.md, "Where help is wanted most" in CONTRIBUTING.md, issues labelled `help wanted`, `good first issue`, `needs-triage`; architecture in `docs/architecture.md`.
@@ -15,7 +15,7 @@ Work: ROADMAP.md, "Where help is wanted most" in CONTRIBUTING.md, issues labelle
 - Layering; only `crates/kernel` uses truck; solidcore only via `solidcore-ops`/`-tess`/`-record` (`xtask/solidcore-seam.txt`): `cargo xtask layers`; see `docs/layers.md`.
 - One outer UI container, one camera path (`navigation::handle`), colours from theme tokens: `cargo xtask ui-containers`.
 - Application code is Rust only and builds for wasm: `cargo xtask wasm`, `cargo xtask web-offline-test`.
-- The product name is SolidCraft; the old name lives in `docs/compatibility.md`.
+- The product name is Torno; the old name lives in `docs/compatibility.md`.
 - Sorted lists (message catalogs, `mod` lines, languages) stay sorted: `cargo xtask lists`. Never edit generated files (`docs/features.md`, `THIRD-PARTY-LICENSES.txt`) in a PR.
 - A design-format change is ONE new file in `crates/doc/src/format/pending/`: `scripts/test-format-pending.sh`.
 - A command has input and output schemas (will become required; `schema/unconverted.txt` only shrinks): `skills/solidcraft-commands/SKILL.md`.
@@ -35,7 +35,7 @@ Work: ROADMAP.md, "Where help is wanted most" in CONTRIBUTING.md, issues labelle
 | Licences, assets, clean-room, the name | `skills/solidcraft-ground-rules/SKILL.md` |
 | Non-test Rust, hostile input, a crash report | `skills/solidcraft-crash-safety/SKILL.md` |
 | A command, a crate boundary | `skills/solidcraft-commands/SKILL.md` |
-| SolidCraft or solidcore, kernel, geometry | `skills/solidcraft-layers/SKILL.md` |
+| Torno or solidcore, kernel, geometry | `skills/solidcraft-layers/SKILL.md` |
 | A dialog, panel, camera, icon, colour | `skills/solidcraft-ui/SKILL.md` |
 | Sheet metal | `skills/solidcraft-sheetmetal/SKILL.md` |
 | Labels, messages, translations | `skills/solidcraft-ui-text/SKILL.md` |

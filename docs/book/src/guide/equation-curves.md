@@ -1,7 +1,7 @@
 # Equation curves
 
 An equation curve is a curve you **describe with a rule** instead of drawing it with clicks.
-You type the rule, and SolidCraft draws the curve that follows it, exactly, every time.
+You type the rule, and Torno draws the curve that follows it, exactly, every time.
 
 It is the way to get shapes that are hard to draw by hand: a smooth wave, a parabola, a spiral,
 or the curved side of a gear tooth.

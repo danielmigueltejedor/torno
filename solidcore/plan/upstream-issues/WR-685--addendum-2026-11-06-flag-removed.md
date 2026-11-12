@@ -2,7 +2,7 @@ Updates: WR-685
 
 #### WR-685 (update, 2026-11-06). `fillet_gn_section_generator` is removed: the G^n section and the generic blend's checks on every kernel
 
-The default kernel now builds rounds and refuses blends as SolidCraft's set already did
+The default kernel now builds rounds and refuses blends as Torno's set already did
 (tangency-labs/solidcore#2273). `UpstreamFixes::fillet_gn_section_generator` is removed, and
 every read site takes the fix's side:
 
@@ -59,7 +59,7 @@ The G^n section's prerequisites go with it: `fillet_surface_plane_curve_on_plane
 **Fixed here, with the checks now on every kernel (not the fork's):**
 - **Sheets.** `BandCutsThePart` and the break-through check ask whether the blend adds material
   (`IsConcaveEdge`), and that failed (`SM_ERR`) on an edge with no use on a material side. So
-  every round on an open sheet failed, on SolidCraft's set too: the goldens' `stubs4` rounds of
+  every round on an open sheet failed, on Torno's set too: the goldens' `stubs4` rounds of
   upstream's `test8`, `shell_fillet`, `shell_fillet2`, `sphere_plane`, `coons_01_03_29`,
   `test5` and `open_shell`. A sheet's edge bounds no material, so there's no part to cut and
   nothing to judge (`edge_bounds_material`; `wr696_band_cuts::a_round_on_a_sheet_has_no_part_to_cut`).
@@ -68,7 +68,7 @@ The G^n section's prerequisites go with it: `fillet_surface_plane_curve_on_plane
 - The mirrored knife edge's r 2 round under WR-643's flags is refused as a fold where it is not
   one (tangency-labs/solidcore#2963).
 - An R 10 cylinder's rim rounded G2 at r 9.99 runs for over 20 minutes on the G^n section, as
-  on SolidCraft's set (tangency-labs/solidcore#2964).
+  on Torno's set (tangency-labs/solidcore#2964).
 
 **Tests:** those that set the flag drop the setting, and on/off comparisons keep their on half.
 The fork ea59e9c's great-circle mark of the variable round is replaced by the default kernel's

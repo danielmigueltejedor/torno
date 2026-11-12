@@ -13,7 +13,7 @@ the geometry. Transposing the tensor exposes the same defect for constant V.
 The same native constant-U geometry is plotted in both panels; its degree-one
 pieces are straight between the evaluated knot points. The corrected dispatcher exports three corresponding records; the before and after
 evaluator exports contain identical native points. This is a native-geometry plot,
-not a VectorCraft schematic. [Evaluator export](diagnostics/iso_continuity_native_plot.rs),
+not a Pluma schematic. [Evaluator export](diagnostics/iso_continuity_native_plot.rs),
 [before data](diagnostics/iso_continuity_native_plot.json),
 [after data](diagnostics/iso_continuity_native_plot_green.json), and
 [plot script](diagnostics/iso_continuity_plot.py) reproduce it.

@@ -1,7 +1,7 @@
 #### WR-641. The fork's extended-rail-end through knot (d33890f) makes a boss's base round fail where its arc meets a wall obliquely
 - **Severity:** Wrong result (the round fails, `SM_ERR` 1001, on valid input that the fork rounds without the change)
 - **Area:** Fillets
-- **Location:** the SolidCraft fork tangency-labs/smlib, commit d33890f ("a round's surface reaches its edge's end at an extended-edge rail end"), `source/SMLib/src/SmFilletSolver.cpp`, `SmFilletSolver::CalcFilletGeom`, the "SolidCraft change: a rail that ends on an extended edge" block before the through-point loop (fork main 83748ba, `:1864`). Not in the pinned v1.0.1; the port carries it as `Kernel::fixes.fillet_through_extended_rail_end` (WR-468).
+- **Location:** the Torno fork tangency-labs/smlib, commit d33890f ("a round's surface reaches its edge's end at an extended-edge rail end"), `source/SMLib/src/SmFilletSolver.cpp`, `SmFilletSolver::CalcFilletGeom`, the "Torno change: a rail that ends on an extended edge" block before the through-point loop (fork main 83748ba, `:1864`). Not in the pinned v1.0.1; the port carries it as `Kernel::fixes.fillet_through_extended_rail_end` (WR-468).
 - **What happens:**
   - At a corner where a rail of geometry 0 ends on an extended edge, the change adds the filleted edge's end parameter to the through knots.
   - The through-point loop takes its guess there from the edge use's binormal at that end, half the second offset long, dropped onto the first base surface and evaluated on its offset.

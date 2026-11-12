@@ -2,7 +2,7 @@
 
 solidcore is a B-rep kernel in idiomatic safe Rust. It started as a port of NVIDIA's SMLib (C++,
 Apache-2.0) and has detached from it: the aim is the most correct result, by construction, not
-SMLib's. SMLib and the SolidCraft fork of it are references to consult (test inputs, expected
+SMLib's. SMLib and the Torno fork of it are references to consult (test inputs, expected
 values, known constructions), never targets to match.
 Upstream is cloned (gitignored) at `upstream/`, pinned to v1.0.1, commit `3fd5b95`
 (`scripts/upstream-pin.env` is the single source of truth for scripts, CI and the site). Many
@@ -17,7 +17,7 @@ plan/                  units/<id>.toml, findings/<slug>.md, upstream-issues/<slu
 
 ## 0. What to work on: read this before choosing anything
 
-**Where the kernel is.** solidcore replaced SMLib as SolidCraft's kernel in 0.40. The switch came
+**Where the kernel is.** solidcore replaced SMLib as Torno's kernel in 0.40. The switch came
 with bugs: not everything that worked before works now, and users meet those failures every day.
 The job now is to make what people actually build work again, correctly. It is not to polish code
 paths nobody reaches.
@@ -36,7 +36,7 @@ request that names it. Check all three, and build on the existing work rather th
 **What not to work on.**
 - **Defects you think you found** in code no user reaches: an overflow from an impossible input,
   a branch only a fuzzer finds, an "improvement" to a solver or an integrator nobody asked for.
-  File an issue with a reproduction from a real use (a rig case, a STEP file, a SolidCraft
+  File an issue with a reproduction from a real use (a rig case, a STEP file, a Torno
   design), and leave it for triage. Don't open a pull request for it unless a maintainer asks.
   Crashes and hangs from real inputs are still taken: they belong to the list above.
 - **Speed tricks.** A speed-up is taken only with its root cause, shown as a count (evaluations,
@@ -70,14 +70,14 @@ ask the maintainers on the area's hub issue before you build. Design discussion 
 [`#solidcore-dev`](https://discord.com/channels/1560611394934673498/1560631619340214394) channel on Discord.
 
 **Show the problem first, then research it.** Before you build a fix, show the person you work
-for what you are solving: a schematic of the problem drawn in VectorCraft (house style:
+for what you are solving: a schematic of the problem drawn in Pluma (house style:
 [docs/agent-style.md](docs/agent-style.md#figures)), or a rendition of the failing case, next to
 what the correct result is. For a body in an `.smb` file, `cargo run --release -p diagnostics --
 FILE.smb --out DIR` draws it through `solidcore-tess` with its large-tolerance edges over
 everything (`--highlight` and `--see-through` take face indices) and writes a JSON report of
 every face and edge with its tolerance and label pixel. A pull request that changes a case's
 result attaches its pictures before and after the change, drawn the same way from the same view,
-whenever the case can be drawn, and a VectorCraft schematic where the problem is a mechanism a
+whenever the case can be drawn, and a Pluma schematic where the problem is a mechanism a
 picture of the body cannot show (a tolerance against a gap, an enclosure that does not shrink,
 the order of a solve). Then find how the problem is solved in the literature: search for the
 papers, read the ones that apply, and design from them. Say in the issue what you read and how
@@ -302,7 +302,7 @@ own constructions. The policy (owner, 2026-11-04; supersedes 2026-11-02 and #101
 ## 5. Where things go
 
 - **Which layer a job belongs to:** [docs/layers.md](docs/layers.md). Each job lives in one layer: kernel, record, ops, tess, or the applications. The kernel computes; ops decides and sequences, and never computes a geometric quantity itself. Two implementations of one job are a bug.
-- `crates/solidcore/tests/kernel_cases/<area>/<case>.json`: a kernel-operation case (an entry, its operand records and exact expected values), one file per case; new ones come here, not to SolidCraft's rig (its README, "Adding a case").
+- `crates/solidcore/tests/kernel_cases/<area>/<case>.json`: a kernel-operation case (an entry, its operand records and exact expected values), one file per case; new ones come here, not to Torno's rig (its README, "Adding a case").
 - `plan/units/<id>.toml`: one unit's plan entry (status, claims, notes). Edit only
   your unit's file. Every tool reads them through `harness/plan/units.py` (Rust:
   `crates/goldens/src/plan.rs`).

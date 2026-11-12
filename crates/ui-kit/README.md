@@ -35,6 +35,6 @@ See `docs/ui-kit.md` for the controls and their rules.
 
 ## Licence
 
-This crate is part of SolidCraft's brand and interface, under the SolidCraft Brand and Interface
-Licence ([LICENSE](LICENSE)). Use it as part of SolidCraft; using it in another program or product
+This crate is part of Torno's brand and interface, under the Torno Brand and Interface
+Licence ([LICENSE](LICENSE)). Use it as part of Torno; using it in another program or product
 needs the maintainers' written permission first.

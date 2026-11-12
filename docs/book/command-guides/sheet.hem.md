@@ -40,7 +40,7 @@ when you need a doubled-over edge, rather than an upright wall.
 
 | Resource | What to explore | Author and licence |
 | --- | --- | --- |
-| [Editable hem demo](https://github.com/tangency-labs/solidcraft/blob/main/docs/book/scripts/hem.json) | The sheet rule, base flange and 8 mm return used in this illustration. | SolidCraft contributors; MIT OR Apache-2.0. |
+| [Editable hem demo](https://github.com/tangency-labs/solidcraft/blob/main/docs/book/scripts/hem.json) | The sheet rule, base flange and 8 mm return used in this illustration. | Torno contributors; MIT OR Apache-2.0. |
 
 [Contribute a tip, demo, model or screenshot](../dev/command-guides.md), explaining
 the selected edge and dimensions.

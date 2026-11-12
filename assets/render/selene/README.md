@@ -2,7 +2,7 @@
 
 This package develops the **author-supplied improved SELENE** into an editable native model for close-up rendering and subsequent mechanism animation. The input is SychPL's `SELENE-showcase.solidcraft`, matched byte for byte to his published file. The original is retained unchanged; the enhanced derivative is [models/SELENE-functional.solidcraft](models/SELENE-functional.solidcraft).
 
-Open the derivative in the personal SolidCraft render branch. The model contains the geometry, component ownership, joints, motion links, physical-material proxies, appearances, browser groups, saved views and inspection studies. Python is only a development tool for reproducing the changes; opening and using the design does not require Python.
+Open the derivative in the personal Torno render branch. The model contains the geometry, component ownership, joints, motion links, physical-material proxies, appearances, browser groups, saved views and inspection studies. Python is only a development tool for reproducing the changes; opening and using the design does not require Python.
 
 ![SELENE functional showcase in native Design shading](exports/SELENE-overview.png)
 
@@ -37,7 +37,7 @@ The source cap has an ideal screw relation. The six complete vials remain in the
 
 ## Reproduce the native derivative
 
-Use Python 3.11+ and the **official SolidCraft v0.18.2 CLI** identified in [SOURCE.md](SOURCE.md). That executor writes `solidcraft/28`, readable by the personal render branch's format-29 reader. The newer official v0.19.0 writes format 30 and is unsuitable as a drop-in authoring replacement for that branch. No format marker is edited to bypass compatibility.
+Use Python 3.11+ and the **official Torno v0.18.2 CLI** identified in [SOURCE.md](SOURCE.md). That executor writes `solidcraft/28`, readable by the personal render branch's format-29 reader. The newer official v0.19.0 writes format 30 and is unsuitable as a drop-in authoring replacement for that branch. No format marker is edited to bypass compatibility.
 
 From the repository root:
 
@@ -82,7 +82,7 @@ The Python checks validate prepared data and the source contract. They do not re
 
 ## Provenance and scope
 
-[SOURCE.md](SOURCE.md) and [source-lock.json](source-lock.json) pin the exact source bytes and author history. The original rover is credited to 0xlillith, the improved showcase assembly to SychPL, and the emblem to SolidCraft contributors. Ubuntu Light lettering retains its [Ubuntu Font Licence notice](licenses/UFL.txt). The source branch has no separate file-specific license declaration for the showcase additions; that provenance distinction is preserved.
+[SOURCE.md](SOURCE.md) and [source-lock.json](source-lock.json) pin the exact source bytes and author history. The original rover is credited to 0xlillith, the improved showcase assembly to SychPL, and the emblem to Torno contributors. Ubuntu Light lettering retains its [Ubuntu Font Licence notice](licenses/UFL.txt). The source branch has no separate file-specific license declaration for the showcase additions; that provenance distinction is preserved.
 
 New geometry, procedural scripts and documentation are original contributions under MIT OR Apache-2.0. Exact non-Markdown asset rows are in [ATTRIBUTION.md](../../../ATTRIBUTION.md). Manufacturer CAD, PCB artwork, logos and netlists are not embedded.
 

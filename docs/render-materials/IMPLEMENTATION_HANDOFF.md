@@ -2,7 +2,7 @@
 
 ## Scope of this contribution
 
-This PR provides English planning content under `docs/render-materials/` and native SELENE authoring resources plus development tools under `assets/render/selene/`, with exact attribution rows. It changes no application command, shader, renderer backend or native document format. The SELENE continuation reconstructs geometry, assemblies and appearances in a derivative through existing SolidCraft commands; the broader catalog remains a specification backlog. The integration base is the user's `lab/render-materials` branch at the recorded revision. Do not replace it with a newer upstream snapshot as a side effect of integrating this package.
+This PR provides English planning content under `docs/render-materials/` and native SELENE authoring resources plus development tools under `assets/render/selene/`, with exact attribution rows. It changes no application command, shader, renderer backend or native document format. The SELENE continuation reconstructs geometry, assemblies and appearances in a derivative through existing Torno commands; the broader catalog remains a specification backlog. The integration base is the user's `lab/render-materials` branch at the recorded revision. Do not replace it with a newer upstream snapshot as a side effect of integrating this package.
 
 ## Immediate implementation tasks
 

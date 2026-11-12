@@ -11,7 +11,7 @@ gone; no path removes every trim curve any more.
   keeps the flag-on halves alone; the flag-off assertions went with the behaviour they pinned.
 - **Results:** on the default kernel the kept trims change these tests' results:
   - `tests/issue_2020_offset_mitred_below_depth.rs`, the mitred rounds' top moved to -9 with
-    SolidCraft's flags: the volume is 1006.3206273052182, the closed form's 1006.3206273131506
+    Torno's flags: the volume is 1006.3206273052182, the closed form's 1006.3206273131506
     to 7.9e-12 relative, where the fork's 2fc375f body is 1006.320632128887 (4.8e-9 over it).
     The test now gates on the closed form to 1e-10 and on the fork's value to 1e-8.
   - `tests/issue_2479_pcurve_ends_in_domain.rs`: one trim of the box bottom's rounds

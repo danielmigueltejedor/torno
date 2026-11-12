@@ -1,7 +1,7 @@
-# general: SolidCraft recipe timing evidence and replay tooling (2026-11-05)
+# general: Torno recipe timing evidence and replay tooling (2026-11-05)
 
 Unit: general benchmark tooling. PR: [#2841](https://github.com/tangency-labs/solidcore/pull/2841).
-Inputs: the twenty fresh-model recipes from SolidCraft #3992, identified below.
+Inputs: the twenty fresh-model recipes from Torno #3992, identified below.
 This record compares completed evaluations; it does not certify kernel correctness.
 
 ## Historical evidence

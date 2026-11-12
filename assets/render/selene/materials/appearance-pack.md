@@ -10,7 +10,7 @@ Forty-eight original appearance recipes are prepared for the current opaque PBR 
 | `appearance-swatches.json` | Prepared command script with 48 labeled box swatches and one neutral support base. It uses the existing `file.new`, `solid.box` and `appearance.assign` command shapes. |
 | `appearance-pack.md` | Contract, use, limitations and recipe index. |
 
-The authoring step checked JSON structure, ID/name uniqueness, catalog and capability references, numeric admission bounds, exact runtime parameter keys, and every swatch assignment against the recipe authority. **No SolidCraft runtime was executed and no rendered image was visually reviewed during authoring.** The script is a prepared input whose execution and render admission must be verified on the selected build.
+The authoring step checked JSON structure, ID/name uniqueness, catalog and capability references, numeric admission bounds, exact runtime parameter keys, and every swatch assignment against the recipe authority. **No Torno runtime was executed and no rendered image was visually reviewed during authoring.** The script is a prepared input whose execution and render admission must be verified on the selected build.
 
 ## Runtime projection contract
 
@@ -148,4 +148,4 @@ All entries use opacity 1 and the illustrative IOR control 1.5. M is metallic fr
 
 ## Original provenance
 
-Author: SolidCraft contributors. License: MIT OR Apache-2.0. The two JSON files are original clean-room resource data and analytic command inputs. No commercial material library, copied shader, third-party artwork, restricted CAD extraction or generated image texture is bundled. Their exact attribution rows belong in the repository root `ATTRIBUTION.md`; Markdown documentation is exempt from the non-Markdown asset gate.
+Author: Torno contributors. License: MIT OR Apache-2.0. The two JSON files are original clean-room resource data and analytic command inputs. No commercial material library, copied shader, third-party artwork, restricted CAD extraction or generated image texture is bundled. Their exact attribution rows belong in the repository root `ATTRIBUTION.md`; Markdown documentation is exempt from the non-Markdown asset gate.

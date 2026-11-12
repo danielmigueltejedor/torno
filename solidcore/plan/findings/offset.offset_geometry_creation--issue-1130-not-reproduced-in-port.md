@@ -1,6 +1,6 @@
 # offset.offset_geometry_creation: #1130 (a shelled dome's rim marched on B-spline extensions) does not reproduce in the port
 
-**This is a fork report only.** tangency-labs/solidcore#1130 was reported by jyviko (SolidCraft rig shell/4847). It was confirmed on the SolidCraft fork's C++ (capi test `ops_kernel shelled_dome_rim`), not on upstream SMLib (neither 1.0.0, c9c5979, nor 1.0.1) and not on our C++ build. It is therefore not recorded in `plan/upstream-issues/`. Rechecked on the 1.0.1 port (3fd5b95): `issue_1130_shelled_dome_rim` passes unchanged.
+**This is a fork report only.** tangency-labs/solidcore#1130 was reported by jyviko (Torno rig shell/4847). It was confirmed on the Torno fork's C++ (capi test `ops_kernel shelled_dome_rim`), not on upstream SMLib (neither 1.0.0, c9c5979, nor 1.0.1) and not on our C++ build. It is therefore not recorded in `plan/upstream-issues/`. Rechecked on the 1.0.1 port (3fd5b95): `issue_1130_shelled_dome_rim` passes unchanged.
 
 ## The fork's report
 

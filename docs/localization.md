@@ -1,6 +1,6 @@
 # UI localization
 
-SolidCraft embeds its translations and works offline. English, Arabic, Bosnian, Czech, Danish, German, English (UK), Spanish, Finnish, French, Galician, Hebrew, Croatian, Italian,
+Torno embeds its translations and works offline. English, Arabic, Bosnian, Czech, Danish, German, English (UK), Spanish, Finnish, French, Galician, Hebrew, Croatian, Italian,
 Japanese, Georgian, Korean, Latvian, Malay, Norwegian Bokmål, Dutch, Polish, Brazilian Portuguese, Russian, Serbian, Turkish, Ukrainian and Chinese are currently registered in `crates/ui-egui/src/i18n.rs`. Adding a language requires an
 embedded catalog and one registration there; the preferences selector and validation use the same
 registry.
@@ -90,7 +90,7 @@ claim it, or the English-text lookup would silently pick one.
 
 ## Rendering and coverage
 
-The Italian catalog uses original translations of SolidCraft's English messages, not text
+The Italian catalog uses original translations of Torno's English messages, not text
 extracted from commercial CAD software. Its core terminology is Schizzo (Sketch),
 Estrusione (Extrude), Raccordo (Fillet), Smusso (Chamfer), Corpo (Body), Componente
 (Component) and Vincolo (Constraint). Draft geometry is Sformo, while a report draft

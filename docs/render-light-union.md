@@ -72,4 +72,4 @@ Renderer mixed-light and anisotropic/reflection/HDR combination cases have
 executed. Current combined engine contracts, CLI/UI workflow parity and native
 presentation acceptance remain pending.
 No external assets, dependencies or license changes are introduced; the existing
-SolidCraft implementations and their contribution licenses are retained.
+Torno implementations and their contribution licenses are retained.

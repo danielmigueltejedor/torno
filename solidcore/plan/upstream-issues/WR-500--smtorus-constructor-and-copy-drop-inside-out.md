@@ -6,8 +6,8 @@
   - The copy constructor (`:109-117`) does not copy the member either.
   - Only `RebuildSTEPFromNURBParameters` and `ReadFromDB` set it.
 - **What happens:** a torus made inside out fails Test #11 as soon as it is made. A torus whose rebuild found it inside out fails again after its first copy. `SmSphere`'s constructor and copy keep the flag.
-- **Trigger:** tangency-labs/solidcore#1490: `SmTorus(origin 0, X, Y, [0,270] x [-90,90], R 20, r 4, inside out)` gives surface FALSE and generator TRUE. Five SolidCraft rig cases (sweeps/3897, 4007, 5195, 5325, crashes/4542) fail Test #11 on a copied inside-out torus.
-- **How found:** SolidCraft rig, issue #1490.
+- **Trigger:** tangency-labs/solidcore#1490: `SmTorus(origin 0, X, Y, [0,270] x [-90,90], R 20, r 4, inside out)` gives surface FALSE and generator TRUE. Five Torno rig cases (sweeps/3897, 4007, 5195, 5325, crashes/4542) fail Test #11 on a copied inside-out torus.
+- **How found:** Torno rig, issue #1490.
 - **Confirmed:** by reading the pinned source. The Rust port matches it; difftest `surface.torus` covers it with cases `issue1490_*` (construct, copy and `IsNurbSurfaceTorus` of inside-out tori, fix off). The fork (tangency-labs/smlib 5afca53) has the same code.
 - **Fix:** the constructor sets `m_bInsideOut = bInsideOut`, and the copy constructor copies it.
 - **Rust port:** opt-in `Kernel::fixes.torus_keeps_inside_out` (default `false`, upstream's behaviour) in `crates/solidcore/src/surface/torus.rs`:

@@ -1,9 +1,9 @@
-# SolidCraft roadmap: developer detail
+# Torno roadmap: developer detail
 
 The short, user-facing roadmap is [ROADMAP.md](../../ROADMAP.md). This page is the detailed
 developer status, kept as it was.
 
-Status as of **2026-10-14**. SolidCraft supports parametric modelling (sketch →
+Status as of **2026-10-14**. Torno supports parametric modelling (sketch →
 features → parametric timeline) as an open, pure-Rust, agent-drivable application.
 
 ## At a glance
@@ -69,7 +69,7 @@ PCB / Package, Render, Animation, Simulation, Manufacture/CAM, Drawings.
 | M12 | Release: cross-platform packages, verification and deliberate publication implemented; original current-UI demo refreshed. macOS Developer ID signing and notarization are in the release workflow (#5749; they switch on when the Apple secrets exist). Windows installer signing and broader performance work remain | in progress | 16 |
 | M14 | Configurations: a table of rows (parameter expressions and feature suppressions per row) switched with config.activate (undoable, all or nothing), kept through parameter renames and feature deletes (config.configure, config.table, config.column/row/activate). Per-row body materials and appearances (library looks, custom colour/opacity and clearing overrides), undoable activation and save/reopen: done. Ordered typed configuration rules, atomic validation and structured rule editing: done. Component appearance and certified semantic face style columns, atomic preview/apply and independent-copy remapping: done. Exact constructed sketch-side and immutable imported-face lineage now preserve legacy names and reject retargeting. Left: ambiguous shifted/two-sided caps | in progress | 4 |
 | M13 | Never lose work: atomic saves (temporary file, flush, rename; a crash at any moment leaves the old file or the new one) with the replaced version kept as `<file>.bak`; autosave of unsaved changes to the recovery folder every 5 minutes (preference) and after big operations, only when something changed; "Recover unsaved design?" on the next launch (`doc.recovery_list`, `doc.recover`, `doc.recovery_discard`); a kill-mid-save test (process killed while saving a 0.5 MB design 25 times). File format: `"format": "solidcraft/12"`, older formats upgraded step by step (`doc::format`), newer ones refused with a message, out-of-range numbers and broken placements refused; a corpus of designs saved by M0, components-era, joints-era and current builds (apps/solidcraft-cli/tests/corpus) that must open and evaluate as saved; damaged and hostile variants (truncation, bit flips, hostile values, removed keys, repeated features, deep nesting) never panic | done | 6 |
-| M15 | Frames and weldments (#4003): structural members along 2D and 3D sketch lines, butt and mitre corners, trim to faces and bodies, end caps, gussets, cosmetic welds and a cut list. Done: the profile library (`frame.profile.list`, `frame.profile.properties`, `frame.profile.insert`): bar, round bar, rectangular and round tube, angle, channel and I-beam, each SolidCraft's own parametric definition with exact fillet arcs and exact section properties (area, centroid, second moments), tested against hand-computed values; members (`frame.member`): one body per straight line of a 2D or 3D frame sketch, following parameter edits, with a built-in profile (its dimensions parameter expressions) or a profile sketch (its drawn material by alternating nested loops), anchor, angle and mirror; each member's name kept with its line. Left: corners, trims, end caps, gussets, welds, cut list, FRAME tab and dialogs | in progress | 60 |
+| M15 | Frames and weldments (#4003): structural members along 2D and 3D sketch lines, butt and mitre corners, trim to faces and bodies, end caps, gussets, cosmetic welds and a cut list. Done: the profile library (`frame.profile.list`, `frame.profile.properties`, `frame.profile.insert`): bar, round bar, rectangular and round tube, angle, channel and I-beam, each Torno's own parametric definition with exact fillet arcs and exact section properties (area, centroid, second moments), tested against hand-computed values; members (`frame.member`): one body per straight line of a 2D or 3D frame sketch, following parameter edits, with a built-in profile (its dimensions parameter expressions) or a profile sketch (its drawn material by alternating nested loops), anchor, angle and mirror; each member's name kept with its line. Left: corners, trims, end caps, gussets, welds, cut list, FRAME tab and dialogs | in progress | 60 |
 
 M6 navigation preferences include **Touchpad**: Shift + pointer movement pans, Alt/Option +
 pointer movement orbits without a mouse button, and vertical scrolling zooms. Other presets
@@ -295,8 +295,8 @@ completed drawings publish atomically. The browser still exports synchronously.
   anywhere. See [crash reports](crash-reports.md).
 - Agent chat (off by default, desktop): a side panel that drives a coding agent the user
   already has (Claude Code through its ACP adapter, Codex, Gemini CLI, OpenCode, Grok Build, …) over the
-  Agent Client Protocol, under the user's own login; SolidCraft stores no keys. The agent works
-  through SolidCraft's MCP tools on a gated endpoint of its own: file actions wait for Allow or
+  Agent Client Protocol, under the user's own login; Torno stores no keys. The agent works
+  through Torno's MCP tools on a gated endpoint of its own: file actions wait for Allow or
   Deny, crash reports are off limits, 24 changes per message, one undo step per message, and
   the agent's whole process group ends with the panel or the app. Docks left or right,
   minimises to a strip. Grok Build discovery includes `~/.grok/bin` and reuses the user's
@@ -664,7 +664,7 @@ and reference-object placement remain separate work, as do loft rails and center
   format. Generated-mesh storage measurements reduce serialization and decoding work;
   a seekable reader defers original blobs until after provisional display.
   See [container format](design-container.md) and [performance measurements](perf.md).
-- Warm saves with explicit `cache: true` can include a versioned native B-rep cache through SolidCraft-owned topology
+- Warm saves with explicit `cache: true` can include a versioned native B-rep cache through Torno-owned topology
   and geometry records, with a separate kernel adapter and bounded binary reader. Exact
   face-source certificates and operation history survive codec round trips. A provisional
   picture can be generated before original blobs are read; editing and measurement wait

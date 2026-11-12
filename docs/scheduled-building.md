@@ -1,6 +1,6 @@
 # Automated Build & Deployment Pipeline
 
-SolidCraft includes automated build and deployment scripts for Windows (`update-solidcraft.ps1`) and Linux (`update-solidcraft.sh`).
+Torno includes automated build and deployment scripts for Windows (`update-solidcraft.ps1`) and Linux (`update-solidcraft.sh`).
 
 The scripts check the selected Git branch for updates, build native GUI and CLI executables, optionally build the WebAssembly target, and deploy successful binaries. Builds run in an isolated Git worktree so the user's original checkout, current branch, and uncommitted changes remain untouched.
 

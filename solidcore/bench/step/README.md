@@ -12,7 +12,7 @@ bench/step/run.py --corpus /tmp/step-corpus --out /tmp/bake \
 ```
 
 - `fetch.sh` collects the files, folds duplicates by SHA-256 and writes `manifest.tsv`. The
-  sources are pinned: SolidCraft's own STEP tests (when run inside SolidCraft's tree),
+  sources are pinned: Torno's own STEP tests (when run inside Torno's tree),
   dan335/step-conformance, solidcore's fixtures, cadmpeg's fixtures, and the NIST PMI and STEP
   Tools sets through `scripts/fetch-*-corpus.sh` (SHA-256 pinned). The STEP Tools files are "All
   Rights Reserved": they are downloaded for the run and never committed.

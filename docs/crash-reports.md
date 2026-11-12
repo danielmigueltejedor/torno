@@ -8,8 +8,8 @@ until you review and submit it, and the design is not part of the draft.
 
 To send a report:
 
-1. Review the title, report text and screenshot in SolidCraft, then click **Open GitHub issue form**
-   (**Open GitHub** in narrow windows). SolidCraft copies the report text to your clipboard and opens
+1. Review the title, report text and screenshot in Torno, then click **Open GitHub issue form**
+   (**Open GitHub** in narrow windows). Torno copies the report text to your clipboard and opens
    GitHub. Short reports are also filled in through the URL; paste longer reports into the GitHub draft.
 2. Attach the screenshot if you want to share it: use **Copy screenshot** and paste it into
    GitHub, or use **Save screenshot…** and upload the PNG. Screenshots are not attached automatically.
@@ -19,7 +19,7 @@ To send a report:
 
 The same reviewed report dialog is used by **Report a bug**, command errors and crash reports.
 Desktop and web builds submit through GitHub in the browser; the dialog has no direct submission
-API and needs no GitHub token in SolidCraft. It explains this beside the public-report/account notice.
+API and needs no GitHub token in Torno. It explains this beside the public-report/account notice.
 Sign in with a GitHub account to publish the report.
 
 **Copy report** and **Open GitHub issue form** remain available without credentials or a connection.
@@ -30,7 +30,7 @@ close button. The two export actions must remain visible at high UI zoom.
 
 If offline, a browser launch is blocked, or GitHub cannot be reached, the dialog tells the user to
 copy the report and keep the text to submit later. Opening GitHub requests a clipboard copy even for
-short reports. SolidCraft cannot confirm browser launch, clipboard delivery or submission; the draft
+short reports. Torno cannot confirm browser launch, clipboard delivery or submission; the draft
 stays editable for retrying. Copying or opening a report does not modify the design or its undo history.
 
 ## Where they are

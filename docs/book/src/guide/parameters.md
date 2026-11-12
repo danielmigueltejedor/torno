@@ -26,7 +26,7 @@ Any value input can name its value: type `width = 40` (or `#width = 40`) for a d
 value box while drawing a shape (a line's length, a rectangle's width and height, a circle's
 diameter: the shape is drawn at that size and its dimension uses the parameter), an extrude
 distance, a fillet radius, a hole diameter, a sheet metal rule, a joint's offset and so on.
-SolidCraft adds the user parameter `width` with the expression `40`, and the input uses
+Torno adds the user parameter `width` with the expression `40`, and the input uses
 `width` from then on, so editing it again shows `width`. A bare number reads as it would in that
 input (the design's units for a length, degrees for an angle), and the parameter keeps that
 unit. The right-hand side can be any expression, such as `width = depth * 2`. The command and
@@ -109,8 +109,8 @@ In a CSV, a value that a spreadsheet would run as a formula is written with a `'
 spreadsheet shows it as text. That is a value that starts with `=`, `+`, `-` or `@`, their full-width
 forms, a tab or a line break, after any spaces and `'`; a plain number such as `-5` is left as it is.
 The import takes the `'` off again. A spreadsheet that saves the file again as CSV can drop the `'`
-(Excel does), so export again from SolidCraft instead of passing that file on. Earlier versions of
-SolidCraft wrote every value unchanged, so in a CSV from one of them, a value whose first character
+(Excel does), so export again from Torno instead of passing that file on. Earlier versions of
+Torno wrote every value unchanged, so in a CSV from one of them, a value whose first character
 really was a `'` typed before a formula character (`'=x`) now imports without it (`=x`).
 **Configurations** (`config.*`) keep a table of rows, each with its own parameter values and
 suppressed features, physical materials and body appearances, switched with `config.activate`.

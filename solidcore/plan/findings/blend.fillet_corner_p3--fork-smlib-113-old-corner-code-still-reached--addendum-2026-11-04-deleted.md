@@ -24,7 +24,7 @@ Updates: plan/findings/blend.fillet_corner_p3--fork-smlib-113-old-corner-code-st
 - **The N x N setback paths** #2365 kept (3fc2814fb, e6c3a6aec): the Setback does not build every
   corner they do. A setback asked with `SetSetBackDist` alone at a corner the Ball takes is
   refused (`asked_setback_not_built`); marking the vertex with `AddSetBackVertex` first, as
-  SolidCraft does, makes it the N x N corner.
+  Torno does, makes it the N x N corner.
 - **The closed Nx1 corner's angle case:** an edge meeting itself at an angle is still that
   corner, until #2349 replaces it.
 - **The convex N x N chamfer branch:** the chamfer event replaces it only with

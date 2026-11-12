@@ -1,4 +1,4 @@
-# SolidCraft sheet metal reference for agents
+# Torno sheet metal reference for agents
 
 Command shapes for sheet metal, the segment contract, the bend arithmetic the engine uses, the
 rule values a shop supplies, the inference recipes for FR-17 to FR-20, the traps and one worked

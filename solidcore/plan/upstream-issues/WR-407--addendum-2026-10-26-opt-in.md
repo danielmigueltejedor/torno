@@ -16,7 +16,7 @@
 - **Tests:** `issue_434_planar_path_frame_keeps_the_plane_normal_as_the_frame_z` and
   `issue_434_cover_refuses_a_continuation_that_folds` (fix on; each fails with its gate
   forced off), `issue_434_default_keeps_the_upstream_sweep_frame` and
-  `issue_434_default_covers_across_the_fold` (default pin). The SolidCraft fixture
+  `issue_434_default_covers_across_the_fold` (default pin). The Torno fixture
   `fixtures/solidcraft/434-two-overlapping-swept-arc-walls.json` turns both fields on
   (`fixes`).
-- Callers that want the fork's behaviour (SolidCraft) set both fields.
+- Callers that want the fork's behaviour (Torno) set both fields.

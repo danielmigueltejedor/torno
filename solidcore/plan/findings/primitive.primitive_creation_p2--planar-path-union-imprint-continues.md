@@ -10,7 +10,7 @@ sources, both ends on one proto vertex) returns `SM_ERR_NULL_POINTER (1006)` fro
 `GetFinalVertex` in both. So the intersector is not where they diverge. C++ removes
 the edge definition, goes on (`SE_MSG`) and `IntersectInsertRelate` returns
 `SM_SUCCESS` from `SetRelationships`. The port stopped there because it carries the
-SolidCraft fix for UB-242 (tangency-labs/smlib af8db37), which ends the Boolean on any
+Torno fix for UB-242 (tangency-labs/smlib af8db37), which ends the Boolean on any
 imprint error.
 
 UB-242's hazard is a B-rep left half edited by a failed `MakeEdgeInFace`. The failure here

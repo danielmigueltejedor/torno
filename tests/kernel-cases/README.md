@@ -31,7 +31,7 @@ once), `each_step` (after every sweep, boolean and blend, as before) or `off`; t
   kernel's. It comes from analysis or a hand calculation, or else from the invariants below.
 - **No user designs.** A crash report or a repro design becomes a small synthetic recipe that
   shows the same geometry. Check for private content before committing anything.
-- **No workaround on SolidCraft's side.** A case that fails stays failing until the kernel is
+- **No workaround on Torno's side.** A case that fails stays failing until the kernel is
   fixed. File SMLib defects as issues here with the `area:kernel` label; the fix goes into
   `solidcore`, and the mirror workflow pushes it to tangency-labs/solidcore.
 
@@ -125,7 +125,7 @@ the frozen truck-geometry PRs, a `kernel-paused` PR), for the report's coverage 
 | `files` | The files the case wrote to `$OUT`, each `{path, json \| csv \| dxf}`, matched as a part of what is there: every key the case gives, an array item by item and as long, a whole number exactly, any other number within `rel`. `json`: the file's JSON; `csv`: its rows, as objects keyed by the header row; `dxf`: per layer of its ENTITIES section, how many of each entity (`{"CUT": {"CIRCLE": 1, "ELLIPSE": 0, "length_mm": 31.416}}`; a count may be a range `[min, max]`) and `length_mm`, the total length of its lines, arcs, circles, ellipses and polylines. |
 | `results` | The commands' own answers, each `{step, pointer?, json, rel?, abs_mm?}`: the answer of the `step`th command (from 1, base commands included), or its part at the JSON `pointer` (RFC 6901), matched as `files` matches JSON: a whole number exactly (a count), another within `rel` (the case's relative tolerance unless given) or `abs_mm`, lists item by item. |
 | `construction` | `{name: spec}`, a spec being `{point: [x,y,z]}`, `{axis: {through, dir}}` or `{plane: {through, normal}}`: each named construction point, axis or plane as the timeline evaluated it. A point within the position tolerance (`tolerance.abs_mm`, else 1e-3 of the box diagonal, of 1 mm where there is no body); an axis whose direction is parallel to `dir` (either way, sine of the angle at most 1e-6) and whose line passes within it of `through`; a plane likewise with `normal`. An axis or plane is graded as the line or plane it is, not by the origin it keeps. |
-| `missing` | A capability SolidCraft has no command or parameter for yet (`"solid.thread has no start count"`): the case is reported **not supported yet** without running, so the gap stays visible. |
+| `missing` | A capability Torno has no command or parameter for yet (`"solid.thread has no start count"`): the case is reported **not supported yet** without running, so the gap stays visible. |
 
 ## The kernel rig gate
 
@@ -253,5 +253,5 @@ above, answers in closed form or exact), export it with `--area <area> --export 
 `DIR/<area>/<id>.json` and its `.bodies.json.gz` under `solidcore`, and delete the draft
 (it is not in `CASES`, so it cannot be committed here). An entry can also be written by hand as
 solidcore's README describes. The mirror workflow pushes the change to tangency-labs/solidcore. A
-case about a command, the UI or a product rule stays in SolidCraft as a test in its area's
+case about a command, the UI or a product rule stays in Torno as a test in its area's
 existing test file.

@@ -1,7 +1,7 @@
 # Render resource starter pack
 
 Version **1.0.0**, authored 2026-10-21. This is a reproducible resource handoff
-for the personal SolidCraft render/materials fork. Its parent is the catalog
+for the personal Torno render/materials fork. Its parent is the catalog
 checkpoint `10ada1b45a4eb285ce752ac72f9aaa968ff8b5c4`, on the fixed
 `lab/render-materials` base. It does not update upstream or the application.
 
@@ -86,7 +86,7 @@ python3 -B assets/render/starter/tools/environments.py preview
 python3 -B assets/render/starter/tools/lighting.py review
 ```
 
-These are numerical data/fixture diagnostics, not screenshots of SolidCraft or
+These are numerical data/fixture diagnostics, not screenshots of Torno or
 proof of photorealistic output. They are not shipped as production resources.
 
 ## Integration contract

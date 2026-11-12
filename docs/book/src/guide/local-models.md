@@ -1,13 +1,13 @@
 # Local models with the Assistant
 
 You can use a model running on your computer to work on the open design in
-SolidCraft's desktop Assistant. See [Agent chat](agent-chat.md) for the panel's
+Torno's desktop Assistant. See [Agent chat](agent-chat.md) for the panel's
 controls.
 
 ## What you need
 
 - Ollama, LM Studio, or another OpenAI-compatible server running on your computer.
-- A model that supports **tool calling**: this lets it ask SolidCraft to read or
+- A model that supports **tool calling**: this lets it ask Torno to read or
   change the design. On Ollama's model page, look for the **tools** tag, or run
   `ollama show <model>` and look for `tools` under capabilities. Tool support alone
   does not guarantee good results; see the table below.
@@ -17,7 +17,7 @@ controls.
 ## Set it up
 
 1. Start your server and load or download the model you want to use.
-2. In SolidCraft, open **Preferences > AI > Add agent…** and choose the
+2. In Torno, open **Preferences > AI > Add agent…** and choose the
    **OpenAI-compatible API**. Choose Ollama, LM Studio, or a custom URL.
 3. Enter the server's base URL, such as `http://localhost:11434/v1` for Ollama,
    and the model name. Use **Test**, then add the endpoint.

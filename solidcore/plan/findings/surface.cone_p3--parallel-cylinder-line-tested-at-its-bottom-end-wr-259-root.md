@@ -16,7 +16,7 @@ domain's v minimum is above 0, the same in Rust.
 Change: the Boolean opts into testing the line at its middle
 (`Kernel::cone_parallel_midpoint_test`, set and restored by
 `boolean::merge::p4::manifold_boolean`); the default stays upstream, so `surface.cone_p3`
-still matches the C++ bit for bit. SolidCraft cases on main 70146d6fc: PASS 28 -> 32,
+still matches the C++ bit for bit. Torno cases on main 70146d6fc: PASS 28 -> 32,
 ERROR 4 -> 0, FAIL 0, DEFERRED 29 unchanged; the four 3665 cases pass against their
 closed-form volumes. Ceiling: a line that overlaps both domains only away from its middle
 is still dropped (upgrade: clip `[dMin, dMax]` to both domains' v ranges). Ruled out:

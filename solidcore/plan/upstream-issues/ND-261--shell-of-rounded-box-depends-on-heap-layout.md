@@ -10,7 +10,7 @@
   - With only one vertical edge, the four vertical edges or the four top edges rounded, the closed shell is a manifold solid, so the failure needs the corner blend patches where three rounds meet.
   - Some layouts crash (UB-264).
 - **Trigger:** `SmApiCreateBox(0, 30, 20, 10)`; `SmApiFilletEdges` (r3, cross section 1, continuity 1, thumbweight 1) on all twelve edges, on the four vertical edges, or on one vertical edge; then `SmApiShellBrepFull(-2, TRUE, TRUE, FALSE, open)`, with `open` empty or the plane face at z = 10.
-- **How found:** SolidCraft regression rig on the SMLib fork (tangency-labs/solidcore#460, which reported the open shell as invalid there). Then:
+- **How found:** Torno regression rig on the SMLib fork (tangency-labs/solidcore#460, which reported the open shell as invalid there). Then:
   - a C++/Rust comparison case of `blend.fillet_executive_p3` whose C++ status changed (1001 → 0) between two builds whose only change came after the shell call;
   - a heap-layout sweep: an `LD_PRELOAD` constructor allocates 2N chunks of S bytes before `main` and frees every other one (S in 16, 48, 80, 128, 256, 512; N in 2, 16, 64, 128), as for ND-259.
 - **Confirmed:** yes, on the C++ reference (prebuilt c9c5979 release build, x86-64 Linux), cases `real-box-fillet12-r3-shell-closed-issue-460`, `real-box-fillet12-r3-shell-open-top-issue-460`, `real-box-fillet4v-r3-shell-closed` and `real-box-fillet1v-r3-shell-closed` of `blend.fillet_executive_p3`, one process per layout, 25 layouts (no preload plus 24). 19 processes completed and 6 crashed (UB-264).

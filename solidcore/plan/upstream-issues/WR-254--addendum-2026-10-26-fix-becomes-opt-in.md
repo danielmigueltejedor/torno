@@ -23,5 +23,5 @@ the `WR-254--smfilletcorner-...--dup2.md` record that shares the ID.
   manifold solid), `issue_528_slice_in_a_face_keeps_the_coincident_face_by_default`
   (7 faces, not manifold) and `issue_528_box_sliced_by_its_top_face`, in
   `crates/solidcore/tests/issue_528_slice_by_a_sheet_in_a_face.rs`.
-- **Callers** that relied on the previous default (e.g. SolidCraft, #528) must set the
+- **Callers** that relied on the previous default (e.g. Torno, #528) must set the
   field.

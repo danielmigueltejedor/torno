@@ -289,7 +289,7 @@ What came of it, from #17's thread:
   agrees with the corpus's `score.py` on 119/119 verdicts (§9). The 38 C++ misses are logged as
   WR-74 to WR-80, the fixes of §4.4.
 - #17 also recommends the method of Yang, Jia and Yan [16] for completeness, since neither SMLib nor
-  SolidCraft's earlier kernel completed the cases reported in the literature.
+  Torno's earlier kernel completed the cases reported in the literature.
 - Step 3's policy has since been replaced: fixes change the default result, with no compatibility
   flag, and the existing `UpstreamFixes` flags are to be retired (AGENTS.md §4b, 2026-11-04). The
   WR-80 fix is the default; the WR-74 to WR-79 fixes still sit behind flags (§4.4), which is
@@ -730,7 +730,7 @@ implementations ([layers.md](layers.md) §2, step 4 of its order).
   coincident patch. Most wrong-topology results are here.
 - **Look at the seam and poles.** A curve within the zone tolerance of a closed surface's seam, or
   through a pole, is §7's near-miss seam or pole row.
-- **Check the flags.** The port's fixes are off by default; SolidCraft runs with most of them on. A
+- **Check the flags.** The port's fixes are off by default; Torno runs with most of them on. A
   result that differs between the two is usually a flag (`UpstreamFixes::flags` lists them).
 - **Use the corpus.** `goldens --ssi-corpus 'c3_*'` runs a class; the per-case JSON in
   `reports/` has each verdict's distances and topology signature. Add a corpus-style case for your

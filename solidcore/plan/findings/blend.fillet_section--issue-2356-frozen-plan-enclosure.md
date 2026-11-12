@@ -261,7 +261,7 @@ The deterministic crease regressions preceded the frozen-plan/enclosure
 implementation. Initial polynomial primitives and their tests shared the first
 regression commit; that history has not been rewritten. The production crease
 remains a known-defect reproduction, and the conditional APIs never supply a
-production surface. No SolidCraft gallery case changes state, so no gallery
+production surface. No Torno gallery case changes state, so no gallery
 row/image change is claimed.
 ## Verification after the final main merge
 

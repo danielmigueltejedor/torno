@@ -1,6 +1,6 @@
 # WR-160/161: vendored golden dispositions (2026-11-09)
 
-Updates: `surface.offset_surface--default-third-derivatives-diagnostic-attribution.md`. Continues solidcore #1914 after migration to SolidCraft #13601; component path is `solidcore/`, target branch `kernel`.
+Updates: `surface.offset_surface--default-third-derivatives-diagnostic-attribution.md`. Continues solidcore #1914 after migration to Torno #13601; component path is `solidcore/`, target branch `kernel`.
 
 ## Scope and correctness rationale
 

@@ -61,7 +61,7 @@ work builds on, replaces or leaves alone.
 ## 3. Show the problem first
 
 Show the person you work for what is wrong before anyone builds a fix (AGENTS.md, "Show the
-problem first"): a picture of the failing case next to the correct result, and a VectorCraft
+problem first"): a picture of the failing case next to the correct result, and a Pluma
 schematic when the problem is a mechanism a picture cannot show. Then read the literature and
 design from it.
 

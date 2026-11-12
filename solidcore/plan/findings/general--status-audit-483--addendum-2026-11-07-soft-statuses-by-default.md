@@ -5,7 +5,7 @@ Updates: plan/findings/general--status-audit-483.md
 `fillet_corner_statuses`, `fillet_edge_curve_domain_statuses`, `offset_tangent_gap_statuses`
 and `ssi_alignment_statuses` are no longer read: the fork's choice (tangency-labs/smlib
 66b02de, 4803d6d, e7ebc8d; see the 2026-10-31 and 2026-11-01 addenda) is the only path.
-The fields stay until SolidCraft's set drops them.
+The fields stay until Torno's set drops them.
 
 - `CheckAndFixDegeneracy` keeps a vertex's UV point when its projection fails (it wrote
   `SM_UNDEF_DOUBLE`); `sm_TestG1Continuity` finds no tangency without an end tangent (the

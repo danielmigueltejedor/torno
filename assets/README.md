@@ -1,6 +1,6 @@
 # Application resources
 
-`assets/` is the design resource home for SolidCraft.
+`assets/` is the design resource home for Torno.
 [ATTRIBUTION.md](../ATTRIBUTION.md) is the file inventory and provenance record.
 Keep one editable master per resource and place shipped derivatives in `exports/`.
 
@@ -38,7 +38,7 @@ Edit SVG geometry and its command/UI assignments together; inspect both themes
 and small sizes. Temporary media and generated reports belong in ignored target/. Palettes and model presets are also editable Rust data.
 
 The current macOS master is `icons/app/macos/source/SolidCraft.icon/`, including
-its linked SVG layers and appearance settings. The earlier VectorCraft document
+its linked SVG layers and appearance settings. The earlier Pluma document
 is preserved in the archive. No other native design projects were available for
 the current UI set or preview card. Keep any future `.vectorcraft`, `.ai` or other
 native work and linked inputs under that resource's `source/work/`, with an

@@ -379,7 +379,7 @@ A reviewer can check each of these on a change to the boolean.
 - **Missing material** is a face set called inside (union) or outside (intersection) wrongly, or a
   coincident pair taken for opposite sides. **An open result** is a face kept on one side and
   dropped on the other, usually a common edge one body has and the other does not.
-- **Check the flags.** The fixes are off by default; SolidCraft names its own. A result that differs
+- **Check the flags.** The fixes are off by default; Torno names its own. A result that differs
   between the two is usually a flag (`UpstreamFixes::NAMES`).
 - **Check tolerances last.** A near-tangent or near-coincident pair within the zone tolerance is §5
   or §6, not a classification bug; the answer is a decision made once, never a widened tolerance.

@@ -46,7 +46,7 @@ angle. A ghost shows where the part started. **OK** keeps the new angle.
 
 A component is placed by its **occurrences**. Paste creates another instance of the same
 component, and **Paste New** creates an independent copy. Move an occurrence with the move
-triad, then **Capture Position** to keep it or **Revert** to put it back. SolidCraft asks before
+triad, then **Capture Position** to keep it or **Revert** to put it back. Torno asks before
 the next command if a move wasn't captured. **Ground** fixes an occurrence in place, and
 **Unground** (the same row of **Placement** in the browser's context menu) frees it again.
 
@@ -576,9 +576,9 @@ starts with `=`, `+`, `-` or `@`, their full-width forms, a tab or a line break,
 `'`; a plain number such as `-5` is not one. A script that reads the CSV sees the `'` too: a part number
 `=1+1` is `'=1+1` in the file, and `'=1+1` is `''=1+1`. To get the value back, take off one leading `'`
 when what follows starts a formula, as `solidcraft_doc::csv::unguard` does, or read the `.json` file,
-which holds the values unchanged. The `'` holds only while the file is as SolidCraft wrote it: a
+which holds the values unchanged. The `'` holds only while the file is as Torno wrote it: a
 spreadsheet that saves the file again as CSV can drop it (Excel does), and the formula then runs the next
-time that file opens. Export again from SolidCraft instead of passing on a CSV a spreadsheet has saved.
+time that file opens. Export again from Torno instead of passing on a CSV a spreadsheet has saved.
 The window lists the same rows, switches
 between the levels and groupings and shows children under their part, edits a picked row's part
 number, description and revision, and exports them. Changing part properties changes no

@@ -146,7 +146,7 @@ encoded bodies shrink about fourfold (an imported assembly) to tenfold (modelled
 for a few tens of milliseconds.
 
 `cache/bodies.bin` holds every distinct body once, in
-[SolidCraft's native B-rep encoding](native-brep.md), as contiguous slices. The
+[Torno's native B-rep encoding](native-brep.md), as contiguous slices. The
 encoding is exact: a decoded body is the body that was saved, number for number
 (procedural intersection curves, placed revolutions and planes are stored as the
 kernel holds them, never refitted). Identical bodies share one slice (keyed by the
@@ -256,11 +256,11 @@ The implementation is split into the following review increments after the
 phase-one container PR (#327):
 
 1. Seekable IO and its read-volume/hostile-input tests (the API above).
-2. A versioned SolidCraft-owned B-rep schema and bounded binary codec, tested without
+2. A versioned Torno-owned B-rep schema and bounded binary codec, tested without
    constructing a kernel body. Topology references, oriented edge uses and face
    loops, geometric domains, analytic/spline curve and surface definitions, units,
    tolerances and orientation must have explicit semantics. Preserve face-source
-   certificates, persistent names and history using SolidCraft-owned identities.
+   certificates, persistent names and history using Torno-owned identities.
    No kernel serialized structs, memory layouts, pointers or opaque kernel blobs
    form part of the persisted contract. No evaluated STEP round trip is a substitute.
 3. Separate adapters between the neutral schema and supported kernels. Unsupported

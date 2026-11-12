@@ -16,7 +16,7 @@ intersector as first suspected.
 - With the seam at (5,10) (`SmApiCreateCylinder` default) every offset succeeds; the
   failure needs the vertex.
 - The reporter's e = 1e-3 failure was not reproduced with this construction; their
-  operands come from SolidCraft's own sketch/extrude path and may place vertices
+  operands come from Torno's own sketch/extrude path and may place vertices
   differently.
 
 Fix (documented deviation, `topology::proto_topology::p2`): with

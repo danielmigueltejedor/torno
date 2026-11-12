@@ -1,6 +1,6 @@
-# SolidCraft and AI agents (MCP)
+# Torno and AI agents (MCP)
 
-SolidCraft speaks the [Model Context Protocol](https://modelcontextprotocol.io) over stdio
+Torno speaks the [Model Context Protocol](https://modelcontextprotocol.io) over stdio
 (JSON-RPC 2.0, one message per line; protocol revisions 2025-06-18, 2025-03-26 and 2024-11-05).
 An agent models exactly like a person does: every tool runs engine commands, the same ones the
 toolbar, palette, scripts and control channel use, and never opens a dialog.
@@ -99,7 +99,7 @@ Tool calls read, write and delete files only inside the server's folders:
   save-as elsewhere, the agent can still save beside the design it worked on. Such a call
   succeeded only because its folder was already one of the agent's, so no folder joins just
   because the agent names it;
-- SolidCraft's own recovery folder, so `doc.recovery_list`, `doc.recover` and
+- Torno's own recovery folder, so `doc.recovery_list`, `doc.recover` and
   `doc.recovery_discard` work out of the box (discarding deletes only real recovery entries);
 - the server's own scratch folder (a new private `solidcraft-mcp-*` folder in the temporary
   folder), where `screenshot` without a `path` goes;
@@ -230,9 +230,9 @@ After an update moves the program, running setup again only refreshes the path o
 An entry you changed (extra arguments, another program) is left as you have it. `--live` also adds `solidcraft-live`, which bridges to the open app (port
 7878, see below). Restart the client afterwards.
 
-SolidCraft also does this by itself: when the app starts it adds the `solidcraft` entry to each
+Torno also does this by itself: when the app starts it adds the `solidcraft` entry to each
 installed client (and refreshes its path after an update), and says once which clients it
-connected. It never touches an entry you changed. **Settings > Assistant > Make SolidCraft
+connected. It never touches an entry you changed. **Settings > Assistant > Make Torno
 available to AI apps on this computer** turns it off, which removes the entries it added. Runs
 with `--control` or `SOLIDCRAFT_CONTROL_PORT` (automation) leave your clients alone.
 
@@ -309,13 +309,13 @@ completely (from the notification area) and start it again to load the servers.
 [`skills/`](https://github.com/bherbruck/solidcraft/tree/main/skills) holds five [Agent Skills](https://agentskills.io) for agents that model through this server:
 - `solidcraft-modeling` covers building a new part.
 - `solidcraft-editing` covers changing an existing design.
-- `solidcraft-checking` adds checks for errors SolidCraft does not report, regression tests and porting, next to the other two.
+- `solidcraft-checking` adds checks for errors Torno does not report, regression tests and porting, next to the other two.
 - `solidcraft-mechanisms` covers assemblies: joints placed by world coordinates, motion links, closed loops such as actuators, contact sets and motion studies, checked against analytic values.
 - `solidcraft-reporting` turns a problem the user hit into a bug report: it reproduces it in a fresh design, shrinks it to a minimal command script, checks the numbers with `measure` and a screenshot, and searches existing issues first.
 
 They cover the workflow, the command shapes, how to verify with `measure`, and the known traps. With them an agent builds a part in a few `batch` calls and reads far less output. To install them for Claude Code, copy the folders into `~/.claude/skills/`; [skills/README.md](https://github.com/bherbruck/solidcraft/blob/main/skills/README.md) has the details.
 
-The `skill_reference` tool returns these documents from the copies built into SolidCraft, so an agent without file access can follow them: `{"skill": "solidcraft-modeling"}` returns its `reference.md`, the default file. Mechanisms also has `reference.md`, checking has `reference/porting.md`, and every skill has `SKILL.md` (editing uses modeling's reference). It never reads a path from disk, and an unknown skill or file is refused with the available choices. SolidCraft's own chat turns the agent's file tools off, so this is how its agent reads the skills there. The instructions the server sends at `initialize` point agents at `skill_reference` first, then say how to plan the numbers, build in a few `batch` calls and verify each stage with `measure`; the same pointer is in the system note SolidCraft's own chat gives its agent.
+The `skill_reference` tool returns these documents from the copies built into Torno, so an agent without file access can follow them: `{"skill": "solidcraft-modeling"}` returns its `reference.md`, the default file. Mechanisms also has `reference.md`, checking has `reference/porting.md`, and every skill has `SKILL.md` (editing uses modeling's reference). It never reads a path from disk, and an unknown skill or file is refused with the available choices. Torno's own chat turns the agent's file tools off, so this is how its agent reads the skills there. The instructions the server sends at `initialize` point agents at `skill_reference` first, then say how to plan the numbers, build in a few `batch` calls and verify each stage with `measure`; the same pointer is in the system note Torno's own chat gives its agent.
 
 ## Tools
 
