@@ -30,15 +30,16 @@ use crate::ui_kit;
 use solidcraft_theme::Tokens;
 
 /// The repository releases come from.
-pub const REPO: &str = "danielmigueltejedor/torno";
+pub const REPO: &str = "getnodalia/torno";
 /// The one request an update check makes.
-pub const LATEST_API: &str = "https://api.github.com/repos/danielmigueltejedor/torno/releases/latest";
+pub const LATEST_API: &str = "https://api.github.com/repos/getnodalia/torno/releases/latest";
 /// Where Download goes when no package fits this installation.
-pub const RELEASES_PAGE: &str = "https://github.com/danielmigueltejedor/torno/releases/latest";
-/// Release pages and assets must be on GitHub, under this repository.
-const RELEASE_PREFIXES: [&str; 1] = ["https://github.com/danielmigueltejedor/torno/releases/"];
+pub const RELEASES_PAGE: &str = "https://github.com/getnodalia/torno/releases/latest";
+/// Release pages and assets must be on GitHub, under this repository. It moved to the
+/// `getnodalia` organisation; links GitHub redirects from before the move keep the old owner.
+const RELEASE_PREFIXES: [&str; 2] = ["https://github.com/getnodalia/torno/releases/", "https://github.com/danielmigueltejedor/torno/releases/"];
 
-/// A release page or asset URL: github.com, this owner, exactly `torno`, then `/releases/` (the
+/// A release page or asset URL: github.com, one of the two owners, exactly `torno`, then `/releases/` (the
 /// trailing slash rules out look-alike names such as `torno-evil`).
 fn is_release_url(url: &str) -> bool {
     RELEASE_PREFIXES.iter().any(|p| url.starts_with(p))
@@ -110,7 +111,7 @@ pub fn comparable(v: &semver::Version) -> semver::Version {
 /// candidate and nightly releases are all tagged `v<version>`), else, for a development build or
 /// a string that is not a version, the release history.
 pub fn release_notes_url(version: &str, release_build: bool) -> String {
-    const HISTORY: &str = "https://github.com/danielmigueltejedor/torno/releases";
+    const HISTORY: &str = "https://github.com/getnodalia/torno/releases";
     if release_build && parse_version(version).is_some() && version.chars().all(|c| c.is_ascii_alphanumeric() || matches!(c, '.' | '-' | '+')) {
         format!("{HISTORY}/tag/v{version}")
     } else {

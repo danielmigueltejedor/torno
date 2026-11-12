@@ -307,7 +307,7 @@ fn next_release_feed(dir: &Path) -> (PathBuf, String) {
         "tag_name": format!("v{v}"),
         "name": format!("SolidCraft {v}"),
         "body": "## What's new\n\n- Faster rebuilds.",
-        "html_url": format!("https://github.com/danielmigueltejedor/torno/releases/tag/v{v}"),
+        "html_url": format!("https://github.com/getnodalia/torno/releases/tag/v{v}"),
         "assets": []
     });
     std::fs::write(&path, body.to_string()).unwrap();
@@ -676,15 +676,13 @@ fn releases_under_either_owner_are_accepted() {
         )
         .unwrap()
     };
-    for owner in ["danielmigueltejedor/torno"] {
+    for owner in ["getnodalia/torno", "danielmigueltejedor/torno"] {
         let r = parse(owner);
         assert_eq!(r.page, format!("https://github.com/{owner}/releases/tag/v1.0.0"));
         assert_eq!(r.assets.len(), 1, "{owner}");
     }
     // Any other owner, repository, host or scheme is dropped.
-    for owner in
-        ["evil/torno", "danielmigueltejedor/torno-evil", "danielmigueltejedor.evil/torno", "danielmigueltejedor/other", "tangency-labs/solidcraft"]
-    {
+    for owner in ["evil/torno", "getnodalia/torno-evil", "getnodalia.evil/torno", "getnodalia/other", "tangency-labs/solidcraft"] {
         let r = parse(owner);
         assert_eq!(r.page, RELEASES_PAGE, "{owner}");
         assert!(r.assets.is_empty(), "{owner}");
@@ -698,12 +696,12 @@ fn releases_under_either_owner_are_accepted() {
 fn the_version_links_to_its_release_notes() {
     // A release build opens the page of its own release; stable, candidate and nightly tags all exist.
     for v in ["0.17.0", "0.21.0-rc.2", "0.20.0-nightly.20261023.69.1"] {
-        assert_eq!(release_notes_url(v, true), format!("https://github.com/danielmigueltejedor/torno/releases/tag/v{v}"));
+        assert_eq!(release_notes_url(v, true), format!("https://github.com/getnodalia/torno/releases/tag/v{v}"));
     }
     // A development build has no release of its own: the release history, which is what the issue asks for.
-    assert_eq!(release_notes_url("0.17.0", false), "https://github.com/danielmigueltejedor/torno/releases");
+    assert_eq!(release_notes_url("0.17.0", false), "https://github.com/getnodalia/torno/releases");
     // Anything that is not a version never ends up in a URL.
-    assert_eq!(release_notes_url("0.1/../../x", true), "https://github.com/danielmigueltejedor/torno/releases");
+    assert_eq!(release_notes_url("0.1/../../x", true), "https://github.com/getnodalia/torno/releases");
 }
 
 #[test]
