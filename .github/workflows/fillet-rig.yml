@@ -58,7 +58,7 @@ jobs:
     name: Fillet rig
     # Draft pull requests run no CI, as in ci.yml.
     if: github.event_name != 'pull_request' || !github.event.pull_request.draft
-    runs-on: ubuntu-24.04
+    runs-on: blacksmith-4vcpu-ubuntu-2404
     timeout-minutes: 60
     env:
       CARGO_INCREMENTAL: "0"

@@ -60,7 +60,7 @@ jobs:
     name: release-gate
     needs: [ci, kernel-rig, packages]
     if: always()
-    runs-on: ubuntu-24.04
+    runs-on: blacksmith-4vcpu-ubuntu-2404
     steps:
       - name: Every part passed
         env:

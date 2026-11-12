@@ -82,7 +82,7 @@ jobs:
     name: Select the rig areas
     # Draft pull requests run no CI, as in ci.yml.
     if: github.event_name != 'pull_request' || !github.event.pull_request.draft
-    runs-on: ubuntu-24.04
+    runs-on: blacksmith-4vcpu-ubuntu-2404
     timeout-minutes: 5
     outputs:
       # The shard matrix (JSON list of areas and the ladder; [] when nothing is selected).
@@ -117,7 +117,7 @@ jobs:
     name: Build the CLI
     needs: plan
     if: needs.plan.outputs.build == 'true'
-    runs-on: ubuntu-24.04
+    runs-on: blacksmith-4vcpu-ubuntu-2404
     timeout-minutes: 60
     env:
       CARGO_INCREMENTAL: "0"
@@ -171,7 +171,7 @@ jobs:
     name: Kernel rig (${{ matrix.shard }})
     needs: [plan, build]
     if: needs.plan.outputs.shards != '[]'
-    runs-on: ubuntu-24.04
+    runs-on: blacksmith-4vcpu-ubuntu-2404
     timeout-minutes: 30
     strategy:
       fail-fast: false
@@ -212,7 +212,7 @@ jobs:
     name: kernel-rig
     needs: [plan, build, shard]
     if: always() && (github.event_name != 'pull_request' || !github.event.pull_request.draft)
-    runs-on: ubuntu-24.04
+    runs-on: blacksmith-4vcpu-ubuntu-2404
     steps:
       # A skipped build or shard counts as passed only when the plan selected none.
       - name: Every selected job passed

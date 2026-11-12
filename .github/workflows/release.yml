@@ -76,7 +76,7 @@ env:
 
 jobs:
   version:
-    runs-on: ubuntu-latest
+    runs-on: blacksmith-4vcpu-ubuntu-2404
     outputs:
       build: ${{ steps.changed.outputs.build }}
       version: ${{ steps.v.outputs.version }}
@@ -119,7 +119,7 @@ jobs:
   icons:
     needs: version
     if: needs.version.outputs.build == 'true'
-    runs-on: ubuntu-22.04
+    runs-on: blacksmith-4vcpu-ubuntu-2204
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: dtolnay/rust-toolchain@stable
@@ -146,8 +146,8 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - { arch: x86_64, runner: ubuntu-22.04, deb: amd64 }
-          - { arch: aarch64, runner: ubuntu-22.04-arm, deb: arm64 }
+          - { arch: x86_64, runner: blacksmith-4vcpu-ubuntu-2204, deb: amd64 }
+          - { arch: aarch64, runner: blacksmith-4vcpu-ubuntu-2204-arm, deb: arm64 }
     env:
       SOLIDCRAFT_VERSION: ${{ needs.version.outputs.version }}
       SOLIDCRAFT_BUILD_DATE: ${{ needs.version.outputs.date }}
@@ -203,8 +203,8 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - { arch: x86_64, runner: ubuntu-24.04 }
-          - { arch: aarch64, runner: ubuntu-24.04-arm }
+          - { arch: x86_64, runner: blacksmith-4vcpu-ubuntu-2404 }
+          - { arch: aarch64, runner: blacksmith-4vcpu-ubuntu-2404-arm }
     env:
       SOLIDCRAFT_VERSION: ${{ needs.version.outputs.version }}
       SOLIDCRAFT_BUILD_DATE: ${{ needs.version.outputs.date }}
@@ -233,7 +233,7 @@ jobs:
     needs: [version, linux]
     if: needs.version.outputs.build == 'true'
     # makepkg only repackages the tarball's prebuilt binaries, so both architectures build here.
-    runs-on: ubuntu-24.04
+    runs-on: blacksmith-4vcpu-ubuntu-2404
     # A pre-release or nightly without an Arch package is still worth having; a stable release isn't.
     continue-on-error: ${{ contains(needs.version.outputs.version, '-') }}
     strategy:
@@ -303,8 +303,8 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - { arch: x86_64, runner: ubuntu-24.04 }
-          - { arch: aarch64, runner: ubuntu-24.04-arm }
+          - { arch: x86_64, runner: blacksmith-4vcpu-ubuntu-2404 }
+          - { arch: aarch64, runner: blacksmith-4vcpu-ubuntu-2404-arm }
     env:
       SOLIDCRAFT_VERSION: ${{ needs.version.outputs.version }}
       SOLIDCRAFT_BUILD_DATE: ${{ needs.version.outputs.date }}
@@ -350,7 +350,7 @@ jobs:
     needs: version
     if: needs.version.outputs.build == 'true'
     # GitHub has no FreeBSD runners: build in a FreeBSD 14.3 VM.
-    runs-on: ubuntu-latest
+    runs-on: blacksmith-4vcpu-ubuntu-2404
     timeout-minutes: 180
     env:
       SOLIDCRAFT_VERSION: ${{ needs.version.outputs.version }}
@@ -392,7 +392,7 @@ jobs:
     name: macOS build ${{ matrix.arch }}
     needs: version
     if: needs.version.outputs.build == 'true'
-    runs-on: macos-15
+    runs-on: blacksmith-6vcpu-macos-15
     strategy:
       fail-fast: false
       matrix:
@@ -426,7 +426,7 @@ jobs:
     name: macOS universal
     needs: [version, macos-build]
     if: needs.version.outputs.build == 'true'
-    runs-on: macos-15
+    runs-on: blacksmith-6vcpu-macos-15
     env:
       SOLIDCRAFT_VERSION: ${{ needs.version.outputs.version }}
       SOLIDCRAFT_BUILD_DATE: ${{ needs.version.outputs.date }}
@@ -627,7 +627,7 @@ jobs:
     name: Web (wasm)
     needs: version
     if: needs.version.outputs.build == 'true'
-    runs-on: ubuntu-latest
+    runs-on: blacksmith-4vcpu-ubuntu-2404
     env:
       SOLIDCRAFT_VERSION: ${{ needs.version.outputs.version }}
       TRUNK_VERSION: 0.21.14
@@ -656,7 +656,7 @@ jobs:
     needs: [version, linux, flatpak, arch, snap, freebsd, macos, windows, web]
     # Not for the release gate (packages_only): it builds and checks the packages, nothing more.
     if: needs.version.outputs.build == 'true' && !inputs.packages_only
-    runs-on: ubuntu-latest
+    runs-on: blacksmith-4vcpu-ubuntu-2404
     permissions:
       contents: write
     env:
