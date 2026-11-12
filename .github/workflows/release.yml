@@ -410,8 +410,27 @@ jobs:
       - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
         with:
           key: release-macos-${{ matrix.arch }}
+      - name: Link against the macOS 26 SDK
+        # AppKit draws the traffic lights in the style of the SDK the app was linked against:
+        # linked against 15, macOS 26 keeps the old flat ones instead of Liquid Glass. The macOS 15
+        # runners carry Xcode 26 beside their default; MACOSX_DEPLOYMENT_TARGET keeps the floor.
+        run: |
+          xcode=$(
+            for candidate in /Applications/Xcode_[0-9]*.app; do
+              if [[ -d "$candidate/Contents/Developer" ]]; then
+                printf '%s\n' "$candidate"
+              fi
+            done | awk -F/ '{version=$NF; sub(/^Xcode_/, "", version); if (version+0 >= 26) print}' | sort -V | tail -n 1
+          )
+          test -n "$xcode" || { echo "no Xcode 26 on this runner" >&2; exit 1; }
+          echo "DEVELOPER_DIR=$xcode/Contents/Developer" >> "$GITHUB_ENV"
+          DEVELOPER_DIR="$xcode/Contents/Developer" xcrun --sdk macosx --show-sdk-version
       - name: Build
-        run: packaging/macos/package.sh --build-only ${{ matrix.target }}
+        run: |
+          packaging/macos/package.sh --build-only ${{ matrix.target }}
+          sdk=$(otool -l target/${{ matrix.target }}/release/solidcraft | awk '$1 == "sdk" {print $2; exit}')
+          echo "linked against SDK $sdk"
+          test "${sdk%%.*}" -ge 26
       # Not named release-*: the release job collects every release-* artifact as an asset.
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
