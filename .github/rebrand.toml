@@ -28,6 +28,8 @@ keep = [
     "(?<=[\"'`])solidcraft(-(theme|library|profile|container|shortcuts|crash|drawing|preview))?/(?=[\\d+\\-{\\[\"'`]|N\\b|x\"|$)",
     # Torno's own earlier desktop id, in a .desktop line that can't carry a marker comment.
     "(?<=X-Flatpak-RenamedFrom=)io\\.tangencylabs\\.solidcraft\\.desktop;",
+    # The name of upstream's brand licence (LICENSE-BRAND), which keeps its own text.
+    "SolidCraft Brand and Interface Licence",
     # Credit for work done upstream.
     "SolidCraft contributors(?=\\.|,|$| and)",
 ]
@@ -39,6 +41,7 @@ skip = [
     # Licence notices and legal text keep upstream's names, which the licences require.
     "NOTICE",
     "LICENSE-*",
+    "*/LICENSE",
     "DISCLAIMER.md",
     # The record of what came from upstream, and upstream's own README kept for reference.
     "docs/upstream.md",

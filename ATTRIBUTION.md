@@ -42,11 +42,11 @@ Editable drawing code, native projects and shipped exports are collected under `
 | examples/render-path-studio.json | Torno contributors | original procedural opaque enclosure, teal insert and metal fasteners for progressive rendering; no imported models | MIT OR Apache-2.0 |
 | crates/gpu/src/path/path.wgsl | Torno contributors | original software BVH traversal and path integration using the existing Torno surface/studio equations; no external shader source | MIT OR Apache-2.0 |
 | crates/gpu/src/pbr.rs | Torno contributors | original WGSL translation of Torno's opaque surface and fixed studio reference, embedded as Rust source; no external shader code | MIT OR Apache-2.0 |
-| assets/icons/app/macos/source/Torno.icon/icon.json | Torno contributors | approved Icon Composer composition and appearance settings for the original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| assets/icons/app/macos/source/Torno.icon/Assets/02-grid.svg | Torno contributors | original perspective grid with elliptical radial alpha, exported from VectorCraft | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| assets/icons/app/macos/source/Torno.icon/Assets/02-grid-dark.svg | Torno contributors | original blue perspective grid with elliptical radial alpha, exported from VectorCraft for the Dark appearance | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| assets/icons/app/macos/source/Torno.icon/Assets/03-solid-blue-cutout.svg | Torno contributors | original saturated blue CAD solid with transparent topology cutouts, edited and exported with VectorCraft | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| assets/icons/app/macos/exports/Assets.car | Torno contributors | Apple actool compilation of assets/icons/app/macos/source/Torno.icon for macOS; contains original artwork only | Torno Brand and Interface Licence (LICENSE-BRAND) |
+| assets/icons/app/macos/source/Torno.icon/icon.json | Torno contributors | approved Icon Composer composition and appearance settings for the original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| assets/icons/app/macos/source/Torno.icon/Assets/02-grid.svg | Torno contributors | original perspective grid with elliptical radial alpha, exported from VectorCraft | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| assets/icons/app/macos/source/Torno.icon/Assets/02-grid-dark.svg | Torno contributors | original blue perspective grid with elliptical radial alpha, exported from VectorCraft for the Dark appearance | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| assets/icons/app/macos/source/Torno.icon/Assets/03-solid-blue-cutout.svg | Torno contributors | original saturated blue CAD solid with transparent topology cutouts, edited and exported with VectorCraft | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| assets/icons/app/macos/exports/Assets.car | Torno contributors | Apple actool compilation of assets/icons/app/macos/source/Torno.icon for macOS; contains original artwork only | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
 | assets/archive/icons/macos-v1/source/icon.vectorcraft | Torno contributors | retained editable historical VectorCraft source, with named face and background layers; redundant exports retired | MIT OR Apache-2.0 |
 | assets/icons/app/shared/source/torno-portrait-512.rgba | Torno contributors; source portrait: Wikimedia Commons | Source picture of the Torno app icon (512 x 512 RGBA): portrait of Henry Maudslay from [Henry Maudslay by Grevedon.jpg](https://commons.wikimedia.org/wiki/File:Henry_Maudslay_by_Grevedon.jpg), cut out, converted to black and white and placed over the app colour | MIT OR Apache-2.0; source portrait: public domain |
 | assets/icons/app/macos/exports/icon.icns | Torno contributors; source portrait: Wikimedia Commons | Torno app icon, generated from assets/icons/app/shared/source/torno-portrait-512.rgba: portrait of Henry Maudslay over the app colour | MIT OR Apache-2.0; source portrait: public domain |
@@ -74,7 +74,7 @@ Editable drawing code, native projects and shipped exports are collected under `
 | docs/design/ux-redesign/start-page.png | Torno contributors | original UX mockup (start page (File view)) rendered from an HTML mockup that uses the original Technical Accent icon set; no third-party artwork, and not a screenshot of any other CAD product | MIT OR Apache-2.0 |
 | docs/design/ux-redesign/workspaces.png | Torno contributors | original UX mockup (workspace switcher) rendered from an HTML mockup that uses the original Technical Accent icon set; no third-party artwork, and not a screenshot of any other CAD product | MIT OR Apache-2.0 |
 | docs/design/ux-redesign/command-map.png | Torno contributors | original UX mockup (ribbon command map) rendered from an HTML mockup that uses the original Technical Accent icon set; no third-party artwork, and not a screenshot of any other CAD product | MIT OR Apache-2.0 |
-| assets/branding/web/source/og.png | Torno contributors | original 1280 × 640 social preview card (the Torno mark, name and tagline), served by the docs site for link previews | Torno Brand and Interface Licence (LICENSE-BRAND) |
+| assets/branding/web/source/og.png | Torno contributors | original 1280 × 640 social preview card (the Torno mark, name and tagline), served by the docs site for link previews | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
 | docs/book/src/generated/sample-plate.png | Torno contributors | copy of docs/screenshots/sample-plate.png made by `cargo xtask book` (gitignored) | MIT OR Apache-2.0 |
 | docs/book/src/generated/bracket.png | Torno contributors | rendered by `cargo xtask book` (`torno-cli snapshot examples/bracket.json`; gitignored) | MIT OR Apache-2.0 |
 | docs/book/src/generated/enclosure.png | Torno contributors | rendered by `cargo xtask book` (`torno-cli snapshot docs/book/scripts/enclosure.json`; gitignored) | MIT OR Apache-2.0 |
@@ -155,15 +155,15 @@ Editable drawing code, native projects and shipped exports are collected under `
 | assets/icons/app/linux/exports/hicolor/48x48/apps/dev.danielmiguelt.Torno.png | Torno contributors; source portrait: Wikimedia Commons | Torno app icon on the Nodalix app grid (224/256 tile, 16 px margin, soft shadow), made by tools/nodalia-app-icon.py in nodalix-icon-theme from the picture in assets/icons/app/shared/source/torno-portrait-512.rgba: portrait of Henry Maudslay over the app colour | MIT OR Apache-2.0; source portrait: public domain |
 | assets/icons/app/linux/exports/hicolor/512x512/apps/dev.danielmiguelt.Torno.png | Torno contributors; source portrait: Wikimedia Commons | Torno app icon on the Nodalix app grid (224/256 tile, 16 px margin, soft shadow), made by tools/nodalia-app-icon.py in nodalix-icon-theme from the picture in assets/icons/app/shared/source/torno-portrait-512.rgba: portrait of Henry Maudslay over the app colour | MIT OR Apache-2.0; source portrait: public domain |
 | assets/icons/app/linux/exports/hicolor/64x64/apps/dev.danielmiguelt.Torno.png | Torno contributors; source portrait: Wikimedia Commons | Torno app icon on the Nodalix app grid (224/256 tile, 16 px margin, soft shadow), made by tools/nodalia-app-icon.py in nodalix-icon-theme from the picture in assets/icons/app/shared/source/torno-portrait-512.rgba: portrait of Henry Maudslay over the app colour | MIT OR Apache-2.0; source portrait: public domain |
-| assets/icons/app/shared/source/app_icon.rs | Torno contributors | Original Torno drawing code: the borderless mark, drawn from the faces and gradients of assets/icons/app/macos/source/Torno.icon/Assets/03-solid-blue-cutout.svg | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| assets/icons/app/shared/source/windows_ico.rs | Torno contributors | Original Torno resource data or drawing code, collected without redesign | Torno Brand and Interface Licence (LICENSE-BRAND) |
+| assets/icons/app/shared/source/app_icon.rs | Torno contributors | Original Torno drawing code: the borderless mark, drawn from the faces and gradients of assets/icons/app/macos/source/Torno.icon/Assets/03-solid-blue-cutout.svg | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| assets/icons/app/shared/source/windows_ico.rs | Torno contributors | Original Torno resource data or drawing code, collected without redesign | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
 | assets/icons/app/windows/exports/torno-executable.ico | Torno contributors; source portrait: Wikimedia Commons | Torno app icon, generated from assets/icons/app/shared/source/torno-portrait-512.rgba: portrait of Henry Maudslay over the app colour | MIT OR Apache-2.0; source portrait: public domain |
 | assets/icons/app/windows/exports/torno.ico | Torno contributors; source portrait: Wikimedia Commons | Torno app icon, generated from assets/icons/app/shared/source/torno-portrait-512.rgba: portrait of Henry Maudslay over the app colour | MIT OR Apache-2.0; source portrait: public domain |
-| crates/look/src/glyphs.rs | Torno / VectorCraft contributors | Original glyphs; caption geometry adapted from VectorCraft titlebar.rs (https://github.com/storytold/vectorcraft) | Torno Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/src/glyphs.rs | Torno / VectorCraft contributors | Original glyphs; caption geometry adapted from VectorCraft titlebar.rs (https://github.com/storytold/vectorcraft) | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
 | crates/ui-egui/src/icons/markers.rs | Torno contributors | Original Torno resource data or drawing code, collected without redesign | MIT OR Apache-2.0 |
 | crates/ui-egui/src/icons/navigation.rs | Torno contributors | Original Torno resource data or drawing code, collected without redesign | MIT OR Apache-2.0 |
-| crates/look/src/compass.rs | Torno contributors | Original Torno resource data or drawing code, collected without redesign | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/src/pointer.rs | Torno contributors | Original Torno resource data or drawing code, collected without redesign | Torno Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/src/compass.rs | Torno contributors | Original Torno resource data or drawing code, collected without redesign | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/src/pointer.rs | Torno contributors | Original Torno resource data or drawing code, collected without redesign | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
 | assets/locales/cs.json | potuzai | Czech translation of the English catalog, contributed upstream | MIT OR Apache-2.0 |
 | assets/locales/da.json | Torno contributors | Original Danish translation of Torno's English catalog; no commercial CAD text used | MIT OR Apache-2.0 |
 | assets/locales/de.json | Torno contributors | Original Torno resource data or drawing code, collected without redesign | MIT OR Apache-2.0 |
@@ -194,8 +194,8 @@ Editable drawing code, native projects and shipped exports are collected under `
 | assets/platforms/linux/dev.danielmiguelt.Torno.desktop | PhotoCraft / Torno contributors | PhotoCraft packaging templates (https://github.com/storytold/photocraft), adapted for Torno | Apache-2.0 |
 | assets/platforms/linux/dev.danielmiguelt.Torno.metainfo.xml.in | PhotoCraft / Torno contributors | PhotoCraft packaging templates (https://github.com/storytold/photocraft), adapted for Torno | Apache-2.0 |
 | assets/platforms/linux/dev.danielmiguelt.Torno.mime.xml | PhotoCraft / Torno contributors | PhotoCraft packaging templates (https://github.com/storytold/photocraft), adapted for Torno | Apache-2.0 |
-| assets/platforms/macos/dmg/background.tiff | Torno contributors | original disk image window background (blueprint sheet: grid, double border, circles, centre lines, leader arrow, title block) drawn by assets/platforms/macos/dmg/make_background.py in IBM Plex Sans/Mono; 1x and 2x representations | MIT OR Apache-2.0 |
-| assets/platforms/macos/dmg/make_background.py | Torno contributors | authoring script that draws the disk image background (Pillow); not part of any build | MIT OR Apache-2.0 |
+| assets/platforms/macos/dmg/background.tiff | @danielmigueltejedor | original disk image window background (Nodalia islands: a turned part on Torno's gold, the icons on a white island), rendered from background.svg by assets/platforms/macos/dmg/make_background.py; text is outlined Sora glyph paths (OFL-1.1); 1x and 2x representations | MIT OR Apache-2.0 |
+| assets/platforms/macos/dmg/make_background.py | @danielmigueltejedor | authoring script that renders background.svg to the disk image background (Pillow, resvg); not part of any build | MIT OR Apache-2.0 |
 | assets/platforms/macos/dmg/layout.json | Torno contributors | disk image window size, icon size and icon positions shared by the background script and settings.py | MIT OR Apache-2.0 |
 | assets/platforms/macos/dmg/settings.py | Torno contributors | dmgbuild settings (MIT, https://github.com/dmgbuild/dmgbuild) for the Torno disk image; original settings, no dmgbuild code copied | MIT OR Apache-2.0 |
 | assets/platforms/macos/Info.plist.in | PhotoCraft / Torno contributors | PhotoCraft packaging templates (https://github.com/storytold/photocraft), adapted for Torno | Apache-2.0 |
@@ -203,122 +203,122 @@ Editable drawing code, native projects and shipped exports are collected under `
 | assets/platforms/windows/torno.en-us.wxl | PhotoCraft / Torno contributors | PhotoCraft packaging templates (https://github.com/storytold/photocraft), adapted for Torno | Apache-2.0 |
 | assets/platforms/windows/torno.wxs | PhotoCraft / Torno contributors | PhotoCraft packaging templates (https://github.com/storytold/photocraft), adapted for Torno | Apache-2.0 |
 | crates/viewport-gpu/shaders/viewport.wgsl | Torno contributors | Original Torno resource data or drawing code, collected without redesign | MIT OR Apache-2.0 |
-| crates/look/themes/gruvbox-dark.json | Torno contributors | original Torno theme file mapping Torno's UI colours to the Gruvbox palette's colour values (Gruvbox by Pavel Pertsev, https://github.com/morhetz/gruvbox, MIT) | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/themes/gruvbox-light.json | Torno contributors | original Torno theme file mapping Torno's UI colours to the Gruvbox palette's colour values (Gruvbox by Pavel Pertsev, https://github.com/morhetz/gruvbox, MIT) | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/themes/torno-95.json | Torno contributors | original Torno theme file | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/themes/platinum-9.json | Torno contributors | original Torno theme file | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/themes/cupertino.json | Torno contributors | original Torno theme file | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/themes/green-phosphor.json | Torno contributors | original Torno theme file | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/themes/amber-phosphor.json | Torno contributors | original Torno theme file | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/themes/blueprint.json | Torno contributors | original Torno theme file | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/themes/one-dark.json | Torno contributors | original Torno theme file with colours adapted from the One Dark palette (Atom One Dark by GitHub Atom, https://github.com/atom/atom, MIT) | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/themes/tokyo-night.json | Torno contributors | original Torno theme file adapting the colours of a published palette (Tokyo Night by enkia, https://github.com/enkia/tokyo-night-vscode-theme, MIT) | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/themes/solarized-light.json | Torno contributors | original Torno theme file adapting the colours of a published palette (Solarized by Ethan Schoonover, https://github.com/altercation/solarized, MIT) | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/themes/solarized-dark.json | Torno contributors | original Torno theme file adapting the colours of a published palette (Solarized by Ethan Schoonover, https://github.com/altercation/solarized, MIT) | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/themes/nord.json | Torno contributors | original Torno theme file adapting the colours of a published palette (Nord by Sven Greb and the Nord contributors, https://github.com/nordtheme/nord, MIT) | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/themes/high-contrast.json | Torno contributors | original Torno theme file | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/themes/graphite.json | Torno contributors | original Torno theme file | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/themes/nosferatu.json | Torno contributors | original Torno theme file adapting the colours of a published palette (Dracula by Zeno Rocha and the Dracula Theme contributors, https://github.com/dracula/dracula-theme, MIT) | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/themes/catppuccin-mocha.json | Torno contributors | original Torno theme file adapting the colours of a published palette (Catppuccin by the Catppuccin organisation, https://github.com/catppuccin/catppuccin, MIT) | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/themes/okibi.json | Torno contributors (Kai Evans) | original Torno theme file mapping Torno's UI colours to the Okibi palette (dark) of the Okibi design system by Kai Evans (https://kaievns.github.io/okibi-akiri-design-system-spec/) | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/themes/akari.json | Torno contributors (Kai Evans) | original Torno theme file mapping Torno's UI colours to the Akari palette (light) of the Okibi design system by Kai Evans (https://kaievns.github.io/okibi-akiri-design-system-spec/) | Torno Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/themes/gruvbox-dark.json | Torno contributors | original Torno theme file mapping Torno's UI colours to the Gruvbox palette's colour values (Gruvbox by Pavel Pertsev, https://github.com/morhetz/gruvbox, MIT) | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/themes/gruvbox-light.json | Torno contributors | original Torno theme file mapping Torno's UI colours to the Gruvbox palette's colour values (Gruvbox by Pavel Pertsev, https://github.com/morhetz/gruvbox, MIT) | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/themes/torno-95.json | Torno contributors | original Torno theme file | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/themes/platinum-9.json | Torno contributors | original Torno theme file | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/themes/cupertino.json | Torno contributors | original Torno theme file | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/themes/green-phosphor.json | Torno contributors | original Torno theme file | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/themes/amber-phosphor.json | Torno contributors | original Torno theme file | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/themes/blueprint.json | Torno contributors | original Torno theme file | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/themes/one-dark.json | Torno contributors | original Torno theme file with colours adapted from the One Dark palette (Atom One Dark by GitHub Atom, https://github.com/atom/atom, MIT) | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/themes/tokyo-night.json | Torno contributors | original Torno theme file adapting the colours of a published palette (Tokyo Night by enkia, https://github.com/enkia/tokyo-night-vscode-theme, MIT) | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/themes/solarized-light.json | Torno contributors | original Torno theme file adapting the colours of a published palette (Solarized by Ethan Schoonover, https://github.com/altercation/solarized, MIT) | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/themes/solarized-dark.json | Torno contributors | original Torno theme file adapting the colours of a published palette (Solarized by Ethan Schoonover, https://github.com/altercation/solarized, MIT) | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/themes/nord.json | Torno contributors | original Torno theme file adapting the colours of a published palette (Nord by Sven Greb and the Nord contributors, https://github.com/nordtheme/nord, MIT) | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/themes/high-contrast.json | Torno contributors | original Torno theme file | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/themes/graphite.json | Torno contributors | original Torno theme file | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/themes/nosferatu.json | Torno contributors | original Torno theme file adapting the colours of a published palette (Dracula by Zeno Rocha and the Dracula Theme contributors, https://github.com/dracula/dracula-theme, MIT) | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/themes/catppuccin-mocha.json | Torno contributors | original Torno theme file adapting the colours of a published palette (Catppuccin by the Catppuccin organisation, https://github.com/catppuccin/catppuccin, MIT) | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/themes/okibi.json | Torno contributors (Kai Evans) | original Torno theme file mapping Torno's UI colours to the Okibi palette (dark) of the Okibi design system by Kai Evans (https://kaievns.github.io/okibi-akiri-design-system-spec/) | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/themes/akari.json | Torno contributors (Kai Evans) | original Torno theme file mapping Torno's UI colours to the Akari palette (light) of the Okibi design system by Kai Evans (https://kaievns.github.io/okibi-akiri-design-system-spec/) | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
 | assets/styles/web/loading-logo.svg | Torno contributors | Animation of the Torno mark, built from the paths and gradients of assets/icons/app/macos/source/Torno.icon/Assets/03-solid-blue-cutout.svg; original animation | MIT OR Apache-2.0 |
 | assets/styles/web/loading.css | Torno contributors | Original Torno resource data or drawing code, collected without redesign | MIT OR Apache-2.0 |
 | crates/io/src/native_cad/fixtures/block.FCStd | Torno contributors | original 10 × 20 × 30 mm test box saved by FreeCAD 1.1.4 run as an external program (`make_block_fcstd.py` beside it); no third-party geometry | MIT OR Apache-2.0 |
 | crates/io/src/native_cad/fixtures/block.3dm | Torno contributors | original 10 × 20 × 30 mm test box written with McNeel's MIT-licensed rhino3dm Python package (`make_block_3dm.py` beside it); no third-party geometry | MIT OR Apache-2.0 |
-| crates/look/icons/design/aliases.toml | Torno contributors | icon ids that share a master, original Torno data | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/palette.toml | Torno contributors | icon colour roles (light and dark) and accents, original Torno data | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/flat/bug_report.svg | Torno contributors | single-colour application/navigation icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/flat/chevron.svg | Torno contributors | single-colour application/navigation icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/flat/chevron_right.svg | Torno contributors | single-colour application/navigation icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/flat/close.svg | Torno contributors | single-colour application/navigation icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/flat/disclosure_closed.svg | Torno contributors | single-colour application/navigation icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/flat/disclosure_open.svg | Torno contributors | single-colour application/navigation icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/flat/fit.svg | Torno contributors | single-colour application/navigation icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/flat/folder.svg | Torno contributors | single-colour application/navigation icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/flat/help.svg | Torno contributors | single-colour application/navigation icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/flat/home.svg | Torno contributors | single-colour application/navigation icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/flat/lookat.svg | Torno contributors | single-colour application/navigation icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/flat/moon.svg | Torno contributors | single-colour application/navigation icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/flat/nav_settings.svg | Torno contributors | single-colour application/navigation icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/flat/orbit.svg | Torno contributors | single-colour application/navigation icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/flat/plus.svg | Torno contributors | single-colour application/navigation icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/flat/pan.svg | Torno contributors | single-colour application/navigation icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/flat/perspective.svg | Torno contributors | single-colour application/navigation icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/flat/prefs_appearance.svg | Torno contributors | original icon master (64 grid) | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/flat/prefs_assistant.svg | Torno contributors | original icon master (64 grid) | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/flat/prefs_design.svg | Torno contributors | original icon master (64 grid) | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/flat/prefs_general.svg | Torno contributors | original icon master (64 grid) | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/flat/prefs_graphics.svg | Torno contributors | original icon master (64 grid) | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/flat/prefs_layout.svg | Torno contributors | original icon master (64 grid) | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/flat/prefs_mouse3d.svg | Torno contributors | original icon master (64 grid) | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/flat/prefs_navigation.svg | Torno contributors | original icon master (64 grid) | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/flat/prefs_plugins.svg | Torno contributors | original icon master (64 grid) | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/flat/prefs_shortcuts.svg | Torno contributors | original icon master (64 grid) | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/flat/prefs_sketch.svg | Torno contributors | original icon master (64 grid) | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/flat/prefs_tools.svg | Torno contributors | original icon master (64 grid) | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/flat/redo.svg | Torno contributors | single-colour application/navigation icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/flat/save.svg | Torno contributors | single-colour application/navigation icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/flat/settings.svg | Torno contributors | single-colour application/navigation icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/flat/settings_keyboard.svg | Torno contributors | original icon master (64 grid) | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/flat/settings_monitor.svg | Torno contributors | original icon master (64 grid) | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/flat/settings_mouse.svg | Torno contributors | original icon master (64 grid) | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/flat/settings_palette.svg | Torno contributors | original icon master (64 grid) | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/flat/settings_plug.svg | Torno contributors | original icon master (64 grid) | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/flat/spin.svg | Torno contributors | single-colour application/navigation icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/flat/style.svg | Torno contributors | single-colour application/navigation icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/flat/undo.svg | Torno contributors | single-colour application/navigation icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/flat/zoom.svg | Torno contributors | single-colour application/navigation icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/accessibility.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/activate.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/align.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/appearance.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/arc3.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/arc_center.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/arc_slot.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/arc_tangent.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/as_built.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/auto_constrain.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/axis.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/bendtable.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/blend.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/blend_surface.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/body.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/boss.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/boundary.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/boundary_fill.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/box.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/break.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/c_coincident.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/c_collinear.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/c_concentric.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/c_equal.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/c_fix.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/c_hv.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/c_midpoint.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/c_parallel.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/c_perpendicular.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/c_polygon.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/c_smooth.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/c_symmetry.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/c_tangent.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/camera.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/canvas.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/capture.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/center_of_mass.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/centerline.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/chain.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/chamfer.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/checkpoint.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/circle.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/circle2.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/circle3.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/circle_tt.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/circle_ttt.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/coil.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/colored_components.svg | Torno contributors | original icon master (64 grid) | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/combine.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/component.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/aliases.toml | Torno contributors | icon ids that share a master, original Torno data | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/palette.toml | Torno contributors | icon colour roles (light and dark) and accents, original Torno data | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/flat/bug_report.svg | Torno contributors | single-colour application/navigation icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/flat/chevron.svg | Torno contributors | single-colour application/navigation icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/flat/chevron_right.svg | Torno contributors | single-colour application/navigation icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/flat/close.svg | Torno contributors | single-colour application/navigation icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/flat/disclosure_closed.svg | Torno contributors | single-colour application/navigation icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/flat/disclosure_open.svg | Torno contributors | single-colour application/navigation icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/flat/fit.svg | Torno contributors | single-colour application/navigation icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/flat/folder.svg | Torno contributors | single-colour application/navigation icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/flat/help.svg | Torno contributors | single-colour application/navigation icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/flat/home.svg | Torno contributors | single-colour application/navigation icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/flat/lookat.svg | Torno contributors | single-colour application/navigation icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/flat/moon.svg | Torno contributors | single-colour application/navigation icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/flat/nav_settings.svg | Torno contributors | single-colour application/navigation icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/flat/orbit.svg | Torno contributors | single-colour application/navigation icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/flat/plus.svg | Torno contributors | single-colour application/navigation icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/flat/pan.svg | Torno contributors | single-colour application/navigation icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/flat/perspective.svg | Torno contributors | single-colour application/navigation icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/flat/prefs_appearance.svg | Torno contributors | original icon master (64 grid) | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/flat/prefs_assistant.svg | Torno contributors | original icon master (64 grid) | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/flat/prefs_design.svg | Torno contributors | original icon master (64 grid) | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/flat/prefs_general.svg | Torno contributors | original icon master (64 grid) | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/flat/prefs_graphics.svg | Torno contributors | original icon master (64 grid) | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/flat/prefs_layout.svg | Torno contributors | original icon master (64 grid) | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/flat/prefs_mouse3d.svg | Torno contributors | original icon master (64 grid) | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/flat/prefs_navigation.svg | Torno contributors | original icon master (64 grid) | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/flat/prefs_plugins.svg | Torno contributors | original icon master (64 grid) | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/flat/prefs_shortcuts.svg | Torno contributors | original icon master (64 grid) | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/flat/prefs_sketch.svg | Torno contributors | original icon master (64 grid) | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/flat/prefs_tools.svg | Torno contributors | original icon master (64 grid) | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/flat/redo.svg | Torno contributors | single-colour application/navigation icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/flat/save.svg | Torno contributors | single-colour application/navigation icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/flat/settings.svg | Torno contributors | single-colour application/navigation icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/flat/settings_keyboard.svg | Torno contributors | original icon master (64 grid) | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/flat/settings_monitor.svg | Torno contributors | original icon master (64 grid) | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/flat/settings_mouse.svg | Torno contributors | original icon master (64 grid) | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/flat/settings_palette.svg | Torno contributors | original icon master (64 grid) | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/flat/settings_plug.svg | Torno contributors | original icon master (64 grid) | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/flat/spin.svg | Torno contributors | single-colour application/navigation icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/flat/style.svg | Torno contributors | single-colour application/navigation icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/flat/undo.svg | Torno contributors | single-colour application/navigation icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/flat/zoom.svg | Torno contributors | single-colour application/navigation icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/accessibility.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/activate.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/align.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/appearance.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/arc3.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/arc_center.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/arc_slot.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/arc_tangent.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/as_built.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/auto_constrain.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/axis.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/bendtable.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/blend.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/blend_surface.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/body.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/boss.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/boundary.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/boundary_fill.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/box.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/break.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/c_coincident.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/c_collinear.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/c_concentric.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/c_equal.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/c_fix.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/c_hv.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/c_midpoint.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/c_parallel.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/c_perpendicular.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/c_polygon.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/c_smooth.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/c_symmetry.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/c_tangent.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/camera.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/canvas.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/capture.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/center_of_mass.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/centerline.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/chain.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/chamfer.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/checkpoint.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/circle.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/circle2.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/circle3.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/circle_tt.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/circle_ttt.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/coil.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/colored_components.svg | Torno contributors | original icon master (64 grid) | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/combine.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/component.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
 
 ### Render workspace icon drafts
 
@@ -326,328 +326,328 @@ Original Torno drawings, Open for owner review; no runtime assignments.
 
 | File | Author | Source | Licence |
 |---|---|---|---|
-| crates/look/icons/design/svg/model/render_all_shots.svg | Torno contributors | original Camera icon master (64 grid): stacked camera bodies with a lower-right play badge | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/render_appearance.svg | Torno contributors | original Looks icon master (64 grid): shaded look sphere on the top corner of an accent-shaded cube | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/render_aspect_frame.svg | Torno contributors | original Camera icon master (64 grid): wide rounded frame with two opposite corner brackets | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/render_backdrop.svg | Torno contributors | original Studio icon master (64 grid): grey cube in front of a tall upright accent panel | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/render_cancel.svg | Torno contributors | original Output icon master (64 grid): picture with a lower-right round stop badge | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/render_check.svg | Torno contributors | original Output icon master (64 grid): picture with a lower-right round check badge | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/render_compare.svg | Torno contributors | original Output icon master (64 grid): two grey pictures split by a vertical slider with opposed arrows | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/render_copy_look.svg | Torno contributors | original Looks icon master (64 grid): look sphere in a square frame offset from a second frame outline | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/render_execute.svg | Torno contributors | original Output icon master (64 grid): picture with a lower-right round play badge | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/render_export_image.svg | Torno contributors | original Output icon master (64 grid): picture with a large outward diagonal arrow at the upper right | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/render_exposure.svg | Torno contributors | original Camera icon master (64 grid): split light and accent disc with plus and minus marks | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/render_fit_product.svg | Torno contributors | original Camera icon master (64 grid): grey cube inside four corner brackets | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/render_frame_guides.svg | Torno contributors | original Camera icon master (64 grid): rounded frame with a rule-of-thirds grid and four accent nodes | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/render_from_material.svg | Torno contributors | original Looks icon master (64 grid): look sphere struck through above a plain grey slab | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/render_ground.svg | Torno contributors | original Studio icon master (64 grid): grey cube on a slab with an accent contact patch | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/render_lens.svg | Torno contributors | original Camera icon master (64 grid): concentric lens rings around an accent centre | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/render_library.svg | Torno contributors | original Studio icon master (64 grid): row of three look spheres, middle one accent, on a shelf bar | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/render_light_area.svg | Torno contributors | original Lights icon master (64 grid): slanted flat panel above a dotted accent stem | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/render_light_by_highlight.svg | Torno contributors | original Lights icon master (64 grid): shaded sphere with a ringed highlight target and dotted stem arriving from above | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/render_light_point.svg | Torno contributors | original Lights icon master (64 grid): round source disc with centre dot above a dotted accent stem | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/render_light_spot.svg | Torno contributors | original Lights icon master (64 grid): cone source with curved rim above a dotted accent stem | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/render_lighting_presets.svg | Torno contributors | original Studio icon master (64 grid): two stacked cards, the front one holding a light bulb | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/render_output_size.svg | Torno contributors | original Output icon master (64 grid): picture frame with a diagonal double-headed dimension arrow | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/render_paint.svg | Torno contributors | original Looks icon master (64 grid): flat brush with an accent tip, light ferrule and slate handle | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/render_pick_up.svg | Torno contributors | original Looks icon master (64 grid): eyedropper with a grey bulb, slate crossbar and accent sampling tip | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/render_quality.svg | Torno contributors | original Output icon master (64 grid): three rising bars, the tallest in accent | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/render_replace_all.svg | Torno contributors | original Looks icon master (64 grid): grey sample sphere with an arrow to an accent sphere beside a second one | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/render_results.svg | Torno contributors | original Output icon master (64 grid): stack of two pictures, the front one showing a landscape | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/render_same_look.svg | Torno contributors | original Looks icon master (64 grid): look sphere and three cubes, the two matching cubes ringed | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/render_shot.svg | Torno contributors | original Camera icon master (64 grid): camera body with a lower-right plus badge | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/render_shots_strip.svg | Torno contributors | original Camera icon master (64 grid): strip of three small frames, the middle one in accent | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/render_solo_light.svg | Torno contributors | original Lights icon master (64 grid): point source and dotted stem inside four corner focus brackets | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/render_sun.svg | Torno contributors | original Lights icon master (64 grid): source disc with eight short radial rays | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/render_transparent_background.svg | Torno contributors | original Output icon master (64 grid): grey cube on a checker tile | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/render_update_shot.svg | Torno contributors | original Camera icon master (64 grid): camera body with a lower-right refresh badge | Torno Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/render_all_shots.svg | Torno contributors | original Camera icon master (64 grid): stacked camera bodies with a lower-right play badge | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/render_appearance.svg | Torno contributors | original Looks icon master (64 grid): shaded look sphere on the top corner of an accent-shaded cube | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/render_aspect_frame.svg | Torno contributors | original Camera icon master (64 grid): wide rounded frame with two opposite corner brackets | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/render_backdrop.svg | Torno contributors | original Studio icon master (64 grid): grey cube in front of a tall upright accent panel | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/render_cancel.svg | Torno contributors | original Output icon master (64 grid): picture with a lower-right round stop badge | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/render_check.svg | Torno contributors | original Output icon master (64 grid): picture with a lower-right round check badge | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/render_compare.svg | Torno contributors | original Output icon master (64 grid): two grey pictures split by a vertical slider with opposed arrows | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/render_copy_look.svg | Torno contributors | original Looks icon master (64 grid): look sphere in a square frame offset from a second frame outline | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/render_execute.svg | Torno contributors | original Output icon master (64 grid): picture with a lower-right round play badge | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/render_export_image.svg | Torno contributors | original Output icon master (64 grid): picture with a large outward diagonal arrow at the upper right | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/render_exposure.svg | Torno contributors | original Camera icon master (64 grid): split light and accent disc with plus and minus marks | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/render_fit_product.svg | Torno contributors | original Camera icon master (64 grid): grey cube inside four corner brackets | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/render_frame_guides.svg | Torno contributors | original Camera icon master (64 grid): rounded frame with a rule-of-thirds grid and four accent nodes | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/render_from_material.svg | Torno contributors | original Looks icon master (64 grid): look sphere struck through above a plain grey slab | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/render_ground.svg | Torno contributors | original Studio icon master (64 grid): grey cube on a slab with an accent contact patch | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/render_lens.svg | Torno contributors | original Camera icon master (64 grid): concentric lens rings around an accent centre | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/render_library.svg | Torno contributors | original Studio icon master (64 grid): row of three look spheres, middle one accent, on a shelf bar | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/render_light_area.svg | Torno contributors | original Lights icon master (64 grid): slanted flat panel above a dotted accent stem | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/render_light_by_highlight.svg | Torno contributors | original Lights icon master (64 grid): shaded sphere with a ringed highlight target and dotted stem arriving from above | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/render_light_point.svg | Torno contributors | original Lights icon master (64 grid): round source disc with centre dot above a dotted accent stem | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/render_light_spot.svg | Torno contributors | original Lights icon master (64 grid): cone source with curved rim above a dotted accent stem | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/render_lighting_presets.svg | Torno contributors | original Studio icon master (64 grid): two stacked cards, the front one holding a light bulb | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/render_output_size.svg | Torno contributors | original Output icon master (64 grid): picture frame with a diagonal double-headed dimension arrow | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/render_paint.svg | Torno contributors | original Looks icon master (64 grid): flat brush with an accent tip, light ferrule and slate handle | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/render_pick_up.svg | Torno contributors | original Looks icon master (64 grid): eyedropper with a grey bulb, slate crossbar and accent sampling tip | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/render_quality.svg | Torno contributors | original Output icon master (64 grid): three rising bars, the tallest in accent | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/render_replace_all.svg | Torno contributors | original Looks icon master (64 grid): grey sample sphere with an arrow to an accent sphere beside a second one | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/render_results.svg | Torno contributors | original Output icon master (64 grid): stack of two pictures, the front one showing a landscape | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/render_same_look.svg | Torno contributors | original Looks icon master (64 grid): look sphere and three cubes, the two matching cubes ringed | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/render_shot.svg | Torno contributors | original Camera icon master (64 grid): camera body with a lower-right plus badge | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/render_shots_strip.svg | Torno contributors | original Camera icon master (64 grid): strip of three small frames, the middle one in accent | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/render_solo_light.svg | Torno contributors | original Lights icon master (64 grid): point source and dotted stem inside four corner focus brackets | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/render_sun.svg | Torno contributors | original Lights icon master (64 grid): source disc with eight short radial rays | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/render_transparent_background.svg | Torno contributors | original Output icon master (64 grid): grey cube on a checker tile | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/render_update_shot.svg | Torno contributors | original Camera icon master (64 grid): camera body with a lower-right refresh badge | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
 
 ### UI icon masters (continued)
 
 | File | Author | Source | Licence |
 |---|---|---|---|
-| crates/look/icons/design/svg/model/compute.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/configuration_table.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/conic.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/constrainer.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/construction.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/convert_sheet.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/copy.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/curvature_comb.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/curvature_map.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/cylinder.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/decal.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/delete.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/dimension.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/dots.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/draft.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/draft_analysis.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/drive.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/dxf.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/edge_continuity.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/edit.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/ellipse.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/emboss.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/environment_map.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/explode.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/export.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/extend.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/extrude.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/flat/eye.svg | Torno contributors | single-colour application/navigation icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/fastener.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/fillet.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/filter.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/finish.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/fit_section.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/flange.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/flat.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/fold.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/folder.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/graph.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/hem.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/hole.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/import.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/include.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/inspect.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/interference.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/intersect.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/intersection_curve.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/iso_analysis.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/iso_curve.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/joint.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/joint_origin.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/library.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/line.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/line_mid.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/lip.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/list.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/loft.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/material.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/measure.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/min_radius.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/mirror.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/motion_link.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/move.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/new.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/offset.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/offset_face.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/offset_surface.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/open.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/origin.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/params.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/paste.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/patch.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/pattern.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/pattern_circ.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/pattern_path.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/pattern_rect.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/perforate.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/pipe.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/silhouette.svg | Torno contributors | original icon master (64 grid) | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/flat/assistant.svg | Torno contributors | original icon master (64 grid) | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/flat/agent_link.svg | Torno contributors | original icon master (64 grid) | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/offset_two_sides.svg | Torno contributors | original icon master (64 grid) | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/offset_symmetric.svg | Torno contributors | original icon master (64 grid) | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/flat/import_tray.svg | Torno contributors | original icon master (64 grid) | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/flat/export_tray.svg | Torno contributors | original icon master (64 grid) | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/flat/send.svg | Torno contributors | original icon master (64 grid) | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/flat/stop.svg | Torno contributors | original icon master (64 grid) | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/flat/shield.svg | Torno contributors | original icon master (64 grid) | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/status_recovery.svg | Torno contributors | original icon master (64 grid) | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/frame_member.svg | Torno contributors | original icon master (64 grid) | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/render_environment.svg | Torno contributors | original Studio icon master (64 grid): dome with a grey cube inside | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/flat/style_shaded.svg | Torno contributors | original icon master (64 grid) | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/flat/style_wireframe.svg | Torno contributors | original icon master (64 grid) | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/flat/style_hidden_edges.svg | Torno contributors | original icon master (64 grid) | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/flat/style_translucent.svg | Torno contributors | original icon master (64 grid) | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/flat/select_faces_edges.svg | Torno contributors | original icon master (64 grid) | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/flat/select_bodies.svg | Torno contributors | original icon master (64 grid) | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/flat/select_features.svg | Torno contributors | original icon master (64 grid) | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/flat/select_parts.svg | Torno contributors | original icon master (64 grid) | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/flat/select_components.svg | Torno contributors | original icon master (64 grid) | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/flat/select_sketch.svg | Torno contributors | original icon master (64 grid) | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/flat/display.svg | Torno contributors | original icon master (64 grid) | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/flat/grid.svg | Torno contributors | original icon master (64 grid) | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/flat/ground_shadow.svg | Torno contributors | original icon master (64 grid) | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/flat/ambient_occlusion.svg | Torno contributors | original icon master (64 grid) | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/placeholder.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/plane.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/plane_angle.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/plastic_assign.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/plastic_rule.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/play.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/point.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/polygon.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/presspull.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/project.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/project_surface.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/rect.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/rect3.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/rect_center.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/rect_rounded.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/refold.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/rename.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/render_image.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/render_scene.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/reorder.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/rest.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/restore.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/reverse_normal.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/revert.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/revolve.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/rib.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/rigid_group.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/rollback.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/ruled.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/scale.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/section.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/select.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/sheet.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/sheet_rules.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/shell.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/sketch.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/sketch_chamfer.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/sketch_fillet.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/sketch_mirror.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/slot.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/snap.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/sphere.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/spline.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/spline_cv.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/split_body.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/split_face.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/spun.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/star.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/status_error.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/status_warning.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/stitch.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/flat/suppress.svg | Torno contributors | single-colour application/navigation icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/surface.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/svg.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/sweep.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/text.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/thicken.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/thread.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/torus.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/trim.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/unfold.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/unstitch.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/untrim.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/update.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/zebra.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/small/as_built.svg | Torno contributors | small-slot icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/small/component.svg | Torno contributors | small-slot icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/small/curvature_comb.svg | Torno contributors | small-slot icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/small/interference.svg | Torno contributors | small-slot icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/small/iso_analysis.svg | Torno contributors | small-slot icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/small/joint.svg | Torno contributors | small-slot icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/small/pattern.svg | Torno contributors | small-slot icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/small/section.svg | Torno contributors | small-slot icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/workspace/ws_animate.svg | Torno contributors | workspace icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/polygon_circumscribed.svg | Torno contributors | original sketch variant icon master (64 grid) | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/polygon_edge.svg | Torno contributors | original sketch variant icon master (64 grid) | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/slot_overall.svg | Torno contributors | original sketch variant icon master (64 grid) | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/slot_center.svg | Torno contributors | original sketch variant icon master (64 grid) | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/arc_slot_center.svg | Torno contributors | original sketch variant icon master (64 grid) | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/sketch_chamfer_angle.svg | Torno contributors | original sketch variant icon master (64 grid) | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/sketch_chamfer_two_distances.svg | Torno contributors | original sketch variant icon master (64 grid) | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/gear.svg | Torno contributors | original icon master (64 grid) | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/rack_pinion.svg | Torno contributors | original icon master (64 grid) | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/screw.svg | Torno contributors | original icon master (64 grid) | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/cam.svg | Torno contributors | original icon master (64 grid) | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/trace.svg | Torno contributors | original icon master (64 grid) | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/agent_chat.svg | Torno contributors | original icon master (64 grid) | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/normal.svg | Torno contributors | original icon master (64 grid) | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/infinite.svg | Torno contributors | original icon master (64 grid) | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/pattern_flip.svg | Torno contributors | original icon master (64 grid) | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/pattern_center.svg | Torno contributors | original icon master (64 grid) | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/reach.svg | Torno contributors | original icon master (64 grid) | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/cut.svg | Torno contributors | original icon master (64 grid) | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/compare.svg | Torno contributors | original icon master (64 grid) | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/web.svg | Torno contributors | original icon master (64 grid) | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/replace_face.svg | Torno contributors | original icon master (64 grid) | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/bounding_solid.svg | Torno contributors | original icon master (64 grid) | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/delete_face.svg | Torno contributors | original icon master (64 grid) | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/snap_fit.svg | Torno contributors | original icon master (64 grid) | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/contact_sets.svg | Torno contributors | original contact icon master (64 grid) | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/contact_all.svg | Torno contributors | original contact icon master (64 grid) | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/contact_off.svg | Torno contributors | original contact icon master (64 grid) | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/contact_new.svg | Torno contributors | original contact icon master (64 grid) | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/axis_through_cylinder.svg | Torno contributors | original construction icon master (64 grid) | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/axis_normal_to_face.svg | Torno contributors | original construction icon master (64 grid) | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/axis_two_planes.svg | Torno contributors | original construction icon master (64 grid) | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/axis_two_points.svg | Torno contributors | original construction icon master (64 grid) | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/axis_edge.svg | Torno contributors | original construction icon master (64 grid) | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/point_vertex.svg | Torno contributors | original construction icon master (64 grid) | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/point_two_edges.svg | Torno contributors | original construction icon master (64 grid) | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/point_three_planes.svg | Torno contributors | original construction icon master (64 grid) | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/point_center.svg | Torno contributors | original construction icon master (64 grid) | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/point_edge_plane.svg | Torno contributors | original construction icon master (64 grid) | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/point_along_path.svg | Torno contributors | original construction icon master (64 grid) | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/plane_midplane.svg | Torno contributors | original construction icon master (64 grid) | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/plane_two_edges.svg | Torno contributors | original construction icon master (64 grid) | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/plane_three_points.svg | Torno contributors | original construction icon master (64 grid) | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/plane_tangent.svg | Torno contributors | original construction icon master (64 grid) | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/plane_along_path.svg | Torno contributors | original construction icon master (64 grid) | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/plane_perpendicular.svg | Torno contributors | original construction icon master (64 grid) | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/workspace/ws_design.svg | Torno contributors | workspace icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/workspace/ws_drawing.svg | Torno contributors | workspace icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/workspace/ws_render.svg | Torno contributors | workspace icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/references.toml | Torno contributors | original icon authoring or review tool resource | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/tools/author/bases.py | Torno contributors | original icon authoring or review tool resource | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/tools/author/new_icon.py | Torno contributors | original icon authoring or review tool resource | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/tools/review/index.html | Torno contributors | original icon authoring or review tool resource | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/tools/review/guide.html | Torno contributors | original icon authoring or review tool resource | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/tools/review/review.css | Torno contributors | original icon authoring or review tool resource | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/tools/review/review.js | Torno contributors | original icon authoring or review tool resource | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/tools/icon_palette.py | Torno contributors | Original shared semantic icon palette resolver for repository tools | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/tools/icon_status.py | Torno contributors | icon lint, status page or preview tool (standard-library Python), original Torno code | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/tools/lint_icons.py | Torno contributors | icon lint, status page or preview tool (standard-library Python), original Torno code | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/tools/preview.py | Torno contributors | icon lint, status page or preview tool (standard-library Python), original Torno code | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/tools/review_state.py | Torno contributors | icon review state helper (standard-library Python), original Torno code | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/requested_icons.txt | Torno contributors | Runtime icon requests collected by the headless menu audit, original Torno data | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/review.json | Torno contributors | icon review state (accepted icons and notes), original Torno data | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/tools/author/lib.py | Torno contributors | icon authoring script (standard-library Python), original Torno code | Torno Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/compute.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/configuration_table.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/conic.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/constrainer.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/construction.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/convert_sheet.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/copy.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/curvature_comb.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/curvature_map.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/cylinder.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/decal.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/delete.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/dimension.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/dots.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/draft.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/draft_analysis.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/drive.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/dxf.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/edge_continuity.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/edit.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/ellipse.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/emboss.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/environment_map.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/explode.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/export.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/extend.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/extrude.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/flat/eye.svg | Torno contributors | single-colour application/navigation icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/fastener.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/fillet.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/filter.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/finish.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/fit_section.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/flange.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/flat.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/fold.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/folder.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/graph.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/hem.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/hole.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/import.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/include.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/inspect.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/interference.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/intersect.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/intersection_curve.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/iso_analysis.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/iso_curve.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/joint.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/joint_origin.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/library.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/line.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/line_mid.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/lip.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/list.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/loft.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/material.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/measure.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/min_radius.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/mirror.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/motion_link.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/move.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/new.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/offset.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/offset_face.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/offset_surface.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/open.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/origin.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/params.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/paste.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/patch.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/pattern.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/pattern_circ.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/pattern_path.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/pattern_rect.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/perforate.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/pipe.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/silhouette.svg | Torno contributors | original icon master (64 grid) | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/flat/assistant.svg | Torno contributors | original icon master (64 grid) | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/flat/agent_link.svg | Torno contributors | original icon master (64 grid) | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/offset_two_sides.svg | Torno contributors | original icon master (64 grid) | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/offset_symmetric.svg | Torno contributors | original icon master (64 grid) | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/flat/import_tray.svg | Torno contributors | original icon master (64 grid) | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/flat/export_tray.svg | Torno contributors | original icon master (64 grid) | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/flat/send.svg | Torno contributors | original icon master (64 grid) | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/flat/stop.svg | Torno contributors | original icon master (64 grid) | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/flat/shield.svg | Torno contributors | original icon master (64 grid) | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/status_recovery.svg | Torno contributors | original icon master (64 grid) | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/frame_member.svg | Torno contributors | original icon master (64 grid) | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/render_environment.svg | Torno contributors | original Studio icon master (64 grid): dome with a grey cube inside | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/flat/style_shaded.svg | Torno contributors | original icon master (64 grid) | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/flat/style_wireframe.svg | Torno contributors | original icon master (64 grid) | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/flat/style_hidden_edges.svg | Torno contributors | original icon master (64 grid) | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/flat/style_translucent.svg | Torno contributors | original icon master (64 grid) | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/flat/select_faces_edges.svg | Torno contributors | original icon master (64 grid) | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/flat/select_bodies.svg | Torno contributors | original icon master (64 grid) | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/flat/select_features.svg | Torno contributors | original icon master (64 grid) | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/flat/select_parts.svg | Torno contributors | original icon master (64 grid) | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/flat/select_components.svg | Torno contributors | original icon master (64 grid) | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/flat/select_sketch.svg | Torno contributors | original icon master (64 grid) | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/flat/display.svg | Torno contributors | original icon master (64 grid) | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/flat/grid.svg | Torno contributors | original icon master (64 grid) | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/flat/ground_shadow.svg | Torno contributors | original icon master (64 grid) | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/flat/ambient_occlusion.svg | Torno contributors | original icon master (64 grid) | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/placeholder.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/plane.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/plane_angle.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/plastic_assign.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/plastic_rule.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/play.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/point.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/polygon.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/presspull.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/project.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/project_surface.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/rect.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/rect3.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/rect_center.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/rect_rounded.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/refold.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/rename.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/render_image.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/render_scene.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/reorder.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/rest.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/restore.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/reverse_normal.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/revert.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/revolve.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/rib.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/rigid_group.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/rollback.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/ruled.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/scale.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/section.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/select.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/sheet.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/sheet_rules.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/shell.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/sketch.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/sketch_chamfer.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/sketch_fillet.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/sketch_mirror.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/slot.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/snap.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/sphere.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/spline.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/spline_cv.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/split_body.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/split_face.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/spun.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/star.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/status_error.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/status_warning.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/stitch.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/flat/suppress.svg | Torno contributors | single-colour application/navigation icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/surface.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/svg.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/sweep.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/text.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/thicken.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/thread.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/torus.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/trim.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/unfold.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/unstitch.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/untrim.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/update.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/zebra.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/small/as_built.svg | Torno contributors | small-slot icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/small/component.svg | Torno contributors | small-slot icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/small/curvature_comb.svg | Torno contributors | small-slot icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/small/interference.svg | Torno contributors | small-slot icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/small/iso_analysis.svg | Torno contributors | small-slot icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/small/joint.svg | Torno contributors | small-slot icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/small/pattern.svg | Torno contributors | small-slot icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/small/section.svg | Torno contributors | small-slot icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/workspace/ws_animate.svg | Torno contributors | workspace icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/polygon_circumscribed.svg | Torno contributors | original sketch variant icon master (64 grid) | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/polygon_edge.svg | Torno contributors | original sketch variant icon master (64 grid) | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/slot_overall.svg | Torno contributors | original sketch variant icon master (64 grid) | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/slot_center.svg | Torno contributors | original sketch variant icon master (64 grid) | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/arc_slot_center.svg | Torno contributors | original sketch variant icon master (64 grid) | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/sketch_chamfer_angle.svg | Torno contributors | original sketch variant icon master (64 grid) | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/sketch_chamfer_two_distances.svg | Torno contributors | original sketch variant icon master (64 grid) | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/gear.svg | Torno contributors | original icon master (64 grid) | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/rack_pinion.svg | Torno contributors | original icon master (64 grid) | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/screw.svg | Torno contributors | original icon master (64 grid) | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/cam.svg | Torno contributors | original icon master (64 grid) | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/trace.svg | Torno contributors | original icon master (64 grid) | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/agent_chat.svg | Torno contributors | original icon master (64 grid) | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/normal.svg | Torno contributors | original icon master (64 grid) | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/infinite.svg | Torno contributors | original icon master (64 grid) | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/pattern_flip.svg | Torno contributors | original icon master (64 grid) | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/pattern_center.svg | Torno contributors | original icon master (64 grid) | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/reach.svg | Torno contributors | original icon master (64 grid) | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/cut.svg | Torno contributors | original icon master (64 grid) | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/compare.svg | Torno contributors | original icon master (64 grid) | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/web.svg | Torno contributors | original icon master (64 grid) | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/replace_face.svg | Torno contributors | original icon master (64 grid) | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/bounding_solid.svg | Torno contributors | original icon master (64 grid) | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/delete_face.svg | Torno contributors | original icon master (64 grid) | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/snap_fit.svg | Torno contributors | original icon master (64 grid) | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/contact_sets.svg | Torno contributors | original contact icon master (64 grid) | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/contact_all.svg | Torno contributors | original contact icon master (64 grid) | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/contact_off.svg | Torno contributors | original contact icon master (64 grid) | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/contact_new.svg | Torno contributors | original contact icon master (64 grid) | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/axis_through_cylinder.svg | Torno contributors | original construction icon master (64 grid) | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/axis_normal_to_face.svg | Torno contributors | original construction icon master (64 grid) | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/axis_two_planes.svg | Torno contributors | original construction icon master (64 grid) | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/axis_two_points.svg | Torno contributors | original construction icon master (64 grid) | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/axis_edge.svg | Torno contributors | original construction icon master (64 grid) | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/point_vertex.svg | Torno contributors | original construction icon master (64 grid) | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/point_two_edges.svg | Torno contributors | original construction icon master (64 grid) | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/point_three_planes.svg | Torno contributors | original construction icon master (64 grid) | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/point_center.svg | Torno contributors | original construction icon master (64 grid) | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/point_edge_plane.svg | Torno contributors | original construction icon master (64 grid) | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/point_along_path.svg | Torno contributors | original construction icon master (64 grid) | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/plane_midplane.svg | Torno contributors | original construction icon master (64 grid) | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/plane_two_edges.svg | Torno contributors | original construction icon master (64 grid) | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/plane_three_points.svg | Torno contributors | original construction icon master (64 grid) | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/plane_tangent.svg | Torno contributors | original construction icon master (64 grid) | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/plane_along_path.svg | Torno contributors | original construction icon master (64 grid) | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/plane_perpendicular.svg | Torno contributors | original construction icon master (64 grid) | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/workspace/ws_design.svg | Torno contributors | workspace icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/workspace/ws_drawing.svg | Torno contributors | workspace icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/workspace/ws_render.svg | Torno contributors | workspace icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/references.toml | Torno contributors | original icon authoring or review tool resource | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/tools/author/bases.py | Torno contributors | original icon authoring or review tool resource | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/tools/author/new_icon.py | Torno contributors | original icon authoring or review tool resource | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/tools/review/index.html | Torno contributors | original icon authoring or review tool resource | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/tools/review/guide.html | Torno contributors | original icon authoring or review tool resource | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/tools/review/review.css | Torno contributors | original icon authoring or review tool resource | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/tools/review/review.js | Torno contributors | original icon authoring or review tool resource | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/tools/icon_palette.py | Torno contributors | Original shared semantic icon palette resolver for repository tools | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/tools/icon_status.py | Torno contributors | icon lint, status page or preview tool (standard-library Python), original Torno code | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/tools/lint_icons.py | Torno contributors | icon lint, status page or preview tool (standard-library Python), original Torno code | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/tools/preview.py | Torno contributors | icon lint, status page or preview tool (standard-library Python), original Torno code | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/tools/review_state.py | Torno contributors | icon review state helper (standard-library Python), original Torno code | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/requested_icons.txt | Torno contributors | Runtime icon requests collected by the headless menu audit, original Torno data | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/review.json | Torno contributors | icon review state (accepted icons and notes), original Torno data | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/tools/author/lib.py | Torno contributors | icon authoring script (standard-library Python), original Torno code | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
 
 | docs/book/src/og.png | Torno contributors | copy of assets/branding/web/source/og.png staged by cargo xtask book (gitignored) | MIT OR Apache-2.0 |
 | docs/sponsors/blacksmith-ci-powered.png | Blacksmith (blacksmith.sh) | "CI powered by Blacksmith" sponsor banner supplied by Blacksmith for the sponsorship credit; used only to credit the sponsor, not part of the application | © Blacksmith, used with permission |
-| crates/look/icons/design/svg/model/path_flange.svg | Torno contributors | original icon master (64 grid) | Torno Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/path_flange.svg | Torno contributors | original icon master (64 grid) | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
 | docs/book/src/generated/hem.png | Torno contributors | rendered by `cargo xtask book` (`torno-cli snapshot docs/book/scripts/hem.json`; gitignored), original sheet metal demonstration | MIT OR Apache-2.0 |
 | docs/book/scripts/hem.json | Torno contributors | original parametric recipe for an 80 × 50 mm sheet with an 8 mm returned edge, authored for the command guide | MIT OR Apache-2.0 |
-| crates/look/themes/clay.json | Torno contributors | original Torno theme file (Clay, light): warm paper palette chosen for Torno | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/themes/clay-dark.json | Torno contributors | original Torno theme file (Clay Dark): warm charcoal palette chosen for Torno | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/cone.svg | Torno contributors | original icon master (64 grid) | Torno Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/themes/clay.json | Torno contributors | original Torno theme file (Clay, light): warm paper palette chosen for Torno | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/themes/clay-dark.json | Torno contributors | original Torno theme file (Clay Dark): warm charcoal palette chosen for Torno | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/cone.svg | Torno contributors | original icon master (64 grid) | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
 | assets/locales/ar.json | Abdullah (A-AL-ANAZI) | Original Arabic translation of Torno's English catalog; no commercial CAD text used | MIT OR Apache-2.0 |
 | assets/locales/he.json | Torno contributors | Original Hebrew translation of Torno's English catalog; no commercial CAD text used | MIT OR Apache-2.0 |
-| crates/look/themes/cga.json | Torno contributors | original Torno theme file using the 16 colours of the IBM Color Graphics Adapter (black, cyan, magenta, and white of its high-intensity palette 1 for the interface) | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/themes/1-bit.json | Torno contributors | original Torno theme file | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/themes/1-bit-dark.json | Torno contributors | original Torno theme file | Torno Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/themes/cga.json | Torno contributors | original Torno theme file using the 16 colours of the IBM Color Graphics Adapter (black, cyan, magenta, and white of its high-intensity palette 1 for the interface) | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/themes/1-bit.json | Torno contributors | original Torno theme file | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/themes/1-bit-dark.json | Torno contributors | original Torno theme file | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
 | `assets/locales/pending/navbar-customisation.json` | Torno contributors | Original navigation bar editor translations | MIT OR Apache-2.0 |
 | `assets/locales/pending/navbar-slots.json` | Torno contributors | Original navigation slot translations | MIT OR Apache-2.0 |
 | assets/locales/bs.json | Tarik Sijercic (tsijercic1) | Original Bosnian translation of Torno's English catalog; no commercial CAD text used | MIT OR Apache-2.0 |
 | assets/locales/hr.json | Tarik Sijercic (tsijercic1) | Original Croatian translation of Torno's English catalog; no commercial CAD text used | MIT OR Apache-2.0 |
 | assets/locales/sr.json | Tarik Sijercic (tsijercic1) | Original Serbian (ekavian, Cyrillic) translation of Torno's English catalog; no commercial CAD text used | MIT OR Apache-2.0 |
-| crates/look/icons/design/svg/model/finish_edit.svg | Torno contributors | original icon master (64 grid) | Torno Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/finish_edit.svg | Torno contributors | original icon master (64 grid) | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
 | `assets/locales/pending/sketch-tracking-guides.json` | Torno contributors | Original alignment-guide preference labels and help text | MIT OR Apache-2.0 |
 | assets/locales/pending/point-clouds.json | Torno contributors | Original point-cloud UI strings and translations | MIT OR Apache-2.0 |
-| crates/look/icons/design/svg/model/feature_group.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/mesh_body.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/timeline_play.svg | Torno contributors | Original history playback icon; canonical grey_cube base and original action cue | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/timeline_stop.svg | Torno contributors | Original history playback icon; canonical grey_cube base and original action cue | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/flat/status_pin.svg | Torno contributors | Original analytic pin icon for persistent viewport results | Torno Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/feature_group.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/mesh_body.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/timeline_play.svg | Torno contributors | Original history playback icon; canonical grey_cube base and original action cue | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/timeline_stop.svg | Torno contributors | Original history playback icon; canonical grey_cube base and original action cue | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/flat/status_pin.svg | Torno contributors | Original analytic pin icon for persistent viewport results | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
 | assets/locales/pending/render-wear.json | Torno contributors | Original UI labels and translations | MIT OR Apache-2.0 |
-| crates/look/icons/design/svg/model/equation_curve.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/equation_curve.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
 | assets/locales/pending/sketch-recent-snap.json | Torno contributors | Original preference messages for the recent centre and midpoint snap | MIT OR Apache-2.0 |
-| crates/look/icons/design/svg/model/construction_line.svg | Torno contributors | original icon master (64 grid) | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/construction_line_horizontal.svg | Torno contributors | original icon master (64 grid) | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/construction_line_vertical.svg | Torno contributors | original icon master (64 grid) | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/construction_line_angle.svg | Torno contributors | original icon master (64 grid) | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/construction_line_parallel.svg | Torno contributors | original icon master (64 grid) | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/construction_line_perpendicular.svg | Torno contributors | original icon master (64 grid) | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/construction_line_tangent_external.svg | Torno contributors | original icon master (64 grid) | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/construction_line_tangent_at.svg | Torno contributors | original icon master (64 grid) | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/construction_line_tangent_two.svg | Torno contributors | original icon master (64 grid) | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/construction_line_bisector.svg | Torno contributors | original icon master (64 grid) | Torno Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/construction_line.svg | Torno contributors | original icon master (64 grid) | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/construction_line_horizontal.svg | Torno contributors | original icon master (64 grid) | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/construction_line_vertical.svg | Torno contributors | original icon master (64 grid) | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/construction_line_angle.svg | Torno contributors | original icon master (64 grid) | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/construction_line_parallel.svg | Torno contributors | original icon master (64 grid) | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/construction_line_perpendicular.svg | Torno contributors | original icon master (64 grid) | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/construction_line_tangent_external.svg | Torno contributors | original icon master (64 grid) | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/construction_line_tangent_at.svg | Torno contributors | original icon master (64 grid) | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/construction_line_tangent_two.svg | Torno contributors | original icon master (64 grid) | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/construction_line_bisector.svg | Torno contributors | original icon master (64 grid) | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
 | docs/book/src/generated/equation-circle.png | Torno contributors | rendered by `cargo xtask book` (`torno-cli snapshot docs/book/scripts/equation-circle.json`; gitignored) | MIT OR Apache-2.0 |
 | docs/book/src/generated/equation-flower.png | Torno contributors | rendered by `cargo xtask book` (`torno-cli snapshot docs/book/scripts/equation-flower.json`; gitignored) | MIT OR Apache-2.0 |
 | docs/book/src/generated/equation-involute.png | Torno contributors | rendered by `cargo xtask book` (`torno-cli snapshot docs/book/scripts/equation-involute.json`; gitignored) | MIT OR Apache-2.0 |
@@ -655,9 +655,9 @@ Original Torno drawings, Open for owner review; no runtime assignments.
 | docs/book/src/generated/equation-parabola.png | Torno contributors | rendered by `cargo xtask book` (`torno-cli snapshot docs/book/scripts/equation-parabola.json`; gitignored) | MIT OR Apache-2.0 |
 | docs/book/src/generated/equation-spiral.png | Torno contributors | rendered by `cargo xtask book` (`torno-cli snapshot docs/book/scripts/equation-spiral.json`; gitignored) | MIT OR Apache-2.0 |
 | docs/book/src/generated/equation-wave.png | Torno contributors | rendered by `cargo xtask book` (`torno-cli snapshot docs/book/scripts/equation-wave.json`; gitignored) | MIT OR Apache-2.0 |
-| crates/look/icons/design/svg/model/print_face.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/print_face.svg | Torno contributors | two-tone modelling icon master (64 grid), original Torno artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
 | assets/locales/fi.json | Torno contributors | Original Finnish translation of Torno's English catalog, AI-assisted (Claude Code) clean-room from the English and not yet reviewed line by line by a native speaker; no commercial CAD text used | MIT OR Apache-2.0 |
-| crates/look/icons/design/svg/model/plane_axis_point.svg | Torno contributors | original icon master (64 grid) | Torno Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/plane_axis_point.svg | Torno contributors | original icon master (64 grid) | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
 | docs/design/preferences/figures/aa-2x.dark.svg | Torno contributors | original Torno artwork drawn for the Preferences redesign (tracker #9863), extracted from the design board as a standalone SVG | MIT OR Apache-2.0 |
 | docs/design/preferences/figures/aa-2x.light.svg | Torno contributors | original Torno artwork drawn for the Preferences redesign (tracker #9863), extracted from the design board as a standalone SVG | MIT OR Apache-2.0 |
 | docs/design/preferences/figures/aa-4x.dark.svg | Torno contributors | original Torno artwork drawn for the Preferences redesign (tracker #9863), extracted from the design board as a standalone SVG | MIT OR Apache-2.0 |
@@ -781,20 +781,20 @@ Original Torno drawings, Open for owner review; no runtime assignments.
 | docs/design/preferences/figures/view-shadow.dark.svg | Torno contributors | original Torno artwork drawn for the Preferences redesign (tracker #9863), extracted from the design board as a standalone SVG | MIT OR Apache-2.0 |
 | docs/design/preferences/figures/view-shadow.light.svg | Torno contributors | original Torno artwork drawn for the Preferences redesign (tracker #9863), extracted from the design board as a standalone SVG | MIT OR Apache-2.0 |
 | `assets/locales/pending/sketch-offset-instances.json` | Torno contributors | Original offset instance-count label and translations | MIT OR Apache-2.0 |
-| crates/look/icons/design/svg/flat/settings_profile.svg | Torno contributors | single-colour application/navigation icon master (64 grid), original analytic head and shoulder geometry for settings profiles | Torno Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/flat/settings_profile.svg | Torno contributors | single-colour application/navigation icon master (64 grid), original analytic head and shoulder geometry for settings profiles | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
 | tests/kernel-cases/import/4561-convert-box-mesh-with-a-zero-area-triangle/box-degenerate.stl | Torno contributors | synthetic ASCII STL written by hand: a box with one zero-area triangle, for the kernel regression case of tangency-labs/solidcraft#4561 | MIT OR Apache-2.0 |
 | assets/locales/pending/theme-blur-ui.json | Torno contributors | Original blur controls, notices and translations | MIT OR Apache-2.0 |
 | crates/ui-egui/tests/fixtures/theme-blur.json | Torno contributors | Original theme for blur option scenarios and manager review | MIT OR Apache-2.0 |
 | assets/locales/ka.json | David Machakhelidze (devius) | Original Georgian translation of Torno's English catalog, written with Claude Code from the meaning of each English string; terminology and doubtful strings decided by a native Georgian speaker; no commercial CAD text used | MIT OR Apache-2.0 |
-| assets/branding/logo/torno-mark.svg | Torno contributors | static Torno mark: the five faces and gradients of assets/icons/app/macos/source/Torno.icon/Assets/03-solid-blue-cutout.svg (the final frame of assets/styles/web/loading-logo.svg), cropped to the mark's bounds; original artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| assets/branding/logo/torno-mark-mono-black.svg | Torno contributors | one-colour (black) version of assets/branding/logo/torno-mark.svg, same paths; original artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| assets/branding/logo/torno-mark-mono-white.svg | Torno contributors | one-colour (white) version of assets/branding/logo/torno-mark.svg, same paths; original artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| assets/branding/logo/torno-mark-512.png | Torno contributors | transparent 512 px render of assets/branding/logo/torno-mark.svg (cairosvg); original artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| assets/branding/logo/torno-mark-1024.png | Torno contributors | transparent 1024 px render of assets/branding/logo/torno-mark.svg (cairosvg); original artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| assets/branding/logo/torno-mark-2048.png | Torno contributors | transparent 2048 px render of assets/branding/logo/torno-mark.svg (cairosvg); original artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| assets/branding/logo/torno-wordmark.svg | Torno contributors | the name Torno set like the loading logo's wordmark (bold, +0.02 em tracking, #15499e) in IBM Plex Sans Bold from crates/look/fonts/ibm-plex-sans (SIL OFL 1.1, IBM Corp.), outlined to paths; no font file is embedded | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| assets/branding/logo/torno-lockup-horizontal.svg | Torno contributors | assets/branding/logo/torno-mark.svg beside assets/branding/logo/torno-wordmark.svg, in the proportions of assets/branding/web/source/og.png; original artwork | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/themes/onyx.json | Torno contributors | original Onyx stone-grey palette, option overlays and semantic icon-role mapping; existing Torno artwork is unchanged | Torno Brand and Interface Licence (LICENSE-BRAND) |
+| assets/branding/logo/torno-mark.svg | Torno contributors | static Torno mark: the five faces and gradients of assets/icons/app/macos/source/Torno.icon/Assets/03-solid-blue-cutout.svg (the final frame of assets/styles/web/loading-logo.svg), cropped to the mark's bounds; original artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| assets/branding/logo/torno-mark-mono-black.svg | Torno contributors | one-colour (black) version of assets/branding/logo/torno-mark.svg, same paths; original artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| assets/branding/logo/torno-mark-mono-white.svg | Torno contributors | one-colour (white) version of assets/branding/logo/torno-mark.svg, same paths; original artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| assets/branding/logo/torno-mark-512.png | Torno contributors | transparent 512 px render of assets/branding/logo/torno-mark.svg (cairosvg); original artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| assets/branding/logo/torno-mark-1024.png | Torno contributors | transparent 1024 px render of assets/branding/logo/torno-mark.svg (cairosvg); original artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| assets/branding/logo/torno-mark-2048.png | Torno contributors | transparent 2048 px render of assets/branding/logo/torno-mark.svg (cairosvg); original artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| assets/branding/logo/torno-wordmark.svg | Torno contributors | the name Torno set like the loading logo's wordmark (bold, +0.02 em tracking, #15499e) in IBM Plex Sans Bold from crates/look/fonts/ibm-plex-sans (SIL OFL 1.1, IBM Corp.), outlined to paths; no font file is embedded | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| assets/branding/logo/torno-lockup-horizontal.svg | Torno contributors | assets/branding/logo/torno-mark.svg beside assets/branding/logo/torno-wordmark.svg, in the proportions of assets/branding/web/source/og.png; original artwork | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/themes/onyx.json | Torno contributors | original Onyx stone-grey palette, option overlays and semantic icon-role mapping; existing Torno artwork is unchanged | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
 | docs/book/src/media/ui-tour/window.png | Torno contributors | screenshot of Torno 0.29.0 itself (`torno --sample`, default dark theme, software renderer, 1280x800) with original numbered callouts (digits set in DejaVu Sans Bold), captured with examples/demo/doc_shots.py | MIT OR Apache-2.0 |
 | docs/book/src/media/ui-tour/navigate.mp4 | Torno contributors | original screen recording of the actual Torno 0.29.0 English desktop UI (`--sample`, default dark theme, software renderer) orbiting, panning and zooming, with the original drawn pointer of examples/demo/overlay.py and labels set in DejaVu Sans Bold, captured with examples/demo/doc_shots.py | MIT OR Apache-2.0 |
 | assets/locales/pending/sketch-tool-hints.json | carlymx | Original sketch tool hints and engine error translations | MIT OR Apache-2.0 |
@@ -853,9 +853,9 @@ Original Torno drawings, Open for owner review; no runtime assignments.
 | docs/book/src/media/getting-started/start.light.png | Torno contributors | screenshot of Torno 0.29.0 itself (light theme, software renderer, 1280x800) showing the start page with its built-in sample thumbnails, with original numbered callouts (digits set in DejaVu Sans Bold), captured with examples/demo/doc_shots.py --light | MIT OR Apache-2.0 |
 | docs/book/src/media/files/menu.light.png | Torno contributors | screenshot of Torno 0.29.0 itself (`--sample`, light theme, software renderer) showing the File menu, with original numbered callouts (digits set in DejaVu Sans Bold), captured with examples/demo/doc_shots.py --light | MIT OR Apache-2.0 |
 | assets/locales/pending/constraint-glyph-size.json | Torno contributors | Original constraint glyph size preference label and help text | MIT OR Apache-2.0 |
-| crates/look/icons/design/svg/model/end_cap.svg | Torno contributors | original icon master (64 grid) | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/end_cap_inward.svg | Torno contributors | original icon master (64 grid) | Torno Brand and Interface Licence (LICENSE-BRAND) |
-| crates/look/icons/design/svg/model/end_cap_outward.svg | Torno contributors | original icon master (64 grid) | Torno Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/end_cap.svg | Torno contributors | original icon master (64 grid) | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/end_cap_inward.svg | Torno contributors | original icon master (64 grid) | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
+| crates/look/icons/design/svg/model/end_cap_outward.svg | Torno contributors | original icon master (64 grid) | SolidCraft Brand and Interface Licence (LICENSE-BRAND) |
 | assets/locales/lv.json | Torno contributors | Original Latvian translation of Torno's English catalog; no commercial CAD text used | MIT OR Apache-2.0 |
 
 ## Code adapted from sibling projects
