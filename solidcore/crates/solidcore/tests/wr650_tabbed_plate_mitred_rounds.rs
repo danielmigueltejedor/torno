@@ -1,11 +1,11 @@
-//! Regression test for WR-650 (the SolidCraft fork's tangency-labs/smlib@93db777 and
-//! @b298cc2, #1986), from SolidCraft's tabbed-plate recipe: a disc of radius 25 with a
+//! Regression test for WR-650 (the Torno fork's tangency-labs/smlib@93db777 and
+//! @b298cc2, #1986), from Torno's tabbed-plate recipe: a disc of radius 25 with a
 //! tab (two R2 corners) on top, extruded 2, its six top edges rounded r 0.5. The mitred
 //! concave corners at (±4, y), where the tab's sides meet the R25 wall, trace onto the
 //! wall's continuation past its arc, which `offset_extension_as_itself` carries on as the
 //! cylinder itself (WR-633), in arc spans that stop at the closed turn (WR-650).
 //!
-//! SolidCraft runs it with its whole preset of fixes on; the round of the mitred corners
+//! Torno runs it with its whole preset of fixes on; the round of the mitred corners
 //! needs `fillet_mitre_gap_patch` and `fillet_mitre_concave_face_corners` (without them
 //! the level 2 check reports `SmSurfOfRevolution` test 7, and 3.8e-4 of the volume is
 //! missing), and with `offset_extension_as_itself` off the fillet fails (status 8).
@@ -83,7 +83,7 @@ fn plate(k: &mut Kernel) -> Brep {
     create_taper_extrude(k, &refs, H, 0.0, 3, false).unwrap()
 }
 
-/// SolidCraft's outline area, its R25 wall moved in by `da` and the tab's walls by `dt`.
+/// Torno's outline area, its R25 wall moved in by `da` and the tab's walls by `dt`.
 fn area(da: f64, dt: f64) -> f64 {
     let cy = cy();
     let big = 25.0 - da;
@@ -94,7 +94,7 @@ fn area(da: f64, dt: f64) -> f64 {
     0.5 * (big * big * (PI + 2.0 * at) + tab) + (4.0 - dt) * (cy - yc)
 }
 
-/// The volume the r 0.5 rounds take off, SolidCraft's integral over the round's section.
+/// The volume the r 0.5 rounds take off, Torno's integral over the round's section.
 fn want_removed() -> f64 {
     let n = 8192;
     let dphi = (PI / 2.0) / f64::from(n);
@@ -116,7 +116,7 @@ fn volume(k: &Kernel, b: &mut Brep) -> f64 {
     brep_volume(k, b, 1e-11, &attrs).unwrap()
 }
 
-/// The six top edges, each the one passing within 0.01 of SolidCraft's pick point.
+/// The six top edges, each the one passing within 0.01 of Torno's pick point.
 fn top_edges(k: &Kernel, b: &Brep) -> Vec<EdgeId> {
     let cy = cy();
     let picks = [
@@ -152,7 +152,7 @@ fn top_edges(k: &Kernel, b: &Brep) -> Vec<EdgeId> {
 
 /// The plate's volume, then the rounded body's soundness (a manifold solid passing the
 /// level 2 check) and the volume the rounds took off, or the fillet error code, with
-/// SolidCraft's preset of fixes (all 182 of `solidcraft-flags/612ac9a36`) on.
+/// Torno's preset of fixes (all 182 of `torno-flags/612ac9a36`) on.
 fn round() -> (f64, Result<(bool, f64), i32>) {
     let mut k = Kernel::default();
     k.fixes.analytic_copy_keeps_parameterization = true;

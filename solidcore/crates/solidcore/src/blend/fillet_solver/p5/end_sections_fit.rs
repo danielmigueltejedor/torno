@@ -1,7 +1,7 @@
 //! `SmFilletSolver::EndSectionsFitTheirFaces`: whether a fillet's end section at each
 //! Nx1 end lies on its end face.
 //!
-//! Not upstream (SMLib 1.0.1 has none): the SolidCraft fork's tangency-labs/smlib
+//! Not upstream (SMLib 1.0.1 has none): the Torno fork's tangency-labs/smlib
 //! `a307480`, used only with the opt-in `Kernel::fixes.fillet_cliff_overflow` (WR-631),
 //! in the executive's cliff-overflow choice: an end section that runs off its end face
 //! under material overflows it, and the blend is built as a cliff overflow is.

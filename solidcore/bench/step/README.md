@@ -8,15 +8,15 @@ bodies come out closed, how many reference volumes they match, and how long a fi
 ```sh
 bench/step/fetch.sh /tmp/step-corpus             # build the corpus (downloads; never commit it)
 bench/step/run.py --corpus /tmp/step-corpus --out /tmp/bake \
-    --reader base=/path/to/old/solidcraft-cli --reader new=/path/to/new/solidcraft-cli
+    --reader base=/path/to/old/torno-cli --reader new=/path/to/new/torno-cli
 ```
 
 - `fetch.sh` collects the files, folds duplicates by SHA-256 and writes `manifest.tsv`. The
-  sources are pinned: SolidCraft's own STEP tests (when run inside SolidCraft's tree),
+  sources are pinned: Torno's own STEP tests (when run inside Torno's tree),
   dan335/step-conformance, solidcore's fixtures, cadmpeg's fixtures, and the NIST PMI and STEP
   Tools sets through `scripts/fetch-*-corpus.sh` (SHA-256 pinned). The STEP Tools files are "All
   Rights Reserved": they are downloaded for the run and never committed.
-- `run.py` runs each reader as `COMMAND eval FILE --json-out OUT` (the `solidcraft-cli eval`
+- `run.py` runs each reader as `COMMAND eval FILE --json-out OUT` (the `torno-cli eval`
   shape: `bodies[]` with `volume_mm3`, `faces`, `closed`), with a timeout, and writes
   `per-file.tsv` and `summary.md`.
 - `references.tsv` holds the volumes known from formulas, by the file's SHA-256: the

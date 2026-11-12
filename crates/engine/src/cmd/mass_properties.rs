@@ -3,7 +3,7 @@
 //!
 //! Bodies are measured as `component.properties` measures them (docs/assembly-properties.md):
 //! volume and centre from the kernel's measurement, the inertia from how the welded export mesh
-//! spreads that volume (`solidcraft_geom::inertia`), at the body's material density (the default
+//! spreads that volume (`torno_geom::inertia`), at the body's material density (the default
 //! material's when none is assigned). Each body is measured once however often it is placed;
 //! each placement moves its centre and turns its tensor, and an occurrence's bodies combine by
 //! the parallel-axis theorem. An open body adds no mass and is counted.
@@ -15,14 +15,14 @@
 //! an occurrence inside a subassembly placed more than once is listed at the subassembly's first
 //! placement (a warning says so).
 
-use solidcraft_geom::prelude::*;
 use std::collections::{BTreeMap, HashMap, HashSet};
+use torno_geom::prelude::*;
 
 use serde_json::Value;
 use solidcore_record::Vec3;
-use solidcraft_doc::joints::{self, JointKind, MAX_JOINTS};
-use solidcraft_doc::{Document, IDENTITY, MAX_PLACEMENTS, Mat, ModelState, apply_point, mat_inverse, mat_mul};
-use solidcraft_geom::inertia::{self, Tensor3};
+use torno_doc::joints::{self, JointKind, MAX_JOINTS};
+use torno_doc::{Document, IDENTITY, MAX_PLACEMENTS, Mat, ModelState, apply_point, mat_inverse, mat_mul};
+use torno_geom::inertia::{self, Tensor3};
 
 use super::CommandSpec;
 use crate::params::bad;
@@ -236,7 +236,7 @@ pub fn assembly(doc: &Document, state: &ModelState) -> Result<AssemblyMassResult
     let placed: HashSet<u64> =
         ids.iter().map(|id| if *id == 0 { 0 } else { doc.occurrences.iter().find(|o| o.id == *id).map_or(u64::MAX, |o| o.component) }).collect();
     let measured: Vec<usize> = (0..state.bodies.len()).filter(|i| owners.get(*i).is_some_and(|c| placed.contains(c))).collect();
-    let shapes = solidcraft_kernel::map_on_threads(&measured, 16, |&i| -> Result<Shape> {
+    let shapes = torno_kernel::map_on_threads(&measured, 16, |&i| -> Result<Shape> {
         let body = state.bodies.get(i).ok_or_else(|| EngineError::Other("body index out of range".into()))?;
         let closed = crate::cmd::inspect::encloses_volume(&body.body);
         if !closed {
@@ -247,10 +247,10 @@ pub fn assembly(doc: &Document, state: &ModelState) -> Result<AssemblyMassResult
             let measured = super::inspect::measure_body(body, Some(state))?;
             (measured.volume, measured.centroid)
         } else {
-            let measured = solidcraft_kernel::measure_mass(&body.body)?;
+            let measured = torno_kernel::measure_mass(&body.body)?;
             (measured.volume, measured.centroid)
         };
-        let mut moments = solidcraft_io::mass_properties(&body.body)?;
+        let mut moments = torno_io::mass_properties(&body.body)?;
         if let (Some(sheet), Some(moments)) = (sheet, moments.as_mut()) {
             sheet.correct_perforation_mass_properties(moments, &IDENTITY)?;
         }

@@ -1,8 +1,8 @@
 use serde::Serialize;
 use solidcore_record::Vec3;
 use solidcore_record::brep::{self, Brep, Curve, Loop, Shell, Surface};
-use solidcraft_geom::prelude::*;
-use solidcraft_geom::{Aabb3, Mesh};
+use torno_geom::prelude::*;
+use torno_geom::{Aabb3, Mesh};
 
 use crate::history::BodyHistory;
 use crate::{KernelError, Result, guard};
@@ -18,7 +18,7 @@ pub(crate) mod shell_groups;
 /// 3MF or STL: it renders, measures and exports, but B-rep features cannot use it). Cheap to
 /// clone; never mutated in place.
 ///
-/// A solid body is its schema 4 record ([`solidcraft_geom::brep`]): faces, edges and vertices
+/// A solid body is its schema 4 record ([`torno_geom::brep`]): faces, edges and vertices
 /// in the record's canonical order are the body's own, everywhere (history, naming, meshes).
 /// SMLib works on the same body built from that record, made once and shared by clones.
 #[derive(Clone, Debug)]
@@ -26,7 +26,7 @@ pub struct Body {
     pub(crate) record: std::sync::Arc<Brep>,
     /// The body in SMLib, built from `record` on first use (or kept from the operation that
     /// made it), shared by clones because they share the record.
-    pub(crate) smlib: std::sync::Arc<std::sync::OnceLock<std::result::Result<solidcraft_smlib::Brep, Refusal>>>,
+    pub(crate) smlib: std::sync::Arc<std::sync::OnceLock<std::result::Result<torno_smlib::Brep, Refusal>>>,
     /// The record as solidcore-ops' body, for the kernel's answers about its faces
     /// ([`Body::flat_spline_face`]): made on first use, shared by clones as `smlib` is.
     pub(crate) ops: std::sync::Arc<std::sync::OnceLock<(solidcore_ops::Body, solidcore_ops::Order)>>,
@@ -111,7 +111,7 @@ fn remembered<T>(kept: &Remembered<T>, t: &MeshTolerance, make: impl FnOnce() ->
 pub(crate) struct SharedDisplay {
     pub(crate) original: Body,
     meshes: Remembered,
-    plans: Remembered<solidcraft_geom::tess::TessPlan>,
+    plans: Remembered<torno_geom::tess::TessPlan>,
 }
 
 impl SharedDisplay {
@@ -155,7 +155,7 @@ fn placed_mesh(m: &Mesh, t: &[[f64; 4]; 4]) -> Option<Mesh> {
             t[0][2] * v.x + t[1][2] * v.y + t[2][2] * v.z + w * t[3][2],
         )
     };
-    solidcraft_geom::brep::placement::Rigid::of_matrix(t)?;
+    torno_geom::brep::placement::Rigid::of_matrix(t)?;
     Some(Mesh {
         positions: m.positions.iter().map(|p| r(*p, 1.0)).collect(),
         normals: m.normals.iter().map(|n| r(*n, 0.0)).collect(),
@@ -307,7 +307,7 @@ fn coarse_tolerance(span: f64) -> f64 {
 fn span_of(record: &Brep) -> f64 {
     let mut bounds: Aabb3 = record.vertices.iter().map(|v| v3(v.point)).collect();
     for e in &record.edges {
-        if let Ok(c) = solidcraft_geom::brep::eval::CurveEval::new(e.parameters()) {
+        if let Ok(c) = torno_geom::brep::eval::CurveEval::new(e.parameters()) {
             let [t0, t1] = e.interval;
             for i in 1..4 {
                 if let Some(p) = c.point(t0 + (t1 - t0) * f64::from(i) / 4.0)
@@ -398,16 +398,16 @@ const MAX_REFUSAL_PROBES: usize = 20_000;
 
 impl Refusal {
     /// The refusal of `record` for `error`, with the face SMLib refuses on its own.
-    pub(crate) fn of(record: &Brep, error: &solidcraft_smlib::Error) -> Refusal {
-        if let solidcraft_smlib::Error::Internal(why) = error {
+    pub(crate) fn of(record: &Brep, error: &torno_smlib::Error) -> Refusal {
+        if let torno_smlib::Error::Internal(why) = error {
             return Refusal { face: None, surface: None, why: why.clone(), internal: true };
         }
-        let _span = solidcraft_profile::span("kernel", "smlib_refusal_face");
+        let _span = torno_profile::span("kernel", "smlib_refusal_face");
         // It is kept with the body for every later reader: a stopped job's probes must not decide it.
-        let face = solidcraft_smlib::stop::unstoppable(|| {
+        let face = torno_smlib::stop::unstoppable(|| {
             let alone = |f: usize| crate::surfaces::Parts::of(record, &[(f, false)]).and_then(|p| p.canonical()).map(|c| c.brep);
             (record.faces.len() <= MAX_REFUSAL_PROBES)
-                .then(|| (0..record.faces.len()).find(|&f| alone(f).is_ok_and(|r| solidcraft_smlib::Brep::from_record(&r, true).is_err())))
+                .then(|| (0..record.faces.len()).find(|&f| alone(f).is_ok_and(|r| torno_smlib::Brep::from_record(&r, true).is_err())))
                 .flatten()
         });
         let surface = face.and_then(|f| record.faces.get(f)).map(|f| SurfaceKind::of(&f.surface));
@@ -456,7 +456,7 @@ impl Body {
 
     /// This body with `result`, the SMLib result of the step `what` it was decoded from, whose
     /// check that step left to the end of its feature ([`crate::validation::check_kept`]).
-    pub(crate) fn left_unchecked(self, what: &str, how: crate::validation::Checked, result: solidcraft_smlib::Brep) -> Body {
+    pub(crate) fn left_unchecked(self, what: &str, how: crate::validation::Checked, result: torno_smlib::Brep) -> Body {
         let unchecked = crate::validation::Unchecked::new(&self.record, what, how, result);
         Body { unchecked: Some(std::sync::Arc::new(unchecked)), ..self }
     }
@@ -491,12 +491,11 @@ impl Body {
     /// The body in SMLib, built from its record the first time it is asked for. The record is
     /// SMLib's own form (`SmBrepData`), imported as given: a record SMLib refuses is an error that
     /// names why, never repaired here.
-    pub fn smlib(&self) -> Result<&solidcraft_smlib::Brep> {
+    pub fn smlib(&self) -> Result<&torno_smlib::Brep> {
         self.require_brep("an SMLib operation")?;
         self.smlib
             .get_or_init(|| {
-                solidcraft_smlib::stop::unstoppable(|| solidcraft_smlib::Brep::from_record(&self.record, true))
-                    .map_err(|e| Refusal::of(&self.record, &e))
+                torno_smlib::stop::unstoppable(|| torno_smlib::Brep::from_record(&self.record, true)).map_err(|e| Refusal::of(&self.record, &e))
             })
             .as_ref()
             .map_err(
@@ -728,7 +727,7 @@ impl Body {
         if let Some(made) = self.ops.get() {
             return Some(made);
         }
-        let made = solidcraft_smlib::stop::unstoppable(|| solidcore_ops::Body::from_record(&self.record, true)).ok()?;
+        let made = torno_smlib::stop::unstoppable(|| solidcore_ops::Body::from_record(&self.record, true)).ok()?;
         Some(self.ops.get_or_init(|| made))
     }
 
@@ -1093,7 +1092,7 @@ impl Body {
         self.record.faces.len() * 2048 + uses * (512 + 96)
     }
 
-    /// The body's triangles, `t` from its exact surfaces: SolidCraft's one mesher (the planner,
+    /// The body's triangles, `t` from its exact surfaces: Torno's one mesher (the planner,
     /// [`crate::tess`]), evaluated on the CPU, with its edges flagged for display (seams, tangent
     /// joins, protected creases). Triangles carry their face index and the edges their polylines,
     /// in the record's order; neighbouring faces share every boundary node, so the mesh is
@@ -1127,18 +1126,18 @@ impl Body {
     /// The plan [`Body::mesh`] evaluates: every face's triangulation in its own parameters, each
     /// edge sampled once so faces meet exactly. For an evaluator of its own (the GPU viewport);
     /// [`Body::mesh_of`] gives its mesh without planning again.
-    pub fn mesh_plan(&self, t: &MeshTolerance) -> Result<solidcraft_geom::tess::TessPlan> {
+    pub fn mesh_plan(&self, t: &MeshTolerance) -> Result<torno_geom::tess::TessPlan> {
         crate::profile::timed(crate::profile::Kind::Tessellate, "mesh_plan", || self.mesh_plan_untimed(t))
     }
 
-    fn mesh_plan_untimed(&self, t: &MeshTolerance) -> Result<solidcraft_geom::tess::TessPlan> {
+    fn mesh_plan_untimed(&self, t: &MeshTolerance) -> Result<torno_geom::tess::TessPlan> {
         if self.is_mesh() {
             return Err(KernelError::Invalid("a mesh body has no surfaces to mesh".into()));
         }
         // A placed copy is planned as its original, moved (as `Body::mesh` shows the original's
         // mesh): the part is planned once for every copy.
         if let Some((shared, m)) = self.display_of.as_deref()
-            && solidcraft_geom::brep::placement::Rigid::of_matrix(m).is_some()
+            && torno_geom::brep::placement::Rigid::of_matrix(m).is_some()
         {
             return Ok(remembered(&shared.plans, t, || shared.original.mesh_plan_untimed(t))?.transformed(m));
         }
@@ -1158,8 +1157,8 @@ impl Body {
 
     /// The mesh of `plan`, a plan [`Body::mesh_plan`] made of this body: what [`Body::mesh`]
     /// gives at the plan's tolerance.
-    pub fn mesh_of(&self, plan: &solidcraft_geom::tess::TessPlan) -> Result<Mesh> {
-        self.flagged(solidcraft_geom::tess::EvaluateMesh::evaluate_mesh(plan))
+    pub fn mesh_of(&self, plan: &torno_geom::tess::TessPlan) -> Result<Mesh> {
+        self.flagged(torno_geom::tess::EvaluateMesh::evaluate_mesh(plan))
     }
 
     /// A copy of this body that keeps the meshes made of it for reuse, for as long as the copy
@@ -1377,7 +1376,7 @@ impl Body {
                 .triangles
                 .iter()
                 .filter_map(|t| mesh.tri(t))
-                .any(|[a, b, c]| solidcraft_geom::compare::closest_on_triangle(p, a, b, c).dist(p) <= self.record.tolerance);
+                .any(|[a, b, c]| torno_geom::compare::closest_on_triangle(p, a, b, c).dist(p) <= self.record.tolerance);
             return Ok(if near {
                 PointClass::OnBoundary
             } else if mesh.contains(p) {
@@ -1388,9 +1387,9 @@ impl Body {
         }
         let class = self.smlib()?.classify_point([p.x, p.y, p.z]).map_err(|e| KernelError::smlib("SMLib point classification", e))?;
         Ok(match class {
-            solidcraft_smlib::PointClass::Inside => PointClass::Inside,
-            solidcraft_smlib::PointClass::Outside => PointClass::Outside,
-            solidcraft_smlib::PointClass::OnBoundary => PointClass::OnBoundary,
+            torno_smlib::PointClass::Inside => PointClass::Inside,
+            torno_smlib::PointClass::Outside => PointClass::Outside,
+            torno_smlib::PointClass::OnBoundary => PointClass::OnBoundary,
         })
     }
 
@@ -1530,7 +1529,7 @@ impl Body {
 /// rest at the evaluator's points (capped).
 fn edge_points(e: &brep::Edge, chord: f64) -> Result<Vec<Vec3>> {
     const MAX_POINTS: usize = 4096;
-    let curve = solidcraft_geom::brep::eval::CurveEval::new(e.parameters()).map_err(|err| KernelError::Invalid(err.to_string()))?;
+    let curve = torno_geom::brep::eval::CurveEval::new(e.parameters()).map_err(|err| KernelError::Invalid(err.to_string()))?;
     let [t0, t1] = e.interval;
     let at = |t: f64| curve.point(t).ok_or_else(|| KernelError::Invalid(format!("edge curve has no point at {t}")));
     if let Curve::Line { .. } = e.curve {
@@ -1558,7 +1557,7 @@ fn edge_points(e: &brep::Edge, chord: f64) -> Result<Vec<Vec3>> {
 fn curve_hull(c: &Curve, interval: [f64; 2], b: &mut Aabb3) {
     match c {
         Curve::Line { .. } | Curve::Circle { .. } | Curve::Ellipse { .. } => {
-            if let Ok(e) = solidcraft_geom::brep::eval::CurveEval::new(c) {
+            if let Ok(e) = torno_geom::brep::eval::CurveEval::new(c) {
                 let [t0, t1] = interval;
                 for i in 0..=16 {
                     if let Some(p) = e.point(t0 + (t1 - t0) * f64::from(i) / 16.0) {

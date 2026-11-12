@@ -15,7 +15,7 @@ use serde::de::Error as _;
 use serde::{Deserialize, Deserializer, Serialize};
 use serde_json::Value;
 
-use solidcraft_geom::Vec3Geom as _;
+use torno_geom::Vec3Geom as _;
 
 use super::check::whole;
 use super::joints::{JointOriginParam, JointValue};

@@ -6,12 +6,12 @@
 //! vertex the names of the edges that meet there, so they follow the model when earlier features
 //! change; the picked point is the fallback.
 
-use solidcraft_geom::prelude::*;
 use std::collections::BTreeMap;
+use torno_geom::prelude::*;
 
 use serde::{Deserialize, Serialize};
 use solidcore_record::{Plane, Vec3};
-use solidcraft_kernel::{self as kernel, FaceSurface};
+use torno_kernel::{self as kernel, FaceSurface};
 
 use crate::eval::{ModelBody, ModelState};
 use crate::expr::{Kind, Value};
@@ -678,7 +678,7 @@ fn path_segs(ctx: &Ctx, g: &GeoRef) -> Result<Vec<kernel::PathSeg>> {
             // are independent of the sketch plane.
             if let Some(wire) = ss.sketch.wires.iter().find(|wire| wire.id == *curve) {
                 if let Some(arc) = &wire.arc {
-                    let angle = solidcraft_sketch::arc_sweep(arc);
+                    let angle = torno_sketch::arc_sweep(arc);
                     return Ok(vec![kernel::PathSeg::Arc { a: arc.start, center: arc.center, axis: arc.normal, angle }]);
                 }
                 if wire.fit.len() >= 3 {

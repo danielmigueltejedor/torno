@@ -1,4 +1,4 @@
-//! The kernel's body read back as the record ([`to_record`]): SolidCraft's flat-array export
+//! The kernel's body read back as the record ([`to_record`]): Torno's flat-array export
 //! (the body as flat arrays, the arrays as the record) fused into one pass over the kernel's
 //! B-rep data, with no arrays between. What is done here is index mapping and field copies:
 //!

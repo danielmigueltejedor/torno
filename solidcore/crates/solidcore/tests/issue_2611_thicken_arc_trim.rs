@@ -1,4 +1,4 @@
-//! tangency-labs/solidcore#2611 (SolidCraft #11744): thickening a half-pipe sheet trimmed
+//! tangency-labs/solidcore#2611 (Torno #11744): thickening a half-pipe sheet trimmed
 //! along an arc failed with 1001 (`TopologyIntersector::Relate`: a vertex already has a
 //! different mate) or left a body that is no closed solid.
 //!
@@ -147,7 +147,7 @@ fn outer_face(k: &Kernel, b: &Brep) -> FaceId {
     found[0]
 }
 
-/// The sheet: the cut pipe's outer face copied into a B-rep of its own (SolidCraft's
+/// The sheet: the cut pipe's outer face copied into a B-rep of its own (Torno's
 /// `surface.offset` by 0).
 fn sheet(k: &mut Kernel, r: f64, sweep: f64) -> Brep {
     let pipe = pipe(k);

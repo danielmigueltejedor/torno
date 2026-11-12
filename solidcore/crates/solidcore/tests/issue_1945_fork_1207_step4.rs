@@ -1,6 +1,6 @@
-//! Regression test for tangency-labs/solidcore#1945 on SolidCraft's own input: the B-rep SolidCraft
+//! Regression test for tangency-labs/solidcore#1945 on Torno's own input: the B-rep Torno
 //! hands its fillet session at step 4 of `fillets/1207` (`data/issue_1945_blend_1207_step4.smb`),
-//! with SolidCraft's flag set, rounded r2 along the bar's top front edge and the first round's
+//! with Torno's flag set, rounded r2 along the bar's top front edge and the first round's
 //! section curve. Repro, flag set and root cause by tdamsma on #1945: `SmLocalSolveNd::SolveIt`
 //! kept the unscaled point's Jacobian for a clamped-and-scaled step (fixed in the fork's
 //! tangency-labs/smlib@d2757e1, ported under WR-253's `fixes.oscillating_skips_failed_guesses`), so
@@ -314,7 +314,7 @@ fn step4_round_matches_the_fork_and_checks_clean() {
 /// evaluation by default, and `oscillating_skips_failed_guesses` no longer changes the
 /// result here — the fork's topology and volume, bit for bit what `run(true)` builds, and
 /// a clean check. Before #2574 the rail's UV trim kept its short span (test #15), and
-/// with SolidCraft's tangent end (WR-600's flag, the fork's tangency-labs/smlib@856b54e)
+/// with Torno's tangent end (WR-600's flag, the fork's tangency-labs/smlib@856b54e)
 /// the upstream solve left a false near cusp in a straight 2D trim instead (test #13), so
 /// the body was refused.
 #[test]

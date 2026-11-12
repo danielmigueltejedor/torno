@@ -97,7 +97,7 @@ fn hovering_a_joint_row_lights_its_glyph_until_the_pointer_leaves() {
     assert_eq!(h.app.viewport.hover_joint, Some(hinge));
     assert!(h.app.tree.picked_joints.is_empty(), "hovering doesn't pick");
     // Lit as a hovered body's edges are: the dark core over the light halo.
-    let t = solidcraft_theme::Tokens::get();
+    let t = torno_theme::Tokens::get();
     let strokes = |h: &Harness, picked| crate::dialogs_assembly::glyph_strokes(&h.app, hinge, picked, false);
     let (core, rim) = strokes(&h, false);
     assert_eq!((core.color, rim.map(|r| r.color)), (t.hover_edge, Some(t.hover_edge_halo)));
@@ -252,7 +252,7 @@ mod delete {
             let feature = h.app.session.doc.features.last().unwrap();
             let (id, name) = (feature.id, feature.name.clone());
             click(&mut h, &format!("timeline:{name}"));
-            assert!(h.app.session.selection.iter().any(|s| matches!(s, solidcraft_engine::Sel::Feature { id: f } if *f == id)));
+            assert!(h.app.session.selection.iter().any(|s| matches!(s, torno_engine::Sel::Feature { id: f } if *f == id)));
             click(&mut h, "timeline-joint:Hinge");
             assert_eq!(h.app.tree.picked_joints, [hinge], "the clicked joint is the selection; left={left}");
             assert!(h.app.session.selection.is_empty(), "the old feature must not remain a Delete target");

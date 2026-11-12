@@ -2,9 +2,9 @@
 use super::{Result, TraceError};
 use crate::job::Sun;
 use solidcore_record::Vec3;
-use solidcraft_geom::prelude::*;
-use solidcraft_viewport::surface::unit_direction;
 use std::f64::consts::{PI, TAU};
+use torno_geom::prelude::*;
+use torno_viewport::surface::unit_direction;
 
 pub(super) struct Sample {
     pub direction: Vec3,

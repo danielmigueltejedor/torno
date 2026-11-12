@@ -4,7 +4,7 @@
 |---|---|
 | Status | Draft, open for comment |
 | Started | 2026-11-07 |
-| Apps | SolidCraft, CamCraft, PCBCraft |
+| Apps | Torno, CamCraft, PCBCraft |
 | Discussion | the pull request that adds this file, then an issue per phase |
 
 Nothing here is built yet.
@@ -13,8 +13,8 @@ Nothing here is built yet.
 
 **Goals**
 - One button: "Send to CamCraft" opens the current design in CamCraft, ready to set up.
-- Round trips that stay linked: edit the model in SolidCraft, and CamCraft sees the new revision, re-finds its picked faces and regenerates or marks paths stale.
-- The same for PCBCraft: board outline, holes and parts go to SolidCraft; the enclosure's outline and mounting points go back.
+- Round trips that stay linked: edit the model in Torno, and CamCraft sees the new revision, re-finds its picked faces and regenerates or marks paths stale.
+- The same for PCBCraft: board outline, holes and parts go to Torno; the enclosure's outline and mounting points go back.
 - Nothing is lost quietly. A reference that no longer resolves is reported by name.
 
 **Non-goals**
@@ -33,18 +33,18 @@ One **exchange file**, `*.craftx`: a ZIP like the `.sc` container, with parts ad
 | `bodies/<n>.step` | STEP of the same body | Fallback any app reads today. |
 | `mesh/<n>.bin` | Triangles, plus a per-triangle face index | For apps that cut or display meshes. CamCraft slices meshes today. |
 | `faces.json` | Per body: each face's index → persistent name, `exact` flag, surface type, aliases (names it also answers to after a merge). Edges the same way (`<face A>\|<face B>`). | The key to surviving edits. |
-| `params.json` | Exposed parameters: name, value, unit, expression (read-only) | So CAM can show "wall = 3 mm", and PCB can drive SolidCraft parameters later. |
+| `params.json` | Exposed parameters: name, value, unit, expression (read-only) | So CAM can show "wall = 3 mm", and PCB can drive Torno parameters later. |
 | `meta.json` | Material, part number, stock hint (box or offset), colour per face | Taken from design and component metadata. |
 | `board.json` | PCB only: outline, cutouts, holes with names, part placements and heights, keep-outs | Defined with PCBCraft. |
 
-**Stable ids.** SolidCraft already names every face and edge from kernel history (`F2:top`, `F4:side:l4`, `F2:top#[…]` for pieces, `F5:blend:<edge>` for rounds). `model.faces` reports them, with `exact: false` where a name was found by geometry. The exchange carries these strings as given. Receivers treat them as opaque strings. CamCraft picks today are facet-geometry hashes; a linked model would also store the face name, which survives an added hole where a facet hash may not.
+**Stable ids.** Torno already names every face and edge from kernel history (`F2:top`, `F4:side:l4`, `F2:top#[…]` for pieces, `F5:blend:<edge>` for rounds). `model.faces` reports them, with `exact: false` where a name was found by geometry. The exchange carries these strings as given. Receivers treat them as opaque strings. CamCraft picks today are facet-geometry hashes; a linked model would also store the face name, which survives an added hole where a facet hash may not.
 
 ## 3. Transport
 
 | Option | Desktop | Browser (wasm) | Good for | Weak at |
 |---|---|---|---|---|
 | **A. Exchange file + file watching** | Yes. Write beside the design, watch for changes. | Same-origin apps can share OPFS. No watching, so poll or use the `BroadcastChannel` below. | Durable, works with either app closed, easy to debug | Update waits for a save |
-| **B. Control channel session** (SolidCraft's existing loopback socket, token file, `control.subscribe` → `design.changed`) | Yes, already shipped | No sockets. The same messages can go over `postMessage` or `BroadcastChannel` between same-origin tabs. | Instant change notice, handshake | Both apps must run |
+| **B. Control channel session** (Torno's existing loopback socket, token file, `control.subscribe` → `design.changed`) | Yes, already shipped | No sockets. The same messages can go over `postMessage` or `BroadcastChannel` between same-origin tabs. | Instant change notice, handshake | Both apps must run |
 | **C. MCP** | Yes (stdio) | No | Agents driving both apps | Made for agent to app, not app to app. No events between apps. |
 | **D. Launcher / "open in"** (start the other app with a path; later a registered file type or `camcraft://open?path=`) | Yes | `window.open` the other app's URL with the file in shared OPFS, or hand it over with `postMessage` | The button | Carries no updates by itself |
 
@@ -52,9 +52,9 @@ One **exchange file**, `*.craftx`: a ZIP like the `.sc` container, with parts ad
 
 ## 4. Linking and change propagation
 
-- **A link** in the receiving project is `{source_id, path hint, revision, content hash}`. `source_id` is the permanent id. The path is only a hint, as in PCBCraft's file rules and SolidCraft's Insert Design links.
+- **A link** in the receiving project is `{source_id, path hint, revision, content hash}`. `source_id` is the permanent id. The path is only a hint, as in PCBCraft's file rules and Torno's Insert Design links.
 - **Change detection**: the exchange file's hash differs from the linked one → there's a new revision. Taking it can be automatic or one click; the receiver decides.
-- **Re-resolving references** (each receiver does this, with the same outcomes SolidCraft uses for linked designs):
+- **Re-resolving references** (each receiver does this, with the same outcomes Torno uses for linked designs):
 
 | Outcome | Meaning | Receiver does |
 |---|---|---|
@@ -68,14 +68,14 @@ One **exchange file**, `*.craftx`: a ZIP like the `.sc` container, with parts ad
 
 | Item | Owner | Others get |
 |---|---|---|
-| Part geometry, parameters, face names | SolidCraft | CamCraft, PCBCraft (read) |
+| Part geometry, parameters, face names | Torno | CamCraft, PCBCraft (read) |
 | Setups, stock, WCS, tools, toolpaths, posts | CamCraft | Nothing yet (maybe stock and as-machined bodies later) |
-| Board outline, holes, part placement and heights | PCBCraft | SolidCraft (a linked body and sketch, like an inserted design) |
-| Enclosure-driven outline and mount points | SolidCraft | PCBCraft (read, shown as a constraint it can accept) |
+| Board outline, holes, part placement and heights | PCBCraft | Torno (a linked body and sketch, like an inserted design) |
+| Enclosure-driven outline and mount points | Torno | PCBCraft (read, shown as a constraint it can accept) |
 
-To change something you don't own, "Edit in SolidCraft" (or the owner app) opens the source.
+To change something you don't own, "Edit in Torno" (or the owner app) opens the source.
 
-## 5. The SolidCraft side
+## 5. The Torno side
 
 Every step is a command with input and output schemas. Programmatic calls never open dialogs.
 
@@ -93,7 +93,7 @@ Face names, `model.faces`, linked-design face matching, design metadata and `con
 **Format additions** (one file per change in `crates/doc/src/format/pending/`):
 - `design-source-id.rs`: a permanent random id for each design, made on first save. Older designs get one when next saved. A copy made with Save As gets a new one.
 - `bridge-targets.rs`: the export targets (`app`, path hint, auto on or off).
-Inserted exchanges ride the existing Import feature link fields. An older release warns, opens what it can and keeps the rest. Another app's private data, if ever stored in a design, goes under its own reverse-DNS metadata key, which SolidCraft already preserves.
+Inserted exchanges ride the existing Import feature link fields. An older release warns, opens what it can and keeps the rest. Another app's private data, if ever stored in a design, goes under its own reverse-DNS metadata key, which Torno already preserves.
 
 **UI**: a "Send to CamCraft" button, and later "Send to PCBCraft". It changes the default ribbon, so the owner decides where it goes before it merges.
 
@@ -111,11 +111,11 @@ Inserted exchanges ride the existing Import feature link fields. An older releas
 | Phase | Delivers | Who |
 |---|---|---|
 | 0 | Agree on this contract and the manifest | Both authors |
-| 1 | **Send to CamCraft**: `bridge.export` (STEP, mesh, face table) plus launching CamCraft with the path. CamCraft imports the STEP as it does today. | SolidCraft. CamCraft only needs a path argument. |
+| 1 | **Send to CamCraft**: `bridge.export` (STEP, mesh, face table) plus launching CamCraft with the path. CamCraft imports the STEP as it does today. | Torno. CamCraft only needs a path argument. |
 | 2 | CamCraft reads `faces.json`: picks store face names, and re-sending updates the same model (its existing UpdateModel and stale marking), with the outcome table above | CamCraft |
 | 3 | Live: `bridge.auto` + file watching. CamCraft either marks paths stale or regenerates; it never posts on its own. Plus a control-channel notice for running apps. | Both |
 | 4 | Exact B-rep through solidcore-record, once CamCraft moves to Solidcore | Both |
-| 5 | PCBCraft: board → SolidCraft via `file.insert_exchange`, and enclosure outline → PCBCraft, once PCBCraft has boards | PCBCraft, SolidCraft |
+| 5 | PCBCraft: board → Torno via `file.insert_exchange`, and enclosure outline → PCBCraft, once PCBCraft has boards | PCBCraft, Torno |
 | 6 | Browser: shared OPFS, `BroadcastChannel`, `window.open` hand-off between same-origin web builds | All |
 
 ## 8. Open questions for CamCraft's author
@@ -123,7 +123,7 @@ Inserted exchanges ride the existing Import feature link fields. An older releas
 1. **Would CamCraft store our face and edge names on its picks, next to its facet-hash ids, and re-resolve by name first?** That one choice decides whether CAM setups survive model edits.
 2. Does `camcraft-ui` accept a file path at launch, and can a running window take a second file instead of opening a new one?
 3. Should a linked model update automatically and mark paths stale, or regenerate them too, and with what confirmation?
-4. Should stock and material come from SolidCraft (a stock hint in `meta.json`), or stay CamCraft-only?
+4. Should stock and material come from Torno (a stock hint in `meta.json`), or stay CamCraft-only?
 5. Where should the exchange file live: beside the `.sc`, beside the `.camproj`, or copied into the project, as CamCraft keeps facets today?
 6. Is there anything CamCraft wants to send back, such as the as-machined body for drawings, or fixture bodies for assemblies?
 7. What's the timing for Solidcore (M12.1), so we know when to put the B-rep record first?

@@ -58,6 +58,6 @@ for source,target in [("tumblers-render.json","tumblers-textures-render.json"),(
     params["samples"]=2048
     for glass in params["raytrace"]["dielectrics"]: glass["shadow_transmission"]=True
     (SCENES/target).write_text(json.dumps(params,indent=2)+"\n",encoding="utf8",newline="\n")
-manifest={"author":"SolidCraft contributors; original analytic patterns authored for this task", "license":"MIT OR Apache-2.0", "no_external_images":True,"dimensions":[N,N],"stats":stats,"bindings":len(bindings),"linear_pixel_bytes_across_bindings":len(bindings)*2*N*N*16,"files":{p.name:{"sha256":hashlib.sha256(p.read_bytes()).hexdigest(),"bytes":p.stat().st_size} for p in OUT.glob("*.png")}}
+manifest={"author":"Torno contributors; original analytic patterns authored for this task", "license":"MIT OR Apache-2.0", "no_external_images":True,"dimensions":[N,N],"stats":stats,"bindings":len(bindings),"linear_pixel_bytes_across_bindings":len(bindings)*2*N*N*16,"files":{p.name:{"sha256":hashlib.sha256(p.read_bytes()).hexdigest(),"bytes":p.stat().st_size} for p in OUT.glob("*.png")}}
 (OUT/"manifest.json").write_text(json.dumps(manifest,indent=2)+"\n",encoding="utf8",newline="\n")
 print(json.dumps(manifest,indent=2))

@@ -11,9 +11,9 @@ use std::hash::{Hash, Hasher};
 
 use serde_json::{Value, json};
 use solidcore_record::Vec3;
-use solidcraft_doc::joints::{Joint, JointKind, JointOrigin, Snap};
-use solidcraft_doc::kernel::{StepImport, StepNode};
-use solidcraft_doc::{FeatureKind, IDENTITY, Mat};
+use torno_doc::joints::{Joint, JointKind, JointOrigin, Snap};
+use torno_doc::kernel::{StepImport, StepNode};
+use torno_doc::{FeatureKind, IDENTITY, Mat};
 
 use crate::{EngineError, Result, Session};
 
@@ -60,18 +60,18 @@ pub(crate) enum Tree<'a> {
     Step(&'a StepImport),
     /// A mesh file's components (glTF nodes), bodies already in their component's frame
     /// (checked with [`mesh_plan_fits`] first).
-    Mesh(&'a solidcraft_io::MeshPlan),
+    Mesh(&'a torno_io::MeshPlan),
 }
 
 /// Can the components of `plan` be made as it says? (Otherwise its bodies are built in place.)
-pub(crate) fn mesh_plan_fits(plan: &solidcraft_io::MeshPlan) -> bool {
+pub(crate) fn mesh_plan_fits(plan: &torno_io::MeshPlan) -> bool {
     Plan::of_mesh(plan).is_some()
 }
 
 impl Plan {
     /// A glTF file's node plan, as it is; `None` when an occurrence can't hold it (a placement
     /// that isn't rigid, or components out of order), so the caller builds the bodies in place.
-    fn of_mesh(plan: &solidcraft_io::MeshPlan) -> Option<Plan> {
+    fn of_mesh(plan: &torno_io::MeshPlan) -> Option<Plan> {
         let mut made = 0usize;
         let mut places = Vec::with_capacity(plan.places.len());
         for p in &plan.places {
@@ -112,8 +112,8 @@ impl Plan {
         if !has_bodies(node, 0) {
             return;
         }
-        let world = solidcraft_doc::mat_mul(parent_world, &node.transform);
-        let inverse = solidcraft_doc::mat_inverse(&world);
+        let world = torno_doc::mat_mul(parent_world, &node.transform);
+        let inverse = torno_doc::mat_inverse(&world);
         // Too deep, too many, or placed in a way an occurrence can't be: the bodies stay where
         // the parent is (they are built in place, so nothing moves).
         let (Some(inverse), true, true, true) = (inverse, depth < MAX_DEPTH, self.slots.len() < MAX_COMPONENTS, subtree_rigid(node, depth)) else {
@@ -143,7 +143,7 @@ impl Plan {
     /// Every body below `node` goes to `parent`.
     fn flatten(&mut self, node: &StepNode, parent: Option<usize>, parent_world: &Mat) {
         let Some(parent) = parent else { return };
-        let Some(inverse) = solidcraft_doc::mat_inverse(parent_world) else { return };
+        let Some(inverse) = torno_doc::mat_inverse(parent_world) else { return };
         let mut all = Vec::new();
         collect_bodies(node, &mut all, 0);
         self.bodies.extend(all.into_iter().map(|b| (b as usize, parent, inverse)));
@@ -281,7 +281,7 @@ pub(crate) fn add_in_component(
     }
     // The bodies' names, as the feature will give them (checked once it is built).
     let names = match (&kind, imp) {
-        (FeatureKind::Import { skip, .. }, Some(imp)) => solidcraft_doc::import_body_names(&s.model.state(), &body_names, imp, skip),
+        (FeatureKind::Import { skip, .. }, Some(imp)) => torno_doc::import_body_names(&s.model.state(), &body_names, imp, skip),
         // Mesh bodies keep their names unless taken (then they are put right once built).
         (FeatureKind::MeshImport { .. }, _) => body_names.iter().cloned().map(Some).collect(),
         _ => Vec::new(),
@@ -331,8 +331,7 @@ pub(crate) fn move_to_origin(s: &mut Session, placed: &Placed) -> Result<Option<
     let active = s.active_occurrence_path.clone().unwrap_or_else(|| s.doc.first_path(s.active_component));
     // The frame the import was placed in: the origin it goes to.
     let parent = s.doc.path_transform(s.active_component, &active).unwrap_or(IDENTITY);
-    let to_parent =
-        solidcraft_doc::mat_inverse(&parent).ok_or_else(|| EngineError::Other("the active component's placement can't be inverted".into()))?;
+    let to_parent = torno_doc::mat_inverse(&parent).ok_or_else(|| EngineError::Other("the active component's placement can't be inverted".into()))?;
     // This placement of the import only: the bodies whose path runs through its occurrence
     // where it sits in the active component.
     let ours: Vec<String> = s
@@ -343,14 +342,14 @@ pub(crate) fn move_to_origin(s: &mut Session, placed: &Placed) -> Result<Option<
         .map(|(name, ..)| name)
         .collect();
     let world = s.world_state()?;
-    let mut bounds = solidcraft_geom::Aabb3::EMPTY;
+    let mut bounds = torno_geom::Aabb3::EMPTY;
     for body in world.bodies.iter().filter(|b| ours.contains(&b.name)) {
         // Each body's own box in the active component's frame: a turned component's frame would
         // only take a larger box around the world box's corners, leaving the mesh off Z = 0.
-        let b = if solidcraft_doc::is_identity(&to_parent) {
+        let b = if torno_doc::is_identity(&to_parent) {
             body.body.exact_bounds()?
         } else {
-            solidcraft_doc::kernel::place_matrix(&body.body, to_parent)?.exact_bounds()?
+            torno_doc::kernel::place_matrix(&body.body, to_parent)?.exact_bounds()?
         };
         if b.is_empty() {
             continue;
@@ -367,8 +366,8 @@ pub(crate) fn move_to_origin(s: &mut Session, placed: &Placed) -> Result<Option<
     let mut by = IDENTITY;
     by[3] = [shift.x, shift.y, shift.z, 1.0];
     if let Some(o) = s.doc_mut().occurrences.iter_mut().find(|o| o.id == occ) {
-        let moved = solidcraft_doc::mat_mul(&by, &o.transform);
-        if !solidcraft_doc::is_placement(&moved) {
+        let moved = torno_doc::mat_mul(&by, &o.transform);
+        if !torno_doc::is_placement(&moved) {
             return Err(EngineError::Other("moving the import to the origin takes it out of a placement within 1e9 mm".into()));
         }
         o.transform = moved;
@@ -386,7 +385,7 @@ fn put_bodies(s: &mut Session, names: &[Option<String>], moves: &[(usize, u64, M
     for (b, comp, offset) in moves {
         let Some(Some(name)) = names.get(*b) else { continue };
         d.body_components.insert(name.clone(), *comp);
-        if !solidcraft_doc::is_identity(offset) {
+        if !torno_doc::is_identity(offset) {
             d.body_offsets.insert(name.clone(), *offset);
         }
     }
@@ -398,13 +397,13 @@ fn add_rigid_joints(s: &mut Session, pairs: &[(u64, u64, Mat)]) -> Result<Vec<u6
     if pairs.is_empty() {
         return Ok(Vec::new());
     }
-    if s.doc.assembly.joints.len() + pairs.len() > solidcraft_doc::joints::MAX_JOINTS {
+    if s.doc.assembly.joints.len() + pairs.len() > torno_doc::joints::MAX_JOINTS {
         // Too many to hold together: the parts are placed, not locked.
         return Ok(Vec::new());
     }
     let mut ids = Vec::with_capacity(pairs.len());
-    let point = |m: &Mat, p: Vec3| solidcraft_doc::apply_point(m, p);
-    let vector = |m: &Mat, v: Vec3| solidcraft_doc::apply_vector(m, v);
+    let point = |m: &Mat, p: Vec3| torno_doc::apply_point(m, p);
+    let vector = |m: &Mat, v: Vec3| torno_doc::apply_vector(m, v);
     let made: Vec<Joint> = pairs
         .iter()
         .map(|(a, b, m)| {

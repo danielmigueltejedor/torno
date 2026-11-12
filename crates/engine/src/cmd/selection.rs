@@ -5,7 +5,7 @@ use std::collections::BTreeMap;
 
 use serde_json::{Map, Value, json};
 use solidcore_record::Vec3;
-use solidcraft_geom::prelude::*;
+use torno_geom::prelude::*;
 
 use super::CommandSpec;
 use super::measure_sel::{resolve, sketch_of};
@@ -68,7 +68,7 @@ fn identity(sel: &Sel) -> Map<String, Value> {
 /// What resolving items shares: each body's placement and edge names, worked out once.
 struct Context<'a> {
     s: &'a Session,
-    st: std::sync::Arc<solidcraft_doc::ModelState>,
+    st: std::sync::Arc<torno_doc::ModelState>,
     /// World body name → (definition name, component, occurrence path); only in an assembly.
     placements: Option<BTreeMap<String, (String, u64, Vec<u64>)>>,
     edge_names: BTreeMap<String, Vec<String>>,
@@ -102,12 +102,12 @@ impl<'a> Context<'a> {
             Sel::Face { body, index, .. } => {
                 self.body_info(body, v);
                 if let Some(b) = self.st.body(body) {
-                    let names = solidcraft_doc::naming::face_names(b);
+                    let names = torno_doc::naming::face_names(b);
                     if let Some(n) = names.get(*index).filter(|n| !n.is_empty()) {
                         v.insert("name".into(), json!(n));
-                        v.insert("name_exact".into(), json!(solidcraft_doc::naming::face_name_exact(b, *index)));
+                        v.insert("name_exact".into(), json!(torno_doc::naming::face_name_exact(b, *index)));
                     }
-                    v.insert("surface".into(), surface(solidcraft_kernel::face_surface(&b.body, *index), dir));
+                    v.insert("surface".into(), surface(torno_kernel::face_surface(&b.body, *index), dir));
                 }
             }
             Sel::Edge { body, index, .. } => {
@@ -115,13 +115,13 @@ impl<'a> Context<'a> {
                 if let Some(b) = self.st.body(body) {
                     // Its ends from its exact curve; an intersection curve, which the record holds
                     // only as its surfaces, has none to give.
-                    if let Ok(segs) = solidcraft_kernel::edge_path(&b.body, *index)
+                    if let Ok(segs) = torno_kernel::edge_path(&b.body, *index)
                         && let (Some(a), Some(z)) = (segs.first(), segs.last())
                     {
                         v.insert("start".into(), json!(a.start()));
                         v.insert("end".into(), json!(z.end()));
                     }
-                    let names = self.edge_names.entry(body.clone()).or_insert_with(|| solidcraft_doc::naming::edge_names(b));
+                    let names = self.edge_names.entry(body.clone()).or_insert_with(|| torno_doc::naming::edge_names(b));
                     if let Some(n) = names.get(*index).filter(|n| !n.is_empty()) {
                         v.insert("name".into(), json!(n));
                     }
@@ -225,7 +225,7 @@ impl<'a> Context<'a> {
             Entity::Midpoint => {
                 v.insert("entity".into(), json!("midpoint"));
                 let line = sk.curve_index(id).and_then(|i| sk.curves.get(i)).and_then(|c| match c.kind {
-                    solidcraft_sketch::CurveKind::Line { a, b } => Some((sk.point(a)?, sk.point(b)?)),
+                    torno_sketch::CurveKind::Line { a, b } => Some((sk.point(a)?, sk.point(b)?)),
                     _ => None,
                 });
                 if let Some((a, b)) = line {
@@ -260,8 +260,8 @@ fn kind_name(v: Option<Value>) -> Value {
 
 /// A face's surface: an analytic one with its defining values, else a plane when the face is
 /// flat (`normal` from its triangles), else `other`.
-fn surface(s: Option<solidcraft_kernel::FaceSurface>, planar: Option<Vec3>) -> Value {
-    use solidcraft_kernel::FaceSurface as F;
+fn surface(s: Option<torno_kernel::FaceSurface>, planar: Option<Vec3>) -> Value {
+    use torno_kernel::FaceSurface as F;
     match s {
         Some(F::Plane { normal, point }) => json!({"type": "plane", "normal": normal, "point": point}),
         Some(F::Cylinder { origin, axis, radius }) => json!({"type": "cylinder", "origin": origin, "axis": axis, "radius": radius}),

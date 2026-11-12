@@ -1,7 +1,7 @@
 //! The rounds that overflow go first, and the rounds that go second meet them as one blend:
 //! [`solidcore_ops::blend`] hands its second pass the faces its first made (the kernel's
 //! `FilletSession::add_earlier_pass_face`), so a round running on into a first round's end
-//! is not capped at a smooth vertex. On SolidCraft's own inputs (the kernel's issue 2364
+//! is not capped at a smooth vertex. On Torno's own inputs (the kernel's issue 2364
 //! files, its rig's blend-call dumps): the plate (fillets/5158) and the notched block
 //! (fillets/1080). Each value is the kernel's own two-pass build of the same rounds
 //! (`crates/solidcore/tests/issue_2364_alpha1_ends.rs`); with the cap the plate has 2 pi - 16/3
@@ -19,12 +19,11 @@ use solidcore::topology::topology::NotifyRecords;
 use solidcore::Vec3;
 use solidcore_ops::{blend, session, Blend, Body, CheckLevel, Corners};
 
-const PLATE: &[u8] =
-    include_bytes!("../../solidcore/tests/data/issue_2364_solidcraft_5158_plate.smb");
+const PLATE: &[u8] = include_bytes!("../../solidcore/tests/data/issue_2364_torno_5158_plate.smb");
 const NOTCHED: &[u8] =
-    include_bytes!("../../solidcore/tests/data/issue_2364_solidcraft_1080_notched_block.smb");
+    include_bytes!("../../solidcore/tests/data/issue_2364_torno_1080_notched_block.smb");
 
-/// SolidCraft's rig set at the time of the kernel's check: every fix but five.
+/// Torno's rig set at the time of the kernel's check: every fix but five.
 fn fixes() {
     let off = [
         "cone_unbounded_parameterized_as_nurb",

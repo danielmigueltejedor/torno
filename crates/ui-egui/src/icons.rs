@@ -1,11 +1,11 @@
-//! SolidCraft's icon artwork. Compiled only at L5.
+//! Torno's icon artwork. Compiled only at L5.
 //!
-//! Command, menu, browser and timeline icons are SolidCraft's SVG masters (`solidcraft_look::icons::SET`),
+//! Command, menu, browser and timeline icons are Torno's SVG masters (`torno_look::icons::SET`),
 //! drawn by the kit's painters ([`crate::ui_kit::icons`], re-exported here): colours come from the
 //! default `palette.toml` roles/accents and optional active-theme overrides, never arbitrary caller
 //! tints. An icon with no master yet draws the placeholder.
-//! The marker and navigation cube artwork below is not command icons; SolidCraft's code-drawn
-//! glyphs (`solidcraft_look::glyphs`) are installed with its look.
+//! The marker and navigation cube artwork below is not command icons; Torno's code-drawn
+//! glyphs (`torno_look::glyphs`) are installed with its look.
 pub use crate::ui_kit::icons::{
     clear_texture_cache, paint_accented, paint_app_bar, paint_danger, paint_icon, paint_ink, paint_ink_flipped, paint_ink_mirrored, paint_on,
 };
@@ -19,14 +19,14 @@ mod tests {
     use crate::icon_svg::{self, Look};
     use crate::theme;
     use egui::{Color32, Rect};
-    use solidcraft_theme::ColorVision;
     use std::collections::HashMap;
+    use torno_theme::ColorVision;
 
     #[test]
     fn theme_icon_palettes_change_uploaded_pixels_and_reuse_only_matching_textures() {
         use serde_json::json;
         let ctx = crate::fonts::test_context();
-        let dark = solidcraft_theme::is_dark();
+        let dark = torno_theme::is_dark();
         ctx.set_visuals(if dark { egui::Visuals::dark() } else { egui::Visuals::light() });
         let mut previous_alpha = None;
         let mut previous_texture = None;
@@ -80,29 +80,29 @@ mod tests {
 
     #[test]
     fn assistant_pixels_use_the_application_bar_text_token() {
-        let previous = solidcraft_theme::is_dark();
+        let previous = torno_theme::is_dark();
         for dark in [false, true] {
             let ctx = crate::fonts::test_context();
-            solidcraft_theme::set_dark(dark);
+            torno_theme::set_dark(dark);
             let mut out = ctx.run_ui(egui::RawInput::default(), |ui| {
                 paint_app_bar(ui.painter(), Rect::from_min_size(egui::Pos2::ZERO, egui::vec2(32.0, 32.0)), "assistant", 1.0);
             });
-            let ink = solidcraft_theme::Tokens::get().app_bar_text;
+            let ink = torno_theme::Tokens::get().app_bar_text;
             assert!(out.textures_delta.set.iter().any(|(_, deltas)| deltas.iter().any(|delta| match &delta.image {
                 egui::ImageData::Color(image) => image.pixels.contains(&ink),
             })));
             out.textures_delta.clear();
         }
-        solidcraft_theme::set_dark(previous);
+        torno_theme::set_dark(previous);
     }
 
     #[test]
     fn actual_uploaded_icon_pixels_follow_semantics_and_vision_cache_changes() {
         let ctx = crate::fonts::test_context();
-        let previous = solidcraft_theme::vision();
+        let previous = torno_theme::vision();
         for dark in [false, true] {
             for vision in [ColorVision::Off, ColorVision::Protan, ColorVision::Tritan] {
-                solidcraft_theme::set_vision(vision);
+                torno_theme::set_vision(vision);
                 // The line types: Normal in the base blue, and Construction, Centerline and Infinite
                 // in the construction accent, as the sketch canvas draws them.
                 for icon in
@@ -138,15 +138,15 @@ mod tests {
                 }
             }
         }
-        solidcraft_theme::set_vision(previous);
+        torno_theme::set_vision(previous);
     }
 
     #[test]
     fn per_call_accents_preserve_roles_and_share_the_existing_cache() {
-        let previous = solidcraft_theme::vision();
+        let previous = torno_theme::vision();
         for dark in [false, true] {
             for vision in ColorVision::ALL {
-                solidcraft_theme::set_vision(vision);
+                torno_theme::set_vision(vision);
                 let ctx = crate::fonts::test_context();
                 ctx.set_visuals(if dark { egui::Visuals::dark() } else { egui::Visuals::light() });
                 let mut textures = HashMap::new();
@@ -227,7 +227,7 @@ mod tests {
                 output.textures_delta.clear();
             }
         }
-        solidcraft_theme::set_vision(previous);
+        torno_theme::set_vision(previous);
     }
 
     #[test]

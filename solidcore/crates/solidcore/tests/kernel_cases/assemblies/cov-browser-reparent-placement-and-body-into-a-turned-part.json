@@ -168,10 +168,10 @@
     "extrude"
   ],
   "ungraded": [
-    "results: SolidCraft computes it"
+    "results: Torno computes it"
   ],
   "what": "browser.reparent of a part's placement and a loose body into a component placed turned and moved",
   "why_not": [
-    "body \"Cube\" is no kernel operation's output nor an operand: SolidCraft built it or changed the kernel's record"
+    "body \"Cube\" is no kernel operation's output nor an operand: Torno built it or changed the kernel's record"
   ]
 }

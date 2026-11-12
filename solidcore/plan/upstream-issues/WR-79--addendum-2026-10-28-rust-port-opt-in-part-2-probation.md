@@ -15,7 +15,7 @@
   solution angle is below `2 tol / modelSize` radians (model size: the larger box
   diagonal of the two surfaces over their domains) is still skipped, and a rejected
   trace and its start point (a degenerate curve) are remembered so later low-angle
-  start points on them are not traced again. This is the SolidCraft fork's
+  start points on them are not traced again. This is the Torno fork's
   tangency-labs/smlib@30d25bf (`SmAdvSurfaceIntersector.cpp` part), without the fork's
   earlier tangent-seed bookkeeping, which v1.0.1 does not have.
 - **Kind:** a result-changing fix (a missed intersection; no crash, undefined behaviour,

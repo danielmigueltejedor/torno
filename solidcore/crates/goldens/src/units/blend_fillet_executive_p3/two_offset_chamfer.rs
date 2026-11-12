@@ -66,7 +66,7 @@ enum Body {
     /// `SmApiCreateCylinder`.
     #[default]
     Cylinder,
-    /// SolidCraft's extruded cylinder: the capped `SmApiCreateLinearSweep` along +Z of the
+    /// Torno's extruded cylinder: the capped `SmApiCreateLinearSweep` along +Z of the
     /// two `SmApiCreateArc` half circles `seam_deg` to `seam_deg + 180` and
     /// `seam_deg - 180` to `seam_deg` (degrees).
     HalfArcSweep { seam_deg: f64 },

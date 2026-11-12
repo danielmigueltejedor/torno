@@ -1,9 +1,9 @@
 #![allow(clippy::unwrap_used, clippy::panic)]
 use serde_json::{Value, json};
 use solidcore_record::Vec2;
-use solidcraft_doc::{Document, FeatureKind, ProfileSel};
-use solidcraft_geom::prelude::*;
-use solidcraft_sketch::{CurveKind, Sketch};
+use torno_doc::{Document, FeatureKind, ProfileSel};
+use torno_geom::prelude::*;
+use torno_sketch::{CurveKind, Sketch};
 
 use crate::{Session, Snapshot};
 

@@ -1,5 +1,5 @@
-use solidcraft_geom::MeshGeom;
 use std::f64::consts::PI;
+use torno_geom::MeshGeom;
 
 use serde_json::{Value, json};
 
@@ -108,7 +108,7 @@ fn edge_picks_on_bodies_apart_keep_the_body_they_lie_on() {
         s
     };
     let kept = |s: &Session| match &s.doc.features.last().unwrap().kind {
-        solidcraft_doc::FeatureKind::Chamfer { body, .. } => body.as_ref().map(|b| b.0.clone()),
+        torno_doc::FeatureKind::Chamfer { body, .. } => body.as_ref().map(|b| b.0.clone()),
         k => panic!("{k:?}"),
     };
     let each = |s: &Session| ["Low", "High"].map(|b| s.model.state().body(b).unwrap().measure().unwrap().volume);
@@ -147,7 +147,7 @@ fn an_edge_along_another_bodys_seam_is_picked() {
     let mut s = Session::default();
     run(&mut s, "solid.cylinder", json!({"radius": 10, "height": 10, "body_name": "Rod"}));
     let rod = s.model.state().body("Rod").unwrap().body.clone();
-    let mesh = rod.mesh(&solidcraft_kernel::MeshTolerance::chord(0.06)).unwrap();
+    let mesh = rod.mesh(&torno_kernel::MeshTolerance::chord(0.06)).unwrap();
     let seam = mesh.edges.iter().zip(&mesh.seams).find(|(_, seam)| **seam).unwrap().0[0];
     // The box's quarter past the seam's line is outside the cylinder: they touch along it.
     run(
@@ -157,7 +157,7 @@ fn an_edge_along_another_bodys_seam_is_picked() {
     );
     run(&mut s, "solid.chamfer", json!({"edges": [[seam.x, seam.y, 5]], "distance": 1}));
     let kept = match &s.doc.features.last().unwrap().kind {
-        solidcraft_doc::FeatureKind::Chamfer { body, .. } => body.as_ref().map(|b| b.0.clone()),
+        torno_doc::FeatureKind::Chamfer { body, .. } => body.as_ref().map(|b| b.0.clone()),
         k => panic!("{k:?}"),
     };
     assert_eq!(kept.as_deref(), Some("Block"));
@@ -192,7 +192,7 @@ fn a_later_round_at_a_mitred_corner_is_blended_with_the_rounds_there() {
     let rounds = [solidcore_record::Vec3::new(20.0 - k, 10.0, 20.0 - k), solidcore_record::Vec3::new(10.0, k, 20.0 - k)];
     let named = |s: &mut Session, at: solidcore_record::Vec3| {
         let st = s.model.state();
-        let (d, index) = solidcraft_doc::appearance::nearest_face(st.body("Box").unwrap(), at).unwrap();
+        let (d, index) = torno_doc::appearance::nearest_face(st.body("Box").unwrap(), at).unwrap();
         // Found on the display mesh, whose facets lie within its chord of the faces.
         assert!(d < 0.05, "{at:?} is {d} off the nearest face");
         let faces = run(s, "model.faces", json!({"body": "Box"}))["faces"].as_array().cloned().unwrap_or_default();
@@ -227,13 +227,12 @@ fn join_extrude_from_a_chamfered_top_face() {
     run(&mut s, "solid.chamfer", json!({"edges": [[10, 0, 20]], "distance": "bevel"}));
     let base = volume(&mut s);
     let id = run(&mut s, "sketch.create", json!({"plane": {"face": [0, 0, 20]}}))["sketch"].as_u64().unwrap();
-    let solidcraft_doc::FeatureKind::Sketch { plane: solidcraft_doc::PlaneRef::Face { anchor: Some(anchor), .. }, sketch } =
-        &s.doc.feature(id).unwrap().kind
+    let torno_doc::FeatureKind::Sketch { plane: torno_doc::PlaneRef::Face { anchor: Some(anchor), .. }, sketch } = &s.doc.feature(id).unwrap().kind
     else {
         panic!("the chamfered cap retains its exact original construction support");
     };
     assert_eq!(anchor.target.origin_feature, source);
-    assert!(matches!(anchor.target.certificate, Some(solidcraft_doc::config::FaceCertificate::ExtrudeCap { high: true, .. })));
+    assert!(matches!(anchor.target.certificate, Some(torno_doc::config::FaceCertificate::ExtrudeCap { high: true, .. })));
     assert!(!sketch.links.is_empty());
     assert!(sketch.links.iter().all(|link| link.auto_face && !link.lost));
     // The default linked cap outline is radius8; no explicit fixed plane or
@@ -246,7 +245,7 @@ fn join_extrude_from_a_chamfered_top_face() {
         run(&mut s, "parameters.change", json!({"name":"height","expression":format!("{height} mm")}));
         run(&mut s, "parameters.change", json!({"name":"bevel","expression":format!("{bevel} mm")}));
         let expected = PI * (100. * height - (10. * bevel * bevel - bevel * bevel * bevel / 3.) + (10. - bevel) * (10. - bevel) * 5.);
-        let loaded = solidcraft_doc::Document::from_json(&s.doc.to_json()).unwrap();
+        let loaded = torno_doc::Document::from_json(&s.doc.to_json()).unwrap();
         let mut cold = Session::new(loaded);
         let warm_volume = volume(&mut s);
         let cold_volume = volume(&mut cold);
@@ -260,15 +259,15 @@ fn join_extrude_from_a_chamfered_top_face() {
             assert!((solved.plane.origin.z - height).abs() < 1e-8);
             assert!(solved.sketch.links.iter().all(|link| link.auto_face && !link.lost));
             let body = &state.bodies[0];
-            assert_eq!(body.body.classify_point(solidcore_record::Vec3::new(0., 0., height + 4.)).unwrap(), solidcraft_kernel::PointClass::Inside);
-            assert_eq!(body.body.classify_point(solidcore_record::Vec3::new(0., 0., height + 6.)).unwrap(), solidcraft_kernel::PointClass::Outside);
+            assert_eq!(body.body.classify_point(solidcore_record::Vec3::new(0., 0., height + 4.)).unwrap(), torno_kernel::PointClass::Inside);
+            assert_eq!(body.body.classify_point(solidcore_record::Vec3::new(0., 0., height + 6.)).unwrap(), torno_kernel::PointClass::Outside);
             assert_eq!(
                 body.body.classify_point(solidcore_record::Vec3::new(10. - bevel - 0.5, 0., height + 4.)).unwrap(),
-                solidcraft_kernel::PointClass::Inside
+                torno_kernel::PointClass::Inside
             );
             assert_eq!(
                 body.body.classify_point(solidcore_record::Vec3::new(10. - bevel + 0.5, 0., height + 4.)).unwrap(),
-                solidcraft_kernel::PointClass::Outside
+                torno_kernel::PointClass::Outside
             );
         }
     }
@@ -637,7 +636,7 @@ fn rounds_on_a_bar_running_tangent_into_a_cylinder() {
         .iter()
         .map(|f| &f.surface)
         .filter(|s| {
-            let e = solidcraft_geom::brep::eval::SurfaceEval::new(s).ok();
+            let e = torno_geom::brep::eval::SurfaceEval::new(s).ok();
             e.and_then(|e| e.project(p0, None, 1e-6).and_then(|uv| e.point(uv))).is_some_and(|q| q.dist(p0) < 1e-6)
         })
         .collect();
@@ -712,7 +711,7 @@ fn box_fillet_cut_part() {
     let l: Vec<String> = r["curves"].as_array().unwrap().iter().map(|v| v.as_str().unwrap().to_string()).collect();
     let corner = s.doc.sketch(s.active_sketch.unwrap()).unwrap().curves[0].clone();
     let start = match corner.kind {
-        solidcraft_sketch::CurveKind::Line { a, .. } => s.doc.sketch(s.active_sketch.unwrap()).unwrap().points[a].id.clone(),
+        torno_sketch::CurveKind::Line { a, .. } => s.doc.sketch(s.active_sketch.unwrap()).unwrap().points[a].id.clone(),
         _ => panic!(),
     };
     run(&mut s, "sketch.constraint.coincident", json!({"a": start, "b": "origin"}));
@@ -749,7 +748,7 @@ fn box_fillet_cut_part() {
     assert!(rel(volume(&mut s), expect2) < 5e-4);
 
     // Export STL and STEP.
-    let dir = std::env::temp_dir().join(format!("solidcraft-test-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("torno-test-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
     let stl = dir.join("part.stl");
     run(&mut s, "file.export", json!({"path": stl.to_string_lossy()}));
@@ -1237,7 +1236,7 @@ fn registry_is_consistent() {
     assert!(!find_command("sketch.line").unwrap().info(&s).enabled);
 }
 
-/// Only SolidCraft's own dotted ids name commands; other ids are unknown commands.
+/// Only Torno's own dotted ids name commands; other ids are unknown commands.
 #[test]
 fn only_own_ids_name_commands() {
     for old in ["Extrude", "SketchCreate", "FusionFilletEdgesCommand"] {
@@ -1477,7 +1476,7 @@ fn timeline_edits_reresolve_references() {
 
 /// A 40 × 30 × 20 box exported to a STEP file in a fresh temp directory.
 fn step_box_file(tag: &str) -> std::path::PathBuf {
-    let dir = std::env::temp_dir().join(format!("solidcraft-step-{tag}-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("torno-step-{tag}-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
     let mut s = Session::default();
     run(&mut s, "solid.box", json!({"length": 40, "width": 30, "height": 20}));
@@ -1530,7 +1529,7 @@ fn step_open_then_model_on_it() {
 
     // The design saves and reopens without the STEP file.
     let before = volume(&mut s);
-    let design = p.with_extension("solidcraft");
+    let design = p.with_extension("torno");
     run(&mut s, "file.save_as", json!({"path": design.to_string_lossy()}));
     std::fs::remove_file(&p).unwrap();
     let mut s2 = Session::default();
@@ -1543,7 +1542,7 @@ fn step_open_then_model_on_it() {
 /// join was refused past the comparison budget.
 #[test]
 fn join_onto_a_finely_faceted_import() {
-    let dir = std::env::temp_dir().join(format!("solidcraft-step-faceted-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("torno-step-faceted-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
     let n = 4000;
     let mut pts: Vec<[f64; 2]> =
@@ -1608,15 +1607,15 @@ fn step_insert_shell_and_errors() {
     assert_eq!(*d.doc, *before);
 }
 
-fn body_volume(st: &solidcraft_doc::ModelState) -> f64 {
-    st.bodies.iter().map(|b| solidcraft_kernel::measure(&b.body).unwrap().volume).sum()
+fn body_volume(st: &torno_doc::ModelState) -> f64 {
+    st.bodies.iter().map(|b| torno_kernel::measure(&b.body).unwrap().volume).sum()
 }
 
 /// Deleting an inserted assembly keeps the names of the bodies that remain, and leaves no assembly
 /// ownership behind.
 #[test]
 fn step_insert_delete_removes_assembly_and_undo_restores_it() {
-    let dir = std::env::temp_dir().join(format!("solidcraft-step-delete-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("torno-step-delete-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
     let path = dir.join("parts.step");
     let mut source = Session::default();
@@ -1631,7 +1630,7 @@ fn step_insert_delete_removes_assembly_and_undo_restores_it() {
     let kept = s.doc_mut().add_component(Some("Kept"), 0).unwrap();
     let kept_occurrence = s.doc.occurrence_of(kept).unwrap().clone();
     run(&mut s, "file.insert_step", json!({"path": path.to_string_lossy(), "name": "Imported"}));
-    let reopened = solidcraft_doc::Document::from_json(&s.doc.to_json()).unwrap();
+    let reopened = torno_doc::Document::from_json(&s.doc.to_json()).unwrap();
     assert!(reopened.find_feature("Imported").unwrap().inserted, "the insert keeps its mark through save");
     run(&mut s, "solid.mirror", json!({"bodies": ["Part"], "plane": {"origin": [0, 30, 0], "normal": [0, 1, 0]}}));
     assert!(s.model.state().body("Part (3)").is_some());
@@ -1819,8 +1818,8 @@ fn twisted_ruled_faces_are_meshed_to_the_chord_tolerance() {
     run(&mut s, "solid.loft", json!({"sections": [{"sketch": "Bottom"}, {"sketch": "Top"}], "operation": "new"}));
     let st = s.model.state();
     let body = &st.bodies.first().unwrap().body;
-    let exact = solidcraft_kernel::measure(body).unwrap().volume;
-    let mesh = body.mesh(&solidcraft_kernel::MeshTolerance::chord(0.05)).unwrap();
+    let exact = torno_kernel::measure(body).unwrap().volume;
+    let mesh = body.mesh(&torno_kernel::MeshTolerance::chord(0.05)).unwrap();
     let volume: f64 = mesh
         .triangles
         .iter()
@@ -1867,7 +1866,7 @@ fn a_hole_position_of_expressions_follows_the_parameters() {
     run(&mut s, "solid.hole", json!({"position": [80, 10, 4], "clearance": "M5", "name": "Fixed"}));
     let centre_y = |s: &Session| {
         let st = s.model.state();
-        solidcraft_kernel::measure(&st.body("Plate").unwrap().body).unwrap().centroid.y
+        torno_kernel::measure(&st.body("Plate").unwrap().body).unwrap().centroid.y
     };
     let hole = |s: &Session, name: &str| -> Value {
         let saved: Value = serde_json::from_str(&s.doc.to_json()).unwrap();
@@ -1911,7 +1910,7 @@ fn auto_extrude_joins_side_contact_elbow_and_keeps_new_body_explicit() {
             assert!(body.validity().is_empty());
             assert_eq!(body.lumps().unwrap().len(), 1);
             assert_eq!(body.face_count(), 8, "the two flat elbow sides must be single faces");
-            assert_eq!(body.classify_point(solidcore_record::Vec3::new(5.0, 10.0, 25.0)).unwrap(), solidcraft_kernel::PointClass::Inside);
+            assert_eq!(body.classify_point(solidcore_record::Vec3::new(5.0, 10.0, 25.0)).unwrap(), torno_kernel::PointClass::Inside);
         }
     }
 }
@@ -1935,7 +1934,7 @@ fn auto_extrude_joins_corner_screw_boss() {
     assert!(body.validity().is_empty());
     assert_eq!(
         body.classify_point(solidcore_record::Vec3::new(10.0, 10.0, 32.0)).unwrap(),
-        solidcraft_kernel::PointClass::Outside,
+        torno_kernel::PointClass::Outside,
         "the screw hole stays open"
     );
 }
@@ -2131,7 +2130,7 @@ fn extrude_a_body_face() {
 /// solid features.
 #[test]
 fn threemf_export_open_insert() {
-    let dir = std::env::temp_dir().join(format!("solidcraft-3mf-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("torno-3mf-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
     let mut s = Session::default();
     run(&mut s, "solid.box", json!({"length": 40, "width": 30, "height": 20}));
@@ -2188,7 +2187,7 @@ fn threemf_export_open_insert() {
 /// written out here, not read from the table that scales the file.
 #[test]
 fn stl_cube_of_one_unit_comes_in_as_that_many_millimetres() {
-    let dir = std::env::temp_dir().join(format!("solidcraft-stl-units-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("torno-stl-units-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
     let stl = dir.join("one.stl");
     let mut s = Session::default();
@@ -2198,7 +2197,7 @@ fn stl_cube_of_one_unit_comes_in_as_that_many_millimetres() {
         let mut t = Session::default();
         let r = run(&mut t, "file.insert_mesh", json!({"path": stl.to_string_lossy(), "units": units}));
         assert_eq!(r["units"], units, "{r}");
-        let solidcraft_doc::FeatureKind::MeshImport { meshes, .. } = &t.doc.features[0].kind else { panic!("{units}: not a mesh import") };
+        let torno_doc::FeatureKind::MeshImport { meshes, .. } = &t.doc.features[0].kind else { panic!("{units}: not a mesh import") };
         for axis in 0..3 {
             let along: Vec<f64> = meshes[0].positions.chunks(3).map(|p| p[axis]).collect();
             let (lo, hi) = (along.iter().cloned().fold(f64::MAX, f64::min), along.iter().cloned().fold(f64::MIN, f64::max));
@@ -2213,7 +2212,7 @@ fn stl_cube_of_one_unit_comes_in_as_that_many_millimetres() {
 /// within floating-point precision, for each unitless mesh format: STL, OBJ and PLY (with faces).
 #[test]
 fn a_unit_on_import_matches_importing_in_millimetres_then_scaling() {
-    let dir = std::env::temp_dir().join(format!("solidcraft-unit-vs-scale-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("torno-unit-vs-scale-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
     // A cube one unit across, as the three formats write it.
     let corners = [[0, 0, 0], [1, 0, 0], [1, 1, 0], [0, 1, 0], [0, 0, 1], [1, 0, 1], [1, 1, 1], [0, 1, 1]];
@@ -2308,12 +2307,12 @@ fn holes_at_sketch_points_threads_and_components() {
     assert_eq!(r["components"].as_array().map(|a| a.len()), Some(1));
     // Saved and loaded with the components.
     let text = s.doc.to_json();
-    let back = solidcraft_doc::Document::from_json(&text).unwrap();
+    let back = torno_doc::Document::from_json(&text).unwrap();
     assert_eq!(back.components.len(), 2);
     let assigned = r["components"][0]["component"].as_u64().unwrap();
     let transfer = r["components"][0]["feature"].as_u64().unwrap();
     assert!(
-        matches!(&back.feature(transfer).unwrap().kind, solidcraft_doc::FeatureKind::BodyTransfer { bodies, to, .. } if bodies == &["Shaft"] && *to == assigned)
+        matches!(&back.feature(transfer).unwrap().kind, torno_doc::FeatureKind::BodyTransfer { bodies, to, .. } if bodies == &["Shaft"] && *to == assigned)
     );
     let reopened = Session::new(back);
     assert_eq!(reopened.model.state().body("Shaft").unwrap().component, assigned);
@@ -2512,11 +2511,11 @@ fn components_occurrences_and_world_placement() {
     assert_eq!(s.world_state().unwrap().body("Base").unwrap().component, 0);
     run(&mut s, "timeline.roll_to", json!({}));
     // Saved and loaded; older designs get occurrences.
-    let back = solidcraft_doc::Document::from_json(&s.doc.to_json()).unwrap();
+    let back = torno_doc::Document::from_json(&s.doc.to_json()).unwrap();
     assert_eq!(back.occurrences.len(), s.doc.occurrences.len());
     let mut old: serde_json::Value = serde_json::from_str(&s.doc.to_json()).unwrap();
     old.as_object_mut().unwrap().remove("occurrences");
-    let migrated = solidcraft_doc::Document::from_json(&old.to_string()).unwrap();
+    let migrated = torno_doc::Document::from_json(&old.to_string()).unwrap();
     assert_eq!(migrated.occurrences.len(), migrated.components.len());
 }
 
@@ -2553,7 +2552,7 @@ fn feature_inputs_are_parameters() {
     assert!(rel(volume(&mut s), 24.0 * 12.0 * 25.4) < 1e-9);
     assert!(s.execute("parameters.import", &json!({"text": "name,expression\nw,1/"})).is_err());
     // Saved and reloaded, the names stay.
-    let back = solidcraft_doc::Document::from_json(&s.doc.to_json()).unwrap();
+    let back = torno_doc::Document::from_json(&s.doc.to_json()).unwrap();
     assert_eq!(back.features[0].param_names, s.doc.features[0].param_names);
 }
 
@@ -2573,15 +2572,15 @@ fn rolling_back_and_forward_leaves_no_projection_warnings() {
 }
 
 /// Export STEP, validate the file, read it back: no warnings, same volume, area and faces.
-fn step_round_trip(s: &mut Session, tag: &str) -> solidcraft_kernel::StepImport {
-    let p = std::env::temp_dir().join(format!("solidcraft-steprt-{tag}-{}.step", std::process::id()));
+fn step_round_trip(s: &mut Session, tag: &str) -> torno_kernel::StepImport {
+    let p = std::env::temp_dir().join(format!("torno-steprt-{tag}-{}.step", std::process::id()));
     run(s, "file.export", json!({"path": p.to_string_lossy()}));
     let text = std::fs::read_to_string(&p).unwrap();
     let _ = std::fs::remove_file(&p);
-    solidcraft_kernel::step_validate(&text).unwrap();
-    assert_eq!(solidcraft_kernel::step_orientation_errors(&text).unwrap(), Vec::<String>::new());
+    torno_kernel::step_validate(&text).unwrap();
+    assert_eq!(torno_kernel::step_orientation_errors(&text).unwrap(), Vec::<String>::new());
     assert!(text.contains("AP242_MANAGED_MODEL_BASED_3D_ENGINEERING_MIM_LF"));
-    let imp = solidcraft_kernel::step_import(&text).unwrap();
+    let imp = torno_kernel::step_import(&text).unwrap();
     assert!(imp.warnings.is_empty(), "{:?}", imp.warnings);
     imp
 }
@@ -2595,7 +2594,7 @@ fn sample_plate_step_round_trip() {
     assert_eq!(imp.bodies.len(), st.bodies.len());
     for (a, b) in st.bodies.iter().zip(&imp.bodies) {
         assert_eq!(a.name, b.name);
-        let (ma, mb) = (solidcraft_kernel::measure(&a.body).unwrap(), solidcraft_kernel::measure(&b.body).unwrap());
+        let (ma, mb) = (torno_kernel::measure(&a.body).unwrap(), torno_kernel::measure(&b.body).unwrap());
         assert!(rel(mb.volume, ma.volume) < 1e-4, "{} vs {}", mb.volume, ma.volume);
         assert!(rel(mb.area, ma.area) < 1e-4, "{} vs {}", mb.area, ma.area);
         assert!(b.file_faces <= a.body.face_count() && b.file_faces >= ma.merged.faces.min(a.body.face_count()));
@@ -2616,14 +2615,13 @@ fn material_and_appearance_colours_export_to_step() {
     run(&mut s, "appearance.assign", json!({"bodies": ["RedAbs"], "color": "#d01c1c"}));
     assert!(s.execute("appearance.assign", &json!({"bodies": ["RedAbs"], "color": "#12"})).is_err());
     let rgb = |c: [u8; 3]| c.map(|x| x as f32 / 255.0);
-    let want =
-        [("BrassBox", Some(rgb(solidcraft_doc::material_color("Brass").unwrap()))), ("RedAbs", Some(rgb([0xd0, 0x1c, 0x1c]))), ("Plain", None)];
+    let want = [("BrassBox", Some(rgb(torno_doc::material_color("Brass").unwrap()))), ("RedAbs", Some(rgb([0xd0, 0x1c, 0x1c]))), ("Plain", None)];
     let same = |a: Option<[f32; 3]>, b: Option<[f32; 3]>| match (a, b) {
         (Some(a), Some(b)) => a.iter().zip(b).all(|(x, y)| (x - y).abs() < 1e-3),
         (None, None) => true,
         _ => false,
     };
-    let check = |imp: &solidcraft_kernel::StepImport| {
+    let check = |imp: &torno_kernel::StepImport| {
         for (name, c) in want {
             let b = imp.bodies.iter().find(|b| b.name == name).unwrap_or_else(|| panic!("no body {name}"));
             assert!(same(b.body.color(), c), "{name}: {:?} vs {c:?}", b.body.color());
@@ -2631,7 +2629,7 @@ fn material_and_appearance_colours_export_to_step() {
     };
     check(&step_round_trip(&mut s, "colours"));
     // Open the export and export again: the file's colours are kept.
-    let p = std::env::temp_dir().join(format!("solidcraft-colours-{}.step", std::process::id()));
+    let p = std::env::temp_dir().join(format!("torno-colours-{}.step", std::process::id()));
     run(&mut s, "file.export", json!({"path": p.to_string_lossy()}));
     let mut s2 = Session::default();
     run(&mut s2, "doc.open", json!({"path": p.to_string_lossy()}));
@@ -2646,7 +2644,7 @@ fn obj_export_writes_the_colours_of_the_bodies() {
     let mut s = Session::default();
     run(&mut s, "solid.box", json!({"length": 10, "width": 10, "height": 10, "body_name": "Red Box"}));
     run(&mut s, "appearance.assign", json!({"bodies": ["Red Box"], "color": "#d03030"}));
-    let dir = std::env::temp_dir().join(format!("solidcraft-objcolours-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("torno-objcolours-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
     let obj = dir.join("part.obj");
     run(&mut s, "file.export", json!({"path": obj.to_string_lossy(), "format": "obj"}));
@@ -2676,7 +2674,7 @@ fn face_colours_and_opacity_export() {
     assert_eq!(paint.faces[0].face, top);
     assert!((paint.faces[0].color[0] - 1.0).abs() < 1e-3 && paint.faces[0].color[1].abs() < 1e-3, "{paint:?}");
     // Opened again, the face keeps its colour (shown and exported).
-    let p = std::env::temp_dir().join(format!("solidcraft-facecol-{}.step", std::process::id()));
+    let p = std::env::temp_dir().join(format!("torno-facecol-{}.step", std::process::id()));
     run(&mut s, "file.export", json!({"path": p.to_string_lossy()}));
     let mut s2 = Session::default();
     run(&mut s2, "doc.open", json!({"path": p.to_string_lossy()}));
@@ -2695,8 +2693,8 @@ fn iges_export_and_open() {
     run(&mut s, "solid.box", json!({"length": 40, "width": 30, "height": 5, "body_name": "Plate"}));
     run(&mut s, "solid.cylinder", json!({"radius": 4, "height": 20, "base": [10, 10, 5], "body_name": "Pin"}));
     run(&mut s, "appearance.assign", json!({"bodies": ["Pin"], "color": "#ff0000"}));
-    let want: Vec<f64> = s.world_state().unwrap().bodies.iter().map(|b| solidcraft_kernel::measure(&b.body).unwrap().volume).collect();
-    let p = std::env::temp_dir().join(format!("solidcraft-iges-{}.igs", std::process::id()));
+    let want: Vec<f64> = s.world_state().unwrap().bodies.iter().map(|b| torno_kernel::measure(&b.body).unwrap().volume).collect();
+    let p = std::env::temp_dir().join(format!("torno-iges-{}.igs", std::process::id()));
     run(&mut s, "file.export", json!({"path": p.to_string_lossy()}));
     let mut s2 = Session::default();
     run(&mut s2, "doc.open", json!({"path": p.to_string_lossy()}));
@@ -2705,7 +2703,7 @@ fn iges_export_and_open() {
     let names: Vec<&str> = st.bodies.iter().map(|b| b.name.as_str()).collect();
     assert_eq!(names, ["Plate", "Pin"]);
     for (b, v) in st.bodies.iter().zip(&want) {
-        assert!(rel(solidcraft_kernel::measure(&b.body).unwrap().volume, *v) < 1e-4);
+        assert!(rel(torno_kernel::measure(&b.body).unwrap().volume, *v) < 1e-4);
     }
     assert_eq!(st.bodies[1].body.color(), Some([1.0, 0.0, 0.0]));
 }
@@ -2719,8 +2717,7 @@ fn split_body_by_a_face() {
     run(&mut s, "solid.cylinder", json!({"radius": 4, "height": 40, "base": [5, 10, -5], "body_name": "Tool"}));
     run(&mut s, "solid.split_body", json!({"body": "Block", "tool": {"body": "Tool", "point": [9, 10, 10]}}));
     let st = s.world_state().unwrap();
-    let mut v: Vec<f64> =
-        st.bodies.iter().filter(|b| b.name.starts_with("Block")).map(|b| solidcraft_kernel::measure(&b.body).unwrap().volume).collect();
+    let mut v: Vec<f64> = st.bodies.iter().filter(|b| b.name.starts_with("Block")).map(|b| torno_kernel::measure(&b.body).unwrap().volume).collect();
     v.sort_by(f64::total_cmp);
     let core = PI * 16.0 * 30.0;
     assert!(v.len() == 2 && rel(v[0], core) < 1e-3 && rel(v[1], 6000.0 - core) < 1e-3, "{v:?}");
@@ -2742,7 +2739,7 @@ fn split_body_by_a_face_follows_the_face() {
     let volumes = |s: &Session| {
         let st = s.world_state().unwrap();
         let mut v: Vec<f64> =
-            st.bodies.iter().filter(|b| b.name.starts_with("Post")).map(|b| solidcraft_kernel::measure(&b.body).unwrap().volume).collect();
+            st.bodies.iter().filter(|b| b.name.starts_with("Post")).map(|b| torno_kernel::measure(&b.body).unwrap().volume).collect();
         v.sort_by(f64::total_cmp);
         v
     };
@@ -2769,7 +2766,7 @@ fn split_body_by_a_sketch_line() {
     let volumes = |s: &Session| {
         let st = s.world_state().unwrap();
         let mut v: Vec<f64> =
-            st.bodies.iter().filter(|b| b.name.starts_with("Block")).map(|b| solidcraft_kernel::measure(&b.body).unwrap().volume).collect();
+            st.bodies.iter().filter(|b| b.name.starts_with("Block")).map(|b| torno_kernel::measure(&b.body).unwrap().volume).collect();
         v.sort_by(f64::total_cmp);
         v
     };
@@ -2819,7 +2816,7 @@ fn split_body_of_a_body_of_two_pieces_splits_both() {
     assert_eq!(st.bodies.len(), 2, "{:?}", st.bodies.iter().map(|b| &b.name).collect::<Vec<_>>());
     for b in &st.bodies {
         // Each half holds the half of both squares: two pieces, half the body each.
-        assert!(rel(solidcraft_kernel::measure(&b.body).unwrap().volume, 4000.0) < 1e-6, "{}", b.name);
+        assert!(rel(torno_kernel::measure(&b.body).unwrap().volume, 4000.0) < 1e-6, "{}", b.name);
         assert_eq!(b.body.lumps().unwrap().len(), 2, "{}", b.name);
     }
 }
@@ -2832,12 +2829,12 @@ fn chord_and_variable_fillets() {
     run(&mut s, "solid.box", json!({"length": 10, "width": 20, "height": 30, "body_name": "B"}));
     run(&mut s, "solid.fillet", json!({"edges": [[10, 10, 30]], "radius": 4, "type": "chord"}));
     let r = 4.0 / 2f64.sqrt();
-    let v = solidcraft_kernel::measure(&s.world_state().unwrap().body("B").unwrap().body).unwrap().volume;
+    let v = torno_kernel::measure(&s.world_state().unwrap().body("B").unwrap().body).unwrap().volume;
     assert!(rel(v, 6000.0 - (1.0 - PI / 4.0) * r * r * 20.0) < 1e-4, "{v}");
     let mut s = Session::default();
     run(&mut s, "solid.box", json!({"length": 10, "width": 20, "height": 30, "body_name": "B"}));
     run(&mut s, "solid.fillet", json!({"edges": [[10, 10, 30]], "radius": 2, "type": "variable", "radius2": 5, "start": [10, 0, 30]}));
-    let v = solidcraft_kernel::measure(&s.world_state().unwrap().body("B").unwrap().body).unwrap().volume;
+    let v = torno_kernel::measure(&s.world_state().unwrap().body("B").unwrap().body).unwrap().volume;
     let removed = (1.0 - PI / 4.0) * 20.0 * (4.0 + 10.0 + 25.0) / 3.0;
     assert!(rel(v, 6000.0 - removed) < 1e-4, "{v}");
     assert!(s.execute("solid.fillet", &json!({"edges": [[10, 10, 30]], "radius": 2, "type": "variable"})).is_err());
@@ -2845,7 +2842,7 @@ fn chord_and_variable_fillets() {
     let mut s = Session::default();
     run(&mut s, "solid.box", json!({"length": 10, "width": 20, "height": 30, "body_name": "B"}));
     run(&mut s, "solid.fillet", json!({"edges": [[10, 10, 30]], "radius": 4, "type": "variable", "radius2": 0, "start": [10, 0, 30]}));
-    let v = solidcraft_kernel::measure(&s.world_state().unwrap().body("B").unwrap().body).unwrap().volume;
+    let v = torno_kernel::measure(&s.world_state().unwrap().body("B").unwrap().body).unwrap().volume;
     assert!(rel(v, 6000.0 - (1.0 - PI / 4.0) * 20.0 * 16.0 / 3.0) < 1e-4, "{v}");
     // A radius through a middle point (a user parameter), straight between: 2 → 4 → 2.
     let mut s = Session::default();
@@ -2856,7 +2853,7 @@ fn chord_and_variable_fillets() {
         "solid.fillet",
         json!({"edges": [[10, 10, 30]], "radius": 2, "type": "variable", "radius2": 2, "start": [10, 0, 30], "mid": [[0.5, "waist"]]}),
     );
-    let vol = |s: &Session| solidcraft_kernel::measure(&s.world_state().unwrap().body("B").unwrap().body).unwrap().volume;
+    let vol = |s: &Session| torno_kernel::measure(&s.world_state().unwrap().body("B").unwrap().body).unwrap().volume;
     let removed = 2.0 * (1.0 - PI / 4.0) * 10.0 * (4.0 + 8.0 + 16.0) / 3.0;
     assert!(rel(vol(&s), 6000.0 - removed) < 1e-4, "{}", vol(&s));
     // The middle radius follows its parameter.
@@ -2880,21 +2877,17 @@ fn components_export_as_step_assembly() {
     run(&mut s, "component.create", json!({"name": "Pin"}));
     run(&mut s, "solid.cylinder", json!({"radius": 2, "height": 10, "base": [5, 5, 5]}));
     run(&mut s, "occurrence.copy", json!({"component": "Pin", "translate": [20, 0, 0]}));
-    let want: f64 = s.world_state().unwrap().bodies.iter().map(|b| solidcraft_kernel::measure(&b.body).unwrap().volume).sum();
+    let want: f64 = s.world_state().unwrap().bodies.iter().map(|b| torno_kernel::measure(&b.body).unwrap().volume).sum();
     let imp = step_round_trip(&mut s, "asm");
     assert_eq!(imp.bodies.len(), 3, "{:?}", imp.bodies.iter().map(|b| &b.name).collect::<Vec<_>>());
-    let got: f64 = imp.bodies.iter().map(|b| solidcraft_kernel::measure(&b.body).unwrap().volume).sum();
+    let got: f64 = imp.bodies.iter().map(|b| torno_kernel::measure(&b.body).unwrap().volume).sum();
     assert!(rel(got, want) < 1e-4, "{got} vs {want}");
     let root = &imp.tree[0];
     assert_eq!(root.children.len(), 2);
     assert!(root.children.iter().all(|c| c.name == "Pin"));
     // The second pin sits 20 mm along X from the first.
-    let xs: Vec<f64> = imp
-        .bodies
-        .iter()
-        .filter(|b| b.path.last().is_some_and(|p| p == "Pin"))
-        .map(|b| solidcraft_kernel::measure(&b.body).unwrap().centroid.x)
-        .collect();
+    let xs: Vec<f64> =
+        imp.bodies.iter().filter(|b| b.path.last().is_some_and(|p| p == "Pin")).map(|b| torno_kernel::measure(&b.body).unwrap().centroid.x).collect();
     assert_eq!(xs.len(), 2);
     assert!(((xs[0] - xs[1]).abs() - 20.0).abs() < 1e-6, "{xs:?}");
 }
@@ -2957,7 +2950,7 @@ fn appearances_by_face_body_and_component() {
     assert_eq!(look(&mut s, "Shell")["appearance"]["name"], "Brass");
     // Saved and opened again.
     run(&mut s, "appearance.assign", json!({"faces": [[5, 5, 10]], "color": "#00ff00"}));
-    let back = solidcraft_doc::Document::from_json(&s.doc.to_json()).unwrap();
+    let back = torno_doc::Document::from_json(&s.doc.to_json()).unwrap();
     assert_eq!(back.appearances, s.doc.appearances);
     assert!(s.execute("appearance.assign", &json!({"bodies": ["Shell"], "appearance": "Unobtainium"})).is_err());
     assert!(s.execute("appearance.assign", &json!({"color": "#ffffff"})).is_err(), "no target");
@@ -2977,16 +2970,16 @@ fn cached_evaluation_matches_from_scratch() {
     );
     run(&mut s, "solid.box", json!({"corner": [-50, 0, 0], "length": 10, "width": 10, "height": 10, "body_name": "Side"}));
     let same = |s: &Session, what: &str| {
-        let mut fresh = solidcraft_doc::Model::new();
+        let mut fresh = torno_doc::Model::new();
         fresh.no_cache = true;
         fresh.evaluate(&s.doc);
-        let errs = |m: &solidcraft_doc::Model| m.results.iter().map(|r| (r.id, r.error.clone(), r.skipped)).collect::<Vec<_>>();
+        let errs = |m: &torno_doc::Model| m.results.iter().map(|r| (r.id, r.error.clone(), r.skipped)).collect::<Vec<_>>();
         assert_eq!(errs(&s.model), errs(&fresh), "{what}: feature results");
-        let shape = |st: &solidcraft_doc::ModelState| {
+        let shape = |st: &torno_doc::ModelState| {
             st.bodies
                 .iter()
                 .map(|b| {
-                    let m = solidcraft_kernel::measure(&b.body).unwrap();
+                    let m = torno_kernel::measure(&b.body).unwrap();
                     // Volume and area to 1e-9: two evaluations from scratch differ in the last
                     // bits too (the kernel's tessellation is not bit-for-bit repeatable).
                     (b.name.clone(), b.feature, (m.volume * 1e6).round(), (m.area * 1e6).round(), m.faces, m.edges, m.vertices, m.merged.faces)
@@ -2997,15 +2990,14 @@ fn cached_evaluation_matches_from_scratch() {
         assert_eq!(s.model.state().sketches.len(), fresh.state().sketches.len(), "{what}: sketches");
     };
     // Two evaluations from scratch agree to the same precision.
-    let mut a = solidcraft_doc::Model::new();
+    let mut a = torno_doc::Model::new();
     a.no_cache = true;
     a.evaluate(&s.doc);
-    let mut b = solidcraft_doc::Model::new();
+    let mut b = torno_doc::Model::new();
     b.no_cache = true;
     b.evaluate(&s.doc);
-    let vols = |m: &solidcraft_doc::Model| {
-        m.state().bodies.iter().map(|x| (solidcraft_kernel::measure(&x.body).unwrap().volume * 1e6).round()).collect::<Vec<_>>()
-    };
+    let vols =
+        |m: &torno_doc::Model| m.state().bodies.iter().map(|x| (torno_kernel::measure(&x.body).unwrap().volume * 1e6).round()).collect::<Vec<_>>();
     assert_eq!(vols(&a), vols(&b));
     same(&s, "built");
     let hits = |s: &Session| s.model.cache.lock().map(|c| c.hits).unwrap_or(0);
@@ -3060,7 +3052,7 @@ fn fillet_follows_its_edge_after_an_upstream_resize() {
 
 mod naming {
     use serde_json::{Value, json};
-    use solidcraft_geom::MeshGeom;
+    use torno_geom::MeshGeom;
 
     use super::run;
     use crate::Session;
@@ -3078,7 +3070,7 @@ mod naming {
     fn reselect(s: &Session, name: &str) -> Option<String> {
         let id = s.doc.find_feature(name).map(|f| f.id)?;
         let error = s.model.result(id).and_then(|r| r.error.clone())?;
-        solidcraft_doc::reselect_parts(&error).filter(|(feature, _)| *feature == name).map(|(_, reference)| reference.to_string())
+        torno_doc::reselect_parts(&error).filter(|(feature, _)| *feature == name).map(|(_, reference)| reference.to_string())
     }
 
     /// A 40 x 30 x 10 block (sketch S: l1…l4 counter-clockwise from the origin), a hole H, a
@@ -3219,8 +3211,8 @@ mod naming {
         run(&mut s, "edit.undo", json!({}));
         assert_eq!(attached(&s), Some(10.));
         assert!((top(&mut s) - 15.).abs() < 1e-6);
-        let reopened = solidcraft_doc::Document::from_json(&s.doc.to_json()).unwrap();
-        let mut model = solidcraft_doc::Model::new();
+        let reopened = torno_doc::Document::from_json(&s.doc.to_json()).unwrap();
+        let mut model = torno_doc::Model::new();
         model.evaluate(&reopened);
         assert_eq!(model.state().sketch(reopened.find_feature("Top").unwrap().id).unwrap().plane.origin.z, 10.);
         assert!((model.state().bodies[0].mesh().bounds().max.z - 15.).abs() < 1e-6);
@@ -3228,7 +3220,7 @@ mod naming {
         // no strong anchor: that name finds no face today. The sketch fails, asking for its face
         // again, and so does the peg on it; the block builds.
         let mut old = (*s.doc).clone();
-        let solidcraft_doc::FeatureKind::Sketch { plane: solidcraft_doc::PlaneRef::Face { anchor, name, .. }, sketch } =
+        let torno_doc::FeatureKind::Sketch { plane: torno_doc::PlaneRef::Face { anchor, name, .. }, sketch } =
             &mut old.features.iter_mut().find(|f| f.name == "Top").unwrap().kind
         else {
             panic!("fixture must contain a face sketch");
@@ -3242,10 +3234,10 @@ mod naming {
             }
         }
         old.format = "solidcraft/10".into();
-        let legacy = Session::new(solidcraft_doc::Document::from_json(&old.to_json()).unwrap());
+        let legacy = Session::new(torno_doc::Document::from_json(&old.to_json()).unwrap());
         let error = |s: &Session, name: &str| s.model.results.iter().find(|r| r.id == s.doc.find_feature(name).unwrap().id).unwrap().error.clone();
-        let reference = format!("{}{saved}", solidcraft_doc::naming::LEGACY_MARK);
-        assert_eq!(error(&legacy, "Top").as_deref().and_then(solidcraft_doc::reselect_parts), Some(("Top", reference.as_str())));
+        let reference = format!("{}{saved}", torno_doc::naming::LEGACY_MARK);
+        assert_eq!(error(&legacy, "Top").as_deref().and_then(torno_doc::reselect_parts), Some(("Top", reference.as_str())));
         assert!(error(&legacy, "Peg").is_some());
         assert!(error(&legacy, "Block").is_none());
         // An upstream join that trims the certified face: the attachment stays on what is left
@@ -3322,7 +3314,7 @@ fn counterbore_for_a_cap_screw_head() {
     // The material a through hole of diameter `hole` with a counterbore `dk` wide and `k` deep removes.
     let removed = |hole: f64, dk: f64, k: f64| PI * hole * hole / 4.0 * (10.0 - k) + PI * dk * dk / 4.0 * k;
     let recess = |s: &Session| match s.doc.features.last().map(|f| &f.kind) {
-        Some(solidcraft_doc::FeatureKind::Hole { hole: solidcraft_doc::HoleKind::Counterbore { cb_diameter, cb_depth, .. }, .. }) => {
+        Some(torno_doc::FeatureKind::Hole { hole: torno_doc::HoleKind::Counterbore { cb_diameter, cb_depth, .. }, .. }) => {
             (cb_diameter.as_str().to_string(), cb_depth.as_str().to_string())
         }
         other => panic!("not a counterbore: {other:?}"),
@@ -3431,12 +3423,8 @@ fn press_pull_on_a_chamfer_face_edits_the_chamfer() {
     run(&mut t, "solid.chamfer", json!({"edges": [[40, 0, 10]], "distance": 3, "name": "Bevel"}));
     let out = run(&mut t, "solid.press_pull", json!({"face": [36.98, 0, 10], "distance": 1}));
     assert!(out.get("edited").is_none(), "{out}");
-    assert!(matches!(t.doc.features.last().map(|f| &f.kind), Some(solidcraft_doc::FeatureKind::Extrude { .. })), "an extrude added: {out}");
-    assert!(
-        matches!(&t.doc.features[1].kind, solidcraft_doc::FeatureKind::Chamfer { distance, .. } if distance == "3"),
-        "{:?}",
-        t.doc.features[1].kind
-    );
+    assert!(matches!(t.doc.features.last().map(|f| &f.kind), Some(torno_doc::FeatureKind::Extrude { .. })), "an extrude added: {out}");
+    assert!(matches!(&t.doc.features[1].kind, torno_doc::FeatureKind::Chamfer { distance, .. } if distance == "3"), "{:?}", t.doc.features[1].kind);
     // Too far in (past zero) or too far out: an error, the chamfer as it was.
     let on = [39.0, 1.0, 10.0];
     for d in [-10.0, 1e9] {
@@ -3457,7 +3445,7 @@ fn press_pull_on_a_chamfer_face_edits_the_chamfer() {
         let out = run(&mut s, "solid.press_pull", json!({"face": [40.0 - u, u, 10.0], "distance": 1}));
         assert_eq!(out["edited"], "Bevel", "{extra}: {out}");
         assert_eq!(s.doc.features.len(), 2, "{extra}");
-        let Some(solidcraft_doc::FeatureKind::Chamfer { distance2, angle, .. }) = s.doc.features.last().map(|f| &f.kind) else { panic!("{extra}") };
+        let Some(torno_doc::FeatureKind::Chamfer { distance2, angle, .. }) = s.doc.features.last().map(|f| &f.kind) else { panic!("{extra}") };
         assert_eq!(distance2.as_ref().map(|e| e.to_string()), extra.get("distance2").map(|v| v.to_string()), "{extra}");
         assert_eq!(angle.as_ref().map(|e| e.to_string()), extra.get("angle").and_then(|v| v.as_str()).map(str::to_string), "{extra}");
         assert!(volume(&mut s) < v0 - 1.0, "{extra}: a bigger chamfer cuts more");
@@ -3718,11 +3706,11 @@ fn a_hole_leaves_hidden_bodies_alone() {
         }
         // The name of the plate's face that is picked, before the hole takes the point away.
         let picked =
-            solidcraft_doc::naming::face_name_at_body(s.world_state().unwrap().body("Plate").unwrap(), solidcore_record::Vec3::new(20.0, 20.0, 0.0));
+            torno_doc::naming::face_name_at_body(s.world_state().unwrap().body("Plate").unwrap(), solidcore_record::Vec3::new(20.0, 20.0, 0.0));
         let r = s.execute("solid.hole", &json!({"position": [20, 20, 0], "diameter": 5, "depth": 10, "name": "Hole1"})).unwrap();
         (s, r, picked)
     };
-    let vol = |s: &Session, name: &str| solidcraft_kernel::measure(&s.world_state().unwrap().body(name).unwrap().body).unwrap().volume;
+    let vol = |s: &Session, name: &str| torno_kernel::measure(&s.world_state().unwrap().body(name).unwrap().body).unwrap().volume;
     let (block, plate) = (40.0 * 40.0 * 20.0, 40.0 * 40.0 * 5.0);
     let (mut hidden, r, picked) = setup(true);
     assert_eq!(r["changed_bodies"], json!(["Plate"]));
@@ -3750,7 +3738,7 @@ fn a_hole_drills_its_picked_body_and_an_edit_keeps_its_scope() {
         run(&mut s, "solid.box", json!({"corner": [0, 0, 5], "length": 40, "width": 40, "height": 5, "operation": "new", "body_name": "Upper"}));
         s
     };
-    let vol = |s: &Session, name: &str| solidcraft_kernel::measure(&s.world_state().unwrap().body(name).unwrap().body).unwrap().volume;
+    let vol = |s: &Session, name: &str| torno_kernel::measure(&s.world_state().unwrap().body(name).unwrap().body).unwrap().volume;
     let plate = 40.0 * 40.0 * 5.0;
     let hole = |d: f64| json!({"position": [20, 20, 10], "direction": [0, 0, -1], "diameter": d, "depth": 20, "name": "Hole1"});
 
@@ -3790,9 +3778,9 @@ fn a_hole_made_with_a_hidden_body_replays_the_same() {
         run(&mut s, "solid.hole", json!({"position": [20, 20, 0], "diameter": 5, "depth": 3, "name": "Hole1"}));
         s
     };
-    let vol = |s: &Session, name: &str| solidcraft_kernel::measure(&s.world_state().unwrap().body(name).unwrap().body).unwrap().volume;
+    let vol = |s: &Session, name: &str| torno_kernel::measure(&s.world_state().unwrap().body(name).unwrap().body).unwrap().volume;
     // A new session evaluated from the saved text alone, as a rebuild from scratch does.
-    let scratch = |s: &Session| Session::new(solidcraft_doc::Document::from_json(&s.doc.to_json()).unwrap());
+    let scratch = |s: &Session| Session::new(torno_doc::Document::from_json(&s.doc.to_json()).unwrap());
     let s = build(5.0);
     let (block, plate) = (vol(&s, "Block"), vol(&s, "Plate"));
     assert_eq!(block, 40.0 * 40.0 * 20.0, "the hidden body is not drilled");
@@ -3802,7 +3790,7 @@ fn a_hole_made_with_a_hidden_body_replays_the_same() {
         assert_eq!(vol(s, "Plate"), plate, "{what}: Plate");
     };
     // (1) Save and reopen.
-    let dir = std::env::temp_dir().join(format!("solidcraft-hole-history-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("torno-hole-history-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
     let file = dir.join("hole.solidcraft");
     let mut saved = build(5.0);
@@ -3882,7 +3870,7 @@ fn appearances_survive_later_features() {
     // Exported with a body colour and the red face, then opened: the colours come in as the
     // body's own; a hole afterwards keeps them.
     run(&mut s, "appearance.assign", json!({"bodies": ["B"], "color": "#2050c0"}));
-    let dir = std::env::temp_dir().join(format!("solidcraft-paint-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("torno-paint-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
     let step = dir.join("painted.step");
     run(&mut s, "file.export", json!({"path": step.to_string_lossy()}));
@@ -3903,7 +3891,7 @@ fn appearances_survive_later_features() {
 /// The original #2 RGB import acceptance, including later topology and placement edits.
 #[test]
 fn imported_rgb_appearances_survive_edits_reopen_and_step_export() {
-    let dir = std::env::temp_dir().join(format!("solidcraft-imported-rgb-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("torno-imported-rgb-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
     let input = dir.join("rgb.step");
     let saved = dir.join("edited.solidcraft");
@@ -4148,7 +4136,7 @@ fn a_deleted_sketch_point_drops_only_its_own_hole() {
             .body
             .classify_point(solidcore_record::Vec3::new(15.0, 10.0, 5.0))
             .expect("classify the point at `a`")
-            == solidcraft_kernel::PointClass::Outside),
+            == torno_kernel::PointClass::Outside),
         "the hole at `a` is drilled"
     );
     assert!(
@@ -4156,11 +4144,11 @@ fn a_deleted_sketch_point_drops_only_its_own_hole() {
             .body
             .classify_point(solidcore_record::Vec3::new(45.0, 10.0, 5.0))
             .expect("classify the point at `b`")
-            == solidcraft_kernel::PointClass::Inside),
+            == torno_kernel::PointClass::Inside),
         "`b`'s spot is solid"
     );
     let f = s.doc.find_feature("Holes").unwrap();
-    assert!(matches!(&f.kind, solidcraft_doc::FeatureKind::Hole { points: Some(sp), .. } if sp.ids == ["a", "b"]), "{:?}", f.kind);
+    assert!(matches!(&f.kind, torno_doc::FeatureKind::Hole { points: Some(sp), .. } if sp.ids == ["a", "b"]), "{:?}", f.kind);
 
     // Undo puts `b` back, and its hole with it.
     run(&mut s, "edit.undo", json!({}));
@@ -4186,7 +4174,7 @@ fn combine_keep_tools_and_new_component() {
     assert!(st.body("B").is_some(), "the tool is kept");
     let a = st.body("A").unwrap();
     assert_eq!(s.doc.body_component("A", a.feature), comp);
-    assert!(rel(solidcraft_kernel::measure(&a.body).unwrap().volume, 4000.0) < 1e-9);
+    assert!(rel(torno_kernel::measure(&a.body).unwrap().volume, 4000.0) < 1e-9);
 }
 
 /// Align with snap points: a box's vertex onto another's face centre, an edge midpoint onto a
@@ -4417,7 +4405,7 @@ fn special_files_are_refused_by_every_file_command() {
         assert!(r.as_ref().is_err_and(|e| e.to_string().contains("not a regular file")), "{cmd}: {r:?}");
     }
     // The commands that check the extension first need a special file with the right name.
-    let dir = std::env::temp_dir().join(format!("solidcraft-special-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("torno-special-{}", std::process::id()));
     let _ = std::fs::create_dir_all(&dir);
     for (cmd, name) in [("file.insert_step", "x.step"), ("file.insert_mesh", "x.3mf"), ("sketch.insert_dxf", "x.dxf")] {
         let p = dir.join(name);
@@ -4564,7 +4552,7 @@ fn extruding_a_sketch_on_a_side_face_takes_the_whole_drawn_profile() {
         run(&mut s2, "solid.extrude", json!({"sketch": id, "distance": 5, "operation": "new", "body_name": "Rib", "profiles": selection.clone()}));
         let state = s2.model.state();
         let rib = state.bodies.iter().find(|b| b.name == "Rib").unwrap();
-        let v = rib.body.mesh(&solidcraft_kernel::MeshTolerance::chord(1e-2)).unwrap().measure().volume;
+        let v = rib.body.mesh(&torno_kernel::MeshTolerance::chord(1e-2)).unwrap().measure().volume;
         assert!(rel(v, 500.0) < 1e-6, "{selection}: {v}");
     }
 }
@@ -4586,7 +4574,7 @@ fn a_pick_bounded_by_a_projected_rim_takes_only_that_region() {
     run(&mut s2, "solid.extrude", json!({"sketch": id, "distance": 5, "operation": "new", "body_name": "Pad", "profiles": [{"point": [12, 7]}]}));
     let state = s2.model.state();
     let pad = state.bodies.iter().find(|b| b.name == "Pad").unwrap();
-    let v = pad.body.mesh(&solidcraft_kernel::MeshTolerance::chord(1e-2)).unwrap().measure().volume;
+    let v = pad.body.mesh(&torno_kernel::MeshTolerance::chord(1e-2)).unwrap().measure().volume;
     // The square with the hole's rim cut out of it, not the whole square. The mesh measures the
     // round rim as a polygon, so the volume is a little under the analytic one.
     let want = (400.0 - PI * 25.0) * 5.0;
@@ -4627,13 +4615,13 @@ fn an_exact_pick_of_a_region_cut_by_the_face_outline_takes_only_that_region() {
         }
         run(&mut s2, "solid.extrude", p);
         let state = s2.model.state();
-        let Some(solidcraft_doc::FeatureKind::Extrude { profiles, .. }) = s2.doc.features.last().map(|f| &f.kind) else { panic!("an extrude") };
-        let count = solidcraft_doc::profile_selection_indices(state.sketch(id).unwrap(), profiles).unwrap().len();
+        let Some(torno_doc::FeatureKind::Extrude { profiles, .. }) = s2.doc.features.last().map(|f| &f.kind) else { panic!("an extrude") };
+        let count = torno_doc::profile_selection_indices(state.sketch(id).unwrap(), profiles).unwrap().len();
         let v = state
             .bodies
             .iter()
             .filter(|b| b.name.starts_with("Pad"))
-            .map(|b| b.body.mesh(&solidcraft_kernel::MeshTolerance::chord(1e-2)).unwrap().measure().volume)
+            .map(|b| b.body.mesh(&torno_kernel::MeshTolerance::chord(1e-2)).unwrap().measure().volume)
             .sum();
         (v, count)
     };
@@ -4701,7 +4689,7 @@ fn renaming_a_pattern_copy_keeps_the_other_copies_names() {
 /// Three solids in one STEP file that carry the same label: the file written for three boxes, each
 /// named `X`.
 fn step_three_solids_labelled_x(tag: &str) -> std::path::PathBuf {
-    let dir = std::env::temp_dir().join(format!("solidcraft-step-{tag}-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("torno-step-{tag}-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
     let mut s = Session::default();
     for (i, label) in ["Aa", "Bb", "Cc"].iter().enumerate() {
@@ -4926,7 +4914,7 @@ fn a_design_saved_before_format_14_with_fewer_body_names_opens_and_names_every_b
     legacy["format"] = json!("solidcraft/13");
     let extrude = legacy["features"].as_array_mut().unwrap().iter_mut().find(|f| f["type"] == "extrude").unwrap();
     extrude["body_names"] = json!(["Ribs"]);
-    let dir = std::env::temp_dir().join(format!("solidcraft-373-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("torno-373-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
     let design = dir.join("ribs.solidcraft");
     std::fs::write(&design, legacy.to_string()).unwrap();
@@ -5272,7 +5260,7 @@ fn pattern_copies_added_after_a_rename_keep_their_numbers() {
     assert_eq!(names(&s), ["X", "Second", "X (3)"]);
     run(&mut s, "edit.redo", json!({}));
     assert_eq!(names(&s), ["X", "Second", "X (3)", "X (4)", "X (5)"]);
-    let reopened = Session::new(solidcraft_doc::Document::from_json(&s.doc.to_json()).unwrap());
+    let reopened = Session::new(torno_doc::Document::from_json(&s.doc.to_json()).unwrap());
     assert_eq!(names(&reopened), ["X", "Second", "X (3)", "X (4)", "X (5)"]);
     run(&mut s, "timeline.edit", json!({"feature": "Pat", "set": {"pattern": {"count1": "2"}}}));
     assert_eq!(names(&s), ["X", "Second"]);
@@ -5299,7 +5287,7 @@ fn a_side_drawn_in_two_collinear_pieces_extrudes_into_one_face() {
     let st = s.model.state();
     let body = st.body("Body1").unwrap();
     let edge = format!("F2:side:{}|F2:top", pieces[1]);
-    let at = solidcraft_doc::naming::find_edge(body, &edge, solidcore_record::Vec3::new(15.0, 0.0, 5.0)).unwrap();
+    let at = torno_doc::naming::find_edge(body, &edge, solidcore_record::Vec3::new(15.0, 0.0, 5.0)).unwrap();
     assert!(at.y.abs() < 1e-9 && (at.z - 5.0).abs() < 1e-9, "{edge} at {at:?}");
     // A sketch attaches to the joined side as to any side.
     assert_eq!(run(&mut s, "sketch.create", json!({"plane": {"face": [15, 0, 2.5]}}))["attachment"], "exact_face");
@@ -5346,7 +5334,7 @@ fn a_tapered_side_drawn_in_two_collinear_pieces_is_one_face() {
 /// model evaluating the renamed design gives; undo does the same.
 #[test]
 fn renaming_an_imported_assembly_body_reads_nothing_again() {
-    let dir = std::env::temp_dir().join(format!("solidcraft-step-rename-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("torno-step-rename-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
     let mut a = Session::default();
     run(&mut a, "solid.box", json!({"length": 10, "width": 10, "height": 10, "body_name": "Cube"}));
@@ -5380,7 +5368,7 @@ fn renaming_an_imported_assembly_body_reads_nothing_again() {
 /// rename keeps the siblings' names, so the model is the one evaluating the renamed design gives.
 #[test]
 fn renaming_an_imported_body_with_numbered_siblings_evaluates_nothing() {
-    let dir = std::env::temp_dir().join(format!("solidcraft-step-rename-siblings-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("torno-step-rename-siblings-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
     let mut a = Session::default();
     run(&mut a, "solid.box", json!({"length": 10, "width": 10, "height": 10, "body_name": "Bolt"}));
@@ -5430,9 +5418,8 @@ fn renaming_a_body_later_features_change_evaluates_nothing() {
         json!({"features": ["Hole1"], "dir1": [1, 0, 0], "count1": 3, "spacing1": 25, "dir2": [0, 1, 0], "count2": 2, "spacing2": 25}),
     );
     run(&mut s, "solid.chamfer", json!({"edges": [[40, 0, 10], [80, 25, 10]], "distance": 1}));
-    let looks = |st: &solidcraft_doc::ModelState| {
-        st.bodies.iter().map(|b| (b.name.clone(), (*solidcraft_doc::naming::face_names(b)).clone())).collect::<Vec<_>>()
-    };
+    let looks =
+        |st: &torno_doc::ModelState| st.bodies.iter().map(|b| (b.name.clone(), (*torno_doc::naming::face_names(b)).clone())).collect::<Vec<_>>();
     let before = looks(&s.model.state());
     let v = body_volume(&s.model.state());
     let old = before.first().map(|b| b.0.clone()).unwrap();
@@ -5469,9 +5456,8 @@ fn renaming_a_split_body_evaluates_nothing() {
         );
     }
     run(&mut s, "solid.split_body", json!({"body": "Caisson", "plane": {"origin": [0, 0, 80], "normal": [0, 0, 1]}}));
-    let looks = |st: &solidcraft_doc::ModelState| {
-        st.bodies.iter().map(|b| (b.name.clone(), (*solidcraft_doc::naming::face_names(b)).clone())).collect::<Vec<_>>()
-    };
+    let looks =
+        |st: &torno_doc::ModelState| st.bodies.iter().map(|b| (b.name.clone(), (*torno_doc::naming::face_names(b)).clone())).collect::<Vec<_>>();
     let before = looks(&s.model.state());
     assert!(before.iter().any(|b| b.0 == "Caisson (1)"), "{:?}", before.iter().map(|b| &b.0).collect::<Vec<_>>());
     let v = body_volume(&s.model.state());
@@ -5509,7 +5495,7 @@ fn renaming_a_body_keeps_its_copies_consistent_with_rebuilding() {
     fresh.refresh();
     assert_eq!(names(&fresh), names(&s));
     for (a, b) in fresh.model.state().bodies.iter().zip(&s.model.state().bodies) {
-        assert_eq!(solidcraft_doc::naming::face_names(a), solidcraft_doc::naming::face_names(b));
+        assert_eq!(torno_doc::naming::face_names(a), torno_doc::naming::face_names(b));
     }
 }
 
@@ -5582,13 +5568,13 @@ fn creating_a_component_recomputes_nothing() {
     let mut legacy = (*s.doc).clone();
     let mut legacy_face = false;
     for f in &mut legacy.features {
-        if let solidcraft_doc::FeatureKind::Sketch { plane: solidcraft_doc::PlaneRef::Face { anchor, .. }, .. } = &mut f.kind {
+        if let torno_doc::FeatureKind::Sketch { plane: torno_doc::PlaneRef::Face { anchor, .. }, .. } = &mut f.kind {
             *anchor = None;
             legacy_face = true;
         }
     }
     assert!(legacy_face, "the face extrude's sketch is on a face plane");
-    let mut s = Session::new(solidcraft_doc::Document::from_json(&legacy.to_json()).unwrap());
+    let mut s = Session::new(torno_doc::Document::from_json(&legacy.to_json()).unwrap());
     assert!(s.model.results.iter().all(|r| r.error.is_none()), "the legacy design evaluates");
     for name in ["First", "Second"] {
         run(&mut s, "component.create", json!({"name": name}));
@@ -5635,7 +5621,7 @@ fn a_cut_leaves_hidden_bodies_alone() {
         run(&mut s, "solid.extrude", json!({"distance": 30, "direction": "negative", "operation": "cut"}));
         s
     };
-    let vol = |s: &Session, name: &str| solidcraft_kernel::measure(&s.world_state().unwrap().body(name).unwrap().body).unwrap().volume;
+    let vol = |s: &Session, name: &str| torno_kernel::measure(&s.world_state().unwrap().body(name).unwrap().body).unwrap().volume;
     let full = 20.0 * 20.0 * 10.0;
     let mut hidden = setup(true);
     assert!((vol(&hidden, "Below") - full).abs() < 1e-6, "the hidden body is not cut");
@@ -5661,7 +5647,7 @@ fn join_leaves_a_hidden_body_alone() {
     run(&mut s, "solid.extrude", json!({"sketch": "Rim", "profiles": [{"point": [3, 3]}], "distance": 3, "operation": "join"}));
     let st = s.model.state();
     assert_eq!(st.bodies.len(), 2);
-    let v = |n: &str| solidcraft_kernel::measure(&st.body(n).unwrap().body).unwrap().volume;
+    let v = |n: &str| torno_kernel::measure(&st.body(n).unwrap().body).unwrap().volume;
     assert!(rel(v("Plate"), 8816.0) < 1e-9 && rel(v("Plate (2)"), 8000.0) < 1e-9);
     let f = s.doc.features.last().unwrap();
     assert_eq!(f.participants, vec!["Plate".to_string()]);

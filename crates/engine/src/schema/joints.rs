@@ -7,9 +7,9 @@ use serde::de::Error as _;
 use serde::{Deserialize, Deserializer, Serialize};
 use serde_json::{Map, Value, json};
 use solidcore_record::Vec3;
-use solidcraft_doc::joints::cam::MAX_PROFILE_EDGES;
-use solidcraft_doc::joints::{Coupling, JointExprs, JointKind, Snap};
-use solidcraft_geom::Vec3Geom;
+use torno_doc::joints::cam::MAX_PROFILE_EDGES;
+use torno_doc::joints::{Coupling, JointExprs, JointKind, Snap};
+use torno_geom::Vec3Geom;
 
 use super::check::whole;
 use super::component::OccurrencePath;

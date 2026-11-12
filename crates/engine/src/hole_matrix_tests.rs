@@ -11,10 +11,10 @@
 //!
 //! Ratchet: cases that fail today are listed in `tests/hole_matrix/known_failures.txt`. A listed
 //! case that passes fails the test (take it off the list), and so does an unlisted one that fails.
-//! `HOLE_MATRIX_BLESS=1 cargo test -p solidcraft-engine hole_matrix` rewrites the list.
+//! `HOLE_MATRIX_BLESS=1 cargo test -p torno-engine hole_matrix` rewrites the list.
 
-use solidcraft_geom::prelude::*;
 use std::f64::consts::PI;
+use torno_geom::prelude::*;
 
 use serde_json::{Value, json};
 use solidcore_record::Vec3;
@@ -35,7 +35,7 @@ fn measure(s: &mut Session) -> Result<(f64, i64), String> {
 }
 
 fn solid_at(s: &Session, p: Vec3) -> bool {
-    s.model.state().bodies.iter().any(|b| b.body.classify_point(p).unwrap() == solidcraft_kernel::PointClass::Inside)
+    s.model.state().bodies.iter().any(|b| b.body.classify_point(p).unwrap() == torno_kernel::PointClass::Inside)
 }
 
 fn v3(a: [f64; 3]) -> Vec3 {
@@ -721,7 +721,7 @@ fn check(case: &Case) -> Result<(), String> {
     let (mut s, start, faces0) = match case.open {
         Some(file) => {
             let text = old_design(file).ok_or("no such design")?;
-            let doc = solidcraft_doc::Document::from_json(text).map_err(|e| format!("open: {e}"))?;
+            let doc = torno_doc::Document::from_json(text).map_err(|e| format!("open: {e}"))?;
             let s = Session::new(doc);
             (s, case.start.unwrap_or_default(), None)
         }
@@ -756,7 +756,7 @@ fn check(case: &Case) -> Result<(), String> {
         .doc
         .find_feature("H")
         .map(|f| f.id)
-        .or_else(|| s.doc.features.iter().rev().find(|f| matches!(f.kind, solidcraft_doc::FeatureKind::Hole { .. })).map(|f| f.id))
+        .or_else(|| s.doc.features.iter().rev().find(|f| matches!(f.kind, torno_doc::FeatureKind::Hole { .. })).map(|f| f.id))
         && let Some(r) = s.model.result(id)
         && let Some(e) = &r.error
     {
@@ -804,7 +804,7 @@ fn check(case: &Case) -> Result<(), String> {
             return Err(format!("after {:?}: removed {:.2} mm³, expected {after:.2}", case.after.iter().map(|x| x.0).collect::<Vec<_>>(), start - v));
         }
         // Saved and opened again, it rebuilds the same.
-        let doc = solidcraft_doc::Document::from_json(&s.doc.to_json()).map_err(|e| format!("reopen: {e}"))?;
+        let doc = torno_doc::Document::from_json(&s.doc.to_json()).map_err(|e| format!("reopen: {e}"))?;
         let mut again = Session::new(doc);
         let (v2, _) = measure(&mut again)?;
         if !close(start - v2, after, start) {
@@ -883,19 +883,19 @@ fn recessed_drill_point_geometry_roundtrip_preview_and_undo() {
         let mut legacy: Value = serde_json::from_str(&s.doc.to_json()).unwrap();
         legacy["format"] = json!("solidcraft/30");
         legacy.as_object_mut().unwrap().remove("format_pending");
-        let old = Session::new(solidcraft_doc::Document::from_json(&legacy.to_string()).unwrap());
+        let old = Session::new(torno_doc::Document::from_json(&legacy.to_string()).unwrap());
         assert!(solid_at(&old, probe), "format-30 recessed holes keep their flat bottom");
         p["tip_angle"] = json!("118 deg");
         run(&mut s, "timeline.redefine", json!({"feature":hole,"command":"solid.hole","params":p})).unwrap();
         assert!(!solid_at(&s, probe), "{kind}: drill point must remove the axis below the shoulder");
         assert!(solid_at(&s, Vec3::new(23.1, 15.0, 11.5)), "point must not widen the cylindrical bore");
         let saved = s.doc.to_json();
-        let loaded = Session::new(solidcraft_doc::Document::from_json(&saved).unwrap());
+        let loaded = Session::new(torno_doc::Document::from_json(&saved).unwrap());
         assert!(!solid_at(&loaded, probe), "chosen bottom must survive reopen");
         p.as_object_mut().unwrap().remove("tip_angle");
         let redefine = json!({"feature":hole,"command":"solid.hole","params":p});
         let preview = s.preview(&[("timeline.redefine".into(), redefine.clone())]).unwrap();
-        assert!(preview.after.bodies.iter().any(|b| b.body.classify_point(probe).unwrap() == solidcraft_kernel::PointClass::Inside));
+        assert!(preview.after.bodies.iter().any(|b| b.body.classify_point(probe).unwrap() == torno_kernel::PointClass::Inside));
         assert_eq!(s.doc.to_json(), saved, "preview cannot accept the bottom change");
         run(&mut s, "timeline.redefine", redefine).unwrap();
         assert!(solid_at(&s, probe));
@@ -935,7 +935,7 @@ fn a_hole_on_a_cones_side_drills_along_its_normal() {
     // The side is r = 15 (1 - z / 20): at (7.5, 0, 10) the outward normal is (0.8, 0, 0.6).
     run(&mut s, "solid.hole", json!({"position": [7.5, 0, 10], "diameter": 4, "depth": 4, "name": "H"})).unwrap();
     let f = s.doc.find_feature("H").unwrap();
-    let solidcraft_doc::FeatureKind::Hole { direction, .. } = &f.kind else { panic!("not a hole") };
+    let torno_doc::FeatureKind::Hole { direction, .. } = &f.kind else { panic!("not a hole") };
     let d = direction.0;
     assert!((d.x + 0.8).abs() < 1e-6 && d.y.abs() < 1e-6 && (d.z + 0.6).abs() < 1e-6, "{d:?}");
 }
@@ -960,7 +960,7 @@ fn bridged_counterbore_layers_along_x_save_and_refuse_bad_values() {
     assert!(solid_at(&s, Vec3::new(22.9, 17.9, 16.5)), "the bore is round below the layers");
     let saved = s.doc.to_json();
     assert!(saved.contains("\"bridge\""), "the design saves the layer");
-    let reopened = Session::new(solidcraft_doc::Document::from_json(&saved).unwrap());
+    let reopened = Session::new(torno_doc::Document::from_json(&saved).unwrap());
     assert!(!solid_at(&reopened, Vec3::new(22.9, 17.9, 16.7)), "the layers survive reopening");
     // A thicker layer moves the square down with it.
     let mut thick = block();

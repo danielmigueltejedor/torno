@@ -27,9 +27,9 @@
 
 use solidcore_record::Vec3;
 use solidcore_record::brep::{Brep, Curve2, Face, Surface};
-use solidcraft_geom::brep::eval::SurfaceEval;
-use solidcraft_geom::bspline::{HPoint, segment};
-use solidcraft_geom::prelude::*;
+use torno_geom::brep::eval::SurfaceEval;
+use torno_geom::bspline::{HPoint, segment};
+use torno_geom::prelude::*;
 
 use crate::{KernelError, Result};
 

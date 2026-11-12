@@ -1,7 +1,7 @@
 use super::{MAX_BVH_DEPTH, Node, Triangle, build};
 use solidcore_record::Vec3;
-use solidcraft_render::job::CancelToken;
-use solidcraft_viewport::surface::OpaqueSurface;
+use torno_render::job::CancelToken;
+use torno_viewport::surface::OpaqueSurface;
 
 // Triangle centres spread over 60 decades: a sixteen-bin SAH split on the
 // centre range peels only the few largest triangles off at each level, so an

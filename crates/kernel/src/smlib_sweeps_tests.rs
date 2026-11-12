@@ -1,8 +1,8 @@
 //! The sweeps through SMLib ([`crate::smlib_sweeps`]): analytic volumes, and the history and
 //! construction sources the builders' vocabulary gives each face.
 
-use solidcraft_geom::prelude::*;
 use std::f64::consts::{PI, TAU};
+use torno_geom::prelude::*;
 
 use solidcore_record::{Loop2, Plane, Region2, Seg2, Vec2, Vec3};
 

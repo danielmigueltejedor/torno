@@ -1,5 +1,5 @@
 [package]
-name = "solidcraft-control"
+name = "torno-control"
 description = "The control channel any app may share: token files, the loopback server, and its requests; no UI toolkit"
 version.workspace = true
 edition.workspace = true

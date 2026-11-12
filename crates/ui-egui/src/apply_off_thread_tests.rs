@@ -46,7 +46,7 @@ fn until_applied(h: &mut Harness) {
 }
 
 /// An evaluated result held behind a channel, so widget assertions do not race the worker.
-fn hold_result(h: &mut Harness, different_commands: bool) -> std::sync::mpsc::Sender<Result<solidcraft_engine::ComputedCommands, String>> {
+fn hold_result(h: &mut Harness, different_commands: bool) -> std::sync::mpsc::Sender<Result<torno_engine::ComputedCommands, String>> {
     let cmds = crate::dialogs::apply_commands(&h.app, h.app.dialog.as_ref().unwrap()).unwrap();
     let (finish, done) = std::sync::mpsc::channel();
     h.app.applying = Some(crate::dialogs::Applying {
@@ -61,7 +61,7 @@ fn hold_result(h: &mut Harness, different_commands: bool) -> std::sync::mpsc::Se
     finish
 }
 
-fn result(h: &Harness) -> Result<solidcraft_engine::ComputedCommands, String> {
+fn result(h: &Harness) -> Result<torno_engine::ComputedCommands, String> {
     let dialog = h.app.dialog.as_ref().unwrap();
     let commands = crate::dialogs::apply_commands(&h.app, dialog).unwrap();
     match &h.app.editing_state {
@@ -80,8 +80,8 @@ fn ok_computes_off_the_window_thread_saying_so_then_applies() {
     assert!(h.widget("Computing\u{2026} 0 s").is_some(), "the dialog says it computes");
     h.step(&json!({"key": "Enter"})).unwrap();
     finish.send(prepared).ok().unwrap();
-    let window = std::sync::Arc::new(solidcraft_engine::doc::progress::Progress::default());
-    solidcraft_engine::doc::progress::watch(window.clone(), || until_applied(&mut h));
+    let window = std::sync::Arc::new(torno_engine::doc::progress::Progress::default());
+    torno_engine::doc::progress::watch(window.clone(), || until_applied(&mut h));
     assert_eq!(window.features(), (0, 0), "adoption does not evaluate the model");
     assert!(h.app.dialog.is_none());
     h.step(&json!({"expect": {"bodies": 1, "volume": 13000}})).unwrap();
@@ -163,7 +163,7 @@ fn switching_tabs_cancels_the_transaction_without_changing_either_document() {
     let prepared = result(&h);
     let finish = hold_result(&mut h, false);
     let progress = h.app.applying.as_ref().unwrap().progress.clone();
-    let other = solidcraft_engine::Session::default();
+    let other = torno_engine::Session::default();
     let other_doc = other.doc.clone();
     crate::documents::open_tab(&mut h.app, other).unwrap();
     assert!(progress.is_cancelled());
@@ -221,8 +221,8 @@ fn inputs_changed_while_ok_computes_are_computed_off_the_thread_too() {
     let prepared = result(&h);
     let finish = hold_result(&mut h, true);
     finish.send(prepared).ok().unwrap();
-    let window = std::sync::Arc::new(solidcraft_engine::doc::progress::Progress::default());
-    solidcraft_engine::doc::progress::watch(window.clone(), || until_applied(&mut h));
+    let window = std::sync::Arc::new(torno_engine::doc::progress::Progress::default());
+    torno_engine::doc::progress::watch(window.clone(), || until_applied(&mut h));
     assert_eq!(window.features(), (0, 0));
     assert!(h.app.dialog.is_none());
     assert_eq!(h.app.session.doc.features.len(), features + 1);
@@ -258,8 +258,8 @@ fn hole_ok_adopts_real_cut_without_window_evaluation() {
     h.step(&json!({"click":{"handle":"dialog:Diameter"}})).unwrap();
     h.step(&json!({"key":"A","cmd":true})).unwrap();
     h.step(&json!({"text":"4 mm"})).unwrap();
-    let window = std::sync::Arc::new(solidcraft_engine::doc::progress::Progress::default());
-    solidcraft_engine::doc::progress::watch(window.clone(), || {
+    let window = std::sync::Arc::new(torno_engine::doc::progress::Progress::default());
+    torno_engine::doc::progress::watch(window.clone(), || {
         h.step(&json!({"click":{"handle":"dialog:OK"}})).unwrap();
         until_applied(&mut h);
     });
@@ -308,8 +308,8 @@ fn changed_first_cut_adopts_its_entire_suffix_without_window_evaluation() {
     h.step(&json!({"click":{"handle":"dialog:Distance"}})).unwrap();
     h.step(&json!({"key":"A","cmd":true})).unwrap();
     h.step(&json!({"text":"9 mm"})).unwrap();
-    let window = std::sync::Arc::new(solidcraft_engine::doc::progress::Progress::default());
-    solidcraft_engine::doc::progress::watch(window.clone(), || {
+    let window = std::sync::Arc::new(torno_engine::doc::progress::Progress::default());
+    torno_engine::doc::progress::watch(window.clone(), || {
         h.step(&json!({"click":{"handle":"dialog:OK"}})).unwrap();
         for _ in 0..5000 {
             h.frames(1);
@@ -358,8 +358,8 @@ fn an_edit_without_a_preview_adopts_its_suffix_without_window_evaluation() {
     // frames, and a window thread held up under load would find it in and apply it at once.
     let (finish, gate) = std::sync::mpsc::channel();
     h.app.apply_gate = Some(std::sync::Arc::new(std::sync::Mutex::new(gate)));
-    let window = std::sync::Arc::new(solidcraft_engine::doc::progress::Progress::default());
-    solidcraft_engine::doc::progress::watch(window.clone(), || {
+    let window = std::sync::Arc::new(torno_engine::doc::progress::Progress::default());
+    torno_engine::doc::progress::watch(window.clone(), || {
         h.step(&json!({"click":{"handle":"dialog:OK"}})).unwrap();
         assert!(h.app.applying.is_some(), "computing beside the window");
         finish.send(()).unwrap();
@@ -371,7 +371,7 @@ fn an_edit_without_a_preview_adopts_its_suffix_without_window_evaluation() {
     assert_eq!(h.app.session.undo.len(), undo + 1);
     let shelf = &h.app.session.doc.feature(plane).unwrap().kind;
     assert!(
-        matches!(shelf, solidcraft_engine::doc::FeatureKind::ConstructionPlane { plane: solidcraft_engine::doc::PlaneRef::Offset { distance, .. } } if *distance == "15"),
+        matches!(shelf, torno_engine::doc::FeatureKind::ConstructionPlane { plane: torno_engine::doc::PlaneRef::Offset { distance, .. } } if *distance == "15"),
         "{shelf:?}"
     );
     h.step(&json!({"expect":{"bodies":1,"volume":24500}})).unwrap();
@@ -388,14 +388,14 @@ fn cancelling_an_edit_restores_pinned_geometry_without_evaluating_an_evicted_suf
     h.call("ui.editFeature", json!({"feature":target}));
     crate::dialogs::sync_feature_edit(&mut h.app);
     let sketch = h.app.session.feature_edit_sketch.expect("edited Extrude exposes its sketch");
-    assert!(solidcraft_engine::view::sketch_shown(&h.app.session, sketch));
+    assert!(torno_engine::view::sketch_shown(&h.app.session, sketch));
     let prepared = result(&h);
     let finish = hold_result(&mut h, false);
     *h.app.session.model.cache.lock().unwrap() = Default::default();
     // Picks are view state: cancellation keeps a newer selection.
-    h.app.session.selection = vec![solidcraft_engine::Sel::Axis { name: "X".into() }];
-    let window = std::sync::Arc::new(solidcraft_engine::doc::progress::Progress::default());
-    solidcraft_engine::doc::progress::watch(window.clone(), || {
+    h.app.session.selection = vec![torno_engine::Sel::Axis { name: "X".into() }];
+    let window = std::sync::Arc::new(torno_engine::doc::progress::Progress::default());
+    torno_engine::doc::progress::watch(window.clone(), || {
         h.step(&json!({"key":"Escape"})).unwrap();
     });
     assert_eq!(window.features(), (0, 0), "Cancel never rebuilds the old suffix on the window thread");
@@ -406,7 +406,7 @@ fn cancelling_an_edit_restores_pinned_geometry_without_evaluating_an_evicted_suf
     assert_eq!(h.app.session.doc.marker, None);
     assert_eq!((h.app.session.undo.len(), h.app.session.redo.len()), history);
     assert!(std::sync::Arc::ptr_eq(&before, &h.app.session.world_state().unwrap()));
-    assert_eq!(h.app.session.selection, vec![solidcraft_engine::Sel::Axis { name: "X".into() }]);
+    assert_eq!(h.app.session.selection, vec![torno_engine::Sel::Axis { name: "X".into() }]);
 }
 
 #[test]
@@ -486,7 +486,7 @@ fn a_worker_error_then_cancel_preserves_original_world_history_redo_and_selectio
     let world = h.app.session.world_state().unwrap();
     let document = h.app.session.doc.clone();
     let history = (h.app.session.undo.len(), h.app.session.redo.len());
-    h.app.session.selection = vec![solidcraft_engine::Sel::Feature { id: target }];
+    h.app.session.selection = vec![torno_engine::Sel::Feature { id: target }];
     let selection = h.app.session.selection.clone();
     h.call("ui.editFeature", json!({"feature":target}));
     let prefix = h.app.session.doc.clone();
@@ -495,8 +495,8 @@ fn a_worker_error_then_cancel_preserves_original_world_history_redo_and_selectio
         *distance = "missing_extent".into();
     }
     let dialog = dialog.clone();
-    let window = std::sync::Arc::new(solidcraft_engine::doc::progress::Progress::default());
-    solidcraft_engine::doc::progress::watch(window.clone(), || {
+    let window = std::sync::Arc::new(torno_engine::doc::progress::Progress::default());
+    torno_engine::doc::progress::watch(window.clone(), || {
         // Exercise the production worker directly: a preview may disable the OK widget
         // for this deliberately invalid expression before a synthetic click reaches it.
         h.app.applying = crate::dialogs::begin_applying(&h.app, &dialog);
@@ -518,8 +518,8 @@ fn another_interactive_command_closes_the_editor_without_rebuilding_its_old_suff
     let (mut h, target) = cut_chain();
     let document = h.app.session.doc.clone();
     h.call("ui.editFeature", json!({"feature":target}));
-    let window = std::sync::Arc::new(solidcraft_engine::doc::progress::Progress::default());
-    solidcraft_engine::doc::progress::watch(window.clone(), || h.app.start("solid.hole"));
+    let window = std::sync::Arc::new(torno_engine::doc::progress::Progress::default());
+    torno_engine::doc::progress::watch(window.clone(), || h.app.start("solid.hole"));
     assert_eq!(window.features(), (0, 0));
     assert!(std::sync::Arc::ptr_eq(&document, &h.app.session.doc));
     assert!(h.app.editing_state.is_none());

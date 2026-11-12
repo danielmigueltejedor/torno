@@ -8,8 +8,8 @@
 
 use serde::{Deserialize, Serialize};
 use solidcore_record::{Vec2, Vec3};
-use solidcraft_geom::Aabb2;
-use solidcraft_geom::prelude::*;
+use torno_geom::Aabb2;
+use torno_geom::prelude::*;
 
 use crate::model::{Curve, CurveKind, Result, Sketch, SketchError, in_range, radius_in_range};
 

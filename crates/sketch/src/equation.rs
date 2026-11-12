@@ -1,6 +1,6 @@
 //! Equation curves (#8352): a fit point spline whose points come from formulas. The sketch keeps
 //! the formulas beside the spline; the design's parameters are worked out in the document layer
-//! (`solidcraft_doc::sketch_equation`), which places the points again before every solve. The
+//! (`torno_doc::sketch_equation`), which places the points again before every solve. The
 //! points are fixed for the solver, so dragging never bends the curve, while other geometry can
 //! still share its end points.
 

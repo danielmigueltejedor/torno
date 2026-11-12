@@ -4,8 +4,8 @@
 
 use serde_json::{Value, json};
 use solidcore_record::Vec2;
-use solidcraft_geom::prelude::*;
-use solidcraft_sketch::{ConstraintKind, CurveKind, Sketch};
+use torno_geom::prelude::*;
+use torno_sketch::{ConstraintKind, CurveKind, Sketch};
 
 use crate::Session;
 
@@ -20,7 +20,7 @@ fn sketch(s: &Session) -> Sketch {
     s.doc.sketch(s.active_sketch.unwrap()).unwrap().clone()
 }
 
-fn curve<'a>(sk: &'a Sketch, id: &str) -> &'a solidcraft_sketch::Curve {
+fn curve<'a>(sk: &'a Sketch, id: &str) -> &'a torno_sketch::Curve {
     sk.curves.get(sk.curve_index(id).unwrap()).unwrap()
 }
 
@@ -42,7 +42,7 @@ fn a_short_horizontal_reference_holds_through_dimension_edits_drag_and_reopen() 
     sk.curves[axis].infinite = true;
     sk.curves[axis].construction = true;
     sk.add_line_pts(0, arm_end, Some("arm")).unwrap();
-    sk.add_constraint(solidcraft_sketch::ConstraintKind::Horizontal { l: axis }, None).unwrap();
+    sk.add_constraint(torno_sketch::ConstraintKind::Horizontal { l: axis }, None).unwrap();
     s.refresh();
 
     let check = |s: &Session, degrees: f64| {
@@ -62,7 +62,7 @@ fn a_short_horizontal_reference_holds_through_dimension_edits_drag_and_reopen() 
     run(&mut s, "sketch.drag", json!({"entity": "arm.end", "from": [at.x, at.y], "to": [14, 10]}));
     run(&mut s, "sketch.drag_end", json!({}));
     check(&s, 15.0);
-    let doc = solidcraft_doc::Document::from_json(&s.doc.to_json()).unwrap();
+    let doc = torno_doc::Document::from_json(&s.doc.to_json()).unwrap();
     *s.doc_mut() = doc;
     s.refresh();
     check(&s, 15.0);
@@ -204,9 +204,7 @@ fn construction_lines_with_a_length_are_segments_held_by_a_dimension() {
         assert!(((b - a).len() - 25.0).abs() < 1e-6, "{mode}: {:?}", b - a);
         assert!((b - a).normalized().unwrap().dist(expected) < 1e-6, "{mode} towards {near}: {:?}", b - a);
         assert_eq!(out["constraints"].as_array().unwrap().len(), 2, "{mode}: direction and length");
-        assert!(
-            sk.constraints.iter().any(|k| matches!(k.kind, solidcraft_sketch::ConstraintKind::Length { value, .. } if (value - 25.0).abs() < 1e-9))
-        );
+        assert!(sk.constraints.iter().any(|k| matches!(k.kind, torno_sketch::ConstraintKind::Length { value, .. } if (value - 25.0).abs() < 1e-9)));
     }
     // The length is a dimension: it follows its parameter, and the line keeps its direction.
     run(&mut s, "parameters.add", json!({"name": "rib", "expression": "40 mm"}));
@@ -218,7 +216,7 @@ fn construction_lines_with_a_length_are_segments_held_by_a_dimension() {
     let v = sk.point(b).unwrap() - sk.point(a).unwrap();
     assert!((v.len() - 15.0).abs() < 1e-6 && v.cross(Vec2::new(0.6, 0.8)).abs() < 1e-6, "{v:?}");
     // It is saved as a finite construction line.
-    let back = solidcraft_doc::Document::from_json(&s.doc.to_json()).unwrap();
+    let back = torno_doc::Document::from_json(&s.doc.to_json()).unwrap();
     let c = curve(back.sketch(s.active_sketch.unwrap()).unwrap(), &id);
     assert!(c.construction && !c.infinite);
     // Refused, leaving the design as it was: bad lengths, and the methods without a start and
@@ -253,7 +251,7 @@ fn a_construction_line_with_a_length_can_be_a_normal_line() {
     let c = curve(&sk, out["curves"][0].as_str().unwrap());
     assert!(!c.construction && !c.infinite);
     assert_eq!(profiles(&s), 2, "a normal line cuts the rectangle in two");
-    let back = solidcraft_doc::Document::from_json(&s.doc.to_json()).unwrap();
+    let back = torno_doc::Document::from_json(&s.doc.to_json()).unwrap();
     assert!(!curve(back.sketch(s.active_sketch.unwrap()).unwrap(), out["curves"][0].as_str().unwrap()).construction);
     for p in [json!({"at": [0, 0], "construction": false}), json!({"at": [0, 0], "length": 5, "construction": "no"})] {
         let before = s.doc.to_json();
@@ -375,7 +373,7 @@ fn construction_tools_keep_profiles_and_undo_and_save_as_one_edit() {
     let r = run(&mut s, "sketch.construction_line", json!({"at":[-5,5],"through":[30,5]}));
     assert_eq!(s.undo.len(), depth + 1);
     assert_eq!(profiles(&s), 1);
-    let doc = solidcraft_doc::Document::from_json(&s.doc.to_json()).unwrap();
+    let doc = torno_doc::Document::from_json(&s.doc.to_json()).unwrap();
     let id = r["curves"][0].as_str().unwrap();
     let c = curve(doc.sketch(s.active_sketch.unwrap()).unwrap(), id);
     assert!(c.construction && c.infinite);
@@ -437,7 +435,7 @@ fn construction_relations_follow_source_edits_without_an_auxiliary_dimension() {
     run(&mut s, "sketch.line", json!({"points":[[0,0],[0,20]],"ids":["b"],"infer":false}));
     let parallel = run(&mut s, "sketch.construction_line.parallel", json!({"curve":"a","at":[5,5]}));
     let bisector = run(&mut s, "sketch.construction_line.bisector", json!({"curve":"a","curve2":"b","at":[10,10]}));
-    assert!(sketch(&s).constraints.iter().all(|c| !matches!(c.kind, solidcraft_sketch::ConstraintKind::Distance { .. })));
+    assert!(sketch(&s).constraints.iter().all(|c| !matches!(c.kind, torno_sketch::ConstraintKind::Distance { .. })));
     run(&mut s, "sketch.drag", json!({"entity":"a.end","from":[20,0],"to":[20,10]}));
     let sk = sketch(&s);
     let direction = |id: &str| {
@@ -486,7 +484,7 @@ fn it_is_saved_and_a_line_without_it_reads_finite() {
     run(&mut s, "sketch.line", json!({"points": [[0, 10], [10, 15]], "ids": ["b"]}));
     run(&mut s, "sketch.infinite", json!({"curves": ["a"]}));
     let text = s.doc.to_json();
-    let back = solidcraft_doc::Document::from_json(&text).unwrap();
+    let back = torno_doc::Document::from_json(&text).unwrap();
     let sk = back.sketch(s.active_sketch.unwrap()).unwrap();
     assert!(curve(sk, "a").infinite);
     assert!(!curve(sk, "b").infinite);

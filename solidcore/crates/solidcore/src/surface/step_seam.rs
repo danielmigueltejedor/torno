@@ -2,7 +2,7 @@
 //! boundary: the surface placed again about its own axis so that its angle parameter
 //! starts where the face does not reach, or on the face's own seam.
 //!
-//! Upstream: none (solidcore's STEP reader, #2578). The idea is SolidCraft's reader
+//! Upstream: none (solidcore's STEP reader, #2578). The idea is Torno's reader
 //! (`crates/step/src/topology/swept.rs` `widest_gap`, `common_angle`, `span`,
 //! `crates/step/src/topology/frames.rs` `about_axis`, `quarters_turned`,
 //! `turn_frames`, and `crates/geom/src/brep/form.rs` `tube_turned`, at a5b71ca2;
@@ -12,16 +12,16 @@
 //! ([`crate::surface::step_window::face_window`]), [`Axis2Placement`] and
 //! [`Surface::transform`].
 //!
-//! | Rust                      | SolidCraft                                                   |
+//! | Rust                      | Torno                                                   |
 //! |---------------------------|--------------------------------------------------------------|
 //! | [`seam_into_widest_gap`]  | `swept::span` (a closed conic's start), `frames::turn_frames` (the turn), `form::tube_turned` |
 //! | [`PlacedSeam`]            | the turned frame and `Span::Turn { start }`                  |
 //! | [`ClosedSeam`]            | `swept::widest_gap`'s `(start, width)`, `common_angle`        |
 //!
-//! Deviations: not a port. See [`seam_into_widest_gap`] for the rules. SolidCraft and
+//! Deviations: not a port. See [`seam_into_widest_gap`] for the rules. Torno and
 //! step-brep take the boundary's angles from sampled points (step-brep 17 an edge, for
 //! cylinders and cones only); here they are the face's window from each edge's
-//! extrema, for every closed kind. SolidCraft starts a closed profile where the face
+//! extrema, for every closed kind. Torno starts a closed profile where the face
 //! starts (the end of the gap); the seam here goes in the gap's middle, as SMLib's
 //! import puts it, so the face keeps half the gap on either side of it.
 

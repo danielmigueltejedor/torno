@@ -12,15 +12,15 @@
 #![forbid(unsafe_code)]
 #![deny(clippy::disallowed_methods)]
 
-// The record's types are SolidCraft's wire format, carried over as it is: each type says what it
+// The record's types are Torno's wire format, carried over as it is: each type says what it
 // is, its formula and its SMLib and STEP counterparts, and its fields are the names in that
-// formula (SolidCraft's docs/native-brep.md), so fields and variants are not documented one by
+// formula (Torno's docs/native-brep.md), so fields and variants are not documented one by
 // one.
 #[allow(missing_docs)]
 pub mod brep;
 pub mod native;
 pub mod plane;
-// Profiles are SolidCraft's sketch wire format, carried over as it is: each variant says what it
+// Profiles are Torno's sketch wire format, carried over as it is: each variant says what it
 // is and its fields are the names in its formula.
 #[allow(missing_docs)]
 pub mod profile;

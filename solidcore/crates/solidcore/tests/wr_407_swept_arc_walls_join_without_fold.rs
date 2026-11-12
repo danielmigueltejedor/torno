@@ -1,5 +1,5 @@
 //! Regression test for WR-407 (tangency-labs/solidcore#434, the fork's
-//! tangency-labs/smlib@1b6f5fa, SolidCraft kernel case sweeps/844): two walls 12 thick
+//! tangency-labs/smlib@1b6f5fa, Torno kernel case sweeps/844): two walls 12 thick
 //! and 60 tall swept along half circles (wall A r 44..56 over 0..180 degrees, wall B
 //! r 52..64 over 90..270) overlap over a quarter turn and share the planes z = 0 and
 //! z = 60, and are joined.
@@ -12,7 +12,7 @@
 //! fold is refused and the join has the closed-form volume
 //! `V_A + V_B - overlap = 60 (pi/2)(56^2 - 44^2) + 60 (pi/2)(64^2 - 52^2) - 60 (pi/4)(56^2 - 52^2)`.
 //! The walls' radial faces are the sweep's approximation of the arcs, so the volume is
-//! held to 1 mm3 (the SolidCraft case's tolerance).
+//! held to 1 mm3 (the Torno case's tolerance).
 #![allow(
     clippy::unwrap_used,
     clippy::expect_used,

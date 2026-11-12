@@ -2,8 +2,8 @@
 //! which of overlapping sketch curves a click picks.
 
 use serde_json::{Value, json};
-use solidcraft_engine::Sel;
-use solidcraft_engine::geom::prelude::*;
+use torno_engine::Sel;
+use torno_engine::geom::prelude::*;
 
 use crate::scenario::Harness;
 
@@ -688,7 +688,7 @@ fn a_small_body_on_a_large_one_is_not_picked_through() {
 
 #[test]
 fn a_curve_from_intersect_is_labelled_intersected_and_one_from_project_projected() {
-    use solidcraft_engine::sketch::LinkKind;
+    use torno_engine::sketch::LinkKind;
     let mut h = Harness::new();
     h.app.run("solid.box", json!({"length":40,"width":10,"height":10,"body_name":"Block"})).unwrap();
     let label = |h: &Harness, kind: LinkKind| {
@@ -791,7 +791,7 @@ fn approximate_long_click_reaches_profiles_and_shows_all_eight_rows() {
     h.step(&json!({"hold":[pos.x,pos.y]})).unwrap();
     assert_eq!(h.app.viewport.select_other.popup.as_ref().unwrap().rows.len(), 8);
     h.frames(3);
-    if let Ok(dir) = std::env::var("SOLIDCRAFT_SELECT_OTHER_EVIDENCE") {
+    if let Ok(dir) = std::env::var("TORNO_SELECT_OTHER_EVIDENCE") {
         let ctx = crate::fonts::test_context();
         let mut textures = std::collections::HashMap::new();
         let mut last = None;
@@ -1107,7 +1107,7 @@ fn hidden_edge_clicks_feed_fillet_before_and_after_opening_the_dialog() {
         assert_eq!(h.app.session.doc.features.len(), before + 1);
         assert!(h.app.session.model.results.iter().all(|r| r.error.is_none()));
         let state = h.app.session.world_state().unwrap();
-        let volume = |name| solidcraft_engine::kernel::measure(&state.body(name).unwrap().body).unwrap().volume;
+        let volume = |name| torno_engine::kernel::measure(&state.body(name).unwrap().body).unwrap().volume;
         let expected = 1000.0 - 10.0 * (1.0 - std::f64::consts::FRAC_PI_4);
         assert!((volume("Target") - expected).abs() < 0.02, "radius-1 fillet on a length-10 edge: {}", volume("Target"));
         assert!((volume("Cover") - 9000.0).abs() < 1e-6, "the cover must stay intact");
@@ -1122,7 +1122,7 @@ fn hidden_edge_clicks_feed_fillet_before_and_after_opening_the_dialog() {
 /// Optional real viewport captures for local review, using the same GPU pipeline as the app.
 #[cfg(not(target_arch = "wasm32"))]
 fn save_hidden_edge_evidence(h: &Harness, name: &str) {
-    let Ok(dir) = std::env::var("SOLIDCRAFT_HIDDEN_EDGE_EVIDENCE") else { return };
+    let Ok(dir) = std::env::var("TORNO_HIDDEN_EDGE_EVIDENCE") else { return };
     let size = 768;
     let proj = crate::viewport::projection(&h.app, egui::Rect::from_min_size(egui::Pos2::ZERO, egui::vec2(size as f32, size as f32)));
     let eye = proj.cam.eye().to_f32();
@@ -1135,7 +1135,7 @@ fn save_hidden_edge_evidence(h: &Harness, name: &str) {
         size,
         None,
         [0.0; 8],
-        crate::gpu::analysis_colors(&solidcraft_theme::Tokens::get().analysis),
+        crate::gpu::analysis_colors(&torno_theme::Tokens::get().analysis),
     )
     .expect("a GPU is required when evidence capture is requested");
     std::fs::create_dir_all(&dir).unwrap();

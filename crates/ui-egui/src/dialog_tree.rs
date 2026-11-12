@@ -11,7 +11,7 @@
 
 use egui::{Rect, pos2};
 
-use solidcraft_theme::Tokens;
+use torno_theme::Tokens;
 
 use crate::SolveApp;
 use crate::ui_kit::{Container, DockEdges, SHELL_GAP, Surface};
@@ -64,7 +64,7 @@ pub(crate) fn show(app: &mut SolveApp, ctx: &egui::Context) {
                 crate::scenario::publish_handle("dialog_tree:header", rect.center());
             }
             if let Some(resp) = r.resp {
-                resp.on_hover_text(solidcraft_ui_text::tr(if open { "ui.collapse" } else { "ui.expand" }));
+                resp.on_hover_text(torno_ui_text::tr(if open { "ui.collapse" } else { "ui.expand" }));
             }
             if r.fold || r.clicked {
                 app.shell.dialog_tree_open = !open;

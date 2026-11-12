@@ -5,17 +5,17 @@
 //! thread forms ([`ThreadForm`]).
 
 use serde_json::{Value, json};
-use solidcraft_engine::doc::thread_forms::{SteepFlank, ThreadForm, ThreadHand, ThreadTip};
-use solidcraft_engine::doc::{
+use torno_engine::doc::thread_forms::{SteepFlank, ThreadForm, ThreadHand, ThreadTip};
+use torno_engine::doc::{
     Document, Expr, FeatureKind, TappedThread, TappedThreadFamily, ThreadLimit, ThreadRunout, metric_thread_sizes, parse_metric_thread,
     parse_tapped_thread, tapped_thread_sizes,
 };
-use solidcraft_engine::{Sel, Session};
+use torno_engine::{Sel, Session};
 
 use crate::dialogs::{Dialog, Kind, combo, edge_sel, face_sel, form_row, object_point, plane_sel, put, set_object_accepting};
 use crate::selection::{Accept, EDGES, FACES, PLANES, SelInput};
 use crate::ui_kit::{choice_row, expr_row, hint_row, text_row};
-use solidcraft_ui_text::tr;
+use torno_ui_text::tr;
 
 /// Common metric pitch presets besides the coarse one, not an exhaustive catalogue of standard
 /// diameter/pitch pairs; the current pitch is included separately, custom pairs remain editable.
@@ -49,8 +49,8 @@ impl HoleThreadDraft {
 
     fn update(&mut self, doc: &Document, authored: &mut String) {
         let candidate = || -> Result<String, String> {
-            let d = doc.eval(&self.diameter, solidcraft_engine::doc::expr::Kind::Length).map_err(|e| format!("nominal diameter: {e}"))?;
-            let p = doc.eval(&self.pitch, solidcraft_engine::doc::expr::Kind::Length).map_err(|e| format!("pitch: {e}"))?;
+            let d = doc.eval(&self.diameter, torno_engine::doc::expr::Kind::Length).map_err(|e| format!("nominal diameter: {e}"))?;
+            let p = doc.eval(&self.pitch, torno_engine::doc::expr::Kind::Length).map_err(|e| format!("pitch: {e}"))?;
             let text = designation(d, p);
             parse_metric_thread(&text).ok_or("use a positive nominal diameter and a pitch smaller than it")?;
             Ok(text)
@@ -179,7 +179,7 @@ pub(crate) fn hole_rows(
                     (false, true) => "thread.drill_range",
                     (false, false) => "thread.drill_range_custom",
                 };
-                let tip = solidcraft_ui_text::format(id, &args);
+                let tip = torno_ui_text::format(id, &args);
                 let mut text = drill.clone().unwrap_or_else(|| default.clone());
                 let (submitted, changed) = crate::ui_kit::text_field_tip(ui, &mut text, &default, &tip);
                 if changed {
@@ -449,7 +449,7 @@ pub(crate) fn rows(
     if !f.sizes().is_empty() {
         size_rows(ui, f, designation, suggested);
     }
-    let hint = solidcraft_ui_text::format("thread.fits_the_face", &[("example", &example(f))]);
+    let hint = torno_ui_text::format("thread.fits_the_face", &[("example", &example(f))]);
     let (submitted, changed) = text_row(ui, "Designation", designation, &hint);
     enter |= submitted;
     if let Some(at) = crate::scenario::handle_at("dialog:Designation") {
@@ -646,7 +646,7 @@ fn up_to(inputs: &[SelInput]) -> Option<Value> {
 /// The face's size in the dialog's form, for an automatic size.
 pub(crate) fn suggested(s: &Session, picks: &[Sel], o: &Options) -> Option<String> {
     picks.first().and_then(|sel| match sel {
-        Sel::Face { point, .. } => solidcraft_engine::doc::suggested_thread_in(&crate::open_meshing::session_world(s), *point, o.form).ok(),
+        Sel::Face { point, .. } => torno_engine::doc::suggested_thread_in(&crate::open_meshing::session_world(s), *point, o.form).ok(),
         _ => None,
     })
 }
@@ -743,8 +743,8 @@ mod contribution_tests {
     };
     use serde_json::json;
     use solidcore_record::Vec3;
-    use solidcraft_engine::geom::MeshGeom;
-    use solidcraft_engine::{Sel, Session};
+    use torno_engine::geom::MeshGeom;
+    use torno_engine::{Sel, Session};
     fn hole() -> (SolveApp, Dialog) {
         let mut app = SolveApp::new(Session::default(), Services::default());
         app.run("solid.box", json!({"length":20,"width":20,"height":10,"body_name":"Plate"})).unwrap();
@@ -785,7 +785,7 @@ mod contribution_tests {
         for label in ["Profile", "Size", "Nominal diameter", "Pitch", "Designation", "Tap drill diameter"] {
             let row = crate::scenario::rect_of(&format!("dialog:row:{label}")).unwrap();
             let control = crate::scenario::rect_of(&format!("dialog:control:{label}")).unwrap();
-            assert_eq!(row.height(), solidcraft_theme::Tokens::get().control_height, "{label}");
+            assert_eq!(row.height(), torno_theme::Tokens::get().control_height, "{label}");
             assert!(card.contains_rect(row) && row.contains_rect(control), "{label}: {row:?} {control:?} outside {card:?}");
         }
     }
@@ -898,7 +898,7 @@ mod contribution_tests {
         assert!(params(&h).get("diameter").is_none(), "a new size takes its own drill");
 
         // An older design's M8 hole, drilled 6.75 mm (d - P), keeps that drill when edited.
-        let solidcraft_engine::doc::FeatureKind::Hole { diameter, .. } = &mut h.app.session.doc_mut().feature_mut(id).unwrap().kind else {
+        let torno_engine::doc::FeatureKind::Hole { diameter, .. } = &mut h.app.session.doc_mut().feature_mut(id).unwrap().kind else {
             panic!("not Hole")
         };
         *diameter = "6.75 mm".into();
@@ -972,8 +972,8 @@ mod contribution_tests {
             assert_eq!(p["thread"], designation);
             let out = app.run(id, p.clone()).unwrap();
             let f = app.session.doc.feature(out["feature"].as_u64().unwrap()).unwrap();
-            let solidcraft_engine::doc::FeatureKind::Hole { diameter, .. } = &f.kind else { panic!("not a Hole") };
-            let drill = app.session.doc.eval(diameter, solidcraft_engine::doc::expr::Kind::Length).unwrap();
+            let torno_engine::doc::FeatureKind::Hole { diameter, .. } = &f.kind else { panic!("not a Hole") };
+            let drill = app.session.doc.eval(diameter, torno_engine::doc::expr::Kind::Length).unwrap();
             assert!((drill - expected).abs() < 1e-9, "{designation}: {drill}");
         }
     }
@@ -1086,18 +1086,18 @@ mod contribution_tests {
             assert!((t.major_diameter - major).abs() < 1e-9 && (t.pitch - pitch).abs() < 1e-9);
             let body = &world.bodies[0].body;
             assert!(body.validity().is_empty());
-            let face = solidcraft_engine::kernel::cylinder_face_at(body, Vec3::new(10.0 + drill / 2.0, 10.0, 5.0)).unwrap();
+            let face = torno_engine::kernel::cylinder_face_at(body, Vec3::new(10.0 + drill / 2.0, 10.0, 5.0)).unwrap();
             assert!(face.internal && (2.0 * face.radius - drill).abs() < 1e-8);
-            let actual = body.mesh(&solidcraft_engine::kernel::MeshTolerance::chord(0.001)).unwrap().measure().volume;
+            let actual = body.mesh(&torno_engine::kernel::MeshTolerance::chord(0.001)).unwrap().measure().volume;
             let expected = 4000.0 - std::f64::consts::PI * (drill / 2.0).powi(2) * 10.0;
             assert!((actual - expected).abs() < 0.5, "{name}: {actual} versus {expected}");
             // A saved explicit drill remains authoritative, including a legacy metric bore.
             let mut doc = Document::from_json(&saved).unwrap();
-            let solidcraft_engine::doc::FeatureKind::Hole { diameter, .. } = &mut doc.feature_mut(id).unwrap().kind else { panic!("not Hole") };
+            let torno_engine::doc::FeatureKind::Hole { diameter, .. } = &mut doc.feature_mut(id).unwrap().kind else { panic!("not Hole") };
             *diameter = format!("{} mm", drill + 0.05).as_str().into();
             let reopened = Session::new(Document::from_json(&doc.to_json()).unwrap());
             let world = crate::open_meshing::session_world(&reopened);
-            let face = solidcraft_engine::kernel::cylinder_face_at(&world.bodies[0].body, Vec3::new(10.0 + (drill + 0.05) / 2.0, 10.0, 5.0)).unwrap();
+            let face = torno_engine::kernel::cylinder_face_at(&world.bodies[0].body, Vec3::new(10.0 + (drill + 0.05) / 2.0, 10.0, 5.0)).unwrap();
             assert!((2.0 * face.radius - drill - 0.05).abs() < 1e-8);
         }
     }
@@ -1120,7 +1120,7 @@ mod contribution_tests {
         }
         assert_eq!(app.session.doc.to_json(), before);
         let out = app.run("solid.thread", json!({"face":[13.4,10,5],"designation":"M8"})).unwrap();
-        let solidcraft_engine::doc::FeatureKind::Thread { designation, modeled, .. } =
+        let torno_engine::doc::FeatureKind::Thread { designation, modeled, .. } =
             &mut app.session.doc_mut().feature_mut(out["feature"].as_u64().unwrap()).unwrap().kind
         else {
             panic!("not Thread")
@@ -1135,7 +1135,7 @@ mod contribution_tests {
 
     #[test]
     fn expanded_catalogue_public_plate_evidence_uses_only_headless_model_rendering() {
-        let Some(dir) = std::env::var_os("SOLIDCRAFT_CATALOGUE_EVIDENCE") else { return };
+        let Some(dir) = std::env::var_os("TORNO_CATALOGUE_EVIDENCE") else { return };
         crate::gpu::install_cpu_picture_renderer();
         let mut h = crate::scenario::Harness::new();
         h.app.run("solid.box", json!({"length":50,"width":25,"height":6,"body_name":"ThreadPlate"})).unwrap();
@@ -1199,10 +1199,10 @@ mod contribution_tests {
             let commands = apply_commands(&app, &dialog).unwrap();
             let result = app.run(&commands[0].0, commands[0].1.clone()).unwrap();
             let feature = app.session.doc.feature(result["feature"].as_u64().unwrap()).unwrap();
-            let solidcraft_engine::doc::FeatureKind::Hole { diameter, .. } = &feature.kind else { panic!("not a hole") };
-            assert!((app.session.doc.eval(diameter, solidcraft_engine::doc::expr::Kind::Length).unwrap() - drill).abs() < 1e-9);
+            let torno_engine::doc::FeatureKind::Hole { diameter, .. } = &feature.kind else { panic!("not a hole") };
+            assert!((app.session.doc.eval(diameter, torno_engine::doc::expr::Kind::Length).unwrap() - drill).abs() < 1e-9);
             let saved = app.session.doc.to_json();
-            let reopened = Session::new(solidcraft_engine::doc::Document::from_json(&saved).unwrap());
+            let reopened = Session::new(torno_engine::doc::Document::from_json(&saved).unwrap());
             let state = crate::open_meshing::session_world(&reopened);
             assert_eq!(state.threads.len(), 1);
             assert!((state.threads[0].pitch - pitch).abs() < 1e-9);
@@ -1231,7 +1231,7 @@ mod contribution_tests {
 
     #[test]
     fn parallel_pipe_holes_have_the_tabulated_cylinders_depth_and_saved_designations() {
-        use solidcraft_engine::doc::{TappedThreadFamily, tapped_thread_sizes};
+        use torno_engine::doc::{TappedThreadFamily, tapped_thread_sizes};
         for family in [TappedThreadFamily::G, TappedThreadFamily::Rp] {
             for size in tapped_thread_sizes(family) {
                 let mut app = SolveApp::new(Session::default(), Services::default());
@@ -1248,16 +1248,16 @@ mod contribution_tests {
                 let body = &state.bodies[0].body;
                 assert!(body.validity().is_empty());
                 for z in [6.0, 10.0, 14.0] {
-                    let c = solidcraft_engine::kernel::cylinder_face_at(body, Vec3::new(40.0 + size.tap_drill / 2.0, 40.0, z)).unwrap();
+                    let c = torno_engine::kernel::cylinder_face_at(body, Vec3::new(40.0 + size.tap_drill / 2.0, 40.0, z)).unwrap();
                     assert!(c.internal && (2.0 * c.radius - size.tap_drill).abs() < 1e-8);
                 }
-                let actual = body.mesh(&solidcraft_engine::kernel::MeshTolerance::chord(0.001)).unwrap().measure().volume;
+                let actual = body.mesh(&torno_engine::kernel::MeshTolerance::chord(0.001)).unwrap().measure().volume;
                 let removed = std::f64::consts::PI * (size.tap_drill / 2.0).powi(2) * 10.0;
                 assert!((actual - (96000.0 - removed)).abs() / removed < 0.002, "{}: {actual}", size.designation);
                 assert_eq!(reopened.doc.to_json(), saved);
                 if size.designation.ends_with(" 1/4") {
                     let mut doc = Document::from_json(&saved).unwrap();
-                    let solidcraft_engine::doc::FeatureKind::Hole { diameter, .. } =
+                    let torno_engine::doc::FeatureKind::Hole { diameter, .. } =
                         &mut doc.feature_mut(result["feature"].as_u64().unwrap()).unwrap().kind
                     else {
                         panic!("not Hole")
@@ -1265,11 +1265,9 @@ mod contribution_tests {
                     *diameter = format!("{} mm", size.tap_drill + 0.03).as_str().into();
                     let reopened = Session::new(Document::from_json(&doc.to_json()).unwrap());
                     let state = crate::open_meshing::session_world(&reopened);
-                    let c = solidcraft_engine::kernel::cylinder_face_at(
-                        &state.bodies[0].body,
-                        Vec3::new(40.0 + (size.tap_drill + 0.03) / 2.0, 40.0, 10.0),
-                    )
-                    .unwrap();
+                    let c =
+                        torno_engine::kernel::cylinder_face_at(&state.bodies[0].body, Vec3::new(40.0 + (size.tap_drill + 0.03) / 2.0, 40.0, 10.0))
+                            .unwrap();
                     assert!((2.0 * c.radius - size.tap_drill - 0.03).abs() < 1e-8);
                 }
             }

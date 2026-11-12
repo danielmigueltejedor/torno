@@ -43,7 +43,7 @@ fn native_studios_resolve_without_mutation_and_apply_one_complete_undo() {
         assert!(!saved.stage.is_empty());
         assert_eq!(s.doc.features.len(), 1);
         assert!(s.doc.materials.is_empty());
-        let reopened = solidcraft_doc::Document::from_json(&s.doc.to_json()).unwrap();
+        let reopened = torno_doc::Document::from_json(&s.doc.to_json()).unwrap();
         assert_eq!(reopened.render.setups["Shot"], *saved);
         s.execute("edit.undo", &json!({})).unwrap();
         assert_eq!(s.doc.to_json(), before);
@@ -143,7 +143,7 @@ fn resource_availability_and_original_previews_are_bounded_and_nonmutating() {
     let preview = s.execute("render.library.preview", &json!({"id":"SURF-001"})).unwrap();
     let bytes: Vec<u8> = serde_json::from_value(preview["bytes"].clone()).unwrap();
     assert!(bytes.starts_with(b"\x89PNG\r\n\x1a\n"));
-    assert_eq!(preview["sha256"], json!(solidcraft_doc::render_resources::HdrId::of(&bytes)));
+    assert_eq!(preview["sha256"], json!(torno_doc::render_resources::HdrId::of(&bytes)));
     assert_eq!(preview["fidelity"], "authored_base_color_source_map_not_a_render");
     for id in ["../SURF-001", "HDR-001", "MAT-001", "SURF-999"] {
         assert!(s.execute("render.library.preview", &json!({"id":id})).is_err());
@@ -176,7 +176,7 @@ fn physical_backgrounds_preserve_geometry_lights_camera_and_one_undo() {
         super::super::staging::apply(&mut scene, after, "test").unwrap();
         assert!(Arc::ptr_eq(&first, &scene.meshes[0].mesh));
         assert_eq!(scene.meshes.len(), 1 + after.stage.iter().count());
-        let reopened = solidcraft_doc::Document::from_json(&s.doc.to_json()).unwrap();
+        let reopened = torno_doc::Document::from_json(&s.doc.to_json()).unwrap();
         assert_eq!(&reopened.render.setups["Shot"], after);
         let snapshot = s.doc.to_json();
         assert!(s.execute("render.stage.backdrop", &json!({"name":"Shot","kind":kind,"expected_revision":s.revision,"set":{"stage":[]}})).is_err());
@@ -195,7 +195,7 @@ fn finishing_and_linear_master_saved_intent_survive_reopen_without_host_and_reje
         "backdrop":{"mode":"radial","first_srgb":[230,220,200],"second_srgb":[25,35,45],"center":[0.4,0.3],"radius":0.8}}});
     s.execute("render.settings.set", &json!({"name":"Shot","set":{"job":job}})).unwrap();
     let after = s.doc.to_json();
-    let reopened = solidcraft_doc::Document::from_json(&after).unwrap();
+    let reopened = torno_doc::Document::from_json(&after).unwrap();
     assert_eq!(reopened.render, s.doc.render);
     for patch in [
         json!({"job":{"method":"gpu_path","transparent_background":true,"options":job["options"]}}),
@@ -213,7 +213,7 @@ fn finishing_and_linear_master_saved_intent_survive_reopen_without_host_and_reje
 
 #[test]
 fn cpu_quality_projects_exact_catalog_costs_with_existing_admissible_profiles_without_mutation() {
-    use solidcraft_render::job::{CpuBudget, CpuProgressiveOptions};
+    use torno_render::job::{CpuBudget, CpuProgressiveOptions};
     let mut s = subject();
     let before = s.doc.clone();
     let history = (s.revision, s.undo.len(), s.redo.len());
@@ -282,13 +282,13 @@ fn cpu_quality_rejects_unbound_ids_hostile_context_and_incompatible_adaptive_wit
 #[cfg(feature = "bundled-render-library")]
 #[test]
 fn cpu_native_studios_preserve_full_job_and_exact_hdr_rig_authority_for_all_twenty_five() {
-    use solidcraft_doc::render_settings::CpuJob;
-    use solidcraft_render::job::{CpuBudget, CpuPathOptions, CpuProgressiveOptions, ThinLens, adaptive::AdaptiveSampling};
+    use torno_doc::render_settings::CpuJob;
+    use torno_render::job::{CpuBudget, CpuPathOptions, CpuProgressiveOptions, ThinLens, adaptive::AdaptiveSampling};
     for entry in entries().as_array().unwrap() {
         let id = entry["id"].as_str().unwrap();
         let mut s = Session::default();
         s.execute("solid.box", &json!({"length":20,"width":15,"height":10,"body_name":"Subject"})).unwrap();
-        let camera = solidcraft_viewport::Camera { fov: 0.5, ..Default::default() };
+        let camera = torno_viewport::Camera { fov: 0.5, ..Default::default() };
         let options = CpuJob {
             budget: CpuBudget::Studio,
             progressive: Some(CpuProgressiveOptions { samples_per_pixel: 64, seed: 947 }),
@@ -296,10 +296,10 @@ fn cpu_native_studios_preserve_full_job_and_exact_hdr_rig_authority_for_all_twen
             path: Some(CpuPathOptions { max_depth: 5 }),
             denoise: true,
             lens: Some(ThinLens { aperture_radius_mm: 0.2, focus_distance_mm: 100.0 }),
-            output: Some(Box::new(solidcraft_render::job::OutputOptions { linear_exr: true, ..Default::default() })),
+            output: Some(Box::new(torno_render::job::OutputOptions { linear_exr: true, ..Default::default() })),
             area_samples: Some(64),
             seed: Some(731),
-            volume: Some(solidcraft_render::job::volume::HomogeneousVolume { extinction_per_mm: 0.0, ..Default::default() }),
+            volume: Some(torno_render::job::volume::HomogeneousVolume { extinction_per_mm: 0.0, ..Default::default() }),
             ..Default::default()
         };
         s.execute("render.settings.set", &json!({"name":"Shot","set":{"width":96,"height":64,"camera":camera,"job":{"method":"cpu_raytrace","transparent_background":true,"options":options}}})).unwrap();
@@ -357,7 +357,7 @@ fn cpu_native_studios_preserve_full_job_and_exact_hdr_rig_authority_for_all_twen
                 lighting
                     .area_lights
                     .iter()
-                    .map(|light| solidcraft_render::job::RectangleLightOptions {
+                    .map(|light| torno_render::job::RectangleLightOptions {
                         center_mm: light.center,
                         edge_u_mm: light.u.map(|x| x * 2.0),
                         edge_v_mm: light.v.map(|x| x * 2.0),
@@ -377,7 +377,7 @@ fn cpu_native_studios_preserve_full_job_and_exact_hdr_rig_authority_for_all_twen
         assert_eq!(s.doc.features, before.features);
         assert_eq!(s.doc.materials, before.materials);
         let saved_json = s.doc.to_json();
-        let reopened = solidcraft_doc::Document::from_json(&saved_json).unwrap();
+        let reopened = torno_doc::Document::from_json(&saved_json).unwrap();
         assert_eq!(reopened.render.setups["Shot"], *saved);
         s.execute("edit.undo", &json!({})).unwrap();
         assert_eq!(s.doc, before);
@@ -389,13 +389,13 @@ fn cpu_native_studios_preserve_full_job_and_exact_hdr_rig_authority_for_all_twen
 #[cfg(all(feature = "bundled-render-library", feature = "raytrace-cpu", not(target_arch = "wasm32")))]
 #[test]
 fn cpu_native_studio_cold_capture_matches_typed_source_every_prefix_and_raw_master() {
-    use solidcraft_render::job::{CancelToken, CpuHost, ImageRequest, Integrator, JobId, Phase};
-    use solidcraft_render::lighting::environment_input::EnvironmentInput;
-    use solidcraft_render::raytrace::image::{ImagePoll, ImageTask};
+    use torno_render::job::{CancelToken, CpuHost, ImageRequest, Integrator, JobId, Phase};
+    use torno_render::lighting::environment_input::EnvironmentInput;
+    use torno_render::raytrace::image::{ImagePoll, ImageTask};
     for id in ["NATIVE-STUDIO-001", "NATIVE-STUDIO-004", "RIG-020"] {
         let mut s = Session::default();
         s.execute("solid.box", &json!({"length":20,"width":15,"height":10,"body_name":"Subject"})).unwrap();
-        let camera = solidcraft_viewport::Camera { target: solidcore_record::Vec3::new(10.0, 7.5, 5.0), distance: 35.0, ..Default::default() };
+        let camera = torno_viewport::Camera { target: solidcore_record::Vec3::new(10.0, 7.5, 5.0), distance: 35.0, ..Default::default() };
         s.execute("render.settings.set",&json!({"name":"Shot","set":{"width":8,"height":8,"camera":camera,"job":{"method":"cpu_raytrace","options":{"progressive":{"samples_per_pixel":3,"seed":47},"area_samples":1,"seed":731,"output":{"linear_exr":true}}}}})).unwrap();
         s.execute("render.library.environment.apply", &json!({"id":"HDR-001","name":"Shot","samples":1})).unwrap();
         if id == "RIG-020" {
@@ -404,8 +404,8 @@ fn cpu_native_studio_cold_capture_matches_typed_source_every_prefix_and_raw_mast
             s.execute("render.preset.apply", &json!({"id":id,"name":"Shot","expected_revision":s.revision,"replace_lighting_and_environment":true}))
                 .unwrap();
         }
-        let bytes = solidcraft_io::write_design_container(&s.doc).unwrap();
-        s = Session::new(solidcraft_io::read_design(&bytes).unwrap());
+        let bytes = torno_io::write_design_container(&s.doc).unwrap();
+        s = Session::new(torno_io::read_design(&bytes).unwrap());
         s.execute("render.scene", &json!({})).unwrap();
         let setup = s.doc.render.setups["Shot"].clone();
         let Some(RenderJob::CpuRaytrace { options, transparent_background }) = &setup.job else { panic!() };

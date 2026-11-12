@@ -27,7 +27,7 @@ const CANCEL_GRACE: Duration = Duration::from_secs(5);
 
 /// Variables the agent doesn't inherit: a control token set for the app's own `--control` port
 /// would otherwise reach the agent and outrank the chat endpoint's own token file.
-const ENV_REMOVE: &[&str] = &["SOLIDCRAFT_CONTROL_TOKEN"];
+const ENV_REMOVE: &[&str] = &["TORNO_CONTROL_TOKEN"];
 
 pub struct AcpBackend {
     proc: AgentProcess,
@@ -211,7 +211,7 @@ impl AcpBackend {
             }
             Incoming::ModeChanged(_) | Incoming::ModelChanged(_) | Incoming::ConfigOptions { .. } => {}
             Incoming::Unsupported { rpc, method } => {
-                self.proc.send(&acp::reply_error(rpc, acp::METHOD_NOT_FOUND, &format!("SolidCraft does not serve `{method}`")));
+                self.proc.send(&acp::reply_error(rpc, acp::METHOD_NOT_FOUND, &format!("Torno does not serve `{method}`")));
             }
             Incoming::Ignored => {}
         }
@@ -248,7 +248,7 @@ impl AcpBackend {
         // Drain replies first: an acknowledgement already waiting must keep the connection.
         if self.cancelling.is_some_and(|(_, started)| now.saturating_duration_since(started) >= CANCEL_GRACE) {
             self.proc.shutdown(false);
-            out.push(self.finish_exit(vec![solidcraft_ui_text::tr("ui.agent_chat_cancel_timeout").to_string()]));
+            out.push(self.finish_exit(vec![torno_ui_text::tr("ui.agent_chat_cancel_timeout").to_string()]));
         }
         out
     }
@@ -359,9 +359,9 @@ pub fn test_agent(argv: &[String], cwd: &std::path::Path) -> Result<String, Test
                     }
                 }
                 Ok(FromAgent::Exited(tail)) => {
-                    return Err(TestError::Other(tail.last().cloned().unwrap_or_else(|| solidcraft_ui_text::tr("ui.agent_chat_exited").to_string())));
+                    return Err(TestError::Other(tail.last().cloned().unwrap_or_else(|| torno_ui_text::tr("ui.agent_chat_exited").to_string())));
                 }
-                Err(_) => return Err(TestError::Other(solidcraft_ui_text::tr("ui.ai_no_answer").to_string())),
+                Err(_) => return Err(TestError::Other(torno_ui_text::tr("ui.ai_no_answer").to_string())),
             }
         }
     };
@@ -372,7 +372,7 @@ pub fn test_agent(argv: &[String], cwd: &std::path::Path) -> Result<String, Test
         p.send(&acp::request(2, "session/new", acp::session_new_params(&session_cwd, None, &v, acp::SYSTEM_NOTE)));
         wait_for(&p, 2).map(|_| {
             let who = acp::agent_info(&v);
-            solidcraft_ui_text::format("ui.ai_test_acp_ok", &[("agent", if who.is_empty() { "?" } else { &who })])
+            torno_ui_text::format("ui.ai_test_acp_ok", &[("agent", if who.is_empty() { "?" } else { &who })])
         })
     });
     p.shutdown(true);

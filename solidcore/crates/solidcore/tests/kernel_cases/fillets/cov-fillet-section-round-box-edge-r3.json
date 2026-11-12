@@ -152,7 +152,7 @@
     "blend_dropping"
   ],
   "ungraded": [
-    "continuity: SolidCraft computes it"
+    "continuity: Torno computes it"
   ],
   "what": "a box's top back edge rounded r3: the ball's circle, tangent to each face with the curvature jumping by 1/3",
   "why_not": []

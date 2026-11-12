@@ -1,7 +1,7 @@
 //! Not upstream: removing a ring fillet (a round all the way round a boss's foot or rim)
 //! and closing the hole with the sharp edge where its two tangent faces meet.
 //!
-//! Port of the SolidCraft fork's `SmRingFilletRemoval` (tangency-labs/smlib 52bfef0,
+//! Port of the Torno fork's `SmRingFilletRemoval` (tangency-labs/smlib 52bfef0,
 //! `SmFilletRemoval.cpp` / `.h`, and `SmBrep::JoinShellsAtVertex`, `SmBrep.cpp`), as
 //! amended by 661f79c. WR-605; used by [`super::delete_fillet_face`] only with
 //! `Kernel::fixes.fillet_removal_takes_ring_fillets`.

@@ -284,7 +284,7 @@ pub fn offset_sheet(body: &Body, distance: f64) -> Result<()> {
     })?
 }
 
-/// The largest draft angle a draft takes, radians, not included (SolidCraft's: a turn short of
+/// The largest draft angle a draft takes, radians, not included (Torno's: a turn short of
 /// square to the pull, where a face's line on the neutral plane would carry it off to infinity).
 const MAX_DRAFT_ANGLE: f64 = 1.569_796_326_794_896_6;
 
@@ -294,7 +294,7 @@ const MAX_NEUTRAL_ORIGIN: f64 = 1e9;
 /// Marks each face of `picked` as moved, with the kernel's draft mark ([`ids::DRAFT_MOVED`]): the
 /// mark rides on the face, copied to what the kernel's local operation makes of it
 /// (`Behavior::Copy`), so a face the operation keeps or replaces still carries it. A merge keeping an unpicked face over a picked one hands that
-/// survivor the mark, as SolidCraft's marks do.
+/// survivor the mark, as Torno's marks do.
 fn mark_moved(b: &mut Brep, picked: &[FaceId]) -> solidcore::Result<()> {
     for &f in picked {
         b.add_attribute(

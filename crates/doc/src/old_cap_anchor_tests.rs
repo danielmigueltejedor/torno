@@ -1,5 +1,5 @@
 use crate::Document;
-use solidcraft_geom::prelude::*;
+use torno_geom::prelude::*;
 
 /// Sketch1 (a stadium) and Extrude1, Sketch2 on Extrude1's bottom cap and Extrude2 joined from it,
 /// then Sketch3 on the same cap, as 0.30.1 saved them (#13323): the attachments carry an

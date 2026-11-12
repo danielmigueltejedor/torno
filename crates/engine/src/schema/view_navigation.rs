@@ -6,7 +6,7 @@ use std::borrow::Cow;
 
 use super::check::whole;
 use solidcore_record::{Vec2, Vec3};
-use solidcraft_geom::Vec3Geom;
+use torno_geom::Vec3Geom;
 
 use super::types::{CameraParam, present};
 
@@ -129,7 +129,7 @@ pub struct NormalToParams {
 pub struct CameraReply {
     /// The camera now.
     #[schemars(with = "CameraParam")]
-    pub camera: solidcraft_viewport::Camera,
+    pub camera: torno_viewport::Camera,
     /// In the warn parameter-check mode: what the call's parameters got wrong.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub param_warnings: Vec<String>,
@@ -771,7 +771,7 @@ fn navigate_form(p: &serde_json::Map<String, Value>) -> Result<NavigateParams, s
 pub struct NavigateResult {
     /// The camera now.
     #[schemars(with = "CameraParam")]
-    pub camera: solidcraft_viewport::Camera,
+    pub camera: torno_viewport::Camera,
     /// Frame the whole model from the new direction.
     pub fit: bool,
     /// True for a `motion`; absent for a turn.

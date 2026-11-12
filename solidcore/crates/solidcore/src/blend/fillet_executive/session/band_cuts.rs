@@ -1,7 +1,7 @@
 //! Whether a convex blend would take all of the part between its rails somewhere along its
 //! edge, cutting it into pieces, and the largest size that keeps it whole.
 //!
-//! Upstream: not in SMLib at the pinned commit. SolidCraft's fork (tangency-labs/smlib#79,
+//! Upstream: not in SMLib at the pinned commit. Torno's fork (tangency-labs/smlib#79,
 //! merged at 5e8c9c1) adds `SmFilletSolver::BandCutsThePart` with `sm_EdgesCrossingPlane`
 //! and `sm_KeepsMaterialBehind` (`SmFilletSolver.cpp`, `SmFilletSolver.h`) in commits
 //! 862971f, e568e45 (the section intersected with every face, not sampled) and aac4288 (a
@@ -570,7 +570,7 @@ struct ThroughFaces {
 /// blend runs off its face (over a cliff, into a hole or an opening) and is trimmed to the
 /// faces it runs onto. Nor is a piece through a hole or an opening in a blended face: its
 /// walls bound that face. The construction builds both to their closed-form volumes
-/// (SolidCraft rig cases the fork builds). It builds a blind pocket or a cavity under a
+/// (Torno rig cases the fork builds). It builds a blind pocket or a cavity under a
 /// blended face wrong, and those are refused (WR-707 addendum, 2026-11-02).
 fn section_breaks_through(
     k: &Kernel,

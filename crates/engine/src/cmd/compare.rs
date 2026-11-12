@@ -1,15 +1,15 @@
 //! Compare Bodies: two versions of one part laid over each other. Both are measured, each
 //! surface's distance to the other is sampled, and the places where only one of them has
 //! material are found, measured and, on request, coloured. The places are found from the
-//! surfaces ([`solidcraft_geom::compare`]), so bodies that share almost every face compare as
+//! surfaces ([`torno_geom::compare`]), so bodies that share almost every face compare as
 //! well as any; each place's volume, centre and box are then measured exactly, on the pieces of
 //! the two cuts a − b and b − a that lie there, as `inspect.measure` measures a body.
 
 use serde_json::Value;
 use solidcore_record::Vec3;
-use solidcraft_geom::Aabb3;
-use solidcraft_geom::compare::{self, CompareOptions, Side};
-use solidcraft_geom::prelude::*;
+use torno_geom::Aabb3;
+use torno_geom::compare::{self, CompareOptions, Side};
+use torno_geom::prelude::*;
 
 use super::CommandSpec;
 use crate::params::bad;
@@ -61,7 +61,7 @@ fn number(cmd: &str, p: &Value, key: &str, default: f64, range: std::ops::RangeI
 }
 
 /// The two bodies: `a` and `b`, else the two selected bodies, else the design's only two.
-fn pair(s: &Session, st: &solidcraft_doc::ModelState, p: &Value, cmd: &str) -> Result<(String, String)> {
+fn pair(s: &Session, st: &torno_doc::ModelState, p: &Value, cmd: &str) -> Result<(String, String)> {
     let given = |k: &str| -> Result<Option<String>> {
         match p.get(k) {
             None | Some(Value::Null) => Ok(None),
@@ -133,14 +133,14 @@ fn difference(ma: &Value, mb: &Value) -> Difference {
 }
 
 /// The volume a closed mesh encloses (divergence theorem, about its box's centre).
-fn enclosed_volume(m: &solidcraft_geom::Mesh) -> f64 {
+fn enclosed_volume(m: &torno_geom::Mesh) -> f64 {
     let o = m.bounds().center();
     m.triangles.iter().filter_map(|t| m.tri(t)).map(|[a, b, c]| (a - o).dot((b - o).cross(c - o)) / 6.0).sum()
 }
 
 /// What makes the comparison less certain: a body whose surface does not enclose what it
 /// measures (open, or faces that failed).
-fn warnings(bodies: [(&str, &Value, &solidcraft_geom::Mesh); 2], chord: f64) -> Vec<String> {
+fn warnings(bodies: [(&str, &Value, &torno_geom::Mesh); 2], chord: f64) -> Vec<String> {
     let mut out = Vec::new();
     for (name, measure, mesh) in bodies {
         let (Some(v), area) = (measure["volume_mm3"].as_f64(), measure["area_mm2"].as_f64().unwrap_or(0.0)) else { continue };
@@ -165,14 +165,14 @@ struct Measured {
 
 /// The pieces of `from` − `tool`, the material only `from` has, each measured as
 /// `inspect.measure` measures a body (none when `tool` takes all of it).
-fn cut_pieces(from: &solidcraft_kernel::Body, tool: &solidcraft_kernel::Body) -> std::result::Result<Vec<Measured>, String> {
-    let rest = solidcraft_kernel::boolean(from, tool, solidcraft_kernel::BoolOp::Cut).map_err(|e| e.to_string())?;
+fn cut_pieces(from: &torno_kernel::Body, tool: &torno_kernel::Body) -> std::result::Result<Vec<Measured>, String> {
+    let rest = torno_kernel::boolean(from, tool, torno_kernel::BoolOp::Cut).map_err(|e| e.to_string())?;
     let Some(rest) = rest else { return Ok(Vec::new()) };
     rest.lumps()
         .map_err(|e| e.to_string())?
         .iter()
         .map(|piece| {
-            let m = solidcraft_kernel::measure_mass(piece).map_err(|e| e.to_string())?;
+            let m = torno_kernel::measure_mass(piece).map_err(|e| e.to_string())?;
             Ok(Measured { volume: m.volume, center: m.centroid, bbox: m.bbox })
         })
         .collect()
@@ -195,15 +195,10 @@ fn overlap(piece: &Aabb3, region: &Aabb3, pad: f64) -> f64 {
 /// most of it, summed. A piece by no region is thinner than the tolerance or in a region not
 /// listed. `None` for a region whose cut could not be made or that no piece fell to; the second
 /// value says why, once per side.
-fn exact_regions(
-    a: &solidcraft_kernel::Body,
-    b: &solidcraft_kernel::Body,
-    c: &compare::Comparison,
-    pad: f64,
-) -> (Vec<Option<Measured>>, Vec<String>) {
+fn exact_regions(a: &torno_kernel::Body, b: &torno_kernel::Body, c: &compare::Comparison, pad: f64) -> (Vec<Option<Measured>>, Vec<String>) {
     let sides = [Side::OnlyInA, Side::OnlyInB];
     let wanted: Vec<Side> = sides.into_iter().filter(|side| c.regions.iter().any(|r| r.side == *side)).collect();
-    let cuts = solidcraft_kernel::map_on_threads(&wanted, 2, |side| match side {
+    let cuts = torno_kernel::map_on_threads(&wanted, 2, |side| match side {
         Side::OnlyInA => cut_pieces(a, b),
         Side::OnlyInB => cut_pieces(b, a),
     });
@@ -272,12 +267,11 @@ fn compare_bodies(s: &mut Session, p: &Value) -> Result<Value> {
     // Meshed within a quarter of the tolerance (the kernel goes no finer than a millionth of a
     // body's size), so two meshes of one surface agree well within it.
     let chord = tolerance / 4.0;
-    let mut done = solidcraft_kernel::map_on_threads(&[ba, bb], 2, |b| {
-        (super::inspect::measure_json(b), b.body.mesh(&solidcraft_kernel::MeshTolerance::chord(chord)))
-    })
-    .into_iter()
-    .zip([&na, &nb]);
-    let mut next = || -> Result<(Value, solidcraft_geom::Mesh)> {
+    let mut done =
+        torno_kernel::map_on_threads(&[ba, bb], 2, |b| (super::inspect::measure_json(b), b.body.mesh(&torno_kernel::MeshTolerance::chord(chord))))
+            .into_iter()
+            .zip([&na, &nb]);
+    let mut next = || -> Result<(Value, torno_geom::Mesh)> {
         let Some((r, name)) = done.next() else { return Err(bad(cmd, "no such body")) };
         let (m, mesh) = r.ok_or_else(|| bad(cmd, format!("`{name}`: measuring it failed")))?;
         let mesh = mesh.map_err(|e| bad(cmd, format!("`{name}`: {e}")))?;
@@ -290,7 +284,7 @@ fn compare_bodies(s: &mut Session, p: &Value) -> Result<Value> {
     let options = CompareOptions { tolerance, spacing, max_points, max_regions, ..CompareOptions::default() };
     let each = |n: usize, job: &(dyn Fn(usize) + Sync)| {
         let jobs: Vec<usize> = (0..n).collect();
-        solidcraft_kernel::for_each_on_threads(&jobs, 16, |i| job(*i));
+        torno_kernel::for_each_on_threads(&jobs, 16, |i| job(*i));
     };
     let c = compare::compare(&mesh_a, &mesh_b, &options, &each);
     // The regions' exact volumes, from the cuts of two bodies that enclose volumes.
@@ -423,12 +417,11 @@ fn faces_to_color(c: &compare::Comparison, r: &compare::Region) -> Vec<(usize, u
 /// Give the faces holding each region the colour of its side (a face holding several takes the
 /// largest one's); returns how many face appearances were set.
 fn color_regions(s: &mut Session, c: &compare::Comparison, names: [&String; 2], colors: [[u8; 3]; 2]) -> Result<usize> {
-    use solidcraft_doc::appearance::{FaceLook, Look};
+    use torno_doc::appearance::{FaceLook, Look};
     let st = s.model.state();
     // Where each face of the two bodies is, as the design file names and finds it. A body placed
     // by an occurrence is coloured where it is defined, if at all.
-    let found: Vec<_> =
-        names.iter().map(|n| st.body(n).map(|b| (solidcraft_doc::naming::face_spots(b), solidcraft_doc::naming::face_names(b)))).collect();
+    let found: Vec<_> = names.iter().map(|n| st.body(n).map(|b| (torno_doc::naming::face_spots(b), torno_doc::naming::face_names(b)))).collect();
     let mut picks: Vec<(String, Vec3, Option<String>, Look)> = Vec::new();
     // Smallest region first, so the largest one's colour is the one that stays.
     for r in c.regions.iter().rev() {

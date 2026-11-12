@@ -1,4 +1,4 @@
-//! WR-602 (the SolidCraft fork's tangency-labs/smlib@cac11ea): with the fork's keep
+//! WR-602 (the Torno fork's tangency-labs/smlib@cac11ea): with the fork's keep
 //! (`Kernel::fixes.fillet_cleanup_keeps_target_faces`), `DoFilleting`'s
 //! `BooleanPostProcess` leaves every edge of the fillet's input, and every edge between two
 //! of its faces, alone. Where a round takes away the face on one side of a target edge,

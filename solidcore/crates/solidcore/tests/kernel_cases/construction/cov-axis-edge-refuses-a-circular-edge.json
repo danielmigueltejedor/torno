@@ -32,6 +32,6 @@
   "ungraded": [],
   "what": "an axis on a circular edge, which is not straight",
   "why_not": [
-    "the failure is SolidCraft's, not a kernel operation's: step 2 (construct.axis.edge): the edge is not straight"
+    "the failure is Torno's, not a kernel operation's: step 2 (construct.axis.edge): the edge is not straight"
   ]
 }

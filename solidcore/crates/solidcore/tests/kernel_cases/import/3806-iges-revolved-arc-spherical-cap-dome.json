@@ -61,6 +61,6 @@
   "ungraded": [],
   "what": "a dome: an IGES surface of revolution (120) of a 60-to-90 degree circular arc (100) of radius 50 centred on the axis, trimmed by a circle at the rim, over a flat base disc; the cap must be 50 mm across and 6.7 mm tall, not a whole sphere",
   "why_not": [
-    "body \"Body1\" is no kernel operation's output nor an operand: SolidCraft built it or changed the kernel's record"
+    "body \"Body1\" is no kernel operation's output nor an operand: Torno built it or changed the kernel's record"
   ]
 }

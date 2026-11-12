@@ -63,7 +63,7 @@
     "extrude"
   ],
   "ungraded": [
-    "results: SolidCraft computes it"
+    "results: Torno computes it"
   ],
   "what": "timeline.compute_all after the block is deleted: the round and the cut fail",
   "why_not": [

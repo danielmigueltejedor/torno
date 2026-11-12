@@ -1,6 +1,6 @@
 //! Regression test for WR-342 (tangency-labs/solidcore#974, the fork's commit "an inset
 //! face that does not fit its offset surface's domain is clipped right side out";
-//! SolidCraft rig shell/4567): a vase whose profile meets the axis at a slant, shelled
+//! Torno rig shell/4567): a vase whose profile meets the axis at a slant, shelled
 //! 2 mm inward and open at the top.
 //!
 //! The vase is a full turn of the profile (0, 0) - (15, 5) - (15, 30) - (0, 30) in the

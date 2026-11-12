@@ -2,12 +2,12 @@
 //! library; recalling a preset only edits the open dialog, never the document.
 
 use serde::{Deserialize, Serialize, de};
-use solidcraft_engine::doc::{DocError, Document, expr};
 use std::collections::BTreeMap;
+use torno_engine::doc::{DocError, Document, expr};
 
 use crate::dialogs::{Dialog, Kind};
 use crate::ui_kit::{self, Button, Text};
-use solidcraft_ui_text::tr;
+use torno_ui_text::tr;
 
 const MAX_PRESETS: usize = 64;
 const MAX_NAME: usize = 96;
@@ -204,7 +204,7 @@ impl Preset {
             thread: opts.thread.clone(),
             thread_options: if opts.tapped {
                 ThreadOptions {
-                    handedness: if opts.hand == solidcraft_engine::doc::thread_forms::ThreadHand::Left { "left".into() } else { "right".into() },
+                    handedness: if opts.hand == torno_engine::doc::thread_forms::ThreadHand::Left { "left".into() } else { "right".into() },
                     full_length: opts.thread_full_depth,
                     depth: if opts.thread_full_depth { None } else { Some(portable_length(&opts.thread_depth, true)?) },
                     modeled: opts.modeled,
@@ -257,10 +257,10 @@ impl Preset {
             || (!self.tapped && !length(&self.diameter))
             || (self.extent == Extent::Distance && !length(&self.depth))
             || (self.extent != Extent::All && (self.angled_bottom || self.style == Style::Drilled) && !angle(&self.tip_angle))
-            || (self.tapped && solidcraft_engine::doc::parse_tapped_thread(&self.thread).is_none())
+            || (self.tapped && torno_engine::doc::parse_tapped_thread(&self.thread).is_none())
             || self.thread_options.ease_out.as_deref().is_some_and(|text| !named_runout(text) && !length(text))
             || self.thread_options.drill.as_deref().is_some_and(|text| {
-                !solidcraft_engine::doc::parse_tapped_thread(&self.thread)
+                !torno_engine::doc::parse_tapped_thread(&self.thread)
                     .is_some_and(|t| doc.eval(text, expr::Kind::Length).is_ok_and(|v| t.check_drill(v).is_ok()))
             })
             || (self.tapped && !self.thread_options.full_length && self.thread_options.depth.as_deref().is_none_or(|text| !length(text)))
@@ -298,9 +298,9 @@ impl Preset {
         opts.custom_thread = None;
         opts.thread_full_depth = self.thread_options.full_length;
         opts.hand = if self.thread_options.handedness == "left" {
-            solidcraft_engine::doc::thread_forms::ThreadHand::Left
+            torno_engine::doc::thread_forms::ThreadHand::Left
         } else {
-            solidcraft_engine::doc::thread_forms::ThreadHand::Right
+            torno_engine::doc::thread_forms::ThreadHand::Right
         };
         opts.thread_depth = self.thread_options.depth.clone().unwrap_or_else(|| crate::dialogs::HoleOpts::default().thread_depth);
         opts.modeled = self.thread_options.modeled;
@@ -537,7 +537,7 @@ pub(crate) fn name_prompt(ctx: &egui::Context, d: &mut Dialog, library: &mut Lib
     let Some(mut prompt) = state.prompt.take() else { return false };
     let title = tr(if prompt.renaming { "hole_presets.rename" } else { "hole_presets.save" });
     let (closed, action) = ui_kit::Confirm::new(egui::Id::unique("personal_hole_preset_name"), "save", title)
-        .actions(if prompt.renaming { tr("hole_presets.rename") } else { solidcraft_ui_text::tr_label("Save") }, "Cancel", None)
+        .actions(if prompt.renaming { tr("hole_presets.rename") } else { torno_ui_text::tr_label("Save") }, "Cancel", None)
         .show(ctx, true, |ui| {
             ui_kit::row(ui, "hole_presets.name", |ui| ui_kit::focused_text_field(ui, &mut prompt.name, tr("hole_presets.name_hint")));
             // Retain over-limit names for a clear validation error, but bound UI storage too.
@@ -598,7 +598,7 @@ mod tests {
     #[test]
     fn hole_presets_round_trip_modelled_taper_threads_and_their_ends() {
         use crate::dialogs_thread::Ease;
-        use solidcraft_engine::doc::thread_forms::ThreadHand;
+        use torno_engine::doc::thread_forms::ThreadHand;
         let harness = crate::scenario::Harness::new();
         let doc = Document::default();
         for (thread, modeled, ease, saved) in [

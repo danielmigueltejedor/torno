@@ -1,17 +1,17 @@
 //! A multi-section blend: one B-spline surface through ordered cross-sections that leaves the
 //! first and the last of them with the continuity their frames ask for.
 //!
-//! Upstream: none (not in SMLib). SolidCraft's `loft_blend` (`crates/kernel/src/loft_blend.rs`
+//! Upstream: none (not in SMLib). Torno's `loft_blend` (`crates/kernel/src/loft_blend.rs`
 //! at 52afe21) and the Hermite rows of its `bridge::section`, moved into the kernel so no
 //! application builds the surface.
 //!
 //! | Rust               | Upstream |
 //! |--------------------|----------|
-//! | [`section_blend`]  | (none; SolidCraft's `loft_blend`) |
-//! | [`SectionFrame`]   | (none; SolidCraft's `bridge::Frame`) |
-//! | [`EndOrder`]       | (none; SolidCraft's `Continuity`) |
-//! | `end_rows` (crate) | (none; the rows of SolidCraft's `bridge::section`) |
-//! | `third_derivative` (crate) | (none; SolidCraft's `bridge::third_derivative`) |
+//! | [`section_blend`]  | (none; Torno's `loft_blend`) |
+//! | [`SectionFrame`]   | (none; Torno's `bridge::Frame`) |
+//! | [`EndOrder`]       | (none; Torno's `Continuity`) |
+//! | `end_rows` (crate) | (none; the rows of Torno's `bridge::section`) |
+//! | `third_derivative` (crate) | (none; Torno's `bridge::third_derivative`) |
 //! | [`SectionBlendDefinition`], [`section_blend_surface`] | (none; the face's definition kept, #3140) |
 //!
 //! **The surface.** The sections run along u, each sampled at the same stations along v. Section
@@ -26,7 +26,7 @@
 //! degree-elevated exactly (by its own row elevation: the rows are vectors of points before any
 //! surface exists, so the kernel's surface and single-curve elevations do not fit them).
 //!
-//! **What each section holds (the definition, SolidCraft's).**
+//! **What each section holds (the definition, Torno's).**
 //! - The first and the last section hold what their [`EndOrder`] asks (G0 to G3) from the
 //!   caller's frames: the tangent `leave * speed`, the curvature `bend * speed^2` and the change
 //!   of curvature from `bend_change` (`third_derivative`: only its part square to the tangent
@@ -41,7 +41,7 @@
 //!   reach. So the joint is C3 in u with four or more sections and C2 with three, at every
 //!   station.
 //!
-//! This is SolidCraft's definition of the blend, not an approximation of another surface: the
+//! This is Torno's definition of the blend, not an approximation of another surface: the
 //! finite differences are the conditions the surface is built to, not estimates of a curve the
 //! sections lie on, and no error against anything is claimed. What is exact: the surface passes
 //! through every station; at every station of an end it holds the frames' conditions to rounding;
@@ -61,7 +61,7 @@
 //! never replaced by a default direction. Two neighbouring sections meeting at a station
 //! (distance not positive) leave the span there no room: a speed of zero, and no tangent to
 //! divide by at the next section; the blend is refused, never nudged apart. Both are exact tests,
-//! not SolidCraft's `1e-12` and `1e-9` floors: a chord of `1e-12` is not refused, its speed is
+//! not Torno's `1e-12` and `1e-9` floors: a chord of `1e-12` is not refused, its speed is
 //! about `1e-12` and the end rows collapse onto the section, a valid but degenerate surface.
 //!
 //! **The definition kept** ([`SectionBlendDefinition`]): the sections, the end orders and crowns,
@@ -69,7 +69,7 @@
 //! them with each motion applied by [`BSplineSurface::transform`], bit for bit, so a re-certified
 //! net is the rebuilt one exactly (bound 0), in any orientation of its parameter square.
 //!
-//! Deviations: no upstream counterpart. SolidCraft's `1e-12` floor on a tangent's length and its
+//! Deviations: no upstream counterpart. Torno's `1e-12` floor on a tangent's length and its
 //! `1e-9` floor on the distance between neighbouring sections are exact tests here (a length that
 //! is not positive): what the floors protect is the division, and an exact test protects it
 //! without a scale-dependent constant. Its one-sided third difference at the last-but-one section
@@ -208,7 +208,7 @@ pub(crate) fn end_rows(
 /// The third derivative a curve needs at an end so that the arc-length derivative of its
 /// curvature vector is `target`, from its first two derivatives `d1`, `d2` there: only its part
 /// square to the tangent holds the condition, the rest is a reparametrisation and is left zero
-/// (SolidCraft's `bridge::third_derivative`).
+/// (Torno's `bridge::third_derivative`).
 ///
 /// # Errors
 /// `InvalidInput` for a tangent of no length or a result that is not finite.
@@ -413,7 +413,7 @@ pub fn section_blend(
                             (point(i + 2, s)? - point(i + 1, s)? * 3.0 + here * 3.0 - before)
                                 * (1.0 / cube)
                         }
-                        // (the backward stencil f(i+1) - 3 f(i) + 3 f(i-1) - f(i-2): SolidCraft's
+                        // (the backward stencil f(i+1) - 3 f(i) + 3 f(i-1) - f(i-2): Torno's
                         // has its sign turned, see Deviations)
                         (Some(k), false) => {
                             (after - here * 3.0 + before * 3.0 - point(k, s)?) * (1.0 / cube)

@@ -4,8 +4,8 @@ use crate::test_support::sample_app;
 use egui::pos2;
 use serde_json::json;
 use solidcore_record::Vec3;
-use solidcraft_engine::Session;
-use solidcraft_engine::geom::prelude::*;
+use torno_engine::Session;
+use torno_engine::geom::prelude::*;
 
 use crate::context_menu::{self, Target};
 use crate::ui_kit::Item;
@@ -118,7 +118,7 @@ fn appearance_browser_action_targets_the_clicked_body() {
     act(&mut app, &Target::Body { name: b.clone() }, "Appearance");
     let dialog = app.dialog.as_ref().unwrap();
     assert!(matches!(dialog.kind, crate::dialogs::Kind::Appearance(_)));
-    assert_eq!(dialog.inputs[0].items, vec![solidcraft_engine::Sel::Body { name: b }]);
+    assert_eq!(dialog.inputs[0].items, vec![torno_engine::Sel::Body { name: b }]);
 }
 
 #[test]
@@ -217,7 +217,7 @@ fn right_click_on_a_face_of_a_selected_body_keeps_the_bodies() {
     let first = body(&app);
     app.run("solid.box", json!({"length": 5, "width": 5, "height": 5, "corner": [200, 0, 0]})).unwrap();
     let second = app.session.model.state().bodies.iter().map(|b| b.name.clone()).find(|n| *n != first).expect("a second body");
-    let both = vec![solidcraft_engine::Sel::Body { name: first.clone() }, solidcraft_engine::Sel::Body { name: second.clone() }];
+    let both = vec![torno_engine::Sel::Body { name: first.clone() }, torno_engine::Sel::Body { name: second.clone() }];
     app.run("select.set", json!({"items": [{"type": "body", "name": first}, {"type": "body", "name": second}]})).unwrap();
     // A face of the first body: both bodies stay selected, and the menu stays the bodies' menu.
     app.viewport.hover = Some(Hit::Face { body: first.clone(), index: 0, point: Vec3::new(9.0, 9.0, 9.0) });
@@ -233,7 +233,7 @@ fn right_click_on_a_face_of_a_selected_body_keeps_the_bodies() {
     app.viewport.hover = Some(Hit::Face { body: second, index: 0, point: Vec3::new(9.0, 9.0, 9.0) });
     context_menu::open(&mut app, pos2(400.0, 300.0), Default::default());
     assert!(
-        matches!(app.session.selection.as_slice(), [solidcraft_engine::Sel::Face { .. }]),
+        matches!(app.session.selection.as_slice(), [torno_engine::Sel::Face { .. }]),
         "a face of an unselected body is picked: {:?}",
         app.session.selection
     );
@@ -250,7 +250,7 @@ fn face_menu_hides_and_finds_the_body() {
     }
     assert!(find(&items, "Appearance").enabled);
     context_menu::run_item(&mut app, &find(&items, "Find in Timeline"), pos2(0.0, 0.0));
-    assert!(matches!(app.session.selection.as_slice(), [solidcraft_engine::Sel::Feature { .. }]));
+    assert!(matches!(app.session.selection.as_slice(), [torno_engine::Sel::Feature { .. }]));
     context_menu::run_item(&mut app, &find(&items, "Show/Hide"), pos2(0.0, 0.0));
     assert_eq!(app.session.visibility.hidden_bodies, vec![b]);
 }
@@ -262,7 +262,7 @@ fn face_menu_lists_only_what_acts_on_the_faces() {
     let mut app = SolveApp::new(Session::default(), Services::default());
     app.run("solid.box", json!({"length":40,"width":30,"height":20,"body_name":"Plate"})).unwrap();
     app.run("solid.hole", json!({"position":[20,15,20],"diameter":8})).unwrap();
-    let count = app.session.world_state().unwrap().body("Plate").map(|b| solidcraft_engine::doc::naming::face_names(b).len()).unwrap_or(0);
+    let count = app.session.world_state().unwrap().body("Plate").map(|b| torno_engine::doc::naming::face_names(b).len()).unwrap_or(0);
     let planar = |app: &SolveApp, i: usize| crate::dialogs::planar_face(&app.session, "Plate", i).is_some();
     let flat: Vec<usize> = (0..count).filter(|&i| planar(&app, i)).collect();
     let curved = (0..count).find(|&i| !planar(&app, i)).expect("the hole has a curved wall");
@@ -382,7 +382,7 @@ fn sketch_menu_replaces_a_sketch_with_another_sketchs_contents() {
     assert_eq!(app.session.doc.sketch(small).unwrap().curves.len(), 1, "the circle took the square's place");
     assert_eq!(app.session.doc.find_feature("Small").map(|f| f.id), Some(small));
 
-    let dir = std::env::temp_dir().join(format!("solidcraft-menu-replace-sketch-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("torno-menu-replace-sketch-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
     let path = dir.join("Other.sc").to_string_lossy().to_string();
     let mut other = Session::default();
@@ -453,7 +453,7 @@ fn a_selected_arc_offers_an_arc_length_dimension() {
     let st = app.session.model.state();
     let ss = st.sketch(app.session.active_sketch.unwrap()).unwrap();
     let len = ss.sketch.constraints.iter().find_map(|c| match c.kind {
-        solidcraft_engine::sketch::ConstraintKind::ArcLength { value, .. } => Some(value),
+        torno_engine::sketch::ConstraintKind::ArcLength { value, .. } => Some(value),
         _ => None,
     });
     // A quarter of a circle of radius 10.
@@ -506,7 +506,7 @@ fn sketch_dimension_menu_deletes_only_the_dimension_and_supports_undo() {
             h.step(&json!({"click":{"dimension":id}})).unwrap();
         }
         h.step(&json!({"click":{"dimension":id},"button":"right"})).unwrap();
-        assert_eq!(h.app.session.selection, vec![solidcraft_engine::Sel::SketchConstraint { id: id.to_owned() }]);
+        assert_eq!(h.app.session.selection, vec![torno_engine::Sel::SketchConstraint { id: id.to_owned() }]);
         let menu = h.call("ui.menu", json!({}));
         assert!(menu["result"]["items"].as_array().unwrap().iter().any(|i| i["id"] == "ui.delete" && i["enabled"] == true), "{menu}");
         assert_eq!(h.call("ui.menuPick", json!({"item":"ui.delete"}))["ok"], true);
@@ -548,7 +548,7 @@ fn sketch_constraint_menu_keeps_the_selection_and_respects_pick_filters() {
     // A non-dimensional constraint can be deleted too. Right-clicking a dimension already
     // in a multi-selection retains all the selected constraints for the same Delete action.
     for ids in [vec![horizontal.clone()], vec![horizontal.clone(), id.to_owned()]] {
-        let selection: Vec<_> = ids.iter().map(|id| solidcraft_engine::Sel::SketchConstraint { id: id.clone() }).collect();
+        let selection: Vec<_> = ids.iter().map(|id| torno_engine::Sel::SketchConstraint { id: id.clone() }).collect();
         h.app.session.selection = selection.clone();
         if ids.len() > 1 {
             h.step(&json!({"click":{"dimension":id},"button":"right"})).unwrap();
@@ -595,7 +595,7 @@ fn component_menu_activates_grounds_and_pastes() {
     // Paste New pastes an independent copy of the copied component into another one (here the
     // design): it is off until a component is copied, and never into itself.
     let placement = Target::Occurrence { path: app.session.doc.first_path(c) };
-    app.session.selection = vec![solidcraft_engine::Sel::Occurrence { path: app.session.doc.first_path(c) }];
+    app.session.selection = vec![torno_engine::Sel::Occurrence { path: app.session.doc.first_path(c) }];
     act(&mut app, &placement, "Copy");
     assert_eq!(app.copied_placements.len(), 1, "{:?}", app.status);
     let design = Target::Component { id: 0 };
@@ -648,7 +648,7 @@ fn move_shortcut_respects_grounding_and_keeps_body_selection_as_a_body_move() {
     assert!(app.tree.occurrence_move.is_none(), "a body selection still edits geometry");
     let dialog = app.dialog.as_ref().expect("body Move opens");
     assert!(matches!(dialog.kind, crate::dialogs::Kind::Move { .. }));
-    assert_eq!(dialog.inputs[0].items, vec![solidcraft_engine::Sel::Body { name: "Body1".into() }]);
+    assert_eq!(dialog.inputs[0].items, vec![torno_engine::Sel::Body { name: "Body1".into() }]);
 }
 
 #[test]
@@ -762,7 +762,7 @@ fn expand_and_collapse_all_open_the_browser_tree_from_the_design_menu() {
 
 #[test]
 fn delete_key_handles_every_kind_and_asks_about_dependents() {
-    use solidcraft_engine::Sel;
+    use torno_engine::Sel;
     let mut app = sample_app();
     app.run("construct.plane.offset", json!({"base": "XY", "offset": 10})).unwrap();
     app.run("solid.box", json!({"length": 5, "width": 5, "height": 5, "corner": [200, 0, 0]})).unwrap();
@@ -828,7 +828,7 @@ fn browser_feature_menu_deletes_its_target_and_supports_undo() {
     let keep = app.session.doc.features[0].id;
     let target = app.session.doc.features[1].id;
     // A Browser context menu acts on its row, even when another feature is selected.
-    app.session.selection = vec![solidcraft_engine::Sel::Feature { id: keep }];
+    app.session.selection = vec![torno_engine::Sel::Feature { id: keep }];
     let saved = app.session.doc.to_json();
     let undo = app.session.undo.len();
     act(&mut app, &Target::Feature { id: target }, "Delete");
@@ -855,7 +855,7 @@ fn browser_feature_menu_renames_its_target_and_supports_undo() {
     let target = app.session.doc.features[1].id;
     let keep_name = app.session.doc.feature(keep).unwrap().name.clone();
     let target_name = app.session.doc.feature(target).unwrap().name.clone();
-    app.session.selection = vec![solidcraft_engine::Sel::Feature { id: keep }];
+    app.session.selection = vec![torno_engine::Sel::Feature { id: keep }];
     let saved = app.session.doc.to_json();
     let undo = app.session.undo.len();
     act(&mut app, &Target::Feature { id: target }, "Rename");
@@ -899,7 +899,7 @@ fn browser_feature_menu_confirms_dependent_changes_before_deleting() {
 fn menu_delete_items_use_the_same_path() {
     let mut app = sample_app();
     let b = body(&app);
-    let original_volume = solidcraft_engine::kernel::measure(&app.session.world_state().unwrap().body(&b).unwrap().body).unwrap().volume;
+    let original_volume = torno_engine::kernel::measure(&app.session.world_state().unwrap().body(&b).unwrap().body).unwrap().volume;
     let created = app.run("component.from_bodies", json!({"bodies": [b]})).unwrap();
     let c = app.session.doc.components[0].id;
     let transfer = created["components"][0]["feature"].as_u64().unwrap();
@@ -918,14 +918,14 @@ fn menu_delete_items_use_the_same_path() {
     assert_eq!(restored.bodies.len(), 1, "the original joined plate stays intact");
     let plate = restored.body(&b).unwrap();
     assert_eq!(plate.component, 0);
-    assert!((solidcraft_engine::kernel::measure(&plate.body).unwrap().volume - original_volume).abs() < 1e-6);
+    assert!((torno_engine::kernel::measure(&plate.body).unwrap().volume - original_volume).abs() < 1e-6);
     assert!(plate.mesh().contains(solidcore_record::Vec3::new(40.0, 35.0, 12.0)));
-    let mut reopened = solidcraft_engine::Session::new(solidcraft_engine::doc::Document::from_json(&app.session.doc.to_json()).unwrap());
+    let mut reopened = torno_engine::Session::new(torno_engine::doc::Document::from_json(&app.session.doc.to_json()).unwrap());
     reopened.refresh();
     let reopened_state = reopened.world_state().unwrap();
     assert_eq!(reopened_state.bodies.len(), 1);
     assert_eq!(reopened_state.body(&b).unwrap().component, 0);
-    assert!((solidcraft_engine::kernel::measure(&reopened_state.body(&b).unwrap().body).unwrap().volume - original_volume).abs() < 1e-6);
+    assert!((torno_engine::kernel::measure(&reopened_state.body(&b).unwrap().body).unwrap().volume - original_volume).abs() < 1e-6);
     // A sketch from the browser: asks, since its features go too.
     let id = app.session.doc.features.iter().find(|f| f.name == "Base").unwrap().id;
     act(&mut app, &Target::Sketch { id }, "Delete");
@@ -939,7 +939,7 @@ fn canvas_menu_hides_renames_calibrates_and_deletes() {
     png.extend(400u32.to_be_bytes());
     png.extend(200u32.to_be_bytes());
     png.extend([8, 6, 0, 0, 0, 0, 0, 0, 0]);
-    let data = solidcraft_engine::doc::canvas::base64_encode(&png);
+    let data = torno_engine::doc::canvas::base64_encode(&png);
     let id = app.run("canvas.insert", json!({"data": data, "plane": "XY", "width": 80})).unwrap()["canvas"].as_u64().unwrap();
     let t = Target::Canvas { id };
     act(&mut app, &t, "Show/Hide");
@@ -963,7 +963,7 @@ fn canvas_menu_hides_renames_calibrates_and_deletes() {
     let items = context_menu::items(&app, &t);
     for label in ["Edit Canvas", "Calibrate", "Straighten", "Delete"] {
         let item = find(&items, label);
-        assert!(!item.enabled && item.tip.as_deref() == Some(solidcraft_ui_text::tr("browser.canvas_locked")), "{label}: {item:?}");
+        assert!(!item.enabled && item.tip.as_deref() == Some(torno_ui_text::tr("browser.canvas_locked")), "{label}: {item:?}");
     }
     assert!(find(&items, "Show/Hide").enabled && find(&items, "Rename").enabled);
     app.tree.picked_canvases = vec![id];
@@ -1060,7 +1060,7 @@ fn v_on_a_selected_profile_toggles_its_sketch() {
     let mut app = sample_app();
     let sk = app.session.doc.features.iter().find(|f| f.name == "Base").unwrap().id;
     crate::browser::set_sketch_visible(&mut app, sk, true);
-    app.session.selection = vec![solidcraft_engine::Sel::Profile { sketch: sk, index: 0 }];
+    app.session.selection = vec![torno_engine::Sel::Profile { sketch: sk, index: 0 }];
     context_menu::toggle_visibility(&mut app);
     assert!(!crate::browser::sketch_visible(&app, sk), "V on a picked profile hides its sketch");
     context_menu::toggle_visibility(&mut app);
@@ -1142,7 +1142,7 @@ fn named_views_save_restore_rename_and_delete() {
     act(&mut app, &Target::NamedViews, "New Named View");
     assert_eq!(app.session.doc.named_views.len(), 1);
     let saved = app.cam;
-    app.cam.set_view(solidcraft_viewport::StandardView::Top);
+    app.cam.set_view(torno_viewport::StandardView::Top);
     let t = Target::NamedView { name: "Named View1".into() };
     act(&mut app, &t, "Restore");
     assert_eq!(app.cam_anim.map(|a| a.to), Some(saved), "animates back to the saved camera");
@@ -1190,7 +1190,7 @@ fn an_uncaptured_move_asks_before_the_next_command() {
     crate::browser::answer_capture(&mut app, "revert").unwrap();
     assert!(app.session.pending_moves.is_empty());
     assert!(app.dialog.is_some(), "Create Sketch started");
-    assert_eq!(app.session.doc.occurrences[0].transform, solidcraft_engine::doc::IDENTITY);
+    assert_eq!(app.session.doc.occurrences[0].transform, torno_engine::doc::IDENTITY);
     // Capture keeps the move.
     app.dialog = None;
     app.run("occurrence.move", json!({"occurrence": occ, "translate": [10, 0, 0], "capture": false})).unwrap();
@@ -1206,7 +1206,7 @@ fn an_uncaptured_move_asks_before_the_next_command() {
 /// the same question first.
 #[test]
 fn closing_with_an_uncaptured_move_asks_to_save_and_to_capture() {
-    let dir = std::env::temp_dir().join(format!("solidcraft-close-pending-move-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("torno-close-pending-move-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
     let path = dir.join("two.sc");
     let mut app = sample_app();
@@ -1239,7 +1239,7 @@ fn closing_with_an_uncaptured_move_asks_to_save_and_to_capture() {
     crate::browser::answer_capture(&mut app, "capture").unwrap();
     crate::save_job::tick(&mut app, true);
     assert!(app.docs.closing.is_none() && app.session.path.is_none(), "saved and closed: a blank design is left");
-    let saved = solidcraft_engine::io::read_design(&std::fs::read(&path).unwrap()).unwrap();
+    let saved = torno_engine::io::read_design(&std::fs::read(&path).unwrap()).unwrap();
     assert_eq!(saved.occurrences[0].transform[3][0], 10.0, "the file holds the move");
     let _ = std::fs::remove_dir_all(&dir);
 }
@@ -1277,7 +1277,7 @@ fn rename_shows_f2_and_f2_with_a_menu_open_renames_what_the_menu_is_for() {
     png.extend(400u32.to_be_bytes());
     png.extend(200u32.to_be_bytes());
     png.extend([8, 6, 0, 0, 0, 0, 0, 0, 0]);
-    let data = solidcraft_engine::doc::canvas::base64_encode(&png);
+    let data = torno_engine::doc::canvas::base64_encode(&png);
     let canvas = h.app.run("canvas.insert", json!({"data": data, "plane": "XY", "width": 80})).unwrap()["canvas"].as_u64().unwrap();
     let rename_key = |app: &SolveApp, target: &Target| {
         context_menu::entries(app, target)
@@ -1299,7 +1299,7 @@ fn rename_shows_f2_and_f2_with_a_menu_open_renames_what_the_menu_is_for() {
         assert_eq!(rename_key(&h.app, &target), "F2", "Rename shows F2: {target:?}");
     }
     assert_eq!(rename_key(&h.app, &Target::NamedView { name: "Top".into() }), "", "F2 does not rename a saved view");
-    let sample = solidcraft_engine::sample::samples().into_iter().find(|s| s.name == "Hinge Assembly").unwrap();
+    let sample = torno_engine::sample::samples().into_iter().find(|s| s.name == "Hinge Assembly").unwrap();
     let mut assembly = SolveApp::new(Session::default(), Services::default());
     assembly.session.run_script(&(sample.script)()).unwrap();
     let joint = assembly.session.doc.assembly.joints[0].id;
@@ -1381,15 +1381,15 @@ fn occurrence_moves_turn_about_their_origin_then_move() {
     crate::browser::apply_occurrence_move(&mut app, &m);
     let t = *app.session.pending_moves.get(&occ).unwrap();
     // The pivot lands 10 mm along X; X turns into Y.
-    let p = solidcraft_engine::doc::apply_point(&t, solidcore_record::Vec3::new(5.0, 0.0, 0.0));
-    let x = solidcraft_engine::doc::apply_vector(&t, solidcore_record::Vec3::X);
+    let p = torno_engine::doc::apply_point(&t, solidcore_record::Vec3::new(5.0, 0.0, 0.0));
+    let x = torno_engine::doc::apply_vector(&t, solidcore_record::Vec3::X);
     assert!((p.x - 15.0).abs() < 1e-9 && p.y.abs() < 1e-9, "{p:?}");
     assert!((x.y - 1.0).abs() < 1e-9, "{x:?}");
     // Changing the values again starts from where it was, not from the last move.
     m.translate = [0.0, 0.0, 0.0];
     m.angles = [0.0; 3];
     crate::browser::apply_occurrence_move(&mut app, &m);
-    assert_eq!(*app.session.pending_moves.get(&occ).unwrap(), solidcraft_engine::doc::IDENTITY);
+    assert_eq!(*app.session.pending_moves.get(&occ).unwrap(), torno_engine::doc::IDENTITY);
 }
 
 #[test]
@@ -1462,7 +1462,7 @@ fn construction_plane_row_opens_its_menu() {
     assert_eq!(menu["target"], json!({"type": "plane", "id": id}), "{menu}");
     let labels: Vec<&str> = menu["items"].as_array().unwrap().iter().filter_map(|i| i["label"].as_str()).filter(|l| !l.is_empty()).collect();
     assert_eq!(labels, ["Create Sketch", "Edit Feature", "Delete", "Rename", "Show/Hide", "Find in Timeline"]);
-    assert_eq!(h.app.session.selection, vec![solidcraft_engine::Sel::Plane { name: "Cut".into() }], "the right-click picks the plane");
+    assert_eq!(h.app.session.selection, vec![torno_engine::Sel::Plane { name: "Cut".into() }], "the right-click picks the plane");
     context_menu::close(&mut h.app);
 
     let t = Target::Plane { id };
@@ -1474,7 +1474,7 @@ fn construction_plane_row_opens_its_menu() {
     assert!(context_menu::finish_rename(&mut h.app, Some("Section"), true));
     assert!(h.app.session.doc.find_feature("Section").is_some_and(|f| f.id == id));
     act(&mut h.app, &t, "Find in Timeline");
-    assert_eq!(h.app.session.selection, vec![solidcraft_engine::Sel::Feature { id }]);
+    assert_eq!(h.app.session.selection, vec![torno_engine::Sel::Feature { id }]);
     act(&mut h.app, &t, "Edit Feature");
     assert!(h.app.dialog.is_some(), "Edit Feature opens the plane's dialog");
     h.app.dialog = None;
@@ -1682,7 +1682,7 @@ fn typing_a_new_body_name_and_enter_renames_it() {
 #[test]
 fn contribution_picked_faces_open_their_own_feature_after_later_modifiers() {
     use solidcore_record::Vec3;
-    use solidcraft_engine::Sel;
+    use torno_engine::Sel;
     for expected in [1, 2, 3] {
         let mut app = SolveApp::new(Session::default(), Services::default());
         app.run("solid.box", json!({"length":40,"width":30,"height":20,"body_name":"Plate"})).unwrap();
@@ -1691,7 +1691,7 @@ fn contribution_picked_faces_open_their_own_feature_after_later_modifiers() {
         app.run("solid.hole", json!({"position":[32,20,20],"diameter":4})).unwrap();
         let state = app.session.world_state().unwrap();
         let b = state.body("Plate").unwrap();
-        let names = solidcraft_engine::doc::naming::face_names(b);
+        let names = torno_engine::doc::naming::face_names(b);
         let index = names.iter().position(|n| n.starts_with(&format!("F{expected}:"))).unwrap();
         let mesh = b.mesh();
         let point = mesh
@@ -1726,7 +1726,7 @@ fn contribution_picked_faces_open_their_own_feature_after_later_modifiers() {
 fn contribution_unresolvable_face_does_not_edit_the_body_creator() {
     let mut app = SolveApp::new(Session::default(), Services::default());
     app.run("solid.box", json!({"length":10,"width":10,"height":10,"body_name":"Plate"})).unwrap();
-    app.session.selection = vec![solidcraft_engine::Sel::Face { body: "Plate".into(), index: usize::MAX, point: solidcore_record::Vec3::ZERO }];
+    app.session.selection = vec![torno_engine::Sel::Face { body: "Plate".into(), index: usize::MAX, point: solidcore_record::Vec3::ZERO }];
     let items = context_menu::items(&app, &Target::Viewport);
     assert!(!items.iter().any(|i| i.label == "Edit Feature" || i.label == "Find in Timeline"));
     assert!(find(&items, "Find in Browser").enabled, "the body is still known");
@@ -1784,7 +1784,7 @@ fn every_context_target_has_identified_icon_rows_including_submenus() {
         assert!(!rows.is_empty(), "unexercised target: {target:?}");
         check(&rows);
     }
-    let sample = solidcraft_engine::sample::samples().into_iter().find(|s| s.name == "Hinge Assembly").unwrap();
+    let sample = torno_engine::sample::samples().into_iter().find(|s| s.name == "Hinge Assembly").unwrap();
     let mut assembly = SolveApp::new(Session::default(), Services::default());
     assembly.session.run_script(&(sample.script)()).unwrap();
     assert!(!assembly.session.doc.assembly.joints.is_empty());
@@ -1871,14 +1871,14 @@ fn appearance_browser_selection_reaches_the_editor_without_other_bodies() {
     for (clicked, expected) in [("Two", vec!["One", "Two"]), ("Other", vec!["Other"])] {
         let mut app = appearance_selection_app();
         // A face in the selection must not turn its whole body into another appearance target.
-        app.session.selection.push(solidcraft_engine::Sel::Face { body: "Other".into(), index: 0, point: Vec3::ZERO });
+        app.session.selection.push(torno_engine::Sel::Face { body: "Other".into(), index: 0, point: Vec3::ZERO });
         let appearance = find(&context_menu::items(&app, &Target::Body { name: clicked.into() }), "Appearance");
         assert_eq!(appearance.children[0].params, appearance.params, "the library entry and parent use the same targets");
         context_menu::run_item(&mut app, &appearance, pos2(0.0, 0.0));
         let mut dialog = app.dialog.clone().expect("the Appearance editor opens");
         let crate::dialogs::Kind::Appearance(state) = &mut dialog.kind else { panic!("Appearance editor expected") };
         state.color = [196, 40, 36];
-        let targets: Vec<_> = expected.iter().map(|name| solidcraft_engine::Sel::Body { name: (*name).into() }).collect();
+        let targets: Vec<_> = expected.iter().map(|name| torno_engine::Sel::Body { name: (*name).into() }).collect();
         assert_eq!(dialog.inputs[0].items, targets);
         for (command, params) in crate::dialogs::apply_commands(&app, &dialog).unwrap() {
             app.run(&command, params).unwrap();
@@ -1910,7 +1910,7 @@ fn mesh_export_from_a_selected_browser_body_takes_the_selected_bodies() {
             let item = find(&context_menu::items(&app, &Target::Body { name: (*clicked).into() }), label);
             context_menu::run_item(&mut app, &item, pos2(0.0, 0.0));
             let dialog = app.dialog.as_ref().unwrap_or_else(|| panic!("{label} opens its dialog"));
-            let bodies: Vec<_> = expected.iter().map(|name| solidcraft_engine::Sel::Body { name: (*name).into() }).collect();
+            let bodies: Vec<_> = expected.iter().map(|name| torno_engine::Sel::Body { name: (*name).into() }).collect();
             assert_eq!(dialog.inputs[0].items, bodies, "{label}: clicked {clicked}, selected {selected:?}");
         }
     }
@@ -1934,7 +1934,7 @@ fn appearance_parent_click_opens_editor_after_hovering_quick_choices() {
     assert!(h.app.viewport.context_menu.is_none(), "activation closes the context menu");
     let dialog = h.app.dialog.as_ref().expect("parent click opens the full editor");
     assert!(matches!(dialog.kind, crate::dialogs::Kind::Appearance(_)));
-    assert_eq!(dialog.inputs[0].items, vec![solidcraft_engine::Sel::Body { name }]);
+    assert_eq!(dialog.inputs[0].items, vec![torno_engine::Sel::Body { name }]);
 }
 
 #[test]
@@ -2020,7 +2020,7 @@ fn only_one_row_is_lit_while_a_flyout_is_closing() {
     fn lit_rows(h: &Harness, rows: &[Item]) -> Vec<String> {
         fn filled(shape: &egui::Shape, r: egui::Rect, found: &mut bool) {
             match shape {
-                egui::Shape::Rect(rect) => *found |= rect.rect == r && rect.fill == solidcraft_theme::Tokens::get().accent_soft,
+                egui::Shape::Rect(rect) => *found |= rect.rect == r && rect.fill == torno_theme::Tokens::get().accent_soft,
                 egui::Shape::Vec(shapes) => shapes.iter().for_each(|s| filled(s, r, found)),
                 _ => {}
             }
@@ -2222,7 +2222,7 @@ mod browser_rows {
         let mut h = Harness::new();
         h.app.home.open = false;
         h.app.ui.show_browser = true;
-        h.app.session.run_script(&solidcraft_engine::sample::script()).expect("sample");
+        h.app.session.run_script(&torno_engine::sample::script()).expect("sample");
         h.frames(3);
         h
     }
@@ -2477,7 +2477,7 @@ fn the_history_bar_feature_menu_is_reported_and_picked() {
     assert!(!h.app.session.doc.feature(id).unwrap().suppressed);
     h.call("ui.menu", json!({"x": 400, "y": 900, "target": {"type": "timeline", "feature": id}}));
     assert_eq!(h.call("ui.menuPick", json!({"item": "Find in Browser"}))["ok"], true);
-    assert_eq!(h.app.session.selection, vec![solidcraft_engine::Sel::Body { name: "Blk".into() }]);
+    assert_eq!(h.app.session.selection, vec![torno_engine::Sel::Body { name: "Blk".into() }]);
 
     // After the history marker, Delete and the delete of everything after the marker are two
     // items with their own ids, so each can be picked.

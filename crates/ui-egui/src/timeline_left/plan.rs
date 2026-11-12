@@ -11,7 +11,7 @@
 use std::collections::{BTreeSet, HashMap, HashSet};
 use std::sync::Arc;
 
-use solidcraft_engine::doc::TimelineGroup;
+use torno_engine::doc::TimelineGroup;
 
 use super::{TimelineItem, group_path, sketches_key};
 use crate::SolveApp;
@@ -138,7 +138,7 @@ impl RowPlan {
             let listed: Vec<HistoryFeature> = doc.features.iter().map(HistoryFeature::of).collect();
             crate::history_rows::rows(&listed, &groups, doc.marker, true)
         } else {
-            let sketch = |feature: &solidcraft_engine::doc::Feature| matches!(feature.kind, solidcraft_engine::doc::FeatureKind::Sketch { .. });
+            let sketch = |feature: &torno_engine::doc::Feature| matches!(feature.kind, torno_engine::doc::FeatureKind::Sketch { .. });
             HistoryRows::in_order(doc.features.iter().map(|feature| (feature.id, sketch(feature))))
         };
         let mut index_of = HashMap::with_capacity(features.len());
@@ -163,7 +163,7 @@ impl RowPlan {
             .iter()
             .map(|feature| {
                 index_of.get(&feature.0).and_then(|index| doc.features.get(*index)).is_some_and(
-                    |feature| matches!(&feature.kind, solidcraft_engine::doc::FeatureKind::Sketch { sketch, .. } if !sketch.patterns.is_empty()),
+                    |feature| matches!(&feature.kind, torno_engine::doc::FeatureKind::Sketch { sketch, .. } if !sketch.patterns.is_empty()),
                 )
             })
             .collect();

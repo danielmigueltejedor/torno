@@ -7,13 +7,13 @@
   <key>CFBundleDevelopmentRegion</key>
   <string>en</string>
   <key>CFBundleDisplayName</key>
-  <string>SolidCraft</string>
+  <string>Torno</string>
   <key>CFBundleName</key>
-  <string>SolidCraft</string>
+  <string>Torno</string>
   <key>CFBundleExecutable</key>
-  <string>SolidCraft</string>
+  <string>Torno</string>
   <key>CFBundleIdentifier</key>
-  <string>io.tangencylabs.solidcraft</string>
+  <string>dev.danielmiguelt.Torno</string>
   <key>CFBundleInfoDictionaryVersion</key>
   <string>6.0</string>
   <key>CFBundlePackageType</key>
@@ -24,12 +24,12 @@
   <string>@SHORT_VERSION@</string>
   <key>CFBundleVersion</key>
   <string>@SHORT_VERSION@</string>
-  <key>SolidCraftVersion</key>
+  <key>TornoVersion</key>
   <string>@VERSION@</string>
   <key>CFBundleIconFile</key>
-  <string>SolidCraft</string>
+  <string>Torno</string>
   <key>CFBundleIconName</key>
-  <string>SolidCraft</string>
+  <string>Torno</string>
   <key>LSApplicationCategoryType</key>
   <string>public.app-category.graphics-design</string>
   <!-- Must match MACOSX_DEPLOYMENT_TARGET in package.sh. -->
@@ -43,13 +43,13 @@
   <array>
     <dict>
       <key>CFBundleTypeName</key>
-      <string>SolidCraft design</string>
+      <string>Torno design</string>
       <key>CFBundleTypeExtensions</key>
-      <!-- solidcraft: designs saved before .sc; solvecraft: before the rename (compatibility
+      <!-- torno: designs saved before .sc; solvecraft: before the rename (compatibility
            shims, docs/compatibility.md). -->
-      <array><string>sc</string><string>solidcraft</string><string>solvecraft</string></array>
+      <array><string>sc</string><string>torno</string><string>solvecraft</string></array>
       <key>LSItemContentTypes</key>
-      <array><string>io.tangencylabs.solidcraft.design</string></array>
+      <array><string>dev.danielmiguelt.Torno.design</string></array>
       <key>CFBundleTypeRole</key>
       <string>Editor</string>
       <key>LSHandlerRank</key>
@@ -71,17 +71,17 @@
   <array>
     <dict>
       <key>UTTypeIdentifier</key>
-      <string>io.tangencylabs.solidcraft.design</string>
+      <string>dev.danielmiguelt.Torno.design</string>
       <key>UTTypeDescription</key>
-      <string>SolidCraft design</string>
+      <string>Torno design</string>
       <key>UTTypeConformsTo</key>
       <array><string>public.data</string><string>public.content</string></array>
       <key>UTTypeTagSpecification</key>
       <dict>
         <key>public.filename-extension</key>
-        <array><string>sc</string><string>solidcraft</string><string>solvecraft</string></array>
+        <array><string>sc</string><string>torno</string><string>solvecraft</string></array>
         <key>public.mime-type</key>
-        <array><string>application/x-solidcraft</string></array>
+        <array><string>application/x-torno</string></array>
       </dict>
     </dict>
   </array>

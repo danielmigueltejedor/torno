@@ -2,13 +2,13 @@
 //! Lowering changes only already-sized captured surface fields, never render options.
 use crate::{Result, Session, params::bad};
 use serde_json::{Value, json};
-use solidcraft_doc::{
+use std::{collections::BTreeMap, sync::Arc};
+use torno_doc::{
     render_coat::{CoatBindings, SavedCoat},
     render_settings::RenderJob,
     render_surface::RenderBodyTarget,
 };
-use solidcraft_render::{ProductScene, job::RaytraceOptions};
-use std::{collections::BTreeMap, sync::Arc};
+use torno_render::{ProductScene, job::RaytraceOptions};
 
 /// No bindings is the original zero-allocation capture path. Even zero-weight
 /// authored bindings require a current opaque target; they cannot mask Glass.

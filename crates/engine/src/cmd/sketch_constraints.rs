@@ -3,8 +3,8 @@
 
 use serde_json::Value;
 use solidcore_record::Vec2;
-use solidcraft_geom::prelude::*;
-use solidcraft_sketch::{ConstraintKind, CurveKind, Sketch};
+use torno_geom::prelude::*;
+use torno_sketch::{ConstraintKind, CurveKind, Sketch};
 
 use super::sketch::{add_c, dof_now, edit, keep_redundant, listed, redundancy, residual_of};
 use super::sketch_store;
@@ -184,7 +184,7 @@ const MAX_TRIALS: usize = 2000;
 
 /// Add `k` if it removes a degree of freedom and the sketch still solves; else leave the
 /// sketch as it was. Returns the new dof when kept.
-fn try_add(sk: &mut Sketch, doc: &mut solidcraft_doc::Document, k: ConstraintKind, dof: usize, dim: bool) -> Option<usize> {
+fn try_add(sk: &mut Sketch, doc: &mut torno_doc::Document, k: ConstraintKind, dof: usize, dim: bool) -> Option<usize> {
     let saved = sk.clone();
     let param = if dim {
         let v = k.value()?;
@@ -200,7 +200,7 @@ fn try_add(sk: &mut Sketch, doc: &mut solidcraft_doc::Document, k: ConstraintKin
         return None;
     }
     let mut trial = sk.clone();
-    let rep = solidcraft_sketch::solve_with(&mut trial, &solidcraft_sketch::Hold::default(), None, solidcraft_sketch::Analysis::Freedom, None);
+    let rep = torno_sketch::solve_with(&mut trial, &torno_sketch::Hold::default(), None, torno_sketch::Analysis::Freedom, None);
     if rep.ok() && rep.dof < dof {
         *sk = trial;
         return Some(rep.dof);
@@ -212,14 +212,14 @@ fn try_add(sk: &mut Sketch, doc: &mut solidcraft_doc::Document, k: ConstraintKin
     None
 }
 
-fn run_auto(sk: &mut Sketch, doc: &mut solidcraft_doc::Document, p: &Value, datum: usize, mut dof: usize) -> (Vec<String>, usize) {
+fn run_auto(sk: &mut Sketch, doc: &mut torno_doc::Document, p: &Value, datum: usize, mut dof: usize) -> (Vec<String>, usize) {
     use ConstraintKind::*;
     let tol = num(p, "tolerance").filter(|t| *t > 0.0).unwrap_or(0.01);
     let atol = num(p, "angle_tolerance").filter(|t| *t > 0.0).unwrap_or(1.0).to_radians();
     let dims = crate::params::bool_(p, "dimensions").unwrap_or(true);
     let n0 = sk.constraints.len();
     let mut trials = 0;
-    let mut attempt = |sk: &mut Sketch, doc: &mut solidcraft_doc::Document, k: ConstraintKind, dim: bool, dof: &mut usize| {
+    let mut attempt = |sk: &mut Sketch, doc: &mut torno_doc::Document, k: ConstraintKind, dim: bool, dof: &mut usize| {
         if *dof == 0 || trials >= MAX_TRIALS {
             return;
         }
@@ -349,7 +349,7 @@ fn guess(sk: &Sketch, ents: &[String], cmd: &str) -> Result<ConstraintKind> {
         sk.resolve_point(r).map(|p| (Some(p), None)).ok_or_else(|| bad(cmd, format!("unknown sketch entity `{r}`")))
     };
     let line_dir = |c: usize| match sk.shape(c) {
-        Some(solidcraft_sketch::Shape::Line { a, b }) => (b - a).normalized(),
+        Some(torno_sketch::Shape::Line { a, b }) => (b - a).normalized(),
         _ => None,
     };
     let round = |c: usize| matches!(sk.curves.get(c).map(|c| &c.kind), Some(CurveKind::Circle { .. } | CurveKind::Arc { .. }));
@@ -378,9 +378,7 @@ fn guess(sk: &Sketch, ents: &[String], cmd: &str) -> Result<ConstraintKind> {
                     if cross < 0.2 {
                         // Parallel; on one line → collinear.
                         let off = match (sk.shape(x), sk.shape(y)) {
-                            (Some(solidcraft_sketch::Shape::Line { a, .. }), Some(solidcraft_sketch::Shape::Line { a: b0, .. })) => {
-                                u.cross(b0 - a).abs()
-                            }
+                            (Some(torno_sketch::Shape::Line { a, .. }), Some(torno_sketch::Shape::Line { a: b0, .. })) => u.cross(b0 - a).abs(),
                             _ => f64::INFINITY,
                         };
                         let len = sk.polyline(x).windows(2).map(|w| w[0].dist(w[1])).sum::<f64>();
@@ -510,16 +508,14 @@ fn toggle_diameter(s: &mut Session, p: &Value) -> Result<Value> {
             let others: Vec<String> = doc
                 .param_users(name)
                 .into_iter()
-                .filter(
-                    |u| !matches!(u, solidcraft_doc::ParamUser::Dimension { feature, constraint, .. } if *feature == sketch && *constraint == cid),
-                )
+                .filter(|u| !matches!(u, torno_doc::ParamUser::Dimension { feature, constraint, .. } if *feature == sketch && *constraint == cid))
                 .map(|u| u.describe())
                 .collect();
             if !others.is_empty() {
                 return Err(bad(cmd, format!("`{name}` is also used by {}; switching `{cid}` would change them", others.join(", "))));
             }
             let e = doc.param(name).map(|p| p.expr.clone()).ok_or_else(|| bad(cmd, format!("no parameter `{name}`")))?;
-            let e = if solidcraft_doc::expr::references(&e).is_empty() {
+            let e = if torno_doc::expr::references(&e).is_empty() {
                 doc.design_length(value).1
             } else if diameter {
                 format!("2 * ({e})")

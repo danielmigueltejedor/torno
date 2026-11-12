@@ -7,7 +7,7 @@ use serde::de::Error as _;
 use serde::{Deserialize, Deserializer, Serialize};
 use serde_json::{Value, json};
 
-use solidcraft_doc::BrowserEntry;
+use torno_doc::BrowserEntry;
 
 use super::canvas::CanvasPlane;
 use super::check::{located, whole};
@@ -985,8 +985,8 @@ pub struct VisibilityState {
     pub hidden_folders: Vec<String>,
 }
 
-impl From<&solidcraft_doc::Visibility> for VisibilityState {
-    fn from(v: &solidcraft_doc::Visibility) -> Self {
+impl From<&torno_doc::Visibility> for VisibilityState {
+    fn from(v: &torno_doc::Visibility) -> Self {
         VisibilityState {
             hidden_bodies: v.hidden_bodies.clone(),
             hidden_occurrences: v.hidden_occurrences.clone(),
@@ -1195,7 +1195,7 @@ fn target_schema() -> Value {
 /// The camera `view.save` keeps, as the handler reads it: finite numbers and a positive
 /// distance. A `name` inside it is replaced by the call's `name`.
 #[derive(Clone, Debug, PartialEq)]
-pub struct ViewCamera(pub solidcraft_doc::NamedView);
+pub struct ViewCamera(pub torno_doc::NamedView);
 
 impl<'de> Deserialize<'de> for ViewCamera {
     fn deserialize<D: Deserializer<'de>>(d: D) -> Result<Self, D::Error> {
@@ -1305,7 +1305,7 @@ pub struct ViewDeleted {
 pub struct ViewListParams {}
 
 /// A named view, as `view.list` gives it. Only its schema is described here: the reply carries
-/// the design's own [`solidcraft_doc::NamedView`] values.
+/// the design's own [`torno_doc::NamedView`] values.
 #[derive(Debug, Serialize, JsonSchema)]
 pub struct ViewEntry {
     /// The view's name.
@@ -1327,7 +1327,7 @@ pub struct ViewEntry {
 pub struct ViewListResult {
     /// The design's named views, in the order they were made.
     #[schemars(with = "Vec<ViewEntry>")]
-    pub views: Vec<solidcraft_doc::NamedView>,
+    pub views: Vec<torno_doc::NamedView>,
     /// In the warn parameter-check mode: what the call's parameters got wrong.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub param_warnings: Vec<String>,
@@ -1336,7 +1336,7 @@ pub struct ViewListResult {
 /// The camera `view.apply` turns to, as the handler reads it: `up` is refused, `roll` is finite,
 /// the pitch within ±π/2 and the rest finite with a positive distance.
 #[derive(Clone, Copy, Debug, PartialEq)]
-pub struct ApplyCamera(pub solidcraft_viewport::Camera);
+pub struct ApplyCamera(pub torno_viewport::Camera);
 
 impl<'de> Deserialize<'de> for ApplyCamera {
     fn deserialize<D: Deserializer<'de>>(d: D) -> Result<Self, D::Error> {

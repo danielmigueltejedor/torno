@@ -13,7 +13,7 @@
 //! | [`SurfaceIntersector::find_interior_curves`], [`SurfaceIntersector::find_interior_curves_from_node_pairs`], [`InteriorNodePair`] | `FindInteriorCurves` |
 //! | [`SurfaceIntersector::do_point_intersection`], [`PointIntersectionOptions`] | `DoPointIntersection` |
 //! | [`SurfaceIntersector::do_law_intersection`], [`LawIntersectionOptions`] | `DoLawIntersection` |
-//! | `SurfaceIntersector::span_on_found_curve`, `SurfaceIntersector::reaches_found_curve_end`, `stop_at_found_curve_end` (crate/private) | the SolidCraft fork's `bSpanOnFoundCurve`, `bReachesFoundCurveEnd` lambdas of `TraceCurve` and its loop-top stop (opt-in, WR-76) |
+//! | `SurfaceIntersector::span_on_found_curve`, `SurfaceIntersector::reaches_found_curve_end`, `stop_at_found_curve_end` (crate/private) | the Torno fork's `bSpanOnFoundCurve`, `bReachesFoundCurveEnd` lambdas of `TraceCurve` and its loop-top stop (opt-in, WR-76) |
 //! | [`IntersectionCurve`]                                 | the curve, type and deviation out-params of both drivers |
 //! | [`IntersectorVirtuals`], [`do_point_intersection_with`], [`trace_curve_with`], [`do_law_intersection_with`] | the virtual calls of `DoPointIntersection` / `TraceCurve` / `DoLawIntersection` (`this->ComputePointValues(..)`, ..) on a derived intersector |
 //!
@@ -81,7 +81,7 @@
 //!   `TraceCurve` runs its "already traced" test also on a first step that `TestPoint`
 //!   ended (`SurfaceIntersector::span_on_found_curve`), and a near-tangent trace that
 //!   passes a found curve's free end stops there, its last span shortened to that end
-//!   (`SurfaceIntersector::reaches_found_curve_end`); the SolidCraft fork's
+//!   (`SurfaceIntersector::reaches_found_curve_end`); the Torno fork's
 //!   tangency-labs/smlib@0ce09f2. Off by default (upstream behaviour).
 //! - **Empty trace (WR-80).** The trace-back of `FindInteriorCurves` and
 //!   `DoIntersection` (part 5) is one method, [`SurfaceIntersector::trace_back`], which
@@ -1407,7 +1407,7 @@ pub fn trace_curve_with<'s, V: IntersectorVirtuals<'s> + ?Sized>(
     Ok(())
 }
 
-/// The loop-top test of the opt-in fix WR-76 (#392) in `TraceCurve` (the SolidCraft
+/// The loop-top test of the opt-in fix WR-76 (#392) in `TraceCurve` (the Torno
 /// fork's tangency-labs/smlib@0ce09f2): when the curve's last span `prev -> last` of a
 /// near-tangent trace has gone past a free end of a found curve
 /// ([`SurfaceIntersector::reaches_found_curve_end`]), the last span is shortened to end

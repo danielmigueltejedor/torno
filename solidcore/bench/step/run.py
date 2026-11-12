@@ -4,10 +4,10 @@
 
 Each reader is LABEL=COMMAND, a command that takes a STEP file as its last argument and prints
 JSON with `bodies`: a list of objects with `volume_mm3`, `faces` and `closed` (as
-`solidcraft-cli eval FILE` does; older builds name `closed` `solid`, which is read in its place). A `.p21` file is passed as a `.step` copy.
+`torno-cli eval FILE` does; older builds name `closed` `solid`, which is read in its place). A `.p21` file is passed as a `.step` copy.
 
     bench/step/run.py --corpus bench/step/corpus --out /tmp/bake \\
-        --reader base=/path/to/old/solidcraft-cli --reader new=/path/to/new/solidcraft-cli
+        --reader base=/path/to/old/torno-cli --reader new=/path/to/new/torno-cli
 
 Writes OUT/per-file.tsv (one row per file, one column group per reader) and OUT/summary.md:
 files opened (at least one body), refused, timed out, every body closed, reference volumes matched

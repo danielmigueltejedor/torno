@@ -41,7 +41,7 @@ with `[1, 1.5]` where `[1, 1]` is expected. Restored, both pass; no library chan
 Limits: only the full-turn arc (`span == 360`) and the `inside_out = false` public
 factories are covered; a partial arc's proportional branch, an inside-out ellipse and
 the surface-of-revolution caller (`SmSurfOfRevolution::AdjustSTEPUVDomain`, the
-SolidCraft flat-round-trip trigger) are not exercised here. The C++ reference was not
+Torno flat-round-trip trigger) are not exercised here. The C++ reference was not
 rerun for this case; the default half is the pinned behaviour already recorded in the
 2026-10-25 addendum and by `step_interval_past_a_turn_is_rejected_without_changing_the_curve`
 (the collapsed interval and untouched curve that test pins), and the flag stays off by default.

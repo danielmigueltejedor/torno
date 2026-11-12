@@ -2,7 +2,7 @@
 
 ## Owner scope
 
-Continue the personal renderer plan with grouped implementation and bounded validation: close the actual full-master GUI acceptance, connect operational background/stage resources, add useful native finishing and real linear-output support. Save recovery checkpoints to `0xlillith/solidcraft`, branch `lab/render-scale-resources`, draft PR #7. Do not update upstream, main or releases. Reuse the shared Nateaux/Nathan-Dane UI resources rather than a parallel widget/icon set.
+Continue the personal renderer plan with grouped implementation and bounded validation: close the actual full-master GUI acceptance, connect operational background/stage resources, add useful native finishing and real linear-output support. Save recovery checkpoints to `0xlillith/torno`, branch `lab/render-scale-resources`, draft PR #7. Do not update upstream, main or releases. Reuse the shared Nateaux/Nathan-Dane UI resources rather than a parallel widget/icon set.
 
 ## Previously outstanding GUI acceptance - completed
 

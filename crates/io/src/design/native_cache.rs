@@ -1,13 +1,13 @@
 //! The model cache: a design's evaluated timeline (every feature's result and the state after
 //! it, [`SavedModel`]), saved with it so opening need not evaluate it again. Bodies use
-//! SolidCraft's exact native B-rep encoding (a mesh body, its own triangles); the key ties the
+//! Torno's exact native B-rep encoding (a mesh body, its own triangles); the key ties the
 //! cache to the exact document, and to the source, platform and geometry kernel that computed it
 //! (docs/design-container.md).
 use super::*;
-use solidcraft_doc::{ModelState, SavedModel};
+use torno_doc::{ModelState, SavedModel};
 
-const FORMAT: &str = "solidcraft-model-cache/9";
-const PRODUCER: &str = "solidcraft-truck-adapter/4";
+const FORMAT: &str = "torno-model-cache/9";
+const PRODUCER: &str = "torno-truck-adapter/4";
 const MANIFEST: &str = "cache/model.json";
 const PAYLOAD: &str = "cache/bodies.bin";
 /// Body records (a placed copy is one record; its part is stored once).
@@ -18,7 +18,7 @@ const MAX_MANIFEST: usize = 32 << 20;
 
 /// The build that wrote a cache (recorded; earlier builds read only their own caches).
 fn build() -> String {
-    format!("{}/{}-{}", env!("SOLIDCRAFT_SOURCE_COMMIT"), std::env::consts::ARCH, std::env::consts::OS)
+    format!("{}/{}-{}", env!("TORNO_SOURCE_COMMIT"), std::env::consts::ARCH, std::env::consts::OS)
 }
 
 /// What computed a cache: the same evaluation source (build.rs), compiled for the same platform,
@@ -26,7 +26,7 @@ fn build() -> String {
 /// that source as it was (only the interface or the commands changed) reads the caches of the
 /// build before it; one that changed it (a kernel fix, the codec) evaluates the design again.
 fn evaluation() -> String {
-    format!("{}/{}-{}", env!("SOLIDCRAFT_EVALUATION_SOURCE"), std::env::consts::ARCH, std::env::consts::OS)
+    format!("{}/{}-{}", env!("TORNO_EVALUATION_SOURCE"), std::env::consts::ARCH, std::env::consts::OS)
 }
 
 /// The geometry kernel that computed a cache. A cache another kernel wrote (the C++ SMLib, which
@@ -115,8 +115,8 @@ struct Encoded {
 }
 
 /// What a decoded body must share with the one encoded: its faces, edges, vertices and shells.
-fn same_topology(a: &solidcraft_kernel::Body, b: &solidcraft_kernel::Body) -> bool {
-    let counts = |x: &solidcraft_kernel::Body| (x.face_count(), x.edge_count(), x.vertex_count(), x.shell_count());
+fn same_topology(a: &torno_kernel::Body, b: &torno_kernel::Body) -> bool {
+    let counts = |x: &torno_kernel::Body| (x.face_count(), x.edge_count(), x.vertex_count(), x.shell_count());
     counts(a) == counts(b)
 }
 
@@ -129,7 +129,7 @@ const MAX_MESH_HEADER: usize = 16 << 20;
 
 /// A mesh body's slice: the tag, the header's length (u32) and the header (JSON: the counts,
 /// colour and paint), then each vertex as three f64 and each triangle as three u32, little-endian.
-fn encode_mesh_body(body: &solidcraft_kernel::Body) -> Option<Vec<u8>> {
+fn encode_mesh_body(body: &torno_kernel::Body) -> Option<Vec<u8>> {
     let (positions, triangles) = body.triangle_mesh()?;
     let normals = body.triangle_corner_normals()?;
     let header =
@@ -167,7 +167,7 @@ fn encode_mesh_body(body: &solidcraft_kernel::Body) -> Option<Vec<u8>> {
 }
 
 /// The mesh body of a slice [`encode_mesh_body`] wrote; `None` for anything else.
-fn decode_mesh_body(bytes: &[u8]) -> Option<solidcraft_kernel::Body> {
+fn decode_mesh_body(bytes: &[u8]) -> Option<torno_kernel::Body> {
     let rest = bytes.strip_prefix(MESH_TAG.as_slice())?;
     let (length, rest) = rest.split_first_chunk::<4>()?;
     let length = usize::try_from(u32::from_le_bytes(*length)).ok().filter(|n| *n <= MAX_MESH_HEADER)?;
@@ -179,7 +179,7 @@ fn decode_mesh_body(bytes: &[u8]) -> Option<solidcraft_kernel::Body> {
     if normals != 0 && normals != triangles {
         return None;
     }
-    if triangles > solidcraft_kernel::MAX_TRIANGLES {
+    if triangles > torno_kernel::MAX_TRIANGLES {
         return None;
     }
     // The counts must account for every byte, so nothing is allocated for data that is not there.
@@ -210,33 +210,33 @@ fn decode_mesh_body(bytes: &[u8]) -> Option<solidcraft_kernel::Body> {
         })
         .collect::<Option<_>>()?;
     let color: Option<[f32; 3]> = serde_json::from_value(header.get("color").cloned().unwrap_or(Value::Null)).ok()?;
-    let paint: Option<solidcraft_kernel::Paint> = serde_json::from_value(header.get("paint").cloned().unwrap_or(Value::Null)).ok()?;
+    let paint: Option<torno_kernel::Paint> = serde_json::from_value(header.get("paint").cloned().unwrap_or(Value::Null)).ok()?;
     if color.is_some_and(|c| c.iter().any(|x| !x.is_finite())) {
         return None;
     }
-    Some(solidcraft_kernel::mesh_body_with_normals(&positions, &triangles, &normals).ok()?.with_color(color).with_paint(paint))
+    Some(torno_kernel::mesh_body_with_normals(&positions, &triangles, &normals).ok()?.with_color(color).with_paint(paint))
 }
 
 /// A mesh body decoded is the one encoded: the same vertices, bit for bit, the same triangles,
 /// colour and paint.
-fn same_mesh(a: &solidcraft_kernel::Body, b: &solidcraft_kernel::Body) -> bool {
+fn same_mesh(a: &torno_kernel::Body, b: &torno_kernel::Body) -> bool {
     let (Some((pa, ta)), Some((pb, tb))) = (a.triangle_mesh(), b.triangle_mesh()) else { return false };
     let bits = |p: &[solidcore_record::Vec3]| p.iter().map(|v| [v.x.to_bits(), v.y.to_bits(), v.z.to_bits()]).collect::<Vec<_>>();
-    let normals = |body: &solidcraft_kernel::Body| {
+    let normals = |body: &torno_kernel::Body| {
         body.triangle_corner_normals().unwrap_or_default().iter().flatten().map(|n| [n.x.to_bits(), n.y.to_bits(), n.z.to_bits()]).collect::<Vec<_>>()
     };
     ta == tb && bits(pa) == bits(pb) && normals(a) == normals(b) && a.color() == b.color() && a.paint() == b.paint()
 }
 
 /// A body of the cache's payload, mesh or B-rep by the slice's tag.
-fn decode_cached_body(bytes: &[u8]) -> Option<solidcraft_kernel::Body> {
-    if bytes.starts_with(MESH_TAG) { decode_mesh_body(bytes) } else { solidcraft_kernel::decode_native_body(bytes).ok() }
+fn decode_cached_body(bytes: &[u8]) -> Option<torno_kernel::Body> {
+    if bytes.starts_with(MESH_TAG) { decode_mesh_body(bytes) } else { torno_kernel::decode_native_body(bytes).ok() }
 }
 
 impl Encoded {
     fn of(model: &SavedModel) -> Result<Self> {
         // What to encode: every body, and the part every placed copy shows.
-        let mut shares: Vec<solidcraft_kernel::DisplayShare> = Vec::new();
+        let mut shares: Vec<torno_kernel::DisplayShare> = Vec::new();
         let mut share_index = std::collections::HashMap::new();
         let mut placed = Vec::with_capacity(model.bodies.len());
         for b in &model.bodies {
@@ -248,17 +248,17 @@ impl Encoded {
                 (part, t)
             }));
         }
-        let bodies: Vec<&solidcraft_kernel::Body> = model.bodies.iter().chain(shares.iter().map(|s| s.original())).collect();
+        let bodies: Vec<&torno_kernel::Body> = model.bodies.iter().chain(shares.iter().map(|s| s.original())).collect();
         // A body is kept only when it decodes to itself: one the codec gave back with other
         // topology (two loose vertices more on a pattern copy cut by an extrude) would open as
         // another body. Then the model isn't kept, and opening the design evaluates it.
-        let encoded = solidcraft_kernel::map_on_threads(&bodies, 16, |b| {
+        let encoded = torno_kernel::map_on_threads(&bodies, 16, |b| {
             if b.is_mesh() {
                 let bytes = encode_mesh_body(b)?;
                 return decode_mesh_body(&bytes).is_some_and(|back| same_mesh(b, &back)).then_some(bytes);
             }
-            let bytes = solidcraft_kernel::encode_native_body(b).ok()?;
-            let back = solidcraft_kernel::decode_native_body(&bytes).ok()?;
+            let bytes = torno_kernel::encode_native_body(b).ok()?;
+            let back = torno_kernel::decode_native_body(&bytes).ok()?;
             same_topology(b, &back).then_some(bytes)
         });
         let mut slices = Vec::new();
@@ -382,7 +382,7 @@ fn current(manifest: &Value, document: &[u8]) -> bool {
         && is("evaluation", &evaluation())
         && is("kernel", KERNEL)
         && is("document", &digest(document))
-        && source_trusted(env!("SOLIDCRAFT_EVALUATION_SOURCE"), cfg!(any(test, feature = "trust-unknown-source")))
+        && source_trusted(env!("TORNO_EVALUATION_SOURCE"), cfg!(any(test, feature = "trust-unknown-source")))
 }
 
 #[cfg(test)]
@@ -447,7 +447,7 @@ fn read_geometry<R: Read + Seek>(reader: &mut PackageReader<R>, document: &[u8],
     if end != data.len() {
         return Err(invalid("trailing cached data"));
     }
-    let decoded = solidcraft_kernel::map_on_threads(&parts, 16, |bytes| decode_cached_body(bytes));
+    let decoded = torno_kernel::map_on_threads(&parts, 16, |bytes| decode_cached_body(bytes));
     let unique = decoded.into_iter().map(Option::flatten).collect::<Option<Vec<_>>>().ok_or_else(|| invalid("cached body"))?;
     let body = |v: Option<&Value>| unique.get(count(v)?).ok_or_else(|| invalid("cached body index"));
     let shares = manifest
@@ -456,7 +456,7 @@ fn read_geometry<R: Read + Seek>(reader: &mut PackageReader<R>, document: &[u8],
         .filter(|s| s.len() <= MAX_UNIQUE)
         .ok_or_else(|| invalid("cached shares"))?
         .iter()
-        .map(|i| Ok(solidcraft_kernel::DisplayShare::new(body(Some(i))?.clone())))
+        .map(|i| Ok(torno_kernel::DisplayShare::new(body(Some(i))?.clone())))
         .collect::<Result<Vec<_>>>()?;
     let table = manifest
         .get("bodies")
@@ -491,7 +491,7 @@ fn matrix_of(numbers: &[f64]) -> Result<[[f64; 4]; 4]> {
 
 pub(super) fn geometry_preview(document: &[u8], model: &SavedModel) -> Result<DesignPreview> {
     let doc = Document::from_json(std::str::from_utf8(document).map_err(invalid)?)?;
-    let world = solidcraft_doc::world_state(&doc, &*model.final_state()?)?;
+    let world = torno_doc::world_state(&doc, &*model.final_state()?)?;
     let mut preview = DesignPreview::default();
     let mut triangles = 0usize;
     let mut display_bytes = 0usize;
@@ -510,7 +510,7 @@ pub(super) fn geometry_preview(document: &[u8], model: &SavedModel) -> Result<De
         let (positions, faces) = match entry.body.triangle_mesh() {
             Some(own) => own,
             None => {
-                made = solidcraft_kernel::native_preview_mesh(&entry.body, detail, &mut work).map_err(invalid)?;
+                made = torno_kernel::native_preview_mesh(&entry.body, detail, &mut work).map_err(invalid)?;
                 (made.positions.as_slice(), made.triangles.as_slice())
             }
         };

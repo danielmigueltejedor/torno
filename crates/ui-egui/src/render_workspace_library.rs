@@ -10,12 +10,12 @@ use crate::ui_kit::BackingTooltipExt as _;
 use crate::{SolveApp, ui_kit};
 use serde_json::{Value, json};
 use solidcore_record::Vec3;
-use solidcraft_engine::doc::Document;
-use solidcraft_theme::Tokens;
 use std::{
     collections::BTreeMap,
     sync::{Arc, Weak},
 };
+use torno_engine::doc::Document;
+use torno_theme::Tokens;
 
 #[derive(Clone, Debug)]
 pub(super) struct View {
@@ -183,7 +183,7 @@ fn refresh(app: &mut SolveApp, view: &mut View) -> Result<(), String> {
         view.next = None;
     } else {
         let reply = app.run("render.library.list", json!({"kind":view.kind,"query":view.query,"offset":view.offset,"limit":48,"availability":if view.kind=="physical_profiles" {"all"} else {&view.availability}}))?;
-        view.entries = reply["items"].as_array().cloned().ok_or_else(|| solidcraft_ui_text::tr("render.error_library_reply").to_string())?;
+        view.entries = reply["items"].as_array().cloned().ok_or_else(|| torno_ui_text::tr("render.error_library_reply").to_string())?;
         // Capture authored optical parameters once per page; selection remains read-only.
         for entry in &mut view.entries {
             if let Some(id) = entry["id"].as_str() {
@@ -514,12 +514,12 @@ pub(super) fn card(app: &mut SolveApp, ui: &mut egui::Ui, bounds: egui::Rect) {
                 ui,
                 &mut mode,
                 &[
-                    ui_kit::IconSegment { key: "render:library-grid", icon: "grid", tip: solidcraft_ui_text::tr("render.library_grid").into() },
-                    ui_kit::IconSegment { key: "render:library-list", icon: "list", tip: solidcraft_ui_text::tr("render.library_list").into() },
+                    ui_kit::IconSegment { key: "render:library-grid", icon: "grid", tip: torno_ui_text::tr("render.library_grid").into() },
+                    ui_kit::IconSegment { key: "render:library-list", icon: "list", tip: torno_ui_text::tr("render.library_list").into() },
                     ui_kit::IconSegment {
                         key: "render:library-panel",
                         icon: "library",
-                        tip: solidcraft_ui_text::tr("render.stage_panels.surfaces_references").into(),
+                        tip: torno_ui_text::tr("render.stage_panels.surfaces_references").into(),
                     },
                 ],
                 &[],
@@ -808,7 +808,7 @@ fn selected_light_reason(app: &SolveApp, view: &View) -> Option<String> {
             .filter_map(Value::as_f64)
             .fold(0.0, f64::max);
         if maximum > 64.0 {
-            return Some(solidcraft_ui_text::format("render.cpu_studio_radiance_limit", &[("radiance", &maximum.to_string())]));
+            return Some(torno_ui_text::format("render.cpu_studio_radiance_limit", &[("radiance", &maximum.to_string())]));
         }
     }
     None
@@ -819,7 +819,7 @@ fn selected_light_reason(app: &SolveApp, view: &View) -> Option<String> {
 fn cpu_maps_supported(app: &SolveApp, view: &View) -> bool {
     let Some(target) = view.target.as_ref().and_then(|target| target.stable_target.as_ref()) else { return false };
     let Ok(setup) = setups::snapshot(app) else { return false };
-    let Some(solidcraft_engine::doc::render_settings::RenderJob::CpuRaytrace { options, .. }) = &setup.job else { return false };
+    let Some(torno_engine::doc::render_settings::RenderJob::CpuRaytrace { options, .. }) = &setup.job else { return false };
     (setup.optics.is_empty() || options.path.is_some())
         && !setup.optics.iter().any(|optical| &optical.target == target)
         && options.validate_surface_maps(setup.exposure_ev).is_ok()
@@ -827,7 +827,7 @@ fn cpu_maps_supported(app: &SolveApp, view: &View) -> bool {
 
 fn surface_controls(app: &mut SolveApp, ui: &mut egui::Ui, view: &mut View, id: &str) {
     let picked = app.session.selection.iter().find_map(|selection| match selection {
-        solidcraft_engine::Sel::Body { name } | solidcraft_engine::Sel::Face { body: name, .. } => Some(name.clone()),
+        torno_engine::Sel::Body { name } | torno_engine::Sel::Face { body: name, .. } => Some(name.clone()),
         _ => None,
     });
     if !current_target(app, view) {
@@ -959,7 +959,7 @@ fn surface_controls(app: &mut SolveApp, ui: &mut egui::Ui, view: &mut View, id: 
 }
 
 fn selected_looks(app: &mut SolveApp) -> Vec<Value> {
-    use solidcraft_engine::Sel;
+    use torno_engine::Sel;
     let targets: Vec<_> = app
         .session
         .selection
@@ -1022,7 +1022,7 @@ fn browse_contents(app: &mut SolveApp, ui: &mut egui::Ui, stage_card: bool) {
     } else {
         view.total
     };
-    let hint = solidcraft_ui_text::format("render.search_appearances", &[("count", &count.to_string())]);
+    let hint = torno_ui_text::format("render.search_appearances", &[("count", &count.to_string())]);
     let query = if view.collection == 0 { &mut view.query } else { &mut view.collection_query };
     let search = ui_kit::search_field(ui, ui.scope_id().with("render_library_search"), query, &hint);
     query.truncate(query.char_indices().nth(128).map_or(query.len(), |(at, _)| at));
@@ -1281,7 +1281,7 @@ fn browse_contents(app: &mut SolveApp, ui: &mut egui::Ui, stage_card: bool) {
                             .selection
                             .iter()
                             .filter_map(|selection| match selection {
-                                solidcraft_engine::Sel::Body { name } => Some(name.clone()),
+                                torno_engine::Sel::Body { name } => Some(name.clone()),
                                 _ => None,
                             })
                             .collect();
@@ -1390,7 +1390,7 @@ pub(super) fn inspect(app: &mut SolveApp, ui: &mut egui::Ui) {
                     ui.small(format!(
                         "{}: {}",
                         app.tr("render.library_omitted"),
-                        item.as_str().unwrap_or(solidcraft_ui_text::tr("render.property_unknown"))
+                        item.as_str().unwrap_or(torno_ui_text::tr("render.property_unknown"))
                     ));
                 }
             }
@@ -1424,7 +1424,7 @@ fn source_preview(app: &mut SolveApp, ui: &mut egui::Ui, view: &mut View, id: &s
             let reply = app.run("render.library.preview", json!({"id":id}))?;
             let bytes: Vec<u8> = serde_json::from_value(reply["bytes"].clone()).map_err(|e| e.to_string())?;
             if bytes.len() > 2 * 1024 * 1024 {
-                return Err(solidcraft_ui_text::tr("render.error_source_preview").into());
+                return Err(torno_ui_text::tr("render.error_source_preview").into());
             }
             let mut reader = image::ImageReader::with_format(std::io::Cursor::new(bytes), image::ImageFormat::Png);
             let mut limits = image::Limits::default();
@@ -1564,14 +1564,14 @@ pub(super) fn saved_surface_controls(app: &mut SolveApp, ui: &mut egui::Ui) {
 pub(super) fn saved_surface_target_controls(
     app: &mut SolveApp,
     ui: &mut egui::Ui,
-    target: Option<&solidcraft_engine::doc::render_surface::RenderBodyTarget>,
+    target: Option<&torno_engine::doc::render_surface::RenderBodyTarget>,
 ) {
     if let Some(target) = target {
         saved_surface_content(app, ui, Some(target));
     }
 }
 
-fn saved_surface_content(app: &mut SolveApp, ui: &mut egui::Ui, target: Option<&solidcraft_engine::doc::render_surface::RenderBodyTarget>) {
+fn saved_surface_content(app: &mut SolveApp, ui: &mut egui::Ui, target: Option<&torno_engine::doc::render_surface::RenderBodyTarget>) {
     let bindings = app.render_workspace.view.draft.surfaces.clone();
     if !bindings.iter().any(|b| target.is_none_or(|t| t == &b.target)) {
         return;
@@ -1583,8 +1583,8 @@ fn saved_surface_content(app: &mut SolveApp, ui: &mut egui::Ui, target: Option<&
         }
         for (index, binding) in bindings.iter().enumerate().filter(|(_, b)| target.is_none_or(|t| t == &b.target)) {
             let source = match &binding.source {
-                solidcraft_engine::doc::render_surface::SurfaceSource::Builtin(source) => source.id.as_str(),
-                solidcraft_engine::doc::render_surface::SurfaceSource::Embedded(_) => app.tr("render.surface_import.embedded"),
+                torno_engine::doc::render_surface::SurfaceSource::Builtin(source) => source.id.as_str(),
+                torno_engine::doc::render_surface::SurfaceSource::Embedded(_) => app.tr("render.surface_import.embedded"),
             };
             ui.label(format!("{} - {} ({}): {:?}", source, binding.target.definition, binding.target.feature, binding.target.occurrence_path));
             if ui_kit::button(ui, app.tr("render.inspector_replace"), ui_kit::Button::Normal).clicked() {
@@ -1646,19 +1646,19 @@ fn physical_controls(app: &mut SolveApp, ui: &mut egui::Ui, view: &mut View, id:
     ui.small(resource["reference_state"].as_str().unwrap_or(""));
     if let Some(properties) = resource["properties"].as_array() {
         for (index, property) in properties.iter().enumerate() {
-            let name = property["quantity"].as_str().unwrap_or(solidcraft_ui_text::tr("render.property_fallback"));
+            let name = property["quantity"].as_str().unwrap_or(torno_ui_text::tr("render.property_fallback"));
             let title = format!("{}: {} {}", name, property["value"], property["unit"].as_str().unwrap_or(""));
             ui_kit::section(ui, ("physical_property", id, index), &title, false, |ui| {
-                ui.small(solidcraft_ui_text::format(
+                ui.small(torno_ui_text::format(
                     "render.property_source",
                     &[("id", property["source_id"].as_str().unwrap_or("")), ("locator", property["source_locator"].as_str().unwrap_or(""))],
                 ));
-                ui.small(solidcraft_ui_text::format(
+                ui.small(torno_ui_text::format(
                     "render.property_qualifier",
-                    &[("value", property["qualifier"].as_str().unwrap_or(solidcraft_ui_text::tr("render.property_unknown")))],
+                    &[("value", property["qualifier"].as_str().unwrap_or(torno_ui_text::tr("render.property_unknown")))],
                 ));
-                ui.small(solidcraft_ui_text::format("render.property_conditions", &[("value", &property["conditions"].to_string())]));
-                ui.small(solidcraft_ui_text::format("render.property_uncertainty", &[("value", &property["uncertainty"].to_string())]));
+                ui.small(torno_ui_text::format("render.property_conditions", &[("value", &property["conditions"].to_string())]));
+                ui.small(torno_ui_text::format("render.property_uncertainty", &[("value", &property["uncertainty"].to_string())]));
                 ui.small(property["note"].as_str().unwrap_or(""));
             });
         }
@@ -1789,7 +1789,7 @@ mod studio_browser_tests {
     fn image_import_controls_keep_physical_grain_and_adopt_without_reading_source_again() {
         let (mut h, view) = image_import_fixture();
         let request = surface_import::request(&mut h.app, &view).unwrap();
-        let frame: solidcraft_engine::render::job::textures::PlanarFrame = serde_json::from_value(request["frame"].clone()).unwrap();
+        let frame: torno_engine::render::job::textures::PlanarFrame = serde_json::from_value(request["frame"].clone()).unwrap();
         assert!((frame.u[2] - 20.0).abs() < 1e-10 && frame.u[1].abs() < 1e-10);
         assert!((frame.v[1] + 40.0).abs() < 1e-10 && frame.v[2].abs() < 1e-10);
         assert_eq!(request["provenance"]["author"], "Original test author");
@@ -1903,7 +1903,7 @@ mod studio_browser_tests {
             "optics":{"ior":1.5,"boundary":"closed_mesh"}}),
             )
             .unwrap();
-        h.app.run("select.set", json!({"items":[solidcraft_engine::Sel::Body{name:"Glass".into()}]})).unwrap();
+        h.app.run("select.set", json!({"items":[torno_engine::Sel::Body{name:"Glass".into()}]})).unwrap();
         super::super::enter(&mut h.app, true).unwrap();
         h.app.render_workspace.view.live_paused = true;
         let before = h.app.session.doc.clone();
@@ -1929,10 +1929,10 @@ mod studio_browser_tests {
         assert!(Arc::ptr_eq(&before, &h.app.session.doc));
         assert_eq!((h.app.session.revision, h.app.session.undo.len(), h.app.session.redo.len()), history);
         let model = h.app.session.model.state();
-        h.app.run("select.set", json!({"items":[solidcraft_engine::Sel::Body{name:"Panel".into()}]})).unwrap();
+        h.app.run("select.set", json!({"items":[torno_engine::Sel::Body{name:"Panel".into()}]})).unwrap();
         let selected = (h.app.session.revision, h.app.session.undo.len(), h.app.session.redo.len());
         assert_eq!(selected, (history.0 + 1, history.1, history.2), "explicit selection advances only the transient display revision");
-        assert_eq!(h.app.session.selection, vec![solidcraft_engine::Sel::Body { name: "Panel".into() }]);
+        assert_eq!(h.app.session.selection, vec![torno_engine::Sel::Body { name: "Panel".into() }]);
         assert!(Arc::ptr_eq(&before, &h.app.session.doc));
         assert!(Arc::ptr_eq(&model, &h.app.session.model.state()));
         h.frames(4);
@@ -1962,7 +1962,7 @@ mod studio_browser_tests {
         assert_eq!(saved.materials, before.materials);
         assert_eq!(saved.appearances, before.appearances);
         assert!(h.app.render_workspace.view.job.is_none());
-        assert_eq!(solidcraft_engine::doc::Document::from_json(&saved.to_json()).unwrap(), *saved);
+        assert_eq!(torno_engine::doc::Document::from_json(&saved.to_json()).unwrap(), *saved);
         h.app.run("edit.undo", json!({})).unwrap();
         assert_eq!(h.app.session.doc, before);
         h.app.run("edit.redo", json!({})).unwrap();
@@ -1972,8 +1972,8 @@ mod studio_browser_tests {
         let mut h = Harness::new();
         h.call("ui.resize", json!({"width":1440,"height":3000}));
         h.app.run("solid.box", json!({"length":20,"width":15,"height":10,"body_name":"Sample"})).unwrap();
-        h.app.run("select.set", json!({"items":[solidcraft_engine::Sel::Body{name:"Sample".into()}]})).unwrap();
-        let camera = solidcraft_viewport::Camera {
+        h.app.run("select.set", json!({"items":[torno_engine::Sel::Body{name:"Sample".into()}]})).unwrap();
+        let camera = torno_viewport::Camera {
             distance: 73.0,
             target: solidcore_record::Vec3::new(10.0, 7.5, 5.0),
             yaw: 0.3,
@@ -2002,7 +2002,7 @@ mod studio_browser_tests {
         h.app.render_workspace.view.draft.width = 16;
         h.app.render_workspace.view.draft.height = 12;
         h.frames(4);
-        let navigation = solidcraft_viewport::Camera { distance: 92.0, yaw: 0.75, ..camera };
+        let navigation = torno_viewport::Camera { distance: 92.0, yaw: 0.75, ..camera };
         h.app.cam = navigation;
         h.frames(2);
         assert_eq!(h.app.cam, navigation);
@@ -2013,7 +2013,7 @@ mod studio_browser_tests {
         h
     }
 
-    fn library_nonlighting_intent(setup: &solidcraft_engine::doc::render_settings::RenderSetup) -> Value {
+    fn library_nonlighting_intent(setup: &torno_engine::doc::render_settings::RenderSetup) -> Value {
         let mut value = serde_json::to_value(setup).unwrap();
         for field in ["camera", "stage", "exposure_ev"] {
             value.as_object_mut().unwrap().remove(field);
@@ -2133,8 +2133,8 @@ mod studio_browser_tests {
     #[cfg(not(target_arch = "wasm32"))]
     #[test]
     fn cpu_saved_builtin_maps_use_real_review_pointer_save_undo_reopen_and_native_render() {
-        use solidcraft_engine::doc::render_settings::{RenderJob, RenderSetup};
-        use solidcraft_engine::render::job::{CpuHost, Integrator, Phase};
+        use torno_engine::doc::render_settings::{RenderJob, RenderSetup};
+        use torno_engine::render::job::{CpuHost, Integrator, Phase};
         let mut h = Harness::new();
         h.call("ui.resize", json!({"width":1440,"height":3000}));
         let host = CpuHost::for_platform().unwrap();
@@ -2142,7 +2142,7 @@ mod studio_browser_tests {
         h.app.session.set_render_job_host(Some(host.clone())).unwrap();
         h.app.preferences.render_legacy_image_defaults = false;
         h.app.run("solid.box", json!({"length":10,"width":10,"height":5,"body_name":"Sample"})).unwrap();
-        h.app.run("select.set", json!({"items":[solidcraft_engine::Sel::Body{name:"Sample".into()}]})).unwrap();
+        h.app.run("select.set", json!({"items":[torno_engine::Sel::Body{name:"Sample".into()}]})).unwrap();
         super::super::enter(&mut h.app, true).unwrap();
         h.app.render_workspace.view.live_paused = true;
         super::super::select_image_method(&mut h.app, ImageMethod::CpuRaytrace);
@@ -2191,8 +2191,8 @@ mod studio_browser_tests {
         h.app.run("edit.redo", json!({})).unwrap();
         super::super::setups::load(&mut h.app);
         assert_eq!(h.app.session.doc, saved);
-        let reopened = solidcraft_engine::doc::Document::from_json(&saved.to_json()).unwrap();
-        h.app.session = solidcraft_engine::Session::new(reopened);
+        let reopened = torno_engine::doc::Document::from_json(&saved.to_json()).unwrap();
+        h.app.session = torno_engine::Session::new(reopened);
         h.app.session.set_render_job_host(Some(host)).unwrap();
         super::super::reset_document(&mut h.app);
         h.app.render_workspace.view.live_paused = true;
@@ -2225,16 +2225,15 @@ mod studio_browser_tests {
     #[cfg(not(target_arch = "wasm32"))]
     #[test]
     fn cpu_native_studio_review_pointer_preserves_camera_and_cold_capture_for_hdr_and_area_rigs() {
-        use solidcraft_engine::doc::render_settings::{RenderJob, RenderSetup};
-        use solidcraft_engine::render::job::{CpuHost, Integrator, Phase};
+        use torno_engine::doc::render_settings::{RenderJob, RenderSetup};
+        use torno_engine::render::job::{CpuHost, Integrator, Phase};
         for id in ["NATIVE-STUDIO-001", "NATIVE-STUDIO-004"] {
             let mut h = Harness::new();
             let host = CpuHost::for_platform().unwrap();
             let available = host.descriptor_for(Integrator::Raytrace).is_ok();
             h.app.session.set_render_job_host(Some(host.clone())).unwrap();
             h.app.run("solid.box", json!({"length":20,"width":15,"height":10,"body_name":"Sample"})).unwrap();
-            let saved_camera =
-                solidcraft_viewport::Camera { distance: 60.0, target: solidcore_record::Vec3::new(10.0, 7.5, 5.0), ..Default::default() };
+            let saved_camera = torno_viewport::Camera { distance: 60.0, target: solidcore_record::Vec3::new(10.0, 7.5, 5.0), ..Default::default() };
             h.app.run("render.settings.set",json!({"name":"Studio","set":{"width":8,"height":8,"camera":saved_camera,"job":{"method":"cpu_raytrace","options":{"progressive":{"samples_per_pixel":2,"seed":47},"area_samples":4,"seed":731,"output":{"linear_exr":true}}}}})).unwrap();
             super::super::enter(&mut h.app, true).unwrap();
             h.app.render_workspace.view.live_paused = true;
@@ -2275,8 +2274,8 @@ mod studio_browser_tests {
             assert_eq!(h.app.session.doc, before);
             h.app.run("edit.redo", json!({})).unwrap();
             assert_eq!(h.app.session.doc, saved);
-            let reopened = solidcraft_engine::doc::Document::from_json(&saved.to_json()).unwrap();
-            h.app.session = solidcraft_engine::Session::new(reopened);
+            let reopened = torno_engine::doc::Document::from_json(&saved.to_json()).unwrap();
+            h.app.session = torno_engine::Session::new(reopened);
             h.app.session.set_render_job_host(Some(host.clone())).unwrap();
             super::super::reset_document(&mut h.app);
             h.app.render_workspace.view.name = "Studio".into();
@@ -2324,7 +2323,7 @@ mod studio_browser_tests {
         choose(&mut h.app, &mut view, "rigs", "RIG-020").unwrap();
         let source = &view.details.as_ref().unwrap()["resource"]["lights"][0];
         assert_eq!(source["type"], "uniform_distant_disk");
-        let expected_sun = solidcraft_engine::render::job::Sun {
+        let expected_sun = torno_engine::render::job::Sun {
             direction: std::array::from_fn(|i| -source["incoming_photon_direction"][i].as_f64().unwrap()),
             angular_radius_rad: source["angular_diameter_rad"].as_f64().unwrap() * 0.5,
             radiance: serde_json::from_value(source["emission"]["rgb"].clone()).unwrap(),
@@ -2351,8 +2350,7 @@ mod studio_browser_tests {
         assert!(job.shadows);
         assert_eq!((job.area_samples, job.seed), (Some(64), Some(731)), "explicit GI adoption preserves authored unrelated sampling fields");
         assert_eq!(job.sun.as_deref(), Some(&expected_sun), "review applies the exact Sun radiance/direction/radius without clamping or splitting");
-        let Some(solidcraft_engine::doc::render_settings::RenderJob::CpuRaytrace { options, .. }) = &h.app.session.doc.render.setups["Studio"].job
-        else {
+        let Some(torno_engine::doc::render_settings::RenderJob::CpuRaytrace { options, .. }) = &h.app.session.doc.render.setups["Studio"].job else {
             panic!("CPU method lost");
         };
         assert_eq!(options.sun, Some(expected_sun));
@@ -2365,7 +2363,7 @@ mod studio_browser_tests {
         h.app.render_workspace.view.draft.height = 2048;
         // The fixed Compact image is valid; prospective progressive16 adoption
         // crosses its pixel limit. The refusal offers Studio, never adopts it.
-        use solidcraft_engine::render::job::{CpuBudget, CpuProgressiveOptions};
+        use torno_engine::render::job::{CpuBudget, CpuProgressiveOptions};
         let sampling = CpuProgressiveOptions::default();
         assert_eq!(sampling.samples_per_pixel, 16);
         let sampling = Some(sampling);
@@ -2452,7 +2450,7 @@ mod studio_browser_tests {
         assert_eq!(h.app.session.doc.to_json(), before);
         let catalog = h.app.run("appearance.library", json!({})).unwrap();
         let blue = catalog["appearances"].as_array().unwrap().iter().find(|entry| entry["name"] == "ABS - Blue").unwrap();
-        h.app.run("select.set", json!({"items":[solidcraft_engine::Sel::Body { name: "Sample".into() }]})).unwrap();
+        h.app.run("select.set", json!({"items":[torno_engine::Sel::Body { name: "Sample".into() }]})).unwrap();
         h.app.render_workspace.view.library.collection = 0;
         h.app.render_workspace.view.library.loaded = false;
         h.frames(3);
@@ -2461,10 +2459,10 @@ mod studio_browser_tests {
         h.step(&json!({"click":{"handle":format!("render:library:{}", appearance_id(blue))}})).unwrap();
         assert_eq!(h.app.session.doc.appearances.bodies.get("Sample").unwrap().name, "ABS - Blue");
         assert_eq!(h.app.session.undo.len(), undo + 1);
-        if let Some(dir) = std::env::var_os("SOLIDCRAFT_LIBRARY_EVIDENCE") {
+        if let Some(dir) = std::env::var_os("TORNO_LIBRARY_EVIDENCE") {
             std::fs::create_dir_all(&dir).unwrap();
             h.app.run("appearance.assign", json!({"bodies":["Sample"],"appearance":"Aluminum - Anodized Blue"})).unwrap();
-            h.app.run("select.set", json!({"items":[solidcraft_engine::Sel::Body {name:"Sample".into()}]})).unwrap();
+            h.app.run("select.set", json!({"items":[torno_engine::Sel::Body {name:"Sample".into()}]})).unwrap();
             h.app.render_workspace.view.library.collection = 0;
             h.app.render_workspace.view.library.loaded = false;
             let aluminum = h.app.run("appearance.library", json!({})).unwrap()["appearances"]
@@ -2515,7 +2513,7 @@ mod studio_browser_tests {
                 )
                 .to_image();
                 card_image.save(std::path::Path::new(&dir).join(if dark { "card-dark.png" } else { "card-light.png" })).unwrap();
-                if let Some(reference) = std::env::var_os("SOLIDCRAFT_LIBRARY_REFERENCE") {
+                if let Some(reference) = std::env::var_os("TORNO_LIBRARY_REFERENCE") {
                     let reference = image::open(reference).unwrap().to_rgba8();
                     let reference = image::imageops::crop_imm(&reference, 8, 487, 266, 356).to_image();
                     let mut pair = image::RgbaImage::new(532, card_image.height().max(reference.height()));
@@ -2559,7 +2557,7 @@ mod studio_browser_tests {
         let mut h = Harness::new();
         h.app.run("solid.box", json!({"length":10,"width":10,"height":10,"body_name":"Sample"})).unwrap();
         h.app.run("appearance.assign", json!({"bodies":["Sample"],"appearance":"ABS - Red"})).unwrap();
-        h.app.session.selection = vec![solidcraft_engine::Sel::Body { name: "Sample".into() }];
+        h.app.session.selection = vec![torno_engine::Sel::Body { name: "Sample".into() }];
         let selected = selected_looks(&mut h.app);
         assert_eq!(selected.len(), 1);
         let used = h.app.run("appearance.list", json!({})).unwrap()["in_design"].as_array().unwrap().clone();
@@ -2579,7 +2577,7 @@ mod studio_browser_tests {
     fn look_tile_click_applies_to_selection_through_assign_and_undo() {
         let mut h = Harness::new();
         h.app.run("solid.box", json!({"length":10,"width":10,"height":10,"body_name":"Sample"})).unwrap();
-        h.app.session.selection = vec![solidcraft_engine::Sel::Body { name: "Sample".into() }];
+        h.app.session.selection = vec![torno_engine::Sel::Body { name: "Sample".into() }];
         super::super::enter(&mut h.app, true).unwrap();
         h.frames(4);
         let blue = h.app.render_workspace.view.library.entries.iter().find(|e| e["name"] == "ABS - Blue").unwrap().clone();

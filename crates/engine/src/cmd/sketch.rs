@@ -2,9 +2,9 @@
 
 use serde_json::{Value, json};
 use solidcore_record::{Plane, Vec2, Vec3};
-use solidcraft_doc::{FeatureKind, PlaneRef, expr::Kind};
-use solidcraft_geom::prelude::*;
-use solidcraft_sketch::{Analysis, Budget, ConstraintKind, CurveKind, Hold, PointExprs, Sketch, SolveReport, TwoCircles, solve, solve_with};
+use torno_doc::{FeatureKind, PlaneRef, expr::Kind};
+use torno_geom::prelude::*;
+use torno_sketch::{Analysis, Budget, ConstraintKind, CurveKind, Hold, PointExprs, Sketch, SolveReport, TwoCircles, solve, solve_with};
 
 use super::{CommandSpec, in_sketch};
 use crate::params::{bad, bool_, expr, num, req_expr, req_vec2, str_, string_list, vec2, vec3};
@@ -394,7 +394,7 @@ pub(super) fn edit<T>(
     p: &Value,
     cmd: &str,
     strict: bool,
-    f: impl FnOnce(&mut Sketch, &mut solidcraft_doc::Document) -> Result<T>,
+    f: impl FnOnce(&mut Sketch, &mut torno_doc::Document) -> Result<T>,
 ) -> Result<(T, Value)> {
     let (out, info) = edit_solve(s, p, cmd, strict, f)?;
     Ok((out, info.and_then(|info| serde_json::to_value(info).ok()).unwrap_or(Value::Null)))
@@ -406,7 +406,7 @@ pub(super) fn edit_solve<T>(
     p: &Value,
     cmd: &str,
     strict: bool,
-    f: impl FnOnce(&mut Sketch, &mut solidcraft_doc::Document) -> Result<T>,
+    f: impl FnOnce(&mut Sketch, &mut torno_doc::Document) -> Result<T>,
 ) -> Result<(T, Option<SketchSolve>)> {
     let id = sketch_store::target(s, p, cmd)?;
     let (out, rep) = edit_solved(s, id, strict, Analysis::Freedom, |sk, doc| Ok((f(sk, doc)?, Left::Unsolved)))?;
@@ -454,7 +454,7 @@ pub(super) fn edit_solved<T>(
     id: u64,
     strict: bool,
     analysis: Analysis,
-    f: impl FnOnce(&mut Sketch, &mut solidcraft_doc::Document) -> Result<(T, Left)>,
+    f: impl FnOnce(&mut Sketch, &mut torno_doc::Document) -> Result<(T, Left)>,
 ) -> Result<(T, Option<SolveReport>)> {
     let mut doc = (*s.doc).clone();
     let mut sk = sketch_store::read(&doc, id)?.clone();
@@ -620,7 +620,7 @@ pub(super) fn counted_solve(
 /// Inside an `edit` closure: solve the sketch for the document's parameter values from its
 /// stored solved state, as the edit's own solve does, for commands that work on the current
 /// geometry.
-pub(super) fn solve_current(sk: &mut Sketch, doc: &solidcraft_doc::Document) -> Result<SolveReport> {
+pub(super) fn solve_current(sk: &mut Sketch, doc: &torno_doc::Document) -> Result<SolveReport> {
     let stored = sk.driving_values();
     let (values, _) = doc.param_values();
     Ok(doc.solve_sketch_with_analysis(&values, sk, &stored, None, Analysis::Freedom)?)
@@ -632,7 +632,7 @@ pub(super) fn solve_current(sk: &mut Sketch, doc: &solidcraft_doc::Document) -> 
 pub(super) mod solve_counts {
     use std::cell::Cell;
 
-    use solidcraft_sketch::Analysis;
+    use torno_sketch::Analysis;
 
     thread_local! {
         static COUNTS: Cell<(usize, usize)> = const { Cell::new((0, 0)) };
@@ -688,7 +688,7 @@ pub(super) fn draw(
     s: &mut Session,
     p: &Value,
     cmd: &str,
-    f: impl FnOnce(&mut Sketch, &mut solidcraft_doc::Document) -> Result<(Vec<String>, Vec<String>)>,
+    f: impl FnOnce(&mut Sketch, &mut torno_doc::Document) -> Result<(Vec<String>, Vec<String>)>,
 ) -> Result<((Vec<String>, Vec<String>), Value)> {
     edit(s, p, cmd, false, |sk, doc| {
         let first = sk.points.len();
@@ -720,7 +720,7 @@ impl PArg {
     }
 }
 
-pub(super) fn parg(sk: &mut Sketch, doc: &solidcraft_doc::Document, v: &Value, cmd: &str) -> Result<PArg> {
+pub(super) fn parg(sk: &mut Sketch, doc: &torno_doc::Document, v: &Value, cmd: &str) -> Result<PArg> {
     if let Some(p) = vec2(v) {
         return Ok(PArg::At(p));
     }
@@ -745,7 +745,7 @@ pub(super) fn parg(sk: &mut Sketch, doc: &solidcraft_doc::Document, v: &Value, c
     Err(bad(cmd, POINT_ARG_MUST))
 }
 
-pub(super) fn req_parg(sk: &mut Sketch, doc: &solidcraft_doc::Document, p: &Value, k: &str, cmd: &str) -> Result<PArg> {
+pub(super) fn req_parg(sk: &mut Sketch, doc: &torno_doc::Document, p: &Value, k: &str, cmd: &str) -> Result<PArg> {
     parg(sk, doc, p.get(k).ok_or_else(|| bad(cmd, format!("missing `{k}`")))?, cmd)
 }
 
@@ -786,7 +786,7 @@ pub(crate) fn point_arg_form(v: &Value, snaps: bool) -> std::result::Result<(), 
 
 /// A point given as `[x, y]` with a coordinate typed as text: where it is now and, when a
 /// coordinate names a parameter, the expressions that place it (none: a plain point).
-pub(super) fn expr_point(doc: &solidcraft_doc::Document, v: &Value, cmd: &str) -> Result<Option<(Vec2, Option<PointExprs>)>> {
+pub(super) fn expr_point(doc: &torno_doc::Document, v: &Value, cmd: &str) -> Result<Option<(Vec2, Option<PointExprs>)>> {
     let Some([x, y]) = v.as_array().map(Vec::as_slice) else { return Ok(None) };
     if !x.is_string() && !y.is_string() {
         return Ok(None);
@@ -869,7 +869,7 @@ pub(crate) fn created(before: Option<&Sketch>, after: &Sketch) -> Value {
     let points: Vec<&str> = after.points.iter().map(|x| x.id.as_str()).filter(new).collect();
     let curves: Vec<&str> = after.curves.iter().map(|x| x.id.as_str()).filter(new).collect();
     let (dims, cons): (Vec<_>, Vec<_>) = after.constraints.iter().filter(|c| new(&c.id.as_str())).partition(|c| c.kind.is_dimension());
-    let ids = |v: Vec<&solidcraft_sketch::Constraint>| v.into_iter().map(|c| c.id.clone()).collect::<Vec<_>>();
+    let ids = |v: Vec<&torno_sketch::Constraint>| v.into_iter().map(|c| c.id.clone()).collect::<Vec<_>>();
     let wires: Vec<String> = after.wires.iter().map(|x| x.id.as_str()).filter(new).map(str::to_string).collect();
     let owned = |v: Vec<&str>| v.into_iter().map(str::to_string).collect::<Vec<_>>();
     let out = Created { points: owned(points), curves: owned(curves), constraints: ids(cons), dimensions: ids(dims), wires };
@@ -889,7 +889,7 @@ pub(super) fn result(sk_out: (Vec<String>, Vec<String>), info: Value) -> Value {
 // ---------------------------------------------------------------------------------------------
 // Sketch lifecycle
 
-pub(crate) fn author_path_for_rebind(s: &Session, feature: &solidcraft_doc::Feature, p: &Value, cmd: &str) -> Result<Vec<u64>> {
+pub(crate) fn author_path_for_rebind(s: &Session, feature: &torno_doc::Feature, p: &Value, cmd: &str) -> Result<Vec<u64>> {
     let mut saved = None;
     if let FeatureKind::Sketch { plane, .. } = &feature.kind {
         let mut plane = plane;
@@ -930,7 +930,7 @@ pub(crate) fn author_path_for_rebind(s: &Session, feature: &solidcraft_doc::Feat
     if feature.component != 0 && path.is_empty() {
         return Err(bad(cmd, "a component sketch needs an explicit complete author_path"));
     }
-    solidcraft_doc::EmbossFace::component_frame(&s.placed_document(), feature.component, &path)?;
+    torno_doc::EmbossFace::component_frame(&s.placed_document(), feature.component, &path)?;
     Ok(path)
 }
 
@@ -993,15 +993,15 @@ pub(super) fn plane_frame(p: &Value, cmd: &str) -> Result<Option<&'static str>> 
 /// The note a reply carries when a world plane went into a moved or turned component
 /// (`placement`: that component's) for an explicit plane read in `frame`, where it differs from
 /// the component's own.
-pub(super) fn frame_note(frame: Option<&str>, placement: &solidcraft_doc::Mat) -> Option<&'static str> {
-    (frame == Some("world") && !solidcraft_doc::is_identity(placement)).then_some(
+pub(super) fn frame_note(frame: Option<&str>, placement: &torno_doc::Mat) -> Option<&'static str> {
+    (frame == Some("world") && !torno_doc::is_identity(placement)).then_some(
         "the plane was read in world coordinates and the component is moved or turned, so it is stored at that world place in the component; frame: \"component\" reads it in the component's own coordinates",
     )
 }
 
 /// The reply's `frame` for an explicit plane, with a note when a world plane went into a moved
 /// or turned component (`placement`: that component's), where it differs from the component's own.
-fn frame_reply(out: &mut CreateResult, frame: Option<&str>, placement: &solidcraft_doc::Mat) {
+fn frame_reply(out: &mut CreateResult, frame: Option<&str>, placement: &torno_doc::Mat) {
     let Some(frame) = frame else { return };
     out.frame = Frame::named(frame);
     out.note = frame_note(Some(frame), placement).map(str::to_string);
@@ -1009,7 +1009,7 @@ fn frame_reply(out: &mut CreateResult, frame: Option<&str>, placement: &solidcra
 
 /// The indices of `m`'s triangles by face, for `faces` faces (triangles of a face past that
 /// are left out): one pass, so testing every face costs the triangle count once, not per face.
-pub(super) fn face_triangles(m: &solidcraft_geom::Mesh, faces: usize) -> Vec<Vec<usize>> {
+pub(super) fn face_triangles(m: &torno_geom::Mesh, faces: usize) -> Vec<Vec<usize>> {
     let mut by_face = vec![Vec::new(); faces];
     for (i, f) in m.tri_face.iter().enumerate().take(m.triangles.len()) {
         if let Some(tris) = by_face.get_mut(*f as usize) {
@@ -1021,7 +1021,7 @@ pub(super) fn face_triangles(m: &solidcraft_geom::Mesh, faces: usize) -> Vec<Vec
 
 /// Does a face, the triangles `tris` of `m` (from [`face_triangles`]), contain point `p` (within
 /// `tol` of the face plane)?
-pub(super) fn face_contains(m: &solidcraft_geom::Mesh, tris: &[usize], p: Vec3, tol: f64) -> bool {
+pub(super) fn face_contains(m: &torno_geom::Mesh, tris: &[usize], p: Vec3, tol: f64) -> bool {
     tris.iter().filter_map(|i| m.triangles.get(*i)).any(|t| {
         let Some([a, b, c]) = m.tri(t) else { return false };
         let n = (b - a).cross(c - a);
@@ -1177,7 +1177,7 @@ fn sketch_on_plane(s: &mut Session, p: &Value, plane: PlaneRef, internal_body: O
     let attachment = s.doc.feature(id).and_then(|feature| match &feature.kind {
         FeatureKind::Sketch { plane, .. } => Some(if face::anchor(plane).is_some() {
             Attachment::ExactFace
-        } else if solidcraft_doc::sheet::plane_sheet_face(plane).is_some() {
+        } else if torno_doc::sheet::plane_sheet_face(plane).is_some() {
             Attachment::SheetFace
         } else if internal_body.is_some() {
             Attachment::InternalLegacyFace
@@ -1217,7 +1217,7 @@ fn edit_sketch(s: &mut Session, p: &Value) -> Result<Value> {
         _ => None,
     };
     if let Some(path) = authored_path {
-        solidcraft_doc::EmbossFace::component_frame(&s.placed_document(), component, &path)
+        torno_doc::EmbossFace::component_frame(&s.placed_document(), component, &path)
             .map_err(|error| bad("sketch.edit", format!("{error}; explicitly rebind the author placement before editing")))?;
         s.active_component = component;
         s.active_occurrence_path = (!path.is_empty()).then_some(path);
@@ -1385,7 +1385,7 @@ fn finish_edit_history(s: &mut Session, entry: &SketchEntry, marker: Option<usiz
 /// them would split every name it lands in, so it is refused here (#5858).
 fn named_id(cmd: &str, id: Option<&str>) -> Result<Option<String>> {
     match id {
-        Some(i) if !solidcraft_doc::persistent_name::text_fits_name(i) => {
+        Some(i) if !torno_doc::persistent_name::text_fits_name(i) => {
             Err(bad(cmd, format!("the id `{i}` cannot be written into a name whole; give an id without `|`, `,`, `~`, `#`, `]`, `(` or `)`")))
         }
         Some(i) => Ok(Some(i.to_string())),
@@ -1609,7 +1609,7 @@ fn rect_result(sk_out: (Vec<String>, Vec<String>), (sides, corners): (RectSides,
 
 /// A rectangle corner: `[x, y]` of numbers, or with a coordinate typed as an expression (as a
 /// `sketch.line` point is): where it is now and the expressions that place it.
-fn corner_arg(doc: &solidcraft_doc::Document, p: &Value, k: &str, cmd: &str) -> Result<(Vec2, PointExprs)> {
+fn corner_arg(doc: &torno_doc::Document, p: &Value, k: &str, cmd: &str) -> Result<(Vec2, PointExprs)> {
     let v = p.get(k).ok_or_else(|| bad(cmd, format!("`{k}` must be a point [x, y]")))?;
     match expr_point(doc, v, cmd)? {
         Some((at, exprs)) => Ok((at, exprs.unwrap_or_default())),
@@ -1836,7 +1836,7 @@ fn circle_size(s: &Session, p: &Value, cmd: &str) -> Result<(f64, Option<(String
     if !(r > 1e-9 && r < 1e8) {
         return Err(bad(cmd, "radius must be positive"));
     }
-    let driven = !solidcraft_doc::expr::references(&e).is_empty();
+    let driven = !torno_doc::expr::references(&e).is_empty();
     Ok((r, driven.then_some((e, key == "diameter"))))
 }
 
@@ -1864,7 +1864,7 @@ fn circle_center(s: &mut Session, p: &Value) -> Result<Value> {
         }
         // A size typed as an expression is a dimension driven by the parameters it names.
         if let Some((e, diameter)) = &size {
-            let unit = solidcraft_doc::expr::length_unit_or_mm(&doc.units).to_string();
+            let unit = torno_doc::expr::length_unit_or_mm(&doc.units).to_string();
             let pname = doc.new_model_param(e, &unit);
             let kind = if *diameter { ConstraintKind::Diameter { c: ci, value: 2.0 * r } } else { ConstraintKind::Radius { c: ci, value: r } };
             cons.push(sk.add_constraint(kind, Some(pname))?);
@@ -2264,7 +2264,7 @@ fn constrain(s: &mut Session, p: &Value, cmd: &str, f: impl FnOnce(&mut Sketch) 
         residual = residual_of(sk, &id);
         // A constraint that already holds needs nothing moved (even when both entities are
         // fully determined: it is then redundant, see `redundancy`).
-        let holds = residual.is_some_and(|r| r <= solidcraft_sketch::CONSISTENT);
+        let holds = residual.is_some_and(|r| r <= torno_sketch::CONSISTENT);
         if let Some((first, second)) = order.filter(|_| !holds) {
             apply_in_order(sk, &rep, &[first], second, cmd, std::slice::from_ref(&id))?;
         }
@@ -2386,7 +2386,7 @@ pub(super) fn apply_in_order(sk: &mut Sketch, rep: &SolveReport, first: &[Ent], 
     const TEMP: &str = "__keep_size";
     for (h, extra) in tries {
         let mut trial = sk.clone();
-        trial.constraints.extend(extra.into_iter().map(|kind| solidcraft_sketch::Constraint {
+        trial.constraints.extend(extra.into_iter().map(|kind| torno_sketch::Constraint {
             id: TEMP.into(),
             kind,
             param: None,
@@ -2426,7 +2426,7 @@ pub(super) fn apply_in_order(sk: &mut Sketch, rep: &SolveReport, first: &[Ent], 
         .constraints
         .iter()
         .position(|c| new.contains(&c.id))
-        .map(|ci| solidcraft_sketch::determined_by(sk, ci))
+        .map(|ci| torno_sketch::determined_by(sk, ci))
         .unwrap_or_default()
         .into_iter()
         .filter_map(|k| sk.constraints.get(k))
@@ -2451,7 +2451,7 @@ const CONFLICT_PROBE_MAX: usize = 64;
 /// solution. Empty when the sketch is too large to probe, already solves, or fails whatever
 /// the sketch's own constraints — the new one asks the impossible of the geometry itself.
 fn conflict_probe(sk: &Sketch, new: &[String]) -> Vec<String> {
-    let is_new = |c: &solidcraft_sketch::Constraint| new.contains(&c.id);
+    let is_new = |c: &torno_sketch::Constraint| new.contains(&c.id);
     let holds = |s: &Sketch| {
         let mut t = s.clone();
         let rep = solve_with(&mut t, &Hold::default(), None, Analysis::StatusOnly, None);
@@ -2508,7 +2508,7 @@ pub(super) fn dof_now(sk: &Sketch) -> usize {
 
 /// A constraint just added that removes no degree of freedom (`before` → the edit's `info`) is
 /// redundant or a conflict. Redundant when it held where the sketch was before it was added
-/// (`residual`, see [`solidcraft_sketch::constraint_residual`]): what it asks for is already
+/// (`residual`, see [`torno_sketch::constraint_residual`]): what it asks for is already
 /// implied by other constraints, and the solver satisfies it with them. Returns the
 /// constraints that determine it (as "id (Name)"), or `None` when it removes a degree of
 /// freedom. A conflict is refused; the caller's edit is rolled back by returning the error.
@@ -2526,7 +2526,7 @@ pub(super) fn redundancy(
     if a < b {
         return Ok(None);
     }
-    if !residual.is_some_and(|r| r <= solidcraft_sketch::CONSISTENT) {
+    if !residual.is_some_and(|r| r <= torno_sketch::CONSISTENT) {
         return Err(bad(cmd, "that would over-constrain the sketch (it conflicts with what the other constraints already determine)"));
     }
     Ok(Some(determined_by(s, p, cmd, cid)))
@@ -2537,11 +2537,7 @@ pub(super) fn redundancy(
 fn determined_by(s: &Session, p: &Value, cmd: &str, cid: &str) -> Vec<String> {
     let Some(sk) = sketch_store::target(s, p, cmd).ok().and_then(|id| sketch_store::read(&s.doc, id).ok()) else { return Vec::new() };
     let Some(ci) = sk.constraints.iter().position(|c| c.id == cid) else { return Vec::new() };
-    solidcraft_sketch::determined_by(sk, ci)
-        .into_iter()
-        .filter_map(|k| sk.constraints.get(k))
-        .map(|c| format!("{} ({})", c.id, c.kind.name()))
-        .collect()
+    torno_sketch::determined_by(sk, ci).into_iter().filter_map(|k| sk.constraints.get(k)).map(|c| format!("{} ({})", c.id, c.kind.name())).collect()
 }
 
 /// "k3 (Vertical), k9 (Vertical)", or "other constraints" when they are not known.
@@ -2559,9 +2555,9 @@ pub(super) fn keep_redundant(p: &Value, cmd: &str, by: &[String]) -> Result<()> 
 }
 
 /// The residual of the constraint `id` where the sketch is now (see
-/// [`solidcraft_sketch::constraint_residual`]).
+/// [`torno_sketch::constraint_residual`]).
 pub(super) fn residual_of(sk: &Sketch, id: &str) -> Option<f64> {
-    sk.constraints.iter().position(|c| c.id == id).and_then(|ci| solidcraft_sketch::constraint_residual(sk, ci))
+    sk.constraints.iter().position(|c| c.id == id).and_then(|ci| torno_sketch::constraint_residual(sk, ci))
 }
 
 /// The point already tied to the middle of line `l`, including one created by drawing.
@@ -2827,7 +2823,7 @@ fn c_tangent(s: &mut Session, p: &Value) -> Result<Value> {
 /// `y` name the axes even before their lines exist, as in [`line_or_axis_ref`].
 fn tangent_end(sk: &Sketch, p: &Value, key: &str) -> Option<usize> {
     let id = p.get(key)?.as_str()?;
-    if sk.curve_index(id).is_some() || solidcraft_sketch::sketch_axis_geom(id).is_some() {
+    if sk.curve_index(id).is_some() || torno_sketch::sketch_axis_geom(id).is_some() {
         return None;
     }
     sk.resolve_point(id)
@@ -2912,7 +2908,7 @@ fn tangent_at_end(s: &mut Session, p: &Value, cmd: &str) -> Result<Value> {
         // As in `constrain`: what already holds needs nothing moved, and is then redundant when it
         // removes no degree of freedom (see `redundancy`).
         residual = ids.iter().try_fold(0.0_f64, |worst, id| residual_of(sk, id).map(|r| worst.max(r)));
-        if residual.is_some_and(|r| r <= solidcraft_sketch::CONSISTENT) {
+        if residual.is_some_and(|r| r <= torno_sketch::CONSISTENT) {
             return Ok((tangent, ids));
         }
         // A line's end and a curve, in either order: only that end moves, so the line turns about
@@ -3349,7 +3345,7 @@ fn dimension_result(s: &mut Session, p: &Value) -> Result<DimensionResult> {
     let text_at = p.get("text_at").and_then(vec2);
     let driven = bool_(p, "driven").unwrap_or(false);
     // `name = expression` defines the user parameter `name` and dimensions with it (#2916).
-    let (defines, value) = match value.as_ref().and_then(|v| solidcraft_doc::expr::definition(v.as_str())) {
+    let (defines, value) = match value.as_ref().and_then(|v| torno_doc::expr::definition(v.as_str())) {
         Some((name, rhs)) => {
             if rhs.is_empty() {
                 return Err(bad(cmd, format!("value: `{name} =` needs a value after the `=`")));
@@ -3357,7 +3353,7 @@ fn dimension_result(s: &mut Session, p: &Value) -> Result<DimensionResult> {
             if driven {
                 return Err(bad(cmd, format!("value: a driven dimension has no value, so it cannot define `{name}`")));
             }
-            (Some((name.to_string(), rhs.to_string())), Some(solidcraft_doc::expr::Expr::new(name)))
+            (Some((name.to_string(), rhs.to_string())), Some(torno_doc::expr::Expr::new(name)))
         }
         None => (None, value),
     };
@@ -3527,11 +3523,12 @@ fn dimension_result(s: &mut Session, p: &Value) -> Result<DimensionResult> {
                     // order, so the free line is the one kept parallel to it. Other linked lines
                     // (a projected edge) keep the pick order and get no Parallel.
                     let linked = |c: usize| sk.curves.get(c).is_some_and(|c| c.link.is_some());
-                    let axis = |c: usize| {
-                        sk.curves.get(c).and_then(|c| c.link.as_deref()).and_then(|l| sk.link(l)).is_some_and(|l| {
-                            matches!(l.source, solidcraft_sketch::LinkSource::Axis { .. } | solidcraft_sketch::LinkSource::SketchAxis { .. })
-                        })
-                    };
+                    let axis =
+                        |c: usize| {
+                            sk.curves.get(c).and_then(|c| c.link.as_deref()).and_then(|l| sk.link(l)).is_some_and(|l| {
+                                matches!(l.source, torno_sketch::LinkSource::Axis { .. } | torno_sketch::LinkSource::SketchAxis { .. })
+                            })
+                        };
                     // A centerline comes first, then an axis, whichever was picked first.
                     let centerline = |c: usize| sk.curves.get(c).is_some_and(|c| c.centerline);
                     let a_ref = centerline(a) || (!centerline(b) && axis(a) && !linked(b));
@@ -3644,14 +3641,14 @@ fn dimension_result(s: &mut Session, p: &Value) -> Result<DimensionResult> {
         if let Some((name, rhs)) = &defines {
             // The new user parameter reads a bare number as the dimension would (the design's
             // unit for a length, degrees for an angle), and carries that unit.
-            if let Some(problem) = solidcraft_doc::Document::param_name_problem(name) {
+            if let Some(problem) = torno_doc::Document::param_name_problem(name) {
                 return Err(bad(cmd, format!("value: {problem}")));
             }
             if doc.param(name).is_some() {
                 return Err(bad(cmd, format!("value: there is already a parameter `{name}`: type `{name}` to use it, or change it in Parameters")));
             }
             let rhs = doc.with_design_unit(rhs, kind);
-            let unit = if is_angle { "deg".to_string() } else { solidcraft_doc::expr::length_unit_or_mm(&doc.units).to_string() };
+            let unit = if is_angle { "deg".to_string() } else { torno_doc::expr::length_unit_or_mm(&doc.units).to_string() };
             doc.add_user_param(name, &rhs, Some(&unit), None).map_err(|e| bad(cmd, format!("value: {e}")))?;
         }
         let e = value.as_ref().map(|e| doc.with_design_unit(e, kind)).unwrap_or(default_expr);
@@ -3680,8 +3677,7 @@ fn dimension_result(s: &mut Session, p: &Value) -> Result<DimensionResult> {
             && let Some(factor) = Some(want / cur).filter(|f| f.is_finite() && (f - 1.0).abs() > 1e-9)
         {
             if let Some(big) = sk.scaled_for_first_dimension(factor, &k, scale_about_origin).filter(|big| {
-                sk.links.is_empty()
-                    || solidcraft_sketch::measure_dimension(big, &k).is_some_and(|v| (v - want).abs() <= solidcraft_sketch::CONSISTENT)
+                sk.links.is_empty() || torno_sketch::measure_dimension(big, &k).is_some_and(|v| (v - want).abs() <= torno_sketch::CONSISTENT)
             }) {
                 *sk = big;
                 scaled = Some(factor);
@@ -3830,7 +3826,7 @@ fn direction_fixed(sk: &Sketch, l: usize) -> bool {
 fn solved_measure(s: &Session, p: &Value, cmd: &str, id: &str) -> Option<(f64, &'static str)> {
     let sk = sketch_store::read(&s.doc, sketch_store::target(s, p, cmd).ok()?).ok()?;
     let k = &sk.constraints.iter().find(|c| c.id == id)?.kind;
-    Some(measured(k.is_angle(), solidcraft_sketch::measure_dimension(sk, k)?))
+    Some(measured(k.is_angle(), torno_sketch::measure_dimension(sk, k)?))
 }
 
 /// The type of a dimension between `a` and `b` (two points or a line's ends). `auto` takes it
@@ -3979,8 +3975,8 @@ fn ellipse_half_axis(
 /// dimension so it follows the geometry.
 fn place_text(sk: &mut Sketch, id: &str, at: Option<Vec2>) {
     let Some(i) = sk.constraints.iter().position(|c| c.id == id) else { return };
-    let text = match (at, sk.constraints.get(i).and_then(|c| solidcraft_sketch::dim_frame(sk, &c.kind))) {
-        (Some(at), Some(f)) => Some(solidcraft_sketch::encode_text(&f, at)),
+    let text = match (at, sk.constraints.get(i).and_then(|c| torno_sketch::dim_frame(sk, &c.kind))) {
+        (Some(at), Some(f)) => Some(torno_sketch::encode_text(&f, at)),
         _ => None,
     };
     if let Some(c) = sk.constraints.get_mut(i) {
@@ -4219,7 +4215,7 @@ fn sketch_delete(s: &mut Session, p: &Value) -> Result<Value> {
                 && topology
                     .roles
                     .iter()
-                    .any(|role| !role.retired && role.kind == solidcraft_sketch::OffsetRoleKind::Arc && !removed.contains(role.output.as_str()))
+                    .any(|role| !role.retired && role.kind == torno_sketch::OffsetRoleKind::Arc && !removed.contains(role.output.as_str()))
             {
                 return Err(bad(cmd, "break the offset association before deleting only part of its curved boundary"));
             }
@@ -4235,12 +4231,8 @@ fn sketch_delete(s: &mut Session, p: &Value) -> Result<Value> {
         let pids: Vec<String> = points.iter().filter_map(|q| sk.points.get(*q).map(|x| x.id.clone())).collect();
         // Linked geometry from the model, by its entity count before the delete (#5098).
         let size = |sk: &Sketch, id: &str| sk.link_curves(id).len() + sk.link_points(id).len();
-        let linked: Vec<(String, usize)> = sk
-            .links
-            .iter()
-            .filter(|l| !matches!(l.source, solidcraft_sketch::LinkSource::Text { .. }))
-            .map(|l| (l.id.clone(), size(sk, &l.id)))
-            .collect();
+        let linked: Vec<(String, usize)> =
+            sk.links.iter().filter(|l| !matches!(l.source, torno_sketch::LinkSource::Text { .. })).map(|l| (l.id.clone(), size(sk, &l.id))).collect();
         sk.remove_curves(&curves);
         let pidx: Vec<usize> = pids.iter().filter_map(|id| sk.point_index(id)).collect();
         sk.remove_points(&pidx);
@@ -4388,7 +4380,7 @@ fn drag_frame(s: &mut Session, p: &Value, live: bool) -> Result<(Value, Option<c
     // moving point that got furthest toward `to` moved (`Dragged::at`).
     let sk = sketch_store::read(&s.doc, id)?;
     let at = d.at(sk, from, to);
-    let rep = rep.or_else(|| last.map(|ss| SolveReport { status: solidcraft_sketch::SolveStatus::Solved, failing: Vec::new(), ..ss.report.clone() }));
+    let rep = rep.or_else(|| last.map(|ss| SolveReport { status: torno_sketch::SolveStatus::Solved, failing: Vec::new(), ..ss.report.clone() }));
     let out = reply(
         cmd,
         DragResult { sketch: rep.as_ref().map(solve_info), reached: d.reached, at: [at.x, at.y], retry: d.retry, param_warnings: Vec::new() },
@@ -4429,7 +4421,7 @@ fn drag_end(s: &mut Session, p: &Value) -> Result<Value> {
 }
 
 /// The Sketch Palette options of a sketch, by their palette names (true = shown / on).
-fn options_of(v: &solidcraft_sketch::SketchView) -> SketchOptions {
+fn options_of(v: &torno_sketch::SketchView) -> SketchOptions {
     SketchOptions {
         show_profile: !v.hide_profile,
         show_points: !v.hide_points,

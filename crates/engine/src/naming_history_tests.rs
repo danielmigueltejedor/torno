@@ -5,7 +5,7 @@
 
 use serde_json::{Value, json};
 use solidcore_record::Vec3;
-use solidcraft_geom::MeshGeom;
+use torno_geom::MeshGeom;
 
 use crate::Session;
 
@@ -31,12 +31,12 @@ fn error(s: &Session, name: &str) -> Option<String> {
 /// The reference feature `name` failed on, asking for it to be picked again.
 fn reselect(s: &Session, name: &str) -> Option<String> {
     let error = error(s, name)?;
-    solidcraft_doc::reselect_parts(&error).filter(|(feature, _)| *feature == name).map(|(_, reference)| reference.to_string())
+    torno_doc::reselect_parts(&error).filter(|(feature, _)| *feature == name).map(|(_, reference)| reference.to_string())
 }
 
 /// Whether any body holds `p`.
 fn solid_at(s: &Session, p: [f64; 3]) -> bool {
-    s.model.state().bodies.iter().any(|b| b.body.classify_point(Vec3::new(p[0], p[1], p[2])).unwrap() == solidcraft_kernel::PointClass::Inside)
+    s.model.state().bodies.iter().any(|b| b.body.classify_point(Vec3::new(p[0], p[1], p[2])).unwrap() == torno_kernel::PointClass::Inside)
 }
 
 /// Which body holds `p`.
@@ -45,15 +45,15 @@ fn body_at(s: &Session, p: [f64; 3]) -> Option<String> {
         .state()
         .bodies
         .iter()
-        .find(|b| b.body.classify_point(Vec3::new(p[0], p[1], p[2])).unwrap() == solidcraft_kernel::PointClass::Inside)
+        .find(|b| b.body.classify_point(Vec3::new(p[0], p[1], p[2])).unwrap() == torno_kernel::PointClass::Inside)
         .map(|b| b.name.clone())
 }
 
 fn names(s: &Session, body: &str) -> Vec<(String, bool)> {
     let state = s.model.state();
     let b = state.body(body).unwrap_or_else(|| panic!("body {body}"));
-    let names = solidcraft_doc::naming::face_names(b);
-    names.iter().enumerate().map(|(i, n)| (n.clone(), solidcraft_doc::naming::face_name_exact(b, i))).collect()
+    let names = torno_doc::naming::face_names(b);
+    names.iter().enumerate().map(|(i, n)| (n.clone(), torno_doc::naming::face_name_exact(b, i))).collect()
 }
 
 /// A 40 x 30 x 10 block ("Block": sketch lines l1 bottom, l2 right, l3 top, l4 left).
@@ -181,7 +181,7 @@ fn a_blend_follows_its_named_edge_to_a_moved_lid_instead_of_the_body_below() {
         let blend = s.doc.find_feature("Blend").unwrap();
         assert!(blend.edge_names.iter().all(|n| !n.is_empty()));
         // Exercise the saved reference, including files with no explicit target body.
-        let mut s = Session::new(solidcraft_doc::Document::from_json(&s.doc.to_json()).unwrap());
+        let mut s = Session::new(torno_doc::Document::from_json(&s.doc.to_json()).unwrap());
         s.refresh();
 
         // The old pick lies on the lower body's edge after this edit. The saved name
@@ -192,12 +192,12 @@ fn a_blend_follows_its_named_edge_to_a_moved_lid_instead_of_the_body_below() {
         let state = s.model.state();
         let base = state.body("Body1").unwrap();
         let lid = state.body("Body2").unwrap();
-        let base_volume = solidcraft_kernel::measure(&base.body).unwrap().volume;
-        let lid_volume = solidcraft_kernel::measure(&lid.body).unwrap().volume;
+        let base_volume = torno_kernel::measure(&base.body).unwrap().volume;
+        let lid_volume = torno_kernel::measure(&lid.body).unwrap().volume;
         assert!((base_volume - 24000.0).abs() < 0.01, "{command}: the base stays sharp: {base_volume}");
         assert!((lid_volume - (6000.0 - removed)).abs() < 0.01, "{command}: the lid keeps its blend: {lid_volume}");
-        assert_eq!(base.body.classify_point(Vec3::new(39.9, 29.9, 12.5)).unwrap(), solidcraft_kernel::PointClass::Inside);
-        assert_eq!(lid.body.classify_point(Vec3::new(39.9, 29.9, 22.5)).unwrap(), solidcraft_kernel::PointClass::Outside);
+        assert_eq!(base.body.classify_point(Vec3::new(39.9, 29.9, 12.5)).unwrap(), torno_kernel::PointClass::Inside);
+        assert_eq!(lid.body.classify_point(Vec3::new(39.9, 29.9, 22.5)).unwrap(), torno_kernel::PointClass::Outside);
     }
 }
 
@@ -323,18 +323,18 @@ fn pieces_of_a_cut_keep_their_names_when_the_design_is_evaluated_again() {
     run(&mut s, "solid.extrude", json!({"distance": 5, "operation": "join"}));
     run(&mut s, "solid.hole", json!({"depth": 14, "diameter": 5, "position": [-1, 10, 8]}));
     // Each body by name, with where it is (two pieces have the same volume).
-    let pieces = |st: &solidcraft_doc::ModelState| -> Vec<(String, String)> {
+    let pieces = |st: &torno_doc::ModelState| -> Vec<(String, String)> {
         st.bodies
             .iter()
             .map(|b| {
-                let m = solidcraft_kernel::measure(&b.body).unwrap();
+                let m = torno_kernel::measure(&b.body).unwrap();
                 (b.name.clone(), format!("{:.3} {:.3} {:.3} {:.3}", m.volume, m.centroid.x, m.centroid.y, m.centroid.z))
             })
             .collect()
     };
     let live = pieces(&s.model.state());
     assert_eq!(live.len(), 3, "{live:?}");
-    let mut again = solidcraft_doc::Model::new();
+    let mut again = torno_doc::Model::new();
     again.no_cache = true;
     again.evaluate(&s.doc);
     assert_eq!(pieces(&again.state()), live);
@@ -354,7 +354,7 @@ fn a_name_of_a_body_without_history_is_found_by_geometry_and_says_so_once_it_mov
     run(&mut s, "solid.align", json!({"bodies": ["Body1"], "from": [0, 0, 0], "to": [0, 0, 2], "name": "Lift"}));
     let state = s.model.state();
     let body = state.bodies.first().unwrap();
-    assert!((0..solidcraft_doc::naming::face_names(body).len()).all(|i| !solidcraft_doc::naming::face_name_exact(body, i)));
+    assert!((0..torno_doc::naming::face_names(body).len()).all(|i| !torno_doc::naming::face_name_exact(body, i)));
     run(&mut s, "solid.fillet", json!({"edges": [[40, 15, 12]], "radius": 2, "name": "Round"}));
     // Where it was picked, the pick and the name agree: nothing to say.
     assert_eq!(warning(&s, "Round"), None);
@@ -417,7 +417,7 @@ fn a_sketch_on_a_certified_face_survives_a_fillet_and_a_cut_upstream_of_it() {
     assert!((top(&s) - 14.0).abs() < 1e-6);
     let state = s.model.state();
     let body = state.bodies.first().unwrap();
-    assert!((0..solidcraft_doc::naming::face_names(body).len()).all(|i| solidcraft_doc::naming::face_name_exact(body, i)));
+    assert!((0..torno_doc::naming::face_names(body).len()).all(|i| torno_doc::naming::face_name_exact(body, i)));
     change(&mut s, "h", "16 mm");
     for f in ["Corner", "Hole", "Top", "Peg"] {
         assert_eq!(error(&s, f), None, "{f}");
@@ -430,7 +430,7 @@ fn a_sketch_on_a_certified_face_survives_a_fillet_and_a_cut_upstream_of_it() {
 /// blends (a corner patch and its rounds); where a round runs into an end face is not one.
 #[test]
 fn blend_seams_are_a_rounds_contacts_and_the_blends_beside_it() {
-    use solidcraft_doc::naming::{BlendSeamKind, blend_seams};
+    use torno_doc::naming::{BlendSeamKind, blend_seams};
     let mut s = Session::default();
     block(&mut s);
     run(&mut s, "solid.fillet", json!({"edges": [[20, 0, 10]], "radius": 2, "tangent_chain": false}));
@@ -458,7 +458,7 @@ fn blend_seams_are_a_rounds_contacts_and_the_blends_beside_it() {
 /// name holds a `|` of its own, `F3:blend(F1:+z|F2:side)`).
 #[test]
 fn a_round_of_a_round_s_end_has_no_seam_with_that_round_s_faces() {
-    use solidcraft_doc::naming::{blend_seams, face_names};
+    use torno_doc::naming::{blend_seams, face_names};
     let mut s = Session::default();
     run(&mut s, "solid.box", json!({"length": 40, "width": 10, "height": 15, "corner": [0, -5, 0], "body_name": "Block"}));
     run(&mut s, "solid.cylinder", json!({"radius": 10, "height": 30, "base": [0, 0, 0], "operation": "join", "targets": ["Block"]}));
@@ -555,7 +555,7 @@ fn a_cut_through_one_of_two_bosses_names_only_its_own_walls() {
     run(&mut s, "solid.extrude", json!({"distance": 16, "body_name": "Arm"}));
     run(&mut s, "solid.cylinder", json!({"diameter": 46.0, "height": 22, "base": [0, 0, 0], "operation": "join", "targets": ["Arm"]}));
     // A point on the boss's outer wall, above the arm.
-    let wall = |s: &Session| solidcraft_doc::naming::face_names_at(&s.model.state(), &[Vec3::new(-23.0, 0.0, 19.0)]).pop().unwrap_or_default();
+    let wall = |s: &Session| torno_doc::naming::face_names_at(&s.model.state(), &[Vec3::new(-23.0, 0.0, 19.0)]).pop().unwrap_or_default();
     let boss = wall(&s);
     assert!(boss.starts_with("F2:side:a"), "{boss}");
     run(&mut s, "solid.cylinder", json!({"diameter": 30.0, "height": 20, "base": [170.0, 0, 0], "operation": "join", "targets": ["Arm"]}));
@@ -608,7 +608,7 @@ fn split_pieces_keep_their_numbers_across_evaluations() {
         let first = named(&mut s);
         assert_eq!(first.iter().any(|(n, _)| n.contains('#')), pieces, "split pieces: {first:?}");
         for run in 0..10 {
-            let mut fresh = Session::new(solidcraft_doc::Document::clone(&s.doc));
+            let mut fresh = Session::new(torno_doc::Document::clone(&s.doc));
             fresh.refresh();
             assert_eq!(named(&mut fresh), first, "evaluation {run}");
         }
@@ -633,15 +633,15 @@ fn a_design_saved_before_pieces_were_numbered_by_place_opens_marked_and_names_al
         pending.retain(|c| c != "face-pieces-by-place");
     }
     // 0.18.3 folded the change into format 29, so a build before it wrote 28.
-    file["format"] = Value::String(solidcraft_doc::format::format_string(28));
-    let old = solidcraft_doc::Document::from_json(&file.to_string()).unwrap();
+    file["format"] = Value::String(torno_doc::format::format_string(28));
+    let old = torno_doc::Document::from_json(&file.to_string()).unwrap();
     assert!(old.features.iter().all(|f| f.kernel_piece_order), "the features of an older design keep the old numbering");
     let mut reopened = Session::new(old);
     reopened.refresh();
     assert!(reopened.model.results.iter().all(|r| r.error.is_none()), "{:?}", reopened.model.results);
     let kept = listed(&mut reopened, "Disc");
     assert_eq!(kept.len(), by_place.len());
-    let mut legacy = solidcraft_doc::Document::clone(&s.doc);
+    let mut legacy = torno_doc::Document::clone(&s.doc);
     legacy.features.iter_mut().for_each(|f| f.kernel_piece_order = true);
     let mut saved_with = Session::new(legacy);
     saved_with.refresh();
@@ -651,7 +651,7 @@ fn a_design_saved_before_pieces_were_numbered_by_place_opens_marked_and_names_al
 /// The volumes of the design's bodies, by name.
 fn volumes(s: &Session) -> Vec<(String, f64)> {
     let st = s.model.state();
-    st.bodies.iter().map(|b| (b.name.clone(), solidcraft_kernel::measure(&b.body).unwrap().volume)).collect()
+    st.bodies.iter().map(|b| (b.name.clone(), torno_kernel::measure(&b.body).unwrap().volume)).collect()
 }
 
 /// Whether the four vertical corners of the box `lo`..`hi` are rounded halfway up `z`.
@@ -765,10 +765,9 @@ fn one_fillet_over_stacked_boxes_saved_named_on_the_lower_asks_for_the_upper_edg
     // As an older build saved it: both edges named and referenced on the lower box.
     let before = s.model.state_before(f);
     let lower = before.bodies.iter().find(|b| b.feature == id(&s, "Lower")).unwrap().clone();
-    let old_names = solidcraft_doc::naming::edge_names_at(&lower, &[Vec3::new(25.0, -25.0, 20.0), Vec3::new(-25.0, -25.0, 45.0)]);
+    let old_names = torno_doc::naming::edge_names_at(&lower, &[Vec3::new(25.0, -25.0, 20.0), Vec3::new(-25.0, -25.0, 45.0)]);
     assert!(old_names[1].contains("top"), "{old_names:?}");
-    let old_refs =
-        solidcraft_doc::edge_refs(&before, &Some(lower.name.clone().into()), &[Vec3::new(25.0, -25.0, 20.0), Vec3::new(-25.0, -25.0, 45.0)]);
+    let old_refs = torno_doc::edge_refs(&before, &Some(lower.name.clone().into()), &[Vec3::new(25.0, -25.0, 20.0), Vec3::new(-25.0, -25.0, 45.0)]);
     let feature = s.doc_mut().feature_mut(f).unwrap();
     feature.edge_names = old_names.clone();
     feature.edge_refs = old_refs;
@@ -800,7 +799,7 @@ fn a_shell_point_pick_moved_off_its_face_reopens_only_that_face() {
     assert_eq!(error(&s, "Shell"), None);
     let state = s.model.state();
     let bar = state.body("Bar").expect("the shelled bar");
-    let volume = solidcraft_kernel::measure(&bar.body).expect("measure").volume;
+    let volume = torno_kernel::measure(&bar.body).expect("measure").volume;
     // 150 x 20 x 20 open at x = 150 only: 60000 - 148 * 16 * 16.
     assert!((volume - 22112.0).abs() < 1e-3, "{volume}");
     assert_eq!(bar.body.face_count(), 11);
@@ -826,7 +825,7 @@ fn a_chamfer_running_past_the_side_edges_it_takes_up_is_named_by_its_edge() {
     assert_eq!(blends, vec!["F3:blend(F2:side:l1|F2:start)".to_string()]);
     // On the chamfer's plane, through (x, -11, 0) and (x, 0, 220): below and above z = 85.
     let on = |z: f64| Vec3::new(0.0, -11.0 * (1.0 - z / 220.0), z);
-    let at = solidcraft_doc::naming::face_names_at(&s.model.state(), &[on(40.0), on(150.0)]);
+    let at = torno_doc::naming::face_names_at(&s.model.state(), &[on(40.0), on(150.0)]);
     assert_eq!(at, vec![blends[0].clone(), blends[0].clone()]);
 }
 
@@ -860,7 +859,7 @@ fn a_sketch_on_a_thickened_surface_follows_the_face() {
 
     let slab = |s: &Session| {
         let body = s.model.state().body("Slab").unwrap().body.clone();
-        let measured = solidcraft_kernel::measure(&body).unwrap();
+        let measured = torno_kernel::measure(&body).unwrap();
         (measured.volume, measured.bbox.min.y)
     };
     let (volume, min_y) = slab(&s);
@@ -881,7 +880,7 @@ fn a_sketch_on_a_thickened_surface_follows_the_face() {
     assert!((volume - (4800.0 + boss)).abs() < 0.05, "the slab grew with the thickness and the boss stayed whole {}: got {volume}", 4800.0 + boss);
     assert!((min_y - (-8.0)).abs() < 1e-6, "the boss followed the face to y = -4: {min_y}");
 
-    let mut cold = Session::new(solidcraft_doc::Document::from_json(&s.doc.to_json()).unwrap());
+    let mut cold = Session::new(torno_doc::Document::from_json(&s.doc.to_json()).unwrap());
     cold.refresh();
     let (volume, min_y) = slab(&cold);
     assert!((volume - (4800.0 + boss)).abs() < 0.05 && (min_y - (-8.0)).abs() < 1e-6, "reopened: {volume} {min_y}");
@@ -1001,7 +1000,7 @@ fn a_sketch_on_a_face_of_a_two_sided_cut_keeps_its_attachment() {
     assert!(named.iter().any(|(n, _)| n == &format!("F{cut}:bottom")), "{named:?}");
     assert!(named.iter().any(|(n, _)| n == &format!("F{cut}:top")), "{named:?}");
     // The attachment is kept when the design is opened again.
-    let cold = Session::new(solidcraft_doc::Document::from_json(&s.doc.to_json()).unwrap());
+    let cold = Session::new(torno_doc::Document::from_json(&s.doc.to_json()).unwrap());
     assert_eq!(error(&cold, "OnUpper"), None);
     assert_eq!(error(&cold, "OnLower"), None);
 }

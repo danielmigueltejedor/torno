@@ -1,8 +1,8 @@
 //! Deterministic software rasterisation of the actual egui meshes and texture uploads.
 use egui::{ColorImage, TextureId, pos2, vec2};
 
-use solidcraft_ui_egui::scenario::Harness;
 use std::collections::HashMap;
+use torno_ui_egui::scenario::Harness;
 
 pub fn paint(h: &mut Harness, textures: &mut HashMap<TextureId, ColorImage>, events: Vec<egui::Event>) -> egui::FullOutput {
     paint_at(h, textures, events, vec2(1100.0, 1500.0))

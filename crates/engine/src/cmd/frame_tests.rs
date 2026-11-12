@@ -1,8 +1,8 @@
 #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 
 use serde_json::{Value, json};
-use solidcraft_geom::prelude::*;
 use std::f64::consts::PI;
+use torno_geom::prelude::*;
 
 use crate::Session;
 
@@ -374,7 +374,7 @@ fn members_undo_and_survive_save_and_reopen() {
     let before = bodies(&mut s);
     assert_eq!(before.len(), 4);
     assert_eq!(before[0].0, "Rail");
-    let mut reopened = Session::new(solidcraft_doc::Document::from_json(&s.doc.to_json()).unwrap());
+    let mut reopened = Session::new(torno_doc::Document::from_json(&s.doc.to_json()).unwrap());
     let after = bodies(&mut reopened);
     assert_eq!(before.len(), after.len());
     for (b, a) in before.iter().zip(&after) {
@@ -397,7 +397,7 @@ fn sketch_lines(s: &Session, name: &str) -> Vec<(String, [f64; 2], [f64; 2])> {
     sk.curves
         .iter()
         .filter_map(|c| match c.kind {
-            solidcraft_sketch::CurveKind::Line { a, b } => {
+            torno_sketch::CurveKind::Line { a, b } => {
                 let (p, q) = (sk.points[a].pos, sk.points[b].pos);
                 Some((c.id.clone(), [p.x, p.y], [q.x, q.y]))
             }
@@ -494,7 +494,7 @@ fn a_renamed_member_keeps_its_name_through_line_edits() {
         assert_eq!(before.get(name), Some(bb), "{name}: {before:?} → {after:?}");
     }
     // It survives saving and reopening.
-    let mut reopened = Session::new(solidcraft_doc::Document::from_json(&s.doc.to_json()).unwrap());
+    let mut reopened = Session::new(torno_doc::Document::from_json(&s.doc.to_json()).unwrap());
     assert_eq!(boxes(&mut reopened), after);
 }
 
@@ -572,7 +572,7 @@ fn profile_dimensions_follow_parameters() {
     assert!(rel(total_volume(&mut s), square(2.0)) < 1e-9, "{}", total_volume(&mut s));
     // A parameter that makes the profile not fit fails the feature, naming the dimension.
     let err = s.execute("parameters.change", &json!({"name": "T", "expression": "25 mm"})).err().map(|e| e.to_string()).unwrap_or_default();
-    let fid = s.doc.features.iter().find(|f| matches!(f.kind, solidcraft_doc::FeatureKind::FrameMember { .. })).unwrap().id;
+    let fid = s.doc.features.iter().find(|f| matches!(f.kind, torno_doc::FeatureKind::FrameMember { .. })).unwrap().id;
     let failing = s.model.result(fid).and_then(|r| r.error.clone()).unwrap_or_default();
     assert!(err.contains("wall") || failing.contains("wall"), "{err} / {failing}");
 }
@@ -815,7 +815,7 @@ fn moving_a_capped_members_occurrence_rebuilds_the_cap_as_from_scratch() {
     run(&mut s, "frame.end_cap", json!({"faces": [top], "thickness": 4, "direction": "inward"}));
     run(&mut s, "occurrence.move", json!({"occurrence": "Holder:1", "translate": [30, 0, 0]}));
     let warm = bodies(&mut s);
-    let mut cold = Session::new(solidcraft_doc::Document::from_json(&s.doc.to_json()).unwrap());
+    let mut cold = Session::new(torno_doc::Document::from_json(&s.doc.to_json()).unwrap());
     let cold = bodies(&mut cold);
     assert_eq!(warm.len(), cold.len(), "{warm:?} vs {cold:?}");
     for (w, c) in warm.iter().zip(&cold) {
@@ -878,7 +878,7 @@ fn end_caps_follow_member_edits_renames_undo_and_reopen() {
     assert!(rel(cap.1, 54.0 * 34.0 * 6.0) < 1e-9, "{cap:?}");
     assert!(near3(cap.2, [-27.0, -17.0, 300.0]), "{cap:?}");
     assert!(measured(&mut s, "Post End Cap (2)").2[2] < -5.9);
-    let reopened = Session::new(solidcraft_doc::Document::from_json(&s.doc.to_json()).unwrap());
+    let reopened = Session::new(torno_doc::Document::from_json(&s.doc.to_json()).unwrap());
     assert!(rel(reopened.model.state().body("Post End Cap").unwrap().mesh().measure().volume, 54.0 * 34.0 * 6.0) < 1e-7);
     run(&mut s, "edit.undo", json!({}));
     run(&mut s, "edit.undo", json!({}));

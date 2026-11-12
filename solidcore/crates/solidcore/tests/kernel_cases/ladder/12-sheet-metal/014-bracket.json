@@ -103,6 +103,6 @@
   "ungraded": [],
   "what": "a bracket: a 30 mm flange on the front edge, a 10 mm lip turned out on its far edge, a d10 hole through the base",
   "why_not": [
-    "body \"Body1\" is no kernel operation's output nor an operand: SolidCraft built it or changed the kernel's record"
+    "body \"Body1\" is no kernel operation's output nor an operand: Torno built it or changed the kernel's record"
   ]
 }

@@ -1,4 +1,4 @@
-//! solidcore#2365 (SolidCraft rig, jyviko's review): a corner set back through
+//! solidcore#2365 (Torno rig, jyviko's review): a corner set back through
 //! `AddSetBackVertex` and `SetSetBackDist` on the N x N corner builds its setback, as
 //! before smlib#125's port. The fork's dc757a6
 //! deletes the N x N corners' setback paths, which left these corners refused
@@ -9,20 +9,20 @@
 //! ([`FilletCornerType::NByTwo`]), the setback set on it read as the fill asked: its patch
 //! meets the rounds tangentially (the N x N patch was up to 4.71 degrees off). Its six fill
 //! patches are marked as the N x N patch's six were. The G2 cases' volumes come within
-//! 0.007 % of the rig's (SolidCraft's G2 patch), where the N x N patch was up to 0.08 % off.
+//! 0.007 % of the rig's (Torno's G2 patch), where the N x N patch was up to 0.08 % off.
 //! A setback too short for the fill to stay convex is refused with the one that builds
 //! (`NoRoom`, 3.5 on r3 rounds: 3.5595), where the N x N corner built a patch.
 //!
-//! The seven cases are SolidCraft's kernel-rig cases that built before the port (their
-//! entries are in `tests/kernel_cases/`; six build here, the r3 one is refused), driven as SolidCraft's `round_edges` drives the
+//! The seven cases are Torno's kernel-rig cases that built before the port (their
+//! entries are in `tests/kernel_cases/`; six build here, the r3 one is refused), driven as Torno's `round_edges` drives the
 //! session: circular rounds per edge, each set-back vertex marked (`add_set_back_vertex`)
 //! before the corners are made, then `set_corner_setback` on the vertex's corner, and with
-//! a G2 corner the corner's patch marked (`set_mark_corner_patches`) for SolidCraft to
+//! a G2 corner the corner's patch marked (`set_mark_corner_patches`) for Torno to
 //! replace; then `StitchAndOrient`. The fixes are the corpus's `fixes.json`. The values are
 //! those the same calls give on the Setback (solidcore#2933), every one: counts, the
 //! patch's faces and the volume to 1e-9. The rig's values are the N x N corner's (013's
-//! filled corner) or SolidCraft's G2 patch's, so here the corner's own Setback fill is
-//! checked: its six faces marked, and the body's faces the rig's less SolidCraft's one G2
+//! filled corner) or Torno's G2 patch's, so here the corner's own Setback fill is
+//! checked: its six faces marked, and the body's faces the rig's less Torno's one G2
 //! patch plus these six. Where the cut takes the whole patch away (`...-outside-setback`)
 //! the volume is the rig's measured value.
 #![allow(
@@ -48,9 +48,9 @@ use solidcore::topology::brep::p5::{stitch_and_orient, StitchAndOrientOptions};
 use solidcore::topology::{edge, EdgeId, VertexId};
 use solidcore::{Brep, Kernel};
 
-/// The corpus's fix list (`tests/kernel_cases/fixes.json`, SolidCraft's), and
+/// The corpus's fix list (`tests/kernel_cases/fixes.json`, Torno's), and
 /// `closed_smooth_pole_tangent_limit`, which the rig run turned on too.
-fn solidcraft_fixes() -> Kernel {
+fn torno_fixes() -> Kernel {
     let names: Vec<String> = serde_json::from_str(include_str!("kernel_cases/fixes.json")).unwrap();
     let mut f = UpstreamFixes::default();
     for name in names
@@ -131,7 +131,7 @@ fn counts(b: &Brep) -> (usize, usize, usize) {
     )
 }
 
-/// SolidCraft's `blend_edges` with circular rounds: the edges at `at` rounded `radius`, the
+/// Torno's `blend_edges` with circular rounds: the edges at `at` rounded `radius`, the
 /// vertex at `corner` marked a set-back vertex and its corner set back `setback`; with
 /// `mark`, the corner's patch marked. Refused: the error noted.
 fn round_set_back(
@@ -209,7 +209,7 @@ fn box_corner(
     setback: f64,
     mark: bool,
 ) -> Made {
-    let mut k = solidcraft_fixes();
+    let mut k = torno_fixes();
     let mut b = create_box(&mut k, Point3::new(0.0, 0.0, 0.0), l, w, h).unwrap();
     let (kind, patch) =
         round_set_back(&mut k, &mut b, at, radius, [l, w, h], setback, mark).unwrap();
@@ -270,7 +270,7 @@ fn ladder_013_corner_setback_builds_its_setback() {
 
 /// ladder 07-fillets/015-corner-g2-patch and fillets/9-fillet-corner-r5-curvature-default-
 /// setback (the same calls): three r5 rounds at the box corner, the G2 corner's default
-/// setback 1.5 r = 7.5, its patch marked (rig, with SolidCraft's G2 patch in place of the
+/// setback 1.5 r = 7.5, its patch marked (rig, with Torno's G2 patch in place of the
 /// marked faces: V 47370.105567, 10 faces, 24 edges).
 #[test]
 fn ladder_015_and_9_g2_corner_patch_is_marked() {
@@ -287,13 +287,13 @@ fn ladder_015_and_9_g2_corner_patch_is_marked() {
 
 /// fillets/every-box-corner-three-edges-r3-curvature-setback-3-5: a 40 x 30 x 20 box's
 /// corner (40, 30, 20), three r3 rounds, the G2 corner set back 3.5 (rig: V 23830.420377,
-/// 10 faces, 24 edges, SolidCraft's G2 patch). The Setback's G1 fill stays convex only from
+/// 10 faces, 24 edges, Torno's G2 patch). The Setback's G1 fill stays convex only from
 /// a setback of 3.5595: 3.5 is refused (`NoRoom`), naming it, where the N x N corner built
 /// a patch (V 23826.811198).
 #[test]
 fn every_box_corner_r3_setback_3_5_is_refused_naming_the_setback_that_builds() {
     let at = [[20.0, 30.0, 20.0], [40.0, 15.0, 20.0], [40.0, 30.0, 10.0]];
-    let mut k = solidcraft_fixes();
+    let mut k = torno_fixes();
     let mut b = create_box(&mut k, Point3::new(0.0, 0.0, 0.0), 40.0, 30.0, 20.0).unwrap();
     let (code, comment) =
         round_set_back(&mut k, &mut b, &at, 3.0, [40.0, 30.0, 20.0], 3.5, true).unwrap_err();
@@ -308,7 +308,7 @@ fn every_box_corner_r3_setback_3_5_is_refused_naming_the_setback_that_builds() {
 /// faces, 27 edges).
 #[test]
 fn bar_into_post_g2_corner_patch_is_marked() {
-    let mut k = solidcraft_fixes();
+    let mut k = torno_fixes();
     let (b, kind, patch) = bar_into_post(&mut k);
     let m = finish(&mut k, b, kind, patch);
     assert_made(
@@ -326,7 +326,7 @@ fn bar_into_post_g2_corner_patch_is_marked() {
 /// away: the three rounds outside it (rig: V 9342.029547, 13 faces, 33 edges).
 #[test]
 fn bar_into_post_outside_the_setback_cube() {
-    let mut k = solidcraft_fixes();
+    let mut k = torno_fixes();
     let (mut b, kind, patch) = bar_into_post(&mut k);
     stitch_and_orient(&mut k, &mut b, &StitchAndOrientOptions::default()).unwrap();
     let cube = create_box(&mut k, Point3::new(-1.0, -1.0, 7.0), 4.0, 4.0, 4.0).unwrap();
@@ -348,7 +348,7 @@ fn bar_into_post_outside_the_setback_cube() {
 /// 44254.341161, 13 faces, 33 edges).
 #[test]
 fn ladder_019_concave_corner_g2_patch_is_marked() {
-    let mut k = solidcraft_fixes();
+    let mut k = torno_fixes();
     let bx = create_box(&mut k, Point3::new(0.0, 0.0, 0.0), 60.0, 40.0, 20.0).unwrap();
     let notch = create_box(&mut k, Point3::new(40.0, 20.0, 10.0), 30.0, 30.0, 20.0).unwrap();
     let mut b = boolean_difference(&mut k, bx, notch).unwrap();
@@ -369,7 +369,7 @@ fn ladder_019_concave_corner_g2_patch_is_marked() {
 /// `(faces, edges, vertices)` of a body, and whether it is a closed solid.
 type Sheet = ((usize, usize, usize), bool);
 
-/// SolidCraft's G2 corners asked as the blend corner's open Setback instead: each set-back
+/// Torno's G2 corners asked as the blend corner's open Setback instead: each set-back
 /// vertex marked, `set_set_back_fill(vertex, setback, ease, open = true)` before the corners
 /// are made, the patches marked. The corner is the Setback; the fill's patches (6 faces)
 /// are made and marked only for a G2 fill, which an ease (`ease > 0`) or curvature-continuous
@@ -451,14 +451,14 @@ fn open_setback_with_an_ease_is_the_g2_setback_with_its_patch_marked() {
         (Circular, 2.0, (6, Some(((15, 36, 23), true)))),
         (BlendCurve, 0.0, (6, Some(((15, 36, 23), true)))),
     ] {
-        let mut k = solidcraft_fixes();
+        let mut k = torno_fixes();
         let mut b = boxed(&mut k);
         let got = open_fill(
             &mut k, &mut b, &BOX_EDGES, corner, 5.0, 7.5, generator, ease,
         );
         assert_eq!(got, want, "box {generator:?} ease {ease}");
     }
-    let mut k = solidcraft_fixes();
+    let mut k = torno_fixes();
     let bar = create_box(&mut k, Point3::new(0.0, 0.0, 0.0), 40.0, 16.0, 10.0).unwrap();
     let post = create_cylinder(&mut k, Point3::new(40.0, 8.0, 0.0), 8.0, 20.0).unwrap();
     let mut b = boolean_union(&mut k, bar, post).unwrap();
@@ -474,7 +474,7 @@ fn open_setback_with_an_ease_is_the_g2_setback_with_its_patch_marked() {
         1.0,
     );
     assert_eq!(got, (6, Some(((16, 39, 25), true))), "bar");
-    let mut k = solidcraft_fixes();
+    let mut k = torno_fixes();
     let bx = boxed(&mut k);
     let notch = create_box(&mut k, Point3::new(40.0, 20.0, 10.0), 30.0, 30.0, 20.0).unwrap();
     let mut b = boolean_difference(&mut k, bx, notch).unwrap();
@@ -501,7 +501,7 @@ fn fill_asked(
     Option<solidcore::blend::blend_corner::BlendCornerEvent>,
     Result<Made, (i32, String)>,
 ) {
-    let mut k = solidcraft_fixes();
+    let mut k = torno_fixes();
     let mut b = create_box(&mut k, Point3::new(0.0, 0.0, 0.0), 60.0, 40.0, 20.0).unwrap();
     let edges: Vec<EdgeId> = BOX_EDGES.iter().map(|&p| pick(&k, &b, p)).collect();
     let v = vertex_at(&b, [60.0, 40.0, 20.0]);

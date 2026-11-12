@@ -1,8 +1,8 @@
 use crate::context_menu::{self, Target};
 use crate::scenario::Harness;
 use serde_json::json;
-use solidcraft_engine::Sel;
-use solidcraft_engine::geom::MeshGeom;
+use torno_engine::Sel;
+use torno_engine::geom::MeshGeom;
 
 #[test]
 fn replaced_body_name_uses_evaluated_owner_in_browser_and_component_actions() {
@@ -120,7 +120,7 @@ fn browser_reuses_unchanged_rows_and_refreshes_live_state_and_replaced_documents
     assert_eq!(row(&h), before, "selection or visibility rebuilt stable row data");
 
     let revision = h.app.session.revision;
-    h.app.session = solidcraft_engine::Session::new(solidcraft_engine::doc::Document::new("Replacement"));
+    h.app.session = torno_engine::Session::new(torno_engine::doc::Document::new("Replacement"));
     h.app.session.revision = revision;
     h.frames(2);
     assert!(super::drawn_rows().iter().any(|row| row.0 == "Replacement"));
@@ -234,19 +234,19 @@ fn occurrence_move_dialog_keeps_other_pending_moves_and_reuses_initial_baseline(
     let movement = items.iter().find(|i| i.id == "ui.moveOccurrence").unwrap();
     context_menu::run_item(&mut h.app, movement, egui::Pos2::ZERO);
     let mut m = h.app.tree.occurrence_move.clone().unwrap();
-    m.pivot = Some(solidcraft_engine::doc::apply_point(&h.app.session.occurrence_placement(&[second]).unwrap().world, solidcore_record::Vec3::ZERO));
+    m.pivot = Some(torno_engine::doc::apply_point(&h.app.session.occurrence_placement(&[second]).unwrap().world, solidcore_record::Vec3::ZERO));
     m.translate = [10.0, 0.0, 0.0];
     crate::browser::apply_occurrence_move(&mut h.app, &m);
     let at = h.app.session.occurrence_placement(&[second]).unwrap();
-    assert!((solidcraft_engine::doc::apply_point(&at.world, solidcore_record::Vec3::ZERO).x - 65.0).abs() < 1e-8);
+    assert!((torno_engine::doc::apply_point(&at.world, solidcore_record::Vec3::ZERO).x - 65.0).abs() < 1e-8);
     m.translate = [3.0, 0.0, 0.0];
     crate::browser::apply_occurrence_move(&mut h.app, &m);
     let at = h.app.session.occurrence_placement(&[second]).unwrap();
-    assert!((solidcraft_engine::doc::apply_point(&at.world, solidcore_record::Vec3::ZERO).x - 58.0).abs() < 1e-8);
+    assert!((torno_engine::doc::apply_point(&at.world, solidcore_record::Vec3::ZERO).x - 58.0).abs() < 1e-8);
     assert_eq!(h.app.session.pending_moves[&first], first_pending);
     crate::browser::revert_occurrence_dialog(&mut h.app, &m);
     let restored = h.app.session.occurrence_placement(&[second]).unwrap();
-    assert!((solidcraft_engine::doc::apply_point(&restored.world, solidcore_record::Vec3::ZERO).x - 55.0).abs() < 1e-8);
+    assert!((torno_engine::doc::apply_point(&restored.world, solidcore_record::Vec3::ZERO).x - 55.0).abs() < 1e-8);
     assert_eq!(h.app.session.pending_moves[&first], first_pending);
     h.app.run("component.revert_position", json!({"occurrences":[second]})).unwrap();
     context_menu::run_item(&mut h.app, movement, egui::Pos2::ZERO);
@@ -647,7 +647,7 @@ fn dragging_an_occurrence_row_onto_the_top_of_a_sibling_reorders_them() {
     assert_eq!(h.call("ui.drag", json!({"x0":from.x,"y0":from.y,"x1":to.x,"y1":to.y - 10.0,"steps":12}))["ok"], true);
     h.frames(3);
     let saved = &h.app.session.doc.browser_order["0/components"];
-    assert_eq!(*saved, [c, a, b].map(|id| solidcraft_engine::doc::BrowserEntry::item(&id.to_string())));
+    assert_eq!(*saved, [c, a, b].map(|id| torno_engine::doc::BrowserEntry::item(&id.to_string())));
     assert!(row(c).y < row(a).y && row(a).y < row(b).y, "the rows follow the saved order");
     assert!(h.app.session.doc.occurrences.iter().all(|o| o.parent == 0), "none moved into another");
 }

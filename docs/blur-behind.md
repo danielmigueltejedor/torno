@@ -139,7 +139,7 @@ changes for blur. The egui dependency is the published 0.36.2 crate.
 | --- | --- |
 | Build UI | Native `eframe::App::ui` calls `SolveApp::ui` (`crates/ui-egui/src/lib.rs`). `blur::State::begin` installs a stack-scoped thread-local host policy. `cad_ui` draws the workspace under floating cards, or in the remaining central rectangle for docked layout. |
 | View background | `viewport.rs::show` emits an egui gradient mesh before the viewport callback. `render_workspace.rs::show` emits its effective preview background, shared with the blur source. Neither is contained in the GPU renderer's scene texture. |
-| Prepare scene | `gpu.rs::ViewportCallback::prepare` calls `solidcraft_gpu::view::Renderer::prepare`. Native `set_wgpu_split` already draws scene depth/MSAA/OIT offscreen. The UI target has one sample and no depth. The resolved scene is transparent outside geometry. |
+| Prepare scene | `gpu.rs::ViewportCallback::prepare` calls `torno_gpu::view::Renderer::prepare`. Native `set_wgpu_split` already draws scene depth/MSAA/OIT offscreen. The UI target has one sample and no depth. The resolved scene is transparent outside geometry. |
 | Acquire/order | `vendor/egui-wgpu/src/winit.rs::Painter::paint_and_update_textures` acquires/probes the drawable before preparing callbacks. `Renderer::update_buffers` uploads meshes, runs all callback `prepare`s, then all `finish_prepare`s. The enabled frame hook supplies actual physical target extent and the effective scale, including surface clamping. |
 | Build source | The enabled `blur_native.rs::Source` replaces the viewport callback. Its `prepare` delegates unchanged to the original callback. Its `finish_prepare` retains the independent background/prepared viewport source and availability/cache evidence. A source cache hit avoids rebuilding that source. |
 | UI composition | The native pass owner initializes C from the cached source and segments the original ordered UI stream at semantic backing markers. Before each marker it runs the existing blur pyramid from current C, then the marker samples B. Ordinary fill, border and content follow. The replaced source callback is skipped during composition. |
@@ -337,9 +337,9 @@ no unsafe counting allocator was added. Timing alone cannot prove zero allocatio
 No commands below were run by this worker. Manager's minimal focused checks:
 
 ```powershell
-cargo test --locked --profile ci -p solidcraft-ui-egui --lib blur_stock_ -- --nocapture
-cargo test --locked --profile ci -p solidcraft-ui-egui --lib blur_ -- --nocapture
-cargo build --locked --profile ci -p solidcraft
+cargo test --locked --profile ci -p torno-ui-egui --lib blur_stock_ -- --nocapture
+cargo test --locked --profile ci -p torno-ui-egui --lib blur_ -- --nocapture
+cargo build --locked --profile ci -p torno
 ```
 
 The five `blur_stock_` tests compare stock and app-owned hosts without a GPU:
@@ -359,7 +359,7 @@ from the matching local crates.io index entry; dependency versions are unchanged
 The full vendored egui copy and its path patch were removed; the egui-wgpu patch
 and licences remain. PR6 additionally lists the already-locked winreg dependency
 for the desktop app; dependency versions are unchanged. No cargo execution was
-used. Set `SOLIDCRAFT_REQUIRE_GPU=1` to require an adapter
+used. Set `TORNO_REQUIRE_GPU=1` to require an adapter
 (hardware or software); a missing adapter/device fails every blur fixture consumer.
 The explicit `cfg(test)` rendering fixture runs all positive compositor, cache,
 pixel and suspension assertions on CI software adapters independently of production
@@ -380,12 +380,12 @@ To export fixed-scene 8/18/40 and zero light/dark images, counters, and warmed
 UI/encode/GPU-completion benchmark samples:
 
 ```powershell
-$env:SOLIDCRAFT_REQUIRE_GPU = '1'
-$env:SOLIDCRAFT_BLUR_EVIDENCE = Join-Path $env:TEMP 'solidcraft-9809-blur-review'
-cargo test --locked --profile ci -p solidcraft-ui-egui --lib blur_ -- --nocapture
+$env:TORNO_REQUIRE_GPU = '1'
+$env:TORNO_BLUR_EVIDENCE = Join-Path $env:TEMP 'torno-9809-blur-review'
+cargo test --locked --profile ci -p torno-ui-egui --lib blur_ -- --nocapture
 ```
 
-`SOLIDCRAFT_BLUR_GOLDENS` can name a separate reviewed PNG directory for decoded
+`TORNO_BLUR_GOLDENS` can name a separate reviewed PNG directory for decoded
 RGBA equality. No expected pixels were invented or automatically blessed here.
 The fixed fixture tests both target encodings, source independence from panel
 tint, rest/cache hits, camera invalidation, exact tier pass counts, on/off pixel
@@ -402,9 +402,9 @@ written token file (`$blurTokenPath` below). Port 38876 is the user review app a
 must not be contacted or relaunched; blur validation uses explicit port 38877:
 
 ```powershell
-.\target\ci\solidcraft.exe --sample --control 38877
+.\target\ci\torno.exe --sample --control 38877
 # In a second shell; always choose a NEW output directory:
-.\scripts\blur-evidence.ps1 -Port 38877 -TokenPath $blurTokenPath -OutputDirectory "$env:TEMP\solidcraft-9809-window-review"
+.\scripts\blur-evidence.ps1 -Port 38877 -TokenPath $blurTokenPath -OutputDirectory "$env:TEMP\torno-9809-window-review"
 ```
 
 The collector saves ordinary zero UI/model captures before applying a tint,
@@ -415,13 +415,13 @@ waits for GPU completion, only in test code. For before/after zero CPU timing,
 connect the collector to the manager's separately running main baseline with
 `-Baseline -Port <baseline-port> -OutputDirectory <another-new-directory>`.
 It never launches/builds the baseline or overwrites existing evidence. Baseline
-artifacts under TEMP/solidcraft-8876-evidence and its checkout were not modified.
+artifacts under TEMP/torno-8876-evidence and its checkout were not modified.
 Compare decoded images, not PNG file bytes. If ffmpeg is available, its RGBA
 framemd5 output provides pixel hashes and dimensions without Pillow:
 
 ```powershell
-$mainPng = "$env:TEMP\solidcraft-8876-evidence\blur-main-zero-ui.png"
-$branchPng = "$env:TEMP\solidcraft-9809-window-review\zero-ui.png"
+$mainPng = "$env:TEMP\torno-8876-evidence\blur-main-zero-ui.png"
+$branchPng = "$env:TEMP\torno-9809-window-review\zero-ui.png"
 $mainDecoded = (& ffmpeg -v error -i $mainPng -frames:v 1 -pix_fmt rgba -f framemd5 -) -join "`n"
 if ($LASTEXITCODE -ne 0) { throw 'Baseline decode failed' }
 $branchDecoded = (& ffmpeg -v error -i $branchPng -frames:v 1 -pix_fmt rgba -f framemd5 -) -join "`n"
@@ -539,14 +539,14 @@ headless UI tests inspect constructed shapes/geometry, not screenshots.
 Manager-only focused filters (none run by the worker):
 
 ```powershell
-cargo test --locked --profile ci -p solidcraft-ui-egui --lib blur_ -- --nocapture
-cargo test --locked --profile ci -p solidcraft-ui-egui --lib theme_options_ -- --nocapture
-cargo test --locked --profile ci -p solidcraft-ui-egui --test scenarios prefs_theme_files -- --nocapture
+cargo test --locked --profile ci -p torno-ui-egui --lib blur_ -- --nocapture
+cargo test --locked --profile ci -p torno-ui-egui --lib theme_options_ -- --nocapture
+cargo test --locked --profile ci -p torno-ui-egui --test scenarios prefs_theme_files -- --nocapture
 ```
 
 The zero GPU fixture uses `FixturePolicy::Production`, a declared zero option and
 no harness radius override. It follows the same adapter-availability gate:
-`SOLIDCRAFT_REQUIRE_GPU=1` requires any adapter, including software, and a missing
+`TORNO_REQUIRE_GPU=1` requires any adapter, including software, and a missing
 adapter/device fails. `blur_production_policy_rejects_software_adapter` separately
 checks production CPU fallback; positive shader tests select `FixturePolicy::Rendering`.
 The PR5 fixture policy and PR6 integration have been reconciled in source only.

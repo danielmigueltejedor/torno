@@ -43,7 +43,7 @@ from collections import Counter, defaultdict
 from pathlib import Path
 
 LIST = Path("plan/panic-sites.tsv")
-# solidcore and the STEP crates SolidCraft links. nurbs-grid-mesh is not here: nothing
+# solidcore and the STEP crates Torno links. nurbs-grid-mesh is not here: nothing
 # depends on it, and docs/layers.md has it merged into solidcore-tess and then deleted.
 CRATES = ["solidcore", "step-brep", "step-import", "step-export"]
 COLUMNS = ["file", "fn", "pattern", "n", "status", "code", "reason"]
@@ -604,7 +604,7 @@ def base_list(root, rev):
     if subprocess.run(git + ["cat-file", "-e", f"{rev}^{{commit}}"]).returncode != 0:
         raise SystemExit(f"base revision {rev} is not in this clone (fetch it first)")
     # git takes `/` on every system (#13623). `./` names the list relative to `root`, which is a
-    # folder of the repository inside SolidCraft (`solidcore/`); a base commit holding `root`'s
+    # folder of the repository inside Torno (`solidcore/`); a base commit holding `root`'s
     # tree alone (CI's, there) has it at the top.
     for spec in (f"{rev}:./{LIST.as_posix()}", f"{rev}:{LIST.as_posix()}"):
         res = subprocess.run(git + ["show", spec], stdout=subprocess.PIPE,

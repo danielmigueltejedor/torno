@@ -1,7 +1,7 @@
 //! Move/Copy changes the text source, never independent generated outlines.
 use crate::{SolveApp, dialogs::Kind, selection::SelInput};
 use serde_json::{Value, json};
-use solidcraft_engine::{Sel, doc::expr::Kind as ValueKind, sketch::LinkKind};
+use torno_engine::{Sel, doc::expr::Kind as ValueKind, sketch::LinkKind};
 
 #[derive(Clone, Debug)]
 pub struct TextMove {
@@ -51,7 +51,7 @@ pub(crate) fn commands(app: &SolveApp, k: &TextMove) -> Result<Vec<(String, Valu
     }
     let sk = doc.sketch(k.sketch).map_err(|e| e.to_string())?;
     let curve = sk.curves.iter().find(|c| c.link.as_deref() == Some(&k.link)).ok_or("The text has no outlines")?;
-    let Some(solidcraft_engine::sketch::LinkSource::Text { at, .. }) = sk.link(&k.link).map(|l| &l.source) else {
+    let Some(torno_engine::sketch::LinkSource::Text { at, .. }) = sk.link(&k.link).map(|l| &l.source) else {
         return Err("The source is no longer text".into());
     };
     Ok(vec![(
@@ -96,8 +96,8 @@ pub(crate) fn end_drag(app: &mut SolveApp) {
 mod tests {
     use super::*;
     use crate::scenario::Harness;
-    use solidcraft_engine::geom::prelude::*;
-    use solidcraft_engine::sketch::LinkSource;
+    use torno_engine::geom::prelude::*;
+    use torno_engine::sketch::LinkSource;
 
     fn setup() -> (Harness, String) {
         let (mut h, link, _) = crate::test_support::selected_text("II", [3, 4]);
@@ -169,7 +169,7 @@ mod tests {
         h.app.session.execute("sketch.drag", &json!({"entity":curve,"from":[0,0],"to":[2,3],"live":true})).unwrap();
         h.app.viewport.text_drag = Some((checkpoint, link));
         h.app.viewport.point_drag = Some((curve, 0, None));
-        crate::documents::open_tab(&mut h.app, solidcraft_engine::Session::default()).unwrap();
+        crate::documents::open_tab(&mut h.app, torno_engine::Session::default()).unwrap();
         assert!(h.app.viewport.text_drag.is_none());
         assert!(h.app.viewport.point_drag.is_none());
         crate::documents::switch(&mut h.app, 0);

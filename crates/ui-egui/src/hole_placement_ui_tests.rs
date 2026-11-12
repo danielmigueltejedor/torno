@@ -7,11 +7,11 @@
 
 use serde_json::{Value, json};
 use solidcore_record::{Vec2, Vec3};
-use solidcraft_engine::Sel;
-use solidcraft_engine::doc::FeatureKind;
-use solidcraft_engine::geom::Aabb3;
-use solidcraft_engine::geom::prelude::*;
-use solidcraft_engine::sketch::{CurveKind, LinkKind, SPoint};
+use torno_engine::Sel;
+use torno_engine::doc::FeatureKind;
+use torno_engine::geom::Aabb3;
+use torno_engine::geom::prelude::*;
+use torno_engine::sketch::{CurveKind, LinkKind, SPoint};
 
 use crate::dialogs::Kind;
 use crate::scenario::Harness;
@@ -392,7 +392,7 @@ fn face_places(h: &Harness) -> Vec<(String, Vec3)> {
 
 /// Whether the model holds material at `p`.
 fn solid_at(h: &Harness, p: Vec3) -> bool {
-    h.app.session.model.state().bodies.iter().any(|b| b.body.classify_point(p).unwrap() == solidcraft_engine::kernel::PointClass::Inside)
+    h.app.session.model.state().bodies.iter().any(|b| b.body.classify_point(p).unwrap() == torno_engine::kernel::PointClass::Inside)
 }
 
 #[test]
@@ -876,7 +876,7 @@ fn a_face_place_snaps_to_the_points_of_shown_geometry_only() {
         sk.view.hide_projected = hide;
         let takes = crate::dialogs::SnapPoints::of(&sk);
         for (i, p) in sk.points.iter().enumerate() {
-            let want = solidcraft_engine::view::sketch_point_visible(&sk, i) && !(hide && p.link.is_some());
+            let want = torno_engine::view::sketch_point_visible(&sk, i) && !(hide && p.link.is_some());
             assert_eq!(takes.takes(p), want, "point {} (link {:?}), Show Projected off: {hide}", p.id, p.link);
         }
         let taken = sk.points.iter().filter(|p| takes.takes(p)).count();
@@ -917,7 +917,7 @@ fn combined_recessed_point_presets_keep_partial_depth_across_units_and_legacy_de
             && !opts.thread_full_depth && opts.thread_depth=="5 mm" && opts.thread=="M8x1.2"
             && opts.custom_thread.as_ref().is_none_or(|draft| draft.error.is_none())));
         assert_eq!(h.app.session.doc.to_json(), before, "automatic recall only changes the form");
-        assert!((h.app.session.doc.eval("5 mm", solidcraft_engine::doc::expr::Kind::Length).unwrap() - 5.0).abs() < 1e-9);
+        assert!((h.app.session.doc.eval("5 mm", torno_engine::doc::expr::Kind::Length).unwrap() - 5.0).abs() < 1e-9);
         // Old recessed presets omit the additive fields: flat and Full remain their defaults.
         choose_preset(&mut h, "Select a preset");
         let mut legacy = stored.clone();

@@ -3,9 +3,9 @@
 mod support;
 
 use serde_json::json;
-use solidcraft_engine::geom::prelude::*;
-use solidcraft_engine::{Sel, sketch::ConstraintKind};
-use solidcraft_ui_egui::scenario::Harness;
+use torno_engine::geom::prelude::*;
+use torno_engine::{Sel, sketch::ConstraintKind};
+use torno_ui_egui::scenario::Harness;
 
 fn lines() -> Harness {
     support::sketch_lines(&[[[10, 10], [40, 10]], [[10, 30], [40, 35]]], None)
@@ -190,7 +190,7 @@ fn a_click_on_a_line_end_picks_the_line_for_two_curve_constraints() {
     // The line now touches the circle: its distance from the centre is the radius.
     let a = sk.point(sk.resolve_point("l1.start").unwrap()).unwrap();
     let b = sk.point(sk.resolve_point("l1.end").unwrap()).unwrap();
-    let circle = sk.curves.iter().position(|c| matches!(c.kind, solidcraft_engine::sketch::CurveKind::Circle { .. })).unwrap();
+    let circle = sk.curves.iter().position(|c| matches!(c.kind, torno_engine::sketch::CurveKind::Circle { .. })).unwrap();
     let centre = sk.point(sk.resolve_point(&format!("{}.center", sk.curves[circle].id)).unwrap()).unwrap();
     let radius = sk.radius(circle).unwrap();
     let distance = (b - a).normalized().unwrap().cross(centre - a).abs();

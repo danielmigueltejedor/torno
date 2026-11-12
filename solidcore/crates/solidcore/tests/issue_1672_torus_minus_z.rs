@@ -1,4 +1,4 @@
-//! tangency-labs/solidcore#1672 (SolidCraft rig sweeps/4007): the outer half of a disc
+//! tangency-labs/solidcore#1672 (Torno rig sweeps/4007): the outer half of a disc
 //! of radius 14 centred 14 from the z axis, revolved 270 degrees about -z with
 //! `fixes.revolve_analytic_profile_faces`, has an `SmTorus` face that `orient_body`
 //! swaps (`SwapUV`). Upstream's swap rebuilt the torus from its NURB; the swap now keeps
@@ -33,7 +33,7 @@ use solidcore::{Brep, Kernel, Vec3};
 /// 14 + 4 * 14 / (3 pi) from the axis) over three quarters of a turn.
 const EXPECTED_VOLUME: f64 = 28_932.176_098_892_29;
 
-/// The kernel SolidCraft runs: the analytic profile faces and the torus fixes.
+/// The kernel Torno runs: the analytic profile faces and the torus fixes.
 fn fixed_kernel() -> Kernel {
     let mut k = Kernel::default();
     k.fixes.revolve_analytic_profile_faces = true;

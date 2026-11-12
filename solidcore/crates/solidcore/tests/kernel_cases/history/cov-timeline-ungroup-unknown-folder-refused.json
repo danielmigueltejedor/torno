@@ -32,6 +32,6 @@
   "ungraded": [],
   "what": "timeline.ungroup of a folder that does not exist",
   "why_not": [
-    "the failure is SolidCraft's, not a kernel operation's: step 2 (timeline.ungroup): invalid parameters for `timeline.ungroup`: no timeline folder 99"
+    "the failure is Torno's, not a kernel operation's: step 2 (timeline.ungroup): invalid parameters for `timeline.ungroup`: no timeline folder 99"
   ]
 }

@@ -1,5 +1,5 @@
-use solidcraft_geom::prelude::*;
 use std::f64::consts::PI;
+use torno_geom::prelude::*;
 
 use solidcore_record::{Loop2, Plane, Region2, Seg2, Vec2, Vec3};
 
@@ -159,7 +159,7 @@ fn chamfer_and_step() {
     let b = box_solid(Vec3::ZERO, Vec3::new(20.0, 20.0, 20.0)).unwrap();
     let c = chamfer(&b, &[Vec3::new(20.0, 10.0, 20.0)], 2.0).unwrap();
     assert!(rel(measure(&c).unwrap().volume, 8000.0 - 2.0 * 20.0) < 1e-4);
-    let s = step_export(&[&c], "SolidCraft").unwrap();
+    let s = step_export(&[&c], "Torno").unwrap();
     assert!(s.starts_with("ISO-10303-21;"));
     assert!(s.contains("MANIFOLD_SOLID_BREP") || s.contains("CLOSED_SHELL"));
 }
@@ -634,7 +634,7 @@ fn tapered_extrude_swallows_a_short_tip() {
             vec![meet(left, low), meet(low, high), meet(high, left)]
         }
     };
-    let area = |z: f64| solidcraft_geom::Ring::from(section(z)).signed_area();
+    let area = |z: f64| torno_geom::Ring::from(section(z)).signed_area();
     let simpson = |z0: f64, z1: f64| (z1 - z0) / 6.0 * (area(z0) + 4.0 * area(0.5 * (z0 + z1)) + area(z1));
     let v = simpson(0.0, z_closes) + simpson(z_closes, h);
     let m = measure(&b).unwrap();
@@ -988,7 +988,7 @@ fn connected_logo_join_preserves_exact_faces_at_edge_contact() {
     let tops =
         logo.faces(0.01).unwrap().iter().filter(|f| f.plane_normal.is_some_and(|n| n.z > 0.999999) && (f.centroid.z - 20.0).abs() < 1e-9).count();
     assert_eq!(tops, 1);
-    let text = step_export(&[&logo], "SolidCraft").unwrap();
+    let text = step_export(&[&logo], "Torno").unwrap();
     let imported = step_import(&text).unwrap();
     assert_eq!(imported.bodies.len(), 1);
     let roundtrip = &imported.bodies.first().unwrap().body;
@@ -1049,7 +1049,7 @@ fn sphere_booleans() {
 
 #[test]
 fn similar_spheres_meet() {
-    // bherbruck/solidcraft#232: the contact test compared every pair of nearby triangles of the
+    // getnodalia/torno#232: the contact test compared every pair of nearby triangles of the
     // two fine sphere meshes and gave up past its work limit, so their join was refused.
     let a = sphere(Vec3::ZERO, 10.0).unwrap();
     for (x, meet) in [(12.0, true), (4.0, true), (20.0, true), (20.5, false)] {
@@ -2278,7 +2278,7 @@ fn measure_of_a_body_with_many_faces() {
 }
 
 /// The time it takes (run alone, the suite's other tests share the machine):
-/// `cargo test --release -p solidcraft-kernel perf_measure_5000_faces -- --ignored`.
+/// `cargo test --release -p torno-kernel perf_measure_5000_faces -- --ignored`.
 #[test]
 #[ignore]
 fn perf_measure_5000_faces() {
@@ -2503,7 +2503,7 @@ fn a_box_cut_round_a_small_hole_of_a_long_plate_keeps_the_hole() {
 #[test]
 fn a_stopped_job_does_not_decide_which_face_a_refusal_names() {
     let body = crate::build::box_solid(Vec3::ZERO, Vec3::new(10.0, 10.0, 10.0)).unwrap();
-    let why = solidcraft_smlib::Error::Argument;
+    let why = torno_smlib::Error::Argument;
     let plain = crate::body::Refusal::of(body.record(), &why);
     assert_eq!(plain.face, None, "every face of a box is taken on its own");
     let stop = crate::Stop::new();

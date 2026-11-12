@@ -57,7 +57,7 @@
   "ungraded": [],
   "what": "a loft cut through a 100 x 60 x 30 block from its whole 100 x 60 outline at z = 20 (edges flush with the side faces) down to a 10 x 10 pad in a corner at z = 11, sections given pad first (the cut panicked for one order)",
   "why_not": [
-    "body \"Basin\" is no kernel operation's output nor an operand: SolidCraft built it or changed the kernel's record",
-    "body \"Basin (1)\" is no kernel operation's output nor an operand: SolidCraft built it or changed the kernel's record"
+    "body \"Basin\" is no kernel operation's output nor an operand: Torno built it or changed the kernel's record",
+    "body \"Basin (1)\" is no kernel operation's output nor an operand: Torno built it or changed the kernel's record"
   ]
 }

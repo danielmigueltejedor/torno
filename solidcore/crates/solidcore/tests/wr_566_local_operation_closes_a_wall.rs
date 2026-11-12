@@ -1,7 +1,7 @@
 //! Regression test for WR-566 (the fork's tangency-labs/smlib ccbf77a): a stepped block
 //! (40 x 30 x 20 with the part x > 20, z > 10 cut away) has its low top moved up 10 onto
 //! the high top's plane, or its high top moved down 10 onto the low top's plane
-//! (SolidCraft's replace face, rig case shell/cov-replace-face-step-onto-the-higher-face).
+//! (Torno's replace face, rig case shell/cov-replace-face-step-onto-the-higher-face).
 //! The move closes the step's wall to nothing: its edges along the sides close to points.
 //! With `local_operation_step_walls` alone `CloseLoopGap` refuses those edges
 //! (`SM_ERR_OFFSET_EDGE_VANISHES`); with `local_operation_closes_walls_to_nothing` they

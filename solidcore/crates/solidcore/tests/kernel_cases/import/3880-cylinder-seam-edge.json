@@ -59,6 +59,6 @@
   "ungraded": [],
   "what": "a cylinder r=10 h=30 whose side face is written with a seam edge: one closed solid with 3 faces",
   "why_not": [
-    "body \"cylinder_seam\" is no kernel operation's output nor an operand: SolidCraft built it or changed the kernel's record"
+    "body \"cylinder_seam\" is no kernel operation's output nor an operand: Torno built it or changed the kernel's record"
   ]
 }

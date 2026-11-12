@@ -2,10 +2,10 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 
-use solidcraft_doc::Document;
-use solidcraft_doc::joints::cam::CamProfile;
-use solidcraft_doc::joints::{Assembly, Coupling, JointOrigin, Size};
-use solidcraft_doc::persistent_name::{Base, FaceName, FeatureId, Place};
+use torno_doc::Document;
+use torno_doc::joints::cam::CamProfile;
+use torno_doc::joints::{Assembly, Coupling, JointOrigin, Size};
+use torno_doc::persistent_name::{Base, FaceName, FeatureId, Place};
 
 use crate::{EngineError, Result};
 
@@ -143,7 +143,7 @@ fn unique_name(base: &str, used: &mut BTreeSet<String>) -> Result<String> {
         used.insert(base.to_string());
         return Ok(base.to_string());
     }
-    let name = solidcraft_doc::copy_name(base, |n| used.contains(n));
+    let name = torno_doc::copy_name(base, |n| used.contains(n));
     if name.len() > MAX_NAME {
         return Err(invalid("copied assembly name is too long"));
     }
@@ -246,8 +246,8 @@ fn origin(
     bodies: &BTreeMap<String, String>,
     doc: &Document,
 ) -> Option<JointOrigin> {
-    fn datum_side(snap: &mut solidcraft_doc::joints::Snap, occurrences: &BTreeMap<u64, u64>, doc: &Document) -> Option<()> {
-        let remap = |d: &mut solidcraft_doc::construct::DatumRef| -> Option<()> {
+    fn datum_side(snap: &mut torno_doc::joints::Snap, occurrences: &BTreeMap<u64, u64>, doc: &Document) -> Option<()> {
+        let remap = |d: &mut torno_doc::construct::DatumRef| -> Option<()> {
             // A datum side names an exact placement by its complete occurrence path. A path that
             // ends inside the copied tree is rewritten to the copy's own walk (the source's
             // ancestors are not in the map); a path that leaves the copied tree refuses the
@@ -256,13 +256,13 @@ fn origin(
             Some(())
         };
         match snap {
-            solidcraft_doc::joints::Snap::Plane { plane, .. } => {
-                if let solidcraft_doc::PlaneRef::Datum { datum } = plane.as_mut() {
+            torno_doc::joints::Snap::Plane { plane, .. } => {
+                if let torno_doc::PlaneRef::Datum { datum } = plane.as_mut() {
                     remap(datum)?;
                 }
             }
-            solidcraft_doc::joints::Snap::Axis { axis, .. } => {
-                if let solidcraft_doc::joints::AxisRef::Target(solidcraft_doc::joints::AxisTarget::Datum { datum }) = axis.as_mut() {
+            torno_doc::joints::Snap::Axis { axis, .. } => {
+                if let torno_doc::joints::AxisRef::Target(torno_doc::joints::AxisTarget::Datum { datum }) = axis.as_mut() {
                     remap(datum)?;
                 }
             }

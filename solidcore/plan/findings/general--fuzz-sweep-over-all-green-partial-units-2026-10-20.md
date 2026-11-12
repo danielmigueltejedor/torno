@@ -824,7 +824,7 @@ Final integrated-tree checks pending.
   edge's `EntityRef` (from `ExecutiveAccess::edge_entity`, `None` for adapters
   whose handles have no typed id). Upstream returns success with the body.
   `do_filleting` is unchanged, so its difftest cases still compare as before.
-- **Why.** SolidCraft's rig case `fillets/324-fillet-over-hole-overlap` (an R4 round
+- **Why.** Torno's rig case `fillets/324-fillet-over-hole-overlap` (an R4 round
   on the top long edge of a 40x20x10 block, where a through hole of r=3 at (20, 14.5)
   reaches into the round) comes back from the C++ as success with a body that is not
   a closed manifold solid. The C++ that ran was the tangency-labs/smlib fork, called

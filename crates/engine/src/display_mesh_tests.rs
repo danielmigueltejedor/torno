@@ -1,13 +1,13 @@
 //! What the application draws of a large sheet with small bends and holes, and that what
 //! reads the same mesh (bounds, picks, inside tests) answers as before.
 
-use solidcraft_geom::prelude::*;
 use std::f64::consts::{FRAC_PI_2, TAU};
+use torno_geom::prelude::*;
 
 use serde_json::{Value, json};
 use solidcore_record::Vec3;
-use solidcraft_geom::Mesh;
-use solidcraft_kernel::{DISPLAY_ANGLE, FaceSurface, face_surface};
+use torno_geom::Mesh;
+use torno_kernel::{DISPLAY_ANGLE, FaceSurface, face_surface};
 
 use crate::Session;
 
@@ -111,11 +111,11 @@ fn what_reads_the_display_mesh_of_a_large_sheet_answers_as_before() {
     let st = s.world_state().unwrap();
     let b = &st.bodies[0];
     let m = b.mesh();
-    let coarse = b.body.mesh(&solidcraft_kernel::MeshTolerance::chord((b.body.size() * 1e-3).max(1e-3))).unwrap();
+    let coarse = b.body.mesh(&torno_kernel::MeshTolerance::chord((b.body.size() * 1e-3).max(1e-3))).unwrap();
     // Bounds: the sheet's box is set by flat faces, so the rounder bends move nothing.
     let (now, before) = (m.bounds(), coarse.bounds());
     assert!(now.min.dist(before.min) < 1e-9 && now.max.dist(before.max) < 1e-9, "{now:?} {before:?}");
-    let exact = solidcraft_kernel::measure(&b.body).unwrap().bbox;
+    let exact = torno_kernel::measure(&b.body).unwrap().bbox;
     assert!(now.min.dist(exact.min) < 1e-6 && now.max.dist(exact.max) < 1e-6, "{now:?} {exact:?}");
     // The cost: the sheet takes 2212 triangles against the chord mesh's 92 when measured, a factor of
     // 24; what grows is the number of round faces and the facets across each, not the size of the body.
@@ -143,11 +143,11 @@ fn what_reads_the_display_mesh_of_a_large_sheet_answers_as_before() {
         // The middle of the face's corners, pushed out onto the cylinder.
         let along = origin + axis * (middle - origin).dot(axis);
         let p = along + (middle - along).normalized().unwrap() * radius;
-        assert_eq!(solidcraft_doc::appearance::face_index_at(b, p), Some(face), "radius {radius} at {p:?}");
+        assert_eq!(torno_doc::appearance::face_index_at(b, p), Some(face), "radius {radius} at {p:?}");
         round += 1;
     }
     assert_eq!(round, 12);
-    let top = solidcraft_doc::appearance::face_index_at(b, Vec3::new(1500.0, 500.0, 2.0)).unwrap();
+    let top = torno_doc::appearance::face_index_at(b, Vec3::new(1500.0, 500.0, 2.0)).unwrap();
     assert!(matches!(face_surface(&b.body, top), Some(FaceSurface::Plane { normal, .. }) if normal.dist(Vec3::Z) < 1e-9));
     // Inside and outside: in the sheet, in a flange's wall, in a hole and above the sheet.
     assert!(m.contains(Vec3::new(1500.0, 500.0, 1.0)) && m.contains(Vec3::new(1500.0, now.min.y + 1.0, now.max.z - 10.0)));

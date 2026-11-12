@@ -12,7 +12,7 @@
 //! | [`MassPropertyBehavior`] | `SmMassPropertyBehavior` |
 //! | [`edge_length`], [`face_area`], [`face_centroid`] | `SmApiEdgeComputeLength`, `SmApiFaceComputeArea`, `SmApiFaceComputeCentroid` |
 //! | [`brep_area`], [`brep_volume`], [`brep_mass_properties`] | `SmApiBrepComputeArea`, `SmApiBrepComputeVolume`, `SmApiBrepComputeMassProperties` |
-//! | [`brep_mass_properties_estimated`], [`MassPropertyRequest`], [`EstimatedMassProperties`], [`sheet_face`], [`brep_area_about`], [`estimate_accuracy`] | not upstream: the same computation with sheets' area, a no-material area centroid and centroidal moments (the SolidCraft fork's `smlib_brep_mass_properties`) |
+//! | [`brep_mass_properties_estimated`], [`MassPropertyRequest`], [`EstimatedMassProperties`], [`sheet_face`], [`brep_area_about`], [`estimate_accuracy`] | not upstream: the same computation with sheets' area, a no-material area centroid and centroidal moments (the Torno fork's `smlib_brep_mass_properties`) |
 //!
 //! Deviations: arena ids replace pointers, results replace output arguments; attribute
 //! storage and object keys are supplied by the caller; the `_default` B-rep wrappers
@@ -21,7 +21,7 @@
 //! their unported units. `boundary_properties` exposes the integration after trim
 //! construction for callers already holding oriented trim curves. Nested integration
 //! has a fixed two-level call structure, not input-driven recursion. Both levels split
-//! at the surface's knots, as the SolidCraft fork's tangency-labs/smlib@08d9a14 does
+//! at the surface's knots, as the Torno fork's tangency-labs/smlib@08d9a14 does
 //! (WR-494, #1435): upstream steps across them.
 //! A volume-separating faceuse (WR-535) adds its volume only where it bounds a non void region and its area only
 //! where the area behaviour selects it (tangency-labs/smlib@d2d9586).
@@ -363,7 +363,7 @@ pub fn boundary_properties(
         }
         // Scale volume and moment errors by a length per extra dimension. sqrt(area) is
         // a tenth of the body size; grow it once the origin is farther than the body.
-        // With `fixes.precise_properties_body_length_scale` (WR-472; the SolidCraft
+        // With `fixes.precise_properties_body_length_scale` (WR-472; the Torno
         // fork's tangency-labs/smlib@073d4740) the length is the body size, ten times
         // sqrt(area), or the origin's distance when larger: each component is then held
         // to the area's share of its own size, where 1.0.1's tenth holds each extra power
@@ -414,7 +414,7 @@ pub fn boundary_properties(
         };
 
         // Integrate piece by piece between the trim curve's knots and its crossings of the
-        // surface's knot lines u = k (WR-494; the SolidCraft fork's
+        // surface's knot lines u = k (WR-494; the Torno fork's
         // tangency-labs/smlib@08d9a14): at either the integrand's derivatives jump, and
         // at a knot of multiplicity reaching the degree (a rational circle's double knot)
         // the integrand itself does. A step's error estimate is the leading term of an

@@ -111,7 +111,7 @@
     "source": "analytic",
     "sources": [],
     "volume_mm3": 6010.0,
-    "what": "four squares drawn edge to edge, three extruded 10 up and three 10 down and joined: the concave vertical edge at the centre of the down part chamfered 1, with its tangent chain, the up part's concave edge on the same line (action matrix (apps/solidcraft-cli/tests/action_matrix.rs): typical/up-down-join, Body1 F3:side:l12|F3:side:l5 edge.chamfer)"
+    "what": "four squares drawn edge to edge, three extruded 10 up and three 10 down and joined: the concave vertical edge at the centre of the down part chamfered 1, with its tangent chain, the up part's concave edge on the same line (action matrix (apps/torno-cli/tests/action_matrix.rs): typical/up-down-join, Body1 F3:side:l12|F3:side:l5 edge.chamfer)"
   },
   "expressible": true,
   "operation_expressible": true,
@@ -161,6 +161,6 @@
     "blend_dropping"
   ],
   "ungraded": [],
-  "what": "four squares drawn edge to edge, three extruded 10 up and three 10 down and joined: the concave vertical edge at the centre of the down part chamfered 1, with its tangent chain, the up part's concave edge on the same line (action matrix (apps/solidcraft-cli/tests/action_matrix.rs): typical/up-down-join, Body1 F3:side:l12|F3:side:l5 edge.chamfer)",
+  "what": "four squares drawn edge to edge, three extruded 10 up and three 10 down and joined: the concave vertical edge at the centre of the down part chamfered 1, with its tangent chain, the up part's concave edge on the same line (action matrix (apps/torno-cli/tests/action_matrix.rs): typical/up-down-join, Body1 F3:side:l12|F3:side:l5 edge.chamfer)",
   "why_not": []
 }

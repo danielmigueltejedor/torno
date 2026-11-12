@@ -1,5 +1,5 @@
 //! WR-507 / WR-508 (#1520, #1521) through the 4x4 `SmBrep::Transform`
-//! ([`transform_matrix`]), the overload SolidCraft calls: the fork's own regression
+//! ([`transform_matrix`]), the overload Torno calls: the fork's own regression
 //! tests (`TransformKeepsEdgeTolerance`, `ScaledBodyWithoutVertices` in
 //! tangency-labs/smlib#49 and #50, `capi/tests/flat_roundtrip.cpp`) on the port. Each
 //! test turns on one flag and fails with it off.

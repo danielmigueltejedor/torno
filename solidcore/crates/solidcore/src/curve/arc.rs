@@ -15,7 +15,7 @@
 //! on the circle's plane and sphere by `surface::implicit::curve_on_quadrics` (PR 1,
 //! layer-ops-convert d0b44726f); after the rebase onto it, [`Ellipse::arc`] proves it.
 //!
-//! Not upstream: SolidCraft's sweep profiles (`arc`, `FlatArc`, `one_circle`,
+//! Not upstream: Torno's sweep profiles (`arc`, `FlatArc`, `one_circle`,
 //! `angle_on` and the arc join of its one-wall-per-circle rule). Deviations: none (no
 //! upstream counterpart). No recursion.
 

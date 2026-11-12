@@ -1,15 +1,15 @@
-# solidcraft-ui-kit
+# torno-ui-kit
 
 The UI kit: the tokenised egui controls every dialog, panel and menu is built from, and the
 components built from them. A component takes plain data (labels, icons, entries, values and the
-host's prefix for its names), draws with `solidcraft_theme::Tokens`, reads its text through
-`solidcraft_ui_text`, publishes its handles into `solidcraft_ui_registry` and returns what the user
+host's prefix for its names), draws with `torno_theme::Tokens`, reads its text through
+`torno_ui_text`, publishes its handles into `torno_ui_registry` and returns what the user
 chose for the host to run. Nothing here reads an app's state.
 
 What a host draws with is host data, installed once per process before the first frame or passed
-in: its icon set (`icons::install`; `icons::IconSet::extended` draws another host's set with a few masters of its own), its glyphs, its tab table (`solidcraft_theme::install_tabs`),
+in: its icon set (`icons::install`; `icons::IconSet::extended` draws another host's set with a few masters of its own), its glyphs, its tab table (`torno_theme::install_tabs`),
 its navigation catalogue (`navigation_bar::install_catalogue`), its message catalogs
-(`solidcraft_ui_text::install`), its built-in themes (`theme_files::install_builtin`) and its
+(`torno_ui_text::install`), its built-in themes (`theme_files::install_builtin`) and its
 fonts. With none installed the kit still draws: icons draw nothing, text shows its message ids and
 there are no built-in themes.
 
@@ -35,6 +35,6 @@ See `docs/ui-kit.md` for the controls and their rules.
 
 ## Licence
 
-This crate is part of SolidCraft's brand and interface, under the SolidCraft Brand and Interface
-Licence ([LICENSE](LICENSE)). Use it as part of SolidCraft; using it in another program or product
+This crate is part of Torno's brand and interface, under the Torno Brand and Interface
+Licence ([LICENSE](LICENSE)). Use it as part of Torno; using it in another program or product
 needs the maintainers' written permission first.

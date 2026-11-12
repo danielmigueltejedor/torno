@@ -4,8 +4,8 @@
 
 use serde_json::{Value, json};
 use solidcore_record::{Seg2, Vec2};
-use solidcraft_geom::prelude::*;
-use solidcraft_sketch::{ConstraintKind, CurveKind, Sketch};
+use torno_geom::prelude::*;
+use torno_sketch::{ConstraintKind, CurveKind, Sketch};
 
 use super::sketch::add_c;
 use crate::Result;

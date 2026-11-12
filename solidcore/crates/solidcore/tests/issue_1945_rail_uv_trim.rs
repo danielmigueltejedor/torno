@@ -6,7 +6,7 @@
 //! WR-253's `fixes.oscillating_skips_failed_guesses`, with the commit's 1-D part.
 //!
 //! The case reached that trim only with WR-641's `fillet_through_extended_rail_end`, removed
-//! in #2500; it now runs under SolidCraft's fixes, the blend corner building both rounds,
+//! in #2500; it now runs under Torno's fixes, the blend corner building both rounds,
 //! where the upstream solve's short span does not arise.
 #![allow(
     clippy::all,
@@ -166,9 +166,9 @@ const TOP: [Point3; 2] = [
     Point3::new(14.25957, -15.0, 10.48333),
 ];
 
-/// SolidCraft's fixes: every `UpstreamFixes` field on except `geometric_g2_continuity`, so
+/// Torno's fixes: every `UpstreamFixes` field on except `geometric_g2_continuity`, so
 /// both rounds are built by the blend corner, the construction kept since WR-641's `fillet_through_extended_rail_end` was removed (#2500).
-fn solidcraft_kernel() -> Kernel {
+fn torno_kernel() -> Kernel {
     let mut k = Kernel::default();
     for &name in UpstreamFixes::NAMES {
         if name != "geometric_g2_continuity" {
@@ -300,10 +300,10 @@ fn off_definition(k: &Kernel, b: &mut Brep) -> [(f64, usize); 2] {
     out
 }
 
-/// Both rounds under SolidCraft's fixes: the volumes after the first and the second, and
+/// Both rounds under Torno's fixes: the volumes after the first and the second, and
 /// the second body's `check_brep` failures, lump count and round on its definition.
 fn run() -> (f64, f64, Vec<String>, usize, [(f64, usize); 2]) {
-    let mut k = solidcraft_kernel();
+    let mut k = torno_kernel();
     let b = base(&mut k);
     let mut b1 = round(&mut k, &b, &ARC, 2.0).unwrap();
     let mut b2 = round(&mut k, &b1, &TOP, 2.0).unwrap();
@@ -330,7 +330,7 @@ fn bracket() -> (f64, f64) {
 /// lump, `check_brep` clean, the volume it removes within the closed-form bracket, and its
 /// faces on the rolling ball's definition.
 ///
-/// Without WR-641's flag this failed under SolidCraft's fixes (#2500), 1001
+/// Without WR-641's flag this failed under Torno's fixes (#2500), 1001
 /// `CalcFilletIntSideFace` at the End on the boss: the trace's extension before the End's
 /// section, on the torus's offset extended round its tube (`offset_extension_as_itself`), ran
 /// round the offsets' closed oval past its own span (the end-point and loop checks compare UV,

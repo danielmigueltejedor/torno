@@ -7,13 +7,13 @@ use std::collections::BTreeSet;
 
 use serde_json::{Value, json};
 use solidcore_record::Vec3;
-use solidcraft_doc::Mat;
+use torno_doc::Mat;
 
 use super::{Plan, drive_with_contact, explode_moves, exploded_at, motion_plan, sample_count, view_index};
 use crate::capture::{self, Renderer};
 use crate::params::{bad, str_};
 use crate::{Result, Session};
-use solidcraft_viewport::Camera;
+use torno_viewport::Camera;
 
 /// What the frames show.
 enum Motion {
@@ -101,7 +101,7 @@ pub(super) fn export_with(s: &Session, p: &Value, renderer: Option<&Renderer>) -
             let assembled = crate::view::bounds(&t)?;
             t.pending_moves = exploded_at(moves, 1.0);
             let mut c = crate::view::home_camera(&t)?;
-            c.fit(&solidcraft_render::view_bounds(&assembled.union(&crate::view::bounds(&t)?)));
+            c.fit(&torno_render::view_bounds(&assembled.union(&crate::view::bounds(&t)?)));
             Ok(c)
         }
         Motion::Drive(..) => crate::view::home_camera(s),
@@ -113,14 +113,14 @@ pub(super) fn export_with(s: &Session, p: &Value, renderer: Option<&Renderer>) -
     let renderer = renderer.ok_or_else(|| bad(cmd, "no renderer is installed to draw pictures in this process"))?;
     // A destination outside an agent's folders is refused before anything is drawn.
     let io = |e: std::io::Error| bad(cmd, format!("{path}: {e}"));
-    solidcraft_io::vfs::check(path).map_err(io)?;
+    torno_io::vfs::check(path).map_err(io)?;
     let frame_path = |k: usize| std::path::Path::new(path).join(format!("frame-{k:04}.png")).to_string_lossy().to_string();
     if !gif {
-        solidcraft_io::vfs::create_dir_all(path).map_err(io)?;
+        torno_io::vfs::create_dir_all(path).map_err(io)?;
         // The frames of an earlier export here go first, so the folder never mixes two
         // animations: not after a shorter one, nor when this one fails part way.
-        for stale in (1..=MAX_FRAMES).map(frame_path).filter(|f| solidcraft_io::vfs::exists(f)) {
-            solidcraft_io::vfs::remove(&stale).map_err(|e| bad(cmd, format!("{stale}: {e}")))?;
+        for stale in (1..=MAX_FRAMES).map(frame_path).filter(|f| torno_io::vfs::exists(f)) {
+            torno_io::vfs::remove(&stale).map_err(|e| bad(cmd, format!("{stale}: {e}")))?;
         }
     }
     let mut t = s.scratch();
@@ -150,9 +150,9 @@ pub(super) fn export_with(s: &Session, p: &Value, renderer: Option<&Renderer>) -
         if gif {
             frames.push(picture.rgba);
         } else {
-            let png = solidcraft_viewport::png(width as usize, height as usize, picture.rgba).ok_or_else(|| bad(cmd, "PNG encoding failed"))?;
+            let png = torno_viewport::png(width as usize, height as usize, picture.rgba).ok_or_else(|| bad(cmd, "PNG encoding failed"))?;
             let file = frame_path(k + 1);
-            solidcraft_io::vfs::write(&file, &png).map_err(|e| bad(cmd, format!("{file}: {e}")))?;
+            torno_io::vfs::write(&file, &png).map_err(|e| bad(cmd, format!("{file}: {e}")))?;
             bytes += png.len();
         }
     }
@@ -161,7 +161,7 @@ pub(super) fn export_with(s: &Session, p: &Value, renderer: Option<&Renderer>) -
         // GIF counts in hundredths of a second, and viewers slow anything under 2 down.
         let delay = (100.0 / fps).round().clamp(2.0, 100.0) as u16;
         let gif = crate::render::gif(width as usize, height as usize, &frames, delay).ok_or_else(|| bad(cmd, "GIF encoding failed"))?;
-        solidcraft_io::write_atomic(std::path::Path::new(path), &gif, false).map_err(io)?;
+        torno_io::write_atomic(std::path::Path::new(path), &gif, false).map_err(io)?;
         bytes = gif.len();
         out["fps"] = json!(100.0 / f64::from(delay));
     }

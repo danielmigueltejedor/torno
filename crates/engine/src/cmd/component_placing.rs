@@ -26,8 +26,8 @@ pub(super) fn in_place(s: &Session, path: &[u64], parent: u64, parent_path: Opti
         path.last().and_then(|id| doc.occurrences.iter().find(|o| o.id == *id)).map(|o| o.component).ok_or_else(|| bad(cmd, "no placement"))?;
     let world = doc.path_transform(component, path).ok_or_else(|| bad(cmd, "that placement is gone"))?;
     let (_, frame) = placement_of(s, &doc, parent, parent_path, "parent_path", cmd)?;
-    let inverse = solidcraft_doc::mat_inverse(&frame).ok_or_else(|| bad(cmd, "the parent's frame is not invertible"))?;
-    Ok(solidcraft_doc::mat_mul(&inverse, &solidcraft_doc::mat_mul(&translation(translate), &world)))
+    let inverse = torno_doc::mat_inverse(&frame).ok_or_else(|| bad(cmd, "the parent's frame is not invertible"))?;
+    Ok(torno_doc::mat_mul(&inverse, &torno_doc::mat_mul(&translation(translate), &world)))
 }
 
 /// The placement of `component` a move or paste is placed by (the design is the empty path): its
@@ -36,7 +36,7 @@ pub(super) fn in_place(s: &Session, path: &[u64], parent: u64, parent_path: Opti
 /// gives `path`, for the error when none of them settles it.
 pub(in crate::cmd) fn placement_of(
     s: &Session,
-    doc: &solidcraft_doc::Document,
+    doc: &torno_doc::Document,
     component: u64,
     path: Option<&[u64]>,
     key: &str,

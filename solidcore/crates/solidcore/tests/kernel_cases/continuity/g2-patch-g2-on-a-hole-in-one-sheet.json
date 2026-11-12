@@ -109,7 +109,7 @@
     "stitch"
   ],
   "ungraded": [
-    "continuity: SolidCraft computes it"
+    "continuity: Torno computes it"
   ],
   "what": "a square hole in one smooth sheet, patched g2 (Curvature): every seam reaches g2, corners included, since round the hole there is only the one surface and its corners ask nothing it cannot give",
   "why_not": []

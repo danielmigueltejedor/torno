@@ -8,15 +8,15 @@ use crate::ui_kit::BackingTooltipExt as _;
 use crate::ui_kit::{StatusTone, choice_row, expr_row, status_line};
 use egui::RichText;
 use serde_json::{Value, json};
-use solidcraft_engine::Sel;
-use solidcraft_engine::Session;
-use solidcraft_engine::doc::expr::Kind as ValueKind;
+use torno_engine::Sel;
+use torno_engine::Session;
+use torno_engine::doc::expr::Kind as ValueKind;
 
 use crate::SolveApp;
 use crate::dialogs::{field, form_row};
 use crate::dialogs_assembly::Asm;
 use crate::selection::{EDGES, FACES, SelInput};
-use solidcraft_theme::Tokens;
+use torno_theme::Tokens;
 
 /// What a round-face input takes: a face, or an edge of one.
 const ROUND: u16 = FACES | EDGES;
@@ -109,7 +109,7 @@ fn pick(inputs: &[SelInput], i: usize) -> Option<(&str, solidcore_record::Vec3)>
 fn picked_radius(s: &Session, inputs: &[SelInput], i: usize) -> Option<f64> {
     let (body, point) = pick(inputs, i)?;
     let st = crate::open_meshing::session_world(s);
-    solidcraft_engine::kernel::cylinder_face_at(&st.body(body)?.body, point).map(|c| c.radius)
+    torno_engine::kernel::cylinder_face_at(&st.body(body)?.body, point).map(|c| c.radius)
 }
 
 /// Size `i` in mm: the picked face's radius, or the typed one.
@@ -160,11 +160,11 @@ pub fn rows(app: &mut SolveApp, ui: &mut egui::Ui, f: &mut CouplingForm, inputs:
         form_row(ui, label, |ui| {
             match (pick(inputs, i), picked_radius(s, inputs, i)) {
                 (_, Some(r)) => {
-                    ui.label(format!("{} mm  ({})", trim(r), solidcraft_ui_text::tr_label("picked")));
+                    ui.label(format!("{} mm  ({})", trim(r), torno_ui_text::tr_label("picked")));
                 }
                 // A pick on a flat face or a straight edge has no radius: say so rather than fail on OK.
                 (Some(_), None) => {
-                    ui.label(RichText::new(solidcraft_ui_text::tr_label("not a round face")).color(t.warning));
+                    ui.label(RichText::new(torno_ui_text::tr_label("not a round face")).color(t.warning));
                 }
                 (None, None) => *enter |= field(ui, text),
             }
@@ -205,9 +205,9 @@ pub fn rows(app: &mut SolveApp, ui: &mut egui::Ui, f: &mut CouplingForm, inputs:
         ui.label(RichText::new(shown.unwrap_or_else(|| "-".into())).color(t.text_dim));
     });
     form_row(ui, "Animate", |ui| {
-        let label = solidcraft_ui_text::tr(if f.animate { "ui.joint_stop" } else { "ui.joint_play" });
+        let label = torno_ui_text::tr(if f.animate { "ui.joint_stop" } else { "ui.joint_play" });
         let r = crate::ui_kit::button(ui, label, crate::ui_kit::Button::Normal)
-            .backing_on_hover_text(solidcraft_ui_text::tr_label("Play the joint's motion in the view"));
+            .backing_on_hover_text(torno_ui_text::tr_label("Play the joint's motion in the view"));
         crate::scenario::publish_handle("dialog:Animate", r.rect.center());
         if r.clicked() {
             f.animate = !f.animate;

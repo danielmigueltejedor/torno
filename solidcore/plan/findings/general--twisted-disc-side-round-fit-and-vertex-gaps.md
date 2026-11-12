@@ -1,12 +1,12 @@
 # General: the twisted disc's side rounds miss their radius by up to 1.8e-3; its top round leaves vertex gaps and fails at its named fit (2026-11-04)
 
 Unit: the generic blend (hub #2243); `blend::fillet_exact`, the fillet trace's surface. Issue
-#2652 (solidcraft#11848), PR #2659.
+#2652 (torno#11848), PR #2659.
 
-Inputs: the twisted slotted disc of solidcraft#11848 rebuilt from the issue's script (2 slots,
+Inputs: the twisted slotted disc of torno#11848 rebuilt from the issue's script (2 slots,
 radius 30, height 15, 30 degree twist; #2649's `tests/issue_2648_twisted_disc_top_round.rs`
 builder), its 4 twisted side edges rounded 2 mm, then its 12 top outline edges rounded.
-SolidCraft's fix list (`tests/kernel_cases/fixes.json`). Rust only (the fixes are not in
+Torno's fix list (`tests/kernel_cases/fixes.json`). Rust only (the fixes are not in
 the pinned C++).
 
 ## 1. Two of the four side rounds are not 2 mm rounds of their walls

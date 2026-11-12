@@ -1,6 +1,6 @@
-//! The SolidCraft egui front end.
+//! The Torno egui front end.
 //!
-//! A thin shell over [`solidcraft_engine::Session`]: panels read engine state and act through
+//! A thin shell over [`torno_engine::Session`]: panels read engine state and act through
 //! commands ([`SolveApp::run`]). Nothing here owns design data. The layout follows the familiar
 //! parametric-CAD desktop: application bar, a toolbar of workspace tabs and panels, the browser
 //! on the left, the 3D viewport with an axis view and navigation bar, the command dialog on the
@@ -13,8 +13,8 @@ pub mod access;
 pub mod agent_chat;
 pub mod agent_cursor;
 pub mod ai_connect;
-pub use solidcraft_ui_kit::app_bar;
-pub use solidcraft_ui_kit::blur;
+pub use torno_ui_kit::app_bar;
+pub use torno_ui_kit::blur;
 pub mod bom_panel;
 pub mod browser;
 pub mod browser_canvas;
@@ -72,12 +72,12 @@ mod feature_edit;
 #[cfg(test)]
 mod font_literals_tests;
 pub mod fonts;
-pub use solidcraft_ui_kit::frame;
+pub use torno_ui_kit::frame;
 pub mod frame_rate;
 pub mod gizmo;
 pub mod gpu;
 pub mod help;
-pub use solidcraft_ui_kit::history_bar;
+pub use torno_ui_kit::history_bar;
 mod history_folds;
 pub(crate) mod history_rows;
 #[cfg(test)]
@@ -160,7 +160,7 @@ mod status_tests {
         assert_eq!(super::friendly_error("edit.undo", "nothing to undo"), "Undo: nothing to undo");
         {
             // The label follows the interface language; the engine's words stay English.
-            let _polish = solidcraft_ui_text::scope("pl");
+            let _polish = torno_ui_text::scope("pl");
             assert_eq!(super::friendly_error("edit.undo", "nothing to undo"), "Cofnij: nothing to undo");
             assert_eq!(
                 super::friendly_error("sketch.dimension", "invalid parameters for `sketch.dimension`: value: `mm` is a unit name"),
@@ -168,7 +168,7 @@ mod status_tests {
             );
         }
         assert_eq!(super::friendly_error("edit.undo", "nothing to undo"), "Undo: nothing to undo");
-        let mut app = super::SolveApp::new(solidcraft_engine::Session::default(), Default::default());
+        let mut app = super::SolveApp::new(torno_engine::Session::default(), Default::default());
         app.run("solid.box", serde_json::json!({"length": 5, "width": 5, "height": 5})).unwrap();
         assert_eq!(app.session.log.last().map(String::as_str), Some("Box done"));
         let _ = app.run("edit.redo", serde_json::json!({}));
@@ -204,9 +204,9 @@ mod file_load_ui_tests;
 #[cfg(test)]
 mod fillet_spline_handle_tests;
 pub mod mouse_gesture;
-use solidcraft_ui_kit::nav_bar;
+use torno_ui_kit::nav_bar;
 pub(crate) mod navigation;
-pub use solidcraft_ui_kit::navigation_bar;
+pub use torno_ui_kit::navigation_bar;
 #[cfg(test)]
 mod navigation_bar_tests;
 mod navigation_bar_view;
@@ -226,7 +226,7 @@ pub(crate) mod plugins;
 pub mod point_clouds;
 pub mod prefs;
 pub mod prefs_notice;
-pub use solidcraft_ui_kit::prefs_window;
+pub use torno_ui_kit::prefs_window;
 #[cfg(test)]
 mod preselect_tests;
 pub mod preview;
@@ -249,7 +249,7 @@ pub mod resume_ui;
 mod revolve_edit_tests;
 #[cfg(test)]
 mod revolve_manipulator_tests;
-pub use solidcraft_ui_kit::ribbon;
+pub use torno_ui_kit::ribbon;
 #[cfg(test)]
 mod round_pick_tests;
 mod rule_editor;
@@ -312,16 +312,16 @@ pub mod space_mouse_calibration;
 pub mod space_mouse_model;
 pub mod space_mouse_offer;
 pub mod stand_up;
-pub use solidcraft_ui_kit::start_page;
+pub use torno_ui_kit::start_page;
 mod status_bar;
 #[cfg(test)]
 mod sweep_dialog_tests;
 pub(crate) mod test_boat;
 pub mod theme;
-pub use solidcraft_ui_kit::theme_files;
+pub use torno_ui_kit::theme_files;
 #[cfg(test)]
 mod theme_files_tests;
-use solidcraft_ui_kit::theme_options;
+use torno_ui_kit::theme_options;
 #[cfg(test)]
 mod thin_extrude_tests;
 pub mod timeline;
@@ -335,13 +335,13 @@ pub mod tool_modifiers;
 pub mod toolbar;
 pub mod toolbar_custom;
 pub mod tools;
-pub use solidcraft_ui_kit as ui_kit;
+pub use torno_ui_kit as ui_kit;
 #[cfg(test)]
 mod ui_kit_guard_tests;
 pub mod update;
 mod value_step;
 pub(crate) mod view_angles;
-pub use solidcraft_ui_kit::view_compass;
+pub use torno_ui_kit::view_compass;
 mod view_confirm;
 pub mod view_gizmo;
 pub mod view_pick;
@@ -350,15 +350,15 @@ mod viewport_details;
 mod viewport_layout;
 mod viewport_status;
 mod viewport_status_fixture;
-pub use solidcraft_ui_kit::window_chrome;
+pub use torno_ui_kit::window_chrome;
 pub mod workspace;
 
 use std::sync::mpsc::Receiver;
 
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
-use solidcraft_engine::Session;
-use solidcraft_viewport::{Camera, CameraAnim, StandardView};
+use torno_engine::Session;
+use torno_viewport::{Camera, CameraAnim, StandardView};
 
 pub(crate) use control::ControlRequest;
 
@@ -416,7 +416,7 @@ pub struct UiState {
     /// A soft shadow on the ground under the model (seen from above).
     pub ground_shadow: bool,
     /// The world's up axis (Z or Y; #3): the camera, axis view, home view and ground follow it.
-    pub up_axis: solidcraft_viewport::UpAxis,
+    pub up_axis: torno_viewport::UpAxis,
     /// The agent cursor: shown, speed, follow camera (#35).
     pub agent_cursor: agent_cursor::Settings,
     /// The running tool's icon rides beside the pointer in the viewport (View settings; off by
@@ -722,10 +722,10 @@ pub struct SolveApp {
     pub own_clipboard_stamp: u64,
     /// The bodies (or components) the last copy or cut took, with the design they were in, to
     /// paste into another design (`component.paste_from_design`).
-    pub foreign_copy: Option<std::sync::Arc<solidcraft_engine::ForeignCopy>>,
+    pub foreign_copy: Option<std::sync::Arc<torno_engine::ForeignCopy>>,
     /// The sketch geometry the last copy or cut took, when it was sketch geometry: a sketch of
     /// another design pastes it (#9258).
-    pub foreign_sketch_clip: Option<solidcraft_engine::cmd::sketch_clipboard::SketchClip>,
+    pub foreign_sketch_clip: Option<torno_engine::cmd::sketch_clipboard::SketchClip>,
     /// Esc was already acted on this frame (by the shortcuts), so later handlers skip it.
     pub esc_handled: bool,
     pub(crate) escape_owner: Option<EscapeOwner>,
@@ -746,7 +746,7 @@ pub struct SolveApp {
     /// Update Links, Open Linked Design or Reload from file waiting for a network server to be allowed.
     pub network_prompt: Option<network_prompt::NetworkPrompt>,
     /// Designs left by crashed apps, offered for recovery.
-    pub recoverable: Vec<solidcraft_engine::recovery::Entry>,
+    pub recoverable: Vec<torno_engine::recovery::Entry>,
     /// The recovery folder holding this launch's reopen-guard marker (#5064); `None` when
     /// there is no recovery folder. A reopened design that finishes opening is taken off it.
     pub reopen_guard_dir: Option<std::path::PathBuf>,
@@ -776,7 +776,7 @@ pub struct SolveApp {
     pub msaa_compatibility: bool,
     /// Startup fallback diagnostic, also shown in Graphics preferences.
     pub graphics_fallback: Option<String>,
-    /// Settings put back at start because they kept SolidCraft from starting, one line each,
+    /// Settings put back at start because they kept Torno from starting, one line each,
     /// shown until dismissed (`prefs::show_reset_notice`).
     pub settings_reset: Vec<prefs::SettingReset>,
     /// The last command was a big operation: autosave after it.
@@ -823,15 +823,15 @@ pub struct SolveApp {
     pub agent: agent_cursor::AgentCursor,
     /// The agent chat panel (docs/design/in-app-agent-chat.md).
     pub agent_chat: agent_chat::AgentChat,
-    /// Making SolidCraft available to the AI apps installed here ([`ai_connect`]).
+    /// Making Torno available to the AI apps installed here ([`ai_connect`]).
     pub ai_connect: ai_connect::State,
     /// The window's screenshots in flight: control requests' and the issue report's.
-    shots: solidcraft_control_egui::screenshot::Shots,
+    shots: torno_control_egui::screenshot::Shots,
     styled: bool,
     fitted: bool,
     /// A framing to settle once the viewport's layout is known: the camera to frame from, the
     /// bounds, whether to glide there, and whether it is the navigators' shared-zoom framing.
-    pending_fit: Option<(Camera, solidcraft_engine::geom::Aabb3, bool, bool)>,
+    pending_fit: Option<(Camera, torno_engine::geom::Aabb3, bool, bool)>,
     /// Frames a pending fit has waited for a layout that can frame it (`resolve_fit`).
     fit_waits: u32,
     /// The sheet metal flat pattern's own pan and zoom.
@@ -878,22 +878,22 @@ impl SolveApp {
         // The app's catalogs, once per process; later calls find them installed.
         i18n::install();
         // The app's look (icons, glyphs and built-in theme files), likewise, before the first frame.
-        solidcraft_look::install_tables();
+        torno_look::install_tables();
         // The tab table theme files are read against, likewise.
         workspace::install_tabs();
         // The navigation slots stored bars are read against, likewise.
         navigation_slots::install();
         #[cfg(test)]
-        let image_host = Some(solidcraft_engine::render::job::CpuHost::cooperative());
+        let image_host = Some(torno_engine::render::job::CpuHost::cooperative());
         #[cfg(not(test))]
-        let image_host = solidcraft_engine::render::job::CpuHost::for_platform().map_err(|e| log::error!("render image host: {e}")).ok();
+        let image_host = torno_engine::render::job::CpuHost::for_platform().map_err(|e| log::error!("render image host: {e}")).ok();
         if let Err(e) = session.set_render_job_host(image_host.clone()) {
             log::error!("render image host: {e}");
         }
         let mut render_workspace = render_workspace::State::default();
         render_workspace.image_host = image_host;
         #[cfg(not(target_arch = "wasm32"))]
-        solidcraft_engine::slicer_files::clean_old();
+        torno_engine::slicer_files::clean_old();
         let tree = browser::TreeState::for_session(session.uid);
         let mut app = SolveApp {
             panel_runtime: None,
@@ -1023,7 +1023,7 @@ impl SolveApp {
             control_job: None,
             control_answering: Vec::new(),
             agent: Default::default(),
-            shots: solidcraft_control_egui::screenshot::Shots::new("no frame was presented (window hidden?); use ui.render"),
+            shots: torno_control_egui::screenshot::Shots::new("no frame was presented (window hidden?); use ui.render"),
             styled: false,
             fitted: false,
             pending_fit: None,
@@ -1048,12 +1048,12 @@ impl SolveApp {
 
     /// Translate text using the active language preference.
     pub fn tr<'a>(&self, text: &'a str) -> &'a str {
-        solidcraft_ui_text::Locale::for_language(&self.preferences.language).text(text)
+        torno_ui_text::Locale::for_language(&self.preferences.language).text(text)
     }
 
     /// Translate a display label supplied by the engine, without changing its identifier.
     pub fn tr_label<'a>(&self, text: &'a str) -> &'a str {
-        solidcraft_ui_text::Locale::for_language(&self.preferences.language).label(text)
+        torno_ui_text::Locale::for_language(&self.preferences.language).label(text)
     }
 
     /// Draw the viewport on the GPU (eframe's wgpu render state, with the app's depth and
@@ -1091,29 +1091,25 @@ impl SolveApp {
         self.blur.install(rs, scene.depth.is_some() && window.depth.is_none() && window.samples == 1);
         #[allow(unused_mut)] // Only native hosts can wait for the startup readback.
         #[cfg(not(target_arch = "wasm32"))]
-        let force_cpu = solidcraft_gpu::env::force_cpu_tessellation();
+        let force_cpu = torno_gpu::env::force_cpu_tessellation();
         #[cfg(target_arch = "wasm32")]
         let force_cpu = false;
-        let (mut installed, stats, tess_ready) =
-            solidcraft_viewport_egui::install(rs, scene, window, !self.cpu_meshing, force_cpu, gpu::report_gpu_error);
+        let (mut installed, stats, tess_ready) = torno_viewport_egui::install(rs, scene, window, !self.cpu_meshing, force_cpu, gpu::report_gpu_error);
         #[cfg(not(target_arch = "wasm32"))]
         if scene.depth.is_some() && window.depth.is_none() && window.samples == 1 {
             let mut renderer = rs.renderer.write();
             if let Some(res) = renderer.callback_resources.get_mut::<gpu::Renderer>() {
                 match res.check_msaa(&rs.device, &rs.queue) {
-                    Ok(solidcraft_viewport_gpu::view::MsaaCheck::Passed) => {}
-                    Ok(solidcraft_viewport_gpu::view::MsaaCheck::Fallback) => {
+                    Ok(torno_viewport_gpu::view::MsaaCheck::Passed) => {}
+                    Ok(torno_viewport_gpu::view::MsaaCheck::Fallback) => {
                         installed.samples = 1;
                         self.msaa_compatibility = true;
-                        eprintln!(
-                            "SolidCraft graphics: anti-aliasing check failed at {}x and passed at 1x; using 1x for this session",
-                            scene.samples
-                        );
+                        eprintln!("Torno graphics: anti-aliasing check failed at {}x and passed at 1x; using 1x for this session", scene.samples);
                     }
-                    Ok(solidcraft_viewport_gpu::view::MsaaCheck::FailedAtOne) => {
-                        eprintln!("SolidCraft graphics: anti-aliasing check also failed at 1x; keeping {}x", scene.samples);
+                    Ok(torno_viewport_gpu::view::MsaaCheck::FailedAtOne) => {
+                        eprintln!("Torno graphics: anti-aliasing check also failed at 1x; keeping {}x", scene.samples);
                     }
-                    Err(error) => eprintln!("SolidCraft graphics: anti-aliasing check error; keeping {}x: {error}", scene.samples),
+                    Err(error) => eprintln!("Torno graphics: anti-aliasing check error; keeping {}x: {error}", scene.samples),
                 }
             }
         }
@@ -1139,7 +1135,7 @@ impl SolveApp {
             // Next to the graphics settings: a setup that stops the app is not run again by itself.
             let marker = self.services.graphics_path.as_deref().map(|p| std::path::Path::new(p).with_file_name(render_workspace::SETUP_MARKER));
             self.render_workspace.watch_setup(marker);
-            self.render_workspace.defer_path_host(key, move || solidcraft_gpu::path::host_on_adapter(&adapter).map_err(|e| e.to_string()));
+            self.render_workspace.defer_path_host(key, move || torno_gpu::path::host_on_adapter(&adapter).map_err(|e| e.to_string()));
         }
         render_workspace::sync_backend(self);
         ai_connect::tick(self);
@@ -1161,7 +1157,7 @@ impl SolveApp {
     /// Portable preferences for storage. On refusal the host retains its stored panel record.
     pub fn try_prefs(&self) -> Result<String, String> {
         let layout = prefs::held_panel_layout(self).unwrap_or_else(|| panel_runtime::preferences_value(self));
-        let portable = panel_runtime::portable_preferences_value(self, layout).map_err(solidcraft_engine::panels::commands::error_text)?;
+        let portable = panel_runtime::portable_preferences_value(self, layout).map_err(torno_engine::panels::commands::error_text)?;
         Ok(self.prefs_with_panel_layout(portable))
     }
 
@@ -1340,8 +1336,8 @@ impl SolveApp {
 
     /// Run a command programmatically (JSON parameters, no dialogs).
     pub fn run(&mut self, id: &str, params: Value) -> Result<Value, String> {
-        if solidcraft_engine::panels::commands::is_command(id) {
-            return self.run_panel_command(id, &params).map_err(solidcraft_engine::panels::commands::error_text);
+        if torno_engine::panels::commands::is_command(id) {
+            return self.run_panel_command(id, &params).map_err(torno_engine::panels::commands::error_text);
         }
         if self.file_load.busy() || self.file_picker.is_some() || self.saving.is_some() {
             return Err("a file operation is in progress".into());
@@ -1352,7 +1348,7 @@ impl SolveApp {
         }
         // Commands may start only detected slicers and the programs the user added under Custom….
         if matches!(id, "file.save_mesh" | "file.send_to_slicer") {
-            solidcraft_engine::slicers::set_chosen_programs(&self.preferences.custom_slicers);
+            torno_engine::slicers::set_chosen_programs(&self.preferences.custom_slicers);
         }
         self.session.set_validation(self.preferences.validation);
         if id == "timeline.play" {
@@ -1398,7 +1394,7 @@ impl SolveApp {
         id: &str,
         params: &Value,
         revision: u64,
-        selected_before: Vec<solidcraft_engine::Sel>,
+        selected_before: Vec<torno_engine::Sel>,
         r: Result<Value, String>,
     ) -> Result<Value, String> {
         // An Undo offered by the last toast is stale once another command changed the design.
@@ -1438,7 +1434,7 @@ impl SolveApp {
     /// Host effects shared by directly executed and already evaluated commands.
     pub(crate) fn command_completed(&mut self, id: &str, r: Result<Value, String>) -> Result<Value, String> {
         // The engine has no edit in place to start or finish; the window does, and says when it can't.
-        let r = match solidcraft_engine::find_command(id).map(|spec| spec.id) {
+        let r = match torno_engine::find_command(id).map(|spec| spec.id) {
             // `queued`: it waits for the end of the agent's turn.
             Some("component.edit_in_place") => r.and_then(|v| edit_in_place::command_ran(self, &v).map(|queued| with_queued(v, queued))),
             Some("component.finish_edit") => r.and_then(|v| edit_in_place::finish_command(self).map(|queued| with_queued(v, queued))),
@@ -1500,7 +1496,7 @@ impl SolveApp {
                 "timeline.redefine" if v.get("rolled_back").and_then(Value::as_bool) == Some(true) => {
                     let feature = v.get("feature").and_then(Value::as_u64).and_then(|f| self.session.doc.feature(f));
                     let name = feature.map(|f| f.name.clone()).unwrap_or_default();
-                    self.set_status(solidcraft_ui_text::format("timeline.edited_rolled_back", &[("name", &name)]), false);
+                    self.set_status(torno_ui_text::format("timeline.edited_rolled_back", &[("name", &name)]), false);
                 }
                 _ => {}
             }
@@ -1664,14 +1660,14 @@ impl SolveApp {
     /// What follows a command's run, whether it ran here or on a worker (a save): its echo,
     /// the status line when it failed, what opening and saving update, and the toolbar tab.
     pub(crate) fn finish_command(&mut self, id: &str, r: &Result<Value, String>) {
-        let id = solidcraft_engine::find_command(id).map_or(id, |spec| spec.id);
+        let id = torno_engine::find_command(id).map_or(id, |spec| spec.id);
         match r {
             Ok(v) => {
                 // Programmatic callers (the control channel, scripts) run outside a render
                 // language scope, so resolve the echo from the saved preference instead of the
                 // thread-local scope. The command's own label is translated too, so the echo
                 // reads the same way the toolbar button it came from does.
-                let language = solidcraft_ui_text::Locale::for_language(&self.preferences.language);
+                let language = torno_ui_text::Locale::for_language(&self.preferences.language);
                 let label = language.label(command_label(id));
                 // Frames of a gesture (a continuous view move, a part dragged by its joints) are
                 // not echoed one by one.
@@ -1725,7 +1721,7 @@ impl SolveApp {
             Err(e) => {
                 // The native menu runs Undo and Redo before `logic` installs the frame scope, so
                 // the error would be translated with the thread default.
-                let _language = solidcraft_ui_text::scope(&self.preferences.language);
+                let _language = torno_ui_text::scope(&self.preferences.language);
                 let msg = friendly_error(id, e);
                 self.session.echo(msg.clone());
                 self.set_status(msg, true);
@@ -1769,7 +1765,7 @@ impl SolveApp {
     pub(crate) fn pick_design_to_insert(&mut self) {
         self.pick_open(|app, path| {
             let Some(path) = path else { return };
-            if solidcraft_engine::io::is_design_path(&path) {
+            if torno_engine::io::is_design_path(&path) {
                 app.insert_design_async(&path, None);
             } else {
                 app.insert_path_async(&path);
@@ -1783,7 +1779,7 @@ impl SolveApp {
     /// status line once it is in.
     pub(crate) fn insert_design_async(&mut self, path: &str, note: Option<String>) {
         let mut request = file_load::Request::new(path, file_load::Kind::InsertDesign);
-        request.allow_hosts = solidcraft_engine::io::vfs::network_host(path).into_iter().collect();
+        request.allow_hosts = torno_engine::io::vfs::network_host(path).into_iter().collect();
         request.note = note;
         // A request that could not be queued has said why in the status line.
         let _ = file_load::begin_request(self, request);
@@ -1820,8 +1816,8 @@ impl SolveApp {
     fn start_with_variant_memory(&mut self, id: &str, remember_variant: bool, opener: Option<egui::Rect>, section_edit: bool) {
         // A tool can be started outside the frame's scope (a direct `start`, a shortcut in
         // `logic`): build its hint in the user's language, not the thread default.
-        let _language = solidcraft_ui_text::scope(&self.preferences.language);
-        if solidcraft_engine::panels::commands::is_command(id) {
+        let _language = torno_ui_text::scope(&self.preferences.language);
+        if torno_engine::panels::commands::is_command(id) {
             if let Err(why) = self.run(id, json!({})) {
                 self.set_status(why, true);
             }
@@ -1902,7 +1898,7 @@ impl SolveApp {
         }
         // Front … Isometric (Ctrl+1…7 by default) turn the view as the view cube's faces do. The
         // flat pattern is a 2D page: it has no other side to turn to.
-        if solidcraft_engine::standard_view(id).is_some() {
+        if torno_engine::standard_view(id).is_some() {
             if !dialogs_sheet::flat_active(self) {
                 // `view.isometric` → "isometric", which `StandardView::parse` reads as Iso.
                 self.animate_view(id.trim_start_matches("view."));
@@ -1945,7 +1941,7 @@ impl SolveApp {
         // Sketch, on the selected plane or planar face or else on the plane picked next, and then
         // the tool, as the tool's shortcut does outside a sketch (`keymap::press`).
         if workspace::starts_a_sketch(self, id)
-            && let Some(then) = solidcraft_engine::find_command(id).map(|c| c.id)
+            && let Some(then) = torno_engine::find_command(id).map(|c| c.id)
         {
             self.start("sketch.create");
             if let Some(d) = self.dialog.as_mut().filter(|d| matches!(d.kind, dialogs::Kind::Sketch)) {
@@ -1958,7 +1954,7 @@ impl SolveApp {
         // A disabled command starts nothing, however it was reached. The toolbar greys its
         // button, but a shortcut, the command palette and the control channel all land here.
         // Its reason goes to the status line, so the refusal is never silent.
-        if let Some(info) = solidcraft_engine::find_command(id).map(|c| c.info(&self.session))
+        if let Some(info) = torno_engine::find_command(id).map(|c| c.info(&self.session))
             && let Some(why) = info.disabled_reason
         {
             let label = self.tr_label(info.label).to_string();
@@ -2013,7 +2009,7 @@ impl SolveApp {
         // retaining the exact instance path and the grounding/rigid-group restrictions.
         // A selected body, or a component picked in the tree, opens Move/Copy on those bodies.
         if id == "solid.move"
-            && let [solidcraft_engine::Sel::Occurrence { path }] = self.session.selection.as_slice()
+            && let [torno_engine::Sel::Occurrence { path }] = self.session.selection.as_slice()
         {
             let target = context_menu::Target::Occurrence { path: path.clone() };
             if let Some(item) = context_menu::items(self, &target).into_iter().find(|item| item.id == "ui.moveOccurrence") {
@@ -2172,7 +2168,7 @@ impl SolveApp {
         if !section_edit && !sketch_tools::start_hook(self, id) {
             return;
         }
-        if remember_variant && solidcraft_engine::find_command(id).is_some_and(|c| c.info(&self.session).enabled) {
+        if remember_variant && torno_engine::find_command(id).is_some_and(|c| c.info(&self.session).enabled) {
             self.preferences.sketch_variants.remember(id);
         }
         if id == "document.units" {
@@ -2225,21 +2221,21 @@ impl SolveApp {
                 pending.then_start(id);
                 return;
             }
-            if self.session.selection.iter().any(|s| matches!(s, solidcraft_engine::Sel::Edge { .. })) {
+            if self.session.selection.iter().any(|s| matches!(s, torno_engine::Sel::Edge { .. })) {
                 return self.start("solid.fillet");
             }
             let sel = &self.session.selection;
             let blend = sel.iter().find_map(|s| match s {
-                solidcraft_engine::Sel::Face { body, index, point } => dialogs::blend_feature(&self.session, body, *index).map(|id| (id, *point)),
+                torno_engine::Sel::Face { body, index, point } => dialogs::blend_feature(&self.session, body, *index).map(|id| (id, *point)),
                 _ => None,
             });
             // Its arrow sits on the edge of the face clicked.
             if let Some((blend, point)) = blend {
                 return self.edit_feature_at(blend, Some(point));
             }
-            let curved = sel.iter().any(
-                |s| matches!(s, solidcraft_engine::Sel::Face { body, index, .. } if dialogs::planar_face(&self.session, body, *index).is_none()),
-            );
+            let curved = sel
+                .iter()
+                .any(|s| matches!(s, torno_engine::Sel::Face { body, index, .. } if dialogs::planar_face(&self.session, body, *index).is_none()));
             if curved {
                 return self.start("solid.offset_face");
             }
@@ -2272,8 +2268,8 @@ impl SolveApp {
             // placement reads where the sketch puts it once the sketch is no longer the open one.
             if let (Some(sketch), "solid.box" | "solid.sphere" | "solid.torus") = (finished_sketch, id) {
                 for sel in self.session.selection.iter_mut() {
-                    if let solidcraft_engine::Sel::SketchPoint { id } = sel {
-                        *sel = solidcraft_engine::Sel::ExternalSketchPoint { sketch, id: id.clone() };
+                    if let torno_engine::Sel::SketchPoint { id } = sel {
+                        *sel = torno_engine::Sel::ExternalSketchPoint { sketch, id: id.clone() };
                     }
                 }
             }
@@ -2292,7 +2288,7 @@ impl SolveApp {
 
     /// The rest of [`SolveApp::start`], once any sketch `id` ends is finished.
     pub(crate) fn start_interactive(&mut self, id: &str, finished_sketch: Option<u64>) {
-        if let Some(spec) = solidcraft_engine::find_command(id)
+        if let Some(spec) = torno_engine::find_command(id)
             && self.interactive(id)
             && id != "sketch.create"
         {
@@ -2340,7 +2336,7 @@ impl SolveApp {
                     | "sketch.constraint.tangent"
                     | "sketch.constraint.concentric"
                     | "sketch.constraint.collinear"
-            ) && let [solidcraft_engine::Sel::SketchCurve { id: a, .. }, solidcraft_engine::Sel::SketchCurve { id: b, .. }] =
+            ) && let [torno_engine::Sel::SketchCurve { id: a, .. }, torno_engine::Sel::SketchCurve { id: b, .. }] =
                 self.session.selection.as_slice()
                 && a != b
             {
@@ -2357,8 +2353,8 @@ impl SolveApp {
                     .selection
                     .iter()
                     .filter_map(|s| match s {
-                        solidcraft_engine::Sel::SketchCurve { id, .. } | solidcraft_engine::Sel::SketchPoint { id } => Some(id.clone()),
-                        solidcraft_engine::Sel::Axis { name } => tools::sketch_axis_of(self, name).map(str::to_string),
+                        torno_engine::Sel::SketchCurve { id, .. } | torno_engine::Sel::SketchPoint { id } => Some(id.clone()),
+                        torno_engine::Sel::Axis { name } => tools::sketch_axis_of(self, name).map(str::to_string),
                         _ => None,
                     })
                     .take(2)
@@ -2410,7 +2406,7 @@ impl SolveApp {
 
     /// The ribbon has no sketch argument: use one unambiguous sketch pick, otherwise ask.
     fn start_sketch_edit(&mut self, opener: Option<egui::Rect>) {
-        use solidcraft_engine::{Sel, doc::FeatureKind};
+        use torno_engine::{Sel, doc::FeatureKind};
         let mut sketches: Vec<u64> = self
             .session
             .selection
@@ -2490,7 +2486,7 @@ impl SolveApp {
     /// [`Self::edit_feature`] opened from a click at `at` on what the feature made: the dialog's
     /// arrow sits by that point (a fillet's or chamfer's edge nearest it).
     pub(crate) fn edit_feature_at(&mut self, id: u64, at: Option<solidcore_record::Vec3>) {
-        use solidcraft_engine::doc::FeatureKind;
+        use torno_engine::doc::FeatureKind;
         // A non-finite point (over the control channel) keeps the first edge.
         self.edit_anchor_hint = at.filter(|p| p.is_finite()).map(|p| (id, p));
         dialogs::cancel(self);
@@ -2525,7 +2521,7 @@ impl SolveApp {
     /// they wait for it.
     pub(crate) fn close_editor_for_history(&mut self) -> Result<(), String> {
         if self.pending_feature_edit.is_some() {
-            let why = solidcraft_ui_text::tr("ui.history_waits_for_editor").to_string();
+            let why = torno_ui_text::tr("ui.history_waits_for_editor").to_string();
             self.set_status(why.clone(), true);
             return Err(why);
         }
@@ -2573,7 +2569,7 @@ impl SolveApp {
                 let _ = app.run("component.activate", json!({"component": component, "occurrence": path.last(), "path": path}));
             }
         };
-        if let solidcraft_engine::doc::FaceAttachmentStatus::Lost { message, .. } =
+        if let torno_engine::doc::FaceAttachmentStatus::Lost { message, .. } =
             self.session.placed_document().sketch_face_attachment(id, &self.session.model)
         {
             activate(self);
@@ -2731,7 +2727,7 @@ impl SolveApp {
     }
 
     /// Everything shown as selected: the selection plus the open dialog's inputs.
-    pub fn highlighted(&self) -> Vec<solidcraft_engine::Sel> {
+    pub fn highlighted(&self) -> Vec<torno_engine::Sel> {
         let mut v = self.session.selection.clone();
         if let Some(d) = &self.dialog {
             v.extend(d.highlighted(&self.session));
@@ -2810,19 +2806,19 @@ impl SolveApp {
         self.status_undo = false;
     }
 
-    /// Tell the user when the open design came from a newer SolidCraft: the notice on the status
+    /// Tell the user when the open design came from a newer Torno: the notice on the status
     /// line, and what this version couldn't read in the messages.
     pub(crate) fn say_newer_file(&mut self) {
         let Some(file) = self.session.doc.newer_file.clone() else { return };
         for what in &file.not_understood {
-            let text = solidcraft_ui_text::format("document.newer_file_not_read", &[("what", what)]);
+            let text = torno_ui_text::format("document.newer_file_not_read", &[("what", what)]);
             self.messages.push(&text, false, now_ms());
         }
         let text = if file.format <= file.reads_up_to && !file.unknown_changes.is_empty() {
             let change = file.unknown_changes.first().map_or("", String::as_str);
-            solidcraft_ui_text::format("document.newer_file_change", &[("format", &file.format.to_string()), ("change", change)])
+            torno_ui_text::format("document.newer_file_change", &[("format", &file.format.to_string()), ("change", change)])
         } else {
-            solidcraft_ui_text::format("document.newer_file", &[("format", &file.format.to_string()), ("reads", &file.reads_up_to.to_string())])
+            torno_ui_text::format("document.newer_file", &[("format", &file.format.to_string()), ("reads", &file.reads_up_to.to_string())])
         };
         self.set_status(text, false);
     }
@@ -2899,7 +2895,7 @@ impl SolveApp {
     pub fn insert_path_with(&mut self, path: &str, options: &serde_json::Map<String, Value>, mesh: bool) {
         let cmd = if mesh {
             "file.insert_mesh"
-        } else if solidcraft_engine::io::is_point_cloud_path(path) {
+        } else if torno_engine::io::is_point_cloud_path(path) {
             "pointcloud.insert"
         } else {
             file_load::insert_command(path)
@@ -2925,10 +2921,10 @@ impl SolveApp {
             sketch_tools::start_image_placement(self, "canvas.insert", path.to_string());
             return;
         }
-        let import = solidcraft_engine::io::is_step_path(path)
-            || solidcraft_engine::io::is_mesh_path(path)
-            || solidcraft_engine::io::is_point_cloud_path(path)
-            || solidcraft_engine::cmd::drawing_import_command(path).is_some();
+        let import = torno_engine::io::is_step_path(path)
+            || torno_engine::io::is_mesh_path(path)
+            || torno_engine::io::is_point_cloud_path(path)
+            || torno_engine::cmd::drawing_import_command(path).is_some();
         if import && (!self.session.doc.features.is_empty() || !self.session.doc.point_clouds.is_empty()) {
             self.insert_path_async(path);
         } else {
@@ -2939,7 +2935,7 @@ impl SolveApp {
     /// Frame the model at once (programmatic use; the toolbar animates).
     /// Make `up` the world's up axis: the camera turns to the same standard view in that world
     /// (home) and frames the model.
-    pub fn set_up_axis(&mut self, up: solidcraft_viewport::UpAxis) {
+    pub fn set_up_axis(&mut self, up: torno_viewport::UpAxis) {
         self.ui.up_axis = up;
         self.cam_anim = None;
         self.cam.up = up;
@@ -2962,7 +2958,7 @@ impl SolveApp {
         }
         if render_workspace::active(self) {
             self.cancel_view_animation();
-            match solidcraft_engine::product_scene::extract(&self.session) {
+            match torno_engine::product_scene::extract(&self.session) {
                 Ok(scene) if !scene.bounds.is_empty() => self.fit_bounds(scene.bounds),
                 Err(e) => self.set_status(e.to_string(), true),
                 _ => {}
@@ -2981,7 +2977,7 @@ impl SolveApp {
     }
 
     /// Frame `bounds` at once, keeping the view direction (programmatic use).
-    pub fn fit_bounds(&mut self, bounds: solidcraft_engine::geom::Aabb3) {
+    pub fn fit_bounds(&mut self, bounds: torno_engine::geom::Aabb3) {
         self.cancel_view_animation();
         self.viewport.orbit_free = None;
         self.pending_fit = Some((self.cam, bounds, false, false));
@@ -3004,7 +3000,7 @@ impl SolveApp {
     /// `cam` framing `bounds` in the viewport as it is laid out now, or `None` when this layout
     /// can't frame it: the viewport has not been drawn since the fit was asked for, so the
     /// rectangle to frame into is the one from before the Home screen or a dialog covered it.
-    fn try_fitted_bounds(&self, cam: Camera, bounds: &solidcraft_engine::geom::Aabb3) -> Option<Camera> {
+    fn try_fitted_bounds(&self, cam: Camera, bounds: &torno_engine::geom::Aabb3) -> Option<Camera> {
         let layout = self.viewport.layout.as_ref()?;
         if self.universal_panel_frame().is_some() {
             let usable = shell::host_usable(self).ok()?;
@@ -3030,8 +3026,8 @@ impl SolveApp {
     }
 
     /// [`Self::navigator_fitted`] for `bounds`, or `None` when the layout can't frame it yet.
-    fn navigator_fitted_bounds(&self, mut cam: Camera, bounds: &solidcraft_engine::geom::Aabb3) -> Option<Camera> {
-        use solidcraft_engine::geom::Vec3Geom as _;
+    fn navigator_fitted_bounds(&self, mut cam: Camera, bounds: &torno_engine::geom::Aabb3) -> Option<Camera> {
+        use torno_engine::geom::Vec3Geom as _;
 
         if bounds.is_empty() || !bounds.min.is_finite() || !bounds.max.is_finite() {
             return None;
@@ -3041,7 +3037,7 @@ impl SolveApp {
         // A cube around the sphere, seen square-on from any axis, projects to the sphere's own
         // square, so the layout fit of that cube is the sphere's.
         let offset = solidcore_record::Vec3::new(radius, radius, radius);
-        let sphere = solidcraft_engine::geom::Aabb3 { min: centre - offset, max: centre + offset };
+        let sphere = torno_engine::geom::Aabb3 { min: centre - offset, max: centre + offset };
         // Keep Classic's original probe; the opt-in host retains the authored lens and up axis.
         let mut probe = if self.universal_panel_host_enabled() { cam } else { Camera::default() };
         probe.set_view(StandardView::Front);
@@ -3059,14 +3055,14 @@ impl SolveApp {
         cam.is_valid().then_some(cam)
     }
 
-    fn fitted_bounds(&self, mut cam: Camera, bounds: &solidcraft_engine::geom::Aabb3) -> Camera {
+    fn fitted_bounds(&self, mut cam: Camera, bounds: &torno_engine::geom::Aabb3) -> Camera {
         if self.viewport.layout.is_some() {
             return self.try_fitted_bounds(cam, bounds).unwrap_or(cam);
         }
         // Framed at the angle the view draws with, keeping the camera's own.
         let previous = cam;
         cam.fov = self.view_fov();
-        cam.fit(&solidcraft_engine::render::view_bounds(bounds));
+        cam.fit(&torno_engine::render::view_bounds(bounds));
         cam.fov = previous.fov;
         if cam.is_valid() { cam } else { previous }
     }
@@ -3167,7 +3163,7 @@ impl SolveApp {
     /// Move to `to` and frame the whole model from there at Home's zoom (animated): the
     /// navigators' Home, faces, corners, arrows and axes (`navigator_fitted`).
     pub fn animate_to_fitted(&mut self, to: Camera) {
-        let Ok(bounds) = solidcraft_engine::view::bounds(&self.session) else { return };
+        let Ok(bounds) = torno_engine::view::bounds(&self.session) else { return };
         let shared = self.preferences.navigator_fit;
         let framed = if shared { self.navigator_fitted(to) } else { self.fitted(to) };
         self.animate_to(framed);
@@ -3243,7 +3239,7 @@ impl SolveApp {
     }
 
     /// Frame `bounds` as Fit frames the selection, leaving the selection as it is.
-    pub(crate) fn frame_bounds(&mut self, bounds: solidcraft_engine::geom::Aabb3) {
+    pub(crate) fn frame_bounds(&mut self, bounds: torno_engine::geom::Aabb3) {
         let from = self.cam;
         let to = self.fitted_bounds(from, &bounds);
         self.pending_fit = None;
@@ -3305,7 +3301,7 @@ impl SolveApp {
         params_dialog::install_expressions(ctx);
         // Shortcuts run here, before `ui` installs the language scope: a tool started by its
         // key must build its translated hint in the user's language, not in English.
-        let _language = solidcraft_ui_text::scope(&self.preferences.language);
+        let _language = torno_ui_text::scope(&self.preferences.language);
         panel_runtime::tick_app(self, ctx);
         // Sleep/wake often skips frames without a device-lost signal; refresh egui GPU textures
         // when the frame clock jumps so the chrome is not stuck blank (#8749).
@@ -3345,12 +3341,12 @@ impl SolveApp {
         prefs::apply(self, ctx);
         control_switch::tick(self, ctx.input(|i| i.time), Some(ctx));
         // The view's own dark or light only changes tokens, not egui's visuals: no restyle.
-        solidcraft_theme::set_viewport_dark(self.preferences.viewport_theme.dark());
-        solidcraft_theme::set_viewport_background(self.preferences.viewport_background);
-        if !self.styled || solidcraft_theme::is_dark() != self.ui.dark || solidcraft_theme::vision() != self.preferences.color_vision {
-            solidcraft_theme::set_dark(self.ui.dark);
-            solidcraft_theme::set_vision(self.preferences.color_vision);
-            solidcraft_theme::apply(ctx);
+        torno_theme::set_viewport_dark(self.preferences.viewport_theme.dark());
+        torno_theme::set_viewport_background(self.preferences.viewport_background);
+        if !self.styled || torno_theme::is_dark() != self.ui.dark || torno_theme::vision() != self.preferences.color_vision {
+            torno_theme::set_dark(self.ui.dark);
+            torno_theme::set_vision(self.preferences.color_vision);
+            torno_theme::apply(ctx);
             self.styled = true;
         }
         self.publish_tab_accent(ctx);
@@ -3502,11 +3498,11 @@ impl SolveApp {
             self.applied_system_fonts = system_fonts;
             crate::fonts::setup_fonts_without_waiting(
                 ui.ctx(),
-                solidcraft_ui_text::effective_language(&self.preferences.language),
+                torno_ui_text::effective_language(&self.preferences.language),
                 &self.preferences.ui_font,
             );
         }
-        let _language = solidcraft_ui_text::scope(&self.preferences.language);
+        let _language = torno_ui_text::scope(&self.preferences.language);
         let mut report_input = None;
         issue_report::CadInput::block(self, ui, &mut report_input);
         semantic_content::begin(self, ui.ctx());
@@ -3650,7 +3646,7 @@ impl SolveApp {
                     viewport_ui.disable();
                 }
                 self.show_workspace(&mut viewport_ui);
-                shell::paint_top_corners(ui.painter(), full, solidcraft_theme::Tokens::get().app_bar);
+                shell::paint_top_corners(ui.painter(), full, torno_theme::Tokens::get().app_bar);
                 toolbar::toolbar(self, ui);
                 self.publish_tab_accent(ui.ctx());
             }
@@ -3884,16 +3880,16 @@ fn with_queued(mut result: Value, queued: bool) -> Value {
 
 /// A command's name as people see it (its label), for the status bar.
 pub fn command_label(id: &str) -> &str {
-    solidcraft_engine::find_command(id).map_or(id, |c| c.label)
+    torno_engine::find_command(id).map_or(id, |c| c.label)
 }
 
 /// An engine error with the command's label instead of its id: "Shell: offset must be …".
 /// The command label and catalogued engine messages follow the interface language.
 pub fn friendly_error(id: &str, e: &str) -> String {
-    let label = solidcraft_ui_text::tr_label(command_label(id));
+    let label = torno_ui_text::tr_label(command_label(id));
     let msg = e.replace(&format!("invalid parameters for `{id}`: "), "").replace(&format!("{id}: "), "").replace(&format!("`{id}`"), label);
     let msg = i18n::tr_engine_error(&msg);
-    let msg = solidcraft_ui_text::tr_label(&msg);
+    let msg = torno_ui_text::tr_label(&msg);
     if msg.starts_with(label) { msg.to_string() } else { format!("{label}: {msg}") }
 }
 
@@ -3913,5 +3909,5 @@ const SKETCH_ENDING_PANELS: [&str; 3] = ["CREATE", "MODIFY", "ASSEMBLE"];
 const SKETCH_TAB: &str = "SKETCH";
 
 fn ends_sketch(id: &str) -> bool {
-    solidcraft_engine::find_command(id).is_some_and(|c| c.tab != SKETCH_TAB && SKETCH_ENDING_PANELS.contains(&c.panel) && c.id != "sketch.create")
+    torno_engine::find_command(id).is_some_and(|c| c.tab != SKETCH_TAB && SKETCH_ENDING_PANELS.contains(&c.panel) && c.id != "sketch.create")
 }

@@ -49,6 +49,6 @@
   "ungraded": [],
   "what": "a 300 mm square surface whose corner vertex sits 0.19 mm off the end of its edge's curve (the file declares 0.01 mm accuracy): the face must be kept, the vertex snapped onto the curve",
   "why_not": [
-    "body \"panel\" is no kernel operation's output nor an operand: SolidCraft built it or changed the kernel's record"
+    "body \"panel\" is no kernel operation's output nor an operand: Torno built it or changed the kernel's record"
   ]
 }

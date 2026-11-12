@@ -6,7 +6,7 @@
 //! | Rust | Upstream |
 //! |------|----------|
 //! | [`PrimitiveCreation::create_curve_sweep`] | `CreateCurveSweep` |
-//! | [`PrimitiveCreation::create_curve_sweep_with_placements`], `profile_motions` (private) | `CreateCurveSweep` with the SolidCraft fork's `pOptPlacements` |
+//! | [`PrimitiveCreation::create_curve_sweep_with_placements`], `profile_motions` (private) | `CreateCurveSweep` with the Torno fork's `pOptPlacements` |
 //! | [`PrimitiveCreation::create_swung_primitive`] | `CreateSwungPrimitive` |
 //! | [`PrimitiveCreation::create_skin_from_faces`] | `CreateSkinFromFaces` |
 //! | [`PrimitiveCreation::create_blend_primitive`] | `CreateBlendPrimitive` |
@@ -23,11 +23,11 @@
 //! `Kernel::fixes.curve_sweep_closed_path_joins_ends`): a sweep along a closed path
 //! whose end sections lie on its start sections (`sweep_ends_coincide`) is not capped,
 //! so the stitch joins its side faces' end edges to their start edges.
-//! Not upstream (the SolidCraft fork's tangency-labs/smlib 5d3939e, WR-523, #1450):
+//! Not upstream (the Torno fork's tangency-labs/smlib 5d3939e, WR-523, #1450):
 //! [`PrimitiveCreation::create_curve_sweep_with_placements`] reports the rigid motions
 //! carrying the profile onto the first, middle and last sections.
 //! **Statuses pass on** (opt-in `Kernel::fixes.sweep_statuses_pass_on`, WR-662;
-//! SolidCraft change, tangency-labs/smlib c8f6a31): the statuses upstream drops here
+//! Torno change, tangency-labs/smlib c8f6a31): the statuses upstream drops here
 //! are returned instead (`SER`).
 
 use super::{
@@ -368,7 +368,7 @@ impl PrimitiveCreation {
     }
 
     /// [`create_curve_sweep`](Self::create_curve_sweep) that also reports where it
-    /// placed the profile (the SolidCraft fork's `pOptPlacements`, tangency-labs/smlib
+    /// placed the profile (the Torno fork's `pOptPlacements`, tangency-labs/smlib
     /// 5d3939e, WR-523, #1450): the rigid motions carrying the profile curves as given
     /// onto the sweep's first, middle and last sections (of the first composite; all
     /// share the path and its start frame). The B-rep and faces are the same as
@@ -434,7 +434,7 @@ impl PrimitiveCreation {
         if profiles.is_empty() {
             return Err(SolidError::primitive_failed(OP, "no profiles to sweep"));
         }
-        // SolidCraft fork (5d3939e): a scaled sweep's sections are no rigid images of the
+        // Torno fork (5d3939e): a scaled sweep's sections are no rigid images of the
         // profile.
         if opt_placements.is_some() && scale_curve.is_some() {
             return Err(SolidError::invalid_input(
@@ -465,7 +465,7 @@ impl PrimitiveCreation {
                 a.brep(brep)?.tolerance(),
                 0.0,
             )?;
-            // SolidCraft fork (5d3939e): where the sweep places the profile, in the space
+            // Torno fork (5d3939e): where the sweep places the profile, in the space
             // it sweeps in (the same for every composite: they share the path and its
             // start frame).
             let mut placed = [Axis2Placement::IDENTITY; 3];
@@ -532,7 +532,7 @@ impl PrimitiveCreation {
                 &prepared.path_back
             };
             ignore_status(passed_on(a.transform_primitive(brep, placement), p)?)?;
-            // SolidCraft fork (5d3939e): the motions carrying the profile as given onto
+            // Torno fork (5d3939e): the motions carrying the profile as given onto
             // its first, middle and last sections. A profile point went forward into the
             // sweep's space (to the origin, the path turned onto x, oriented with the path
             // when asked), the sweep placed it, and the result came back: each motion is
@@ -570,7 +570,7 @@ impl PrimitiveCreation {
 
 /// The rigid motions carrying the profile as given onto the sweep's sections placed
 /// on `placed` (in the sweep's space), with `back_move` the move back from the path
-/// (the SolidCraft fork's `pOptPlacements` of `CreateCurveSweep`, tangency-labs/smlib
+/// (the Torno fork's `pOptPlacements` of `CreateCurveSweep`, tangency-labs/smlib
 /// 5d3939e): the global system carried forward (profile to the origin, path turned onto
 /// x, oriented when asked), placed, and carried back.
 fn profile_motions(

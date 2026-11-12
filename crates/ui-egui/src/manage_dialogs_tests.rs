@@ -5,8 +5,8 @@ use crate::{
     ui_kit::LayoutMode,
 };
 use serde_json::json;
-use solidcraft_engine::Sel;
-use solidcraft_theme::Tokens;
+use torno_engine::Sel;
+use torno_theme::Tokens;
 
 fn fixture() -> Harness {
     let mut h = Harness::new();
@@ -530,7 +530,7 @@ fn configuration_add_column_menu_filters_as_typed_and_resets_on_close() {
     h.step(&json!({"key":"Enter"})).unwrap();
     h.frames(3);
     assert!(
-        h.app.session.doc.configs.columns.iter().any(|c| matches!(c, solidcraft_engine::doc::config::Column::Suppress(_))),
+        h.app.session.doc.configs.columns.iter().any(|c| matches!(c, torno_engine::doc::config::Column::Suppress(_))),
         "Enter picks the one match"
     );
     assert!(h.app.dialog.is_some(), "Enter in the filter does not submit the card");
@@ -768,7 +768,7 @@ fn physical_material_clicked_save_then_cancel_persists_without_assigning_or_chan
     assert!(h.app.dialog.is_none());
     assert_eq!(h.app.session.doc.materials, assignments);
     assert_eq!(h.app.run("component.properties", json!({})).unwrap(), mass);
-    let reopened = solidcraft_engine::doc::Document::from_json(&h.app.session.doc.to_json()).unwrap();
+    let reopened = torno_engine::doc::Document::from_json(&h.app.session.doc.to_json()).unwrap();
     assert_eq!(reopened.user_materials, h.app.session.doc.user_materials);
     h.app.run("edit.undo", json!({})).unwrap();
     assert!(h.app.session.doc.user_material("Unassigned authored material").is_none());
@@ -921,7 +921,7 @@ fn physical_material_editor_preserves_all_sources_conditions_anisotropy_and_pbr_
     let mut editor = crate::material_editor::Editor::default();
     editor.begin(&h.app.session.doc, Some("Renamed complete substrate"), false);
     assert!(editor.draft.as_ref().unwrap().command(&h.app.session.doc).unwrap().is_none());
-    let reopened = solidcraft_engine::doc::Document::from_json(&h.app.session.doc.to_json()).unwrap();
+    let reopened = torno_engine::doc::Document::from_json(&h.app.session.doc.to_json()).unwrap();
     assert_eq!(reopened.user_materials, h.app.session.doc.user_materials);
     h.app.run("edit.undo", json!({})).unwrap();
     assert_eq!(h.app.session.doc.user_material("Complete substrate"), Some(&original));

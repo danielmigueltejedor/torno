@@ -1,7 +1,7 @@
 //! One disclosure drawing for sections, trees, cards and window folds.
 use crate::BackingTooltipExt as _;
 use egui::{Color32, Painter, Pos2, Rect, Response, Ui, pos2, vec2};
-use solidcraft_theme::Tokens;
+use torno_theme::Tokens;
 
 /// Content visible: down. Content hidden: right. No animation, matching kit sections.
 /// Tokens: form_section_icon_size; the caller supplies a semantic ink token.

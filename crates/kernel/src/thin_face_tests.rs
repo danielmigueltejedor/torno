@@ -5,8 +5,8 @@
 //! So does a face pinched to a point, where its boundary touches itself within the tolerance (a
 //! sphere touching a box's edge leaves one on the box, #1648).
 
-use solidcraft_geom::prelude::*;
 use std::collections::HashMap;
+use torno_geom::prelude::*;
 
 use solidcore_record::Vec3;
 use solidcore_record::brep::{Curve, Loop, Surface};
@@ -17,7 +17,7 @@ use crate::{BoolOp, build::box_solid, build::sphere, ops::boolean};
 
 /// Triangle sides in the mesh with no triangle on the other side of them, with the points
 /// within a thousandth of a millimetre taken as one.
-fn open_sides(mesh: &solidcraft_geom::Mesh) -> usize {
+fn open_sides(mesh: &torno_geom::Mesh) -> usize {
     let key = |i: u32| {
         let p = mesh.positions[i as usize];
         [p.x, p.y, p.z].map(|c| (c * 1e3).round() as i64)

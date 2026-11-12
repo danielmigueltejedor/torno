@@ -5,7 +5,7 @@
 //! Beside [`crate::surface::from_parameters`], for every layer that holds records (the
 //! conversion of a body's edges).
 //!
-//! Not upstream: SolidCraft's flat-array import (its edge curves and UV trims), moved into the
+//! Not upstream: Torno's flat-array import (its edge curves and UV trims), moved into the
 //! kernel so the record and conversion layers compute no geometry (docs/layers.md §1). Every
 //! geometric step of it is here: a line's direction, a conic's interval from the record's
 //! radians to the kernel's degrees (snapped onto a quarter turn within rounding, and moved by
@@ -311,7 +311,7 @@ pub struct RecordCurve {
 /// - **Line:** the line as the kernel holds it, its point and its point plus its vector, over
 ///   the STEP parameters of the interval's ends (`ConvertTFromNURBSToSTEP`); where those run
 ///   down, the vector and the parameters are negated so the interval increases. This is what
-///   SolidCraft's flat export wrote (`FlatFromBrep`'s line origin and direction, its range in
+///   Torno's flat export wrote (`FlatFromBrep`'s line origin and direction, its range in
 ///   STEP parameters), so a line comes back as it went in, not reparameterised onto `[0, 1]`.
 /// - **Circle, ellipse:** the label on the conic's own frame (copied, not rebuilt by a cross
 ///   product), its y axis reversed where the conic's NURBS runs against its angle (its own

@@ -218,10 +218,10 @@
     "extrude"
   ],
   "ungraded": [
-    "results: SolidCraft computes it"
+    "results: Torno computes it"
   ],
   "what": "inspect.clearance between the arm turned 90 degrees and a grounded block",
   "why_not": [
-    "body \"ArmBox\" is no kernel operation's output nor an operand: SolidCraft built it or changed the kernel's record"
+    "body \"ArmBox\" is no kernel operation's output nor an operand: Torno built it or changed the kernel's record"
   ]
 }

@@ -8,7 +8,7 @@ use std::collections::HashMap;
 
 use serde_json::{Value, json};
 use solidcore_record::Vec3;
-use solidcraft_engine::{Sel, Session};
+use torno_engine::{Sel, Session};
 
 /// The most items one message carries; the rest are counted, not dropped silently.
 pub const MAX_ITEMS: usize = 64;
@@ -195,7 +195,7 @@ impl Context {
             return String::new();
         }
         let placed = !self.groups.is_empty();
-        let mut out = format!("[Selected in SolidCraft when this message was sent: {} item(s). ", self.total());
+        let mut out = format!("[Selected in Torno when this message was sent: {} item(s). ", self.total());
         if placed {
             out.push_str("A mark like «1: …» in the message stands for the numbered group below, at the place where the user picked it. ");
         }
@@ -311,11 +311,7 @@ pub fn is_gone(session: &Session, entry: &Entry, names: &mut NameCache) -> bool 
             }
             let edges = !matches!(sel, Sel::Face { .. });
             let current = names.names(body, edges, || {
-                if edges {
-                    solidcraft_engine::doc::naming::edge_names(model_body)
-                } else {
-                    solidcraft_engine::doc::naming::face_names(model_body).to_vec()
-                }
+                if edges { torno_engine::doc::naming::edge_names(model_body) } else { torno_engine::doc::naming::face_names(model_body).to_vec() }
             });
             !entry.names.iter().any(|n| current.contains(n))
         }
@@ -342,7 +338,7 @@ pub fn current_sels(session: &Session, entry: &Entry, names: &mut NameCache) -> 
     let Ok(state) = session.world_state() else { return entry.sels.clone() };
     let Some(model_body) = state.body(body) else { return Vec::new() };
     let current = names.names(body, !is_face, || {
-        if is_face { solidcraft_engine::doc::naming::face_names(model_body).to_vec() } else { solidcraft_engine::doc::naming::edge_names(model_body) }
+        if is_face { torno_engine::doc::naming::face_names(model_body).to_vec() } else { torno_engine::doc::naming::edge_names(model_body) }
     });
     // The names go with the pieces in order; the point to look at stays the piece's.
     let paired = entry.names.len() == entry.sels.len();

@@ -364,7 +364,7 @@ fn matches(schema: schemars::Schema, id: &str, reply: &Value) {
 /// `param_warnings` is what shows the contract accepts the call).
 #[test]
 fn the_parameter_commands_reply_with_their_schemas() {
-    let dir = std::env::temp_dir().join(format!("solidcraft-params-schema-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("torno-params-schema-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&dir);
     std::fs::create_dir_all(&dir).unwrap_or_else(|e| panic!("{e}"));
     let mut s = Session { param_check: ParamCheck::Warn, ..Session::default() };

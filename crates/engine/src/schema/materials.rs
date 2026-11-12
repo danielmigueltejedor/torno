@@ -53,7 +53,7 @@ impl<'de> Deserialize<'de> for Density {
     fn deserialize<D: Deserializer<'de>>(d: D) -> Result<Self, D::Error> {
         Value::deserialize(d)?
             .as_f64()
-            .filter(|density| solidcraft_doc::valid_density(*density))
+            .filter(|density| torno_doc::valid_density(*density))
             .map(Density)
             .ok_or_else(|| D::Error::custom(whole("`density_g_cm3` must be a number above 0 and at most 1000")))
     }

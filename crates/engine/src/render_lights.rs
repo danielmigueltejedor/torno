@@ -1,10 +1,10 @@
 //! Shared light inspection and numerical adapters; no document or view-state mutation.
 use crate::schema::render_lights::{Geometry, Light};
 use solidcore_record::Vec3;
-use solidcraft_doc::render_settings::{RenderJob, RenderSetup};
-use solidcraft_geom::prelude::*;
-use solidcraft_render::job::LightingPreset;
-use solidcraft_render::job::{
+use torno_doc::render_settings::{RenderJob, RenderSetup};
+use torno_geom::prelude::*;
+use torno_render::job::LightingPreset;
+use torno_render::job::{
     AreaLight, AreaLights, DirectionalLightOptions, DirectionalLights, PunctualLightOptions, PunctualLights, RectangleLightOptions, SpotConeOptions,
     Sun,
 };
@@ -61,9 +61,7 @@ pub fn colour_temperature(colour: [f64; 3]) -> f64 {
 
 pub fn position(light: &Light, target: [f64; 3], default_distance: f64) -> (f64, f64, f64) {
     let delta = match light.geometry {
-        Geometry::Directional { direction, .. } => {
-            solidcraft_viewport::surface::unit_direction(vector(direction)).unwrap_or(Vec3::Z) * default_distance
-        }
+        Geometry::Directional { direction, .. } => torno_viewport::surface::unit_direction(vector(direction)).unwrap_or(Vec3::Z) * default_distance,
         Geometry::Point { position_mm, .. } | Geometry::Spot { position_mm, .. } | Geometry::Area { position_mm, .. } => {
             vector(position_mm) - vector(target)
         }
@@ -105,7 +103,7 @@ pub fn patch(light: &mut Light, edit: &crate::schema::render_lights::LightPatch,
             return Err("light vector exceeds finite numerical bounds".into());
         }
     }
-    if edit.direction.is_some_and(|v| solidcraft_viewport::surface::unit_direction(vector(v)).is_err()) {
+    if edit.direction.is_some_and(|v| torno_viewport::surface::unit_direction(vector(v)).is_err()) {
         return Err("light direction must be nonzero".into());
     }
     let aim = edit.aim_at.unwrap_or(target);
@@ -236,14 +234,14 @@ pub fn patch(light: &mut Light, edit: &crate::schema::render_lights::LightPatch,
             let size = edit.size_mm.or_else(|| edit.softness.map(|s| 0.0002 + s * 1000.0)).unwrap_or(old_size);
             let ratio = vector(*edge_v_mm).len() / old_size.max(1e-6);
             if moved {
-                let normal = solidcraft_viewport::surface::unit_direction(vector(aim) - vector(*position_mm)).unwrap_or(-Vec3::Z);
+                let normal = torno_viewport::surface::unit_direction(vector(aim) - vector(*position_mm)).unwrap_or(-Vec3::Z);
                 let up = if normal.z.abs() > 0.99 { Vec3::Y } else { Vec3::Z };
-                let u = solidcraft_viewport::surface::unit_direction(up.cross(normal)).unwrap_or(Vec3::X);
+                let u = torno_viewport::surface::unit_direction(up.cross(normal)).unwrap_or(Vec3::X);
                 *edge_u_mm = array(u * size);
                 *edge_v_mm = array(normal.cross(u) * size * ratio);
             } else if edit.size_mm.is_some() || edit.softness.is_some() {
-                *edge_u_mm = array(solidcraft_viewport::surface::unit_direction(vector(*edge_u_mm)).unwrap_or(Vec3::X) * size);
-                *edge_v_mm = array(solidcraft_viewport::surface::unit_direction(vector(*edge_v_mm)).unwrap_or(Vec3::Y) * size * ratio);
+                *edge_u_mm = array(torno_viewport::surface::unit_direction(vector(*edge_u_mm)).unwrap_or(Vec3::X) * size);
+                *edge_v_mm = array(torno_viewport::surface::unit_direction(vector(*edge_v_mm)).unwrap_or(Vec3::Y) * size * ratio);
             }
             if let Some(position) = edit.position_mm {
                 *position_mm = position;
@@ -255,17 +253,17 @@ pub fn patch(light: &mut Light, edit: &crate::schema::render_lights::LightPatch,
                 *edge_v_mm = v;
             }
             if let Some(width) = edit.width_mm {
-                *edge_u_mm = array(solidcraft_viewport::surface::unit_direction(vector(*edge_u_mm)).unwrap_or(Vec3::X) * width);
+                *edge_u_mm = array(torno_viewport::surface::unit_direction(vector(*edge_u_mm)).unwrap_or(Vec3::X) * width);
             }
             if let Some(height) = edit.height_mm {
-                *edge_v_mm = array(solidcraft_viewport::surface::unit_direction(vector(*edge_v_mm)).unwrap_or(Vec3::Y) * height);
+                *edge_v_mm = array(torno_viewport::surface::unit_direction(vector(*edge_v_mm)).unwrap_or(Vec3::Y) * height);
             }
         }
     }
     if let Geometry::Spot { position_mm, emitted_axis, .. } = &mut light.geometry
         && moved
     {
-        *emitted_axis = array(solidcraft_viewport::surface::unit_direction(vector(aim) - vector(*position_mm)).unwrap_or(-Vec3::Z));
+        *emitted_axis = array(torno_viewport::surface::unit_direction(vector(aim) - vector(*position_mm)).unwrap_or(-Vec3::Z));
     }
     if let Geometry::Spot { emitted_axis, inner_half_angle_radians, outer_half_angle_radians, .. } = &mut light.geometry {
         if let Some(axis) = edit.emitted_axis {
@@ -288,7 +286,7 @@ fn same_vector_bits(a: [f64; 3], b: [f64; 3]) -> bool {
 // IDs refer to the original family slots until write publishes the new order.
 // Preserve an untouched authored source's raw radiance rather than performing an
 // unrelated divide/multiply round trip through the common intensity/colour UI.
-fn original_sun(lighting: solidcraft_render::job::StudioLighting, light: &Light) -> Option<Sun> {
+fn original_sun(lighting: torno_render::job::StudioLighting, light: &Light) -> Option<Sun> {
     original_sun_value(lighting.sun?, light)
 }
 fn original_sun_value(original: Sun, light: &Light) -> Option<Sun> {
@@ -305,7 +303,7 @@ fn original_sun_value(original: Sun, light: &Light) -> Option<Sun> {
         && same_vector_bits(light.colour, colour))
     .then_some(original)
 }
-fn original_area(lighting: solidcraft_render::job::StudioLighting, light: &Light) -> Option<AreaLight> {
+fn original_area(lighting: torno_render::job::StudioLighting, light: &Light) -> Option<AreaLight> {
     let (kind, index) = parse_id(&light.id).ok()?;
     if kind != "area" {
         return None;

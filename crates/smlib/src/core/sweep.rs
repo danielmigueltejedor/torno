@@ -64,7 +64,7 @@ use crate::sweeps::{Affine, Curve as Profile, DraftCorner, Ends, MAX_CURVES, MAX
 use crate::sweeps::{CURVE_MAX_DEGREE, CURVE_MAX_POINTS};
 use crate::{Error, Result};
 
-/// The capi's statuses as SolidCraft errors: an operation's own result.
+/// The capi's statuses as Torno errors: an operation's own result.
 type Out<T> = std::result::Result<T, Error>;
 
 /// A coordinate no larger than this (mm, 1000 km), so that SMLib's tolerances stay meaningful.
@@ -924,7 +924,7 @@ pub(crate) fn sweep_placed(profile: &[Profile], path: &[Profile], frame: SweepFr
 /// `smlib_loft`: a skin through `sections` (`SmApiCreateSkinPrimitive`), `degree` across them.
 /// Two sections of lines whose sides are all flat are built as planar faces instead
 /// ([`planar_loft`]): the skin would make each side a B-spline surface, which nothing downstream
-/// takes for the plane it is (solidcraft#13331).
+/// takes for the plane it is (torno#13331).
 pub(crate) fn loft(sections: &[Vec<Profile>], degree: u32, cap: bool) -> Result<Body> {
     if sections.len() < 2 || sections.len() > MAX_CURVES || !(1..=3).contains(&degree) {
         return Err(Error::Argument);
@@ -1045,7 +1045,7 @@ pub(super) fn build_faces<T>(b: &mut Brep, f: impl FnOnce(&mut Brep, &mut FaceBu
 /// `apex`: the base on the section's curves, a planar triangle on each line, and on each arc or
 /// spline the ruled surface from it to the apex (a zero-length curve there: the wall's pole) as
 /// one face over the surface's whole box, then `StitchAndOrient`. Upstream's `smlib_loft_to_point`
-/// took lines only (solidcraft#11216).
+/// took lines only (torno#11216).
 pub(crate) fn loft_to_point(section: &[Profile], apex: [f64; 3]) -> Result<Body> {
     if !coord_ok(&apex) {
         return Err(Error::Argument);

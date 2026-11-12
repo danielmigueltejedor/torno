@@ -1211,7 +1211,7 @@ impl Torus {
         // InputSurface->NurbDomain (status ignored)
         ignore_status(torus.reparameterize(k, &test.natural_uv_domain()))?;
 
-        // not upstream (WR-493, opt-in; the SolidCraft fork's tangency-labs/smlib@7ea6a96):
+        // not upstream (WR-493, opt-in; the Torno fork's tangency-labs/smlib@7ea6a96):
         // the torus keeps the NURB tested (SetFromGwNurb, whose rebuild's status is
         // ignored)
         if k.fixes.found_torus_sphere_keep_tested_nurb {
@@ -1871,7 +1871,7 @@ fn convert_uv_from_nurbs_to_step(
     Ok(Point2::new(step_x, polar_param))
 }
 
-/// Not upstream (WR-408, tangency-labs/solidcore#1112; the SolidCraft fork's
+/// Not upstream (WR-408, tangency-labs/solidcore#1112; the Torno fork's
 /// `sm_TorusGenCurveInterval`): the generating circle's analytic interval, in degrees,
 /// from the NURB's first and last points, each given as `[x, vec]`: its circle's unit X
 /// axis (from the torus axis out to the circle's centre) and the vector from that centre

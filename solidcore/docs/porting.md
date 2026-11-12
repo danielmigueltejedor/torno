@@ -133,7 +133,7 @@ into `upstream/` (see README): it is the reading reference, and many cases read 
   `plan/upstream-issues.md` were split into those directories; CI fails if either comes
   back. Two PRs that each add a file never conflict.
   Goldens likewise are one file per unit (`crates/goldens/expected/<unit id>.jsonl`), and
-  SolidCraft cases one per issue (`fixtures/solidcraft/<issue>-<slug>.json`).
+  Torno cases one per issue (`fixtures/torno/<issue>-<slug>.json`).
   The same goes for anything new you design: a registry or log is a directory of
   per-entry files that tools read in sorted order, never one file everybody appends to.
 - **Branches from before the per-unit split** (they edit `plan/modules.toml` or commit

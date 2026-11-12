@@ -5,7 +5,7 @@
 
 use serde_json::{Value, json};
 use solidcore_record::Vec3;
-use solidcraft_sketch::WireSpace;
+use torno_sketch::WireSpace;
 
 use super::sketch::edit;
 use super::sketch_store;
@@ -65,13 +65,13 @@ fn reply(cmd: &str, reply: impl serde::Serialize) -> Result<Value> {
 
 fn points(cmd: &str, p: &Value, min: usize) -> Result<Vec<Vec3>> {
     let a = p.get("points").and_then(Value::as_array).ok_or_else(|| bad(cmd, "`points` must list [x,y,z] points"))?;
-    if a.len() < min || a.len() > solidcraft_sketch::MAX_FIT_POINTS {
-        return Err(bad(cmd, format!("`points` needs {min} to {} points", solidcraft_sketch::MAX_FIT_POINTS)));
+    if a.len() < min || a.len() > torno_sketch::MAX_FIT_POINTS {
+        return Err(bad(cmd, format!("`points` needs {min} to {} points", torno_sketch::MAX_FIT_POINTS)));
     }
     a.iter().map(|v| vec3(v).ok_or_else(|| bad(cmd, "a point must be [x, y, z]"))).collect()
 }
 
-fn needs_3d(sk: &solidcraft_sketch::Sketch, cmd: &str) -> Result<()> {
+fn needs_3d(sk: &torno_sketch::Sketch, cmd: &str) -> Result<()> {
     if sk.view.three_d { Ok(()) } else { Err(bad(cmd, "turn on 3D Sketch (sketch.options sketch_3d: true) to draw off the sketch plane")) }
 }
 
@@ -88,14 +88,14 @@ fn in_sketch_3d(s: &Session) -> std::result::Result<(), String> {
 
 /// World command inputs belong to the target sketch's owner, which may differ from the
 /// active component when a script supplies an explicit sketch.
-fn inverse_owner_frame(s: &Session, p: &Value, cmd: &str) -> Result<solidcraft_doc::Mat> {
+fn inverse_owner_frame(s: &Session, p: &Value, cmd: &str) -> Result<torno_doc::Mat> {
     let id = sketch_store::target(s, p, cmd)?;
     let owner = s.doc.feature(id).map(|f| f.component).ok_or_else(|| bad(cmd, "target sketch is missing"))?;
     if owner != 0 && owner != s.active_component {
         if s.doc.occurrences.len() > 100_000 {
             return Err(bad(cmd, "sketch owner placement expansion exceeds supported bounds"));
         }
-        let mut children: std::collections::BTreeMap<u64, Vec<&solidcraft_doc::Occurrence>> = std::collections::BTreeMap::new();
+        let mut children: std::collections::BTreeMap<u64, Vec<&torno_doc::Occurrence>> = std::collections::BTreeMap::new();
         for occurrence in &s.doc.occurrences {
             children.entry(occurrence.parent).or_default().push(occurrence);
         }
@@ -119,13 +119,13 @@ fn inverse_owner_frame(s: &Session, p: &Value, cmd: &str) -> Result<solidcraft_d
         }
     }
     let frame = if owner == s.active_component { s.active_component_frame() } else { s.placed_document().component_transform(owner) };
-    solidcraft_doc::mat_inverse(&frame).ok_or_else(|| bad(cmd, "the sketch owner placement is not invertible"))
+    torno_doc::mat_inverse(&frame).ok_or_else(|| bad(cmd, "the sketch owner placement is not invertible"))
 }
 
 fn line3d(s: &mut Session, p: &Value) -> Result<Value> {
     let cmd = "sketch.line3d";
     let inverse = inverse_owner_frame(s, p, cmd)?;
-    let pts: Vec<Vec3> = points(cmd, p, 2)?.into_iter().map(|at| solidcraft_doc::apply_point(&inverse, at)).collect();
+    let pts: Vec<Vec3> = points(cmd, p, 2)?.into_iter().map(|at| torno_doc::apply_point(&inverse, at)).collect();
     let (ids, info) = edit(s, p, cmd, false, |sk, _| {
         needs_3d(sk, cmd)?;
         pts.windows(2).map(|w| sk.add_drawn_wire_in(w, WireSpace::Component).map_err(Into::into)).collect::<Result<Vec<String>>>()
@@ -136,7 +136,7 @@ fn line3d(s: &mut Session, p: &Value) -> Result<Value> {
 fn spline3d(s: &mut Session, p: &Value) -> Result<Value> {
     let cmd = "sketch.spline3d";
     let inverse = inverse_owner_frame(s, p, cmd)?;
-    let pts: Vec<Vec3> = points(cmd, p, 2)?.into_iter().map(|at| solidcraft_doc::apply_point(&inverse, at)).collect();
+    let pts: Vec<Vec3> = points(cmd, p, 2)?.into_iter().map(|at| torno_doc::apply_point(&inverse, at)).collect();
     let (id, info) = edit(s, p, cmd, false, |sk, _| {
         needs_3d(sk, cmd)?;
         Ok(sk.add_drawn_wire_in(&pts, WireSpace::Component)?)
@@ -152,7 +152,7 @@ fn arc3d(s: &mut Session, p: &Value) -> Result<Value> {
         .map(|k| req_vec3(cmd, p, k))
         .collect::<Result<Vec<Vec3>>>()?
         .into_iter()
-        .map(|at| solidcraft_doc::apply_point(&inverse, at))
+        .map(|at| torno_doc::apply_point(&inverse, at))
         .collect();
     let (id, info) = edit(s, p, cmd, false, |sk, _| {
         needs_3d(sk, cmd)?;
@@ -164,7 +164,7 @@ fn arc3d(s: &mut Session, p: &Value) -> Result<Value> {
 fn point3d(s: &mut Session, p: &Value) -> Result<Value> {
     let cmd = "sketch.point3d";
     let inverse = inverse_owner_frame(s, p, cmd)?;
-    let at = solidcraft_doc::apply_point(&inverse, req_vec3(cmd, p, "point")?);
+    let at = torno_doc::apply_point(&inverse, req_vec3(cmd, p, "point")?);
     let (id, info) = edit(s, p, cmd, false, |sk, _| {
         needs_3d(sk, cmd)?;
         Ok(sk.add_drawn_wire_in(&[at], WireSpace::Component)?)
@@ -180,7 +180,7 @@ fn move3d(s: &mut Session, p: &Value) -> Result<Value> {
         Some(v) => v
             .as_u64()
             .and_then(|v| usize::try_from(v).ok())
-            .filter(|v| *v < solidcraft_sketch::MAX_FIT_POINTS)
+            .filter(|v| *v < torno_sketch::MAX_FIT_POINTS)
             .ok_or_else(|| bad(cmd, "`index` must be a fit point index below 500"))?,
     };
     let parse = |name| p.get(name).map(|v| vec3(v).ok_or_else(|| bad(cmd, format!("`{name}` must be [x,y,z]")))).transpose();
@@ -197,12 +197,12 @@ fn move3d(s: &mut Session, p: &Value) -> Result<Value> {
         let to = match (to, by) {
             (Some(t), _) => {
                 if drawn.space == WireSpace::Component {
-                    solidcraft_doc::apply_point(&inverse, t)
+                    torno_doc::apply_point(&inverse, t)
                 } else {
                     t
                 }
             }
-            (None, Some(d)) => from + if drawn.space == WireSpace::Component { solidcraft_doc::apply_vector(&inverse, d) } else { d },
+            (None, Some(d)) => from + if drawn.space == WireSpace::Component { torno_doc::apply_vector(&inverse, d) } else { d },
             _ => return Err(bad(cmd, "give `to` or `by`")),
         };
         Ok(sk.move_drawn_point(&wire, index, to)?)

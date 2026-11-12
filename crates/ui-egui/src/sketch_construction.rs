@@ -3,8 +3,8 @@
 use egui::Stroke;
 use serde_json::{Value, json};
 use solidcore_record::Vec2;
-use solidcraft_engine::cmd::{construction_line_choice, construction_line_mode, construction_line_solutions, construction_segment};
-use solidcraft_engine::geom::prelude::*;
+use torno_engine::cmd::{construction_line_choice, construction_line_mode, construction_line_solutions, construction_segment};
+use torno_engine::geom::prelude::*;
 
 use crate::SolveApp;
 use crate::tools::Tool;
@@ -63,9 +63,9 @@ pub fn line_type_switch(ui: &mut egui::Ui, t: &mut Tool) {
     }
     let Some(i) = t.dims.iter().position(|b| b.label == "Length") else { return };
     let Some(length_box) = ui.ctx().memory(|m| m.area_rect(egui::Id::unique(("sc_dim_area", i)))) else { return };
-    let tokens = solidcraft_theme::Tokens::get();
+    let tokens = torno_theme::Tokens::get();
     let has_length = typed_length(t).is_some();
-    let reason = solidcraft_ui_text::tr("ui.construction.normal_needs_length");
+    let reason = torno_ui_text::tr("ui.construction.normal_needs_length");
     let refused = [Some(reason), Some(reason)];
     // The Sketch Palette's own line type names, which `segmented` translates.
     let options = ["Construction", "Normal"];
@@ -105,7 +105,7 @@ pub fn hint(id: &str) -> String {
         "bisector" => "ui.construction.bisector_hint",
         _ => "ui.construction.point_hint",
     };
-    solidcraft_ui_text::tr(key).to_owned()
+    torno_ui_text::tr(key).to_owned()
 }
 
 fn arg(point: &(Vec2, Option<String>), preview: bool) -> Value {
@@ -177,7 +177,7 @@ pub fn on_click(app: &mut SolveApp, tool: &mut Tool, hits: &[Hit], at: Option<(V
             let state = crate::open_meshing::session_world(&app.session);
             let valid = active.and_then(|sid| state.sketch(sid)).is_some_and(|ss| {
                 ss.sketch.curve_index(&id).and_then(|i| ss.sketch.curves.get(i)).is_some_and(|c| {
-                    use solidcraft_engine::sketch::CurveKind;
+                    use torno_engine::sketch::CurveKind;
                     match mode {
                         "parallel" | "perpendicular" | "bisector" => matches!(c.kind, CurveKind::Line { .. }),
                         "tangent_external" | "tangent_two" => matches!(c.kind, CurveKind::Circle { .. } | CurveKind::Arc { .. }),
@@ -214,7 +214,7 @@ pub fn place_point(app: &mut SolveApp, t: &mut Tool, at: (Vec2, Option<String>))
     if (matches!(mode, "free" | "angle" | "tangent_external") || picks_side) && t.pts.is_empty() {
         t.pts.push(at);
         if picks_side {
-            app.set_status(solidcraft_ui_text::tr("ui.construction.side_hint").to_owned(), false);
+            app.set_status(torno_ui_text::tr("ui.construction.side_hint").to_owned(), false);
         }
         return;
     }
@@ -242,7 +242,7 @@ pub fn preview(app: &SolveApp, t: &Tool, painter: &egui::Painter, proj: &Proj) {
     let Some(ss) = app.session.active_sketch.and_then(|sid| state.sketch(sid)) else { return };
     let Ok(lines) = construction_line_solutions(&ss.sketch, &p, mode) else { return };
     let chosen = construction_line_choice(&lines, &p).ok();
-    let tokens = solidcraft_theme::Tokens::get();
+    let tokens = torno_theme::Tokens::get();
     let center = ss.plane.to_local(app.cam.target);
     let extent = app.cam.half_height().max(1.0) * 20.0;
     let length = p.get("length").and_then(Value::as_f64);

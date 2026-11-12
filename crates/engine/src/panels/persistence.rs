@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 
 use super::*;
 
-pub const ENVELOPE_FORMAT: &str = "solidcraft.panel-layout";
+pub const ENVELOPE_FORMAT: &str = "torno.panel-layout";
 pub const ENVELOPE_VERSION: u32 = 2;
 
 /// Unknown panel wire values are retained verbatim as JSON values, including

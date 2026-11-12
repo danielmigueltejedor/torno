@@ -327,9 +327,9 @@ fn browser_card_shrinks_and_scrolls_without_covering_history() {
 
 #[test]
 fn selected_row_paints_tab_soft_fill_and_accent_text_in_both_layouts() {
-    let previous = solidcraft_theme::is_dark();
+    let previous = torno_theme::is_dark();
     for dark in [false, true] {
-        solidcraft_theme::set_dark(dark);
+        torno_theme::set_dark(dark);
         for mode in [LayoutMode::Floating, LayoutMode::Docked] {
             for tab in ["MODEL", "SKETCH", "SURFACE", "MESH", "FORM", "SHEET METAL", "RENDER"] {
                 let ctx = crate::fonts::test_context();
@@ -353,7 +353,7 @@ fn selected_row_paints_tab_soft_fill_and_accent_text_in_both_layouts() {
             }
         }
     }
-    solidcraft_theme::set_dark(previous);
+    torno_theme::set_dark(previous);
 }
 
 #[test]
@@ -613,7 +613,7 @@ fn browser_title_uses_a_single_semibold_run() {
         ui.set_width(250.0);
         browser_header(&mut app, ui, true);
     });
-    let title = solidcraft_ui_text::tr("ui.browser_title");
+    let title = torno_ui_text::tr("ui.browser_title");
     let titles: Vec<_> = output
         .shapes
         .iter()
@@ -685,9 +685,9 @@ fn a_long_body_name_stays_inside_the_card_and_ends_in_an_ellipsis() {
 
 #[test]
 fn collapsed_rail_shares_header_hover_inset_and_expands_from_its_whole_card() {
-    let previous = solidcraft_theme::is_dark();
+    let previous = torno_theme::is_dark();
     for dark in [false, true] {
-        solidcraft_theme::set_dark(dark);
+        torno_theme::set_dark(dark);
         for collapsed in [false, true] {
             let ctx = crate::fonts::test_context();
             ctx.global_style_mut(|style| style.animation_time = 0.0);
@@ -712,7 +712,7 @@ fn collapsed_rail_shares_header_hover_inset_and_expands_from_its_whole_card() {
             draw(&mut app, vec![egui::Event::PointerMoved(at)]);
             let output = draw(&mut app, vec![egui::Event::PointerMoved(at)]);
             assert_eq!(output.platform_output.cursor_icon, egui::CursorIcon::PointingHand);
-            let accent = solidcraft_theme::TabAccent::current(&ctx);
+            let accent = torno_theme::TabAccent::current(&ctx);
             let mut hover = None;
             for shape in &output.shapes {
                 crate::test_support::each_shape(&shape.shape, &mut |shape| {
@@ -737,16 +737,16 @@ fn collapsed_rail_shares_header_hover_inset_and_expands_from_its_whole_card() {
             }
         }
     }
-    solidcraft_theme::set_dark(previous);
+    torno_theme::set_dark(previous);
 }
 
 /// #6907: a mesh body's row has its own icon and tooltip, so it can be told from a solid one.
 #[test]
 fn mesh_and_solid_body_rows_have_different_icons_and_tooltips() {
     use solidcore_record::Vec3;
-    use solidcraft_engine::doc::{Document, FeatureKind, MeshData};
-    let solid = solidcraft_engine::kernel::box_solid(Vec3::ZERO, Vec3::new(10., 10., 10.)).unwrap();
-    let mesh = solid.mesh(&solidcraft_engine::kernel::MeshTolerance::chord(0.01)).unwrap();
+    use torno_engine::doc::{Document, FeatureKind, MeshData};
+    let solid = torno_engine::kernel::box_solid(Vec3::ZERO, Vec3::new(10., 10., 10.)).unwrap();
+    let mesh = solid.mesh(&torno_engine::kernel::MeshTolerance::chord(0.01)).unwrap();
     let mut doc = Document::default();
     doc.add_feature(
         FeatureKind::MeshImport {
@@ -763,15 +763,15 @@ fn mesh_and_solid_body_rows_have_different_icons_and_tooltips() {
     )
     .unwrap();
     let mut h = Harness::new();
-    h.app.session = solidcraft_engine::Session::new(doc);
+    h.app.session = torno_engine::Session::new(doc);
     h.app.run("solid.box", json!({"length":10,"width":10,"height":10,"corner":[20,0,0],"operation":"new_body","body_name":"Solid"})).unwrap();
     h.settle();
     let rows = entries(&h.app, 0, "bodies");
     let row = |name: &str| rows.iter().find(|e| e.key == name).unwrap_or_else(|| panic!("no {name} row in {:?}", body_rows(&h.app)));
     assert_eq!((row("Mesh").icon, row("Mesh").tip), ("mesh_body", Some("ui.body_kind_mesh")));
     assert_eq!((row("Solid").icon, row("Solid").tip), ("body", Some("ui.body_kind_solid")));
-    assert_eq!(solidcraft_ui_text::tr("ui.body_kind_mesh"), "Mesh body");
-    assert_eq!(solidcraft_ui_text::tr("ui.body_kind_solid"), "Solid body");
+    assert_eq!(torno_ui_text::tr("ui.body_kind_mesh"), "Mesh body");
+    assert_eq!(torno_ui_text::tr("ui.body_kind_solid"), "Solid body");
     // Its own drawing in the mesh colours, not the solid body's grey cube.
     let icon = crate::icon_svg::resolve("mesh_body");
     assert!(!icon.placeholder);
@@ -1613,7 +1613,7 @@ fn body_reveal_waits_through_rollback_until_its_creator_is_presented_again() {
 /// tests can switch during an input frame without rebuilding or rendering B first.
 fn matching_semantic_tab(h: &mut Harness) -> (usize, String, usize) {
     let original = h.app.docs.active;
-    let incoming = solidcraft_engine::Session::new((*h.app.session.doc).clone());
+    let incoming = torno_engine::Session::new((*h.app.session.doc).clone());
     let original_session = h.app.session.uid;
     crate::documents::open_tab(&mut h.app, incoming).unwrap();
     assert_ne!(h.app.session.uid, original_session);
@@ -1948,7 +1948,7 @@ fn semantic_entrypoints_reject_replaced_sessions_even_without_a_documents_hook()
     let mut h = Harness::new();
     three_bodies(&mut h);
     h.app.run("browser.group", json!({"component":0,"folder":"bodies","name":"Destination"})).unwrap();
-    let incoming = solidcraft_engine::Session::new((*h.app.session.doc).clone());
+    let incoming = torno_engine::Session::new((*h.app.session.doc).clone());
     let document = incoming.doc.to_json();
     let undo = incoming.undo.len();
     let owners = [ContentOwner::BROWSER];
@@ -2146,7 +2146,7 @@ fn closing_a_document_destroys_its_parked_reveals_and_clears_stale_view_pick() {
         crate::documents::close(&mut h.app, original, true);
         assert_eq!(h.app.docs.count(), 1);
         assert_no_pending_reveals(&h);
-        let replacement = solidcraft_engine::Session::new((*h.app.session.doc).clone());
+        let replacement = torno_engine::Session::new((*h.app.session.doc).clone());
         crate::documents::open_tab(&mut h.app, replacement).unwrap();
         assert_no_pending_reveals(&h);
         for _ in 0..3 {
@@ -2161,7 +2161,7 @@ fn last_close_blank_adoption_and_direct_replacement_discard_outgoing_reveal_requ
     for replacement in ["last-close", "blank-adopt", "direct"] {
         let mut h = Harness::new();
         three_bodies(&mut h);
-        let incoming = solidcraft_engine::Session::new((*h.app.session.doc).clone());
+        let incoming = torno_engine::Session::new((*h.app.session.doc).clone());
         queue_all_document_reveals(&mut h);
         match replacement {
             "last-close" => {
@@ -2172,7 +2172,7 @@ fn last_close_blank_adoption_and_direct_replacement_discard_outgoing_reveal_requ
                 assert_no_pending_reveals(&h);
             }
             "blank-adopt" => {
-                h.app.session.replace_design(solidcraft_engine::Session::default());
+                h.app.session.replace_design(torno_engine::Session::default());
                 crate::documents::adopt(&mut h.app, incoming);
                 assert_no_pending_reveals(&h);
             }
@@ -2191,12 +2191,12 @@ fn unpresented_app_requests_have_provenance_before_a_direct_session_replacement(
     let mut h = Harness::new();
     three_bodies(&mut h);
     let document = (*h.app.session.doc).clone();
-    h.app = crate::SolveApp::new(solidcraft_engine::Session::new(document.clone()), crate::Services::default());
+    h.app = crate::SolveApp::new(torno_engine::Session::new(document.clone()), crate::Services::default());
     // Existing callers can set the public request fields before the first UI frame.
     h.app.tree.reveal = Some("Three".into());
     h.app.tree.timeline_reveal = Some(document.features[2].id);
     h.app.tree.view_pick = Some(document.features[2].id);
-    h.app.session.replace_design(solidcraft_engine::Session::new(document));
+    h.app.session.replace_design(torno_engine::Session::new(document));
     semantic_frame(&mut h, &[ContentOwner::HISTORY], Vec::new(), egui::Modifiers::NONE);
     assert_no_pending_reveals(&h);
 }

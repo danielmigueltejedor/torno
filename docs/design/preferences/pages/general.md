@@ -41,7 +41,7 @@ title "Profiles", with the count "3 saved" at the right of the title.
 
 | Label | Control | Edits | Default | Hover | Figure | Notes |
 |---|---|---|---|---|---|---|
-| Reopen the designs that were open last time | Checkbox | `Prefs.reopen_designs` | `true` | none | none | Today's label is longer ("Reopen the designs that were open when SolidCraft was last closed"). |
+| Reopen the designs that were open last time | Checkbox | `Prefs.reopen_designs` | `true` | none | none | Today's label is longer ("Reopen the designs that were open when Torno was last closed"). |
 | Autosave every | Number field (64 wide) with "minutes", an (i) and a "-30 min ... now" strip | `app.autosave_minutes` (not a `Prefs` field; `set_autosave`) | session value | "0 turns it off" | none | The strip under the field ("30 min ... now") is today's `settings_autosave_timeline`. aria-label "Minutes". |
 
 ## Files

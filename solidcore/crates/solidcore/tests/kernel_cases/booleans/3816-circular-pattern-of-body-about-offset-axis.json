@@ -133,13 +133,13 @@
   "ungraded": [],
   "what": "circular pattern of a body about an axis {origin,dir} that does not pass through the world origin",
   "why_not": [
-    "body \"Part (2)\" is no kernel operation's output nor an operand: SolidCraft built it or changed the kernel's record",
-    "body \"Part (3)\" is no kernel operation's output nor an operand: SolidCraft built it or changed the kernel's record",
-    "body \"Part (4)\" is no kernel operation's output nor an operand: SolidCraft built it or changed the kernel's record",
-    "body \"Part (5)\" is no kernel operation's output nor an operand: SolidCraft built it or changed the kernel's record",
-    "body \"Part (6)\" is no kernel operation's output nor an operand: SolidCraft built it or changed the kernel's record",
-    "body \"Part (7)\" is no kernel operation's output nor an operand: SolidCraft built it or changed the kernel's record",
-    "body \"Part (8)\" is no kernel operation's output nor an operand: SolidCraft built it or changed the kernel's record",
-    "body \"Part (9)\" is no kernel operation's output nor an operand: SolidCraft built it or changed the kernel's record"
+    "body \"Part (2)\" is no kernel operation's output nor an operand: Torno built it or changed the kernel's record",
+    "body \"Part (3)\" is no kernel operation's output nor an operand: Torno built it or changed the kernel's record",
+    "body \"Part (4)\" is no kernel operation's output nor an operand: Torno built it or changed the kernel's record",
+    "body \"Part (5)\" is no kernel operation's output nor an operand: Torno built it or changed the kernel's record",
+    "body \"Part (6)\" is no kernel operation's output nor an operand: Torno built it or changed the kernel's record",
+    "body \"Part (7)\" is no kernel operation's output nor an operand: Torno built it or changed the kernel's record",
+    "body \"Part (8)\" is no kernel operation's output nor an operand: Torno built it or changed the kernel's record",
+    "body \"Part (9)\" is no kernel operation's output nor an operand: Torno built it or changed the kernel's record"
   ]
 }

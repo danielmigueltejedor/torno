@@ -3,7 +3,7 @@ use super::{Container, Surface, navigation::*};
 use crate::BackingTooltipExt as _;
 use crate::icons;
 use egui::{FontId, Rect, Response, Sense, Ui, pos2, vec2};
-use solidcraft_theme::Tokens;
+use torno_theme::Tokens;
 
 pub const NAV_STAGE_HEIGHT: f32 = 96.0;
 pub const NAV_STAGE_GRID: f32 = 16.0;
@@ -129,7 +129,7 @@ pub fn navigation_anchor_picker(ui: &mut Ui, id: &str, selected: usize, labels: 
             );
         }
         response.widget_info(|| egui::WidgetInfo::selected(egui::Role::RadioButton, ui.is_enabled(), on, *label));
-        solidcraft_ui_registry::publish_target(&format!("prefs:navbar:anchor:{index}"), cell);
+        torno_ui_registry::publish_target(&format!("prefs:navbar:anchor:{index}"), cell);
         if response.backing_on_hover_text(*label).clicked() {
             clicked = Some(index);
         }
@@ -193,7 +193,7 @@ pub fn navigation_separator_source(ui: &mut Ui, id: &str, label: &str, dragging:
     icons::paint_ink(&painter, Rect::from_center_size(add_rect.center(), vec2(t.space_14, t.space_14)), "plus", t.form_primary);
     response.widget_info(|| egui::WidgetInfo::labeled(egui::Role::Button, ui.is_enabled(), label));
     add.widget_info(|| {
-        egui::WidgetInfo::labeled(egui::Role::Button, ui.is_enabled(), solidcraft_ui_text::format("navbar.custom.add_slot", &[("slot", label)]))
+        egui::WidgetInfo::labeled(egui::Role::Button, ui.is_enabled(), torno_ui_text::format("navbar.custom.add_slot", &[("slot", label)]))
     });
     (response, add)
 }
@@ -237,7 +237,7 @@ pub fn navigation_tile(ui: &mut Ui, id: &str, label: &str, icon: &str, dragging:
     icons::paint_ink(&painter, Rect::from_center_size(add_rect.center(), vec2(t.space_14, t.space_14)), "plus", t.form_primary);
     response.widget_info(|| egui::WidgetInfo::labeled(egui::Role::Button, ui.is_enabled(), label));
     add.widget_info(|| {
-        egui::WidgetInfo::labeled(egui::Role::Button, ui.is_enabled(), solidcraft_ui_text::format("navbar.custom.add_slot", &[("slot", label)]))
+        egui::WidgetInfo::labeled(egui::Role::Button, ui.is_enabled(), torno_ui_text::format("navbar.custom.add_slot", &[("slot", label)]))
     });
     (response, add)
 }

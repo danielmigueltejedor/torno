@@ -1,6 +1,6 @@
 use serde_json::json;
-use solidcraft_engine::Sel;
-use solidcraft_ui_egui::scenario::Harness;
+use torno_engine::Sel;
+use torno_ui_egui::scenario::Harness;
 
 fn setup() -> (Harness, u64) {
     let mut h = Harness::new();
@@ -53,7 +53,7 @@ fn a_line_of_another_sketch_picked_in_the_project_dialog_projects() {
     assert!(sk.curves.iter().any(|curve| curve.link.is_some()), "the line is projected into the sketch");
     // The projection names the sketch it came from, so it follows it.
     assert!(
-        sk.links.iter().any(|l| matches!(&l.source, solidcraft_engine::sketch::LinkSource::SketchCurve { sketch, .. } if *sketch == source)),
+        sk.links.iter().any(|l| matches!(&l.source, torno_engine::sketch::LinkSource::SketchCurve { sketch, .. } if *sketch == source)),
         "{:?}",
         sk.links
     );

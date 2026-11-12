@@ -35,9 +35,9 @@ use serde::de::Error as _;
 use serde::{Deserialize, Deserializer, Serialize};
 use serde_json::{Value, json};
 use solidcore_record::Vec2;
-use solidcraft_doc::Expr;
-use solidcraft_geom::prelude::*;
-use solidcraft_sketch::PatternAlignment;
+use torno_doc::Expr;
+use torno_geom::prelude::*;
+use torno_sketch::PatternAlignment;
 
 use super::check::whole;
 use super::motion::require;

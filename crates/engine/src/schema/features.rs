@@ -874,7 +874,7 @@ pub struct FilletResult {
 }
 
 /// `alignment`, with the handler's message.
-fn pattern_alignment<'de, D: Deserializer<'de>>(d: D) -> Result<Option<solidcraft_sketch::PatternAlignment>, D::Error> {
+fn pattern_alignment<'de, D: Deserializer<'de>>(d: D) -> Result<Option<torno_sketch::PatternAlignment>, D::Error> {
     serde_json::from_value(Value::deserialize(d)?).map(Some).map_err(|_| D::Error::custom(whole("`alignment` must be left, center or right")))
 }
 
@@ -908,7 +908,7 @@ pub struct PatternCircularParams {
     /// Where the original sits in the pattern. Default: right, the original stays fixed.
     #[serde(default, deserialize_with = "pattern_alignment", skip_serializing_if = "Option::is_none")]
     #[schemars(schema_with = "super::sketch_modify::alignment_schema")]
-    pub alignment: Option<solidcraft_sketch::PatternAlignment>,
+    pub alignment: Option<torno_sketch::PatternAlignment>,
     /// Flip the pattern's direction; for an even count centred, selects the extra side.
     #[serde(default, deserialize_with = "pattern_reversed", skip_serializing_if = "Option::is_none")]
     #[schemars(with = "bool")]

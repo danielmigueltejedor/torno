@@ -5,7 +5,7 @@
 //! untrusted: counts are capped and bad lines become warnings.
 
 use solidcore_record::Vec3;
-use solidcraft_geom::prelude::*;
+use torno_geom::prelude::*;
 
 #[derive(Clone, Copy)]
 struct Corner {
@@ -151,7 +151,7 @@ pub fn read_obj(bytes: &[u8], default_name: &str) -> Result<(Vec<MeshObject>, Ve
             }
             triangles.push(nt);
         }
-        let mesh = solidcraft_geom::Mesh { positions, triangles, ..Default::default() };
+        let mesh = torno_geom::Mesh { positions, triangles, ..Default::default() };
         let annotated = tris.iter().any(|f| f.smoothing != 0 || f.corners.iter().any(|c| c.normal.is_some()));
         let mut corner_normals = Vec::new();
         if annotated {
@@ -212,7 +212,7 @@ mod tests {
         assert!((object.corner_normals[0][0] - shared).len() < 1e-12);
         assert_eq!(object.corner_normals[0][0], object.corner_normals[2][1]);
         assert!(object.corner_normals[1].iter().all(|n| n.is_finite() && (n.len() - 1.).abs() < 1e-12));
-        let body = solidcraft_kernel::mesh_body_with_normals(&object.positions, &object.triangles, &object.corner_normals).unwrap();
+        let body = torno_kernel::mesh_body_with_normals(&object.positions, &object.triangles, &object.corner_normals).unwrap();
         assert_eq!(body.triangle_mesh().unwrap().1, &[[0, 1, 2], [1, 0, 3]]);
         assert_eq!(body.triangle_corner_normals().unwrap(), &[object.corner_normals[0], object.corner_normals[2]]);
     }

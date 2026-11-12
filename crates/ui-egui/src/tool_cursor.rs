@@ -10,7 +10,7 @@
 use egui::{Pos2, Rect, Stroke, Vec2, pos2, vec2};
 
 use crate::SolveApp;
-use solidcraft_theme::Tokens;
+use torno_theme::Tokens;
 
 /// The badge's side and the icon inside it, in points.
 const BADGE: f32 = 26.0;
@@ -47,7 +47,7 @@ pub(crate) fn icon(app: &SolveApp) -> Option<&'static str> {
     if !app.ui.tool_cursor {
         return None;
     }
-    command(app).and_then(solidcraft_engine::find_command).map(|spec| spec.icon).filter(|icon| !icon.is_empty())
+    command(app).and_then(torno_engine::find_command).map(|spec| spec.icon).filter(|icon| !icon.is_empty())
 }
 
 /// The badge for a pointer at `at`: above and right of it, so it never covers the coordinate
@@ -91,7 +91,7 @@ mod tests {
     }
 
     fn icon_of(id: &str) -> &'static str {
-        solidcraft_engine::find_command(id).unwrap().icon
+        torno_engine::find_command(id).unwrap().icon
     }
 
     #[test]
@@ -124,7 +124,7 @@ mod tests {
         assert!(h.app.ui.tool_cursor);
         h.call("ui.prefs", json!({"button":"ok"}));
 
-        let mut restarted = crate::SolveApp::new(solidcraft_engine::Session::default(), crate::Services::default());
+        let mut restarted = crate::SolveApp::new(torno_engine::Session::default(), crate::Services::default());
         restarted.load_prefs(&h.app.prefs());
         assert!(restarted.ui.tool_cursor, "an explicitly enabled tool badge survives a restart");
 
@@ -162,7 +162,7 @@ mod tests {
 
     #[test]
     fn saved_tool_badge_requires_a_boolean_and_old_settings_keep_the_default() {
-        let mut app = crate::SolveApp::new(solidcraft_engine::Session::default(), crate::Services::default());
+        let mut app = crate::SolveApp::new(torno_engine::Session::default(), crate::Services::default());
         app.load_prefs("{}");
         assert!(!app.ui.tool_cursor, "settings from before the option was saved keep it off");
         for enabled in [true, false] {
@@ -276,10 +276,10 @@ mod tests {
     /// Every interactive tool's command has an icon to show.
     #[test]
     fn every_interactive_tool_has_a_badge_icon() {
-        let missing: Vec<&str> = solidcraft_engine::command_specs()
+        let missing: Vec<&str> = torno_engine::command_specs()
             .iter()
             .filter_map(|spec| crate::tools::Tool::for_command(spec.id).map(|tool| tool.cmd))
-            .filter(|cmd| solidcraft_engine::find_command(cmd).is_none_or(|spec| spec.icon.is_empty()))
+            .filter(|cmd| torno_engine::find_command(cmd).is_none_or(|spec| spec.icon.is_empty()))
             .collect();
         assert!(missing.is_empty(), "tools without a badge icon: {missing:?}");
     }

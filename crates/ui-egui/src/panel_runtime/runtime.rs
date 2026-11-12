@@ -1,6 +1,6 @@
 use std::collections::{BTreeMap, BTreeSet};
 
-use solidcraft_engine::panels::*;
+use torno_engine::panels::*;
 
 use super::*;
 

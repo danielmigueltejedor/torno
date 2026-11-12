@@ -334,7 +334,7 @@
                 ],
                 "runs": [
                   {
-                    "text": "App (SolidCraft, or any app)",
+                    "text": "App (Torno, or any app)",
                     "style": {
                       "font_family": "Helvetica",
                       "font_style": "Bold",

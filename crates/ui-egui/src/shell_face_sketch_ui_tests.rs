@@ -1,7 +1,7 @@
 use crate::scenario::Harness;
 use serde_json::json;
-use solidcraft_engine::geom::prelude::*;
-use solidcraft_engine::{
+use torno_engine::geom::prelude::*;
+use torno_engine::{
     Sel,
     doc::{FaceAttachmentStatus, FeatureKind, PlaneRef},
 };

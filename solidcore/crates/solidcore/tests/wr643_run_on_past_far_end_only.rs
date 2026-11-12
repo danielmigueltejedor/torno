@@ -1,4 +1,4 @@
-//! Regression test for WR-643 (the SolidCraft fork's tangency-labs/smlib@7224896, branch
+//! Regression test for WR-643 (the Torno fork's tangency-labs/smlib@7224896, branch
 //! `replay/1.0.1`; #960). With WR-610's run-on (`fillet_trace_reaches_rails`),
 //! `RailEdgeuseIntersect` widens a straight side edge's interval past both of its ends.
 //! Behind the corner's vertex, the side edge's line lies on the far side of the filleted

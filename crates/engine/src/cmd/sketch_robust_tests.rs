@@ -3,7 +3,7 @@
 //! degenerate is left behind).
 
 use serde_json::{Value, json};
-use solidcraft_geom::prelude::*;
+use torno_geom::prelude::*;
 
 use crate::Session;
 

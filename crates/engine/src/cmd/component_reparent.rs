@@ -39,10 +39,10 @@ pub(super) fn reparent(s: &mut Session, p: &Value) -> Result<Value> {
     let (from_path, from_frame) = placement_of(s, &doc, o.parent, moved.split_last().map(|(_, up)| up), "path", cmd)?;
     let (to_path, to_frame) = placement_of(s, &doc, to, to_given.as_deref(), "parent_path", cmd)?;
     let local = doc.occurrences.iter().find(|x| x.id == id).map(|x| x.transform).unwrap_or(o.transform);
-    let world = solidcraft_doc::mat_mul(&from_frame, &local);
-    let inverse = solidcraft_doc::mat_inverse(&to_frame).ok_or_else(|| bad(cmd, "the new parent's frame is not invertible"))?;
-    let transform = solidcraft_doc::mat_mul(&inverse, &world);
-    if !solidcraft_doc::valid_transfer_matrix(&transform) {
+    let world = torno_doc::mat_mul(&from_frame, &local);
+    let inverse = torno_doc::mat_inverse(&to_frame).ok_or_else(|| bad(cmd, "the new parent's frame is not invertible"))?;
+    let transform = torno_doc::mat_mul(&inverse, &world);
+    if !torno_doc::valid_transfer_matrix(&transform) {
         return Err(bad(cmd, "the move exceeds the supported rigid coordinate range"));
     }
     drop(doc);

@@ -1,5 +1,5 @@
 use super::*;
-use solidcraft_geom::{Aabb3, Mesh, MeshGeom};
+use torno_geom::{Aabb3, Mesh, MeshGeom};
 
 fn fixed_request_metadata_bytes() -> u64 {
     request().retained_resource_metadata_bytes()
@@ -1814,7 +1814,7 @@ mod prepared_optical_submission {
             }],
         };
         let mut request = ImageRequest { integrator: Integrator::Raytrace, width: 1, height: 1, ..request() };
-        request.camera.set_view(solidcraft_viewport::StandardView::Top);
+        request.camera.set_view(torno_viewport::StandardView::Top);
         request.raytrace = Some(RaytraceOptions {
             lights: Some(Vec::new()),
             environment: Some(crate::job::RaytraceEnvironmentOptions { color: [1.0; 3], intensity: 1.0 }),
@@ -2257,7 +2257,7 @@ mod capture_credit {
             texture_input::MapRole,
         };
         use image::ImageEncoder;
-        use solidcraft_viewport::surface::OpaqueSurface;
+        use torno_viewport::surface::OpaqueSurface;
         let mut bytes = Vec::new();
         image::codecs::png::PngEncoder::new(&mut bytes).write_image(&[128, 64, 32, 255], 1, 1, image::ExtendedColorType::Rgba8).unwrap();
         let map = TextureMap::new(bytes, MapRole::BaseColor).unwrap();
@@ -2303,7 +2303,7 @@ mod capture_credit {
         image.width = 2;
         image.height = 2;
         image.camera.distance = 4.;
-        image.camera.set_view(solidcraft_viewport::StandardView::Top);
+        image.camera.set_view(torno_viewport::StandardView::Top);
         image.integrator = Integrator::Raytrace;
         image.textures = Some(maps);
         image.raytrace = Some(RaytraceOptions {

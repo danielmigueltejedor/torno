@@ -1,11 +1,11 @@
 //! Original schematic cylindrical hatching for evaluated cosmetic threads. The segments lie
 //! on the displayed triangles, so neither a separate cylinder nor a helical B-rep is needed.
-use solidcraft_geom::prelude::*;
 use std::collections::HashMap;
+use torno_geom::prelude::*;
 
 use solidcore_record::Vec3;
-use solidcraft_doc::{ModelBody, ThreadInfo};
-use solidcraft_geom::Mesh;
+use torno_doc::{ModelBody, ThreadInfo};
+use torno_geom::Mesh;
 
 /// Shared upper bound for cosmetic strokes in one viewport/snapshot scene.
 pub const MAX_SCENE_SEGMENTS: usize = 65_536;
@@ -106,11 +106,10 @@ pub fn segments_with_budget(body: &ModelBody, mesh: &Mesh, threads: &[ThreadInfo
                 if !budget.spend((*face as usize).saturating_add(1)) {
                     return out;
                 }
-                let surface = solidcraft_kernel::guard("cosmetic thread surface", || Ok(solidcraft_kernel::face_surface(&body.body, *face as usize)))
-                    .ok()
-                    .flatten();
+                let surface =
+                    torno_kernel::guard("cosmetic thread surface", || Ok(torno_kernel::face_surface(&body.body, *face as usize))).ok().flatten();
                 let found = match surface {
-                    Some(solidcraft_kernel::FaceSurface::Cylinder { origin, axis, radius }) => {
+                    Some(torno_kernel::FaceSurface::Cylinder { origin, axis, radius }) => {
                         let offset = origin - t.axis_point;
                         axis.dot(t.axis).abs() > 1.0 - 1e-6
                             && (offset - t.axis * offset.dot(t.axis)).len() < tolerance
@@ -277,7 +276,7 @@ mod tests {
         run(&mut s, "solid.hole", json!({"position":[10,10,10],"direction":[0,0,-1],"thread":"M6","depth":7}));
         run(&mut s, "occurrence.move", json!({"occurrence":c["occurrence"],"translate":[30,20,10],"axis":[1,0,0],"angle":"90 deg","capture":true}));
         let saved = s.doc.to_json();
-        let reopened = solidcraft_doc::Document::from_json(&saved).unwrap();
+        let reopened = torno_doc::Document::from_json(&saved).unwrap();
         let mut s = Session::new(reopened);
         let st = s.world_state().unwrap();
         assert_eq!(st.threads.len(), 1);
@@ -338,10 +337,10 @@ mod tests {
                 }
             }
             assert_eq!(s.doc.to_json(), saved);
-            let scene = crate::view::scene(&s, &solidcraft_viewport::Camera::default()).unwrap();
+            let scene = crate::view::scene(&s, &torno_viewport::Camera::default()).unwrap();
             assert!(!scene.lines.iter().any(|l| l.width == 0.85), "ordinary snapshots preserve the default-off behavior");
             for distance in [25.0, 60.0] {
-                let cam = solidcraft_viewport::Camera {
+                let cam = torno_viewport::Camera {
                     target: if internal { Vec3::new(10., 10., 5.) } else { Vec3::new(0., 0., 5.) },
                     distance,
                     ..Default::default()
@@ -358,9 +357,9 @@ mod tests {
                     )
                     .unwrap();
                     assert!(scene.lines.iter().any(|l| l.width == 0.85 && !l.on_top));
-                    let marked = solidcraft_viewport::render(&scene, &cam, 320, 240).rgba;
+                    let marked = torno_viewport::render(&scene, &cam, 320, 240).rgba;
                     scene.lines.retain(|l| l.width != 0.85);
-                    let plain = solidcraft_viewport::render(&scene, &cam, 320, 240).rgba;
+                    let plain = torno_viewport::render(&scene, &cam, 320, 240).rgba;
                     let changed = marked.as_chunks::<4>().0.iter().zip(plain.as_chunks::<4>().0.iter()).filter(|(a, b)| a != b).count();
                     assert!(changed > 15, "internal={internal}, distance={distance}, section={section:?}: {changed}");
                 }

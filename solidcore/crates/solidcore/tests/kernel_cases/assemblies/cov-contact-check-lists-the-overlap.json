@@ -218,10 +218,10 @@
     "extrude"
   ],
   "ungraded": [
-    "results: SolidCraft computes it"
+    "results: Torno computes it"
   ],
   "what": "contact.check with the arm driven into the block (contact off for the drive)",
   "why_not": [
-    "body \"ArmBox\" is no kernel operation's output nor an operand: SolidCraft built it or changed the kernel's record"
+    "body \"ArmBox\" is no kernel operation's output nor an operand: Torno built it or changed the kernel's record"
   ]
 }

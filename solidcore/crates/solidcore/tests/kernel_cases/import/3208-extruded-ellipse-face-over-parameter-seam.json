@@ -51,6 +51,6 @@
   "ungraded": [],
   "what": "a prism over a circular segment whose curved side lies on a SURFACE_OF_LINEAR_EXTRUSION of an ELLIPSE (a = b = 10) and spans the ellipse's parameter origin (-60 to +60 degrees): the face must cover only the narrow segment side, not wrap the ellipse",
   "why_not": [
-    "body \"segment\" is no kernel operation's output nor an operand: SolidCraft built it or changed the kernel's record"
+    "body \"segment\" is no kernel operation's output nor an operand: Torno built it or changed the kernel's record"
   ]
 }

@@ -71,10 +71,10 @@
     "boolean2d"
   ],
   "ungraded": [
-    "files: SolidCraft computes it"
+    "files: Torno computes it"
   ],
   "what": "sheet.export_dxf with curves: arcs of a 100 x 60 x 2 plate with a 20 x 12 elliptical cut-out: the ellipse becomes tangent arcs",
   "why_not": [
-    "body \"Body1\" is no kernel operation's output nor an operand: SolidCraft built it or changed the kernel's record"
+    "body \"Body1\" is no kernel operation's output nor an operand: Torno built it or changed the kernel's record"
   ]
 }

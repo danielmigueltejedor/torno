@@ -48,7 +48,7 @@ const DEPTH: f64 = 20.0;
 const EDGE: f64 = 20.0;
 const BLOCK: f64 = (40.0 * 10.0 + 20.0 * 2.0) * DEPTH;
 
-/// The cliff overflow's flags and the trim at creases, as SolidCraft runs them.
+/// The cliff overflow's flags and the trim at creases, as Torno runs them.
 fn kernel() -> Kernel {
     let mut k = Kernel::default();
     k.fixes.fillet_refuse_rails_leaving_faces = true;

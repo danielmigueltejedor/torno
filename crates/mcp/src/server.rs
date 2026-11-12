@@ -1,12 +1,12 @@
-//! SolidCraft's MCP server: its tools, instructions and resources over the shared server
-//! (`solidcraft-mcp-server`), with the agent's folders and the output options around each call.
+//! Torno's MCP server: its tools, instructions and resources over the shared server
+//! (`torno-mcp-server`), with the agent's folders and the output options around each call.
 
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::{Mutex, mpsc};
 
 use serde_json::{Value, json};
-use solidcraft_engine::io::vfs::{self, PathScope};
-use solidcraft_mcp_server::{Contents, Incoming, Info, Tools, read_message, response};
+use torno_engine::io::vfs::{self, PathScope};
+use torno_mcp_server::{Contents, Incoming, Info, Tools, read_message, response};
 
 use crate::backend::{Backend, Remote};
 use crate::options::Options;
@@ -14,12 +14,12 @@ use crate::tools::{call_tool_with, tool_definitions_with};
 
 /// What every MCP client is told at `initialize`: how to plan, build and verify a part. It stays
 /// version-neutral (no workaround for a quirk of the current kernel or solver: those belong in
-/// `skills/solidcraft-modeling/reference.md`, which `skill_reference` serves per release), and
+/// `skills/torno-modeling/reference.md`, which `skill_reference` serves per release), and
 /// `tests::instructions_name_only_real_tools` checks every tool and command id it names.
-const INSTRUCTIONS: &str = "SolidCraft is an independent parametric 3D CAD app, and these tools drive it: when its window is \
+const INSTRUCTIONS: &str = "Torno is an independent parametric 3D CAD app, and these tools drive it: when its window is \
 open the user watches the model appear, otherwise a headless session builds it. When asked to design or build a part, do it \
 with these tools straight away. Units are millimetres and degrees in expressions, Z is up.\n\n\
-Start: for anything beyond one primitive, call `skill_reference {\"skill\":\"solidcraft-modeling\"}` first (command shapes, \
+Start: for anything beyond one primitive, call `skill_reference {\"skill\":\"torno-modeling\"}` first (command shapes, \
 ids, plane axes, worked examples and the known traps of this version; `file: \"SKILL.md\"` has the workflow). Then \
 `inspect_design {\"measure\":false,\"sketches\":false}` to see what is already there.\n\n\
 Plan: work the numbers out first (the parameters, the expected volume and bounding box after each stage, the world point you \
@@ -96,7 +96,7 @@ fn write_line(output: &Mutex<impl std::io::Write>, reply: &str) -> std::io::Resu
     out.flush()
 }
 
-/// SolidCraft's tools as the shared server serves them: the backend they run on, the files they
+/// Torno's tools as the shared server serves them: the backend they run on, the files they
 /// may reach and the options that shape what they return.
 struct Agent {
     backend: Box<dyn Backend>,
@@ -161,8 +161,8 @@ impl Tools for Agent {
 
     fn resources(&self) -> Vec<Value> {
         vec![
-            json!({"uri": "solidcraft://design", "name": "Active design", "description": "document.inspect with measurements", "mimeType": "application/json"}),
-            json!({"uri": "solidcraft://commands", "name": "Command catalog", "description": "every command with its parameter docs", "mimeType": "application/json"}),
+            json!({"uri": "torno://design", "name": "Active design", "description": "document.inspect with measurements", "mimeType": "application/json"}),
+            json!({"uri": "torno://commands", "name": "Command catalog", "description": "every command with its parameter docs", "mimeType": "application/json"}),
         ]
     }
 
@@ -170,33 +170,33 @@ impl Tools for Agent {
         let read = match uri {
             // The solvecraft:// URIs are what earlier releases listed (compatibility shim,
             // docs/compatibility.md); clients that saved them still read the resource.
-            "solidcraft://design" | "solvecraft://design" => self.backend.call("document.inspect", json!({"measure": true})),
-            "solidcraft://commands" | "solvecraft://commands" => self.backend.call("engine.commands", json!({})),
+            "torno://design" | "solvecraft://design" => self.backend.call("document.inspect", json!({"measure": true})),
+            "torno://commands" | "solvecraft://commands" => self.backend.call("engine.commands", json!({})),
             _ => return None,
         };
         Some(read.map(|v| Contents::json(&v)))
     }
 }
 
-/// SolidCraft's MCP server over a [`Backend`].
+/// Torno's MCP server over a [`Backend`].
 pub struct Server {
-    inner: solidcraft_mcp_server::Server<Agent>,
+    inner: torno_mcp_server::Server<Agent>,
 }
 
 impl Server {
     pub fn new(backend: Box<dyn Backend>) -> Self {
-        let info = Info { name: "solidcraft", title: "SolidCraft", version: env!("CARGO_PKG_VERSION"), max_line: solidcraft_engine::MAX_LINE };
+        let info = Info { name: "torno", title: "Torno", version: env!("CARGO_PKG_VERSION"), max_line: torno_engine::MAX_LINE };
         let agent = Agent { backend, scope: None, options: Options::default(), app_options: None, listed: Options::default() };
-        Self { inner: solidcraft_mcp_server::Server::new(info, agent) }
+        Self { inner: torno_mcp_server::Server::new(info, agent) }
     }
-    /// Confine the files tool calls may reach to `scope` (`None`: anywhere). `solidcraft-cli mcp`
+    /// Confine the files tool calls may reach to `scope` (`None`: anywhere). `torno-cli mcp`
     /// always sets one unless started with `--allow-any-path` (docs/mcp.md).
     pub fn with_path_scope(mut self, scope: Option<PathScope>) -> Self {
         self.inner.tools().scope = scope;
         self
     }
-    /// Shape tool output with `options` (default: as always; `solidcraft-cli mcp --compact` or
-    /// `SOLIDCRAFT_MCP_COMPACT=1` turn on compact output, docs/mcp.md). The app's Preferences can
+    /// Shape tool output with `options` (default: as always; `torno-cli mcp --compact` or
+    /// `TORNO_MCP_COMPACT=1` turn on compact output, docs/mcp.md). The app's Preferences can
     /// turn an option on too ([`Server::options`]).
     pub fn with_options(mut self, options: Options) -> Self {
         self.inner.tools().options = options;
@@ -234,7 +234,7 @@ impl Server {
             let (output, in_flight, side) = (&output, &in_flight, &side);
             let reader = scope.spawn(move || -> std::io::Result<()> {
                 let mut input = input;
-                while let Some(incoming) = read_message(&mut input, solidcraft_engine::MAX_LINE)? {
+                while let Some(incoming) = read_message(&mut input, torno_engine::MAX_LINE)? {
                     if let Incoming::Line(line) = &incoming
                         && in_flight.load(Ordering::SeqCst) > 0
                         && let Some(id) = running_call(line)

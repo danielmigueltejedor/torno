@@ -54,7 +54,7 @@ solid edge does not become a sheet metal edge just by selecting Flange.
 
 | Resource | What to explore | Author and licence |
 | --- | --- | --- |
-| [Editable sheet metal demo](https://github.com/tangency-labs/solidcraft/blob/main/docs/book/scripts/sheet-metal.json) | The rule, base sketch and two edge flanges used in this illustration. | SolidCraft contributors; MIT OR Apache-2.0. |
+| [Editable sheet metal demo](https://github.com/tangency-labs/solidcraft/blob/main/docs/book/scripts/sheet-metal.json) | The rule, base sketch and two edge flanges used in this illustration. | Torno contributors; MIT OR Apache-2.0. |
 
 [Contribute a tip, demo, model or screenshot](../dev/command-guides.md), explaining
 the edge or region that must be selected.

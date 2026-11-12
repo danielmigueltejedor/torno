@@ -63,7 +63,7 @@
   "ungraded": [],
   "what": "a V groove whose apex touches the bottom face along a line, cut through: two pieces",
   "why_not": [
-    "body \"Part\" is no kernel operation's output nor an operand: SolidCraft built it or changed the kernel's record",
-    "body \"Part (1)\" is no kernel operation's output nor an operand: SolidCraft built it or changed the kernel's record"
+    "body \"Part\" is no kernel operation's output nor an operand: Torno built it or changed the kernel's record",
+    "body \"Part (1)\" is no kernel operation's output nor an operand: Torno built it or changed the kernel's record"
   ]
 }

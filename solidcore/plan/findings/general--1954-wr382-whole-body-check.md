@@ -5,7 +5,7 @@ For #1954, PR #2383. Rechecked main `fdc55bbb4`, the original audit's
 `tdamsma/solidcore@a520213fc094b898a5107417f9e722f539d4bcc3`.
 The audit classified the shipped (`reported`) flag `bspline_check_min_radius`
 (WR-382) as B-unit: three of five hitting tests failed forced off, but only
-direct curve checks supplied the evidence; no SolidCraft case hit it.
+direct curve checks supplied the evidence; no Torno case hit it.
 
 The merged #2105 and #2124 records leave WR-612, WR-601, WR-597 and WR-643
 without a demonstrated operation-level difference under the shipped preset.

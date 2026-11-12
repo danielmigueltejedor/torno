@@ -1,6 +1,6 @@
 use solidcore_record::Vec3;
 use solidcore_record::brep as b;
-use solidcraft_geom::prelude::*;
+use torno_geom::prelude::*;
 
 use crate::*;
 
@@ -128,7 +128,7 @@ fn set_back_8_the_g2_corner_lies_between_the_hull_and_the_prisms() {
 /// hull cannot beat `lo` by 1e-12 is done; one split 18 times counts its hull in `hi`. Returns
 /// the bracket and the (u, v) where `lo` is reached.
 fn past_the_box(rec: &b::Brep, face: usize) -> (f64, f64, [f64; 2]) {
-    use solidcraft_geom::bspline::{HPoint, segment};
+    use torno_geom::bspline::{HPoint, segment};
     let f = &rec.faces[face];
     let (b::Surface::Spline { u_knots, v_knots, points }, None) = (&f.surface, &f.nurbs) else {
         panic!("face {face} is no polynomial B-spline: {:?}", std::mem::discriminant(&f.surface));

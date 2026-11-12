@@ -21,13 +21,13 @@ use crate::ui_kit::BackingTooltipExt as _;
 use std::collections::{HashMap, HashSet};
 
 use serde_json::json;
-use solidcraft_engine::Sel;
-use solidcraft_engine::doc::Component;
+use torno_engine::Sel;
+use torno_engine::doc::Component;
 
 use crate::SolveApp;
 use crate::timeline_folders::Span;
 use crate::ui_kit::HistoryGroupChip;
-use solidcraft_theme::TabAccent;
+use torno_theme::TabAccent;
 
 /// A history with no more features than this never folds: it still fits a window's width.
 pub(crate) const FOLD_FROM: usize = 50;
@@ -115,7 +115,7 @@ pub(crate) struct View {
 impl View {
     /// The features of the components in `within`, or all of them, leaving out those of the
     /// components marked out of the History bar unless `show_hidden` asks for them (#10393).
-    pub(crate) fn of(doc: &solidcraft_engine::doc::Document, within: Option<&HashSet<u64>>, show_hidden: bool) -> Self {
+    pub(crate) fn of(doc: &torno_engine::doc::Document, within: Option<&HashSet<u64>>, show_hidden: bool) -> Self {
         let hides = !show_hidden && doc.components.iter().any(|c| c.history_hidden);
         let shown = (within.is_some() || hides).then(|| {
             doc.features
@@ -526,7 +526,7 @@ fn group_menu(app: &mut SolveApp, ui: &mut egui::Ui, group: &Group, view: &View)
         let _ = app.run("select.set", json!({ "items": items }));
         ui.close();
     }
-    if crate::ui_kit::menu::button(ui, solidcraft_ui_text::tr_label("Roll History Marker Here"), "rollback").clicked() {
+    if crate::ui_kit::menu::button(ui, torno_ui_text::tr_label("Roll History Marker Here"), "rollback").clicked() {
         let end = view.index(group.end);
         let position = if end >= app.session.doc.features.len() { json!({}) } else { json!({ "position": end }) };
         let _ = app.run_heavy("timeline.roll_to", position);
@@ -536,7 +536,7 @@ fn group_menu(app: &mut SolveApp, ui: &mut egui::Ui, group: &Group, view: &View)
 
 #[cfg(test)]
 mod tests {
-    use solidcraft_engine::doc::Component;
+    use torno_engine::doc::Component;
 
     use super::{Entry, FOLD_DEPTH_MAX, FOLD_FROM, FOLD_MIN, Folder, Group, Opens, chains, entries};
     use crate::timeline_folders::Span;

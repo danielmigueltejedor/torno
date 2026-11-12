@@ -6,7 +6,7 @@
 use std::path::{Path, PathBuf};
 
 /// The Linux app id (Flatpak, desktop entry, AppStream, Wayland `app_id`).
-pub const APP_ID: &str = "io.tangencylabs.solidcraft";
+pub const APP_ID: &str = "dev.danielmiguelt.Torno";
 /// The app id of releases before 0.8 (compatibility shim, docs/compatibility.md). eframe kept
 /// the window state under it, so it is also the old settings key.
 pub const LEGACY_APP_ID: &str = "ai.storyteller.solvecraft";
@@ -77,7 +77,7 @@ mod tests {
     use super::*;
 
     fn scratch(tag: &str) -> std::path::PathBuf {
-        let d = std::env::temp_dir().join(format!("solidcraft-legacy-dir-{tag}-{}", std::process::id()));
+        let d = std::env::temp_dir().join(format!("torno-legacy-dir-{tag}-{}", std::process::id()));
         let _ = std::fs::remove_dir_all(&d);
         std::fs::create_dir_all(&d).unwrap();
         d
@@ -90,7 +90,7 @@ mod tests {
         std::fs::create_dir_all(old.join("recovery")).unwrap();
         std::fs::write(old.join("graphics.json"), "{\"msaa\":8}").unwrap();
         std::fs::write(old.join("recovery").join("a.solvecraft"), "x").unwrap();
-        let new = d.join("solidcraft");
+        let new = d.join("torno");
         assert!(adopt_legacy_dir(&new, &old).unwrap());
         assert_eq!(std::fs::read_to_string(new.join("graphics.json")).unwrap(), "{\"msaa\":8}");
         assert!(new.join("recovery").join("a.solvecraft").is_file());
@@ -106,14 +106,14 @@ mod tests {
     #[test]
     fn flatpak_twins_map_our_sandbox_data_to_the_old_app_ids() {
         let home = Path::new("/home/u");
-        let ours = home.join(".var/app/io.tangencylabs.solidcraft/data/solidcraft");
+        let ours = home.join(".var/app/dev.danielmiguelt.Torno/data/torno");
         let id = std::ffi::OsStr::new(APP_ID);
         assert_eq!(
             flatpak_twins(&ours, id, home),
-            [home.join(".var/app/ai.storyteller.solidcraft/data/solidcraft"), home.join(".var/app/ai.storyteller.solvecraft/data/solidcraft")]
+            [home.join(".var/app/ai.storyteller.solidcraft/data/torno"), home.join(".var/app/ai.storyteller.solvecraft/data/torno")]
         );
         // Outside our sandbox folder, or in another app's sandbox, there is nothing to map.
-        assert!(flatpak_twins(&home.join(".local/share/solidcraft"), id, home).is_empty());
+        assert!(flatpak_twins(&home.join(".local/share/torno"), id, home).is_empty());
         assert!(flatpak_twins(&ours, std::ffi::OsStr::new("org.example.Other"), home).is_empty());
     }
 
@@ -135,7 +135,7 @@ mod tests {
     #[test]
     fn nothing_to_adopt() {
         let d = scratch("none");
-        let new = d.join("solidcraft");
+        let new = d.join("torno");
         assert!(!adopt_legacy_dir(&new, &d.join("missing")).unwrap());
         assert!(!new.exists());
         // An existing current folder is never overwritten.

@@ -1,9 +1,9 @@
 //! Candidate and saved-card review through the shared physical-material validator.
 use serde_json::{Value, json};
-use solidcraft_engine::doc::physical_material::{Family, MaterialCard, PropertyData, admit_card};
+use torno_engine::doc::physical_material::{Family, MaterialCard, PropertyData, admit_card};
 
 use crate::{SolveApp, ui_kit};
-use solidcraft_ui_text::tr;
+use torno_ui_text::tr;
 
 const MAX_BYTES: usize = 256 * 1024;
 const KINDS: &[&str] = &[
@@ -74,8 +74,8 @@ pub fn show(app: &mut SolveApp, ctx: &egui::Context) {
     )
     .wide();
     let panel = if side == crate::frame::Side::Left {
-        let available = palette.map_or(viewport.width(), |r| (r.left() - viewport.left() - solidcraft_theme::Tokens::get().space_8).max(0.0));
-        panel.width((solidcraft_theme::Tokens::get().form_card_width * 3.0).min(available))
+        let available = palette.map_or(viewport.width(), |r| (r.left() - viewport.left() - torno_theme::Tokens::get().space_8).max(0.0));
+        panel.width((torno_theme::Tokens::get().form_card_width * 3.0).min(available))
     } else {
         panel
     };
@@ -84,7 +84,7 @@ pub fn show(app: &mut SolveApp, ctx: &egui::Context) {
         let (closed, action) = panel.feature(
             ui,
             ui_kit::FeatureOptions {
-                icon: solidcraft_engine::find_command("material.properties.validate").map_or("", |c| c.icon),
+                icon: torno_engine::find_command("material.properties.validate").map_or("", |c| c.icon),
                 title,
                 drag_key: "material_card_review",
                 moved,
@@ -139,7 +139,7 @@ fn numbers(ui: &mut egui::Ui, field: &str, values: &[f64], unit: &str) {
 
 /// Review a saved card inside the existing physical-material assignment panel.
 /// Reading properties never changes the assigned density or the candidate reviewer.
-pub(crate) fn show_saved_material(ui: &mut egui::Ui, doc: &solidcraft_engine::doc::Document, name: &str) {
+pub(crate) fn show_saved_material(ui: &mut egui::Ui, doc: &torno_engine::doc::Document, name: &str) {
     value(ui, tr("Density"), doc.material_density(name).map(|density| density.to_string()), "g/cm³");
     let Some(record) = doc.user_material(name).and_then(|material| material.physical_card.as_ref()) else {
         value(ui, tr("ui.material_review.properties"), None, "");
@@ -149,7 +149,7 @@ pub(crate) fn show_saved_material(ui: &mut egui::Ui, doc: &solidcraft_engine::do
 }
 
 /// Read-only card preview shared by the saved-material panel and library picker.
-pub(crate) fn show_record(ui: &mut egui::Ui, record: &solidcraft_engine::doc::physical_material::ValidatedCard) {
+pub(crate) fn show_record(ui: &mut egui::Ui, record: &torno_engine::doc::physical_material::ValidatedCard) {
     ui_kit::section(ui, "saved_physical_card", tr("ui.material_review.properties"), false, |ui| {
         let card = record.card();
         match card.validate() {
@@ -217,11 +217,11 @@ fn show_data(ui: &mut egui::Ui, data: &PropertyData) {
     match data {
         PropertyData::Density { kg_m3 } => numbers(ui, "density", &[*kg_m3], "kg/m³"),
         PropertyData::Elasticity { model } => match model {
-            solidcraft_engine::doc::physical_material::Elasticity::Isotropic { young_modulus_pa, poisson_ratio } => {
+            torno_engine::doc::physical_material::Elasticity::Isotropic { young_modulus_pa, poisson_ratio } => {
                 numbers(ui, "E", &[*young_modulus_pa], "Pa");
                 numbers(ui, "ν", &[*poisson_ratio], "");
             }
-            solidcraft_engine::doc::physical_material::Elasticity::Orthotropic { young_moduli_pa, shear_moduli_pa, poisson_ratios, .. } => {
+            torno_engine::doc::physical_material::Elasticity::Orthotropic { young_moduli_pa, shear_moduli_pa, poisson_ratios, .. } => {
                 numbers(ui, "E1, E2, E3", young_moduli_pa, "Pa");
                 numbers(ui, "G12, G23, G31", shear_moduli_pa, "Pa");
                 numbers(ui, "ν12, ν23, ν31", poisson_ratios, "");
@@ -299,7 +299,7 @@ mod tests {
 
     #[test]
     fn invalid_and_oversized_candidates_never_keep_a_previous_review() {
-        let mut app = SolveApp::new(solidcraft_engine::Session::default(), crate::Services::default());
+        let mut app = SolveApp::new(torno_engine::Session::default(), crate::Services::default());
         let doc = app.session.doc.clone();
         let mut window = ReviewWindow { input: candidate().to_string(), ..Default::default() };
         window.review(&mut app);
@@ -356,7 +356,7 @@ mod tests {
 
     #[test]
     fn executing_json_validation_does_not_open_the_inspector() {
-        let mut app = SolveApp::new(solidcraft_engine::Session::default(), crate::Services::default());
+        let mut app = SolveApp::new(torno_engine::Session::default(), crate::Services::default());
         app.run("material.properties.validate", json!({"card":candidate()})).unwrap();
         assert!(app.material_card_review.is_none());
     }

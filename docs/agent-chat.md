@@ -4,9 +4,9 @@ Agent chat is a side panel where you talk to a coding agent you already use (Cla
 Codex, Google Antigravity, OpenCode, Grok Build and others), or to a model behind an
 OpenAI-compatible or Anthropic-compatible endpoint you choose (Ollama or LM Studio on your
 computer, OpenAI, Anthropic, any other URL), and have it work on the design that's open. A
-coding agent runs on your computer under **your own account** with that agent: SolidCraft
+coding agent runs on your computer under **your own account** with that agent: Torno
 doesn't sell or proxy a model and needs no key for it. An endpoint's key, if it needs one, goes
-into your system keychain, never into SolidCraft's settings.
+into your system keychain, never into Torno's settings.
 
 Desktop app only.
 
@@ -14,23 +14,23 @@ Desktop app only.
 
 Everything about it is on one page: **Preferences → AI**.
 
-- **Show AI features** (on by default) is the master switch. Turned off, SolidCraft shows nothing
+- **Show AI features** (on by default) is the master switch. Turned off, Torno shows nothing
   of it: no AI button, no shortcut, no menu entry, no panel, and nothing is looked for or
   started. The page stays, so you can turn it back on.
 - **Show Assistant button in application bar** (on by default): the **Assistant** icon in the application bar
   row, which stays there however wide the window is. Turn it off to keep only the shortcut and
   the menu entry.
-- **Connect the last-used agent when SolidCraft starts** (off by default): each launch starts
+- **Connect the last-used agent when Torno starts** (off by default): each launch starts
   the agent you connected last (the default one if you never connected), in the background,
-  once SolidCraft has looked for the installed agents. The panel's header shows **Starting…**,
+  once Torno has looked for the installed agents. The panel's header shows **Starting…**,
   then **Ready**, or **Connection failed** with **Retry** in place of **Connect** (the agent is
   missing, could not start, or ended while starting); the conversation says why. A design
-  opened in place of the empty one SolidCraft starts with keeps the agent connected, as long
+  opened in place of the empty one Torno starts with keeps the agent connected, as long
   as nothing was asked in that empty design's chat.
-- **Open the Assistant panel when SolidCraft starts** (off by default): the panel (or its own
+- **Open the Assistant panel when Torno starts** (off by default): the panel (or its own
   window) is shown at each launch.
 
-Neither applies when SolidCraft is started with `--control` for automation.
+Neither applies when Torno is started with `--control` for automation.
 
 With AI features on, the panel opens from:
 
@@ -38,7 +38,7 @@ With AI features on, the panel opens from:
 - **Ctrl+Shift+A** (Cmd+Shift+A on a Mac), which also works from the chat's own text box;
 - **View settings** (the last button of the navigation bar under the view) → **Agent chat**.
 
-Nothing runs until you need it: SolidCraft looks for installed agents (a quick `--version`
+Nothing runs until you need it: Torno looks for installed agents (a quick `--version`
 each, in the background) when the panel or the AI page first opens, and starts an agent only
 when you send a message or press **Connect** (or at launch, when you turned that on above).
 
@@ -75,13 +75,13 @@ click ends the selection; in the message box Ctrl+A selects only the draft.
 - **Docking:** on the left, Assistant is the first panel, before vertical history and the browser.
   The drag highlight shows the actual destination bounds. Drag the panel's header (the dotted grip and the title) to the other half of the
   window and let go. The side it would land on lights up while you drag. You can also pick
-  **Left** or **Right** under Preferences → AI → Panel. SolidCraft remembers the side.
-- **Width:** drag the panel's inner edge. SolidCraft remembers it.
+  **Left** or **Right** under Preferences → AI → Panel. Torno remembers the side.
+- **Width:** drag the panel's inner edge. Torno remembers it.
 - **Its own window:** the pop-out button in the header (a window with an arrow) moves the chat
   into a window of its own, named after the design, which you can move anywhere, including
   another screen. The window's own close button closes the chat, which opens there again next
   time; **Dock** (the same place in its header) puts it back in the side panel. You can also
-  pick **Own window** under Preferences → AI → Panel. SolidCraft remembers where the window
+  pick **Own window** under Preferences → AI → Panel. Torno remembers where the window
   was and how big.
 - **Minimise** (the line in the header) folds the panel into a small floating strip (a side strip in the docked layout) that keeps the chat
   icon, the agent's state, and a count of anything waiting for your answer. Click the icon to
@@ -95,7 +95,7 @@ click ends the selection; in the message box Ctrl+A selects only the draft.
   shown as applied only after the agent reports it; a rejected change leaves the confirmed
   selection in place and shows an error.
 - **Older agents and API endpoints** keep their model and mode drop-downs when they report those
-  choices (an ACP agent's legacy model/mode lists, or an endpoint's `/models`). SolidCraft remembers
+  choices (an ACP agent's legacy model/mode lists, or an endpoint's `/models`). Torno remembers
   the last model choice for each agent and puts it back on the next session when still available.
   An endpoint's agent also keeps it as its default model. An agent that reports no choices shows
   no drop-down. When these model lists include more than one provider (Hermes and OpenCode name
@@ -107,7 +107,7 @@ click ends the selection; in the message box Ctrl+A selects only the draft.
   `Vendor: Model` under ids `vendor/model` (OpenRouter) is grouped by vendor the same way; its rows
   read the model's name, and the id stays in the tooltip and in the search.
 - **Picking a model.** Every model picker opens on a search box over the list the agent or endpoint
-  gave at this connection: SolidCraft has no list of its own. The search covers ids, names and
+  gave at this connection: Torno has no list of its own. The search covers ids, names and
   descriptions, and Enter takes the exact match or the first one shown. A model that isn't listed
   can be typed: **Use custom: …** takes what is in the box, for an endpoint, an ACP agent with a
   model option, or an older agent that listed models. An endpoint takes it as it is and keeps it as
@@ -116,12 +116,12 @@ click ends the selection; in the message box Ctrl+A selects only the draft.
   lists it. An endpoint that can't list its models (it has no such address, or refuses the key)
   still shows its configured model, and the popup says why there are no others.
 - **Reasoning effort is not permissions.** The agent's thinking setting does not change
-  SolidCraft's Ask / Edits / All approval policy. Reasoning options belong to the current session;
+  Torno's Ask / Edits / All approval policy. Reasoning options belong to the current session;
   changing them here does not rewrite OpenCode's configuration or another OpenCode session.
 
 Messages use right-aligned user bubbles and plain assistant text. Consecutive tool calls share
 an activity group: click a row to inspect its output; failed calls have an error tint. Approval
-cards retain the agent’s permission choices, and SolidCraft’s own approvals offer Deny, Always
+cards retain the agent’s permission choices, and Torno’s own approvals offer Deny, Always
 allow and Allow once. The composer’s permission menu uses the same Ask / Edits / All policy as
 Preferences, for the selected agent, and shows the actual changes used against the configured
 turn limit. Queue, Send now and Stop keep their existing behavior.
@@ -192,7 +192,7 @@ messages go as one prompt, in order, when the turn ends normally.
   undoes as one step, like any other message.
 - **Stop** (the square next to the input, or **Esc** in the input) stops the agent and keeps
   the queue: the bubbles wait for **Send**. If an external ACP agent does not finish its cancelled
-  prompt within five seconds, SolidCraft disconnects it and stops its process in the background.
+  prompt within five seconds, Torno disconnects it and stops its process in the background.
   Completed design changes stay undoable, and the queue stays put. Reconnect to start a new agent session.
 - **New chat** (the header button, **Ctrl+Shift+L** / **Cmd+Shift+L** with the chat focused)
   stops what runs, clears the conversation, the queue and the files on the chips, and starts a
@@ -214,24 +214,24 @@ conversation starts with), its own permission setting, and **Edit** and **Remove
 
 ### Found by themselves
 
-SolidCraft looks for agents that speak the [Agent Client Protocol](https://agentclientprotocol.com)
+Torno looks for agents that speak the [Agent Client Protocol](https://agentclientprotocol.com)
 on your `PATH` and in the usual install folders a desktop app's `PATH` often misses (npm's
 global folder, nvm, Volta, bun, `~/.local/bin`, `~/.grok/bin`, Homebrew, `%APPDATA%\npm`). For each one it
 shows its **version** (from `--version`, given three seconds) and whether a **login was found**.
 Version checks and agent sessions also use those folders on their `PATH`, so adapters can find
-runtimes such as Node when SolidCraft is opened from Finder or the Dock. Existing absolute
+runtimes such as Node when Torno is opened from Finder or the Dock. Existing absolute
 `PATH` entries keep their order; no shell startup files are run.
 If a detected Node adapter fails with `SyntaxError: Unexpected token 'with'` on an older Node,
-SolidCraft checks these folders for a Node version that supports import attributes. For an
+Torno checks these folders for a Node version that supports import attributes. For an
 adapter with an `env node` shebang, it retries with that Node and keeps the same interpreter
 for the chat session, including programs the adapter starts. These extra checks run in the
 background with a shared three-second limit for finding Node. Working adapters keep their
 original launch command. If no suitable Node is found, the agent's error names the old version
 and asks you to update Node and press **Refresh**.
-SolidCraft only checks whether the agent's own login file (`~/.claude/.credentials.json`,
+Torno only checks whether the agent's own login file (`~/.claude/.credentials.json`,
 `~/.codex/auth.json`, `~/.gemini/oauth_creds.json`, …) or one of its key variables exists. It never
 reads the file and never starts the agent to find out. On macOS Claude Code keeps its login in
-the keychain, so SolidCraft doesn't guess there. A found login file may be expired: **Test** or a
+the keychain, so Torno doesn't guess there. A found login file may be expired: **Test** or a
 chat connection verifies it. A successful ACP connection shows **signed in**; an authentication
 rejection shows **not signed in**. These results apply to that agent until a newer connection
 result or **Refresh**, which checks the installed agents again. An unrelated connection error
@@ -250,7 +250,7 @@ doesn't change the last known login state.
 The panel lists agents that aren't installed with their install command and a **Copy** button.
 
 For Mistral Vibe, put `vibe-acp` on your PATH and refresh the agent list. Follow Vibe's sign-in
-prompt, run `vibe --setup` in a terminal, or set `MISTRAL_API_KEY` before launching SolidCraft.
+prompt, run `vibe --setup` in a terminal, or set `MISTRAL_API_KEY` before launching Torno.
 See [Mistral's ACP setup guide](https://docs.mistral.ai/vibe/code/use-vibe-in-other-ides).
 **Refresh** looks again after you install one. An agent whose program is there but fails its
 `--version` check without printing a version (an install that didn't finish, such as an npm
@@ -263,14 +263,14 @@ session and ends it again.
 ### Flatpak
 
 The Flatpak sandbox has no home-folder or network access by default. Agents installed
-through nvm or `~/.local/bin` can therefore work in a terminal while SolidCraft reports
+through nvm or `~/.local/bin` can therefore work in a terminal while Torno reports
 that no agent was found. For Claude Code and its ACP adapter, run:
 
 ```sh
-flatpak override --user io.tangencylabs.solidcraft --filesystem=~/.nvm:ro --filesystem=~/.local/bin:ro --filesystem=~/.local/share/claude:ro --filesystem=~/.claude --filesystem=~/.claude.json --share=network
+flatpak override --user dev.danielmiguelt.Torno --filesystem=~/.nvm:ro --filesystem=~/.local/bin:ro --filesystem=~/.local/share/claude:ro --filesystem=~/.claude --filesystem=~/.claude.json --share=network
 ```
 
-These permissions apply to SolidCraft for your user account:
+These permissions apply to Torno for your user account:
 
 - `~/.nvm:ro` exposes Node and globally installed npm adapters read-only.
 - `~/.local/bin:ro` exposes locally installed executables read-only.
@@ -278,30 +278,30 @@ These permissions apply to SolidCraft for your user account:
   including the targets of links in `~/.local/bin`.
 - `~/.claude` and `~/.claude.json` allow Claude Code to read and update its sign-in
   and configuration files.
-- `--share=network` lets the adapter reach its service. It also gives SolidCraft
+- `--share=network` lets the adapter reach its service. It also gives Torno
   network access, including making an enabled control server reachable from the host.
 
-Restart SolidCraft after applying the override. Other agents or installation folders
+Restart Torno after applying the override. Other agents or installation folders
 may need different filesystem permissions.
 
 ### XAI Grok
 
 Install **Grok Build** and run `grok login` in a terminal to sign in with your Grok account.
-In SolidCraft, open **AI → Refresh**, select
+In Torno, open **AI → Refresh**, select
 **XAI Grok**, then **Connect**. You can make it the default under
 **Preferences → AI → Agents**.
 
-SolidCraft reuses Grok Build's sign-in in `~/.grok/auth.json`; it checks only whether that file
+Torno reuses Grok Build's sign-in in `~/.grok/auth.json`; it checks only whether that file
 exists and does not read or copy its tokens. If sign-in is needed, the panel offers Grok's own
 sign-in methods. You can also run `grok login` again and reconnect. Grok controls model access
-and usage limits for your account. This connection does not require an API key in SolidCraft.
+and usage limits for your account. This connection does not require an API key in Torno.
 Grok Build also supports `XAI_API_KEY` for users who choose API authentication.
 
 ### Add agent…
 
 - **Installed agent:** your own entry for an installed agent, for example with other arguments.
 - **Custom command:** any other program that speaks ACP on stdin and stdout, such as
-  `my-agent --acp`. SolidCraft starts it directly, not through a shell.
+  `my-agent --acp`. Torno starts it directly, not through a shell.
 - **OpenAI-compatible API:** a preset (Ollama `http://localhost:11434/v1`, LM Studio
   `http://localhost:1234/v1`, OpenClaw `http://localhost:18789/v1`, OpenAI, Mistral AI
   `https://api.mistral.ai/v1`, Google Gemini `https://generativelanguage.googleapis.com/v1beta/openai`,
@@ -333,7 +333,7 @@ Grok Build also supports `XAI_API_KEY` for users who choose API authentication.
   Secret Service on Linux). By default it is only sent over HTTPS or to this computer. **Test** asks an
   OpenAI-compatible endpoint for its models; an Anthropic-compatible one gets a short message,
   because not every such endpoint lists models (Qwen's has no model list). For these agents
-  SolidCraft runs the conversation itself, with the same tools, limits and questions as for a
+  Torno runs the conversation itself, with the same tools, limits and questions as for a
   coding agent, and no cap on model requests per message (Stop ends it). **Request timeout** is how long one model request may
   take: 300 s by default, from 30 s to an hour. A slow local model (a large model on modest
   hardware, or a long message with many tool results) may need more; raise it here or in the
@@ -342,7 +342,7 @@ Grok Build also supports `XAI_API_KEY` for users who choose API authentication.
   effort** is optional and empty by default: nothing is sent and the provider's own default
   applies. When set, the value goes out as `reasoning_effort` on each `/chat/completions`
   request; accepted values differ per provider and model (for example `low`, `high` or `max`).
-  A value you set is never replaced by SolidCraft: if the endpoint refuses it, the refusal is
+  A value you set is never replaced by Torno: if the endpoint refuses it, the refusal is
   shown instead of being retried with `none`.
 
 **Edit** on an agent you added opens the same dialog filled with its name and command, or its
@@ -365,7 +365,7 @@ conversations, including those in other document tabs.
 For Ollama, choosing a model checks its reported capabilities in the background. If its
 capabilities list lacks `tools`, a warning below the model picker explains that the model can
 only chat and suggests choosing one with tool support. Results are cached in memory per base URL and
-model, with a limit of 128 entries. SolidCraft recognises Ollama through `/api/version` at the
+model, with a limit of 128 entries. Torno recognises Ollama through `/api/version` at the
 endpoint's origin or the Ollama preset. Failed checks and older servers without a capabilities
 field show no warning. The check never blocks sending a message.
 
@@ -373,7 +373,7 @@ field show no warning. The check never blocks sending a message.
 
 Choose a model that supports native tool calling to read or change the design. With Ollama,
 look for `tools` in the model's capabilities; a model that only supports chat cannot operate
-SolidCraft. Other OpenAI-compatible endpoints also need a model with native tool support.
+Torno. Other OpenAI-compatible endpoints also need a model with native tool support.
 
 If tools were available but a completed turn made no tool calls or changes, the panel shows a
 short notice when the reply was empty, or when an explicit edit request received only text.
@@ -395,8 +395,8 @@ wsl.exe -d Ubuntu -e bash -lc claude-agent-acp
 ```
 
 `bash -lc` runs your login shell's setup, so the agent is found where your `PATH` puts it (npm,
-nvm, Volta). When the command's program is `wsl` or `wsl.exe`, SolidCraft gives the agent its
-working folder and the `solidcraft-app` server's program as WSL shows them (`C:\Users\…` becomes
+nvm, Volta). When the command's program is `wsl` or `wsl.exe`, Torno gives the agent its
+working folder and the `torno-app` server's program as WSL shows them (`C:\Users\…` becomes
 `/mnt/c/Users/…`). The server itself still runs on Windows and reaches the app at `127.0.0.1`, so
 this works with WSL's default networking. If you moved WSL's drive mounts away from `/mnt`
 (`automount.root` in `/etc/wsl.conf`), those paths won't match and the agent can't start the server.
@@ -416,9 +416,9 @@ Whatever you typed before signing in is sent once the agent is ready.
 
 ## What the agent can do
 
-The agent reaches the open design only through SolidCraft's own tools (the
-[MCP server](mcp.md)), which SolidCraft hands it when the chat starts. That server is named
-`solidcraft-app`, so an MCP server you set up yourself under the name `solidcraft` (as in
+The agent reaches the open design only through Torno's own tools (the
+[MCP server](mcp.md)), which Torno hands it when the chat starts. That server is named
+`torno-app`, so an MCP server you set up yourself under the name `torno` (as in
 [client configuration](mcp.md#client-configuration)) doesn't take its place:
 
 - **Read the design:** list commands, inspect features, sketches and parameters, measure,
@@ -472,7 +472,7 @@ The agent reaches the open design only through SolidCraft's own tools (the
 
 Preferences → AI → **Custom instructions** holds your own text for the agent: how you like to
 work, rules to keep to ("don't start a new design from the chat", "sketch on XZ with explicit
-plane vectors"). Every chat starts with it, after SolidCraft's own note about where the agent
+plane vectors"). Every chat starts with it, after Torno's own note about where the agent
 is, by the same route that note takes: the system prompt of an endpoint's requests, or the
 session an ACP agent opens. An agent that reads neither doesn't get it. A change applies from
 the next chat (**Connect** or **New chat**), not to the one running. Blank text adds nothing;
@@ -497,12 +497,12 @@ each agent can have its own setting in its row.
 **Always allow** remembers that command for that agent. The page lists what you allowed this way,
 per agent, with **Reset**.
 
-These settings cover SolidCraft's tools. A coding agent's own tools (its shell, its file edits)
+These settings cover Torno's tools. A coding agent's own tools (its shell, its file edits)
 follow the agent's own mode, which you pick in the panel's header. When an agent asks before
-using one of the chat's own SolidCraft tools and names it exactly as the Claude adapter does
-(`mcp__solidcraft-app__batch`), SolidCraft answers for you, since its own gate checks the call,
+using one of the chat's own Torno tools and names it exactly as the Claude adapter does
+(`mcp__torno-app__batch`), Torno answers for you, since its own gate checks the call,
 and notes it in the chat as *Auto-allowed*. Any other question appears in the panel, including
-a SolidCraft tool an agent words differently and a SolidCraft MCP server you added to the agent
+a Torno tool an agent words differently and a Torno MCP server you added to the agent
 yourself. With **Allow everything**, or after **Always allow**, those questions are answered the
 same way and noted too.
 
@@ -526,21 +526,21 @@ saves, opens or inserts. A sweep's or pattern's `path` (curve ids) and an occurr
   paths.
 - **Not the rest of the app.** It can't click the interface, change settings, quit, or drive the
   chat itself.
-- **Its own tools stay off where we can turn them off.** SolidCraft declares no file system and
+- **Its own tools stay off where we can turn them off.** Torno declares no file system and
   no terminal to the agent, runs it in an empty working folder of its own, and asks the Claude
   Code adapter to turn off its shell, file and web tools for the session.
 
-When the panel's agent is stopped, another agent is picked, or SolidCraft quits, the agent and
+When the panel's agent is stopped, another agent is picked, or Torno quits, the agent and
 every program it started (the CLI it wraps, its MCP server) are stopped.
 
 ## Privacy
 
-Nothing goes anywhere except to the agent you run, or the endpoint you added. SolidCraft starts
+Nothing goes anywhere except to the agent you run, or the endpoint you added. Torno starts
 a coding agent as a program on your computer and talks to it over its standard input and
 output. What the agent sends to its own service, under your account and that service's terms,
-is between you and that service, exactly as when you use the agent in a terminal. SolidCraft
+is between you and that service, exactly as when you use the agent in a terminal. Torno
 never sees, stores or passes on a coding agent's password, token or key. An endpoint's key is
-kept in the system keychain and sent only to that endpoint. SolidCraft's own connection to the
+kept in the system keychain and sent only to that endpoint. Torno's own connection to the
 agent's tools uses a random per-launch token in a file only you can read, which never passes
 through the agent.
 
@@ -550,7 +550,7 @@ A scripted test agent is in the source tree. It makes a block, rounds it and mea
 no model behind it:
 
 ```sh
-cargo build --release -p solidcraft-ui-egui --example acp_test_agent
+cargo build --release -p torno-ui-egui --example acp_test_agent
 ```
 
 Then add it under Preferences → AI → **Add agent… → Custom command** with the path of
@@ -559,15 +559,15 @@ or "ask" to see the agent ask its own permission.
 
 ## Benchmarking the Assistant
 
-`solidcraft-cli bench-assistant` runs the eleven tasks of the
+`torno-cli bench-assistant` runs the eleven tasks of the
 [standard model test (v1, #4851)](https://github.com/tangency-labs/solidcraft/issues/4851) against a
 desktop app that is already running with a control port, and checks each result on the design
-itself. Use it to see how well a local model drives SolidCraft before you post its results.
+itself. Use it to see how well a local model drives Torno before you post its results.
 
 ```sh
-solidcraft --control 9271
+torno --control 9271
 # In another terminal:
-solidcraft-cli bench-assistant --connect 127.0.0.1:9271 \
+torno-cli bench-assistant --connect 127.0.0.1:9271 \
   --base-url http://localhost:11434/v1 --model qwen2.5:7b \
   --json results.json --markdown results.md
 ```
@@ -578,7 +578,7 @@ sends the prompt once, and waits for the turn to end. It runs only the setup the
 (the box some tasks start from) and does none of the modelling itself. When it finishes it stops
 the agent and puts your permission setting back.
 
-- The control token comes from `--token`, `SOLIDCRAFT_CONTROL_TOKEN`, or the app's
+- The control token comes from `--token`, `TORNO_CONTROL_TOKEN`, or the app's
   [token file](control-protocol.md#token), in that order.
 - `--tasks 1,2,5` runs only those tasks, `--repeat N` runs the test N times, and `--timeout-s`
   (default 300) is each turn's deadline; a turn that runs past it is stopped and fails as "timeout".

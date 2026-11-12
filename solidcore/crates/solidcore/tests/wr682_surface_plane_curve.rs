@@ -1,4 +1,4 @@
-//! WR-682 (the SolidCraft fork's tangency-labs/smlib@5bdcddf, 14a6daa and 4c6571b; on every
+//! WR-682 (the Torno fork's tangency-labs/smlib@5bdcddf, 14a6daa and 4c6571b; on every
 //! kernel since its flag, `fillet_surface_plane_curve_on_plane_equation`, was retired: WR-682
 //! addendum 2026-11-07): `sm_SrfSrfIntersection` traces the
 //! curve of a surface and a plane between two points on both on the plane's equation, so

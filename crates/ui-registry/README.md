@@ -1,4 +1,4 @@
-# solidcraft-ui-registry
+# torno-ui-registry
 
 The widget registry: UI components name what they draw and record where it was drawn this
 frame, so UI tests, scenarios and the control channel can find a widget by name instead of by

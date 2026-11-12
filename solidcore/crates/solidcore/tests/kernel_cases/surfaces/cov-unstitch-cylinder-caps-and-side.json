@@ -50,8 +50,8 @@
   "ungraded": [],
   "what": "a cylinder r 5, 10 high, unstitched: the side and the two caps, each a surface body",
   "why_not": [
-    "body \"Body1\" is no kernel operation's output nor an operand: SolidCraft built it or changed the kernel's record",
-    "body \"Body2\" is no kernel operation's output nor an operand: SolidCraft built it or changed the kernel's record",
-    "body \"Body3\" is no kernel operation's output nor an operand: SolidCraft built it or changed the kernel's record"
+    "body \"Body1\" is no kernel operation's output nor an operand: Torno built it or changed the kernel's record",
+    "body \"Body2\" is no kernel operation's output nor an operand: Torno built it or changed the kernel's record",
+    "body \"Body3\" is no kernel operation's output nor an operand: Torno built it or changed the kernel's record"
   ]
 }

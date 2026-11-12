@@ -54,6 +54,6 @@
   "ungraded": [],
   "what": "the four rounds of a block's top edges (r2, sharp vertical edges) deleted, so the planar top and sides extend to close the gap: refused ('only planar neighbours can extend to close the gap yet')",
   "why_not": [
-    "body \"Block\" is no kernel operation's output nor an operand: SolidCraft built it or changed the kernel's record"
+    "body \"Block\" is no kernel operation's output nor an operand: Torno built it or changed the kernel's record"
   ]
 }

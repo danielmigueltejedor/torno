@@ -21,7 +21,7 @@
 //! `Kernel::fixes.revolve_nested_shells_as_cavities`): after a full turn's
 //! stitch, a closed shell inside another becomes that solid's cavity.
 //! Not upstream (WR-448, tangency-labs/solidcore#545, opt-in
-//! `Kernel::fixes.revolve_analytic_profile_faces`; SolidCraft change, tangency-labs/smlib
+//! `Kernel::fixes.revolve_analytic_profile_faces`; Torno change, tangency-labs/smlib
 //! 0b143f7): upstream makes analytic faces only for a one-curve profile. With the fix
 //! a whole turn gives each other curve its cylinder, cone, sphere or torus
 //! ([`analytic_revolution`]) before falling back to the `SmSurfOfRevolution`, and a
@@ -31,12 +31,12 @@
 //! goes through the same per-curve rule, so a whole circle's torus has its seam at the
 //! profile (#1491).
 //! Not upstream (WR-590, opt-in `Kernel::fixes.revolve_splits_curves_on_axis`;
-//! SolidCraft change, tangency-labs/smlib e4f1377): a partial turn first splits each
+//! Torno change, tangency-labs/smlib e4f1377): a partial turn first splits each
 //! curve where it meets the axis inside itself ([`split_curves_on_axis`], the fork's
 //! `sm_SplitCurvesOnAxis`), which `CheckCurveSweep` otherwise refuses
 //! (`SM_SC_ROT_ON_CURVE`); a closed curve's last piece is joined back onto its first.
 //! **Statuses pass on** (opt-in `Kernel::fixes.sweep_statuses_pass_on`, WR-662;
-//! SolidCraft change, tangency-labs/smlib c8f6a31): the statuses upstream drops here
+//! Torno change, tangency-labs/smlib c8f6a31): the statuses upstream drops here
 //! are returned instead (`SER`).
 
 use super::{construct::target, geometry::bspline, PrimitiveAccess};
@@ -250,7 +250,7 @@ fn targets(
     }
 }
 /// Not upstream (WR-409, tangency-labs/solidcore#1113, opt-in
-/// `Kernel::fixes.sheet_sweep_joins_profile_wires`; the SolidCraft fork's
+/// `Kernel::fixes.sheet_sweep_joins_profile_wires`; the Torno fork's
 /// `sm_CreateJoinedWireEdges`): the profile's wire edges `edges`, in the curves' order,
 /// joined where they meet. An end within the B-rep's tolerance of an earlier wire's end
 /// is glued to that earlier vertex (`GlueVertices`), so two curves meeting at a point

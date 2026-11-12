@@ -1,6 +1,6 @@
-//! tangency-labs/solidcore#2656: the blend regressions SolidCraft's pin bump found
+//! tangency-labs/solidcore#2656: the blend regressions Torno's pin bump found
 //! (tangency-labs/solidcraft#11875, 8ddce9016 to 5d2635d36), on
-//! the blend corner (WR-697), with SolidCraft's fix set at that pin.
+//! the blend corner (WR-697), with Torno's fix set at that pin.
 //!
 //! **#2364 (smlib#124's End at a smooth vertex).** A blended edge that runs on tangentially
 //! into an edge of its convexity that is not blended was capped there: the blend cut by the
@@ -15,13 +15,13 @@
 //! adds a face (ladder 012: 9 faces, 47770.945948; 1207: 9 faces, 7957.723438) or builds a
 //! capped body where the run-on is refused (the curvature rounds).
 //!
-//! **#2369 (the setback corner).** The corner of SolidCraft's
+//! **#2369 (the setback corner).** The corner of Torno's
 //! report-fillet-curvature-three-edges-at-bar-corner-solver-residues-outside-setback builds
-//! on main with SolidCraft's calls, and the cut outside its setback is the closed form.
+//! on main with Torno's calls, and the cut outside its setback is the closed form.
 //!
-//! The cases are SolidCraft's (the kernel rig's entries in `tests/kernel_cases/`, its
-//! ladder recipes and its tests), driven as SolidCraft's `blend_edges` and `fillet_variable`
-//! drive the session. The values are closed forms (SolidCraft's `expected.json`) where the
+//! The cases are Torno's (the kernel rig's entries in `tests/kernel_cases/`, its
+//! ladder recipes and its tests), driven as Torno's `blend_edges` and `fillet_variable`
+//! drive the session. The values are closed forms (Torno's `expected.json`) where the
 //! case has one.
 #![allow(
     clippy::unwrap_used,
@@ -58,9 +58,9 @@ use solidcore::topology::{edge, Brep, EdgeId};
 use solidcore::Kernel;
 use std::f64::consts::FRAC_PI_4;
 
-/// SolidCraft's fixes at the 5d2635d36 pin: the corpus's `fixes.json` and the bump's other fixes
+/// Torno's fixes at the 5d2635d36 pin: the corpus's `fixes.json` and the bump's other fixes
 /// (tangency-labs/solidcraft#11875).
-fn solidcraft_kernel() -> Kernel {
+fn torno_kernel() -> Kernel {
     let names: Vec<String> = serde_json::from_str(include_str!("kernel_cases/fixes.json")).unwrap();
     let mut f = UpstreamFixes::default();
     for name in names.iter().map(String::as_str).chain([
@@ -89,7 +89,7 @@ fn volume(k: &Kernel, b: &mut Brep) -> f64 {
     brep_volume(k, b, 1e-8, &attrs).unwrap()
 }
 
-/// The edge nearest `p` (SolidCraft's pick: within its tolerance).
+/// The edge nearest `p` (Torno's pick: within its tolerance).
 fn pick(k: &Kernel, b: &Brep, p: [f64; 3]) -> EdgeId {
     let q = Point3::new(p[0], p[1], p[2]);
     let mut best = (f64::INFINITY, None);
@@ -113,7 +113,7 @@ enum Kind {
 /// The refusal's error code and comment.
 type Refused = (i32, String);
 
-/// SolidCraft's `blend_edges` (one call, no setbacks): the edges at `at` blended `size`,
+/// Torno's `blend_edges` (one call, no setbacks): the edges at `at` blended `size`,
 /// the corners made, filleted, stitched.
 fn blend(
     k: &mut Kernel,
@@ -155,7 +155,7 @@ fn blend(
     Ok(())
 }
 
-/// SolidCraft's `fillet_variable` (its `law_along`): the edge at `at` rounded by the
+/// Torno's `fillet_variable` (its `law_along`): the edge at `at` rounded by the
 /// linear law from `r0` at the end nearest `start` to `r1`, a degree-1 B-spline law.
 fn variable(k: &mut Kernel, b: &mut Brep, at: [f64; 3], start: [f64; 3], r0: f64, r1: f64) {
     let e = pick(k, b, at);
@@ -243,12 +243,12 @@ fn read_smb(k: &mut Kernel, bytes: &[u8]) -> Brep {
 /// Ladder 07-fillets/012-variable-into-rounded-corner: the 60 x 40 x
 /// 20 box's upright (60, 40) rounded r5, then the top back edge by the linear law r1 (x = 0)
 /// to r5 (x = 55), which at x = 55 runs on tangentially into the upright round's top arc and
-/// on into its quarter column until it leaves the part. SolidCraft's closed form: V = 48000 -
+/// on into its quarter column until it leaves the part. Torno's closed form: V = 48000 -
 /// 121.753137 - 107.300918 - 15.820019 = 47755.125926 (to 1e-6 there), 8 faces, 18 edges,
 /// 12 vertices. Capped (#2364): 9 faces, 47770.945948.
 #[test]
 fn ladder_012_variable_round_runs_on_into_the_upright_round() {
-    let mut k = solidcraft_kernel();
+    let mut k = torno_kernel();
     let mut b = boxed(&mut k, 60.0, 40.0, 20.0);
     blend(&mut k, &mut b, Kind::Round, &[[60.0, 40.0, 10.0]], 5.0).unwrap();
     variable(
@@ -268,11 +268,11 @@ fn ladder_012_variable_round_runs_on_into_the_upright_round() {
 /// the box's top back edge r5, the top right edge r3 alone (it runs
 /// on at y = 35 into the r5 round's end arc), then the upright (60, 40) r2 with its tangent
 /// chain, up the arc and along the seam. The case's invariants: 11 faces, one valid body;
-/// SolidCraft's golden (8ddce9016): 24 edges, 15 vertices, 47589.770467. Capped (#2364):
+/// Torno's golden (8ddce9016): 24 edges, 15 vertices, 47589.770467. Capped (#2364):
 /// 25 edges, 16 vertices, 47591.482.
 #[test]
 fn ladder_021_round_runs_on_into_the_earlier_round() {
-    let mut k = solidcraft_kernel();
+    let mut k = torno_kernel();
     let mut b = boxed(&mut k, 60.0, 40.0, 20.0);
     blend(&mut k, &mut b, Kind::Round, &[[30.0, 40.0, 20.0]], 5.0).unwrap();
     blend(&mut k, &mut b, Kind::Round, &[[60.0, 20.0, 20.0]], 3.0).unwrap();
@@ -289,15 +289,15 @@ fn ladder_021_round_runs_on_into_the_earlier_round() {
     assert_rel(v, 47_589.770_467, 1e-8, "021");
 }
 
-/// fillets/1207-fillet-box-end-edge-into-unblended-round-partial-chain, also SolidCraft's
+/// fillets/1207-fillet-box-end-edge-into-unblended-round-partial-chain, also Torno's
 /// `smooth_edges_and_unfinished_tangent_chains_are_refused_saying_why`: the cube 20's top back
 /// edge r3, then the end face's top edge r1 alone, which at y = 17 runs on into the r3 round's
-/// end arc and through the round until it leaves the part at y = 17 + sqrt 5. SolidCraft's
+/// end arc and through the round until it leaves the part at y = 17 + sqrt 5. Torno's
 /// closed form 8000 - 38.628316 - 3.648231 - 0.218236 = 7957.505202, 8 faces. Capped (#2364):
 /// 9 faces, 7957.723438.
 #[test]
 fn rig_1207_round_runs_on_past_the_end_arc() {
-    let mut k = solidcraft_kernel();
+    let mut k = torno_kernel();
     let mut b = boxed(&mut k, 20.0, 20.0, 20.0);
     blend(&mut k, &mut b, Kind::Round, &[[10.0, 20.0, 20.0]], 3.0).unwrap();
     blend(&mut k, &mut b, Kind::Round, &[[0.0, 8.5, 20.0]], 1.0).unwrap();
@@ -306,12 +306,12 @@ fn rig_1207_round_runs_on_past_the_end_arc() {
     assert_rel(v, 7_957.505_202, 1e-8, "1207");
 }
 
-/// SolidCraft's `ops::tests::fillet_takes_exactly_the_picked_edges`:
+/// Torno's `ops::tests::fillet_takes_exactly_the_picked_edges`:
 /// the cube 20's upright (20, 20) rounded r5, then one straight edge of the top rim (now
 /// line, arc, line) r1: one face more (8), the round run on into the upright round's top arc.
 #[test]
 fn rim_edge_runs_on_into_the_upright_round() {
-    let mut k = solidcraft_kernel();
+    let mut k = torno_kernel();
     let mut b = boxed(&mut k, 20.0, 20.0, 20.0);
     blend(&mut k, &mut b, Kind::Round, &[[20.0, 20.0, 10.0]], 5.0).unwrap();
     blend(&mut k, &mut b, Kind::Round, &[[7.5, 20.0, 20.0]], 1.0).unwrap();
@@ -319,14 +319,14 @@ fn rim_edge_runs_on_into_the_upright_round() {
     assert_eq!(faces, 8);
 }
 
-/// SolidCraft's `robustness::fillet_into_an_earlier_round`: the 60 x
+/// Torno's `robustness::fillet_into_an_earlier_round`: the 60 x
 /// 40 x 15 box's top front edge r2, then the front right upright r2 or r3 alone, which runs
 /// on into the first round's end arc: each takes off about what it would alone, 36000 - (1 -
-/// pi/4) (4 * 60 + r^2 * 15), within SolidCraft's 2, with one face more.
+/// pi/4) (4 * 60 + r^2 * 15), within Torno's 2, with one face more.
 #[test]
 fn upright_runs_on_into_the_earlier_round() {
     for r in [2.0, 3.0] {
-        let mut k = solidcraft_kernel();
+        let mut k = torno_kernel();
         let mut b = boxed(&mut k, 60.0, 40.0, 15.0);
         blend(&mut k, &mut b, Kind::Round, &[[30.0, 0.0, 15.0]], 2.0).unwrap();
         blend(&mut k, &mut b, Kind::Round, &[[60.0, 0.0, 7.0]], r).unwrap();
@@ -337,19 +337,19 @@ fn upright_runs_on_into_the_earlier_round() {
     }
 }
 
-/// fillets/5158 and fillets/1080 in SolidCraft's two passes (its `overflow_first`: the rounds
+/// fillets/5158 and fillets/1080 in Torno's two passes (its `overflow_first`: the rounds
 /// that overflow first, then the others), with no faces handed over as the first pass's
-/// (`add_earlier_pass_face`, which SolidCraft does not call). The
+/// (`add_earlier_pass_face`, which Torno does not call). The
 /// second rounds run on into the first ones' end arcs as before smlib#124: the plate 8
-/// faces, SolidCraft's closed form 1681.903758348 (to 1e-5 there); the notched block 13
+/// faces, Torno's closed form 1681.903758348 (to 1e-5 there); the notched block 13
 /// faces, 10198.718249 (the fork's two passes, 9822462; its closed form 10198.718039, 2.1e-8
 /// off). Capped (#2364): 10 and 15 faces.
 #[test]
 fn second_pass_runs_on_into_the_first_without_its_faces() {
-    let mut k = solidcraft_kernel();
+    let mut k = torno_kernel();
     let mut b = read_smb(
         &mut k,
-        include_bytes!("data/issue_2364_solidcraft_5158_plate.smb"),
+        include_bytes!("data/issue_2364_torno_5158_plate.smb"),
     );
     blend(&mut k, &mut b, Kind::Round, &[[-15.0, 0.0, 2.0]], 2.0).unwrap();
     blend(&mut k, &mut b, Kind::Round, &[[0.0, 15.5, 2.0]], 2.0).unwrap();
@@ -357,10 +357,10 @@ fn second_pass_runs_on_into_the_first_without_its_faces() {
     assert_eq!(faces, 8, "5158");
     assert_rel(v, 1_681.903_758_348, 1e-8, "5158");
 
-    let mut k = solidcraft_kernel();
+    let mut k = torno_kernel();
     let mut b = read_smb(
         &mut k,
-        include_bytes!("data/issue_2364_solidcraft_1080_notched_block.smb"),
+        include_bytes!("data/issue_2364_torno_1080_notched_block.smb"),
     );
     let first = [[20.0, 0.0, 10.0], [40.0, 15.0, 10.0]];
     blend(&mut k, &mut b, Kind::Round, &first, 8.0).unwrap();
@@ -380,7 +380,7 @@ fn second_pass_runs_on_into_the_first_without_its_faces() {
 /// is wanted.
 #[test]
 fn curvature_side_round_running_on_into_the_front_round_is_not_capped() {
-    let mut k = solidcraft_kernel();
+    let mut k = torno_kernel();
     let mut b = boxed(&mut k, 40.0, 30.0, 20.0);
     blend(&mut k, &mut b, Kind::Curvature, &[[20.0, 0.0, 20.0]], 3.0).unwrap();
     let r = blend(&mut k, &mut b, Kind::Curvature, &[[40.0, 16.5, 20.0]], 3.0);
@@ -388,15 +388,15 @@ fn curvature_side_round_running_on_into_the_front_round_is_not_capped() {
 }
 
 /// fillets/report-fillet-curvature-three-edges-at-bar-corner-solver-residues-outside-setback
-/// (#2369) with SolidCraft's calls: the residues bar's three edges at
+/// (#2369) with Torno's calls: the residues bar's three edges at
 /// its top corner rounded curvature-continuous 2, the vertex set back
 /// (`add_set_back_vertex`), its corner (the Setback) set back 3 (`set_corner_setback`, the
 /// G2 corner's default 1.5 r) with its patches marked; then the cube [-1, 3]^2 x [7, 11]
 /// about the corner cut away, which takes the whole patch (the rails end at sqrt(3^2 + 2^2)
-/// from the corner). SolidCraft's closed form 9526.705048390, 13 faces.
+/// from the corner). Torno's closed form 9526.705048390, 13 faces.
 #[test]
-fn outside_setback_with_solidcraft_s_calls_is_the_closed_form() {
-    let mut k = solidcraft_kernel();
+fn outside_setback_with_torno_s_calls_is_the_closed_form() {
+    let mut k = torno_kernel();
     let mut b = read_smb(
         &mut k,
         include_bytes!("data/issue_2369_g2_bar_corner_residues.smb"),
@@ -497,7 +497,7 @@ const ARC_PIECES: [([f64; 3], [f64; 3]); 2] = [
 /// each piece reaches one end of it, not the other.
 #[test]
 fn block_cylinder_is_the_closed_form() {
-    let mut k = solidcraft_kernel();
+    let mut k = torno_kernel();
     let mut b = block_cylinder(&mut k);
     let (_, v) = measured(&mut k, &mut b);
     assert_rel(v, 12_000.0 + 2_250.0 * std::f64::consts::PI, 1e-9, "part");
@@ -527,7 +527,7 @@ fn block_cylinder_is_the_closed_form() {
 /// #453's construction.
 #[test]
 fn block_cylinder_arc_piece_is_refused_at_the_seam() {
-    let mut k = solidcraft_kernel();
+    let mut k = torno_kernel();
     for &(at_pick, _) in &ARC_PIECES {
         let mut b = block_cylinder(&mut k);
         let r = blend(&mut k, &mut b, Kind::Round, &[at_pick], 2.0);
@@ -541,7 +541,7 @@ fn block_cylinder_arc_piece_is_refused_at_the_seam() {
 /// V = 12000 + 2250 pi + 23.378532906443 = 19091.962003483477 (the rig case's `method`).
 #[test]
 fn block_cylinder_both_pieces_round_the_half_circle() {
-    let mut k = solidcraft_kernel();
+    let mut k = torno_kernel();
     let mut b = block_cylinder(&mut k);
     let picks = ARC_PIECES.map(|(p, _)| p);
     blend(&mut k, &mut b, Kind::Round, &picks, 2.0).unwrap();
@@ -607,7 +607,7 @@ fn a_tangent_field_edge_at_the_smooth_vertex_keeps_the_cap() {
     use solidcore::curve::tangent_field::{TangentDirType, TangentFieldCurve};
     use solidcore::surface::surface::SurfaceKind;
     use solidcore::topology::edgeuse::p1 as eu1;
-    let mut k = solidcraft_kernel();
+    let mut k = torno_kernel();
     let mut b = boxed(&mut k, 20.0, 20.0, 20.0);
     blend(&mut k, &mut b, Kind::Round, &[[10.0, 20.0, 20.0]], 3.0).unwrap();
     // the r3 round's end arc on x = 0, from (0, 17, 20) to (0, 20, 17)
@@ -681,7 +681,7 @@ fn a_cancel_during_the_run_on_check_comes_back() {
     use solidcore::blend::blend_corner::end::end_at_smooth_vertex;
     use solidcore::topology::vertex;
     use solidcore::{CancelToken, SolidError};
-    let mut k = solidcraft_kernel();
+    let mut k = torno_kernel();
     let mut b = boxed(&mut k, 20.0, 20.0, 20.0);
     blend(&mut k, &mut b, Kind::Round, &[[10.0, 20.0, 20.0]], 3.0).unwrap();
     let v = b

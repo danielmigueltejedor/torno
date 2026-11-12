@@ -19,11 +19,11 @@
 //! written as one, and a piece ending within 10 nanometres of where the path is goes straight on
 //! to the next.
 
-use solidcraft_geom::prelude::*;
 use std::fmt::Write;
+use torno_geom::prelude::*;
 
 use solidcore_record::{Region2, Seg2, Vec2};
-use solidcraft_geom::paper::{Item, Prepared, arc_pieces};
+use torno_geom::paper::{Item, Prepared, arc_pieces};
 
 use crate::{IoError, MAX_DRAWING_BYTES, Result};
 

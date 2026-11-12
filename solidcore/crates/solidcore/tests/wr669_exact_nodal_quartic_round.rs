@@ -1,4 +1,4 @@
-//! WR-669 (`fixes.fillet_exact_round_classes`), the SolidCraft fork's tangency-labs/smlib@dda3b5d:
+//! WR-669 (`fixes.fillet_exact_round_classes`), the Torno fork's tangency-labs/smlib@dda3b5d:
 //! a round between two faces touching at one point the same way round is exact on the nodal
 //! quartic their offsets meet in, where upstream (and the flag before that commit) traces it.
 //!

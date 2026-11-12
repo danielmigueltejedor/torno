@@ -1,14 +1,14 @@
 //! Frame members (#4003): one body per straight line of a frame sketch, its cross-section a
 //! profile laid square to the line (`frame::member_axes`) and run from one end to the other.
 
-use solidcraft_geom::prelude::*;
 use std::borrow::Cow;
 use std::collections::{BTreeMap, HashSet};
+use torno_geom::prelude::*;
 
 use solidcore_record::{Plane, Region2, Vec2, Vec3};
-use solidcraft_geom::{Aabb2, Ring};
-use solidcraft_kernel as kernel;
-use solidcraft_sketch::CurveKind;
+use torno_geom::{Aabb2, Ring};
+use torno_kernel as kernel;
+use torno_sketch::CurveKind;
 
 use super::{ModelBody, ModelState, SolvedSketch, new_name, path_in_frame, select_profiles, sketch_in_feature_frame, val};
 use crate::expr::{Kind, Value};
@@ -241,7 +241,7 @@ fn profile_regions(vals: &BTreeMap<String, Value>, st: &ModelState, profile: &Me
                 ProfileSel::All => material(ss)?,
                 sel => select_profiles(ss, sel)?,
             };
-            (solidcraft_sketch::merge_regions(&picked), ss.name.clone())
+            (torno_sketch::merge_regions(&picked), ss.name.clone())
         }
     };
     match regions.len() {
@@ -256,8 +256,8 @@ fn profile_regions(vals: &BTreeMap<String, Value>, st: &ModelState, profile: &Me
 /// their counters filled in), each profile inside an even number of other profiles' outlines,
 /// so nested loops alternate between material and hole.
 fn material(ss: &SolvedSketch) -> Result<Vec<Region2>> {
-    let drawn = solidcraft_sketch::find_drawn_profiles(&ss.sketch);
-    let ps = solidcraft_sketch::without_text_counters(&ss.sketch, if drawn.is_empty() { ss.profiles.clone() } else { drawn });
+    let drawn = torno_sketch::find_drawn_profiles(&ss.sketch);
+    let ps = torno_sketch::without_text_counters(&ss.sketch, if drawn.is_empty() { ss.profiles.clone() } else { drawn });
     if ps.is_empty() {
         return Err(DocError::Invalid(format!("{} has no closed profiles", ss.name)));
     }

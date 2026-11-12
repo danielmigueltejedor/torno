@@ -7,7 +7,7 @@ version.workspace = true
 publish = false
 
 # solidcore's hard rules (no unsafe, no unwrap/expect/panic, no unchecked indexing), with the
-# style lints the reader was written under in SolidCraft: the workspace's pedantic set is not on
+# style lints the reader was written under in Torno: the workspace's pedantic set is not on
 # yet, and `!(x > tol)` stays the NaN-refusing idiom.
 [lints.rust]
 unsafe_code = "forbid"

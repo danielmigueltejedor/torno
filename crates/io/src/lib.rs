@@ -58,16 +58,16 @@ pub use threemf::{
 pub use urdf::{UrdfOptions, UrdfPackage, urdf};
 
 use solidcore_record::Vec3;
-use solidcraft_doc::{Document, Metadata, ModelState};
-use solidcraft_geom::prelude::*;
-use solidcraft_geom::{MassProperties, Mesh};
+use torno_doc::{Document, Metadata, ModelState};
+use torno_geom::prelude::*;
+use torno_geom::{MassProperties, Mesh};
 
 /// Design file extension: new designs, autosaves and recovery files are written as `.sc`.
 pub const DESIGN_EXT: &str = "sc";
 /// The design extensions of earlier releases, newest first. Compatibility shim
 /// (docs/compatibility.md): such files still open everywhere a design opens, and Save keeps
 /// writing an opened file under its own name; new designs are saved as [`DESIGN_EXT`].
-pub const LEGACY_DESIGN_EXTS: [&str; 2] = ["solidcraft", "solvecraft"];
+pub const LEGACY_DESIGN_EXTS: [&str; 2] = ["torno", "solvecraft"];
 /// Every extension a design file may have, current first.
 pub const DESIGN_EXTS: [&str; 3] = [DESIGN_EXT, LEGACY_DESIGN_EXTS[0], LEGACY_DESIGN_EXTS[1]];
 
@@ -105,9 +105,9 @@ pub enum IoError {
     #[error("{0}")]
     Invalid(String),
     #[error(transparent)]
-    Kernel(#[from] solidcraft_kernel::KernelError),
+    Kernel(#[from] torno_kernel::KernelError),
     #[error(transparent)]
-    Doc(#[from] solidcraft_doc::DocError),
+    Doc(#[from] torno_doc::DocError),
 }
 
 pub type Result<T> = std::result::Result<T, IoError>;
@@ -177,7 +177,7 @@ fn generic_name(n: &str) -> bool {
 
 /// The name an imported body gets under the `names` choice; the solid's name when the chosen
 /// one is missing or says nothing.
-fn body_name(b: &solidcraft_kernel::ImportedBody, names: StepNames) -> String {
+fn body_name(b: &torno_kernel::ImportedBody, names: StepNames) -> String {
     let usable = |n: &&String| !generic_name(n);
     let chosen = match names {
         StepNames::Auto if !generic_name(&b.name) => Some(&b.name),
@@ -193,13 +193,13 @@ fn body_name(b: &solidcraft_kernel::ImportedBody, names: StepNames) -> String {
 pub struct StepFeature {
     /// Timeline name: the root product's name, else the file name.
     pub name: String,
-    pub kind: solidcraft_doc::FeatureKind,
+    pub kind: torno_doc::FeatureKind,
     /// Body names from the file, as [`StepNames`] chose them (automatic by default).
     pub body_names: Vec<String>,
     pub warnings: Vec<String>,
     /// The file as read. Hold it until the feature has been evaluated: the timeline then reuses
     /// it instead of reading the file again (it is freed with the last holder).
-    pub import: std::sync::Arc<solidcraft_kernel::StepImport>,
+    pub import: std::sync::Arc<torno_kernel::StepImport>,
 }
 
 /// Bytes the encoding detector sees at most: the lines with 8-bit bytes, which in a STEP or IGES
@@ -239,7 +239,7 @@ pub fn step_import_feature(bytes: &[u8], file: &str) -> Result<StepFeature> {
 
 /// [`step_import_feature`], with the bodies named after `names`.
 pub fn step_import_feature_named(bytes: &[u8], file: &str, names: StepNames) -> Result<StepFeature> {
-    let _span = solidcraft_profile::span("import", "step_import_feature_named");
+    let _span = torno_profile::span("import", "step_import_feature_named");
     limits::check(limits::Kind::Step, bytes.len() as u64).map_err(IoError::Invalid)?;
     // STEP is 7-bit text with escapes; tolerate stray 8-bit bytes. IGES and the cadmpeg formats
     // are restated as STEP (the feature keeps that STEP text).
@@ -247,13 +247,13 @@ pub fn step_import_feature_named(bytes: &[u8], file: &str, names: StepNames) -> 
         native_cad_to_step(bytes, file).map_err(IoError::Invalid)?
     } else {
         let text = step_text(bytes);
-        if is_iges_path(file) { solidcraft_kernel::iges_to_step(&text).map_err(IoError::Invalid)? } else { (text, Vec::new()) }
+        if is_iges_path(file) { torno_kernel::iges_to_step(&text).map_err(IoError::Invalid)? } else { (text, Vec::new()) }
     };
     // The limit of a file being imported is the limit of its format, not the design file's
     // (#2721): the restated text is checked against the import limit, and the design file
     // limit applies to the design that is saved, which refuses it there.
     design::check_step_importable(&text)?;
-    let imp = solidcraft_kernel::step_import_shared(&text)?;
+    let imp = torno_kernel::step_import_shared(&text)?;
     let stem = std::path::Path::new(file)
         .file_stem()
         .map(|s| s.to_string_lossy().to_string())
@@ -270,7 +270,7 @@ pub fn step_import_feature_named(bytes: &[u8], file: &str, names: StepNames) -> 
     Ok(StepFeature {
         name,
         body_names,
-        kind: solidcraft_doc::FeatureKind::Import { file: file_name, step: text.into(), components: imp.tree.clone(), skip: Vec::new() },
+        kind: torno_doc::FeatureKind::Import { file: file_name, step: text.into(), components: imp.tree.clone(), skip: Vec::new() },
         warnings: iges_warnings.into_iter().chain(imp.warnings.iter().cloned()).collect(),
         import: imp,
     })
@@ -288,7 +288,7 @@ pub fn is_mesh_path(path: &str) -> bool {
 pub struct MeshFeature {
     /// Timeline name: the only mesh's name, else the file name.
     pub name: String,
-    pub kind: solidcraft_doc::FeatureKind,
+    pub kind: torno_doc::FeatureKind,
     pub body_names: Vec<String>,
     pub warnings: Vec<String>,
 }
@@ -305,7 +305,7 @@ pub fn mesh_import_feature(bytes: &[u8], file: &str) -> Result<MeshFeature> {
 /// keeps the millimetre mesh and nothing of the unit. Only STL, OBJ and PLY files take a unit
 /// other than millimetres; a 3MF or glTF file says its own.
 pub fn mesh_import_feature_in(bytes: &[u8], file: &str, mm_per_unit: f64) -> Result<MeshFeature> {
-    let _span = solidcraft_profile::span("import", "mesh_import_feature");
+    let _span = torno_profile::span("import", "mesh_import_feature");
     if !mm_per_unit.is_finite() || mm_per_unit <= 0.0 {
         return Err(IoError::Invalid("the unit must be a positive number of millimetres".into()));
     }
@@ -347,7 +347,7 @@ pub fn mesh_import_feature_in(bytes: &[u8], file: &str, mm_per_unit: f64) -> Res
         read_3mf(bytes)?
     };
     if mm_per_unit != 1.0 {
-        let limit = solidcraft_doc::point_cloud::MAX_COORD;
+        let limit = torno_doc::point_cloud::MAX_COORD;
         for o in &mut objects {
             for p in &mut o.positions {
                 *p = *p * mm_per_unit;
@@ -360,9 +360,9 @@ pub fn mesh_import_feature_in(bytes: &[u8], file: &str, mm_per_unit: f64) -> Res
     // Check every mesh now, so the command fails rather than the timeline.
     let mut meshes = Vec::with_capacity(objects.len());
     for o in &objects {
-        solidcraft_kernel::mesh_body_with_normals(&o.positions, &o.triangles, &o.corner_normals)
+        torno_kernel::mesh_body_with_normals(&o.positions, &o.triangles, &o.corner_normals)
             .map_err(|e| IoError::Invalid(format!("mesh `{}`: {e}", o.name)))?;
-        meshes.push(solidcraft_doc::MeshData {
+        meshes.push(torno_doc::MeshData {
             name: o.name.clone(),
             positions: o.positions.iter().flat_map(|p| [p.x, p.y, p.z]).collect(),
             triangles: o.triangles.iter().flatten().copied().collect(),
@@ -378,7 +378,7 @@ pub fn mesh_import_feature_in(bytes: &[u8], file: &str, mm_per_unit: f64) -> Res
     Ok(MeshFeature {
         name,
         body_names: objects.iter().map(|o| o.name.clone()).collect(),
-        kind: solidcraft_doc::FeatureKind::MeshImport { file: file_name, meshes },
+        kind: torno_doc::FeatureKind::MeshImport { file: file_name, meshes },
         warnings,
     })
 }
@@ -454,17 +454,17 @@ impl MeshQuality {
 }
 
 /// Fine export mesh for a body (chord tolerance 2e-4 of its size).
-pub fn export_mesh(b: &solidcraft_kernel::Body) -> Result<Mesh> {
+pub fn export_mesh(b: &torno_kernel::Body) -> Result<Mesh> {
     export_mesh_at(b, MeshQuality::Standard)
 }
 
 /// [`export_mesh`] at `quality` (never finer than 1 µm).
-pub fn export_mesh_at(b: &solidcraft_kernel::Body, quality: MeshQuality) -> Result<Mesh> {
-    Ok(b.mesh(&solidcraft_kernel::MeshTolerance::chord((b.size() * quality.share()).max(1e-3)))?)
+pub fn export_mesh_at(b: &torno_kernel::Body, quality: MeshQuality) -> Result<Mesh> {
+    Ok(b.mesh(&torno_kernel::MeshTolerance::chord((b.size() * quality.share()).max(1e-3)))?)
 }
 
 /// Distance within which an exported mesh's vertices are welded (STL, 3MF and OBJ alike).
-fn weld_eps(b: &solidcraft_kernel::Body) -> f64 {
+fn weld_eps(b: &torno_kernel::Body) -> f64 {
     weld_distance(b.size())
 }
 
@@ -475,7 +475,7 @@ fn weld_distance(size: f64) -> f64 {
 
 /// Unit-density [`MassProperties`] of a body from its welded [`export_mesh`], the mesh URDF links
 /// take their inertia from; `None` when that mesh does not close (an open surface).
-pub fn mass_properties(b: &solidcraft_kernel::Body) -> Result<Option<MassProperties>> {
+pub fn mass_properties(b: &torno_kernel::Body) -> Result<Option<MassProperties>> {
     let m = export_mesh(b)?;
     let (positions, triangles) = weld(&m.positions, &m.triangles, weld_eps(b));
     Ok(Mesh { positions, triangles, ..Mesh::default() }.mass_properties())
@@ -485,7 +485,7 @@ pub fn mass_properties(b: &solidcraft_kernel::Body) -> Result<Option<MassPropert
 pub fn stl_binary(meshes: &[Mesh], name: &str) -> Vec<u8> {
     let n: usize = meshes.iter().map(|m| m.triangles.len()).sum();
     let mut out = Vec::with_capacity(84 + n * 50);
-    let mut header = format!("SolidCraft STL {name}").into_bytes();
+    let mut header = format!("Torno STL {name}").into_bytes();
     header.resize(80, b' ');
     out.extend_from_slice(&header);
     out.extend_from_slice(&u32::try_from(n).unwrap_or(u32::MAX).to_le_bytes());
@@ -566,11 +566,11 @@ pub fn obj(meshes: &[(String, Mesh)]) -> String {
 /// material name cannot hold replaced by an underscore.
 pub fn obj_files(bodies: &[ObjBody<'_>], mtl_name: &str) -> ObjFiles {
     let materials = material_names(bodies);
-    let mut obj = String::from("# SolidCraft OBJ export (mm)\n");
+    let mut obj = String::from("# Torno OBJ export (mm)\n");
     let mut mtl = String::new();
     if materials.iter().any(|m| m.is_some()) {
         obj += &format!("mtllib {mtl_name}\n");
-        mtl = String::from("# SolidCraft material library\n");
+        mtl = String::from("# Torno material library\n");
     }
     let (mut vbase, mut nbase) = (1usize, 1usize);
     for (i, b) in bodies.iter().enumerate() {
@@ -597,7 +597,7 @@ pub fn obj_files(bodies: &[ObjBody<'_>], mtl_name: &str) -> ObjFiles {
 fn mesh_text(mesh: &Mesh, vbase: usize, nbase: usize) -> (String, usize, usize) {
     use std::collections::HashMap;
     use std::fmt::Write as _;
-    let mut bounds = solidcraft_geom::Aabb3::EMPTY;
+    let mut bounds = torno_geom::Aabb3::EMPTY;
     for p in &mesh.positions {
         bounds.add(*p);
     }
@@ -704,8 +704,8 @@ fn kd(color: [f32; 3]) -> String {
 }
 
 /// The bodies of a model an export takes (all when `bodies` is empty).
-fn selected<'a>(state: &'a ModelState, bodies: &[String]) -> Result<Vec<&'a solidcraft_doc::ModelBody>> {
-    let sel: Vec<&solidcraft_doc::ModelBody> = state.bodies.iter().filter(|b| bodies.is_empty() || bodies.contains(&b.name)).collect();
+fn selected<'a>(state: &'a ModelState, bodies: &[String]) -> Result<Vec<&'a torno_doc::ModelBody>> {
+    let sel: Vec<&torno_doc::ModelBody> = state.bodies.iter().filter(|b| bodies.is_empty() || bodies.contains(&b.name)).collect();
     if sel.is_empty() {
         return Err(IoError::Empty);
     }
@@ -720,7 +720,7 @@ pub fn export_obj(state: &ModelState, bodies: &[String], mtl_name: &str, quality
 }
 
 /// The OBJ export of the given bodies: the mesh file and the material library beside it.
-fn obj_export(sel: &[&solidcraft_doc::ModelBody], mtl_name: &str, quality: MeshQuality) -> Result<ObjFiles> {
+fn obj_export(sel: &[&torno_doc::ModelBody], mtl_name: &str, quality: MeshQuality) -> Result<ObjFiles> {
     let meshes: Vec<Mesh> = per_body(sel, |b| export_mesh_at(&b.body, quality))?;
     let bodies: Vec<ObjBody<'_>> = sel.iter().zip(&meshes).map(|(b, mesh)| ObjBody { name: b.name.as_str(), mesh, color: b.body.color() }).collect();
     Ok(obj_files(&bodies, mtl_name))
@@ -733,8 +733,8 @@ pub fn export(state: &ModelState, bodies: &[String], format: Format, name: &str)
 
 /// The STEP or IGES header of an export named `file_name`: the design's author, organization
 /// and description (#1015).
-fn step_header(file_name: String, meta: &Metadata) -> solidcraft_kernel::StepHeader {
-    solidcraft_kernel::StepHeader {
+fn step_header(file_name: String, meta: &Metadata) -> torno_kernel::StepHeader {
+    torno_kernel::StepHeader {
         file_name,
         author: header_line(meta.author()),
         organization: header_line(meta.organization()),
@@ -777,7 +777,7 @@ pub fn export_with_quality(
     meta: &Metadata,
     quality: MeshQuality,
 ) -> Result<Vec<u8>> {
-    let _span = solidcraft_profile::span("io", "export_with_quality");
+    let _span = torno_profile::span("io", "export_with_quality");
     export_with_parts(state, bodies, &[], format, name, meta, quality, None)
 }
 
@@ -815,14 +815,14 @@ pub fn export_with_parts(
             obj(&meshes).into_bytes()
         }
         Format::Step => {
-            let bs: Vec<solidcraft_kernel::ExportBody> =
-                sel.iter().map(|b| solidcraft_kernel::ExportBody { name: b.name.clone(), body: &b.body, color: b.body.color() }).collect();
-            solidcraft_kernel::step_export_bodies(&bs, &step_header(format!("{name}.step"), meta))?.into_bytes()
+            let bs: Vec<torno_kernel::ExportBody> =
+                sel.iter().map(|b| torno_kernel::ExportBody { name: b.name.clone(), body: &b.body, color: b.body.color() }).collect();
+            torno_kernel::step_export_bodies(&bs, &step_header(format!("{name}.step"), meta))?.into_bytes()
         }
         Format::Iges => {
-            let bs: Vec<solidcraft_kernel::ExportBody> =
-                sel.iter().map(|b| solidcraft_kernel::ExportBody { name: b.name.clone(), body: &b.body, color: b.body.color() }).collect();
-            solidcraft_kernel::iges_export_bodies(&bs, &step_header(format!("{name}.igs"), meta))?.into_bytes()
+            let bs: Vec<torno_kernel::ExportBody> =
+                sel.iter().map(|b| torno_kernel::ExportBody { name: b.name.clone(), body: &b.body, color: b.body.color() }).collect();
+            torno_kernel::iges_export_bodies(&bs, &step_header(format!("{name}.igs"), meta))?.into_bytes()
         }
         Format::ThreeMf | Format::ThreeMfTagged => {
             let objs: Vec<MeshObject> = per_body(&sel, |b| mesh_object(b, format == Format::ThreeMfTagged, quality))?;
@@ -843,8 +843,8 @@ const EXPORT_THREADS: usize = 16;
 /// for byte, as made one body after the other; of several failing bodies the first one's error is
 /// the export's, as it was then. An assembly of many bodies meshed on one core took most of the
 /// export's time.
-fn per_body<R: Send>(sel: &[&solidcraft_doc::ModelBody], f: impl Fn(&solidcraft_doc::ModelBody) -> Result<R> + Sync) -> Result<Vec<R>> {
-    solidcraft_kernel::map_on_threads(sel, EXPORT_THREADS, |b| f(b))
+fn per_body<R: Send>(sel: &[&torno_doc::ModelBody], f: impl Fn(&torno_doc::ModelBody) -> Result<R> + Sync) -> Result<Vec<R>> {
+    torno_kernel::map_on_threads(sel, EXPORT_THREADS, |b| f(b))
         .into_iter()
         .zip(sel)
         .map(|(r, b)| r.unwrap_or_else(|| Err(IoError::Invalid(format!("body {}: meshing it failed", b.name)))))
@@ -853,7 +853,7 @@ fn per_body<R: Send>(sel: &[&solidcraft_doc::ModelBody], f: impl Fn(&solidcraft_
 
 /// A body as a 3MF mesh: welded watertight (T-junctions split), coloured, and with `tagged`
 /// each triangle keeps the B-rep face it came from.
-fn mesh_object(b: &solidcraft_doc::ModelBody, tagged: bool, quality: MeshQuality) -> Result<MeshObject> {
+fn mesh_object(b: &torno_doc::ModelBody, tagged: bool, quality: MeshQuality) -> Result<MeshObject> {
     let m = export_mesh_at(&b.body, quality)?;
     let eps = weld_eps(&b.body);
     // Faces with colours of their own tag their triangles.
@@ -900,8 +900,8 @@ fn mesh_object(b: &solidcraft_doc::ModelBody, tagged: bool, quality: MeshQuality
 /// part, built where the file placed it) is taken into its component's frame by that offset,
 /// as the world placement does, so the occurrences above it place it only once.
 pub fn step_assembly(doc: &Document, local: &ModelState, name: &str) -> Result<Vec<u8>> {
-    let _span = solidcraft_profile::span("io", "step_assembly");
-    use solidcraft_kernel::{ExportBody, ExportProduct};
+    let _span = torno_profile::span("io", "step_assembly");
+    use torno_kernel::{ExportBody, ExportProduct};
     let mut index: std::collections::HashMap<u64, usize> = std::collections::HashMap::new();
     index.insert(0, 0);
     let mut products = vec![ExportProduct { name: doc.name.clone(), bodies: Vec::new(), children: Vec::new() }];
@@ -909,11 +909,11 @@ pub fn step_assembly(doc: &Document, local: &ModelState, name: &str) -> Result<V
         index.insert(c.id, products.len());
         products.push(ExportProduct { name: c.name.clone(), bodies: Vec::new(), children: Vec::new() });
     }
-    let framed: Vec<Option<solidcraft_kernel::Body>> = local
+    let framed: Vec<Option<torno_kernel::Body>> = local
         .bodies
         .iter()
         .map(|b| match doc.model_body_offset(b) {
-            Some(offset) if !solidcraft_doc::is_identity(offset) => solidcraft_kernel::transform_matrix(&b.body, *offset).map(Some),
+            Some(offset) if !torno_doc::is_identity(offset) => torno_kernel::transform_matrix(&b.body, *offset).map(Some),
             _ => Ok(None),
         })
         .collect::<std::result::Result<_, _>>()?;
@@ -928,12 +928,12 @@ pub fn step_assembly(doc: &Document, local: &ModelState, name: &str) -> Result<V
             p.children.push((child, o.transform, o.name.clone()));
         }
     }
-    Ok(solidcraft_kernel::step_export_products(&products, 0, &step_header(format!("{name}.step"), &doc.metadata))?.into_bytes())
+    Ok(torno_kernel::step_export_products(&products, 0, &step_header(format!("{name}.step"), &doc.metadata))?.into_bytes())
 }
 
 /// Read a design file's bytes.
 pub fn read_design(bytes: &[u8]) -> Result<Document> {
-    let _span = solidcraft_profile::span("io", "read_design");
+    let _span = torno_profile::span("io", "read_design");
     limits::check(limits::Kind::Design, bytes.len() as u64).map_err(|e| IoError::Invalid(format!("design {e}")))?;
     if is_design_container(bytes) {
         return design::read(bytes);
@@ -941,13 +941,13 @@ pub fn read_design(bytes: &[u8]) -> Result<Document> {
     // Every DWG starts with its version (`AC1032`), whatever the file is called (#9328).
     if bytes.starts_with(b"AC1") {
         return Err(IoError::Invalid(
-            "this is a DWG file, which SolidCraft can't read: export the model as STEP and open that, or the drawing as DXF and use Insert DXF in a sketch".into(),
+            "this is a DWG file, which Torno can't read: export the model as STEP and open that, or the drawing as DXF and use Insert DXF in a sketch".into(),
         ));
     }
     let s = std::str::from_utf8(bytes).map_err(|_| IoError::Invalid("design file is not UTF-8 JSON".into()))?;
     // Only a file that isn't a design pays for asking whether it is a drawing.
     Document::from_json(s).map_err(|e| match file_kind(bytes) {
-        Ok(FileKind::Drawing) => IoError::Invalid("this file is a SolidCraft drawing, not a design: open it as a drawing".into()),
+        Ok(FileKind::Drawing) => IoError::Invalid("this file is a Torno drawing, not a design: open it as a drawing".into()),
         _ => e.into(),
     })
 }
@@ -1027,7 +1027,7 @@ pub const MAX_STL_TRIANGLES: usize = 20_000_000;
 mod tests {
     use super::*;
     use solidcore_record::Vec3;
-    use solidcraft_doc::{FeatureKind, Model, Operation, point_expr};
+    use torno_doc::{FeatureKind, Model, Operation, point_expr};
 
     fn model() -> (Document, Model) {
         let mut doc = Document::new("t");
@@ -1073,11 +1073,11 @@ mod tests {
 
     fn mesh_volume(bytes: &[u8]) -> f64 {
         let f = mesh_import_feature(bytes, "x.stl").unwrap();
-        let solidcraft_doc::FeatureKind::MeshImport { meshes, .. } = f.kind else { panic!() };
+        let torno_doc::FeatureKind::MeshImport { meshes, .. } = f.kind else { panic!() };
         let m = &meshes[0];
         let pos: Vec<Vec3> = m.positions.chunks(3).map(|c| Vec3::new(c[0], c[1], c[2])).collect();
         let tris: Vec<[u32; 3]> = m.triangles.chunks(3).map(|c| [c[0], c[1], c[2]]).collect();
-        solidcraft_kernel::measure(&solidcraft_kernel::mesh_body(&pos, &tris).unwrap()).unwrap().volume
+        torno_kernel::measure(&torno_kernel::mesh_body(&pos, &tris).unwrap()).unwrap().volume
     }
 
     /// A unit scales an STL's coordinates to millimetres once, as it is read (an inch cube of 10 is
@@ -1088,11 +1088,11 @@ mod tests {
         let stl = cube_stl(&[], b"solid exported by something", None, [0.0; 3]);
         let volume = |mm: f64| {
             let f = mesh_import_feature_in(&stl, "x.stl", mm).unwrap();
-            let solidcraft_doc::FeatureKind::MeshImport { meshes, .. } = f.kind else { panic!() };
+            let torno_doc::FeatureKind::MeshImport { meshes, .. } = f.kind else { panic!() };
             let m = &meshes[0];
             let pos: Vec<Vec3> = m.positions.chunks(3).map(|c| Vec3::new(c[0], c[1], c[2])).collect();
             let tris: Vec<[u32; 3]> = m.triangles.chunks(3).map(|c| [c[0], c[1], c[2]]).collect();
-            solidcraft_kernel::measure(&solidcraft_kernel::mesh_body(&pos, &tris).unwrap()).unwrap().volume
+            torno_kernel::measure(&torno_kernel::mesh_body(&pos, &tris).unwrap()).unwrap().volume
         };
         assert!((volume(1.0) - 1000.0).abs() < 1e-6);
         assert!((volume(25.4) - 1000.0 * 25.4f64.powi(3)).abs() < 1e-3 * 25.4f64.powi(3));
@@ -1127,9 +1127,9 @@ mod tests {
         let (a, b, c, d) = ([0.5, -3.75, 1.25], [7.0, 0.25, -2.5], [-1.5, 4.0, 0.125], [2.0, 2.0, 9.5]);
         let triangles = [[a, b, c], [a, c, d], [a, d, b], [b, d, c]];
         let stl = stl_of(&triangles);
-        for (unit, mm) in solidcraft_doc::point_cloud::UNITS {
+        for (unit, mm) in torno_doc::point_cloud::UNITS {
             let feature = mesh_import_feature_in(&stl, "t.stl", mm).unwrap();
-            let solidcraft_doc::FeatureKind::MeshImport { meshes, .. } = feature.kind else { panic!() };
+            let torno_doc::FeatureKind::MeshImport { meshes, .. } = feature.kind else { panic!() };
             let want: Vec<f64> = triangles.iter().flatten().flatten().map(|v| f64::from(*v) * mm).collect();
             assert_eq!(&*meshes[0].positions, want.as_slice(), "{unit}");
         }
@@ -1149,9 +1149,9 @@ mod tests {
             v.sort_by(f64::total_cmp);
             v
         };
-        for (unit, mm) in solidcraft_doc::point_cloud::UNITS {
+        for (unit, mm) in torno_doc::point_cloud::UNITS {
             let feature = mesh_import_feature_in(ply.as_bytes(), "t.ply", mm).unwrap();
-            let solidcraft_doc::FeatureKind::MeshImport { meshes, .. } = feature.kind else { panic!() };
+            let torno_doc::FeatureKind::MeshImport { meshes, .. } = feature.kind else { panic!() };
             let want: Vec<f64> = corners.iter().flatten().map(|v| f64::from(*v) * mm).collect();
             assert_eq!(sorted(meshes[0].positions.to_vec()), sorted(want), "{unit}");
         }
@@ -1261,7 +1261,7 @@ mod tests {
         };
         let x = model_xml(export_with_metadata(&m.state(), &[], Format::ThreeMf, "t", &meta).unwrap());
         for want in [
-            "<metadata name=\"Application\">SolidCraft</metadata>\n <metadata name=\"Title\">ACME &lt;enclosures&gt;</metadata>",
+            "<metadata name=\"Application\">Torno</metadata>\n <metadata name=\"Title\">ACME &lt;enclosures&gt;</metadata>",
             "<metadata name=\"Designer\">Jane O&apos;Brien</metadata>",
             "<metadata name=\"Description\">Vented Gehäuse\nfor a Pi</metadata>",
             "<metadata name=\"LicenseTerms\">CC-BY-4.0</metadata>",
@@ -1274,7 +1274,7 @@ mod tests {
         }
         // Without properties the files are as they always were.
         let plain = String::from_utf8(export(&m.state(), &[], Format::Step, "t").unwrap()).unwrap();
-        assert!(plain.contains("FILE_DESCRIPTION(('SolidCraft model'),'2;1');\nFILE_NAME('t.step','',(''),(''),"));
+        assert!(plain.contains("FILE_DESCRIPTION(('Torno model'),'2;1');\nFILE_NAME('t.step','',(''),(''),"));
         assert!(!model_xml(export(&m.state(), &[], Format::ThreeMf, "t").unwrap()).contains("Title"));
     }
 
@@ -1327,7 +1327,7 @@ mod tests {
         assert!(rebuilt.results.iter().all(|r| r.error.is_none()));
         let state = rebuilt.state();
         assert_eq!(state.bodies.len(), 1);
-        assert!((solidcraft_kernel::measure(&state.bodies[0].body).unwrap().volume - 6000.0).abs() < 1e-6);
+        assert!((torno_kernel::measure(&state.bodies[0].body).unwrap().volume - 6000.0).abs() < 1e-6);
         assert!(step_import_feature(b"ISO-10303-21;", "x.step").is_err());
         assert!(step_import_feature(&[0xff, 0xfe, 0x00], "x.step").is_err());
         assert!(Format::from_name("a.dwg").is_err());
@@ -1338,7 +1338,7 @@ mod tests {
         assert_eq!(Format::from_name("NEW.SC").unwrap(), Format::Design);
         assert!(is_design_path("/d/old.SOLVECRAFT") && is_design_path("older.solidcraft") && is_design_path("new.sc") && !is_design_path("a.step"));
         assert_eq!(DESIGN_EXT, "sc");
-        assert_eq!(DESIGN_EXTS, ["sc", "solidcraft", "solvecraft"], "new extension first, then every older one");
+        assert_eq!(DESIGN_EXTS, ["sc", "torno", "solvecraft"], "new extension first, then every older one");
         assert!(read_stl(&[0u8; 10]).is_err());
         let mut fake = vec![0u8; 84];
         fake[80..84].copy_from_slice(&u32::MAX.to_le_bytes());
@@ -1348,7 +1348,7 @@ mod tests {
     /// A frame holding a plate and two posts, whose solids carry the names of the last feature
     /// that made them, as some CAD systems write them; as STEP text.
     fn frame_step() -> String {
-        use solidcraft_kernel::{ExportBody, ExportProduct, StepHeader, box_solid, step_export_products};
+        use torno_kernel::{ExportBody, ExportProduct, StepHeader, box_solid, step_export_products};
         let plate = box_solid(Vec3::ZERO, Vec3::new(10.0, 10.0, 2.0)).unwrap();
         let post = box_solid(Vec3::ZERO, Vec3::new(2.0, 2.0, 8.0)).unwrap();
         let at = |x: f64| [[1.0, 0.0, 0.0, 0.0], [0.0, 1.0, 0.0, 0.0], [0.0, 0.0, 1.0, 0.0], [x, 0.0, 0.0, 1.0]];
@@ -1378,7 +1378,7 @@ mod tests {
         assert_eq!(names(&text, StepNames::Solid), ["Cut-Extrude3", "Boss-Extrude1", "Boss-Extrude1"]);
         assert_eq!(names(&text, StepNames::Product), ["Plate", "Post", "Post"]);
         assert_eq!(names(&text, StepNames::Instance), ["Plate-1", "Post-1", "Post-2"]);
-        // Meaningful solid names survive automatic naming, including SolidCraft exports.
+        // Meaningful solid names survive automatic naming, including Torno exports.
         assert_eq!(step_import_feature(text.as_bytes(), "frame.step").unwrap().body_names, names(&text, StepNames::Solid));
         let generic = text.replace("'Cut-Extrude3'", "'Body1'").replace("'Boss-Extrude1'", "'Body 2 (3)'");
         assert_eq!(step_import_feature(generic.as_bytes(), "frame.step").unwrap().body_names, ["Plate", "Post", "Post"]);
@@ -1432,7 +1432,7 @@ mod tests {
         .unwrap();
         doc.add_feature(
             FeatureKind::Fillet {
-                edges: vec![solidcraft_doc::Position(Vec3::new(0.0, 0.0, 5.0))],
+                edges: vec![torno_doc::Position(Vec3::new(0.0, 0.0, 5.0))],
                 radius: "4".into(),
                 body: None,
                 style: Default::default(),
@@ -1448,7 +1448,7 @@ mod tests {
         doc.add_feature(
             FeatureKind::Cylinder {
                 base: point_expr(Vec3::new(80.0, 0.0, 0.0)),
-                axis: solidcraft_doc::Dir(Vec3::Z),
+                axis: torno_doc::Dir(Vec3::Z),
                 radius: "6".into(),
                 height: "15".into(),
                 operation: Operation::NewBody,
@@ -1494,7 +1494,7 @@ mod tests {
         for (a, b) in st.bodies.iter().zip(&st2.bodies) {
             assert!(b.body.is_mesh() && b.body.is_closed_mesh(), "{} is not watertight", a.name);
             let v_stl = stl_volume(&export(&st, std::slice::from_ref(&a.name), Format::StlBinary, "t").unwrap());
-            let v = solidcraft_kernel::measure(&b.body).unwrap().volume;
+            let v = torno_kernel::measure(&b.body).unwrap().volume;
             assert!((v - v_stl).abs() <= 1e-6 * v_stl.abs(), "{}: {v} vs {v_stl}", a.name);
         }
     }
@@ -1519,7 +1519,7 @@ mod tests {
             assert_eq!(a.name, b.name);
             assert!(b.body.is_mesh() && b.body.is_closed_mesh(), "{} is not watertight", b.name);
             let v_stl = stl_volume(&export(&st, std::slice::from_ref(&a.name), Format::StlBinary, "t").unwrap());
-            let v = solidcraft_kernel::measure(&b.body).unwrap().volume;
+            let v = torno_kernel::measure(&b.body).unwrap().volume;
             assert!((v - v_stl).abs() <= 1e-6 * v_stl.abs(), "{}: {v} vs {v_stl}", a.name);
         }
         // Mesh bodies export again (3MF, STL, OBJ) but not as STEP.
@@ -1555,7 +1555,7 @@ mod tests {
         .unwrap();
         doc.add_feature(
             FeatureKind::Fillet {
-                edges: vec![solidcraft_doc::Position(Vec3::new(0.1, -0.3, 5.0 + 1.0 / 3.0))],
+                edges: vec![torno_doc::Position(Vec3::new(0.1, -0.3, 5.0 + 1.0 / 3.0))],
                 radius: "4".into(),
                 body: None,
                 style: Default::default(),
@@ -1600,7 +1600,7 @@ mod tests {
                 assert!(exact.contains(&attr(l, k).to_bits()), "{l}");
             }
         }
-        // Any 3MF reader opens it: SolidCraft's own ignores the tags and gets a closed mesh.
+        // Any 3MF reader opens it: Torno's own ignores the tags and gets a closed mesh.
         let f = mesh_import_feature(&bytes, "tagged.3mf").unwrap();
         let mut d2 = Document::new("m");
         let id = d2.add_feature(f.kind, Some(&f.name)).unwrap();

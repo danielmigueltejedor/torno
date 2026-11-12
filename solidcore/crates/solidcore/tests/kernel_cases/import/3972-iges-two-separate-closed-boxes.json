@@ -49,7 +49,7 @@
   "ungraded": [],
   "what": "an IGES file of twelve trimmed planes forming two separate closed boxes (10x20x30, one 100 mm along x): they must come in as two solids, not one open body",
   "why_not": [
-    "body \"Body1\" is no kernel operation's output nor an operand: SolidCraft built it or changed the kernel's record",
-    "body \"Body1 2\" is no kernel operation's output nor an operand: SolidCraft built it or changed the kernel's record"
+    "body \"Body1\" is no kernel operation's output nor an operand: Torno built it or changed the kernel's record",
+    "body \"Body1 2\" is no kernel operation's output nor an operand: Torno built it or changed the kernel's record"
   ]
 }

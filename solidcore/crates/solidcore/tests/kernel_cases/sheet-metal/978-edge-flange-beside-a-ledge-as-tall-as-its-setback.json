@@ -57,6 +57,6 @@
   "ungraded": [],
   "what": "a 90 degree inside flange of radius 1 on an edge that has a ledge beside it exactly as tall as the flange's setback (3 mm): sew failed with a degenerate edge",
   "why_not": [
-    "body \"Body1\" is no kernel operation's output nor an operand: SolidCraft built it or changed the kernel's record"
+    "body \"Body1\" is no kernel operation's output nor an operand: Torno built it or changed the kernel's record"
   ]
 }

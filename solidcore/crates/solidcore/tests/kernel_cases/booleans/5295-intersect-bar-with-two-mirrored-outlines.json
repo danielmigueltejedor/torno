@@ -63,7 +63,7 @@
   "ungraded": [],
   "what": "a bar intersected in one extrude with two mirrored outlines (slanted on their inner sides): truck deleted the body with only a warning; each outline alone worked",
   "why_not": [
-    "body \"Bar (1)\" is no kernel operation's output nor an operand: SolidCraft built it or changed the kernel's record",
-    "body \"Bar\" is no kernel operation's output nor an operand: SolidCraft built it or changed the kernel's record"
+    "body \"Bar (1)\" is no kernel operation's output nor an operand: Torno built it or changed the kernel's record",
+    "body \"Bar\" is no kernel operation's output nor an operand: Torno built it or changed the kernel's record"
   ]
 }

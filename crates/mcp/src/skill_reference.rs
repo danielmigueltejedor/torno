@@ -1,4 +1,4 @@
-//! Read-only access to the skill documents shipped with SolidCraft.
+//! Read-only access to the skill documents shipped with Torno.
 
 use serde_json::{Map, Value};
 
@@ -10,32 +10,32 @@ struct Skill {
 // Exact names only: these are embedded documents, never filesystem paths to open.
 const SKILLS: &[Skill] = &[
     Skill {
-        name: "solidcraft-checking",
+        name: "torno-checking",
         files: &[
-            ("SKILL.md", include_str!("../../../skills/solidcraft-checking/SKILL.md")),
-            ("reference/porting.md", include_str!("../../../skills/solidcraft-checking/reference/porting.md")),
+            ("SKILL.md", include_str!("../../../skills/torno-checking/SKILL.md")),
+            ("reference/porting.md", include_str!("../../../skills/torno-checking/reference/porting.md")),
         ],
     },
-    Skill { name: "solidcraft-editing", files: &[("SKILL.md", include_str!("../../../skills/solidcraft-editing/SKILL.md"))] },
+    Skill { name: "torno-editing", files: &[("SKILL.md", include_str!("../../../skills/torno-editing/SKILL.md"))] },
     Skill {
-        name: "solidcraft-mechanisms",
+        name: "torno-mechanisms",
         files: &[
-            ("SKILL.md", include_str!("../../../skills/solidcraft-mechanisms/SKILL.md")),
-            ("reference.md", include_str!("../../../skills/solidcraft-mechanisms/reference.md")),
-        ],
-    },
-    Skill {
-        name: "solidcraft-modeling",
-        files: &[
-            ("SKILL.md", include_str!("../../../skills/solidcraft-modeling/SKILL.md")),
-            ("reference.md", include_str!("../../../skills/solidcraft-modeling/reference.md")),
+            ("SKILL.md", include_str!("../../../skills/torno-mechanisms/SKILL.md")),
+            ("reference.md", include_str!("../../../skills/torno-mechanisms/reference.md")),
         ],
     },
     Skill {
-        name: "solidcraft-sheetmetal",
+        name: "torno-modeling",
         files: &[
-            ("SKILL.md", include_str!("../../../skills/solidcraft-sheetmetal/SKILL.md")),
-            ("reference.md", include_str!("../../../skills/solidcraft-sheetmetal/reference.md")),
+            ("SKILL.md", include_str!("../../../skills/torno-modeling/SKILL.md")),
+            ("reference.md", include_str!("../../../skills/torno-modeling/reference.md")),
+        ],
+    },
+    Skill {
+        name: "torno-sheetmetal",
+        files: &[
+            ("SKILL.md", include_str!("../../../skills/torno-sheetmetal/SKILL.md")),
+            ("reference.md", include_str!("../../../skills/torno-sheetmetal/reference.md")),
         ],
     },
 ];

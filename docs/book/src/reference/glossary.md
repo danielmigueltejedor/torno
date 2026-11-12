@@ -1,6 +1,6 @@
 # Glossary
 
-This page sets SolidCraft's **ubiquitous language**: one agreed term for each idea, defined once
+This page sets Torno's **ubiquitous language**: one agreed term for each idea, defined once
 and used the same way in labels, command ids, parameter keys, the design file, the docs, the MCP
 tools and every translation.
 
@@ -23,7 +23,7 @@ that could replace the term in a sentence. It names no product and doesn't use t
 itself, in the way ISO 704 and ISO 10241-1 describe for terminology. A note follows, with the
 context:
 
-- **In SolidCraft:** the command ids, parameter keys and design-file keys that use the term.
+- **In Torno:** the command ids, parameter keys and design-file keys that use the term.
 - **Don't use:** the other words for the same idea.
 - **Elsewhere:** general names that people coming from other CAD software may know.
 - **For translators:** what the term must not be confused with.
@@ -37,7 +37,7 @@ later pull requests, one topic at a time, each pointing at its entry here.
 
 Number measuring optical dispersion as `(nd - 1) / (nF - nC)` at the Fraunhofer d, F and C wavelengths.
 
-- **In SolidCraft:** Glass `model.dispersion.abbe_number`; larger values give less chromatic dispersion.
+- **In Torno:** Glass `model.dispersion.abbe_number`; larger values give less chromatic dispersion.
 - **For translators:** an optical material quantity, not a sample or photon count.
 
 ### appearance
@@ -47,7 +47,7 @@ How a body, face or component looks on screen and in renders.
 An appearance sets colour and surface finish only. It has no effect on mass or strength. Compare
 *material*.
 
-- **In SolidCraft:** `appearance.assign`, `appearance.library`, `appearance.list`; the
+- **In Torno:** `appearance.assign`, `appearance.library`, `appearance.list`; the
   `appearances` design-file key.
 - **Don't use:** look, colour (for the whole appearance), render material.
 - **Elsewhere:** appearance, visual material, colour.
@@ -60,7 +60,7 @@ The list of the components placed in a design or in one component, with the quan
 It lists every part at any depth, or only the direct children. Each component's *bill of
 materials type* decides whether it has a row and whether what it holds is counted.
 
-- **In SolidCraft:** `assembly.bom` ("Bill of Materials") and its window on the INSPECT panel;
+- **In Torno:** `assembly.bom` ("Bill of Materials") and its window on the INSPECT panel;
   each row's `item`, `part_number` and `count`; a component's `metadata` and `properties`
   design-file keys, which `component.metadata.set` changes.
 - **Don't use:** BOM in labels; parts list (for the bill of materials itself).
@@ -81,7 +81,7 @@ There are five:
 - *inseparable*, something made as one piece (welded, glued, riveted and so on): one row; of
   what it holds, only the purchased components are listed, and only in a list of every part.
 
-- **In SolidCraft:** the `bom_type` part property, which `component.metadata.set` changes and
+- **In Torno:** the `bom_type` part property, which `component.metadata.set` changes and
   `component.metadata` reads; the `bom_type` of each `assembly.bom` row.
 - **Don't use:** BOM structure, item type, kind; made (for *normal*: it reads as "already
   made").
@@ -96,7 +96,7 @@ One connected solid or surface shape that features create and change.
 
 A design can hold many bodies. A component groups bodies; an occurrence places them.
 
-- **In SolidCraft:** `body.rename`; the `bodies` browser folder; `body_name` parameters.
+- **In Torno:** `body.rename`; the `bodies` browser folder; `body_name` parameters.
 - **Don't use:** part, solid (for a surface body too), object.
 - **Elsewhere:** body, solid body, surface body.
 - **For translators:** not a component and not a design.
@@ -106,7 +106,7 @@ A design can hold many bodies. A component groups bodies; an occurrence places t
 The panel that lists the design's components, bodies, sketches, construction planes and joints as
 a tree.
 
-- **In SolidCraft:** `browser.group`, `browser.move`, `browser.order`, `browser.visibility`, and the
+- **In Torno:** `browser.group`, `browser.move`, `browser.order`, `browser.visibility`, and the
   other `browser.*` commands.
 - **Don't use:** model tree, scene browser, parts browser.
 - **Elsewhere:** browser, model tree, feature tree, design tree.
@@ -118,13 +118,13 @@ a tree.
 
 A concentration or structured redistribution of light caused by reflection or refraction.
 
-- **In SolidCraft:** Render job `caustics` controls the photon estimate for point and hard directional sources; finite sources also have camera-path estimates.
+- **In Torno:** Render job `caustics` controls the photon estimate for point and hard directional sources; finite sources also have camera-path estimates.
 
 ### chromatic dispersion
 
 Variation of refractive index with wavelength that can separate colours along refracted paths.
 
-- **In SolidCraft:** Glass `model.dispersion`; the current renderer uses three representative wavelength bands.
+- **In Torno:** Glass `model.dispersion`; the current renderer uses three representative wavelength bands.
 
 ### component
 
@@ -134,7 +134,7 @@ placed one or more times.
 Each placement of a component is an *occurrence*. Editing a component changes every occurrence
 of it.
 
-- **In SolidCraft:** `component.create`, `component.activate`, and the other `component.*`
+- **In Torno:** `component.create`, `component.activate`, and the other `component.*`
   commands; the `components` design-file key.
 - **Don't use:** part, assembly, sub-assembly (for the component itself).
 - **Elsewhere:** component, part, sub-assembly.
@@ -146,7 +146,7 @@ A rule that fixes the relation between sketch entities, such as coincident, para
 
 A constraint with a value is a *dimension*.
 
-- **In SolidCraft:** `sketch.constraint.coincident`, `sketch.constraint.parallel`, and the other
+- **In Torno:** `sketch.constraint.coincident`, `sketch.constraint.parallel`, and the other
   `sketch.constraint.*` commands; the `constraint` parameter key; the sketch's `constraints`
   design-file key.
 - **Don't use:** relation, condition.
@@ -160,7 +160,7 @@ A sketch entity that guides the drawing but isn't part of any profile.
 A construction entity can be a line, an arc, a circle or any other curve, and it can carry
 constraints and dimensions like any sketch entity.
 
-- **In SolidCraft:** the `construction` parameter of the sketch drawing commands; the
+- **In Torno:** the `construction` parameter of the sketch drawing commands; the
   `construction` field of a sketch curve; the `ui.construction` catalogue entry.
 - **Don't use:** "construction" on its own where it could mean a *construction plane*.
 - **Elsewhere:** construction line, construction geometry, reference line.
@@ -175,7 +175,7 @@ any body.
 
 They are listed together in the browser's *Construction* folder.
 
-- **In SolidCraft:** `construct.plane.offset`, `construct.axis.two_points`,
+- **In Torno:** `construct.plane.offset`, `construct.axis.two_points`,
   `construct.point.vertex`, and the other `construct.*` commands; the CONSTRUCT toolbar panel.
 - **Don't use:** "construction" on its own where it could mean a *construction entity*; work plane.
 - **Elsewhere:** construction plane, reference plane, datum plane (and axis, point).
@@ -185,19 +185,19 @@ They are listed together in the browser's *Construction* folder.
 
 A sketch entity that is not a point: a line, an arc, a circle, an ellipse, a spline or a conic.
 
-- **In SolidCraft:** the sketch's `curves` design-file key; curve ids in parameters such as `path`.
+- **In Torno:** the sketch's `curves` design-file key; curve ids in parameters such as `path`.
 - **Don't use:** geometry, edge (for a sketch curve).
 - **Elsewhere:** curve, sketch curve, segment.
 - **For translators:** not an edge of a body.
 
 ### design
 
-The model that is open in SolidCraft: its timeline, components, bodies, sketches, parameters and
+The model that is open in Torno: its timeline, components, bodies, sketches, parameters and
 settings.
 
 A design is saved as a *design file*.
 
-- **In SolidCraft:** `file.new` ("New Design"), `document.units` ("Change Design Units"),
+- **In Torno:** `file.new` ("New Design"), `document.units` ("Change Design Units"),
   `document.metadata` ("Design Properties"), `doc.open`, `doc.recover`.
 - **Don't use:** document, doc, project, file (for the model itself), part.
 - **Elsewhere:** design, document, model, part file, assembly file.
@@ -205,9 +205,9 @@ A design is saved as a *design file*.
 
 ### design file
 
-A file in which SolidCraft saves one design, with the `.sc` extension (`.solidcraft` in earlier releases; those files still open).
+A file in which Torno saves one design, with the `.sc` extension (`.solidcraft` in earlier releases; those files still open).
 
-- **In SolidCraft:** `file.save`, `file.save_as`, `doc.open`; the `solidcraft/N` format tag.
+- **In Torno:** `file.save`, `file.save_as`, `doc.open`; the `solidcraft/N` format tag.
 - **Don't use:** document, project file.
 - **Elsewhere:** design file, model file.
 - **For translators:** "file" is only for what is on disk: opening, saving, importing and
@@ -219,7 +219,7 @@ A constraint that sets a size, such as a length, a distance, an angle or a radiu
 
 A dimension can drive the sketch, or be driven by it and only show the value.
 
-- **In SolidCraft:** `sketch.dimension`, `sketch.dimension_text`, `sketch.toggle_driven`; a
+- **In Torno:** `sketch.dimension`, `sketch.dimension_text`, `sketch.toggle_driven`; a
   dimension's id is a constraint id.
 - **Don't use:** measurement (for a dimension), size.
 - **Elsewhere:** dimension, dimensional constraint, driving dimension.
@@ -233,7 +233,7 @@ and set in from its edge.
 An end cap is a separate body named after its member. Compare a mounting plate, which is
 rectangular or round and need not follow the profile.
 
-- **In SolidCraft:** `frame.end_cap`; the `frame_end_cap` design-file key.
+- **In Torno:** `frame.end_cap`; the `frame_end_cap` design-file key.
 - **Don't use:** plug, lid, blank (for the plate).
 - **Elsewhere:** end cap, end plate, cap plate.
 - **For translators:** a closing plate on a tube's end, not a cap of a sketch or surface.
@@ -245,7 +245,7 @@ A sketch curve whose shape comes from formulas over a range of one variable.
 It is a fit point spline through fixed points that the formulas place, and they place them again
 when the design's parameters change. Compare *spline*, whose points are placed by hand.
 
-- **In SolidCraft:** `sketch.equation_curve`, `sketch.equation_curve.edit`; the `equations`
+- **In Torno:** `sketch.equation_curve`, `sketch.equation_curve.edit`; the `equations`
   design-file key of a sketch; `variable_unit` says whether the variable is a plain number or a
   length like its range.
 - **Don't use:** formula curve, function curve, parametric curve (for the command).
@@ -257,9 +257,9 @@ when the design's parameters change. Compare *spline*, whose points are placed b
 One step in the timeline that creates or changes geometry, such as an extrude, a fillet or a
 construction plane.
 
-- **In SolidCraft:** `timeline.edit`, `timeline.suppress`, `timeline.reorder`, and the other
+- **In Torno:** `timeline.edit`, `timeline.suppress`, `timeline.reorder`, and the other
   `timeline.*` commands; the `features` design-file key.
-- **Don't use:** operation, step (in labels); feature (for something SolidCraft can do in
+- **Don't use:** operation, step (in labels); feature (for something Torno can do in
   general: say *tool* or *capability*).
 - **Elsewhere:** feature, operation.
 - **For translators:** French uses *fonction* for a timeline feature, so "AI features" had to
@@ -272,7 +272,7 @@ One of the browser's fixed sections of a component: Bodies, Sketches, Constructi
 A folder is part of every component and can't be renamed or removed. A container that someone
 makes is a *group*.
 
-- **In SolidCraft:** the `folder` parameter of `browser.group`, `browser.order` and
+- **In Torno:** the `folder` parameter of `browser.group`, `browser.order` and
   `browser.visibility` (`bodies`, `sketches`, `construction`).
 - **Don't use:** folder for a group.
 - **Elsewhere:** folder, node.
@@ -282,7 +282,7 @@ makes is a *group*.
 
 Radius of the surface neighbourhood used to estimate illumination from nearby photon hits.
 
-- **In SolidCraft:** Caustics `radius_mm`; smaller values preserve sharper details and require more photons to reduce noise.
+- **In Torno:** Caustics `radius_mm`; smaller values preserve sharper details and require more photons to reduce noise.
 
 ### group
 
@@ -291,7 +291,7 @@ A named container that someone makes, in the browser or in the timeline, to keep
 A group changes only how items are listed. It has no effect on the geometry or the order in which
 features are computed.
 
-- **In SolidCraft:** `browser.group`, `browser.ungroup`, `browser.rename_group`; `timeline.group`,
+- **In Torno:** `browser.group`, `browser.ungroup`, `browser.rename_group`; `timeline.group`,
   `timeline.ungroup`, `timeline.rename_group`, `timeline.move_to_group`; the `group` parameter key;
   the `groups` parameter of `timeline.delete` and `timeline.suppress` (a group with all its features);
   the `browser_groups` and `timeline_groups` design-file keys.
@@ -306,7 +306,7 @@ The physical substance of a body, which sets its density and mechanical properti
 A material sets mass, centre of gravity and strength values. How the body looks is its
 *appearance*.
 
-- **In SolidCraft:** `material.assign` ("Physical Material"), `material.list`, `material.create`,
+- **In Torno:** `material.assign` ("Physical Material"), `material.list`, `material.create`,
   and the other `material.*` commands; the `materials` and `user_materials` design-file keys.
 - **Don't use:** material for a render or visual material.
 - **Elsewhere:** material, physical material.
@@ -317,11 +317,11 @@ A material sets mass, centre of gravity and strength values. How the body looks 
 How a body's mass resists turning about an axis: the mass times the square of its distance from
 that axis, summed over the body.
 
-SolidCraft reports the whole inertia tensor about the centre of mass in world axes, with its
+Torno reports the whole inertia tensor about the centre of mass in world axes, with its
 *principal moments* and *principal axes*: the three axes with no products of inertia between
 them. The *first moments* are the mass times the centre of mass.
 
-- **In SolidCraft:** `inertia_g_mm2`, `principal_moments_g_mm2`, `principal_axes`,
+- **In Torno:** `inertia_g_mm2`, `principal_moments_g_mm2`, `principal_axes`,
   `first_moment_g_mm` and `about` in `component.properties` and `occurrence.properties`; the
   Properties window's Moment of inertia section.
 - **Don't use:** rotational inertia, second moment of mass, mass moment.
@@ -335,7 +335,7 @@ One placed copy of a component inside its parent component.
 A component can have several occurrences. Moving an occurrence moves only that copy; editing the
 component changes every copy. The browser names occurrences with a number, such as `Bolt M20:3`.
 
-- **In SolidCraft:** `occurrence.copy`, `occurrence.move`, `occurrence.drag`, `occurrence.ground`,
+- **In Torno:** `occurrence.copy`, `occurrence.move`, `occurrence.drag`, `occurrence.ground`,
   `occurrence.properties`; the `occurrences` design-file key; the `path` of occurrence ids.
 - **Don't use:** instance, placement.
 - **Elsewhere:** occurrence, instance, component instance.
@@ -345,7 +345,7 @@ component changes every copy. The browser names occurrences with a number, such 
 
 Indirect diffuse and specular illumination computed by tracing finite light paths between opaque surfaces. Shown as **Indirect lighting (opaque surfaces)** in Sampling.
 
-- **In SolidCraft:** optional CPU `job.options.path` / runtime `raytrace.path`, enabled explicitly in Sampling.
+- **In Torno:** optional CPU `job.options.path` / runtime `raytrace.path`, enabled explicitly in Sampling.
 - **Don't use:** ambient occlusion, glass, full optical parity.
 - **For translators:** this describes light transport; it is unrelated to a modelling path or physical material density.
 
@@ -358,7 +358,7 @@ An operation is work that takes long enough to run beside the window: opening or
 a feature dialog's OK computing, an undo or a history marker move recomputing the timeline, an
 agent's command. A new one goes on top; one that ends fades out.
 
-- **In SolidCraft:** the `ui.operations` control method; the `operations_panel` preference.
+- **In Torno:** the `ui.operations` control method; the `operations_panel` preference.
 - **Don't use:** job, task, activity.
 - **Elsewhere:** progress panel, background tasks.
 - **For translators:** an operation is work under way, not a feature's *operation* (join, cut,
@@ -368,7 +368,7 @@ agent's command. A new one goes on top; one that ends fades out.
 
 A design property that holds the identifier an organisation gives a design.
 
-- **In SolidCraft:** the `part_number` design property, shown in Design Properties and set with
+- **In Torno:** the `part_number` design property, shown in Design Properties and set with
   `document.metadata.set`.
 - **Don't use:** part number for a standard part's size.
 - **For translators:** see *Words with more than one meaning*, "part".
@@ -377,7 +377,7 @@ A design property that holds the identifier an organisation gives a design.
 
 The maximum number of shaded surfaces in a rendering path, starting with the first visible surface. A depth of 1 uses direct lighting only; higher values allow more light bounces. This does not count CAD mesh vertices.
 
-- **In SolidCraft:** CPU `path.max_depth` is 1–16; longer paths are truncated.
+- **In Torno:** CPU `path.max_depth` is 1–16; longer paths are truncated.
 - **For translators:** a count, not a geometric depth in millimetres or timeline depth.
 
 ### pattern instance
@@ -386,7 +386,7 @@ One copy that a pattern makes of its features, bodies or sketch entities.
 
 The first instance is the original.
 
-- **In SolidCraft:** `solid.pattern.rectangular`, `solid.pattern.circular`, `solid.pattern.path`,
+- **In Torno:** `solid.pattern.rectangular`, `solid.pattern.circular`, `solid.pattern.path`,
   `sketch.pattern.rectangular`, `sketch.pattern.circular`; the `count` and `spacing` parameters
   ("between instances").
 - **Don't use:** instance for an occurrence; element, item.
@@ -400,7 +400,7 @@ A sheet metal rule kept in the user's preferences instead of a design, ready to 
 Picking one in Sheet Metal Rules fills the rule manager, and its OK copies the rule into the
 design, which then keeps a copy of its own. It is an app setting, not part of a design.
 
-- **In SolidCraft:** Sheet Metal Rules › Personal rules (`sheet.manage_rules`); the
+- **In Torno:** Sheet Metal Rules › Personal rules (`sheet.manage_rules`); the
   `personal_sheet_rules` key of the stored preferences.
 - **Don't use:** preset, template, library rule.
 - **Elsewhere:** rule library, sheet metal style library.
@@ -413,7 +413,7 @@ The flat face of a body that lies on the print bed when the body is sent to a sl
 A body has one print face at most. The export turns a copy of the body so this face points down
 at Z = 0, with the centre of mass over the origin; the design itself does not move.
 
-- **In SolidCraft:** `body.print_face`; the `print_faces` of a design; the `print_faces` and
+- **In Torno:** `body.print_face`; the `print_faces` of a design; the `print_faces` and
   `warnings` of a `file.send_to_slicer` reply.
 - **Don't use:** bottom face, base face (both say where a face is now, not where it is printed).
 - **Elsewhere:** place on face, lay flat, bed face.
@@ -427,7 +427,7 @@ set distance from, measured in that face's plane.
 Up to two reference edges place one hole or cylinder. Each distance is a parameter, and the
 feature follows its edges when the part changes.
 
-- **In SolidCraft:** the `references` parameter of `solid.hole` and `solid.cylinder` (each
+- **In Torno:** the `references` parameter of `solid.hole` and `solid.cylinder` (each
   `{edge, distance}`); the windows' Reference 1, Reference 2 and Distance 1, Distance 2 rows; the
   "Reference distance" input (`ui.reference_1`, `ui.reference_2`, `ui.reference_distance`).
 - **Don't use:** datum edge, anchor edge.
@@ -442,7 +442,7 @@ The marker in the timeline after which no feature is computed.
 Moving the rollback marker back shows the design as it was at that step. Features after the marker
 are kept, not deleted.
 
-- **In SolidCraft:** `timeline.rollback`, `timeline.roll_to`; the `marker` design-file key.
+- **In Torno:** `timeline.rollback`, `timeline.roll_to`; the `marker` design-file key.
 - **Don't use:** timeline marker, history marker, rollback bar.
 - **Elsewhere:** rollback bar, rollback marker, end-of-part marker.
 - **For translators:** "history" is the undo history, not the timeline. French had three names
@@ -457,7 +457,7 @@ A settings profile holds the Interface, Navigation and Sketch preferences, the i
 language, keyboard shortcuts, the toolbar and the S box favourites. Settings that belong to one
 computer (the 3D mouse, graphics, units) stay out. It is an app setting, not part of a design.
 
-- **In SolidCraft:** `settings.profile.list`, `settings.profile.save`, `settings.profile.apply`,
+- **In Torno:** `settings.profile.list`, `settings.profile.save`, `settings.profile.apply`,
   `settings.profile.rename`, `settings.profile.delete`, `settings.profile.export`,
   `settings.profile.import`; the `settings_profiles` key of the stored preferences; the
   `solidcraft-profile/1` file format.
@@ -471,7 +471,7 @@ computer (the 3D mouse, graphics, units) stay out. It is an app setting, not par
 A set of points and curves, with their constraints, on one plane, that features use as profiles,
 paths and guides.
 
-- **In SolidCraft:** `sketch.create`, `sketch.finish`, and the other `sketch.*` commands; the
+- **In Torno:** `sketch.create`, `sketch.finish`, and the other `sketch.*` commands; the
   `sketches` browser folder.
 - **Don't use:** drawing, profile (for the whole sketch).
 - **Elsewhere:** sketch, 2D sketch.
@@ -481,7 +481,7 @@ paths and guides.
 
 A point or a curve in a sketch.
 
-- **In SolidCraft:** the `entities` parameter of the sketch commands (it takes point and curve
+- **In Torno:** the `entities` parameter of the sketch commands (it takes point and curve
   ids); the sketch's `points` and `curves` design-file keys.
 - **Don't use:** geometry (for sketch content), element, object.
 - **Elsewhere:** sketch entity, sketch geometry, sketch element.
@@ -489,10 +489,10 @@ A point or a curve in a sketch.
 
 ### standard part
 
-A ready-made component, such as a screw, nut, washer, pin or bearing, that SolidCraft builds from
+A ready-made component, such as a screw, nut, washer, pin or bearing, that Torno builds from
 a standard size.
 
-- **In SolidCraft:** `parts.library` ("Standard Parts"), `parts.insert`, `parts.fastener`,
+- **In Torno:** `parts.library` ("Standard Parts"), `parts.insert`, `parts.fastener`,
   `parts.resize`; the `parts` design-file key.
 - **Don't use:** library part, part (on its own), content.
 - **Elsewhere:** standard part, library part, fastener, catalogue part.
@@ -502,13 +502,13 @@ a standard size.
 
 Interference between coherent optical waves reflected at the interfaces of a thin layer.
 
-- **In SolidCraft:** Glass `model.thin_film`, with `ior` and `thickness_nm`; this differs from an incoherent ideal Glass sheet.
+- **In Torno:** Glass `model.thin_film`, with `ior` and `thickness_nm`; this differs from an incoherent ideal Glass sheet.
 
 ### timeline
 
-The ordered list of a design's features, which SolidCraft computes from first to last.
+The ordered list of a design's features, which Torno computes from first to last.
 
-- **In SolidCraft:** the `timeline.*` commands; the `features` design-file key, in timeline
+- **In Torno:** the `timeline.*` commands; the `features` design-file key, in timeline
   order.
 - **Don't use:** feature history, history (for the timeline).
 - **Elsewhere:** timeline, history, feature tree.
@@ -520,7 +520,7 @@ How two rounds of a fillet continue where they turn round a sharp corner edge be
 as the rounds along a boss's base at its upright edges: in a mitre, or swept round the corner
 edge as a torus.
 
-- **In SolidCraft:** the `turn` parameter of `solid.fillet` and its design-file key, `mitre`
+- **In Torno:** the `turn` parameter of `solid.fillet` and its design-file key, `mitre`
   (the default) or `swept`; the Fillet dialog's Turns row.
 - **Don't use:** corner (that is what fills a corner where three rounded edges meet, `corner`).
 - **Elsewhere:** mitred corner, swept corner, corner sweep.
@@ -536,7 +536,7 @@ Back 180°); pitch is how far the eye is above the ground plane (Top view 90°, 
 positive roll turns the picture clockwise. They are the camera's own angles, which `view.apply`
 and the MCP camera take in radians.
 
-- **In SolidCraft:** `view.angle_readout` and the View angles readout under the orientation
+- **In Torno:** `view.angle_readout` and the View angles readout under the orientation
   gizmo; the `yaw`, `pitch` and `roll` of `view.apply`'s `camera`.
 - **Don't use:** camera angles, view rotation.
 - **Elsewhere:** view orientation, azimuth and elevation.
@@ -544,9 +544,9 @@ and the MCP camera take in radians.
 
 ### web browser
 
-A program that shows web pages, such as the one that runs SolidCraft's web build.
+A program that shows web pages, such as the one that runs Torno's web build.
 
-- **In SolidCraft:** the web build; the `home.in_this_browser` catalogue entry.
+- **In Torno:** the web build; the `home.in_this_browser` catalogue entry.
 - **Don't use:** browser on its own.
 - **For translators:** not the *browser* panel. Where a language uses one word for both, use the
   CAD word for the panel.

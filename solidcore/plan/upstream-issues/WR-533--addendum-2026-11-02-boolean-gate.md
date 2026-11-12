@@ -16,6 +16,6 @@ The fork's C++ refused with 1006 (`SM_ERR_NULL_POINTER`); the port refuses later
 
 Mutation: with the production read in `update_edges` (`crates/solidcore/src/topology/proto_topology/p2.rs`) forced to upstream's path, the test fails at the flag-on assertion with the same 1001. Restored, it passes.
 
-Interaction (probe, not committed): with every `UpstreamFixes` flag on, the union succeeds with this flag off as well. Turning the flags on one at a time (with this one off) finds `proto_vertex_miss_is_false` (WR-73): with it on, the union succeeds with or without this flag, with the same 22 faces and volume (19951.738878) and a valid check. So SolidCraft, which sets WR-73, does not reach this flag on this case. Why WR-73's proto-vertex cleanup avoids the split across the definition was not traced.
+Interaction (probe, not committed): with every `UpstreamFixes` flag on, the union succeeds with this flag off as well. Turning the flags on one at a time (with this one off) finds `proto_vertex_miss_is_false` (WR-73): with it on, the union succeeds with or without this flag, with the same 22 faces and volume (19951.738878) and a valid check. So Torno, which sets WR-73, does not reach this flag on this case. Why WR-73's proto-vertex cleanup avoids the split across the definition was not traced.
 
 No library code, tolerance, unit status or known mismatch changes.

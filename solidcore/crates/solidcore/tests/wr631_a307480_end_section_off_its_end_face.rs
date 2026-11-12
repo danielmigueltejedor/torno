@@ -1,6 +1,6 @@
-//! The SolidCraft fork's tangency-labs/smlib@a307480 (`fillet_cliff_overflow`, WR-631): a
+//! The Torno fork's tangency-labs/smlib@a307480 (`fillet_cliff_overflow`, WR-631): a
 //! fillet whose end section runs off its end face overflows it, and is built by
-//! subtraction. SolidCraft rig fillets/cov-chamfer-outer-corner-edge-of-a-shelled-box-
+//! subtraction. Torno rig fillets/cov-chamfer-outer-corner-edge-of-a-shelled-box-
 //! with-a-lip: an 80 x 50 x 30 box shelled 2 open at the top, a 1 x 2 lip on the inner
 //! half of its rim, its outer corner edge at (0, 50) chamfered 3. At the top the
 //! chamfer's end section (from (3, 50) to (0, 47) at z = 30) runs off the 2 mm rim strip,

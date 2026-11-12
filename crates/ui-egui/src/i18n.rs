@@ -1,8 +1,8 @@
-//! SolidCraft's message catalogs and the adapters that read its own names and engine messages.
+//! Torno's message catalogs and the adapters that read its own names and engine messages.
 //! The message machinery (lookup, labels, substitution, the language choice) is the shared
-//! `solidcraft_ui_text` crate; [`install`] hands it these catalogs at startup.
+//! `torno_ui_text` crate; [`install`] hands it these catalogs at startup.
 
-use solidcraft_ui_text::{Catalog, Locale};
+use torno_ui_text::{Catalog, Locale};
 
 static ENGLISH: Catalog = Catalog::new("en", "English", include_str!(concat!(env!("OUT_DIR"), "/locales/en.json")));
 static ARABIC: Catalog = Catalog::new("ar", "العربية", include_str!(concat!(env!("OUT_DIR"), "/locales/ar.json")));
@@ -83,15 +83,15 @@ pub const LOCALES: &[&Catalog] = &[
     &CHINESE_TRADITIONAL,
 ];
 
-/// Install SolidCraft's catalogs for every lookup, and how the kit's tree rows show labels: once,
+/// Install Torno's catalogs for every lookup, and how the kit's tree rows show labels: once,
 /// at startup, before the first message is read. Calling it again does nothing.
 pub fn install() {
     // This crate's own tests read English whatever the PC's language (#10297): the shared crate
     // only sees `cfg!(test)` in its own tests. Pinned before installing, so no test thread reads
     // the OS language in between.
     #[cfg(test)]
-    solidcraft_ui_text::pin_system_language();
-    solidcraft_ui_text::install(LOCALES);
+    torno_ui_text::pin_system_language();
+    torno_ui_text::install(LOCALES);
     crate::ui_kit::install_row_names(row_name);
 }
 
@@ -100,11 +100,11 @@ fn row_name(label: &str, name: bool) -> String {
     if name { tr_name(label) } else { tr_dyn(label) }
 }
 
-/// The names SolidCraft gives and the engine messages it shows, translated with a [`Locale`].
+/// The names Torno gives and the engine messages it shows, translated with a [`Locale`].
 pub trait LocaleNames {
     /// A name someone gave (a body, sketch, component, …): shown as typed, even when it matches
     /// a UI label ("Fillet", "Boss"); only the default names are translated. A right-to-left name
-    /// is given in display order like a catalog message (see [`solidcraft_ui_text::bidi`]), so a
+    /// is given in display order like a catalog message (see [`torno_ui_text::bidi`]), so a
     /// multi-word Hebrew or Arabic name reads from the right like the interface's own labels (#10471).
     fn given_name(self, text: &str) -> String;
     /// Evaluation errors stay English for scripts; the empty Cut/Intersect hint that names
@@ -115,7 +115,7 @@ pub trait LocaleNames {
     fn dynamic(self, text: &str) -> String;
 }
 
-/// The default names SolidCraft gives (`Untitled` for a new design, `Sketch1`, `Body2`,
+/// The default names Torno gives (`Untitled` for a new design, `Sketch1`, `Body2`,
 /// `Component3`), translated.
 fn default_name(locale: Locale, text: &str) -> Option<String> {
     if text == "Untitled" {
@@ -134,11 +134,11 @@ fn default_name(locale: Locale, text: &str) -> Option<String> {
 
 impl LocaleNames for Locale {
     fn given_name(self, text: &str) -> String {
-        default_name(self, text).unwrap_or_else(|| solidcraft_ui_text::bidi::visual(text).into_owned())
+        default_name(self, text).unwrap_or_else(|| torno_ui_text::bidi::visual(text).into_owned())
     }
 
     fn diagnostic(self, text: &str) -> String {
-        if let Some((feature, reference)) = solidcraft_engine::doc::reselect_parts(text) {
+        if let Some((feature, reference)) = torno_engine::doc::reselect_parts(text) {
             return self.format("diagnostic.reselect_reference", &[("feature", &self.given_name(feature)), ("reference", reference)]);
         }
         const PREFIX: &str = "there is no body to cut or intersect in component '";
@@ -177,13 +177,13 @@ impl LocaleNames for Locale {
 }
 
 pub fn tr_dyn(text: &str) -> String {
-    solidcraft_ui_text::locale().dynamic(text)
+    torno_ui_text::locale().dynamic(text)
 }
 pub fn tr_name(text: &str) -> String {
-    solidcraft_ui_text::locale().given_name(text)
+    torno_ui_text::locale().given_name(text)
 }
 pub fn tr_diagnostic(text: &str) -> String {
-    solidcraft_ui_text::locale().diagnostic(text)
+    torno_ui_text::locale().diagnostic(text)
 }
 
 /// The id of an offset curve an engine error names at the start, `` `{id}` ``.
@@ -196,7 +196,7 @@ fn offset_error_id<'a>(text: &'a str, middle: &str, end: &str) -> Option<&'a str
 /// Translate known engine error messages using i18n keys.
 /// If the error message is not recognized, returns it unchanged.
 pub fn tr_engine_error(error: &str) -> String {
-    use solidcraft_ui_text::{format, tr};
+    use torno_ui_text::{format, tr};
     // `EngineError::BadParams` carries `invalid parameters for `<command>`: ` in front.
     let text = error.strip_prefix("invalid parameters for `").and_then(|rest| rest.split_once("`: ")).map_or(error, |(_, text)| text);
     if let Some((name, ids)) = text
@@ -231,9 +231,9 @@ pub fn tr_engine_error(error: &str) -> String {
 
 /// Interface direction follows the selected catalog, including English fallback.
 /// Message contents and document coordinates never determine workspace direction.
-pub(crate) fn panel_direction(preference: &str) -> solidcraft_engine::panels::Direction {
-    use solidcraft_engine::panels::Direction;
-    match solidcraft_ui_text::effective_language(preference) {
+pub(crate) fn panel_direction(preference: &str) -> torno_engine::panels::Direction {
+    use torno_engine::panels::Direction;
+    match torno_ui_text::effective_language(preference) {
         "ar" | "he" => Direction::Rtl,
         _ => Direction::Ltr,
     }
@@ -242,13 +242,13 @@ pub(crate) fn panel_direction(preference: &str) -> solidcraft_engine::panels::Di
 #[cfg(test)]
 mod tests {
     use super::install;
-    use solidcraft_ui_text::*;
     use std::collections::BTreeMap;
+    use torno_ui_text::*;
 
     /// The system's locale tags pick a catalog: exact tag, then base language, then English (#10138).
     #[test]
     fn panel_direction_follows_effective_catalog_including_missing_message_fallback() {
-        use solidcraft_engine::panels::Direction;
+        use torno_engine::panels::Direction;
         install();
         for language in ["ar", "he"] {
             assert_eq!(super::panel_direction(language), Direction::Rtl);
@@ -367,9 +367,9 @@ mod tests {
             let pending: BTreeMap<String, Messages> = serde_json::from_str(&std::fs::read_to_string(entry.path()).unwrap()).unwrap();
             for (locale, messages) in pending {
                 for (id, text) in messages {
-                    // The catalogs hand right-to-left text out in display order (`solidcraft_ui_text::bidi`);
+                    // The catalogs hand right-to-left text out in display order (`torno_ui_text::bidi`);
                     // pending files hold it in reading order, as the catalogs do (#7527).
-                    assert_eq!(Locale::for_language(&locale).text(&id), solidcraft_ui_text::bidi::visual_template(&text), "{locale}: {id}");
+                    assert_eq!(Locale::for_language(&locale).text(&id), torno_ui_text::bidi::visual_template(&text), "{locale}: {id}");
                 }
             }
         }
@@ -454,7 +454,7 @@ mod tests {
     #[test]
     fn reselect_reference_diagnostic_translates_with_the_feature_and_reference_as_given() {
         install();
-        let message = solidcraft_engine::doc::DocError::reselect("F4:side:c1#1|F4:top").in_feature("Fillet {2}").to_string();
+        let message = torno_engine::doc::DocError::reselect("F4:side:c1#1|F4:top").in_feature("Fillet {2}").to_string();
         assert_eq!(Locale::for_language("en").diagnostic(&message), message);
         for language in ["ar", "de", "he", "ja", "ko", "zh"] {
             let translated = Locale::for_language(language).diagnostic(&message);
@@ -554,7 +554,7 @@ mod tests {
             wanted.push(section.tab);
             wanted.push(section.panel);
         }
-        for spec in solidcraft_engine::command_specs() {
+        for spec in torno_engine::command_specs() {
             wanted.push(spec.tab);
             wanted.push(spec.panel);
         }
@@ -575,7 +575,7 @@ mod tests {
     fn every_command_label_is_in_the_english_catalog() {
         install();
         let texts = english_texts();
-        let mut untranslated: Vec<&str> = solidcraft_engine::command_specs().iter().map(|c| c.label).filter(|label| !texts.contains(label)).collect();
+        let mut untranslated: Vec<&str> = torno_engine::command_specs().iter().map(|c| c.label).filter(|label| !texts.contains(label)).collect();
         untranslated.sort_unstable();
         untranslated.dedup();
         assert!(
@@ -591,7 +591,7 @@ mod tests {
     fn every_sample_name_and_description_is_in_the_english_catalog() {
         install();
         let texts = english_texts();
-        let samples = solidcraft_engine::sample::samples();
+        let samples = torno_engine::sample::samples();
         let missing: Vec<&str> = samples.iter().flat_map(|s| [s.name, s.about]).filter(|text| !texts.contains(text)).collect();
         assert!(missing.is_empty(), "sample texts absent from en.json: {missing:?}");
         assert_eq!(Locale::for_language("ja").label("Sample Plate"), "サンプル プレート");
@@ -719,7 +719,7 @@ mod tests {
         let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("src");
         let mut files = Vec::new();
         source_files(&root, &mut files);
-        // The UI kit and its components, which SolidCraft mounts as `crate::ui_kit`.
+        // The UI kit and its components, which Torno mounts as `crate::ui_kit`.
         source_files(&crate::test_support::kit_src(), &mut files);
         files.sort();
         let sources: Vec<(std::path::PathBuf, String)> =
@@ -815,8 +815,8 @@ mod tests {
             ] {
                 assert_ne!(locale.text(id), Locale::for_language("en").text(id), "{language}: {id}");
             }
-            let session = solidcraft_engine::Session::default();
-            for command in solidcraft_engine::command_specs().into_iter().filter(|c| c.planned.is_some() && crate::workspace::render_tab(c.tab)) {
+            let session = torno_engine::Session::default();
+            for command in torno_engine::command_specs().into_iter().filter(|c| c.planned.is_some() && crate::workspace::render_tab(c.tab)) {
                 assert_ne!(locale.label(command.label), command.label, "{language}: {}", command.id);
                 let reason = command.info(&session).disabled_reason.unwrap();
                 assert_ne!(locale.label(&reason), reason, "{language}: {} reason", command.id);
@@ -1525,7 +1525,7 @@ mod tests {
     fn module_path(path: &std::path::Path) -> Vec<String> {
         let mut parts: Vec<String> = path.components().filter_map(|part| part.as_os_str().to_str().map(str::to_string)).collect();
         let start = parts.iter().rposition(|part| part == "src").map_or(0, |at| at + 1);
-        // The kit crate's files sit under `crate::ui_kit`, where SolidCraft mounts the crate.
+        // The kit crate's files sit under `crate::ui_kit`, where Torno mounts the crate.
         let kit = start >= 2 && parts.get(start - 2).is_some_and(|dir| dir == "ui-kit");
         let mut relative: Vec<String> = parts.split_off(start);
         let file = relative.pop().unwrap_or_default();
@@ -1572,7 +1572,7 @@ mod tests {
                 out
             }
             Some("crate") => path.to_vec(),
-            Some("solidcraft_ui_kit") => {
+            Some("torno_ui_kit") => {
                 let mut out = vec!["crate".to_string(), "ui_kit".to_string()];
                 out.extend_from_slice(&path[1..]);
                 out
@@ -1642,8 +1642,8 @@ mod tests {
         let code: String = tokens.to_string().split_whitespace().collect();
         let label_file = code.contains("fntr(text:&str)->&str")
             || code.contains("lettr=crate::i18n::tr_label;")
-            || code.contains("lettr=solidcraft_ui_text::tr_label;");
-        let id_file = ["usecrate::i18n::tr;", "lettr=crate::i18n::tr;", "usesolidcraft_ui_text::tr;", "lettr=solidcraft_ui_text::tr;"]
+            || code.contains("lettr=torno_ui_text::tr_label;");
+        let id_file = ["usecrate::i18n::tr;", "lettr=crate::i18n::tr;", "usetorno_ui_text::tr;", "lettr=torno_ui_text::tr;"]
             .iter()
             .any(|pattern| code.contains(pattern))
             || imports_i18n_tr(&code);
@@ -1688,7 +1688,7 @@ mod tests {
                             "tr" if !qualified => push(&tokens, i + 1, &[0], id_file && !label_file, &[], out),
                             "tr_label" => push(&tokens, i + 1, &[0], false, &[], out),
                             "SelInput" if is_path(&tokens, i, "new") => push(&tokens, i + 4, &[0], false, &[], out),
-                            "i18n" | "solidcraft_ui_text" if is_path(&tokens, i, "tr") => push(&tokens, i + 4, &[0], true, &[], out),
+                            "i18n" | "torno_ui_text" if is_path(&tokens, i, "tr") => push(&tokens, i + 4, &[0], true, &[], out),
                             _ => {
                                 // `Column::new`, `Menu::heading`, …: a type path, read by name (the
                                 // same known limit as the methods).
@@ -2052,10 +2052,10 @@ mod tests {
         (i + 1).min(tokens.len())
     }
 
-    /// Whether the file imports `tr` from `crate::i18n` or `solidcraft_ui_text` inside a use list,
+    /// Whether the file imports `tr` from `crate::i18n` or `torno_ui_text` inside a use list,
     /// from the use list in `code` (spacing removed) under its own name.
     fn imports_i18n_tr(code: &str) -> bool {
-        ["usecrate::i18n::{", "usesolidcraft_ui_text::{"].iter().any(|import| {
+        ["usecrate::i18n::{", "usetorno_ui_text::{"].iter().any(|import| {
             code.split_once(import).is_some_and(|(_, rest)| rest.split_once('}').is_some_and(|(list, _)| list.split(',').any(|name| name == "tr")))
         })
     }

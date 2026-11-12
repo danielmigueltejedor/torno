@@ -1,5 +1,5 @@
-use solidcraft_geom::prelude::*;
 use std::f64::consts::{FRAC_PI_2, PI};
+use torno_geom::prelude::*;
 
 use serde_json::{Value, json};
 
@@ -76,7 +76,7 @@ fn side_edge_flanges_across_a_bend_keep_their_relief_through_rebuild_and_reopen(
             let sheet = &s.model.state().sheets[0];
             let parent = &sheet.flanges[0];
             let point = parent.p + parent.d * parent.len + parent.n * (sheet.allowance(parent) + parent.leg * 0.5);
-            let side = solidcraft_doc::apply_point(&sheet.world(Some(0)), Vec3::new(point.x, point.y, sheet.t));
+            let side = torno_doc::apply_point(&sheet.world(Some(0)), Vec3::new(point.x, point.y, sheet.t));
             let mut edges = vec![json!([120, 45, 2]), json!([side.x, side.y, side.z])];
             if reverse {
                 edges.reverse();
@@ -101,12 +101,12 @@ fn side_edge_flanges_across_a_bend_keep_their_relief_through_rebuild_and_reopen(
                 run(&mut s, command, json!({}));
                 assert!((volume(&mut s) - formed).abs() < formed * 1e-3);
             }
-            let mut reopened = Session::new(solidcraft_doc::Document::from_json(&s.doc.to_json()).unwrap());
+            let mut reopened = Session::new(torno_doc::Document::from_json(&s.doc.to_json()).unwrap());
             assert!(no_errors_or_warnings(&reopened), "{:?}", reopened.model.results);
             assert!((volume(&mut reopened) - formed).abs() < 1e-6);
             assert_eq!(flat(&mut reopened), pattern);
             let dxf = run(&mut reopened, "sheet.export_dxf", json!({}))["dxf"].as_str().unwrap().to_owned();
-            assert!(!solidcraft_io::read_dxf(&dxf).unwrap().is_empty());
+            assert!(!torno_io::read_dxf(&dxf).unwrap().is_empty());
         }
     }
 }
@@ -124,7 +124,7 @@ fn shallow_sheet_pocket_preserves_material_depth_export_undo_and_reopen() {
     assert_eq!(f["pockets"][0]["depth_mm"], 1.0);
     let dxf = run(&mut s, "sheet.export_dxf", json!({}))["dxf"].as_str().unwrap().to_string();
     assert!(dxf.contains("POCKET_BOTTOM_Z0.000000_TO_1.000000_MM"));
-    assert_eq!(solidcraft_io::read_dxf(&dxf).unwrap().len(), 8);
+    assert_eq!(torno_io::read_dxf(&dxf).unwrap().len(), 8);
     run(&mut s, "edit.undo", json!({}));
     assert!((volume(&mut s) - 15000.0).abs() < 1e-6);
     run(&mut s, "edit.redo", json!({}));
@@ -133,10 +133,10 @@ fn shallow_sheet_pocket_preserves_material_depth_export_undo_and_reopen() {
         assert!((volume(&mut s) - 14900.0).abs() < 1e-6);
         let state = s.model.state();
         let body = &state.bodies[0].body;
-        assert_eq!(body.classify_point(solidcore_record::Vec3::new(25.0, 25.0, 0.5)).unwrap(), solidcraft_kernel::PointClass::Outside);
-        assert_eq!(body.classify_point(solidcore_record::Vec3::new(25.0, 25.0, 1.5)).unwrap(), solidcraft_kernel::PointClass::Inside);
+        assert_eq!(body.classify_point(solidcore_record::Vec3::new(25.0, 25.0, 0.5)).unwrap(), torno_kernel::PointClass::Outside);
+        assert_eq!(body.classify_point(solidcore_record::Vec3::new(25.0, 25.0, 1.5)).unwrap(), torno_kernel::PointClass::Inside);
     }
-    let mut reopened = Session::new(solidcraft_doc::Document::from_json(&s.doc.to_json()).unwrap());
+    let mut reopened = Session::new(torno_doc::Document::from_json(&s.doc.to_json()).unwrap());
     assert!((volume(&mut reopened) - 14900.0).abs() < 1e-6);
     assert_eq!(flat(&mut reopened)["pockets"], f["pockets"]);
 }
@@ -155,7 +155,7 @@ fn planar_sheet_intersection_retains_exact_outline_and_islands() {
         assert_eq!(flat(&mut s)["flat_size_mm"], json!([10.0, 10.0, 2.5]));
     }
     let dxf = run(&mut s, "sheet.export_dxf", json!({}))["dxf"].as_str().unwrap().to_string();
-    assert_eq!(solidcraft_io::read_dxf(&dxf).unwrap().len(), 4);
+    assert_eq!(torno_io::read_dxf(&dxf).unwrap().len(), 4);
     let mut imported = Session::default();
     run(&mut imported, "sketch.insert_dxf", json!({"name":"Retained","text":dxf}));
     run(&mut imported, "sketch.finish", json!({}));
@@ -287,20 +287,20 @@ fn intersect_preserves_both_material_regions_of_a_logical_ring_sheet() {
         let area: f64 = regions.iter().map(|r| r.area()).sum();
         assert!((area - (900.0 - PI * 75.0)).abs() < 1e-8, "area={area}");
         let body = &state.bodies[0].body;
-        assert_eq!(body.classify_point(solidcore_record::Vec3::new(50.0, 30.0, 1.0)).unwrap(), solidcraft_kernel::PointClass::Inside);
-        assert_eq!(body.classify_point(solidcore_record::Vec3::new(57.0, 30.0, 1.0)).unwrap(), solidcraft_kernel::PointClass::Outside);
-        assert_eq!(body.classify_point(solidcore_record::Vec3::new(64.0, 30.0, 1.0)).unwrap(), solidcraft_kernel::PointClass::Inside);
-        assert_eq!(body.classify_point(solidcore_record::Vec3::new(70.0, 30.0, 1.0)).unwrap(), solidcraft_kernel::PointClass::Outside);
+        assert_eq!(body.classify_point(solidcore_record::Vec3::new(50.0, 30.0, 1.0)).unwrap(), torno_kernel::PointClass::Inside);
+        assert_eq!(body.classify_point(solidcore_record::Vec3::new(57.0, 30.0, 1.0)).unwrap(), torno_kernel::PointClass::Outside);
+        assert_eq!(body.classify_point(solidcore_record::Vec3::new(64.0, 30.0, 1.0)).unwrap(), torno_kernel::PointClass::Inside);
+        assert_eq!(body.classify_point(solidcore_record::Vec3::new(70.0, 30.0, 1.0)).unwrap(), torno_kernel::PointClass::Outside);
         assert!((volume(&mut s) - (900.0 - PI * 75.0) * 2.5).abs() < 0.2);
     }
     let dxf = run(&mut s, "sheet.export_dxf", json!({}))["dxf"].as_str().unwrap().to_string();
-    assert_eq!(solidcraft_io::read_dxf(&dxf).unwrap().len(), 6);
+    assert_eq!(torno_io::read_dxf(&dxf).unwrap().len(), 6);
 }
 
 #[test]
 fn machining_a_folded_parallel_panel_preserves_its_pocket_on_unfold() {
     use solidcore_record::Vec3;
-    use solidcraft_doc::{apply_point, apply_vector};
+    use torno_doc::{apply_point, apply_vector};
     let mut s = Session::default();
     base(&mut s, 100.0, 60.0);
     run(&mut s, "sheet.flange", json!({"edges":[[50,0,2.5]],"height":20}));
@@ -323,8 +323,8 @@ fn machining_a_folded_parallel_panel_preserves_its_pocket_on_unfold() {
     run(&mut s, "sheet.unfold", json!({}));
     let state = s.model.state();
     let body = &state.bodies[0].body;
-    assert_eq!(body.classify_point(Vec3::new(c.x, c.y, 0.5)).unwrap(), solidcraft_kernel::PointClass::Outside);
-    assert_eq!(body.classify_point(Vec3::new(c.x, c.y, 1.5)).unwrap(), solidcraft_kernel::PointClass::Inside);
+    assert_eq!(body.classify_point(Vec3::new(c.x, c.y, 0.5)).unwrap(), torno_kernel::PointClass::Outside);
+    assert_eq!(body.classify_point(Vec3::new(c.x, c.y, 1.5)).unwrap(), torno_kernel::PointClass::Inside);
     assert_eq!(flat(&mut s)["pockets"][0]["depth_mm"], 1.0);
     run(&mut s, "sheet.refold", json!({}));
     assert!((volume(&mut s) - (18972.62196081845 - 16.0)).abs() < 0.2);
@@ -343,14 +343,8 @@ fn flipped_sheet_pocket_keeps_depth_in_the_local_thickness_direction() {
         }
         assert!((volume(&mut s) - 14900.0).abs() < 1e-6);
         let state = s.model.state();
-        assert_eq!(
-            state.bodies[0].body.classify_point(solidcore_record::Vec3::new(25.0, 25.0, -0.5)).unwrap(),
-            solidcraft_kernel::PointClass::Outside
-        );
-        assert_eq!(
-            state.bodies[0].body.classify_point(solidcore_record::Vec3::new(25.0, 25.0, -1.5)).unwrap(),
-            solidcraft_kernel::PointClass::Inside
-        );
+        assert_eq!(state.bodies[0].body.classify_point(solidcore_record::Vec3::new(25.0, 25.0, -0.5)).unwrap(), torno_kernel::PointClass::Outside);
+        assert_eq!(state.bodies[0].body.classify_point(solidcore_record::Vec3::new(25.0, 25.0, -1.5)).unwrap(), torno_kernel::PointClass::Inside);
     }
 }
 
@@ -385,17 +379,17 @@ fn multiple_profile_intersect_keeps_tool_union_for_solids_and_sheet_groups() {
                 state
                     .bodies
                     .iter()
-                    .any(|b| b.body.classify_point(solidcore_record::Vec3::new(x, 25.0, 1.0)).unwrap() == solidcraft_kernel::PointClass::Inside)
+                    .any(|b| b.body.classify_point(solidcore_record::Vec3::new(x, 25.0, 1.0)).unwrap() == torno_kernel::PointClass::Inside)
             );
         }
         assert!(
             !state
                 .bodies
                 .iter()
-                .any(|b| b.body.classify_point(solidcore_record::Vec3::new(50.0, 25.0, 1.0)).unwrap() == solidcraft_kernel::PointClass::Inside)
+                .any(|b| b.body.classify_point(solidcore_record::Vec3::new(50.0, 25.0, 1.0)).unwrap() == torno_kernel::PointClass::Inside)
         );
         assert!(state.bodies.iter().any(|b| b.name == "Control"
-            && b.body.classify_point(solidcore_record::Vec3::new(205.0, 5.0, 5.0)).unwrap() == solidcraft_kernel::PointClass::Inside));
+            && b.body.classify_point(solidcore_record::Vec3::new(205.0, 5.0, 5.0)).unwrap() == torno_kernel::PointClass::Inside));
     }
 }
 
@@ -414,7 +408,7 @@ fn deleting_sheet_material_prunes_cosmetic_threads_and_undo_restores_them() {
     assert!(s.model.state().bodies.is_empty());
     assert!(s.model.state().sheets.is_empty());
     assert!(s.model.state().threads.is_empty());
-    assert!(solidcraft_doc::world_state(&s.doc, &s.model.state()).unwrap().threads.is_empty());
+    assert!(torno_doc::world_state(&s.doc, &s.model.state()).unwrap().threads.is_empty());
     run(&mut s, "edit.undo", json!({}));
     assert_eq!(s.model.state().threads.len(), 1);
 }
@@ -435,16 +429,16 @@ fn sheet_pocket_transfer_keeps_local_depth_world_pose_and_history() {
         assert_eq!((sh.pockets[0].z0, sh.pockets[0].z1), (0.0, 1.0));
         let cut = sh.frame.to_world(solidcore_record::Vec2::new(25.0, 25.0)) + sh.frame.normal() * 0.5;
         let floor = sh.frame.to_world(solidcore_record::Vec2::new(25.0, 25.0)) + sh.frame.normal() * 1.5;
-        assert_eq!(mb.body.classify_point(cut).unwrap(), solidcraft_kernel::PointClass::Outside);
-        assert_eq!(mb.body.classify_point(floor).unwrap(), solidcraft_kernel::PointClass::Inside);
+        assert_eq!(mb.body.classify_point(cut).unwrap(), torno_kernel::PointClass::Outside);
+        assert_eq!(mb.body.classify_point(floor).unwrap(), torno_kernel::PointClass::Inside);
         let world = s.world_state().unwrap();
         let body = &world.body(name).unwrap().body;
-        let bounds = body.mesh(&solidcraft_kernel::MeshTolerance::chord(1e-3)).unwrap().bounds();
+        let bounds = body.mesh(&torno_kernel::MeshTolerance::chord(1e-3)).unwrap().bounds();
         assert!(bounds.min.dist(Vec3::ZERO) < 1e-6, "{bounds:?}");
         assert!(bounds.max.dist(Vec3::new(100.0, 60.0, 2.5)) < 1e-6, "{bounds:?}");
-        assert_eq!(body.classify_point(Vec3::new(25.0, 25.0, 0.5)).unwrap(), solidcraft_kernel::PointClass::Outside);
-        assert_eq!(body.classify_point(Vec3::new(25.0, 25.0, 1.5)).unwrap(), solidcraft_kernel::PointClass::Inside);
-        assert!((solidcraft_kernel::measure(body).unwrap().volume - 14900.0).abs() < 1e-6);
+        assert_eq!(body.classify_point(Vec3::new(25.0, 25.0, 0.5)).unwrap(), torno_kernel::PointClass::Outside);
+        assert_eq!(body.classify_point(Vec3::new(25.0, 25.0, 1.5)).unwrap(), torno_kernel::PointClass::Inside);
+        assert!((torno_kernel::measure(body).unwrap().volume - 14900.0).abs() < 1e-6);
     }
     let mut s = Session::default();
     base(&mut s, 100.0, 60.0);
@@ -473,7 +467,7 @@ fn sheet_pocket_transfer_keeps_local_depth_world_pose_and_history() {
         assert_eq!(f["pockets"][0]["side"], "bottom");
         assert_eq!(f["pockets"][0]["depth_mm"], 1.0);
     }
-    let mut reopened = Session::new(solidcraft_doc::Document::from_json(&s.doc.to_json()).unwrap());
+    let mut reopened = Session::new(torno_doc::Document::from_json(&s.doc.to_json()).unwrap());
     check(&reopened, &name, component, origin, y, true);
     run(&mut reopened, "component.activate", json!({"component":component}));
     run(&mut reopened, "sheet.unfold", json!({"body":name}));
@@ -1409,7 +1403,7 @@ fn contains(s: &Session, p: [f64; 3]) -> bool {
         .state()
         .bodies
         .first()
-        .is_some_and(|b| b.body.classify_point(solidcore_record::Vec3::new(p[0], p[1], p[2])).unwrap() == solidcraft_kernel::PointClass::Inside)
+        .is_some_and(|b| b.body.classify_point(solidcore_record::Vec3::new(p[0], p[1], p[2])).unwrap() == torno_kernel::PointClass::Inside)
 }
 
 #[test]
@@ -1425,8 +1419,8 @@ fn a_sketch_on_a_flange_face_attaches_to_its_panel() {
     assert_eq!(made["attachment"], "sheet_face");
     // The sketch keeps the face's name: the body, the panel (its flange) and the side of the sheet.
     let sketch = s.doc.find_feature("Holes").cloned().unwrap();
-    let solidcraft_doc::FeatureKind::Sketch { plane, .. } = &sketch.kind else { panic!("{:?}", sketch.kind) };
-    let name = solidcraft_doc::sheet::plane_sheet_face(plane).unwrap_or_default();
+    let torno_doc::FeatureKind::Sketch { plane, .. } = &sketch.kind else { panic!("{:?}", sketch.kind) };
+    let name = torno_doc::sheet::plane_sheet_face(plane).unwrap_or_default();
     assert!(name.starts_with("sheet:Body1:F") && name.ends_with(":top"), "{name}");
     // A cut through the flange from that sketch is a round hole 7 mm up the face, at x = 30.
     run(&mut s, "solid.extrude", json!({"sketch": "Holes", "distance": 2.5, "direction": "negative", "operation": "cut"}));
@@ -1528,7 +1522,7 @@ fn sketches_on_the_top_and_bottom_faces_of_a_sheet_survive_unfold_refold_and_reo
         assert!((centres[1].0 - 60.0).abs() < 0.01 && (centres[1].1 - 20.0).abs() < 0.01, "{centres:?}");
         assert!((volume(&mut s) - want).abs() < 0.1);
     }
-    let mut reopened = Session::new(solidcraft_doc::Document::from_json(&s.doc.to_json()).unwrap());
+    let mut reopened = Session::new(torno_doc::Document::from_json(&s.doc.to_json()).unwrap());
     assert!((volume(&mut reopened) - want).abs() < 0.1);
     assert_eq!(holes(&flat(&mut reopened)), holes(&flat(&mut s)));
 }
@@ -1556,24 +1550,24 @@ fn a_sketch_on_a_sheet_face_reports_a_lost_attachment_instead_of_moving_to_anoth
     circle_sketch(&mut s, "Holes", json!({"face": [50, 2.5, 12]}), [30.0, -8.0], 3.6);
     let id = s.doc.find_feature("Holes").map(|f| f.id).unwrap_or(0);
     let status = |s: &Session| s.placed_document().sketch_face_attachment(id, &s.model);
-    assert!(matches!(status(&s), solidcraft_doc::FaceAttachmentStatus::Sheet { plane: Some(_) }));
+    assert!(matches!(status(&s), torno_doc::FaceAttachmentStatus::Sheet { plane: Some(_) }));
     // With the flange suppressed there is no such face; the base's top face is not a substitute.
     run(&mut s, "timeline.suppress", json!({"feature": "EdgeFlange1", "suppressed": true}));
     let error = run(&mut s, "timeline.inspect", json!({"feature": "Holes"}))["error"].as_str().unwrap_or_default().to_string();
     assert!(error.contains("lost face attachment") && error.contains("reattach"), "{error}");
-    let solidcraft_doc::FaceAttachmentStatus::Lost { message, repair_plane } = status(&s) else { panic!("{:?}", status(&s)) };
+    let torno_doc::FaceAttachmentStatus::Lost { message, repair_plane } = status(&s) else { panic!("{:?}", status(&s)) };
     assert!(message.contains("sheet face") && repair_plane.is_some(), "{message}");
     // Redefine Sketch Plane repairs it on another face, here the base's top (its sketch keeps its geometry).
     let repaired = run(&mut s, "sketch.redefine", json!({"sketch": "Holes", "plane": {"face": [10, 30, 2.5]}}));
     assert_eq!(repaired["attachment"], "sheet_face");
     assert!(run(&mut s, "timeline.inspect", json!({"feature": "Holes"}))["error"].is_null());
-    assert!(matches!(status(&s), solidcraft_doc::FaceAttachmentStatus::Sheet { .. }));
+    assert!(matches!(status(&s), torno_doc::FaceAttachmentStatus::Sheet { .. }));
     // The flange is back, and a sketch attached to it again is healthy.
     run(&mut s, "timeline.suppress", json!({"feature": "EdgeFlange1", "suppressed": false}));
     let again = run(&mut s, "sketch.redefine", json!({"sketch": "Holes", "plane": {"face": [50, 2.5, 12]}}));
     assert_eq!(again["attachment"], "sheet_face");
     assert!(run(&mut s, "timeline.inspect", json!({"feature": "Holes"}))["error"].is_null());
-    assert!(matches!(status(&s), solidcraft_doc::FaceAttachmentStatus::Sheet { .. }));
+    assert!(matches!(status(&s), torno_doc::FaceAttachmentStatus::Sheet { .. }));
 }
 
 #[test]
@@ -1587,8 +1581,8 @@ fn renaming_a_sheet_body_keeps_its_sketches_on_their_faces() {
     run(&mut s, "body.rename", json!({"body": "Body1", "name": "Bracket"}));
     for (sketch, face) in [("Holes", "sheet:Bracket:F"), ("Above", "sheet:Bracket:base:top")] {
         let feature = s.doc.find_feature(sketch).cloned().unwrap();
-        let solidcraft_doc::FeatureKind::Sketch { plane, .. } = &feature.kind else { panic!("{:?}", feature.kind) };
-        assert!(solidcraft_doc::sheet::plane_sheet_face(plane).is_some_and(|name| name.starts_with(face)), "{sketch}: {:?}", feature.kind);
+        let torno_doc::FeatureKind::Sketch { plane, .. } = &feature.kind else { panic!("{:?}", feature.kind) };
+        assert!(torno_doc::sheet::plane_sheet_face(plane).is_some_and(|name| name.starts_with(face)), "{sketch}: {:?}", feature.kind);
         assert!(run(&mut s, "timeline.inspect", json!({"feature": sketch}))["error"].is_null(), "{sketch}");
     }
     cut_through(&mut s, "Holes");
@@ -1702,13 +1696,11 @@ fn the_bend_table_and_the_dxf_follow_what_flat_cuts_leave_of_a_bend() {
     let bend_lines = |s: &mut Session| -> Vec<(f64, f64)> {
         let text = run(s, "sheet.export_dxf", json!({}))["dxf"].as_str().unwrap_or_default().to_string();
         let on_layer = text.lines().collect::<Vec<_>>().windows(2).filter(|w| w[0].trim() == "8" && w[1].trim() == "BEND_UP").count();
-        let mut found: Vec<(f64, f64)> = solidcraft_io::read_dxf(&text)
+        let mut found: Vec<(f64, f64)> = torno_io::read_dxf(&text)
             .unwrap()
             .iter()
             .filter_map(|g| match g {
-                solidcraft_io::Geom2::Line(a, b) if (a.y + FRAC_PI_2).abs() < 1e-6 && (b.y + FRAC_PI_2).abs() < 1e-6 => {
-                    Some((a.x.min(b.x), a.x.max(b.x)))
-                }
+                torno_io::Geom2::Line(a, b) if (a.y + FRAC_PI_2).abs() < 1e-6 && (b.y + FRAC_PI_2).abs() < 1e-6 => Some((a.x.min(b.x), a.x.max(b.x))),
                 _ => None,
             })
             .collect();
@@ -2042,10 +2034,9 @@ fn a_flange_bent_inside_keeps_the_base_sketchs_arcs_in_the_flat_pattern_and_the_
         run(&mut s, "sheet.flange", json!({"edges": [[100, 0, 2]], "height": 40, "angle": 90, "position": position}));
         assert!(no_errors_or_warnings(&s), "{position}: {:?}", s.model.results);
         let text = run(&mut s, "sheet.export_dxf", json!({}))["dxf"].as_str().unwrap_or_default().to_string();
-        let shapes = solidcraft_io::read_dxf(&text).unwrap();
-        let lines = shapes.iter().filter(|g| matches!(g, solidcraft_io::Geom2::Line(..))).count();
-        let radii: Vec<f64> =
-            shapes.iter().filter_map(|g| if let solidcraft_io::Geom2::Arc { c, a, .. } = g { Some(c.dist(*a)) } else { None }).collect();
+        let shapes = torno_io::read_dxf(&text).unwrap();
+        let lines = shapes.iter().filter(|g| matches!(g, torno_io::Geom2::Line(..))).count();
+        let radii: Vec<f64> = shapes.iter().filter_map(|g| if let torno_io::Geom2::Arc { c, a, .. } = g { Some(c.dist(*a)) } else { None }).collect();
         // Six lines of outline (the plate's top, left and right; the flange's two sides and its
         // end) and the bend's centre line; the four corners.
         assert_eq!((lines, radii.len(), shapes.len()), (7, 4, 11), "{position}");
@@ -2191,13 +2182,13 @@ fn the_angle_display_is_a_rule_setting_checked_saved_and_undone() {
     // Saved with the design and read back; a design saved without it reads bend angles.
     let mut saved: Value = serde_json::from_str(&s.doc.to_json()).unwrap();
     assert_eq!(saved["sheet"]["rules"][0]["angle_display"], "included");
-    let mut reopened = Session::new(solidcraft_doc::Document::from_json(&saved.to_string()).unwrap());
+    let mut reopened = Session::new(torno_doc::Document::from_json(&saved.to_string()).unwrap());
     assert_eq!(display(&mut reopened).0, "included");
     assert_eq!(bend_notes(&mut reopened), ["B1 UP 122%%d R1"]);
     if let Some(rule) = saved["sheet"]["rules"][0].as_object_mut() {
         rule.remove("angle_display");
     }
-    let mut older = Session::new(solidcraft_doc::Document::from_json(&saved.to_string()).unwrap());
+    let mut older = Session::new(torno_doc::Document::from_json(&saved.to_string()).unwrap());
     assert_eq!(display(&mut older), (json!("bend"), json!("bend")));
     assert_eq!(bend_notes(&mut older), ["B1 UP 58%%d R1"]);
     // Undone like the rule's other changes.
@@ -2238,9 +2229,9 @@ fn flat_dxf_preserves_exact_cutout_entities() {
     let dxf = super::flat_dxf(&sh, &super::DxfOptions::default()).unwrap();
     assert_eq!(dxf.matches("0\nCIRCLE\n").count(), 1, "{dxf}");
     assert!(!dxf.contains("0\nARC\n"), "a full circle must not become a zero-length ARC");
-    let read = solidcraft_io::read_dxf(&dxf).unwrap();
+    let read = torno_io::read_dxf(&dxf).unwrap();
     assert_eq!(read.len(), 5);
-    assert!(read.iter().any(|g| matches!(g, solidcraft_io::Geom2::Circle(c, r) if *c == Vec2::new(40.0, 30.0) && (*r - 5.0).abs() < 1e-9)));
+    assert!(read.iter().any(|g| matches!(g, torno_io::Geom2::Circle(c, r) if *c == Vec2::new(40.0, 30.0) && (*r - 5.0).abs() < 1e-9)));
     sh.holes[0].outer = Loop2 {
         segs: vec![
             Seg2::Line { a: Vec2::new(10.0, 10.0), b: Vec2::new(30.0, 10.0) },
@@ -2251,9 +2242,9 @@ fn flat_dxf_preserves_exact_cutout_entities() {
     assert_eq!(dxf.matches("0\nLINE\n").count(), 5, "four outline lines and one exact cutout line");
     assert_eq!(dxf.matches("0\nARC\n").count(), 1);
     assert!(dxf.contains(" 50\n0.0\n 51\n180.0\n"), "{dxf}");
-    let read = solidcraft_io::read_dxf(&dxf).unwrap();
+    let read = torno_io::read_dxf(&dxf).unwrap();
     assert_eq!(read.len(), 6);
-    assert!(read.iter().any(|g| matches!(g, solidcraft_io::Geom2::Arc { c, a, b } if *c == Vec2::new(20.0, 10.0) && a.dist(Vec2::new(30.0, 10.0)) < 1e-9 && b.dist(Vec2::new(10.0, 10.0)) < 1e-9)));
+    assert!(read.iter().any(|g| matches!(g, torno_io::Geom2::Arc { c, a, b } if *c == Vec2::new(20.0, 10.0) && a.dist(Vec2::new(30.0, 10.0)) < 1e-9 && b.dist(Vec2::new(10.0, 10.0)) < 1e-9)));
 }
 
 // A profile chosen by a point outside its inner loop must keep that inner loop through
@@ -2271,7 +2262,7 @@ fn inherited_base_profile_holes_survive_every_sheet_state() {
         let f = flat(&mut s);
         assert_eq!(f["cutouts"].as_array().map(Vec::len), Some(1));
         let dxf = run(&mut s, "sheet.export_dxf", json!({}))["dxf"].as_str().unwrap().to_string();
-        assert_eq!(solidcraft_io::read_dxf(&dxf).unwrap().len(), 8);
+        assert_eq!(torno_io::read_dxf(&dxf).unwrap().len(), 8);
         let mut reopened = Session::default();
         run(&mut reopened, "sketch.insert_dxf", json!({"text": dxf, "name": "Blank"}));
         run(&mut reopened, "sketch.finish", json!({}));
@@ -2299,7 +2290,7 @@ fn edge_notch_uses_the_same_material_boundary_in_solid_flat_and_dxf() {
     assert_eq!(f["outline"][0].as_array().map(Vec::len), Some(8));
     assert_eq!(f["cutouts"].as_array().map(Vec::len), Some(0));
     let dxf = run(&mut s, "sheet.export_dxf", json!({}))["dxf"].as_str().unwrap().to_string();
-    assert_eq!(solidcraft_io::read_dxf(&dxf).unwrap().len(), 8);
+    assert_eq!(torno_io::read_dxf(&dxf).unwrap().len(), 8);
     let mut reopened = Session::default();
     run(&mut reopened, "sketch.insert_dxf", json!({"text": dxf, "name": "Blank"}));
     run(&mut reopened, "sketch.finish", json!({}));
@@ -2539,8 +2530,8 @@ fn a_round_flange_stays_a_circle_and_keeps_a_cut_near_its_rim_through_unfold_ref
             assert!((regions[0].holes[0].signed_area().abs() - 1.0).abs() < 1e-12);
             assert_eq!(s.model.state().bodies.len(), 1);
             let dxf = run(&mut s, "sheet.export_dxf", json!({}))["dxf"].as_str().unwrap().to_string();
-            let drawn = solidcraft_io::read_dxf(&dxf).unwrap();
-            assert!(drawn.iter().any(|g| matches!(g, solidcraft_io::Geom2::Circle(_, r) if (*r - 10.0).abs() < 1e-12)), "{drawn:?}");
+            let drawn = torno_io::read_dxf(&dxf).unwrap();
+            assert!(drawn.iter().any(|g| matches!(g, torno_io::Geom2::Circle(_, r) if (*r - 10.0).abs() < 1e-12)), "{drawn:?}");
             assert_eq!(drawn.len(), 5, "the circle and the square's four sides: {drawn:?}");
             if stage == "sheet.unfold" && initially_flat {
                 run(&mut s, "sheet.refold", json!({}));
@@ -2583,8 +2574,8 @@ fn unrelated_box_cut_preserves_logical_ring_sheet_compound() {
         assert_eq!(s.model.state().bodies.len(), 2);
         let state = s.model.state();
         let body = &state.bodies.iter().find(|b| b.name == sheet_name).unwrap().body;
-        assert_eq!(body.classify_point(solidcore_record::Vec3::new(50.0, 30.0, 1.25)).unwrap(), solidcraft_kernel::PointClass::Inside);
-        assert_eq!(body.classify_point(solidcore_record::Vec3::new(57.0, 30.0, 1.25)).unwrap(), solidcraft_kernel::PointClass::Outside);
+        assert_eq!(body.classify_point(solidcore_record::Vec3::new(50.0, 30.0, 1.25)).unwrap(), torno_kernel::PointClass::Inside);
+        assert_eq!(body.classify_point(solidcore_record::Vec3::new(57.0, 30.0, 1.25)).unwrap(), torno_kernel::PointClass::Outside);
     }
 }
 
@@ -2619,9 +2610,9 @@ fn specialized_sheet_cuts_respect_component_and_explicit_participants() {
 fn ring_cut_preserves_retained_island_through_unfold_and_refold() {
     fn material_probes(s: &Session) {
         let body = &s.model.state().bodies[0].body;
-        assert_eq!(body.classify_point(solidcore_record::Vec3::new(50.0, 30.0, 1.25)).unwrap(), solidcraft_kernel::PointClass::Inside);
-        assert_eq!(body.classify_point(solidcore_record::Vec3::new(57.0, 30.0, 1.25)).unwrap(), solidcraft_kernel::PointClass::Outside);
-        assert_eq!(body.classify_point(solidcore_record::Vec3::new(65.0, 30.0, 1.25)).unwrap(), solidcraft_kernel::PointClass::Inside);
+        assert_eq!(body.classify_point(solidcore_record::Vec3::new(50.0, 30.0, 1.25)).unwrap(), torno_kernel::PointClass::Inside);
+        assert_eq!(body.classify_point(solidcore_record::Vec3::new(57.0, 30.0, 1.25)).unwrap(), torno_kernel::PointClass::Outside);
+        assert_eq!(body.classify_point(solidcore_record::Vec3::new(65.0, 30.0, 1.25)).unwrap(), torno_kernel::PointClass::Inside);
     }
     let mut s = Session::default();
     base(&mut s, 100.0, 60.0);
@@ -2662,26 +2653,22 @@ fn retained_depth_check(s: &mut Session, want: f64, z0: f64, z1: f64) {
     let state = s.model.state();
     assert_eq!(state.sheets.len(), 1);
     assert_eq!(state.sheets[0].t, 2.5, "rule stock gauge is preserved");
-    assert!(
-        state.bodies.iter().any(|b| b.body.classify_point(Vec3::new(25.0, 25.0, (z0 + z1) * 0.5)).unwrap() == solidcraft_kernel::PointClass::Inside)
-    );
-    assert!(!state.bodies.iter().any(|b| b.body.classify_point(Vec3::new(25.0, 25.0, z0 - 0.1)).unwrap() == solidcraft_kernel::PointClass::Inside));
-    assert!(!state.bodies.iter().any(|b| b.body.classify_point(Vec3::new(25.0, 25.0, z1 + 0.1)).unwrap() == solidcraft_kernel::PointClass::Inside));
-    assert!(
-        !state.bodies.iter().any(|b| b.body.classify_point(Vec3::new(10.0, 25.0, (z0 + z1) * 0.5)).unwrap() == solidcraft_kernel::PointClass::Inside)
-    );
+    assert!(state.bodies.iter().any(|b| b.body.classify_point(Vec3::new(25.0, 25.0, (z0 + z1) * 0.5)).unwrap() == torno_kernel::PointClass::Inside));
+    assert!(!state.bodies.iter().any(|b| b.body.classify_point(Vec3::new(25.0, 25.0, z0 - 0.1)).unwrap() == torno_kernel::PointClass::Inside));
+    assert!(!state.bodies.iter().any(|b| b.body.classify_point(Vec3::new(25.0, 25.0, z1 + 0.1)).unwrap() == torno_kernel::PointClass::Inside));
+    assert!(!state.bodies.iter().any(|b| b.body.classify_point(Vec3::new(10.0, 25.0, (z0 + z1) * 0.5)).unwrap() == torno_kernel::PointClass::Inside));
     let bounds = state.bodies[0].mesh().bounds();
     assert!((bounds.min.z - z0).abs() < 1e-8 && (bounds.max.z - z1).abs() < 1e-8, "{bounds:?}");
 }
 
 fn depth_step_reopen(s: &mut Session, suffix: &str, want: f64, inside: solidcore_record::Vec3, outside: solidcore_record::Vec3) {
-    let path = std::env::temp_dir().join(format!("solidcraft-depth-intersect-{suffix}-{}.step", std::process::id()));
+    let path = std::env::temp_dir().join(format!("torno-depth-intersect-{suffix}-{}.step", std::process::id()));
     run(s, "file.export", json!({"path":path.to_string_lossy()}));
     let mut imported = Session::default();
     run(&mut imported, "doc.open", json!({"path":path.to_string_lossy()}));
     assert!((volume(&mut imported) - want).abs() < 1e-6);
-    assert!(imported.model.state().bodies.iter().any(|b| b.body.classify_point(inside).unwrap() == solidcraft_kernel::PointClass::Inside));
-    assert!(!imported.model.state().bodies.iter().any(|b| b.body.classify_point(outside).unwrap() == solidcraft_kernel::PointClass::Inside));
+    assert!(imported.model.state().bodies.iter().any(|b| b.body.classify_point(inside).unwrap() == torno_kernel::PointClass::Inside));
+    assert!(!imported.model.state().bodies.iter().any(|b| b.body.classify_point(outside).unwrap() == torno_kernel::PointClass::Inside));
     std::fs::remove_file(path).unwrap();
 }
 
@@ -2737,7 +2724,7 @@ fn partial_depth_intersect_retains_bottom_top_and_middle_material_through_histor
             assert!(dxf.contains(&format!("POCKET_{}_Z{a:.6}_TO_{b:.6}_MM", side.to_uppercase())));
         }
         let outline = dxf_outline_only(&dxf);
-        assert_eq!(solidcraft_io::read_dxf(&outline).unwrap().len(), 4);
+        assert_eq!(torno_io::read_dxf(&outline).unwrap().len(), 4);
         let mut outline_import = Session::default();
         run(&mut outline_import, "sketch.insert_dxf", json!({"text":outline,"name":"Outline"}));
         run(&mut outline_import, "sketch.finish", json!({}));
@@ -2751,7 +2738,7 @@ fn partial_depth_intersect_retains_bottom_top_and_middle_material_through_histor
             retained_depth_check(&mut s, 100.0, z0, z1);
             assert_eq!(flat(&mut s)["pockets"], exported["pockets"]);
         }
-        let mut reopened = Session::new(solidcraft_doc::Document::from_json(&s.doc.to_json()).unwrap());
+        let mut reopened = Session::new(torno_doc::Document::from_json(&s.doc.to_json()).unwrap());
         retained_depth_check(&mut reopened, 100.0, z0, z1);
         depth_step_reopen(&mut s, &format!("offset{offset}"), 100.0, Vec3::new(25.0, 25.0, (z0 + z1) * 0.5), Vec3::new(25.0, 25.0, z1 + 0.1));
     }
@@ -2773,10 +2760,10 @@ fn partial_depth_intersect_preserves_prior_pockets_and_actual_interval_intersect
         assert!((volume(&mut s) - 75.0).abs() < 1e-6);
         let state = s.model.state();
         let body = &state.bodies[0].body;
-        assert_eq!(body.classify_point(Vec3::new(22.0, 25.0, 0.75)).unwrap(), solidcraft_kernel::PointClass::Outside);
-        assert_eq!(body.classify_point(Vec3::new(22.0, 25.0, 1.25)).unwrap(), solidcraft_kernel::PointClass::Inside);
-        assert_eq!(body.classify_point(Vec3::new(27.0, 25.0, 0.75)).unwrap(), solidcraft_kernel::PointClass::Inside);
-        assert_eq!(body.classify_point(Vec3::new(27.0, 25.0, 0.25)).unwrap(), solidcraft_kernel::PointClass::Outside);
+        assert_eq!(body.classify_point(Vec3::new(22.0, 25.0, 0.75)).unwrap(), torno_kernel::PointClass::Outside);
+        assert_eq!(body.classify_point(Vec3::new(22.0, 25.0, 1.25)).unwrap(), torno_kernel::PointClass::Inside);
+        assert_eq!(body.classify_point(Vec3::new(27.0, 25.0, 0.75)).unwrap(), torno_kernel::PointClass::Inside);
+        assert_eq!(body.classify_point(Vec3::new(27.0, 25.0, 0.25)).unwrap(), torno_kernel::PointClass::Outside);
     }
     let records = s.model.state().sheets[0].pockets.clone();
     run(&mut s, "solid.extrude", json!({"sketch":"RetainDepth","distance":1.5,"start_offset":0.25,"operation":"intersect"}));
@@ -2786,7 +2773,7 @@ fn partial_depth_intersect_preserves_prior_pockets_and_actual_interval_intersect
     assert!((volume(&mut s) - 25.0).abs() < 1e-6);
     run(&mut s, "sheet.unfold", json!({}));
     assert!((volume(&mut s) - 25.0).abs() < 1e-6);
-    let mut cold = Session::new(solidcraft_doc::Document::from_json(&s.doc.to_json()).unwrap());
+    let mut cold = Session::new(torno_doc::Document::from_json(&s.doc.to_json()).unwrap());
     assert!((volume(&mut cold) - 25.0).abs() < 1e-6);
     depth_step_reopen(&mut s, "prior", 25.0, Vec3::new(22.0, 25.0, 1.125), Vec3::new(22.0, 25.0, 0.75));
 }
@@ -2808,9 +2795,9 @@ fn partial_depth_intersect_keeps_disconnected_tool_islands_and_annular_curves() 
         assert!((volume(&mut s) - 200.0).abs() < 1e-6);
         assert_eq!(s.model.state().sheets[0].flat_regions().unwrap().len(), 2);
         for x in [25.0, 65.0] {
-            assert_eq!(s.model.state().bodies[0].body.classify_point(Vec3::new(x, 25.0, 0.5)).unwrap(), solidcraft_kernel::PointClass::Inside);
+            assert_eq!(s.model.state().bodies[0].body.classify_point(Vec3::new(x, 25.0, 0.5)).unwrap(), torno_kernel::PointClass::Inside);
         }
-        assert_eq!(s.model.state().bodies[0].body.classify_point(Vec3::new(45.0, 25.0, 0.5)).unwrap(), solidcraft_kernel::PointClass::Outside);
+        assert_eq!(s.model.state().bodies[0].body.classify_point(Vec3::new(45.0, 25.0, 0.5)).unwrap(), torno_kernel::PointClass::Outside);
     }
     depth_step_reopen(&mut s, "islands", 200.0, Vec3::new(65.0, 25.0, 0.5), Vec3::new(45.0, 25.0, 0.5));
     let mut ring = Session::default();
@@ -2829,13 +2816,13 @@ fn partial_depth_intersect_keeps_disconnected_tool_islands_and_annular_curves() 
         let area: f64 = state.sheets[0].flat_regions().unwrap().iter().map(|r| r.area()).sum();
         assert!((area - 75.0 * PI).abs() < 1e-8);
         assert!((volume(&mut ring) - 75.0 * PI).abs() < 0.1);
-        assert_eq!(state.bodies[0].body.classify_point(Vec3::new(57.0, 30.0, 0.5)).unwrap(), solidcraft_kernel::PointClass::Inside);
-        assert_eq!(state.bodies[0].body.classify_point(Vec3::new(50.0, 30.0, 0.5)).unwrap(), solidcraft_kernel::PointClass::Outside);
-        assert_eq!(state.bodies[0].body.classify_point(Vec3::new(57.0, 30.0, 1.5)).unwrap(), solidcraft_kernel::PointClass::Outside);
+        assert_eq!(state.bodies[0].body.classify_point(Vec3::new(57.0, 30.0, 0.5)).unwrap(), torno_kernel::PointClass::Inside);
+        assert_eq!(state.bodies[0].body.classify_point(Vec3::new(50.0, 30.0, 0.5)).unwrap(), torno_kernel::PointClass::Outside);
+        assert_eq!(state.bodies[0].body.classify_point(Vec3::new(57.0, 30.0, 1.5)).unwrap(), torno_kernel::PointClass::Outside);
     }
     let dxf = run(&mut ring, "sheet.export_dxf", json!({}))["dxf"].as_str().unwrap().to_string();
     assert!(dxf.contains("POCKET_TOP_Z1.000000_TO_2.500000_MM"));
-    assert_eq!(solidcraft_io::read_dxf(&dxf_outline_only(&dxf)).unwrap().len(), 2);
+    assert_eq!(torno_io::read_dxf(&dxf_outline_only(&dxf)).unwrap().len(), 2);
 }
 
 #[test]
@@ -2889,24 +2876,24 @@ fn partial_depth_intersect_flipped_tool_and_transferred_sheet_keep_depth_side_an
         assert!(state.body(&name).unwrap().transferred);
         let world = s.world_state().unwrap();
         let body = &world.body(&name).unwrap().body;
-        assert_eq!(body.classify_point(Vec3::new(25.0, 25.0, 1.0)).unwrap(), solidcraft_kernel::PointClass::Inside);
-        assert_eq!(body.classify_point(Vec3::new(25.0, 25.0, 0.25)).unwrap(), solidcraft_kernel::PointClass::Outside);
-        assert_eq!(body.classify_point(Vec3::new(25.0, 25.0, 2.0)).unwrap(), solidcraft_kernel::PointClass::Outside);
+        assert_eq!(body.classify_point(Vec3::new(25.0, 25.0, 1.0)).unwrap(), torno_kernel::PointClass::Inside);
+        assert_eq!(body.classify_point(Vec3::new(25.0, 25.0, 0.25)).unwrap(), torno_kernel::PointClass::Outside);
+        assert_eq!(body.classify_point(Vec3::new(25.0, 25.0, 2.0)).unwrap(), torno_kernel::PointClass::Outside);
         let bounds = world.body(&name).unwrap().mesh().bounds();
         assert!(before.min.dist(bounds.min) < 1e-8 && before.max.dist(bounds.max) < 1e-8);
-        assert!((solidcraft_kernel::measure(body).unwrap().volume - 100.0).abs() < 1e-6);
+        assert!((torno_kernel::measure(body).unwrap().volume - 100.0).abs() < 1e-6);
     }
-    let mut reopened = Session::new(solidcraft_doc::Document::from_json(&s.doc.to_json()).unwrap());
+    let mut reopened = Session::new(torno_doc::Document::from_json(&s.doc.to_json()).unwrap());
     let reopened_world = reopened.world_state().unwrap();
     let body = &reopened_world.body(&name).unwrap().body;
-    assert_eq!(body.classify_point(Vec3::new(25.0, 25.0, 1.0)).unwrap(), solidcraft_kernel::PointClass::Inside);
-    assert!((solidcraft_kernel::measure(body).unwrap().volume - 100.0).abs() < 1e-6);
+    assert_eq!(body.classify_point(Vec3::new(25.0, 25.0, 1.0)).unwrap(), torno_kernel::PointClass::Inside);
+    assert!((torno_kernel::measure(body).unwrap().volume - 100.0).abs() < 1e-6);
     run(&mut reopened, "timeline.edit", json!({"feature":"RetainSlab","set":{"extent":{"distance":"1.5"}}}));
     let world = reopened.world_state().unwrap();
     let body = &world.body(&name).unwrap().body;
-    assert!((solidcraft_kernel::measure(body).unwrap().volume - 150.0).abs() < 1e-6);
-    assert_eq!(body.classify_point(Vec3::new(25.0, 25.0, 1.75)).unwrap(), solidcraft_kernel::PointClass::Inside);
-    assert_eq!(body.classify_point(Vec3::new(25.0, 25.0, 2.25)).unwrap(), solidcraft_kernel::PointClass::Outside);
+    assert!((torno_kernel::measure(body).unwrap().volume - 150.0).abs() < 1e-6);
+    assert_eq!(body.classify_point(Vec3::new(25.0, 25.0, 1.75)).unwrap(), torno_kernel::PointClass::Inside);
+    assert_eq!(body.classify_point(Vec3::new(25.0, 25.0, 2.25)).unwrap(), torno_kernel::PointClass::Outside);
 }
 
 #[test]
@@ -2928,7 +2915,7 @@ fn partial_depth_intersect_full_gauge_in_rotated_frames_does_not_invent_pockets(
         run(&mut s, "sketch.create", json!({"name":"WorldTool","plane":{"origin":[0,0,0],"x_dir":[1,0,0],"y_dir":[0,1,0]}}));
         run(&mut s, "sketch.rectangle.two_point", json!({"p0":[20,20],"p1":[30,30]}));
         run(&mut s, "sketch.finish", json!({}));
-        let mut tool_session = Session::new(solidcraft_doc::Document::from_json(&s.doc.to_json()).unwrap());
+        let mut tool_session = Session::new(torno_doc::Document::from_json(&s.doc.to_json()).unwrap());
         // The witness is built in the sketch's own component, so its caps lie in the sketch's frame.
         run(&mut tool_session, "component.activate", json!({"component":owner}));
         run(&mut tool_session, "solid.extrude", json!({"sketch":"WorldTool","distance":2.5,"body_name":"CapWitness"}));
@@ -2939,7 +2926,7 @@ fn partial_depth_intersect_full_gauge_in_rotated_frames_does_not_invent_pockets(
         assert_eq!(sources.len(), witness.face_count());
         let mut cap_count = 0;
         for (index, source) in sources.iter().enumerate() {
-            if let Some(solidcraft_kernel::FaceSource::CertifiedExtrudeCap { high, plane, .. }) = source {
+            if let Some(torno_kernel::FaceSource::CertifiedExtrudeCap { high, plane, .. }) = source {
                 cap_count += 1;
                 let current = witness.planar_face(index).unwrap();
                 assert!(current.normal().cross(tool_plane.normal()).len() < 1e-10);
@@ -2956,12 +2943,12 @@ fn partial_depth_intersect_full_gauge_in_rotated_frames_does_not_invent_pockets(
             assert!(s.model.state().sheets[0].pockets.is_empty(), "full gauge must not acquire roundoff-depth pockets");
             let world = s.world_state().unwrap();
             let body = &world.body(&name).unwrap().body;
-            assert!((solidcraft_kernel::measure(body).unwrap().volume - 250.0).abs() < 1e-5);
-            assert_eq!(body.classify_point(Vec3::new(25.0, 25.0, 0.1)).unwrap(), solidcraft_kernel::PointClass::Inside);
-            assert_eq!(body.classify_point(Vec3::new(25.0, 25.0, 2.4)).unwrap(), solidcraft_kernel::PointClass::Inside);
-            assert_eq!(body.classify_point(Vec3::new(10.0, 25.0, 1.0)).unwrap(), solidcraft_kernel::PointClass::Outside);
+            assert!((torno_kernel::measure(body).unwrap().volume - 250.0).abs() < 1e-5);
+            assert_eq!(body.classify_point(Vec3::new(25.0, 25.0, 0.1)).unwrap(), torno_kernel::PointClass::Inside);
+            assert_eq!(body.classify_point(Vec3::new(25.0, 25.0, 2.4)).unwrap(), torno_kernel::PointClass::Inside);
+            assert_eq!(body.classify_point(Vec3::new(10.0, 25.0, 1.0)).unwrap(), torno_kernel::PointClass::Outside);
         }
-        let mut cold = Session::new(solidcraft_doc::Document::from_json(&s.doc.to_json()).unwrap());
+        let mut cold = Session::new(torno_doc::Document::from_json(&s.doc.to_json()).unwrap());
         assert!(cold.model.state().sheets[0].pockets.is_empty());
         assert!(flat(&mut cold)["pockets"].as_array().unwrap().is_empty());
         run(&mut s, "timeline.edit", json!({"feature":"PostTransferRetain","set":{"extent":{"distance":"1","start_offset":"0.5"}}}));
@@ -2972,18 +2959,18 @@ fn partial_depth_intersect_full_gauge_in_rotated_frames_does_not_invent_pockets(
             assert_eq!(s.model.state().sheets[0].pockets.len(), 2);
             let world = s.world_state().unwrap();
             let body = &world.body(&name).unwrap().body;
-            let measured = solidcraft_kernel::measure(body).unwrap().volume;
+            let measured = torno_kernel::measure(body).unwrap().volume;
             assert!((measured - 100.0).abs() < 1e-5, "retained volume {measured}");
-            assert_eq!(body.classify_point(Vec3::new(25.0, 25.0, 1.0)).unwrap(), solidcraft_kernel::PointClass::Inside);
-            assert_eq!(body.classify_point(Vec3::new(25.0, 25.0, 0.1)).unwrap(), solidcraft_kernel::PointClass::Outside);
-            assert_eq!(body.classify_point(Vec3::new(25.0, 25.0, 2.4)).unwrap(), solidcraft_kernel::PointClass::Outside);
+            assert_eq!(body.classify_point(Vec3::new(25.0, 25.0, 1.0)).unwrap(), torno_kernel::PointClass::Inside);
+            assert_eq!(body.classify_point(Vec3::new(25.0, 25.0, 0.1)).unwrap(), torno_kernel::PointClass::Outside);
+            assert_eq!(body.classify_point(Vec3::new(25.0, 25.0, 2.4)).unwrap(), torno_kernel::PointClass::Outside);
         }
-        let cold = Session::new(solidcraft_doc::Document::from_json(&s.doc.to_json()).unwrap());
+        let cold = Session::new(torno_doc::Document::from_json(&s.doc.to_json()).unwrap());
         let world = cold.world_state().unwrap();
         let body = &world.body(&name).unwrap().body;
-        assert!((solidcraft_kernel::measure(body).unwrap().volume - 100.0).abs() < 1e-5);
-        assert_eq!(body.classify_point(Vec3::new(25.0, 25.0, 1.0)).unwrap(), solidcraft_kernel::PointClass::Inside);
-        assert_eq!(body.classify_point(Vec3::new(25.0, 25.0, 0.1)).unwrap(), solidcraft_kernel::PointClass::Outside);
+        assert!((torno_kernel::measure(body).unwrap().volume - 100.0).abs() < 1e-5);
+        assert_eq!(body.classify_point(Vec3::new(25.0, 25.0, 1.0)).unwrap(), torno_kernel::PointClass::Inside);
+        assert_eq!(body.classify_point(Vec3::new(25.0, 25.0, 0.1)).unwrap(), torno_kernel::PointClass::Outside);
     }
 }
 
@@ -3002,15 +2989,15 @@ fn partial_depth_intersect_planar_to_object_retains_current_target_depth() {
         }
         let state = s.model.state();
         let body = &state.body(&name).unwrap().body;
-        assert!((solidcraft_kernel::measure(body).unwrap().volume - 100.0).abs() < 1e-6);
-        assert_eq!(body.classify_point(Vec3::new(25.0, 25.0, 1.0)).unwrap(), solidcraft_kernel::PointClass::Inside);
-        assert_eq!(body.classify_point(Vec3::new(25.0, 25.0, 0.1)).unwrap(), solidcraft_kernel::PointClass::Outside);
-        assert_eq!(body.classify_point(Vec3::new(25.0, 25.0, 2.0)).unwrap(), solidcraft_kernel::PointClass::Outside);
+        assert!((torno_kernel::measure(body).unwrap().volume - 100.0).abs() < 1e-6);
+        assert_eq!(body.classify_point(Vec3::new(25.0, 25.0, 1.0)).unwrap(), torno_kernel::PointClass::Inside);
+        assert_eq!(body.classify_point(Vec3::new(25.0, 25.0, 0.1)).unwrap(), torno_kernel::PointClass::Outside);
+        assert_eq!(body.classify_point(Vec3::new(25.0, 25.0, 2.0)).unwrap(), torno_kernel::PointClass::Outside);
         assert_eq!(state.sheets[0].pockets.len(), 2);
-        assert!((solidcraft_kernel::measure(&state.body("Roof").unwrap().body).unwrap().volume - 100.0).abs() < 1e-6);
+        assert!((torno_kernel::measure(&state.body("Roof").unwrap().body).unwrap().volume - 100.0).abs() < 1e-6);
     }
-    let cold = Session::new(solidcraft_doc::Document::from_json(&s.doc.to_json()).unwrap());
-    assert!((solidcraft_kernel::measure(&cold.model.state().body(&name).unwrap().body).unwrap().volume - 100.0).abs() < 1e-6);
+    let cold = Session::new(torno_doc::Document::from_json(&s.doc.to_json()).unwrap());
+    assert!((torno_kernel::measure(&cold.model.state().body(&name).unwrap().body).unwrap().volume - 100.0).abs() < 1e-6);
 }
 
 #[test]
@@ -3030,7 +3017,7 @@ fn partial_depth_intersect_curved_to_object_refuses_unrepresentable_depth_atomic
             run(&mut s, command, json!({"body":name}));
         }
         let state = s.model.state();
-        assert!((solidcraft_kernel::measure(&state.body(&name).unwrap().body).unwrap().volume - 15000.0).abs() < 1e-6);
+        assert!((torno_kernel::measure(&state.body(&name).unwrap().body).unwrap().volume - 15000.0).abs() < 1e-6);
         assert!(state.sheets[0].pockets.is_empty());
     }
 }
@@ -3045,13 +3032,13 @@ fn partial_depth_intersect_curved_to_object_preserves_current_trimmed_cap_footpr
     run(&mut s, "solid.box", json!({"corner":[19,19,1],"length":12,"width":12,"height":1,"body_name":"StopPlate"}));
     run(&mut s, "solid.combine", json!({"target":"CurvedRoof","tools":["StopPlate"],"operation":"join"}));
     rectangle_tool(&mut s, "Tool", [20.0, 20.0], [30.0, 30.0]);
-    let mut tool_session = Session::new(solidcraft_doc::Document::from_json(&s.doc.to_json()).unwrap());
+    let mut tool_session = Session::new(torno_doc::Document::from_json(&s.doc.to_json()).unwrap());
     run(&mut tool_session, "solid.extrude", json!({"sketch":"Tool","to":[27,25,10],"body_name":"TrimWitness"}));
     let ts = tool_session.model.state();
     let witness = &ts.body("TrimWitness").unwrap().body;
-    assert!((solidcraft_kernel::measure(witness).unwrap().volume - (100.0 - 4.0 * std::f64::consts::PI)).abs() < 0.01);
-    assert_eq!(witness.classify_point(Vec3::new(21.0, 21.0, 0.5)).unwrap(), solidcraft_kernel::PointClass::Inside);
-    assert_eq!(witness.classify_point(Vec3::new(25.0, 25.0, 0.5)).unwrap(), solidcraft_kernel::PointClass::Outside);
+    assert!((torno_kernel::measure(witness).unwrap().volume - (100.0 - 4.0 * std::f64::consts::PI)).abs() < 0.01);
+    assert_eq!(witness.classify_point(Vec3::new(21.0, 21.0, 0.5)).unwrap(), torno_kernel::PointClass::Inside);
+    assert_eq!(witness.classify_point(Vec3::new(25.0, 25.0, 0.5)).unwrap(), torno_kernel::PointClass::Outside);
     run(&mut s, "solid.extrude", json!({"sketch":"Tool","to":[27,25,10],"operation":"intersect","participants":[name]}));
     for command in [None, Some("sheet.unfold"), Some("sheet.refold")] {
         if let Some(command) = command {
@@ -3059,38 +3046,32 @@ fn partial_depth_intersect_curved_to_object_preserves_current_trimmed_cap_footpr
         }
         let state = s.model.state();
         let body = &state.body(&name).unwrap().body;
-        let measured = solidcraft_kernel::measure(body).unwrap().volume;
+        let measured = torno_kernel::measure(body).unwrap().volume;
         assert!((measured - (100.0 - 4.0 * std::f64::consts::PI)).abs() < 0.01);
         let area: f64 = state.sheets[0].flat_regions().unwrap().iter().map(|r| r.area()).sum();
         assert!((area - (100.0 - 4.0 * std::f64::consts::PI)).abs() < 1e-8);
-        assert_eq!(body.classify_point(Vec3::new(21.0, 21.0, 0.5)).unwrap(), solidcraft_kernel::PointClass::Inside);
-        assert_eq!(body.classify_point(Vec3::new(25.0, 25.0, 0.5)).unwrap(), solidcraft_kernel::PointClass::Outside);
-        assert_eq!(body.classify_point(Vec3::new(21.0, 21.0, 1.5)).unwrap(), solidcraft_kernel::PointClass::Outside);
+        assert_eq!(body.classify_point(Vec3::new(21.0, 21.0, 0.5)).unwrap(), torno_kernel::PointClass::Inside);
+        assert_eq!(body.classify_point(Vec3::new(25.0, 25.0, 0.5)).unwrap(), torno_kernel::PointClass::Outside);
+        assert_eq!(body.classify_point(Vec3::new(21.0, 21.0, 1.5)).unwrap(), torno_kernel::PointClass::Outside);
     }
-    let cold = Session::new(solidcraft_doc::Document::from_json(&s.doc.to_json()).unwrap());
-    assert_eq!(
-        cold.model.state().body(&name).unwrap().body.classify_point(Vec3::new(25.0, 25.0, 0.5)).unwrap(),
-        solidcraft_kernel::PointClass::Outside
-    );
+    let cold = Session::new(torno_doc::Document::from_json(&s.doc.to_json()).unwrap());
+    assert_eq!(cold.model.state().body(&name).unwrap().body.classify_point(Vec3::new(25.0, 25.0, 0.5)).unwrap(), torno_kernel::PointClass::Outside);
     let dxf = run(&mut s, "sheet.export_dxf", json!({"body":name}))["dxf"].as_str().unwrap().to_string();
     assert!(dxf.contains("POCKET_TOP_Z1.000000_TO_2.500000_MM"));
     let outline = dxf_outline_only(&dxf);
-    assert_eq!(solidcraft_io::read_dxf(&outline).unwrap().len(), 5);
+    assert_eq!(torno_io::read_dxf(&outline).unwrap().len(), 5);
     let mut outline_import = Session::default();
     run(&mut outline_import, "sketch.insert_dxf", json!({"text":outline,"name":"Outline"}));
     run(&mut outline_import, "sketch.finish", json!({}));
     run(&mut outline_import, "solid.extrude", json!({"distance":1,"profiles":[{"point":[21,21]}]}));
     assert!((volume(&mut outline_import) - (100.0 - 4.0 * std::f64::consts::PI)).abs() < 0.01);
-    assert_eq!(
-        outline_import.model.state().bodies[0].body.classify_point(Vec3::new(25.0, 25.0, 0.5)).unwrap(),
-        solidcraft_kernel::PointClass::Outside
-    );
-    let path = std::env::temp_dir().join(format!("solidcraft-current-trim-cap-{}.step", std::process::id()));
+    assert_eq!(outline_import.model.state().bodies[0].body.classify_point(Vec3::new(25.0, 25.0, 0.5)).unwrap(), torno_kernel::PointClass::Outside);
+    let path = std::env::temp_dir().join(format!("torno-current-trim-cap-{}.step", std::process::id()));
     run(&mut s, "file.export", json!({"path":path.to_string_lossy(),"bodies":[name]}));
     let mut imported = Session::default();
     run(&mut imported, "doc.open", json!({"path":path.to_string_lossy()}));
     assert!((volume(&mut imported) - (100.0 - 4.0 * std::f64::consts::PI)).abs() < 0.01);
-    assert_eq!(imported.model.state().bodies[0].body.classify_point(Vec3::new(25.0, 25.0, 0.5)).unwrap(), solidcraft_kernel::PointClass::Outside);
+    assert_eq!(imported.model.state().bodies[0].body.classify_point(Vec3::new(25.0, 25.0, 0.5)).unwrap(), torno_kernel::PointClass::Outside);
     std::fs::remove_file(path).unwrap();
 }
 
@@ -3120,7 +3101,7 @@ fn partial_depth_intersect_sub_extrusion_resolution_layers_refuse_atomically() {
         assert!(error.contains("resolution") || error.contains("distance is zero") || error.contains("sheet machining"), "{error}");
         assert_eq!(s.doc.to_json(), before);
         assert!(s.model.state().sheets[0].pockets.is_empty());
-        assert!((solidcraft_kernel::measure(&s.world_state().unwrap().body(&name).unwrap().body).unwrap().volume - 15000.0).abs() < 1e-5);
+        assert!((torno_kernel::measure(&s.world_state().unwrap().body(&name).unwrap().body).unwrap().volume - 15000.0).abs() < 1e-5);
     }
 }
 
@@ -3813,10 +3794,10 @@ fn has_round_cutout(f: &Value, c: [f64; 2], r: f64) -> bool {
 fn dxf_has_circle(s: &mut Session, c: [f64; 2], r: f64) -> bool {
     let dxf = run(s, "sheet.export_dxf", json!({}))["dxf"].as_str().unwrap_or_default().to_string();
     let centre = solidcore_record::Vec2::new(c[0], c[1]);
-    solidcraft_io::read_dxf(&dxf)
+    torno_io::read_dxf(&dxf)
         .unwrap_or_default()
         .iter()
-        .any(|g| matches!(g, solidcraft_io::Geom2::Circle(at, radius) if at.dist(centre) < 1e-5 && (radius - r).abs() < 1e-5))
+        .any(|g| matches!(g, torno_io::Geom2::Circle(at, radius) if at.dist(centre) < 1e-5 && (radius - r).abs() < 1e-5))
 }
 
 /// A hole on a flange lands in the flat pattern where the bend allowance puts its panel.
@@ -4098,10 +4079,10 @@ fn corner_reliefs_of_the_rule_reach_the_part_the_flat_pattern_and_the_dxf() {
         assert_eq!(f["outline"].as_array().map(Vec::len), Some(1), "{shape}");
         // The DXF: the round reliefs are arcs of radius 4 about the four corners, the square ones lines.
         let dxf = export(&mut s);
-        let arcs: Vec<(Vec2, f64)> = solidcraft_io::read_dxf(&dxf)
+        let arcs: Vec<(Vec2, f64)> = torno_io::read_dxf(&dxf)
             .unwrap_or_default()
             .iter()
-            .filter_map(|g| if let solidcraft_io::Geom2::Arc { c, a, .. } = g { Some((*c, a.dist(*c))) } else { None })
+            .filter_map(|g| if let torno_io::Geom2::Arc { c, a, .. } = g { Some((*c, a.dist(*c))) } else { None })
             .collect();
         if shape == "round" {
             assert_eq!(arcs.len(), 4, "{arcs:?}");
@@ -4110,9 +4091,8 @@ fn corner_reliefs_of_the_rule_reach_the_part_the_flat_pattern_and_the_dxf() {
             }
         } else {
             let corner = Vec2::new(s0 + 4.0, s0 + 4.0);
-            let read = solidcraft_io::read_dxf(&dxf).unwrap_or_default();
-            let at_corner =
-                |g: &solidcraft_io::Geom2| matches!(g, solidcraft_io::Geom2::Line(a, b) if a.dist(corner) < 1e-6 || b.dist(corner) < 1e-6);
+            let read = torno_io::read_dxf(&dxf).unwrap_or_default();
+            let at_corner = |g: &torno_io::Geom2| matches!(g, torno_io::Geom2::Line(a, b) if a.dist(corner) < 1e-6 || b.dist(corner) < 1e-6);
             assert!(arcs.is_empty() && read.iter().any(at_corner), "{arcs:?}");
         }
         // Unfold and refold keep it, and a cut made folded still goes through: a Ø20 hole in the base.
@@ -4125,7 +4105,7 @@ fn corner_reliefs_of_the_rule_reach_the_part_the_flat_pattern_and_the_dxf() {
         run(&mut s, "sketch.finish", json!({}));
         run(&mut s, "solid.extrude", json!({"sketch": "Hole", "distance": 10, "operation": "cut", "through_all": true}));
         assert!((v - volume(&mut s) - PI * 100.0 * 2.0).abs() < 0.5, "{shape}: {v} - {}", volume(&mut s));
-        let mut reopened = Session::new(solidcraft_doc::Document::from_json(&s.doc.to_json()).unwrap());
+        let mut reopened = Session::new(torno_doc::Document::from_json(&s.doc.to_json()).unwrap());
         assert!((volume(&mut reopened) - volume(&mut s)).abs() < 1e-6, "{shape}");
     }
 }
@@ -4257,7 +4237,7 @@ fn corner_reliefs_at_non_orthogonal_corners_reach_the_flat_pattern_and_the_dxf()
         run(&mut s, "sheet.unfold", json!({}));
         run(&mut s, "sheet.refold", json!({}));
         assert!((volume(&mut s) - v).abs() < 1e-6 * v, "{shape}");
-        let mut reopened = Session::new(solidcraft_doc::Document::from_json(&s.doc.to_json()).unwrap());
+        let mut reopened = Session::new(torno_doc::Document::from_json(&s.doc.to_json()).unwrap());
         assert!((volume(&mut reopened) - v).abs() < 1e-6 * v, "{shape}");
     }
 }
@@ -4317,8 +4297,8 @@ fn a_tear_of_the_rule_reaches_the_part_the_flat_pattern_and_the_dxf() {
         let dxf = run(&mut s, "sheet.export_dxf", json!({}))["dxf"].as_str().unwrap_or_default().to_string();
         assert_eq!(dxf.matches("0\nLINE\n").count(), outline.len() + 4, "{deg}");
         let cut_end = solidcore_record::Vec2::new(x_end(s0), s0 - ba);
-        let read = solidcraft_io::read_dxf(&dxf).unwrap_or_default();
-        let at_cut_end = |g: &solidcraft_io::Geom2| matches!(g, solidcraft_io::Geom2::Line(a, b) if a.dist(cut_end) < 1e-6 || b.dist(cut_end) < 1e-6);
+        let read = torno_io::read_dxf(&dxf).unwrap_or_default();
+        let at_cut_end = |g: &torno_io::Geom2| matches!(g, torno_io::Geom2::Line(a, b) if a.dist(cut_end) < 1e-6 || b.dist(cut_end) < 1e-6);
         assert!(read.iter().any(at_cut_end), "{deg}");
         // Unfold and refold keep it, and a cut made folded still goes through: a Ø20 hole in the base.
         run(&mut s, "sheet.unfold", json!({}));
@@ -4330,7 +4310,7 @@ fn a_tear_of_the_rule_reaches_the_part_the_flat_pattern_and_the_dxf() {
         run(&mut s, "sketch.finish", json!({}));
         run(&mut s, "solid.extrude", json!({"sketch": "Hole", "distance": 10, "operation": "cut", "through_all": true}));
         assert!((v - volume(&mut s) - PI * 100.0 * 2.0).abs() < 0.5, "{deg}: {v} - {}", volume(&mut s));
-        let mut reopened = Session::new(solidcraft_doc::Document::from_json(&s.doc.to_json()).unwrap());
+        let mut reopened = Session::new(torno_doc::Document::from_json(&s.doc.to_json()).unwrap());
         assert!((volume(&mut reopened) - volume(&mut s)).abs() < 1e-6, "{deg}");
     }
 }
@@ -4394,9 +4374,9 @@ fn two_flange_groups(rule: Value, near: Value, far: Value) -> Session {
 /// lines' end points.
 fn relief_drawing(s: &mut Session) -> (Vec<(solidcore_record::Vec2, f64)>, Vec<solidcore_record::Vec2>) {
     let dxf = run(s, "sheet.export_dxf", json!({}))["dxf"].as_str().unwrap_or_default().to_string();
-    let read = solidcraft_io::read_dxf(&dxf).unwrap_or_default();
-    let arcs = read.iter().filter_map(|g| if let solidcraft_io::Geom2::Arc { c, a, .. } = g { Some((*c, a.dist(*c))) } else { None }).collect();
-    let ends = read.iter().flat_map(|g| if let solidcraft_io::Geom2::Line(a, b) = g { vec![*a, *b] } else { Vec::new() }).collect();
+    let read = torno_io::read_dxf(&dxf).unwrap_or_default();
+    let arcs = read.iter().filter_map(|g| if let torno_io::Geom2::Arc { c, a, .. } = g { Some((*c, a.dist(*c))) } else { None }).collect();
+    let ends = read.iter().flat_map(|g| if let torno_io::Geom2::Line(a, b) = g { vec![*a, *b] } else { Vec::new() }).collect();
     (arcs, ends)
 }
 
@@ -4434,11 +4414,11 @@ fn each_edge_flange_feature_chooses_the_corner_relief_of_its_own_corners() {
     run(&mut s, "sheet.unfold", json!({}));
     run(&mut s, "sheet.refold", json!({}));
     assert!((volume(&mut s) - v).abs() < 1e-6 * v);
-    let mut reopened = Session::new(solidcraft_doc::Document::from_json(&s.doc.to_json()).unwrap());
+    let mut reopened = Session::new(torno_doc::Document::from_json(&s.doc.to_json()).unwrap());
     assert!((volume(&mut reopened) - v).abs() < 1e-6 * v);
     assert_eq!(relief_drawing(&mut reopened).0.len(), 1);
     // The size is an input of the feature like its height: another size moves the relief.
-    let near_feature = s.doc.features.iter().find(|f| matches!(f.kind, solidcraft_doc::FeatureKind::SheetFlange { .. }));
+    let near_feature = s.doc.features.iter().find(|f| matches!(f.kind, torno_doc::FeatureKind::SheetFlange { .. }));
     let names = near_feature.map(|f| f.param_names.clone()).unwrap_or_default();
     assert_eq!(names.len(), 3, "height, angle and the relief: {names:?}");
     run(&mut s, "parameters.change", json!({"name": names[2], "expression": "4 mm"}));
@@ -4575,7 +4555,7 @@ fn a_corner_relief_of_an_edge_flange_is_saved_with_it_and_designs_without_one_sa
     assert_eq!(features[1]["corner_relief_shape"], "tear");
     assert!(features[1].get("corner_relief").is_none(), "{}", features[1]);
     let saved = s.doc.to_json();
-    let mut reopened = Session::new(solidcraft_doc::Document::from_json(&saved).unwrap());
+    let mut reopened = Session::new(torno_doc::Document::from_json(&saved).unwrap());
     assert_eq!(reopened.doc.features, s.doc.features);
     assert!((volume(&mut reopened) - volume(&mut s)).abs() < 1e-6);
     assert_eq!(relief_drawing(&mut reopened), relief_drawing(&mut s));
@@ -4755,7 +4735,7 @@ fn edge_flanges_take_their_own_angle_and_height_per_edge() {
         "{saved}"
     );
     // Reopened, it is the same part.
-    let mut again = Session::new(solidcraft_doc::Document::from_json(&text).unwrap());
+    let mut again = Session::new(torno_doc::Document::from_json(&text).unwrap());
     assert!(no_errors_or_warnings(&again), "{:?}", again.model.results);
     assert!(rel(volume(&mut again), v1) < 1e-9);
 }
@@ -4885,7 +4865,7 @@ fn returns_on_a_tray_close_at_its_corners() {
     run(&mut s, "sheet.refold", json!({}));
     assert!(rel(volume(&mut s), v) < 1e-9);
     // Reopened, it is the same part.
-    let mut again = Session::new(solidcraft_doc::Document::from_json(&s.doc.to_json()).unwrap());
+    let mut again = Session::new(torno_doc::Document::from_json(&s.doc.to_json()).unwrap());
     assert!(no_errors_or_warnings(&again), "{:?}", again.model.results);
     assert!(rel(volume(&mut again), v) < 1e-9);
     assert!(same_points(&outline_points(&flat(&mut again)), &outline));
@@ -5117,11 +5097,11 @@ fn designs_without_per_edge_values_are_read_and_written_as_before() {
     let mut design: Value = serde_json::from_str(&text).unwrap();
     let flange = design["features"].as_array().and_then(|f| f.iter().position(|f| f["type"] == "sheet_flange")).unwrap();
     assert_eq!(design["features"][flange]["edges"], json!([[60.0, 0.0, 2.0], [120.0, 45.0, 2.0], [60.0, 90.0, 2.0], [0.0, 45.0, 2.0]]));
-    let mut same = Session::new(solidcraft_doc::Document::from_json(&text).unwrap());
+    let mut same = Session::new(torno_doc::Document::from_json(&text).unwrap());
     assert!(rel(volume(&mut same), v) < 1e-12);
     // A design file whose last edge carries its own angle is the part the command makes.
     design["features"][flange]["edges"][3] = json!({"point": [0.0, 45.0, 2.0], "angle": "100 deg"});
-    let mut opened = Session::new(solidcraft_doc::Document::from_json(&design.to_string()).unwrap());
+    let mut opened = Session::new(torno_doc::Document::from_json(&design.to_string()).unwrap());
     assert!(no_errors_or_warnings(&opened), "{:?}", opened.model.results);
     let mut made = Session::default();
     alu_base(&mut made);
@@ -5131,7 +5111,7 @@ fn designs_without_per_edge_values_are_read_and_written_as_before() {
     assert!(rel(vo, vm) < 1e-9 && rel(vo, v) > 1e-4, "{vo} vs {vm} vs {v}");
     // A key this build doesn't know is refused, not dropped.
     design["features"][flange]["edges"][3] = json!({"point": [0.0, 45.0, 2.0], "twist": "3 deg"});
-    assert!(solidcraft_doc::Document::from_json(&design.to_string()).is_err());
+    assert!(torno_doc::Document::from_json(&design.to_string()).is_err());
 }
 
 /// Names of the hole's side faces (curved, smaller than the bend faces) in `Body1`.
@@ -5567,7 +5547,7 @@ fn fold_fixed_point_must_touch_the_sheet_but_any_face_will_do() {
 fn flat_face_points(s: &Session) -> Vec<(usize, solidcore_record::Vec3, solidcore_record::Vec3)> {
     let state = s.model.state();
     let body = &state.bodies[0].body;
-    let mesh = body.mesh(&solidcraft_kernel::MeshTolerance::chord(0.01)).unwrap();
+    let mesh = body.mesh(&torno_kernel::MeshTolerance::chord(0.01)).unwrap();
     (0..body.face_count())
         .filter_map(|index| {
             let normal = body.planar_face(index)?.normal();
@@ -5610,7 +5590,7 @@ fn every_flat_face_of_a_sheet_takes_an_attached_sketch() {
         run(&mut s, "sketch.finish", json!({}));
         assert_eq!(made["attachment"], "sheet_face", "face {index} at {point:?}");
         let id = made["sketch"].as_u64().unwrap();
-        let solidcraft_doc::FaceAttachmentStatus::Sheet { plane: Some(plane) } = s.placed_document().sketch_face_attachment(id, &s.model) else {
+        let torno_doc::FaceAttachmentStatus::Sheet { plane: Some(plane) } = s.placed_document().sketch_face_attachment(id, &s.model) else {
             panic!("face {index} at {point:?}")
         };
         assert!(plane.normal().dot(normal) > 1.0 - 1e-9 && (point - plane.origin).dot(normal).abs() < 1e-6, "face {index}: {plane:?}");
@@ -5621,7 +5601,7 @@ fn every_flat_face_of_a_sheet_takes_an_attached_sketch() {
     // The base's rim along x = W (the sketch's l2) moves with W.
     let side = on_side.expect("the base rim on x = 100");
     run(&mut s, "parameters.change", json!({"name": "W", "expression": "120 mm"}));
-    let solidcraft_doc::FaceAttachmentStatus::Sheet { plane: Some(plane) } = s.placed_document().sketch_face_attachment(side, &s.model) else {
+    let torno_doc::FaceAttachmentStatus::Sheet { plane: Some(plane) } = s.placed_document().sketch_face_attachment(side, &s.model) else {
         panic!("the rim sketch after the edit")
     };
     assert!((plane.origin.x - 120.0).abs() < 1e-9 && (plane.normal().x - 1.0).abs() < 1e-9, "{plane:?}");
@@ -5662,7 +5642,7 @@ fn a_hole_drilled_into_a_rim_is_a_bore_the_sheet_keeps_when_it_unfolds() {
     assert_eq!(f["bores"].as_array().map(Vec::len), Some(1), "{f}");
     assert_eq!(f["cutouts"], json!([]));
     let inside = |s: &Session, p: [f64; 3]| {
-        s.model.state().bodies[0].body.classify_point(solidcore_record::Vec3::new(p[0], p[1], p[2])).unwrap() == solidcraft_kernel::PointClass::Inside
+        s.model.state().bodies[0].body.classify_point(solidcore_record::Vec3::new(p[0], p[1], p[2])).unwrap() == torno_kernel::PointClass::Inside
     };
     // The flat pattern loses the same bore (the bends unroll to their own length).
     let flat_after = unfolded_volume(&mut s);
@@ -5671,7 +5651,7 @@ fn a_hole_drilled_into_a_rim_is_a_bore_the_sheet_keeps_when_it_unfolds() {
     // Folded again: the bore is where it was drilled, the material beside it stays.
     assert!(!inside(&s, [30.0, y, t / 2.0]));
     assert!(inside(&s, [30.0, y + d, t / 2.0]));
-    let mut reopened = Session::new(solidcraft_doc::Document::from_json(&s.doc.to_json()).unwrap());
+    let mut reopened = Session::new(torno_doc::Document::from_json(&s.doc.to_json()).unwrap());
     assert!(rel(volume(&mut reopened), folded) < 1e-3);
     assert!(rel(unfolded_volume(&mut reopened), flat_after) < 1e-6);
 }
@@ -5691,7 +5671,7 @@ fn a_rim_hole_in_a_flange_follows_it_into_the_flat_pattern() {
     let before = volume(&mut s);
     let flat_before = unfolded_volume(&mut s);
     let inside = |s: &Session, p: [f64; 3]| {
-        s.model.state().bodies[0].body.classify_point(solidcore_record::Vec3::new(p[0], p[1], p[2])).unwrap() == solidcraft_kernel::PointClass::Inside
+        s.model.state().bodies[0].body.classify_point(solidcore_record::Vec3::new(p[0], p[1], p[2])).unwrap() == torno_kernel::PointClass::Inside
     };
     // Halfway up the flange, in the middle of its thickness (whichever way the rule put it).
     let mid = [[40.0 - t / 2.0, 15.0], [40.0 - t / 2.0, -15.0], [40.0 + t / 2.0, 15.0], [40.0 + t / 2.0, -15.0]]
@@ -5867,7 +5847,7 @@ fn perforation_skips_bend_zones_and_survives_fold_unfold_and_reopen() {
     assert_eq!(flat(&mut s)["perforations"][0]["count"].as_u64(), Some(count));
     run(&mut s, "sheet.refold", json!({}));
     assert!(rel(volume(&mut s), volume_folded) < 1e-9);
-    let mut reopened = Session::new(solidcraft_doc::Document::from_json(&s.doc.to_json()).unwrap());
+    let mut reopened = Session::new(torno_doc::Document::from_json(&s.doc.to_json()).unwrap());
     assert_eq!(flat(&mut reopened)["perforations"][0]["count"].as_u64(), Some(count));
     assert!(rel(volume(&mut reopened), volume_folded) < 1e-9);
 }
@@ -6204,7 +6184,7 @@ fn a_mirrored_or_patterned_sheet_body_is_sheet_metal_with_its_flat_pattern() {
         (Vec3::new(-99.0, 30.0, 8.0), true),
         (Vec3::new(-99.0, 30.0, -8.0), false),
     ] {
-        assert_eq!(body.classify_point(p).unwrap() == solidcraft_kernel::PointClass::Inside, inside, "{p:?}");
+        assert_eq!(body.classify_point(p).unwrap() == torno_kernel::PointClass::Inside, inside, "{p:?}");
     }
     drop(state);
 
@@ -6388,12 +6368,14 @@ fn a_mirrored_sheet_copy_is_the_opposite_hand_with_the_mirror_image_flat_pattern
     assert_eq!(bends(&mirrored), bends(&original));
     assert_eq!(bends(&mirrored).len(), 2);
     // The hole is where the mirror put it, on the copy and in its flat pattern.
-    let in_copy =
-        |p: [f64; 3]| {
-            s.model.state().bodies.iter().find(|b| b.name == "Body1 (2)").is_some_and(|b| {
-                b.body.classify_point(solidcore_record::Vec3::new(p[0], p[1], p[2])).unwrap() == solidcraft_kernel::PointClass::Inside
-            })
-        };
+    let in_copy = |p: [f64; 3]| {
+        s.model
+            .state()
+            .bodies
+            .iter()
+            .find(|b| b.name == "Body1 (2)")
+            .is_some_and(|b| b.body.classify_point(solidcore_record::Vec3::new(p[0], p[1], p[2])).unwrap() == torno_kernel::PointClass::Inside)
+    };
     assert!(!in_copy([-25.0, 40.0, 1.0]) && in_copy([-35.0, 40.0, 1.0]));
     let hole = flat_points(&mirrored["cutouts"], 1.0);
     let cx = hole.iter().map(|p| p.0 as f64).sum::<f64>() / hole.len().max(1) as f64 * 1e-6;
@@ -6462,14 +6444,14 @@ fn an_unfolded_sheets_flat_face_is_named_after_its_base_at_every_size() {
     run(&mut s, "sheet.unfold", json!({}));
     let unfold = s.doc.features.last().map_or(0, |f| f.id);
     run(&mut s, "sheet.refold", json!({}));
-    let stem = |n: &str| solidcraft_doc::naming::strip_piece(n).to_string();
+    let stem = |n: &str| torno_doc::naming::strip_piece(n).to_string();
     for h in ["5 mm", "60 mm", "5 mm"] {
         run(&mut s, "parameters.change", json!({"name": "H", "expression": h}));
         let body = s.model.state().bodies[0].name.clone();
         let flat_state = s.model.results.iter().find(|r| r.id == unfold).map(|r| r.state.clone());
         {
             let st = flat_state.expect("the unfold's state");
-            let flat = st.bodies.iter().find(|b| b.name == body).map(|b| solidcraft_doc::naming::face_names(b).as_ref().clone()).unwrap_or_default();
+            let flat = st.bodies.iter().find(|b| b.name == body).map(|b| torno_doc::naming::face_names(b).as_ref().clone()).unwrap_or_default();
             assert!(flat.iter().any(|n| stem(n) == stem(&top)) && flat.iter().any(|n| stem(n) == stem(&bottom)), "H {h}: the flat faces {flat:?}");
             assert!(!flat.iter().any(|n| n.starts_with(&format!("F{unfold}:"))), "H {h}: a flat face named after the unfold: {flat:?}");
         }
@@ -6798,12 +6780,12 @@ fn flange_segment_expressions_follow_parameters() {
     let f = flat(&mut s);
     assert!((flat_area(&f) - want / 2.0).abs() < 1e-6, "{} vs {}", flat_area(&f), want / 2.0);
     // Save and reopen: the segments are kept, and an older design without them still opens.
-    let mut reopened = Session::new(solidcraft_doc::Document::from_json(&s.doc.to_json()).unwrap());
+    let mut reopened = Session::new(torno_doc::Document::from_json(&s.doc.to_json()).unwrap());
     assert!(no_errors_or_warnings(&reopened), "{:?}", reopened.model.results);
     assert!(rel(volume(&mut reopened), want) < 1e-6);
     assert_eq!(flat(&mut reopened), f);
     let mut older = Session::new(
-        solidcraft_doc::Document::from_json(&{
+        torno_doc::Document::from_json(&{
             let mut doc: Value = serde_json::from_str(&s.doc.to_json()).unwrap();
             for feature in doc["features"].as_array_mut().into_iter().flatten() {
                 if feature["type"] == "sheet_flange" {
@@ -7460,10 +7442,10 @@ fn flange_segments_a_sliver_only_edge_builds_the_whole_edge() {
     {
         let doc = std::sync::Arc::make_mut(&mut s.doc);
         for f in doc.features.iter_mut() {
-            let solidcraft_doc::FeatureKind::SheetFlange { edges, .. } = &mut f.kind else { continue };
+            let torno_doc::FeatureKind::SheetFlange { edges, .. } = &mut f.kind else { continue };
             for e in edges.iter_mut() {
                 if !e.segments.is_empty() {
-                    let at = |from: f64, to: f64| solidcraft_doc::FlangeSegment { from, to, angle: None, height: None, flip: None };
+                    let at = |from: f64, to: f64| torno_doc::FlangeSegment { from, to, angle: None, height: None, flip: None };
                     e.segments = vec![at(0.0, 2.5e-10), at(2.5e-10, 5e-10), at(5e-10, 7.5e-10), at(7.5e-10, 1e-9)];
                 }
             }
@@ -7518,13 +7500,11 @@ fn flange_segments_stored_bounds_outside_the_partition_are_refused() {
         {
             let doc = std::sync::Arc::make_mut(&mut s.doc);
             for f in doc.features.iter_mut() {
-                let solidcraft_doc::FeatureKind::SheetFlange { edges, .. } = &mut f.kind else { continue };
+                let torno_doc::FeatureKind::SheetFlange { edges, .. } = &mut f.kind else { continue };
                 for e in edges.iter_mut() {
                     if !e.segments.is_empty() {
-                        e.segments = list
-                            .iter()
-                            .map(|&(from, to)| solidcraft_doc::FlangeSegment { from, to, angle: None, height: None, flip: None })
-                            .collect();
+                        e.segments =
+                            list.iter().map(|&(from, to)| torno_doc::FlangeSegment { from, to, angle: None, height: None, flip: None }).collect();
                     }
                 }
             }

@@ -1,4 +1,4 @@
-//! tangency-labs/solidcore#1059 (WR-410) probe, report only. The SolidCraft fork's rig
+//! tangency-labs/solidcore#1059 (WR-410) probe, report only. The Torno fork's rig
 //! case left an edge's start 1.2e-4 from its vertex: the vertex definition took the
 //! position of the first crossing found, which was a grazing one, where a steeper
 //! crossing fixed the point better. With `Kernel::fixes.boolean_vertex_by_best_crossing`

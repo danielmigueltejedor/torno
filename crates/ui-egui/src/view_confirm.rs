@@ -11,7 +11,7 @@ use egui::{Rect, Sense, vec2};
 
 use crate::SolveApp;
 use crate::ui_kit::{Action, Container, Surface};
-use solidcraft_theme::Tokens;
+use torno_theme::Tokens;
 
 /// Each target's side: large enough to hit without aiming.
 const TARGET: f32 = 40.0;
@@ -84,7 +84,7 @@ pub(crate) fn show(app: &mut SolveApp, ctx: &egui::Context) {
             ]
         }
         Answers::Sketch => {
-            let command = |id: &str| solidcraft_engine::find_command(id).map(|spec| (spec.label, spec.info(&app.session).enabled));
+            let command = |id: &str| torno_engine::find_command(id).map(|spec| (spec.label, spec.info(&app.session).enabled));
             let (finish, finish_enabled) = command("sketch.finish").unwrap_or(("Finish Sketch", false));
             // While a tool or a drag is unfinished, the cross cancels that first, as one Esc does;
             // the next click cancels the sketch.
@@ -114,7 +114,7 @@ pub(crate) fn show(app: &mut SolveApp, ctx: &egui::Context) {
                 ui.ctx().set_cursor_icon(egui::CursorIcon::PointingHand);
             }
             crate::icons::paint_icon(ui.painter(), at.shrink(t.space_6), choice.icon, if choice.enabled { 1.0 } else { 0.35 });
-            let label = solidcraft_ui_text::tr_label(choice.label);
+            let label = torno_ui_text::tr_label(choice.label);
             response.widget_info(|| egui::WidgetInfo::labeled(egui::Role::Button, choice.enabled, label));
             if !host || painted {
                 crate::scenario::publish_target(choice.key, at);

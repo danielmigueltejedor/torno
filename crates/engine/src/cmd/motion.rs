@@ -1,16 +1,16 @@
 //! Contact Sets, Motion Study and Exploded views.
 
-use solidcraft_geom::prelude::*;
 use std::cell::Cell;
 use std::collections::BTreeSet;
+use torno_geom::prelude::*;
 
 use serde_json::{Value, json};
 use solidcore_record::Vec3;
-use solidcraft_doc::Mat;
-use solidcraft_doc::joints::{self, JointKind};
-use solidcraft_doc::motion::{ContactSet, ExplodedView, MotionStudy, StudyKey};
-use solidcraft_geom::{Aabb3, Bvh};
-use solidcraft_kernel::Body;
+use torno_doc::Mat;
+use torno_doc::joints::{self, JointKind};
+use torno_doc::motion::{ContactSet, ExplodedView, MotionStudy, StudyKey};
+use torno_geom::{Aabb3, Bvh};
+use torno_kernel::Body;
 
 use super::CommandSpec;
 use super::joints::{cannot_move, effective_values, joint_id, occurrence_id, place_holding, value};
@@ -282,8 +282,8 @@ fn placed(s: &Session) -> Vec<(Vec<u64>, Body)> {
             // Moving a body into another component preserves its world placement using an
             // offset from its authoring frame. Contact and explode centres must use that
             // same offset as display and physical properties.
-            let frame = s.doc.model_body_offset(b).map(|offset| solidcraft_doc::mat_mul(&m, offset)).unwrap_or(m);
-            if let Ok(t) = solidcraft_kernel::transform_matrix(&b.body, frame) {
+            let frame = s.doc.model_body_offset(b).map(|offset| torno_doc::mat_mul(&m, offset)).unwrap_or(m);
+            if let Ok(t) = torno_kernel::transform_matrix(&b.body, frame) {
                 out.push((path.clone(), t));
             }
         }
@@ -329,13 +329,13 @@ pub fn collisions(s: &Session) -> Vec<(String, String, f64)> {
 /// no sample point inside (#3323).
 fn overlap(a: &Body, b: &Body) -> Option<f64> {
     let (ma, mb) = (
-        a.mesh(&solidcraft_kernel::MeshTolerance::chord((a.size() * 1e-3).max(1e-3))).ok()?,
-        b.mesh(&solidcraft_kernel::MeshTolerance::chord((b.size() * 1e-3).max(1e-3))).ok()?,
+        a.mesh(&torno_kernel::MeshTolerance::chord((a.size() * 1e-3).max(1e-3))).ok()?,
+        b.mesh(&torno_kernel::MeshTolerance::chord((b.size() * 1e-3).max(1e-3))).ok()?,
     );
     mesh_overlap(&ma, &mb, 1e-4 * a.size().max(b.size()).max(1.0))
 }
 
-fn mesh_overlap(ma: &solidcraft_geom::Mesh, mb: &solidcraft_geom::Mesh, tol: f64) -> Option<f64> {
+fn mesh_overlap(ma: &torno_geom::Mesh, mb: &torno_geom::Mesh, tol: f64) -> Option<f64> {
     let (ba, bb) = (ma.bounds(), mb.bounds());
     if ba.max.x < bb.min.x + tol
         || bb.max.x < ba.min.x + tol
@@ -350,13 +350,13 @@ fn mesh_overlap(ma: &solidcraft_geom::Mesh, mb: &solidcraft_geom::Mesh, tol: f64
     (depth > tol).then_some(depth)
 }
 
-fn tris(m: &solidcraft_geom::Mesh) -> Vec<[Vec3; 3]> {
+fn tris(m: &torno_geom::Mesh) -> Vec<[Vec3; 3]> {
     m.triangles.iter().filter_map(|t| m.tri(t)).collect()
 }
 
 /// The deepest any sample point of `a` lies inside `b` (0 if none). `b`'s triangles are indexed
 /// once ([`Surface`]), so each point and edge looks only at the triangles near it.
-fn deepest(a: &solidcraft_geom::Mesh, b: &solidcraft_geom::Mesh, tol: f64) -> f64 {
+fn deepest(a: &torno_geom::Mesh, b: &torno_geom::Mesh, tol: f64) -> f64 {
     let sb = Surface::new(tris(b));
     let bx = b.bounds();
     let mut pts: Vec<Vec3> = a.positions.clone();
@@ -1121,7 +1121,7 @@ fn export(s: &mut Session, p: &Value) -> Result<Value> {
                     c += &format!(
                         "{},{},{},{},{},{},{},{},{},{},{},{},{},{}\n",
                         Value::from(r.step),
-                        solidcraft_doc::csv::field(&at.occurrence),
+                        torno_doc::csv::field(&at.occurrence),
                         o[0],
                         o[1],
                         o[2],
@@ -1143,8 +1143,8 @@ fn export(s: &mut Session, p: &Value) -> Result<Value> {
             let samples = StudyExport::Samples { study: m.name, steps: m.steps, samples: rows };
             serde_json::to_value(&samples).and_then(|v| serde_json::to_string_pretty(&v)).unwrap_or_default()
         };
-        solidcraft_io::vfs::check(path).map_err(|e| EngineError::Other(e.to_string()))?;
-        solidcraft_io::write_atomic(std::path::Path::new(path), text.as_bytes(), false).map_err(|e| EngineError::Other(format!("{path}: {e}")))?;
+        torno_io::vfs::check(path).map_err(|e| EngineError::Other(e.to_string()))?;
+        torno_io::write_atomic(std::path::Path::new(path), text.as_bytes(), false).map_err(|e| EngineError::Other(format!("{path}: {e}")))?;
         return typed_reply(
             cmd,
             StudyExported { export: StudyExport::Written { path: path.to_string(), samples: count }, param_warnings: Vec::new() },
@@ -1155,7 +1155,7 @@ fn export(s: &mut Session, p: &Value) -> Result<Value> {
 
 /// Most samples of a motion trace: each is a solve, and a kept trace keeps every one as a fit
 /// point of its spline.
-const MAX_TRACE: usize = solidcraft_sketch::MAX_FIT_POINTS;
+const MAX_TRACE: usize = torno_sketch::MAX_FIT_POINTS;
 
 /// The joint values a trace drives to at sample `k` of `n`.
 type Plan = Box<dyn Fn(&Session, usize, usize) -> Vec<(u64, Vec<f64>)>>;
@@ -1181,15 +1181,15 @@ fn traced_point(s: &Session, p: &Value, cmd: &str) -> Result<(Vec<u64>, Vec3)> {
     let at = p.get("point").and_then(vec3).filter(|v| v.len() < 1e7).ok_or_else(|| bad(cmd, "`point` must be [x, y, z], a world point"))?;
     let mut t = s.scratch();
     t.pending_moves.clear();
-    let local = solidcraft_doc::mat_inverse(&path_world(&t, &path, cmd)?)
-        .map(|m| solidcraft_doc::apply_point(&m, at))
+    let local = torno_doc::mat_inverse(&path_world(&t, &path, cmd)?)
+        .map(|m| torno_doc::apply_point(&m, at))
         .ok_or_else(|| bad(cmd, "the occurrence's placement is not invertible"))?;
     Ok((path, local))
 }
 
 /// The world placement of an occurrence path (empty: the root).
 fn path_world(t: &Session, path: &[u64], cmd: &str) -> Result<Mat> {
-    if path.is_empty() { Ok(solidcraft_doc::IDENTITY) } else { t.occurrence_placement(path).map(|o| o.world).map_err(|e| bad(cmd, e.to_string())) }
+    if path.is_empty() { Ok(torno_doc::IDENTITY) } else { t.occurrence_placement(path).map(|o| o.world).map_err(|e| bad(cmd, e.to_string())) }
 }
 
 /// Where a point of an occurrence goes as a study plays or a joint is driven: its world
@@ -1210,7 +1210,7 @@ fn sample_trace(s: &Session, p: &Value, cmd: &str) -> Result<(Vec<Vec3>, TraceRu
     for k in 0..n {
         let want = plan(&t, k, n);
         let (r, _) = drive_with_contact(&mut t, &want, &given)?;
-        points.push(solidcraft_doc::apply_point(&world(&t)?, local));
+        points.push(torno_doc::apply_point(&world(&t)?, local));
         if r["stopped_by_loop"].is_object() || r["stopped_by_contact"].is_object() {
             stop = (Some(k), r["stopped_by_loop"].clone(), r["stopped_by_contact"].clone());
             break;
@@ -1322,7 +1322,7 @@ fn keep_sampled_trace(
     cmd: &str,
     points: Vec<Vec3>,
     run: TraceRun,
-    source: Option<solidcraft_doc::motion::MotionTrace>,
+    source: Option<torno_doc::motion::MotionTrace>,
 ) -> Result<Value> {
     let name = match str_(p, "name").map(str::trim).filter(|n| !n.is_empty()) {
         Some(n) => n.to_string(),
@@ -1418,7 +1418,7 @@ fn centres(s: &Session) -> Vec<(u64, Vec3)> {
     for o in s.doc.occurrences.iter().filter(|o| o.parent == 0) {
         let mut bounds = Aabb3::EMPTY;
         for (_, b) in bodies.iter().filter(|(path, _)| path.first() == Some(&o.id)) {
-            if let Ok(m) = b.mesh(&solidcraft_kernel::MeshTolerance::chord((b.size() * 1e-2).max(1e-2))) {
+            if let Ok(m) = b.mesh(&torno_kernel::MeshTolerance::chord((b.size() * 1e-2).max(1e-2))) {
                 bounds = bounds.union(&m.bounds());
             }
         }
@@ -1484,7 +1484,7 @@ fn explode_show(s: &mut Session, p: &Value) -> Result<Value> {
     let i = view_index(s, p, cmd)?;
     let v = s.doc.assembly.exploded.get(i).cloned().ok_or_else(|| bad(cmd, "view"))?;
     let moves = exploded_at(&explode_moves(s, &v), 1.0);
-    if !moves.values().all(solidcraft_doc::is_placement) {
+    if !moves.values().all(torno_doc::is_placement) {
         return Err(bad(cmd, format!("exploded view `{}` moves an occurrence out of range", v.name)));
     }
     // Shown only: `exploded` marks these as the view's, so the design's placements leave them out.
@@ -1509,7 +1509,7 @@ pub(crate) fn shows_exploded_view(s: &Session) -> bool {
 /// component, so each translation is turned into the parent's frame: a part inside a turned
 /// component moves the way the view gives, not along the component's axes (#13939). A component
 /// placed more than once shares its parts' placements, so there a part moves the way given in
-/// the component's first placement ([`solidcraft_doc::joints::occurrence_world`]).
+/// the component's first placement ([`torno_doc::joints::occurrence_world`]).
 fn explode_moves(s: &Session, v: &ExplodedView) -> Vec<(u64, Mat, Vec3)> {
     let placed: std::collections::BTreeMap<u64, (Mat, u64)> = s.doc.occurrences.iter().map(|o| (o.id, (o.transform, o.parent))).collect();
     v.moves
@@ -1520,8 +1520,8 @@ fn explode_moves(s: &Session, v: &ExplodedView) -> Vec<(u64, Mat, Vec3)> {
             let Some(frame) = (parent != 0).then(|| s.doc.occurrence_of(parent)).flatten() else {
                 return Some((*o, transform, *t));
             };
-            let to_parent = solidcraft_doc::mat_inverse(&solidcraft_doc::joints::occurrence_world(&s.doc, frame.id))?;
-            Some((*o, transform, solidcraft_doc::apply_vector(&to_parent, *t)))
+            let to_parent = torno_doc::mat_inverse(&torno_doc::joints::occurrence_world(&s.doc, frame.id))?;
+            Some((*o, transform, torno_doc::apply_vector(&to_parent, *t)))
         })
         .collect()
 }
@@ -1555,7 +1555,7 @@ fn explode_delete(s: &mut Session, p: &Value) -> Result<Value> {
 /// World position of a point of an occurrence (tests).
 #[cfg(test)]
 pub fn world_point(s: &Session, occurrence: u64, p: Vec3) -> Vec3 {
-    solidcraft_doc::apply_point(&joints::occurrence_world(&s.doc, occurrence), p)
+    torno_doc::apply_point(&joints::occurrence_world(&s.doc, occurrence), p)
 }
 
 #[cfg(test)]

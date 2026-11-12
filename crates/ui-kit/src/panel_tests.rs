@@ -2,8 +2,8 @@ use crate::test_support::*;
 use crate::*;
 
 use egui::Ui;
-use solidcraft_theme::Tokens;
-use solidcraft_ui_registry as registry;
+use torno_theme::Tokens;
+use torno_ui_registry as registry;
 
 #[test]
 fn host_window_ledger_is_opt_in_pass_scoped_identity_aware_and_fail_closed() {
@@ -164,11 +164,11 @@ fn actual_feature_and_system_windows_publish_visible_paint_but_popups_and_modals
 fn universal_kit_chrome_uses_one_container_and_preserves_parent_clipping_and_focus_semantics() {
     use crate::panel_host::{HostChrome, panel_host_control, panel_host_sash, panel_host_surface};
     let mut t = Tokens::get();
-    let bevel = solidcraft_theme::Bevel { width: 1.0, highlight: t.form_ink, light: t.control_border, shadow: t.form_dim, dark_shadow: t.border };
+    let bevel = torno_theme::Bevel { width: 1.0, highlight: t.form_ink, light: t.control_border, shadow: t.form_dim, dark_shadow: t.border };
     t.borders.primary = Some(egui::Stroke::new(1.0, t.border));
     t.borders.bevel = Some(bevel);
-    t.borders.primary_inset = Some(solidcraft_theme::InsetBorder { stroke: egui::Stroke::new(0.75, t.form_error), gap: 3.0 });
-    let _tokens = solidcraft_theme::scoped_tokens(t);
+    t.borders.primary_inset = Some(torno_theme::InsetBorder { stroke: egui::Stroke::new(0.75, t.form_error), gap: 3.0 });
+    let _tokens = torno_theme::scoped_tokens(t);
     let ctx = crate::test_support::context();
     ctx.enable_accesskit();
     let bounds = egui::Rect::from_min_size(egui::pos2(20.0, 30.0), egui::vec2(160.0, 120.0));
@@ -267,7 +267,7 @@ fn universal_surface_uses_adaptive_workspace_fill_and_rounding_with_safe_content
     for dark in [false, true] {
         let mut tokens = if dark { Tokens::dark() } else { Tokens::light() };
         tokens.panel = tokens.panel.gamma_multiply(0.8);
-        let _tokens = solidcraft_theme::scoped_tokens(tokens);
+        let _tokens = torno_theme::scoped_tokens(tokens);
         for layout in [LayoutMode::Floating, LayoutMode::Docked] {
             for free_card in [false, true] {
                 let ctx = crate::test_support::context();
@@ -480,7 +480,7 @@ fn universal_drag_badge_keeps_display_order_on_one_line_and_clamps_without_alloc
     let t = Tokens::get();
     let domain = egui::Rect::from_min_max(egui::pos2(20.0, 30.0), egui::pos2(440.0, 330.0));
     let logical = "אחד שניים שלושה ארבעה חמישה שישה שבעה שמונה תשעה עשרה אחרון";
-    let hebrew = solidcraft_ui_text::bidi::visual(logical).into_owned();
+    let hebrew = torno_ui_text::bidi::visual(logical).into_owned();
     assert_ne!(hebrew, logical, "exercise an already display-ordered eleven-word Hebrew title");
     let narrow = egui::Rect::from_min_size(domain.min, egui::vec2(180.0, 600.0));
     for (scale, rtl) in [(1.0, false), (2.0, true)] {
@@ -909,9 +909,9 @@ fn heading_weight_field_surfaces_and_disclosures_follow_tokens_in_both_themes() 
             _ => {}
         }
     }
-    let previous = solidcraft_theme::is_dark();
+    let previous = torno_theme::is_dark();
     for dark in [false, true] {
-        solidcraft_theme::set_dark(dark);
+        torno_theme::set_dark(dark);
         let ctx = crate::test_support::context();
         ctx.set_visuals(if dark { egui::Visuals::dark() } else { egui::Visuals::light() });
         let mut value = "3 mm".to_string();
@@ -934,7 +934,7 @@ fn heading_weight_field_surfaces_and_disclosures_follow_tokens_in_both_themes() 
         assert_eq!(section, 1, "semibold small caps are letter spaced and painted once");
         assert!(fields > 0, "the actual text editor has a token field fill and one pixel border");
     }
-    solidcraft_theme::set_dark(previous);
+    torno_theme::set_dark(previous);
 }
 
 #[test]
@@ -1283,9 +1283,9 @@ fn wide_tables_remain_bounded_with_pinned_actions_on_small_viewports() {
 
 #[test]
 fn window_is_one_and_a_half_cards_wide_with_its_actions_in_both_themes() {
-    let previous = solidcraft_theme::is_dark();
+    let previous = torno_theme::is_dark();
     for dark in [false, true] {
-        solidcraft_theme::set_dark(dark);
+        torno_theme::set_dark(dark);
         let ctx = crate::test_support::context();
         let t = Tokens::get();
         let mut action = Action::None;
@@ -1320,7 +1320,7 @@ fn window_is_one_and_a_half_cards_wide_with_its_actions_in_both_themes() {
         assert!(footer.contains_rect(ok) && footer.contains_rect(cancel));
         assert!(registry::handle_at("dialog:Keep").is_some() && registry::handle_at("dialog:close").is_some());
     }
-    solidcraft_theme::set_dark(previous);
+    torno_theme::set_dark(previous);
 }
 
 #[test]
@@ -1355,9 +1355,9 @@ fn escape_closes_a_window_unless_it_keeps_the_card_open() {
 
 #[test]
 fn window_pages_have_shared_metrics_callbacks_and_a_pinned_left_footer_action() {
-    let previous = solidcraft_theme::is_dark();
+    let previous = torno_theme::is_dark();
     for dark in [false, true] {
-        solidcraft_theme::set_dark(dark);
+        torno_theme::set_dark(dark);
         let ctx = crate::test_support::context();
         let mut selected = usize::MAX;
         let mut drawn = 0;
@@ -1443,7 +1443,7 @@ fn window_pages_have_shared_metrics_callbacks_and_a_pinned_left_footer_action() 
         }
         assert_eq!((selected, drawn), (0, 1), "click dispatches the declared page");
     }
-    solidcraft_theme::set_dark(previous);
+    torno_theme::set_dark(previous);
 }
 
 #[test]
@@ -1500,9 +1500,9 @@ fn page_window_is_as_opaque_as_every_other_window_in_both_themes() {
         }
         fill.expect("the window frame is painted at the window's rect")
     }
-    let previous = solidcraft_theme::is_dark();
+    let previous = torno_theme::is_dark();
     for dark in [false, true] {
-        solidcraft_theme::set_dark(dark);
+        torno_theme::set_dark(dark);
         let t = Tokens::get();
         assert_eq!(t.dialog_body.a(), 255, "{dark}: the window token itself is opaque");
         let plain = window_fill(false);
@@ -1511,7 +1511,7 @@ fn page_window_is_as_opaque_as_every_other_window_in_both_themes() {
         assert_eq!(page.a(), 255, "{dark}: the Preferences page window lets nothing show through");
         assert_eq!(page, plain, "{dark}: the page window has the same fill as every other window");
     }
-    solidcraft_theme::set_dark(previous);
+    torno_theme::set_dark(previous);
 }
 
 #[test]
@@ -1571,9 +1571,9 @@ fn confirm_routes_enter_escape_selected_answers_and_blocks_background_clicks() {
 
 #[test]
 fn destructive_confirm_paints_error_primary_with_readable_on_colour_in_both_themes() {
-    let previous = solidcraft_theme::is_dark();
+    let previous = torno_theme::is_dark();
     for dark in [false, true] {
-        solidcraft_theme::set_dark(dark);
+        torno_theme::set_dark(dark);
         let ctx = crate::test_support::context();
         let mut output = None;
         for _ in 0..3 {
@@ -1605,8 +1605,8 @@ fn destructive_confirm_paints_error_primary_with_readable_on_colour_in_both_them
             });
         }
         assert!(painted_fill, "{dark}: primary must use form_error");
-        let ink = if solidcraft_theme::contrast_ratio(t.on_accent, t.form_error) >= 4.5 { t.on_accent } else { t.tab_on_fill_dark };
-        assert!(solidcraft_theme::contrast_ratio(ink, t.form_error) >= 4.5);
+        let ink = if torno_theme::contrast_ratio(t.on_accent, t.form_error) >= 4.5 { t.on_accent } else { t.tab_on_fill_dark };
+        assert!(torno_theme::contrast_ratio(ink, t.form_error) >= 4.5);
         let mut painted_ink = false;
         for shape in &shapes {
             crate::test_support::each_shape(&shape.shape, &mut |s| {
@@ -1616,7 +1616,7 @@ fn destructive_confirm_paints_error_primary_with_readable_on_colour_in_both_them
         }
         assert!(painted_ink, "{dark}: destructive primary text must use readable on-colour");
     }
-    solidcraft_theme::set_dark(previous);
+    torno_theme::set_dark(previous);
 }
 
 #[test]
@@ -1652,9 +1652,9 @@ fn window_footer_is_optional_and_can_contain_only_a_left_action() {
 fn universal_containers_follow_one_layout_without_changing_transient_surfaces() {
     use crate::{LayoutMode, frame::Side};
     let ctx = crate::test_support::context();
-    let previous = solidcraft_theme::is_dark();
+    let previous = torno_theme::is_dark();
     for dark in [false, true] {
-        solidcraft_theme::set_dark(dark);
+        torno_theme::set_dark(dark);
         let t = Tokens::get();
         for surface in [Surface::Panel, Surface::Feature, Surface::Palette, Surface::Chrome] {
             LayoutMode::Floating.publish(&ctx);
@@ -1690,7 +1690,7 @@ fn universal_containers_follow_one_layout_without_changing_transient_surfaces() 
             assert_eq!(floating, docked, "{surface:?}: anchored/modal/canvas content never becomes a workspace dock");
         }
     }
-    solidcraft_theme::set_dark(previous);
+    torno_theme::set_dark(previous);
 }
 
 #[test]
@@ -1798,7 +1798,7 @@ fn compact_tool_sheet_corners_follow_its_right_edge_contact() {
 #[test]
 fn border_hierarchy_reaches_hosts_sections_controls_and_inset_without_new_targets() {
     use egui::{Color32, Stroke};
-    use solidcraft_theme::{Borders, InsetBorder};
+    use torno_theme::{Borders, InsetBorder};
     for dark in [false, true] {
         let mut t = if dark { Tokens::dark() } else { Tokens::light() };
         t.borders = Borders {
@@ -1811,7 +1811,7 @@ fn border_hierarchy_reaches_hosts_sections_controls_and_inset_without_new_target
             control: Some(Stroke::new(1.5, Color32::BLUE)),
             primary_inset: Some(InsetBorder { stroke: Stroke::new(0.75, Color32::YELLOW), gap: 3.0 }),
         };
-        let _restore = solidcraft_theme::scoped_tokens(t);
+        let _restore = torno_theme::scoped_tokens(t);
         let ctx = crate::test_support::context();
         let mut value = "12 mm".to_string();
         let output = crate::test_support::raw_frame(&ctx, egui::RawInput::default(), |ui| {
@@ -1877,8 +1877,8 @@ fn border_hierarchy_reaches_hosts_sections_controls_and_inset_without_new_target
 fn inset_border_skips_tiny_or_invalid_surfaces_and_keeps_dock_contacts_square() {
     let mut t = Tokens::dark();
     t.borders.primary = Some(egui::Stroke::new(4.0, egui::Color32::WHITE));
-    t.borders.primary_inset = Some(solidcraft_theme::InsetBorder { stroke: egui::Stroke::new(4.0, egui::Color32::YELLOW), gap: 12.0 });
-    let _restore = solidcraft_theme::scoped_tokens(t);
+    t.borders.primary_inset = Some(torno_theme::InsetBorder { stroke: egui::Stroke::new(4.0, egui::Color32::YELLOW), gap: 12.0 });
+    let _restore = torno_theme::scoped_tokens(t);
     let ctx = crate::test_support::context();
     let output = crate::test_support::raw_frame(&ctx, egui::RawInput::default(), |ui| {
         let frame =
@@ -1902,8 +1902,8 @@ fn inset_border_skips_tiny_or_invalid_surfaces_and_keeps_dock_contacts_square() 
 fn menu_companion_is_visible_in_frame_padding_and_bounded_by_its_surface() {
     let mut t = Tokens::dark();
     t.borders.primary = Some(egui::Stroke::new(2.0, egui::Color32::WHITE));
-    t.borders.primary_inset = Some(solidcraft_theme::InsetBorder { stroke: egui::Stroke::new(0.75, egui::Color32::YELLOW), gap: 3.0 });
-    let _restore = solidcraft_theme::scoped_tokens(t);
+    t.borders.primary_inset = Some(torno_theme::InsetBorder { stroke: egui::Stroke::new(0.75, egui::Color32::YELLOW), gap: 3.0 });
+    let _restore = torno_theme::scoped_tokens(t);
     let ctx = crate::test_support::context();
     let mut surface = egui::Rect::NOTHING;
     let output = crate::test_support::raw_frame(&ctx, egui::RawInput::default(), |ui| {
@@ -1936,16 +1936,11 @@ fn menu_companion_is_visible_in_frame_padding_and_bounded_by_its_surface() {
 fn bevel_lighting_reverses_for_fields_and_pressed_buttons_without_changing_geometry() {
     use egui::{Color32, Pos2, Rect};
     let mut t = Tokens::light();
-    let bevel = solidcraft_theme::Bevel {
-        width: 1.0,
-        highlight: Color32::WHITE,
-        light: Color32::LIGHT_GRAY,
-        shadow: Color32::GRAY,
-        dark_shadow: Color32::BLACK,
-    };
+    let bevel =
+        torno_theme::Bevel { width: 1.0, highlight: Color32::WHITE, light: Color32::LIGHT_GRAY, shadow: Color32::GRAY, dark_shadow: Color32::BLACK };
     t.borders.bevel = Some(bevel);
     t.control_radius = 0;
-    let _restore = solidcraft_theme::scoped_tokens(t);
+    let _restore = torno_theme::scoped_tokens(t);
     let ctx = crate::test_support::context();
     let mut button_rect = Rect::NOTHING;
     let mut field_rect = Rect::NOTHING;

@@ -13,13 +13,13 @@
 //! stays a revolution, which the import sends as its exact rational B-spline; any other spline
 //! stays a spline.
 
-use solidcraft_geom::prelude::*;
 use std::borrow::Cow;
 use std::f64::consts::{FRAC_PI_2, TAU};
+use torno_geom::prelude::*;
 
 use solidcore_record::Vec3;
 use solidcore_record::brep as b;
-use solidcraft_geom::brep::eval::{CurveEval, SurfaceEval};
+use torno_geom::brep::eval::{CurveEval, SurfaceEval};
 
 use super::{R, Unsupported};
 
@@ -165,7 +165,7 @@ fn trimmed(brep: &b::Brep, f: &b::Face) -> R<[[f64; 2]; 2]> {
 /// greatest from below, and its control points' (weights positive) from above; halves whose
 /// control points can't beat the best found are dropped, the others halved, until the two meet.
 fn pcurve_box(c: &b::Curve2, interval: [f64; 2]) -> Option<[[f64; 2]; 2]> {
-    use solidcraft_geom::bspline::{HPoint, bezier_segment, segment};
+    use torno_geom::bspline::{HPoint, bezier_segment, segment};
     let (knots, ctrl): (&[f64], Vec<HPoint>) = match c {
         b::Curve2::Spline { knots, points } => (knots, points.iter().map(|p| HPoint { x: p[0], y: p[1], z: 0.0, w: 1.0 }).collect()),
         b::Curve2::RationalSpline { knots, homogeneous } => {

@@ -4,8 +4,8 @@ use std::collections::BTreeMap;
 
 use serde::{Deserialize, Serialize};
 use solidcore_record::Vec3;
-use solidcraft_render::{BackendId, RenderFormat, RenderLimits, RenderMode};
-use solidcraft_viewport::{Camera, UpAxis};
+use torno_render::{BackendId, RenderFormat, RenderLimits, RenderMode};
+use torno_viewport::{Camera, UpAxis};
 
 pub use crate::render_job::{CpuJob, GpuJob, RenderJob, SkyEnvironment};
 use crate::{DocError, Result};
@@ -38,14 +38,14 @@ pub struct RenderSetup {
     pub optics: crate::render_optics::OpticalBindings,
     #[serde(skip_serializing_if = "crate::render_coat::CoatBindings::is_empty")]
     pub coats: crate::render_coat::CoatBindings,
-    #[serde(skip_serializing_if = "solidcraft_render::stage::Stage::is_empty")]
-    pub stage: solidcraft_render::stage::Stage,
+    #[serde(skip_serializing_if = "torno_render::stage::Stage::is_empty")]
+    pub stage: torno_render::stage::Stage,
 }
 
 /// The CPU request a size check belongs to, so a refusal can name the profile that admits it.
 #[derive(Clone, Copy)]
 struct CpuSize {
-    progressive: Option<solidcraft_render::job::CpuProgressiveOptions>,
+    progressive: Option<torno_render::job::CpuProgressiveOptions>,
 }
 
 // Reuse Camera's representation and defaults, but reject misspelled saved fields. A remote
@@ -69,7 +69,7 @@ impl Default for RenderSetup {
     fn default() -> Self {
         // The built-in descriptor owns the canonical default backend identifier.
         Self {
-            backend: solidcraft_render::builtin_backend().id,
+            backend: torno_render::builtin_backend().id,
             mode: RenderMode::Preview,
             camera: Camera::default(),
             width: 1024,
@@ -94,11 +94,11 @@ impl RenderSetup {
             Some(RenderJob::CpuRaytrace { options, .. }) => (
                 options.budget.image_limits(options.progressive.is_some()),
                 Some(CpuSize {
-                    progressive: solidcraft_render::job::cpu_camera_sampling(options.progressive, options.adaptive, options.budget)
+                    progressive: torno_render::job::cpu_camera_sampling(options.progressive, options.adaptive, options.budget)
                         .map_err(|e| DocError::Invalid(e.to_string()))?,
                 }),
             ),
-            Some(RenderJob::GpuPath { .. }) => (solidcraft_render::job::GPU_PATH_LIMITS, None),
+            Some(RenderJob::GpuPath { .. }) => (torno_render::job::GPU_PATH_LIMITS, None),
             _ => (RenderLimits::default(), None),
         };
         self.validate_with_limits(limits, cpu)
@@ -106,14 +106,14 @@ impl RenderSetup {
 
     /// Runtime CPU lowering has already moved typed options out of this setup.
     /// Saving still uses validate(), so a legacy setup cannot smuggle a large profile.
-    pub fn validate_for_cpu(&self, budget: solidcraft_render::job::CpuBudget) -> Result<()> {
+    pub fn validate_for_cpu(&self, budget: torno_render::job::CpuBudget) -> Result<()> {
         budget.validate_image(self.width, self.height, None).map_err(|e| DocError::Invalid(e.to_string()))?;
         self.validate_with_limits(budget.image_limits(false), Some(CpuSize { progressive: None }))
     }
 
     /// Typed GPU options have already been lowered; retain their dimension envelope.
     pub fn validate_for_gpu(&self) -> Result<()> {
-        self.validate_with_limits(solidcraft_render::job::GPU_PATH_LIMITS, None)
+        self.validate_with_limits(torno_render::job::GPU_PATH_LIMITS, None)
     }
 
     fn validate_with_limits(&self, limits: RenderLimits, cpu: Option<CpuSize>) -> Result<()> {
@@ -178,9 +178,8 @@ impl RenderSetup {
         {
             // A CPU refusal names the profile that can render the size (#8941). It is never
             // selected for the person: resolution and profile change only when they choose.
-            let advice = cpu.map_or_else(String::new, |cpu| {
-                format!("; {}", solidcraft_render::job::CpuBudget::size_advice(self.width, self.height, cpu.progressive))
-            });
+            let advice = cpu
+                .map_or_else(String::new, |cpu| format!("; {}", torno_render::job::CpuBudget::size_advice(self.width, self.height, cpu.progressive)));
             return Err(DocError::Invalid(format!(
                 "render output {width} × {height} exceeds the image limits ({} pixels per side, {} pixels in all); \
                  the largest image at this aspect is {w} × {h}{advice}",
@@ -214,7 +213,7 @@ impl RenderSetup {
             }
             job.validate(&self.camera, self.exposure_ev)?;
             if let RenderJob::GpuPath { options, .. } = job {
-                solidcraft_render::job::supersampled_dimensions(self.width, self.height, options.supersampling)
+                torno_render::job::supersampled_dimensions(self.width, self.height, options.supersampling)
                     .map_err(|e| DocError::Invalid(e.to_string()))?;
             }
             if let RenderJob::CpuRaytrace { options, .. } = job {
@@ -223,18 +222,18 @@ impl RenderSetup {
                 let (trace_width, trace_height) = if options.supersampling == 1 && !options.denoise && !options.denoise_diagnostics {
                     (self.width, self.height)
                 } else {
-                    solidcraft_render::job::supersampled_dimensions(self.width, self.height, options.supersampling)
+                    torno_render::job::supersampled_dimensions(self.width, self.height, options.supersampling)
                         .map_err(|e| DocError::Invalid(e.to_string()))?
                 };
                 if options.denoise || options.denoise_diagnostics {
-                    solidcraft_render::job::validate_cpu_denoise_image(trace_width, trace_height).map_err(|e| DocError::Invalid(e.to_string()))?;
+                    torno_render::job::validate_cpu_denoise_image(trace_width, trace_height).map_err(|e| DocError::Invalid(e.to_string()))?;
                 }
                 options
                     .budget
                     .validate_image(
                         trace_width,
                         trace_height,
-                        solidcraft_render::job::cpu_camera_sampling(options.progressive, options.adaptive, options.budget)
+                        torno_render::job::cpu_camera_sampling(options.progressive, options.adaptive, options.budget)
                             .map_err(|e| DocError::Invalid(e.to_string()))?,
                     )
                     .map_err(|e| DocError::Invalid(e.to_string()))?;
@@ -355,22 +354,21 @@ mod tests {
             }
         }
         for coordinate in [-5e9, 5e9, 1e9_f64.next_up()] {
-            let mut point: solidcraft_render::job::PunctualLightOptions = serde_json::from_value(json!({
+            let mut point: torno_render::job::PunctualLightOptions = serde_json::from_value(json!({
                 "position_mm":[coordinate,0.0,0.0],"color":[1.0,1.0,1.0],"intensity":1.0,
                 "reference_distance_mm":100.0,"minimum_distance_mm":0.001}))
             .unwrap();
             assert!(point.validate().is_err());
             point.position_mm = [0.0; 3];
-            point.cone = Some(solidcraft_render::job::SpotConeOptions {
+            point.cone = Some(torno_render::job::SpotConeOptions {
                 emitted_axis: [coordinate, 0.0, 0.0],
                 inner_half_angle_radians: 0.1,
                 outer_half_angle_radians: 0.5,
             });
             assert!(point.validate().is_err());
-            let area =
-                solidcraft_render::job::AreaLight { center: [coordinate, 0.0, 0.0], u: [1.0, 0.0, 0.0], v: [0.0, 1.0, 0.0], radiance: [1.0; 3] };
+            let area = torno_render::job::AreaLight { center: [coordinate, 0.0, 0.0], u: [1.0, 0.0, 0.0], v: [0.0, 1.0, 0.0], radiance: [1.0; 3] };
             assert!(area.validate().is_err());
-            let frame = solidcraft_render::job::textures::PlanarFrame { origin: [coordinate, 0.0, 0.0], u: [1.0, 0.0, 0.0], v: [0.0, 1.0, 0.0] };
+            let frame = torno_render::job::textures::PlanarFrame { origin: [coordinate, 0.0, 0.0], u: [1.0, 0.0, 0.0], v: [0.0, 1.0, 0.0] };
             assert!(frame.validate().is_err());
         }
     }
@@ -545,7 +543,7 @@ mod tests {
         assert!(gpu.validate().is_err());
         let cpu_job = CpuJob {
             hdr: Some(CpuHdrEnvironment { intensity: 1.0, ..cpu }),
-            environment: Some(solidcraft_render::job::RaytraceEnvironmentOptions { color: [0.0; 3], intensity: 0.0 }),
+            environment: Some(torno_render::job::RaytraceEnvironmentOptions { color: [0.0; 3], intensity: 0.0 }),
             ..Default::default()
         };
         assert!(cpu_job.to_runtime(0.0).is_err());
@@ -593,7 +591,7 @@ mod tests {
             exposure_ev: 2.5,
             mode: RenderMode::Final,
             format: RenderFormat::Exr,
-            camera: Camera { up: solidcraft_viewport::UpAxis::Y, ..Default::default() },
+            camera: Camera { up: torno_viewport::UpAxis::Y, ..Default::default() },
             ..Default::default()
         };
         Arc::make_mut(&mut loaded.render).setups.insert("Studio".into(), setup);
@@ -644,7 +642,7 @@ mod tests {
     /// The saved profile is never changed by the check, and GPU path tracing keeps its own limits.
     #[test]
     fn a_cpu_size_refusal_names_the_profile_that_can_render_it() {
-        use solidcraft_render::job::CpuBudget;
+        use torno_render::job::CpuBudget;
         let cpu = |budget, width, height| RenderSetup {
             width,
             height,
@@ -992,7 +990,7 @@ mod tests {
 mod cpu_budget_tests {
     use super::*;
     use serde_json::json;
-    use solidcraft_render::job::{CpuBudget, CpuProgressiveOptions};
+    use torno_render::job::{CpuBudget, CpuProgressiveOptions};
 
     #[test]
     fn inactive_area_tuning_roundtrips_without_leaking_into_runtime_options() {
@@ -1002,7 +1000,7 @@ mod cpu_budget_tests {
         assert_eq!((runtime.seed, runtime.area_samples), (None, None));
         let roundtrip: CpuJob = serde_json::from_value(serde_json::to_value(&saved).unwrap()).unwrap();
         assert_eq!(roundtrip, saved);
-        let raw = solidcraft_render::job::RaytraceOptions { seed: Some(1), ..Default::default() };
+        let raw = torno_render::job::RaytraceOptions { seed: Some(1), ..Default::default() };
         assert!(raw.validate().is_err(), "runtime requests still reject tuning without active emitters");
     }
 
@@ -1067,7 +1065,7 @@ mod cpu_budget_tests {
 #[cfg(test)]
 #[test]
 fn cpu_denoise_saved_flag_roundtrips_offline_and_keeps_false_omitted() {
-    use solidcraft_render::job::CpuBudget;
+    use torno_render::job::CpuBudget;
     let mut setup = RenderSetup {
         width: 16,
         height: 8,
@@ -1102,7 +1100,7 @@ fn cpu_denoise_saved_flag_roundtrips_offline_and_keeps_false_omitted() {
 fn composed_cpu_path_preserves_saved_optics_alpha_filter_lens_and_master_intent() {
     use crate::render_optics::{OpticalMaterial, SavedOptics};
     use crate::render_surface::RenderBodyTarget;
-    use solidcraft_render::job::{CpuPathOptions, CpuProgressiveOptions, OutputOptions, ThinLens};
+    use torno_render::job::{CpuPathOptions, CpuProgressiveOptions, OutputOptions, ThinLens};
     let mut setup = RenderSetup {
         camera: Camera { fov: 0.6, distance: 123.0, ..Default::default() },
         width: 8,
@@ -1178,7 +1176,7 @@ fn gpu_hard_directional_intent_roundtrips_and_hostile_lists_refuse_at_document_l
 fn saved_cpu_aging_is_optional_bounded_and_preserves_stable_targets_without_runtime_ordinals() {
     use crate::render_aging::SavedAgingStack;
     use crate::render_surface::RenderBodyTarget;
-    use solidcraft_render::job::aging::{AgingKind, AgingLayer};
+    use torno_render::job::aging::{AgingKind, AgingLayer};
     let old = CpuJob::default();
     assert!(serde_json::to_value(&old).unwrap().get("aging").is_none());
     let mut layers = SavedAgingStack::default();
@@ -1215,7 +1213,7 @@ fn saved_cpu_aging_is_optional_bounded_and_preserves_stable_targets_without_runt
 mod cpu_adaptive_saved_tests {
     use super::*;
     use serde_json::json;
-    use solidcraft_render::job::{CpuBudget, CpuProgressiveOptions};
+    use torno_render::job::{CpuBudget, CpuProgressiveOptions};
     #[test]
     fn saved_cpu_adaptive_intent_roundtrips_offline_and_pays_pilots_inside_the_existing_profile() {
         let setup: RenderSetup = serde_json::from_value(json!({"width":128,"height":64,
@@ -1242,7 +1240,7 @@ mod cpu_adaptive_saved_tests {
             "16 pilots cannot be hidden outside Compact's 64-sample cap"
         );
         for (budget, maximum) in
-            [(CpuBudget::Compact, 64), (CpuBudget::Studio, 1024), (CpuBudget::Workstation, solidcraft_render::job::MAX_CPU_SAMPLES_PER_PIXEL)]
+            [(CpuBudget::Compact, 64), (CpuBudget::Studio, 1024), (CpuBudget::Workstation, torno_render::job::MAX_CPU_SAMPLES_PER_PIXEL)]
         {
             let mut runtime = runtime.clone();
             runtime.budget = budget;
@@ -1433,7 +1431,7 @@ fn render_quality_saved_intent_preserves_output_size_and_validates_the_internal_
     cpu.width = 1024;
     cpu.height = 1024;
     let Some(RenderJob::CpuRaytrace { options, .. }) = &mut cpu.job else { panic!("expected CPU job") };
-    options.budget = solidcraft_render::job::CpuBudget::Compact;
+    options.budget = torno_render::job::CpuBudget::Compact;
     options.progressive.as_mut().unwrap().samples_per_pixel = 8;
     assert!(cpu.validate().is_err(), "X2 must charge four million internal pixels to Compact's progressive limit");
     let Some(RenderJob::CpuRaytrace { options, .. }) = &mut cpu.job else { panic!("expected CPU job") };

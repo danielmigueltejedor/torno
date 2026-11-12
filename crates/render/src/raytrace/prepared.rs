@@ -2,8 +2,8 @@
 use super::{Bvh, Hit, MAX_DISTANCE_MM, Ray, Result, TraceError};
 use crate::ProductScene;
 use solidcore_record::Vec3;
-use solidcraft_geom::prelude::*;
-use solidcraft_viewport::surface::OpaqueSurface;
+use torno_geom::prelude::*;
+use torno_viewport::surface::OpaqueSurface;
 
 #[derive(Clone, Copy)]
 pub struct PreparedPrimitive {

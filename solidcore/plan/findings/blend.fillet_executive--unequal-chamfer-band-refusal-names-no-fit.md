@@ -46,4 +46,4 @@ Tests: `crates/solidcore/tests/chamfer_band_scale.rs`.
 - Just above the check's own threshold, the rails already cross. There the solver's refusal ("Fillet Solver Error: Rounds Of Two Edges Cross On A Face") comes before the band check's and names no size: another refusal without its fit.
 - The check itself is sampled: `blend.fillet_executive--band-check-is-sampled-not-an-enclosure.md`.
 
-PR: the #3190 follow-up (shipping to SolidCraft after the move).
+PR: the #3190 follow-up (shipping to Torno after the move).

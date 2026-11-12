@@ -3,7 +3,7 @@
 //! Run through the plain entry point (the kernel's identities), the joined curve must
 //! still be owned under the edge identity the B-rep check compares
 //! (`Brep::owner_identity`); before, it kept the kernel key and the check reported
-//! `Test #61` (`pE->ValidateGeometry(FALSE)`) on it (found on solidcraft#4492's mitred
+//! `Test #61` (`pE->ValidateGeometry(FALSE)`) on it (found on torno#4492's mitred
 //! rounds, `offset::offset_faces`).
 #![allow(
     clippy::unwrap_used,

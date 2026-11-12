@@ -85,14 +85,14 @@
 //! - **Tangential contact points** (not upstream, WR-74, tangency-labs/solidcore#394,
 //!   opt-in `Kernel::fixes.ssi_tangent_contact_points`, off by default). The node
 //!   pairs `FindInteriorCurves` drops (normals within 5 degrees, no local
-//!   intersection, normals within 2 degrees at the solution) seed the SolidCraft
+//!   intersection, normals within 2 degrees at the solution) seed the Torno
 //!   fork's search for isolated tangential contacts (`tangent_contacts`,
 //!   tangency-labs/smlib@c26edbc), run after the loop for a non-self intersection.
 //!   Its Newton iterations are bounded loops (8 + 25 steps), no recursion.
 //! - **Opt-in fix (WR-79 part 2, #396).** With
 //!   `Kernel::fixes.ssi_low_angle_start_on_probation` (off by default),
 //!   `FindInteriorCurves` traces a start point below the 5/2 degree normal-angle tests
-//!   on probation (the SolidCraft fork's tangency-labs/smlib@30d25bf): kept only as a
+//!   on probation (the Torno fork's tangency-labs/smlib@30d25bf): kept only as a
 //!   closed loop whose box diagonal exceeds twice the tolerance and that is not
 //!   tangent, coincident or touching; skipped below `2 tol / modelSize` radians;
 //!   rejected traces and their start points are remembered. Off, the port matches the
@@ -1801,7 +1801,7 @@ impl SurfaceIntersector<'_> {
                 // Decide which of the aSingDirections to use.
                 if let Some(p) = prev {
                     if let Some((&first, rest)) = inside.split_first() {
-                        // SolidCraft change (WR-512, #1522): start from the first inside
+                        // Torno change (WR-512, #1522): start from the first inside
                         // direction, which is where the search's dAngleMin comes from.
                         // Upstream leaves the output at dir(0), so where the first inside
                         // direction is the closest (or the only one) the curve starts

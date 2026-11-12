@@ -12,15 +12,15 @@
 //! `pixels_per_point`, offset by the viewport rect); `model` pixels are pixels of a
 //! `ui.render` of the same size, so an agent can render, look, and pick without a window.
 
-use solidcraft_engine::geom::prelude::*;
 use std::collections::HashMap;
+use torno_engine::geom::prelude::*;
 
 use egui::{Pos2, Rect, pos2, vec2};
 use serde_json::{Value, json};
 
 use solidcore_record::Vec3;
-use solidcraft_engine::doc::{apply_point, is_identity};
-use solidcraft_engine::geom::Mesh;
+use torno_engine::doc::{apply_point, is_identity};
+use torno_engine::geom::Mesh;
 
 use crate::SolveApp;
 
@@ -212,8 +212,8 @@ pub fn pick_command(app: &mut SolveApp, p: &Value) -> Result<Value, String> {
 /// exactly as the mouse picker skips them.
 fn face_candidates(
     app: &SolveApp,
-    st: &solidcraft_engine::doc::ModelState,
-    bounds: &[(String, solidcraft_engine::geom::Aabb3)],
+    st: &torno_engine::doc::ModelState,
+    bounds: &[(String, torno_engine::geom::Aabb3)],
     input: &Input,
     active_bodies: &Option<crate::viewport::ActiveBodyNames>,
     replaced: &[String],
@@ -249,7 +249,7 @@ fn face_candidates(
 /// normals) is solved exactly against its plane, so a box picks to the last digit; a curved
 /// face keeps the mesh hit (within the display tolerance) and takes its normal interpolated
 /// from the mesh's per-vertex surface normals.
-fn refine(m: &Mesh, ti: usize, t: f64, lo: Vec3, ld: Vec3, place: &solidcraft_engine::doc::Mat) -> Option<(Vec3, Vec3)> {
+fn refine(m: &Mesh, ti: usize, t: f64, lo: Vec3, ld: Vec3, place: &torno_engine::doc::Mat) -> Option<(Vec3, Vec3)> {
     let [a, b, c] = *m.triangles.get(ti)?;
     let (p0, p1, p2) = (m.positions.get(a as usize)?, m.positions.get(b as usize)?, m.positions.get(c as usize)?);
     let lp = lo + ld * t;
@@ -277,7 +277,7 @@ fn refine(m: &Mesh, ti: usize, t: f64, lo: Vec3, ld: Vec3, place: &solidcraft_en
 }
 
 /// A placement is rigid, so a direction rides along it as a point difference.
-fn apply_dir(place: &solidcraft_engine::doc::Mat, at: Vec3, n: Vec3) -> Vec3 {
+fn apply_dir(place: &torno_engine::doc::Mat, at: Vec3, n: Vec3) -> Vec3 {
     if is_identity(place) {
         return n;
     }
@@ -304,8 +304,8 @@ fn barycentric(p: Vec3, a: Vec3, b: Vec3, c: Vec3) -> (f64, f64, f64) {
 #[allow(clippy::too_many_arguments)]
 fn section_cap(
     app: &SolveApp,
-    st: &solidcraft_engine::doc::ModelState,
-    bounds: &[(String, solidcraft_engine::geom::Aabb3)],
+    st: &torno_engine::doc::ModelState,
+    bounds: &[(String, torno_engine::geom::Aabb3)],
     input: &Input,
     so: Vec3,
     sn: Vec3,
@@ -333,8 +333,8 @@ fn section_cap(
 #[allow(clippy::too_many_arguments)]
 pub(crate) fn body_cut_at(
     app: &SolveApp,
-    st: &solidcraft_engine::doc::ModelState,
-    bounds: &[(String, solidcraft_engine::geom::Aabb3)],
+    st: &torno_engine::doc::ModelState,
+    bounds: &[(String, torno_engine::geom::Aabb3)],
     o: Vec3,
     d: Vec3,
     t_cap: f64,
@@ -385,8 +385,8 @@ pub(crate) fn body_cut_at(
 #[allow(clippy::too_many_arguments)]
 fn near_edges(
     app: &SolveApp,
-    st: &solidcraft_engine::doc::ModelState,
-    bounds: &[(String, solidcraft_engine::geom::Aabb3)],
+    st: &torno_engine::doc::ModelState,
+    bounds: &[(String, torno_engine::geom::Aabb3)],
     proj: &crate::viewport::Proj,
     input: &Input,
     pos: Pos2,

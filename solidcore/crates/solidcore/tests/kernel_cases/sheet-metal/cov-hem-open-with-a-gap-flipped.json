@@ -56,6 +56,6 @@
   ],
   "what": "sheet.hem with its own gap of 1 mm (an open hem), flipped, on the top edge of a 100 x 60 x 2 base, 10 long",
   "why_not": [
-    "body \"Body1\" is no kernel operation's output nor an operand: SolidCraft built it or changed the kernel's record"
+    "body \"Body1\" is no kernel operation's output nor an operand: Torno built it or changed the kernel's record"
   ]
 }

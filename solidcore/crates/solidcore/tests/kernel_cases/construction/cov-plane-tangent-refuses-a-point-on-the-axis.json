@@ -32,6 +32,6 @@
   "ungraded": [],
   "what": "a tangent plane to a cylinder at a point on its axis",
   "why_not": [
-    "the failure is SolidCraft's, not a kernel operation's: step 2 (construct.plane.tangent): the point is on the face's axis"
+    "the failure is Torno's, not a kernel operation's: step 2 (construct.plane.tangent): the point is on the face's axis"
   ]
 }

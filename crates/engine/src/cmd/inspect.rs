@@ -1,13 +1,13 @@
 //! Inspection: measure bodies, describe the document, sketches and model topology.
 
-use solidcraft_geom::prelude::*;
 use std::collections::BTreeMap;
 use std::hash::{BuildHasher, RandomState};
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{Arc, OnceLock, Weak};
+use torno_geom::prelude::*;
 
 use serde_json::{Value, json};
-use solidcraft_sketch::CurveKind;
+use torno_sketch::CurveKind;
 
 use super::CommandSpec;
 use crate::params::{bad, bool_, str_, string_list};
@@ -169,18 +169,15 @@ pub static COMMANDS: &[CommandSpec] = &[
 /// triangles. Only that is asked: other findings of a full validity check (faces that don't
 /// mesh, tolerance gaps of an imported solid) don't take a closed body's volume away, and the
 /// check stays cheap for designs with many bodies.
-pub(crate) fn encloses_volume(body: &solidcraft_kernel::Body) -> bool {
+pub(crate) fn encloses_volume(body: &torno_kernel::Body) -> bool {
     if body.is_mesh() { body.is_closed_mesh() } else { !body.is_surface() }
 }
 
-pub fn measure_json(b: &solidcraft_doc::ModelBody) -> Value {
+pub fn measure_json(b: &torno_doc::ModelBody) -> Value {
     serde_json::to_value(measure_sheet(b, None)).unwrap_or_default()
 }
 
-pub(super) fn measure_body(
-    b: &solidcraft_doc::ModelBody,
-    definitions: Option<&solidcraft_doc::ModelState>,
-) -> Result<solidcraft_kernel::BodyMeasure> {
+pub(super) fn measure_body(b: &torno_doc::ModelBody, definitions: Option<&torno_doc::ModelState>) -> Result<torno_kernel::BodyMeasure> {
     let mut measured = b.measure()?;
     if let Some(state) = definitions
         && let Some(sheet) = state.sheets.iter().find(|sheet| sheet.body == b.definition_name() && !sheet.perforations.is_empty())
@@ -188,15 +185,15 @@ pub(super) fn measure_body(
         let definition = state.body(b.definition_name()).ok_or_else(|| EngineError::Other(format!("missing sheet body `{}`", sheet.body)))?;
         // A body transfer moves the geometry and sheet metadata together. Apply only
         // the placement relative to the current definition, so holes move once.
-        let inverse = solidcraft_doc::mat_inverse(&definition.source_transform)
+        let inverse = torno_doc::mat_inverse(&definition.source_transform)
             .ok_or_else(|| EngineError::Other(format!("invalid sheet placement for `{}`", sheet.body)))?;
-        let placement = solidcraft_doc::mat_mul(&b.source_transform, &inverse);
+        let placement = torno_doc::mat_mul(&b.source_transform, &inverse);
         sheet.correct_perforation_properties(&mut measured, &placement)?;
     }
     Ok(measured)
 }
 
-fn measure_sheet(b: &solidcraft_doc::ModelBody, definitions: Option<&solidcraft_doc::ModelState>) -> BodyMeasurement {
+fn measure_sheet(b: &torno_doc::ModelBody, definitions: Option<&torno_doc::ModelState>) -> BodyMeasurement {
     let name = b.name.clone();
     match measure_body(b, definitions) {
         Ok(m) => {
@@ -264,7 +261,7 @@ fn measure(s: &mut Session, p: &Value) -> Result<Value> {
         return typed_reply(cmd, MeasureResult { measured, param_warnings: Vec::new() });
     }
     // Each body is measured on its own: on all cores, in body order.
-    let measurements: Vec<BodyMeasurement> = solidcraft_kernel::map_on_threads(&selected, 16, |b| measure_sheet(b, Some(&definitions)))
+    let measurements: Vec<BodyMeasurement> = torno_kernel::map_on_threads(&selected, 16, |b| measure_sheet(b, Some(&definitions)))
         .into_iter()
         .zip(&selected)
         .map(|(m, b)| m.unwrap_or_else(|| measure_failed(b.name.clone(), "measuring this body failed".into())))
@@ -327,7 +324,7 @@ fn at2(p: solidcore_record::Vec2) -> [f64; 2] {
 }
 
 /// Sketch `id`, placed where the placed model `world` has it (its component's placement).
-fn sketch_json(s: &Session, world: &solidcraft_doc::ModelState, id: u64) -> Option<SketchInspected> {
+fn sketch_json(s: &Session, world: &torno_doc::ModelState, id: u64) -> Option<SketchInspected> {
     let state = s.model.state();
     let ss = state.sketch(id)?;
     let plane = world.sketch(id).map(|w| w.plane).unwrap_or(ss.plane);
@@ -424,8 +421,8 @@ fn sketch_json(s: &Session, world: &solidcraft_doc::ModelState, id: u64) -> Opti
             index: i,
             area_mm2: p.area,
             centroid_sketch: at2(p.centroid),
-            curves: solidcraft_sketch::distinct_curves(&p.outer_curves),
-            holes: p.hole_curves.iter().map(|h| solidcraft_sketch::distinct_curves(h)).collect(),
+            curves: torno_sketch::distinct_curves(&p.outer_curves),
+            holes: p.hole_curves.iter().map(|h| torno_sketch::distinct_curves(h)).collect(),
         })
         .collect();
     let wires = sk
@@ -442,7 +439,7 @@ fn sketch_json(s: &Session, world: &solidcraft_doc::ModelState, id: u64) -> Opti
                 radius: a.radius,
                 start: a.start.into(),
                 end: a.end.into(),
-                sweep_deg: solidcraft_sketch::arc_sweep(&a).to_degrees(),
+                sweep_deg: torno_sketch::arc_sweep(&a).to_degrees(),
             }),
         })
         .collect();
@@ -479,9 +476,9 @@ static NEXT_REVISION: AtomicU64 = AtomicU64::new(1);
 pub(crate) struct Followed {
     /// Held weakly: a design something holds weakly is never changed in place (`Arc::make_mut`
     /// moves it), and its address can't go to another design meanwhile.
-    doc: Weak<solidcraft_doc::Document>,
+    doc: Weak<torno_doc::Document>,
     visibility: crate::Visibility,
-    pending_moves: BTreeMap<u64, solidcraft_doc::Mat>,
+    pending_moves: BTreeMap<u64, torno_doc::Mat>,
     revision: u64,
 }
 
@@ -567,8 +564,7 @@ fn inspect(s: &mut Session, p: &Value) -> Result<Value> {
     let with_counts = bool_(p, "sketch_counts").unwrap_or(false);
     // Each body is measured on its own: on all cores, in body order (as `inspect.measure`).
     let mut measured =
-        if with_measure { solidcraft_kernel::map_on_threads(&st.bodies, 16, |b| measure_sheet(b, Some(&definitions))) } else { Vec::new() }
-            .into_iter();
+        if with_measure { torno_kernel::map_on_threads(&st.bodies, 16, |b| measure_sheet(b, Some(&definitions))) } else { Vec::new() }.into_iter();
     let bodies: Vec<DocumentBody> = st
         .bodies
         .iter()
@@ -632,7 +628,7 @@ fn inspect(s: &mut Session, p: &Value) -> Result<Value> {
     )
 }
 
-fn body_of<'a>(st: &'a solidcraft_doc::ModelState, p: &Value, cmd: &str) -> Result<&'a solidcraft_doc::ModelBody> {
+fn body_of<'a>(st: &'a torno_doc::ModelState, p: &Value, cmd: &str) -> Result<&'a torno_doc::ModelBody> {
     let n = str_(p, "body").ok_or_else(|| bad(cmd, "`body` is required"))?;
     st.body(n).ok_or_else(|| bad(cmd, format!("no body `{n}`")))
 }
@@ -641,7 +637,7 @@ fn model_edges(s: &mut Session, p: &Value) -> Result<Value> {
     let st = s.world_state()?;
     let b = body_of(&st, p, "model.edges")?;
     let tol = (b.body.size() * 2e-3).max(1e-3);
-    let names = solidcraft_doc::naming::edge_names(b);
+    let names = torno_doc::naming::edge_names(b);
     let edges = b
         .body
         .edges(tol)?
@@ -665,13 +661,13 @@ fn reply(cmd: &str, reply: impl serde::Serialize) -> Result<Value> {
 fn model_faces(s: &mut Session, p: &Value) -> Result<Value> {
     let st = s.world_state()?;
     let b = body_of(&st, p, "model.faces")?;
-    let names = solidcraft_doc::naming::face_names(b);
+    let names = torno_doc::naming::face_names(b);
     let tol = (b.body.size() * 2e-3).max(1e-3);
-    let spots = solidcraft_doc::naming::face_spots(b);
+    let spots = torno_doc::naming::face_spots(b);
     // A folded sheet's faces also have the readable names its sheet gives them, worked out in
     // the body's own coordinates.
     let model = s.model.state();
-    let sheet_names = model.body(&b.name).map(|own| solidcraft_doc::sheet::body_sheet_face_names(&model, own)).unwrap_or_default();
+    let sheet_names = model.body(&b.name).map(|own| torno_doc::sheet::body_sheet_face_names(&model, own)).unwrap_or_default();
     let faces = b
         .body
         .faces(tol)?
@@ -679,7 +675,7 @@ fn model_faces(s: &mut Session, p: &Value) -> Result<Value> {
         .map(|f| {
             let spot = spots.get(f.index).copied().flatten();
             let cylinder = match spot.and_then(|x| x.surface) {
-                Some(solidcraft_kernel::FaceSurface::Cylinder { origin, axis, radius }) => {
+                Some(torno_kernel::FaceSurface::Cylinder { origin, axis, radius }) => {
                     Some(FaceCylinder { origin: origin.into(), axis: solidcore_record::Vec3::from(axis).into(), radius })
                 }
                 _ => None,
@@ -687,7 +683,7 @@ fn model_faces(s: &mut Session, p: &Value) -> Result<Value> {
             ModelFace {
                 index: f.index,
                 name: names.get(f.index).cloned(),
-                exact: solidcraft_doc::naming::face_name_exact(b, f.index),
+                exact: torno_doc::naming::face_name_exact(b, f.index),
                 area: f.area,
                 centroid: f.centroid.into(),
                 plane_normal: f.plane_normal.map(Into::into),
@@ -737,7 +733,7 @@ fn physical_material(s: &mut Session, p: &Value) -> Result<Value> {
         return Err(bad(cmd, "`bodies` must list existing bodies"));
     }
     for b in &bodies {
-        if canonical == solidcraft_doc::DEFAULT_MATERIAL {
+        if canonical == torno_doc::DEFAULT_MATERIAL {
             s.doc_mut().materials.remove(b);
         } else {
             s.doc_mut().materials.insert(b.clone(), canonical.clone());
@@ -777,7 +773,7 @@ fn appearance_reply(cmd: &str, r: impl serde::Serialize) -> Result<Value> {
 }
 
 pub(super) fn appearance(s: &mut Session, p: &Value) -> Result<Value> {
-    use solidcraft_doc::appearance::FaceLook;
+    use torno_doc::appearance::FaceLook;
     let cmd = "appearance.assign";
     let look = appearance_look(cmd, p)?;
     let bodies = string_list(cmd, p, "bodies")?;
@@ -793,7 +789,7 @@ pub(super) fn appearance(s: &mut Session, p: &Value) -> Result<Value> {
             let pt = crate::params::vec3(v)
                 .or_else(|| v.get("point").and_then(crate::params::vec3))
                 .ok_or_else(|| bad(cmd, "`faces` must list points [x, y, z]"))?;
-            let on = |b: &solidcraft_doc::ModelBody| solidcraft_doc::appearance::face_index_at(b, pt).is_some();
+            let on = |b: &torno_doc::ModelBody| torno_doc::appearance::face_index_at(b, pt).is_some();
             let body = match v.get("body").and_then(Value::as_str).or_else(|| str_(p, "body")) {
                 Some(n) => st.body(n).filter(|b| on(b)).map(|b| b.name.clone()),
                 None => st.bodies.iter().filter(|b| on(b)).min_by(|a, b| dist_to(a, pt).total_cmp(&dist_to(b, pt))).map(|b| b.name.clone()),
@@ -813,9 +809,9 @@ pub(super) fn appearance(s: &mut Session, p: &Value) -> Result<Value> {
     let st_names: Vec<(String, solidcore_record::Vec3, Option<String>)> = faces
         .iter()
         .map(|(b, pt)| {
-            let n = st.body(b).and_then(|mb| {
-                solidcraft_doc::appearance::face_index_at(mb, *pt).and_then(|i| solidcraft_doc::naming::face_names(mb).get(i).cloned())
-            });
+            let n = st
+                .body(b)
+                .and_then(|mb| torno_doc::appearance::face_index_at(mb, *pt).and_then(|i| torno_doc::naming::face_names(mb).get(i).cloned()));
             (b.clone(), *pt, n)
         })
         .collect();
@@ -852,20 +848,20 @@ pub(super) fn appearance(s: &mut Session, p: &Value) -> Result<Value> {
             .map(|(b, pt)| {
                 (
                     b.clone(),
-                    st.body(b).and_then(|mb| solidcraft_doc::appearance::face_index_at(mb, *pt)),
+                    st.body(b).and_then(|mb| torno_doc::appearance::face_index_at(mb, *pt)),
                     st_names.iter().find(|(name, p, _)| name == b && p.dist(*pt) < 1e-12).and_then(|(_, _, name)| name.clone()),
                 )
             })
             .collect();
         doc.appearances.faces.retain(|f| {
-            let idx = st.body(&f.body).and_then(|mb| solidcraft_doc::appearance::face_index_at(mb, f.point));
+            let idx = st.body(&f.body).and_then(|mb| torno_doc::appearance::face_index_at(mb, f.point));
             !picked.iter().any(|(b, i, name)| {
                 *b == f.body
                     && (f
                         .name
                         .as_ref()
                         .zip(name.as_ref())
-                        .is_some_and(|(a, b)| solidcraft_doc::naming::strip_piece(a) == solidcraft_doc::naming::strip_piece(b))
+                        .is_some_and(|(a, b)| torno_doc::naming::strip_piece(a) == torno_doc::naming::strip_piece(b))
                         || (!f.strict_name && i.is_some() && *i == idx))
             })
         });
@@ -876,8 +872,8 @@ pub(super) fn appearance(s: &mut Session, p: &Value) -> Result<Value> {
 }
 
 /// Shared look parser for assignment and atomic replacement.
-pub(super) fn appearance_look(cmd: &str, p: &Value) -> Result<Option<solidcraft_doc::appearance::Look>> {
-    use solidcraft_doc::appearance::{Look, library};
+pub(super) fn appearance_look(cmd: &str, p: &Value) -> Result<Option<torno_doc::appearance::Look>> {
+    use torno_doc::appearance::{Look, library};
     // A saved label is data, not a request to resolve a recipe. Keep the explicit
     // appearance selector separate so an owned look may have any recipe's ID as its name.
     let copied_name = match p.get("name") {
@@ -890,7 +886,7 @@ pub(super) fn appearance_look(cmd: &str, p: &Value) -> Result<Option<solidcraft_
     }
     // Both the stable ID and a registered display name explicitly select a recipe.
     // Copied labels use `name`, so color overrides cannot bypass unsupported optics.
-    let preset = str_(p, "appearance").and_then(solidcraft_doc::appearance_pack::find);
+    let preset = str_(p, "appearance").and_then(torno_doc::appearance_pack::find);
     let mut look: Option<Look> = if let Some(preset) = preset {
         // Refuse unsupported optics before any color/PBR/opacity override.
         let mut look = preset.opaque_look().map_err(|e| bad(cmd, e.to_string()))?;
@@ -912,7 +908,7 @@ pub(super) fn appearance_look(cmd: &str, p: &Value) -> Result<Option<solidcraft_
                 Some(l)
             }
             (Some(n), _) => {
-                let mut l = if let Some(preset) = solidcraft_doc::appearance_pack::find(n) {
+                let mut l = if let Some(preset) = torno_doc::appearance_pack::find(n) {
                     preset.opaque_look().map_err(|e| bad(cmd, e.to_string()))?
                 } else {
                     library(n).ok_or_else(|| bad(cmd, format!("no appearance `{n}` in the library (appearance.library)")))?
@@ -944,13 +940,13 @@ pub(super) fn appearance_look(cmd: &str, p: &Value) -> Result<Option<solidcraft_
     Ok(look)
 }
 
-fn dist_to(b: &solidcraft_doc::ModelBody, p: solidcore_record::Vec3) -> f64 {
+fn dist_to(b: &torno_doc::ModelBody, p: solidcore_record::Vec3) -> f64 {
     let bb = b.mesh().bounds();
     let c = solidcore_record::Vec3::new(p.x.clamp(bb.min.x, bb.max.x), p.y.clamp(bb.min.y, bb.max.y), p.z.clamp(bb.min.z, bb.max.z));
     c.dist(p)
 }
 
-pub(super) fn look_json(l: &solidcraft_doc::appearance::Look) -> Value {
+pub(super) fn look_json(l: &torno_doc::appearance::Look) -> Value {
     let mut value = json!({"name": l.name, "color": l.hex(), "opacity": l.opacity});
     if let Some(pbr) = l.pbr {
         value["pbr"] = json!(pbr);
@@ -962,7 +958,7 @@ pub(super) fn look_json(l: &solidcraft_doc::appearance::Look) -> Value {
 #[path = "pbr_appearance_tests.rs"]
 mod pbr_tests;
 
-pub(super) fn attach_pbr(cmd: &str, params: &Value, look: &mut solidcraft_doc::appearance::Look) -> Result<()> {
+pub(super) fn attach_pbr(cmd: &str, params: &Value, look: &mut torno_doc::appearance::Look) -> Result<()> {
     if let Some(value) = params.get("pbr") {
         look.pbr = if value.is_null() {
             None
@@ -973,7 +969,7 @@ pub(super) fn attach_pbr(cmd: &str, params: &Value, look: &mut solidcraft_doc::a
                 .ok_or_else(|| bad(cmd, "`pbr` requires exactly metallic, roughness and dielectric_ior"))?;
             let number = |key: &str| object.get(key).and_then(Value::as_f64).ok_or_else(|| bad(cmd, format!("`pbr.{key}` must be a finite number")));
             Some(
-                solidcraft_doc::pbr_appearance::PbrParameters::new(number("metallic")?, number("roughness")?, number("dielectric_ior")?)
+                torno_doc::pbr_appearance::PbrParameters::new(number("metallic")?, number("roughness")?, number("dielectric_ior")?)
                     .map_err(|e| bad(cmd, e.to_string()))?,
             )
         };
@@ -995,18 +991,18 @@ pub(super) fn attach_pbr(cmd: &str, params: &Value, look: &mut solidcraft_doc::a
 
 fn appearance_library(_s: &mut Session, _p: &Value) -> Result<Value> {
     let category = |name: &str| name.split(" - ").next().unwrap_or(name).to_string();
-    let mut list: Vec<LibraryAppearance> = solidcraft_doc::appearance::LIBRARY
+    let mut list: Vec<LibraryAppearance> = torno_doc::appearance::LIBRARY
         .iter()
         .map(|(n, c, o)| {
             let look = LookReply { name: n.to_string(), color: format!("#{:02x}{:02x}{:02x}", c[0], c[1], c[2]), opacity: *o, pbr: None };
             LibraryAppearance::Plain(PlainAppearance { look, category: category(n) })
         })
         .collect();
-    list.extend(solidcraft_doc::appearance::OPAQUE_FINISHES.iter().filter_map(|(name, ..)| {
-        let look = solidcraft_doc::appearance::library(name)?;
+    list.extend(torno_doc::appearance::OPAQUE_FINISHES.iter().filter_map(|(name, ..)| {
+        let look = torno_doc::appearance::library(name)?;
         Some(LibraryAppearance::Plain(PlainAppearance { look: LookReply::from(&look), category: category(name) }))
     }));
-    for preset in solidcraft_doc::appearance_pack::STARTER_PACK {
+    for preset in torno_doc::appearance_pack::STARTER_PACK {
         let c = preset.preview_color();
         list.push(LibraryAppearance::Starter(StarterAppearance {
             id: preset.id.to_string(),
@@ -1030,9 +1026,9 @@ fn appearance_library(_s: &mut Session, _p: &Value) -> Result<Value> {
 fn appearance_list(s: &mut Session, p: &Value) -> Result<Value> {
     let a = &s.doc.appearances;
     // "In this design": each look used, with where.
-    type Used = Vec<(solidcraft_doc::appearance::Look, Vec<String>, Vec<FaceSpot>, Vec<u64>)>;
+    type Used = Vec<(torno_doc::appearance::Look, Vec<String>, Vec<FaceSpot>, Vec<u64>)>;
     let mut used: Used = Vec::new();
-    fn slot(used: &mut Used, l: &solidcraft_doc::appearance::Look) -> usize {
+    fn slot(used: &mut Used, l: &torno_doc::appearance::Look) -> usize {
         match used.iter().position(|(u, ..)| u == l) {
             Some(i) => i,
             None => {
@@ -1090,7 +1086,7 @@ fn appearance_list(s: &mut Session, p: &Value) -> Result<Value> {
 }
 
 fn material_list(s: &mut Session, _p: &Value) -> Result<Value> {
-    let built_in = solidcraft_doc::MATERIALS.iter().map(|(n, d)| ListedMaterial::BuiltIn { name: n.to_string(), density_g_cm3: *d });
+    let built_in = torno_doc::MATERIALS.iter().map(|(n, d)| ListedMaterial::BuiltIn { name: n.to_string(), density_g_cm3: *d });
     let user = s
         .doc
         .user_materials

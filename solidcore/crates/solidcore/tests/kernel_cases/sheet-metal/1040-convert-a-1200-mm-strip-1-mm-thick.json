@@ -48,6 +48,6 @@
   "ungraded": [],
   "what": "a 1200 x 100 x 1 strip (diagonal over 1000 times its thickness) converted to sheet metal: refused with no outline on that face",
   "why_not": [
-    "body \"Plate\" is no kernel operation's output nor an operand: SolidCraft built it or changed the kernel's record"
+    "body \"Plate\" is no kernel operation's output nor an operand: Torno built it or changed the kernel's record"
   ]
 }

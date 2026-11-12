@@ -4,9 +4,9 @@ use super::{Body, FaceSource};
 use crate::{KernelError, Result, guard};
 use solidcore_record::brep::{self, Surface};
 use solidcore_record::{Plane, Vec3};
-use solidcraft_geom::prelude::*;
 use std::collections::HashMap;
 use std::sync::Arc;
+use torno_geom::prelude::*;
 
 /// The oriented plane each face of `body` lies on (in face order), from its record: the
 /// surface's plane, its normal turned with the face; none for a face on any other surface.

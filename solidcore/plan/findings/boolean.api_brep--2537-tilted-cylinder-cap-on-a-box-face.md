@@ -11,8 +11,8 @@
   exactly half the tool is inside the box; the bottom cap centre sits 1.995 mm below
   z = -55, its whole disc 1.436 mm below it, so the box's bottom face does the cutting
   there.
-- **What the issue reports.** Through SolidCraft (`solidcraft-cli mcp --headless`,
-  `SOLIDCRAFT_KERNEL=solidcore`, solidcore pinned at 2dbd88b and still at 8ddce90) the
+- **What the issue reports.** Through Torno (`torno-cli mcp --headless`,
+  `TORNO_KERNEL=solidcore`, solidcore pinned at 2dbd88b and still at 8ddce90) the
   result check refuses the cut with `SmFace::Test #36` ("Face Surface Seam has
   suspicious Edge near seam") twice; the C++ fork refuses it with eight `Bad Gap`
   failures (9.0232843e-06 and 1e-05 against a 7.5e-06 tolerance) and the same two #36.
@@ -25,7 +25,7 @@
   one closed manifold solid of 10 faces that passes `topology::integrity::check`,
   `is_manifold_solid` and `check_brep` at Level0, Level1 and Level2, in all four
   combinations of those two tools with `UpstreamFixes::default()` and
-  `UpstreamFixes::all()` (SolidCraft runs all but its held-back ones). The volumes are
+  `UpstreamFixes::all()` (Torno runs all but its held-back ones). The volumes are
   1486369.884197 and 1486369.884304 (primitive, no fixes and all fixes) and
   1486369.887650 and 1486369.884296 (revolve, the same two) against the closed form's
   1486369.8843794577: 1.2e-10, 5.1e-11, 2.2e-9 and 5.6e-11 relative. The volume is
@@ -38,7 +38,7 @@
   caps: both caps clear gives 1486357.9329 (the issue's v10 measured 1486357.933); the
   bottom cap on z = -55 gives 1486369.8844 (v16 measured 1486369.885, the C++ fork
   1486369.884); both caps 1 um outside, where each still dips past its face, gives
-  1486381.7354 (v12 measured 1486381.736). So SolidCraft and this reconstruction are
+  1486381.7354 (v12 measured 1486381.736). So Torno and this reconstruction are
   building the same solid; what differs is how the operand bodies and the result check
   get there.
 - **The refused check is ported and does not fire.** `SmFace::Test #36` is the
@@ -46,13 +46,13 @@
   `validation::assert_valid::face` raises it at `CheckLevel::Level2` from
   `face::p4::has_seam_problem_in_brep_mut`'s `near_miss`
   (`assert_valid/face.rs`, "36: FaceSeams must not have near miss"). So the check that
-  refuses the cut in SolidCraft runs here too, on the same result, and passes. What
+  refuses the cut in Torno runs here too, on the same result, and passes. What
   differs is therefore the result it is run on, not the check.
 - **What is therefore still open**, and was not measured here: the operand bodies as
-  SolidCraft hands them over, and SolidCraft's own composition around the kernel call
+  Torno hands them over, and Torno's own composition around the kernel call
   (its revolve, which asserts its result check runs and at which level, its `fixes()`
   preset minus `HELD_BACK`, and the pick/retry path). Narrowing it further wants the
-  case driven through SolidCraft, or SolidCraft's traced operand records for it;
+  case driven through Torno, or Torno's traced operand records for it;
   neither is available here. The entry named below holds the case as data so that a
   re-export, or the corpus runner when it lands with `solidcore-ops`, can be compared
   against it directly.

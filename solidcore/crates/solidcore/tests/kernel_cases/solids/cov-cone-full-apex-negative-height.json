@@ -62,6 +62,6 @@
   "ungraded": [],
   "what": "a full cone (top radius 0: an apex) r6, height -12 from a base at z=10: the apex at z=-2",
   "why_not": [
-    "body \"Body1\" is no kernel operation's output nor an operand: SolidCraft built it or changed the kernel's record"
+    "body \"Body1\" is no kernel operation's output nor an operand: Torno built it or changed the kernel's record"
   ]
 }

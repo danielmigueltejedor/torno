@@ -3,7 +3,7 @@ use super::metrics::*;
 use crate::BackingTooltipExt as _;
 use crate::{Container, Surface};
 use egui::{Response, Ui, vec2};
-use solidcraft_theme::Tokens;
+use torno_theme::Tokens;
 
 /// A column's minimum width is a multiple of the measured form label column.
 pub struct Column<'a> {
@@ -91,8 +91,8 @@ pub fn table_custom<R>(ui: &mut Ui, id: &str, columns: &[Column<'_>], empty: &st
             result
         },
     );
-    solidcraft_ui_registry::publish_rect(&format!("dialog:table:{id}:viewport"), output.inner_rect);
-    solidcraft_ui_registry::publish_count(&format!("dialog:table:{id}:content_width"), f64::from(output.content_size.x));
+    torno_ui_registry::publish_rect(&format!("dialog:table:{id}:viewport"), output.inner_rect);
+    torno_ui_registry::publish_count(&format!("dialog:table:{id}:content_width"), f64::from(output.content_size.x));
     // The nested horizontal ScrollArea consumes vertical scroll targets too. Request the
     // reveal here so it reaches the card's vertical scroller, only after an explicit action.
     if let Some(rect) = reveal {
@@ -201,7 +201,7 @@ impl Table<'_> {
                     }
                 },
             );
-            solidcraft_ui_registry::publish_rect(&format!("dialog:column:{}:{}", self.id, column.label), cell);
+            torno_ui_registry::publish_rect(&format!("dialog:column:{}:{}", self.id, column.label), cell);
             if index + 1 < self.columns.len() {
                 dividers.push((index, cell.right() + t.space_8 * 0.5));
             }
@@ -223,7 +223,7 @@ impl Table<'_> {
         let response = ui
             .interact(grip, ui.make_persistent_id((&self.id, "column_divider", index)), egui::Sense::click_and_drag())
             .on_hover_cursor(egui::CursorIcon::ResizeColumn);
-        solidcraft_ui_registry::publish_target(&format!("dialog:column_divider:{}:{index}", self.id), grip);
+        torno_ui_registry::publish_target(&format!("dialog:column_divider:{}:{index}", self.id), grip);
         if response.hovered() || response.dragged() {
             let inset = row.height() * 0.25;
             ui.painter().vline(x, row.top() + inset..=row.bottom() - inset, t.control_border_stroke(t.control_border));
@@ -290,15 +290,15 @@ impl Table<'_> {
         super::text::paint_text(
             ui,
             egui::Rect::from_min_max(egui::pos2(icon.right() + t.space_6, rect.top()), rect.max),
-            solidcraft_ui_text::tr_label(label),
+            torno_ui_text::tr_label(label),
             egui::FontId::proportional(t.font_label),
             t.form_dim,
             false,
         );
-        response.widget_info(|| egui::WidgetInfo::labeled(egui::Role::Button, ui.is_enabled(), solidcraft_ui_text::tr_label(label)));
-        solidcraft_ui_registry::publish_handle(&format!("dialog:table:{}:add", self.id), rect.center());
-        solidcraft_ui_registry::publish_rect(&format!("dialog:table:{}:add", self.id), rect);
-        response.on_hover_cursor(egui::CursorIcon::PointingHand).backing_on_hover_text(solidcraft_ui_text::tr_label(tooltip))
+        response.widget_info(|| egui::WidgetInfo::labeled(egui::Role::Button, ui.is_enabled(), torno_ui_text::tr_label(label)));
+        torno_ui_registry::publish_handle(&format!("dialog:table:{}:add", self.id), rect.center());
+        torno_ui_registry::publish_rect(&format!("dialog:table:{}:add", self.id), rect);
+        response.on_hover_cursor(egui::CursorIcon::PointingHand).backing_on_hover_text(torno_ui_text::tr_label(tooltip))
     }
 
     fn row_content(&self, ui: &mut Ui, key: &str, selected: bool, force: bool, add: impl FnOnce(&mut TableRow<'_>)) -> Response {
@@ -311,7 +311,7 @@ impl Table<'_> {
             ui.painter().rect_filled(rect, t.control_radius, if selected { t.selected_bg } else { t.hover });
         }
         response.widget_info(|| egui::WidgetInfo::selected(egui::Role::Button, ui.is_enabled(), selected, key));
-        solidcraft_ui_registry::publish_rect(&format!("dialog:table:{}:{key}", self.id), rect);
+        torno_ui_registry::publish_rect(&format!("dialog:table:{}:{key}", self.id), rect);
         let ppp = ui.ctx().pixels_per_point().max(0.5);
         let left = (rect.left() * ppp).round() / ppp + t.space_8;
         ui.push_id((&self.id, key), |ui| {
@@ -346,7 +346,7 @@ impl TableRow<'_> {
         let width = self.widths.get(self.column).copied().unwrap_or(0.0);
         let label = self.columns.get(self.column).map_or("", |c| c.label);
         let rect = egui::Rect::from_min_size(egui::pos2(self.left, self.rect.top()), vec2(width, self.rect.height()));
-        solidcraft_ui_registry::publish_rect(&format!("{}:cell:{label}", self.id), rect);
+        torno_ui_registry::publish_rect(&format!("{}:cell:{label}", self.id), rect);
         self.column += 1;
         self.left += width + Tokens::get().space_8;
         self.ui
@@ -378,8 +378,8 @@ pub fn label_actions(ui: &mut Ui, text: &str, add: impl FnOnce(&mut Ui)) {
 /// Table heading text. Tokens: font_small, form_dim.
 fn header_label(ui: &mut Ui, label: &str) {
     let t = Tokens::get();
-    ui.add(egui::Label::new(egui::RichText::new(solidcraft_ui_text::tr_label(label)).size(t.font_small).strong().color(t.form_dim)).truncate())
-        .backing_on_hover_text(solidcraft_ui_text::tr_label(label));
+    ui.add(egui::Label::new(egui::RichText::new(torno_ui_text::tr_label(label)).size(t.font_small).strong().color(t.form_dim)).truncate())
+        .backing_on_hover_text(torno_ui_text::tr_label(label));
 }
 
 /// How a table orders its rows by one column. `Listed` keeps the order the owner gave them.
@@ -452,7 +452,7 @@ pub fn sort_header(ui: &mut Ui, label: &str, sort: &mut Sort) -> Response {
     if response.hovered() {
         ui.painter().rect_filled(rect, t.control_radius, t.hover);
     }
-    let text = solidcraft_ui_text::tr_label(label);
+    let text = torno_ui_text::tr_label(label);
     let font = crate::type_face::semibold(t.font_small);
     let width = ui.painter().layout_no_wrap(text.to_owned(), font.clone(), t.form_dim).size().x.ceil();
     let text_rect = egui::Rect::from_min_max(rect.min, egui::pos2((rect.left() + width).min(rect.right() - t.space_14 - t.space_4), rect.bottom()));
@@ -474,7 +474,7 @@ pub fn sort_header(ui: &mut Ui, label: &str, sort: &mut Sort) -> Response {
         Sort::Descending => "Back to the original order",
     };
     response.widget_info(|| egui::WidgetInfo::labeled(egui::Role::Button, ui.is_enabled(), text));
-    response.on_hover_cursor(egui::CursorIcon::PointingHand).backing_on_hover_text(solidcraft_ui_text::tr_label(tip))
+    response.on_hover_cursor(egui::CursorIcon::PointingHand).backing_on_hover_text(torno_ui_text::tr_label(tip))
 }
 
 /// Column removal appears inside the hovered header only. Keeps the former × button handle.
@@ -492,8 +492,8 @@ pub fn removable_header(ui: &mut Ui, label: &str) -> bool {
         return false;
     }
     let response = super::actions::icon_button_colored(ui, button, "close", "Remove the column", Some(t.form_error));
-    solidcraft_ui_registry::publish_handle(&format!("dialog:button:{label}:×"), button.center());
-    solidcraft_ui_registry::publish_rect(&format!("dialog:button:{label}:×"), button);
+    torno_ui_registry::publish_handle(&format!("dialog:button:{label}:×"), button.center());
+    torno_ui_registry::publish_rect(&format!("dialog:button:{label}:×"), button);
     response.clicked()
 }
 
@@ -503,11 +503,11 @@ pub fn bin_button(ui: &mut Ui, tooltip: &str) -> Response {
     let (rect, _) = ui.allocate_exact_size(vec2(t.control_height, t.control_height), egui::Sense::hover());
     let response = super::actions::icon_button_colored(ui, rect, "delete", tooltip, Some(t.form_error));
     for (row, label) in
-        [("Actions", "Delete"), ("Actions", "×"), (super::layout::label(ui), solidcraft_ui_text::tr_label("Delete")), (super::layout::label(ui), "×")]
+        [("Actions", "Delete"), ("Actions", "×"), (super::layout::label(ui), torno_ui_text::tr_label("Delete")), (super::layout::label(ui), "×")]
     {
         let key = format!("dialog:button:{row}:{label}");
-        solidcraft_ui_registry::publish_handle(&key, rect.center());
-        solidcraft_ui_registry::publish_rect(&key, rect);
+        torno_ui_registry::publish_handle(&key, rect.center());
+        torno_ui_registry::publish_rect(&key, rect);
     }
     response
 }
@@ -526,8 +526,8 @@ pub fn plus_header<R>(ui: &mut Ui, add: impl FnOnce(&mut Ui) -> R) -> Option<R> 
             ui.painter().vline(x, rect.y_range(), egui::Stroke::new(t.space_2, t.form_primary));
         }
     }
-    solidcraft_ui_registry::publish_handle("dialog:menu:Add Column", rect.center());
-    solidcraft_ui_registry::publish_rect("dialog:menu:Add Column", rect);
+    torno_ui_registry::publish_handle("dialog:menu:Add Column", rect.center());
+    torno_ui_registry::publish_rect("dialog:menu:Add Column", rect);
     let popup = Container::new(ui.ctx(), Surface::Popup).menu(&response).close_behavior(egui::PopupCloseBehavior::CloseOnClickOutside);
     let open = popup.is_open();
     let result = popup.show(|ui| super::scope(ui, add)).map(|r| r.inner);
@@ -540,14 +540,14 @@ pub fn plus_header<R>(ui: &mut Ui, add: impl FnOnce(&mut Ui) -> R) -> Option<R> 
 /// Active configuration status, on the same line as the name and optional Apply action.
 pub fn active_pill(ui: &mut Ui) {
     let t = Tokens::get();
-    let label = solidcraft_ui_text::tr_label("Active");
+    let label = torno_ui_text::tr_label("Active");
     let width = label_width(ui, label) + t.space_16;
     let (rect, response) = ui.allocate_exact_size(vec2(width, t.font_small + t.space_6), egui::Sense::hover());
     ui.painter().rect(rect, t.radius_xl, t.control_fill, t.control_border_stroke(t.control_border), egui::StrokeKind::Inside);
     super::text::paint_text(ui, rect.shrink2(vec2(t.space_8, 0.0)), label, crate::type_face::semibold(t.font_small), t.form_primary, false);
     response.widget_info(|| egui::WidgetInfo::labeled(egui::Role::Label, ui.is_enabled(), label));
-    solidcraft_ui_registry::publish_handle(&format!("dialog:inline:{label}"), rect.center());
-    solidcraft_ui_registry::publish_rect(&format!("dialog:inline:{label}"), rect);
+    torno_ui_registry::publish_handle(&format!("dialog:inline:{label}"), rect.center());
+    torno_ui_registry::publish_rect(&format!("dialog:inline:{label}"), rect);
 }
 
 #[cfg(test)]

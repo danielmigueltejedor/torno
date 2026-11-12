@@ -7,15 +7,15 @@ use crate::schema::render_presets::{
 };
 use crate::{Result, Session, params::bad};
 use serde_json::{Value, json};
-use solidcraft_doc::{
+use std::sync::Arc;
+use torno_doc::{
     render_resources::{CpuHdrEnvironment, GpuHdrEnvironment},
     render_settings::{RenderJob, RenderSettings},
 };
-use solidcraft_render::{
+use torno_render::{
     job::{AreaLights, StudioLighting},
     stage::{Stage, StagePanel},
 };
-use std::sync::Arc;
 
 pub(super) fn entries() -> Value {
     json!([
@@ -257,16 +257,16 @@ pub(super) fn quality(s: &mut Session, params: &Value) -> Result<Value> {
         let samples = number(&["sampling", "minimum_samples"])?.max(16);
         let seed = number(&["seed"])?;
         let context = input.cpu.unwrap_or_default();
-        let production = Some(solidcraft_render::job::CpuProgressiveOptions { samples_per_pixel: samples, seed });
+        let production = Some(torno_render::job::CpuProgressiveOptions { samples_per_pixel: samples, seed });
         let mut eligible = false;
         let mut selected = None;
         let mut refusal = None;
-        for budget in solidcraft_render::job::CpuBudget::ALL {
+        for budget in torno_render::job::CpuBudget::ALL {
             eligible |= budget == context.minimum_budget;
             if !eligible {
                 continue;
             }
-            let admitted = solidcraft_render::job::cpu_camera_sampling(production, context.adaptive, budget)
+            let admitted = torno_render::job::cpu_camera_sampling(production, context.adaptive, budget)
                 .and_then(|sampling| budget.validate_image(width, height, sampling));
             match admitted {
                 Ok(()) => {
@@ -324,7 +324,7 @@ pub(super) fn quality(s: &mut Session, params: &Value) -> Result<Value> {
     }
     let (samples, depth) = (number(&["sampling", "maximum_samples"])?, number(&["transport", "maximum_depth"])?);
     let seed = number(&["seed"])?;
-    if solidcraft_render::job::GPU_PATH_LIMITS.fit(u64::from(width), u64::from(height), None) != Some((u64::from(width), u64::from(height)))
+    if torno_render::job::GPU_PATH_LIMITS.fit(u64::from(width), u64::from(height), None) != Some((u64::from(width), u64::from(height)))
         || samples == 0
         || samples > 4096
         || depth == 0

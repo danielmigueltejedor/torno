@@ -8,7 +8,7 @@ use serde_json::{Value, json};
 use super::MassBody;
 use crate::Session;
 use solidcore_record::Vec3;
-use solidcraft_geom::inertia::Tensor3 as Tensor;
+use torno_geom::inertia::Tensor3 as Tensor;
 
 fn run(s: &mut Session, cmd: &str, params: Value) -> Value {
     s.execute(cmd, &params).unwrap_or_else(|e| panic!("{cmd}: {e}"))
@@ -212,18 +212,18 @@ fn hostile_and_degenerate_inputs_never_panic() {
     assert!(r["occurrences"][0]["mass"].is_null());
     // A pending placement that is not finite is refused, not propagated.
     let (_, occ, _) = part(&mut s, "Block", [10.0, 10.0, 10.0], "Steel");
-    let mut bad = solidcraft_doc::IDENTITY;
+    let mut bad = torno_doc::IDENTITY;
     bad[3][0] = f64::NAN;
     s.pending_moves.insert(occ, bad);
     assert!(s.execute("assembly.mass_properties", &json!({})).is_err());
-    let mut huge = solidcraft_doc::IDENTITY;
+    let mut huge = torno_doc::IDENTITY;
     huge[0][0] = 1e200;
     huge[1][1] = 1e200;
     huge[2][2] = 1e200;
     s.pending_moves.insert(occ, huge);
     assert!(s.execute("assembly.mass_properties", &json!({})).is_err());
     // A flattening placement: no volume, so no mass, and no panic.
-    let mut flat = solidcraft_doc::IDENTITY;
+    let mut flat = torno_doc::IDENTITY;
     flat[2][2] = 0.0;
     s.pending_moves.insert(occ, flat);
     let r = run(&mut s, "assembly.mass_properties", json!({}));

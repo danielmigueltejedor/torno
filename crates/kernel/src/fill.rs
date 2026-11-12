@@ -1,28 +1,28 @@
 //! Filling a closed loop of a body's edges with one face, bounded by the body's own edges,
 //! whole: the loop's plane when its edges certainly lie in one, otherwise a B-spline height field
-//! over the loop's best-fit plane (`solidcraft_geom::fill::fill_loop`). The face is assembled on
+//! over the loop's best-fit plane (`torno_geom::fill::fill_loop`). The face is assembled on
 //! the body's own edge records (`sew::assemble`) and built by SMLib. The height field's
 //! parameters are plane coordinates, so each edge's pcurve is its exact projection onto the
 //! plane.
 //!
 //! The general fill, which also meets the faces beside the loop with G1 … G4, passes through
 //! given points, and fills loops that bound no height field, is a patch whose boundary rows are
-//! the loop's own edges (`solidcraft_geom::fill_iso`): each edge's pcurve is a straight line in
+//! the loop's own edges (`torno_geom::fill_iso`): each edge's pcurve is a straight line in
 //! (u, v), affine in the edge's own parameter. It takes loops of three to sixteen line, spline or
 //! rational edges (a circle's arc on the NURBS form SMLib holds it as); the frames across each
 //! edge are read off the neighbouring face's record surface, with its exact derivatives to the
 //! order asked: the neighbour as a height over its tangent plane to that order
-//! (`solidcraft_geom::linkage`).
+//! (`torno_geom::linkage`).
 
 use solidcore_record::Vec3;
 use solidcore_record::brep::{self as b, Curve2};
-use solidcraft_geom::brep::eval::CurveEval;
-use solidcraft_geom::brep::eval::SurfaceEval;
-use solidcraft_geom::bspline::{HPoint, SplineError};
-use solidcraft_geom::fill_general::{Across, MAX_FILL_POINTS, Station};
-use solidcraft_geom::fill_iso::{IsoEdge, IsoFill, IsoSpec};
-use solidcraft_geom::fill_matched::{MatchedFill, MatchedSpec};
-use solidcraft_geom::prelude::*;
+use torno_geom::brep::eval::CurveEval;
+use torno_geom::brep::eval::SurfaceEval;
+use torno_geom::bspline::{HPoint, SplineError};
+use torno_geom::fill_general::{Across, MAX_FILL_POINTS, Station};
+use torno_geom::fill_iso::{IsoEdge, IsoFill, IsoSpec};
+use torno_geom::fill_matched::{MatchedFill, MatchedSpec};
+use torno_geom::prelude::*;
 
 use crate::body::Body;
 use crate::bridge::Continuity;
@@ -88,8 +88,8 @@ pub struct PatchReport {
     /// `jumps[k]`, k = 2 … 4: the largest jump across the edges asked for order k or more, clear
     /// of the loop's corners, of the k-th derivative of the linkage curves' height above the
     /// neighbour (1/mmᵏ⁻¹): the normal curvature (k = 2), its rate of change
-    /// (3) and that rate's (4) (`solidcraft_geom::fill_iso::Achieved::jumps`).
-    pub jumps: [f64; solidcraft_geom::linkage::MAX_CONTINUITY + 1],
+    /// (3) and that rate's (4) (`torno_geom::fill_iso::Achieved::jumps`).
+    pub jumps: [f64; torno_geom::linkage::MAX_CONTINUITY + 1],
     /// The farthest point from the surface.
     pub point_gap: f64,
 }
@@ -107,7 +107,7 @@ pub fn patch_edges_report(body: &Body, at: &[Vec3], spec: &PatchSpec) -> Result<
         return Err(KernelError::Invalid("pick the edges of a closed loop".into()));
     }
     // A range test also throws out NaN.
-    if !(solidcraft_geom::fill::MIN_CROWN..=solidcraft_geom::fill::MAX_CROWN).contains(&spec.crown) {
+    if !(torno_geom::fill::MIN_CROWN..=torno_geom::fill::MAX_CROWN).contains(&spec.crown) {
         return Err(KernelError::Invalid("a patch's crown must be between -0.9 and 3".into()));
     }
     if spec.edges.len() > 10_000 || spec.edges.iter().any(|(p, _)| !p.is_finite()) {
@@ -146,16 +146,16 @@ fn general_fill(
     points: &[Vec3],
     crown: f64,
 ) -> Result<(Body, PatchReport)> {
-    if !(1..=solidcraft_geom::fill_iso::MAX_ISO_EDGES).contains(&chain.len()) {
+    if !(1..=torno_geom::fill_iso::MAX_ISO_EDGES).contains(&chain.len()) {
         return Err(KernelError::Invalid(format!(
             "not supported yet: a general patch on a loop of {} edges (one to {})",
             chain.len(),
-            solidcraft_geom::fill_iso::MAX_ISO_EDGES
+            torno_geom::fill_iso::MAX_ISO_EDGES
         )));
     }
     let pieces = loop_pieces(record, chain)?;
     let edges: Vec<IsoEdge> = pieces.iter().map(|p| iso_edge(record, p)).collect::<Result<_>>()?;
-    let size = body.size().max(solidcraft_geom::LINEAR_TOL);
+    let size = body.size().max(torno_geom::LINEAR_TOL);
     let mut beside: Vec<Option<Beside>> = Vec::with_capacity(pieces.len());
     for p in &pieces {
         let order = chain.iter().position(|&(e, _)| e == p.edge).and_then(|k| orders.get(k)).copied().unwrap_or(Continuity::G0);
@@ -170,7 +170,7 @@ fn general_fill(
     };
     let spec =
         IsoSpec { tol: face_tolerance(body), angle_tol: PATCH_ANGLE_TOL_DEG.to_radians(), crown, corner_turn: CORNER_TURN_DEG.to_radians(), points };
-    let fill = solidcraft_geom::fill_iso::iso_fill(&edges, &mut across, &spec).map_err(spline_error)?;
+    let fill = torno_geom::fill_iso::iso_fill(&edges, &mut across, &spec).map_err(spline_error)?;
     let made = quilt_body(body, record, &pieces, &fill, face_tolerance(body))?;
     let a = fill.achieved;
     let report = PatchReport {
@@ -190,7 +190,7 @@ const CORNER_TURN_DEG: f64 = 1.0;
 
 /// The one-face sheet on the loop `chain` of `body`'s own edges (each a free edge of the face
 /// beside it), a height field over the loop's plane that meets every face beside the loop with
-/// G2 (`solidcraft_geom::fill_matched`), within [`face_tolerance`] of the loop, its normal within
+/// G2 (`torno_geom::fill_matched`), within [`face_tolerance`] of the loop, its normal within
 /// [`PATCH_ANGLE_TOL_DEG`] and its normal curvature across the loop within `curvature_tol` of
 /// each face's, clear of the loop's corners (a vertex where the loop turns, where two faces
 /// meet). Each edge's pcurve is its exact projection onto the plane. Its history is over
@@ -201,7 +201,7 @@ pub(crate) fn matched_patch(body: &Body, chain: &[(usize, bool)], curvature_tol:
         return Err(KernelError::Invalid("a patch needs a loop of two or more edges".into()));
     }
     let record = crate::native::brep_record(body)?;
-    let size = body.size().max(solidcraft_geom::LINEAR_TOL);
+    let size = body.size().max(torno_geom::LINEAR_TOL);
     let mut sides = Vec::with_capacity(chain.len());
     let mut beside = Vec::with_capacity(chain.len());
     for &(e, forward) in chain {
@@ -232,7 +232,7 @@ pub(crate) fn matched_patch(body: &Body, chain: &[(usize, bool)], curvature_tol:
             .collect()
     };
     let spec = MatchedSpec { tol: face_tolerance(body), angle_tol: PATCH_ANGLE_TOL_DEG.to_radians(), curvature_tol };
-    let fill = solidcraft_geom::fill_matched::fill_matched(n, &mut stations, &spec).map_err(spline_error)?;
+    let fill = torno_geom::fill_matched::fill_matched(n, &mut stations, &spec).map_err(spline_error)?;
     let projection = Projection { origin: fill.fill.origin, axes: fill.fill.axes };
     let surface = crate::surfaces::spline_surface(&fill.fill.surface);
     let made = patch_body(body, &record, chain, surface, fill.fill.counter_clockwise, &Pcurves::Projected(&projection), face_tolerance(body))?;
@@ -343,7 +343,7 @@ fn iso_edge(record: &b::Brep, piece: &Piece) -> Result<IsoEdge> {
     };
     // The piece of the edge, then run the loop's way (the edge's parameter reflected about its
     // interval's middle).
-    let (mut knots, mut h) = solidcraft_geom::bspline::segment(degree, &knots, &h, lo, hi).map_err(spline_error)?;
+    let (mut knots, mut h) = torno_geom::bspline::segment(degree, &knots, &h, lo, hi).map_err(spline_error)?;
     if !forward {
         knots = knots.iter().rev().map(|k| a + z - k).collect();
         h.reverse();
@@ -434,7 +434,7 @@ impl Beside {
     /// loop's way, whose parameter is the edge's reversed where the loop runs against it):
     /// its normal, the direction it leaves the edge in, away from it, and for G2 and up its
     /// curvature vector along that direction and its jet to the order asked
-    /// (`solidcraft_geom::linkage::surface_jet`, on the frame of the boundary and the leave
+    /// (`torno_geom::linkage::surface_jet`, on the frame of the boundary and the leave
     /// direction). `None` where the edge has no tangent there.
     fn across(&self, record: &b::Brep, t: f64) -> Result<Option<Across>> {
         let edge = record.edges.get(self.edge).ok_or_else(|| KernelError::Failed("patch: edge reference".into()))?;
@@ -457,7 +457,7 @@ impl Beside {
             return Ok(Some(Across { leave, normal, bend: None, jet: None }));
         }
         let bend = Some(normal * normal_curvature(&self.surface, uv, normal, leave)?);
-        let jet = solidcraft_geom::linkage::surface_jet(&self.surface, uv, normal, leave, order).ok_or_else(|| {
+        let jet = torno_geom::linkage::surface_jet(&self.surface, uv, normal, leave, order).ok_or_else(|| {
             KernelError::Invalid(format!("not supported yet: g{order} to a face whose surface has no derivatives of order {order} there"))
         })?;
         Ok(Some(Across { leave, normal, bend, jet: Some(jet) }))
@@ -499,7 +499,7 @@ pub fn patch_edges_crowned(body: &Body, at: &[Vec3], crown: f64) -> Result<Body>
         return Err(KernelError::Invalid("pick the edges of a closed loop".into()));
     }
     // A range test also throws out NaN.
-    if !(solidcraft_geom::fill::MIN_CROWN..=solidcraft_geom::fill::MAX_CROWN).contains(&crown) {
+    if !(torno_geom::fill::MIN_CROWN..=torno_geom::fill::MAX_CROWN).contains(&crown) {
         return Err(KernelError::Invalid("a patch's crown must be between -0.9 and 3".into()));
     }
     patch_loop(body, at, crown)
@@ -521,7 +521,7 @@ pub(crate) fn patch_loop(body: &Body, at: &[Vec3], crown: f64) -> Result<Body> {
         None => {
             let tol = face_tolerance(body);
             let mut point = |k: usize, t: f64| sides.get_mut(k).and_then(|s| s.point(t));
-            let fill = match solidcraft_geom::fill::fill_loop(chain.len(), &mut point, tol, crown) {
+            let fill = match torno_geom::fill::fill_loop(chain.len(), &mut point, tol, crown) {
                 Ok(fill) => fill,
                 // Not a height field over its plane: the general fill, when no crown asks for the
                 // height field's bump.
@@ -749,7 +749,7 @@ impl Projection {
         };
         // The piece on the edge's own interval (the same points at the same parameters).
         let domain = [*knots.get(degree)?, *knots.get(knots.len() - degree - 1)?];
-        let (knots, ctrl) = if domain == [a, z] { (knots, ctrl) } else { solidcraft_geom::bspline::segment(degree, &knots, &ctrl, a, z).ok()? };
+        let (knots, ctrl) = if domain == [a, z] { (knots, ctrl) } else { torno_geom::bspline::segment(degree, &knots, &ctrl, a, z).ok()? };
         let homogeneous = ctrl
             .iter()
             .map(|h| {
@@ -797,7 +797,7 @@ fn patch_body(body: &Body, record: &b::Brep, chain: &[(usize, bool)], surface: b
     }
     let mut made = assemble(Parts { vertices, edges, faces: vec![PartFace { surface, forward: true, loops: vec![uses] }], tolerance: tol }, false)?;
     hold_gap(&mut made.brep, tol);
-    let smlib = solidcraft_smlib::Brep::from_record(&made.brep, true).map_err(|e| KernelError::smlib("patch: SMLib", e))?;
+    let smlib = torno_smlib::Brep::from_record(&made.brep, true).map_err(|e| KernelError::smlib("patch: SMLib", e))?;
     let (patch, order) = crate::native::body_from_smlib_ordered(&smlib)?;
     // The patch's edges in its own order, each from the loop edge it is.
     let Some(order) = order else { return Ok(patch) };
@@ -822,7 +822,7 @@ fn patch_body(body: &Body, record: &b::Brep, chain: &[(usize, bool)], surface: b
 /// straight line in (u, v) the patch gives its side. Its history is over `[body]`: every face is
 /// new, each loop edge (or half) a piece of the body's own, each spoke new.
 fn quilt_body(body: &Body, record: &b::Brep, chain: &[Piece], fill: &IsoFill, tol: f64) -> Result<Body> {
-    use solidcraft_geom::fill_iso::{IsoSide, SpokeEnd};
+    use torno_geom::fill_iso::{IsoSide, SpokeEnd};
     let fail = |m: &str| KernelError::Failed(format!("patch: {m}"));
     let index = |n: usize| u32::try_from(n).map_err(|_| fail("budget"));
     let mut vertices: Vec<[f64; 3]> = Vec::new();
@@ -922,7 +922,7 @@ fn quilt_body(body: &Body, record: &b::Brep, chain: &[Piece], fill: &IsoFill, to
     }
     let mut made = assemble(Parts { vertices, edges, faces, tolerance: tol }, false)?;
     hold_gap(&mut made.brep, tol);
-    let smlib = solidcraft_smlib::Brep::from_record(&made.brep, true).map_err(|e| KernelError::smlib("patch: SMLib", e))?;
+    let smlib = torno_smlib::Brep::from_record(&made.brep, true).map_err(|e| KernelError::smlib("patch: SMLib", e))?;
     let (sheet, order) = crate::native::body_from_smlib_ordered(&smlib)?;
     let Some(order) = order else { return Ok(sheet) };
     let place = |list: &[usize], c: usize| if list.is_empty() { Some(c) } else { list.get(c).copied() };
@@ -1003,7 +1003,7 @@ fn middle(vertices: &mut Vec<[f64; 3]>, made: &mut std::collections::HashMap<(us
 /// tolerance, since a planar face is exact and other operations treat it as containing its
 /// edges to that tolerance. A fitted face gets [`face_tolerance`], ten times looser.
 pub(crate) fn planarity_tolerance(body: &Body) -> f64 {
-    (placed_size(body) * 1e-7).max(solidcraft_geom::LINEAR_TOL)
+    (placed_size(body) * 1e-7).max(torno_geom::LINEAR_TOL)
 }
 
 /// The body's size as the fill tolerances take it, the same wherever the body is and however it
@@ -1015,7 +1015,7 @@ pub(crate) fn planarity_tolerance(body: &Body) -> f64 {
 /// vertices takes its box's diagonal.
 fn placed_size(body: &Body) -> f64 {
     let vertices: Vec<Vec3> = body.record().vertices.iter().map(|v| Vec3::new(v.point[0], v.point[1], v.point[2])).collect();
-    solidcraft_geom::Ball::enclosing(&vertices).map_or_else(|| body.size(), |ball| ball.diameter())
+    torno_geom::Ball::enclosing(&vertices).map_or_else(|| body.size(), |ball| ball.diameter())
 }
 
 /// How far the fill's surface may be from the loop's edges: `10⁻⁶` of the body's size
@@ -1034,8 +1034,8 @@ pub(crate) fn face_tolerance(body: &Body) -> f64 {
 mod tests {
     use solidcore_record::brep::{self as b};
     use solidcore_record::{Loop2, Plane, Region2, Vec2, Vec3};
-    use solidcraft_geom::brep::{eval::CurveEval, eval::SurfaceEval};
-    use solidcraft_geom::prelude::*;
+    use torno_geom::brep::{eval::CurveEval, eval::SurfaceEval};
+    use torno_geom::prelude::*;
 
     use crate::body::Body;
     use crate::boolean_record::tests::{Reach, checked};
@@ -1203,8 +1203,8 @@ mod tests {
     /// cylinder integrated over the polygon (midpoint rule on a 300 × 300 grid; the integrand
     /// vanishes on the rim, so cells across it add little error).
     fn gained(fill: &Body, corners: &[Vec2]) -> f64 {
-        let polygon = solidcraft_geom::Ring::from(corners.to_vec());
-        let solidcraft_geom::Aabb2 { min: lo, max: hi } = polygon.bounds();
+        let polygon = torno_geom::Ring::from(corners.to_vec());
+        let torno_geom::Aabb2 { min: lo, max: hi } = polygon.bounds();
         let n = 300;
         let (dx, dy) = ((hi.x - lo.x) / n as f64, (hi.y - lo.y) / n as f64);
         let inside = |x: f64, y: f64| polygon.contains(Vec2::new(x, y));
@@ -1306,7 +1306,7 @@ mod tests {
             faces.push(PartFace { surface, forward: true, loops: vec![uses] });
         }
         let made = assemble(Parts { vertices, edges, faces, tolerance: 1e-6 }, false).unwrap();
-        crate::native::body_from_smlib(&solidcraft_smlib::Brep::from_record(&made.brep, true).unwrap()).unwrap()
+        crate::native::body_from_smlib(&torno_smlib::Brep::from_record(&made.brep, true).unwrap()).unwrap()
     }
 
     #[test]
@@ -1435,7 +1435,7 @@ mod tests {
             v.point[0] += 2e-5;
             v.tolerance = v.tolerance.max(1e-4);
         }
-        let imported = crate::native::body_from_smlib(&solidcraft_smlib::Brep::from_record(&moved, true).unwrap()).unwrap();
+        let imported = crate::native::body_from_smlib(&torno_smlib::Brep::from_record(&moved, true).unwrap()).unwrap();
         let (fill, got) = fill_rim(&imported, &rim);
         check_volume("imported", &solid, &fill, &corners, got);
     }

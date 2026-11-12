@@ -1,7 +1,7 @@
 //! Analytic cursor oracle plus feasibility checks on every accepted continuation step.
 use solidcore_record::Vec2;
-use solidcraft_geom::prelude::*;
-use solidcraft_sketch::{ConstraintKind, Sketch, move_line_towards, move_point_towards, solve};
+use torno_geom::prelude::*;
+use torno_sketch::{ConstraintKind, Sketch, move_line_towards, move_point_towards, solve};
 
 fn linkage() -> (Sketch, usize, usize) {
     let mut sk = Sketch::new();
@@ -141,7 +141,7 @@ fn the_other_moving_joint_reaches_its_rocker_arc_and_motion_limits() {
 fn zero_cursor_budget_does_not_start_optimization() {
     let (mut sk, a, _) = linkage();
     let before = sk.clone();
-    let mut budget = solidcraft_sketch::Budget::new(0);
+    let mut budget = torno_sketch::Budget::new(0);
     assert!(!move_point_towards(&mut sk, a, Vec2::new(-10.0, 16.0), 1.25, Some(&mut budget), |_, _| {
         panic!("an exhausted budget must not evaluate candidates")
     }));
@@ -153,15 +153,15 @@ fn zero_cursor_budget_does_not_start_optimization() {
 #[cfg(feature = "solver-profiling")]
 #[test]
 fn profiling_preserves_budgeted_cursor_motion_and_records_budget_stops() {
-    use solidcraft_sketch::profiling::{StopReason, capture};
+    use torno_sketch::profiling::{StopReason, capture};
 
     let target = Vec2::new(-10.0, 16.0);
     let mut saw_budget_stop = false;
     for work in [0, 128, 256, 512, 1024, 2048, 4096, 8192, 16384] {
         let (mut plain, a, _) = linkage();
         let mut measured = plain.clone();
-        let mut plain_budget = solidcraft_sketch::Budget::new(work);
-        let mut measured_budget = solidcraft_sketch::Budget::new(work);
+        let mut plain_budget = torno_sketch::Budget::new(work);
+        let mut measured_budget = torno_sketch::Budget::new(work);
         let expected = move_point_towards(&mut plain, a, target, 1.25, Some(&mut plain_budget), |_, _| true);
         let (actual, profile) = capture(|| move_point_towards(&mut measured, a, target, 1.25, Some(&mut measured_budget), |_, _| true));
         assert_eq!(actual, expected);
@@ -187,7 +187,7 @@ fn a_cursor_budget_stop_keeps_the_best_corrected_pose_and_reference_dimensions()
         sk.add_constraint(ConstraintKind::DistanceX { p: 0, q: a, value: 10.0 }, None).unwrap();
         sk.constraints.last_mut().unwrap().driven = true;
         let before = sk.clone();
-        let mut budget = solidcraft_sketch::Budget::new(work);
+        let mut budget = torno_sketch::Budget::new(work);
         // The validation callback is Fn: Cell records whether a corrected step was accepted.
         let calls = std::cell::Cell::new(0);
         let moved = move_point_towards(&mut sk, a, target, 1.25, Some(&mut budget), |_, after| {

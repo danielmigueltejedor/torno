@@ -49,6 +49,6 @@
   "ungraded": [],
   "what": "a block whose 12 straight edges are degree-1 B-spline curves over a knot span of 1e-7 (as NX writes short edges); the faces must be kept",
   "why_not": [
-    "body \"block\" is no kernel operation's output nor an operand: SolidCraft built it or changed the kernel's record"
+    "body \"block\" is no kernel operation's output nor an operand: Torno built it or changed the kernel's record"
   ]
 }

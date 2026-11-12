@@ -2,8 +2,8 @@
 //! to model from. They are drawn as points and never become bodies.
 
 use serde_json::{Value, json};
-use solidcraft_doc::Mat;
-use solidcraft_doc::point_cloud::{
+use torno_doc::Mat;
+use torno_doc::point_cloud::{
     ColorBy, Colors, Complex, Filter, Keep, MAX_COORD, MAX_FILTERS, MAX_NAMES, MAX_POINTS, POINT_SIZE, PointCloud, Points, UNITS, unit_scale,
 };
 
@@ -202,12 +202,12 @@ fn bounds(c: &PointCloud) -> Value {
 fn insert(s: &mut Session, p: &Value) -> Result<Value> {
     let cmd = "pointcloud.insert";
     let path = str_(p, "path").filter(|x| !x.trim().is_empty() && x.len() < 4096).ok_or_else(|| bad(cmd, "`path` is required"))?;
-    if !solidcraft_io::is_point_cloud_path(path) {
+    if !torno_io::is_point_cloud_path(path) {
         return Err(bad(cmd, "only PLY, XYZ and PTS files (.ply, .xyz, .pts) can be inserted as point clouds"));
     }
     let (units, scale) = units_of(p, cmd)?.unwrap_or(("mm", 1.0));
     let max_points = match p.get("max_points") {
-        None | Some(Value::Null) => solidcraft_io::DEFAULT_MAX_POINTS,
+        None | Some(Value::Null) => torno_io::DEFAULT_MAX_POINTS,
         Some(v) => v
             .as_u64()
             .filter(|n| (1..=MAX_POINTS as u64).contains(n))
@@ -217,8 +217,8 @@ fn insert(s: &mut Session, p: &Value) -> Result<Value> {
     let size = point_size(p, cmd)?.unwrap_or(2.0);
     let colors = (color_by(p, cmd)?, color(p, cmd)?, height_range(p, cmd)?);
     let center = bool_(p, "center").unwrap_or(false);
-    let bytes = solidcraft_io::vfs::read(path, solidcraft_io::MAX_POINT_CLOUD_BYTES).map_err(|e| EngineError::Other(format!("{path}: {e}")))?;
-    let read = solidcraft_io::read_point_cloud(&bytes, path, scale, max_points).map_err(|e| EngineError::Other(format!("{path}: {e}")))?;
+    let bytes = torno_io::vfs::read(path, torno_io::MAX_POINT_CLOUD_BYTES).map_err(|e| EngineError::Other(format!("{path}: {e}")))?;
+    let read = torno_io::read_point_cloud(&bytes, path, scale, max_points).map_err(|e| EngineError::Other(format!("{path}: {e}")))?;
     let warnings = read.warnings;
     drop(bytes);
     let file = std::path::Path::new(path).file_name().map(|n| n.to_string_lossy().to_string()).unwrap_or_else(|| path.to_string());
@@ -237,7 +237,7 @@ fn insert(s: &mut Session, p: &Value) -> Result<Value> {
         colors: Colors(read.colors.into()),
         source_points: read.source_points,
         units: units.into(),
-        transform: solidcraft_doc::IDENTITY,
+        transform: torno_doc::IDENTITY,
         point_size: size,
         color_by: ColorBy::File,
         color: None,
@@ -339,7 +339,7 @@ fn edit(s: &mut Session, p: &Value) -> Result<Value> {
 /// grew is thinned only past the limit. The counts cannot say this: a cloud has fewer points than
 /// its file when some could not be read, too, thinned or not.
 fn reload_limit(c: &PointCloud) -> usize {
-    c.max_points.map_or(solidcraft_io::DEFAULT_MAX_POINTS, |n| usize::try_from(n).unwrap_or(MAX_POINTS))
+    c.max_points.map_or(torno_io::DEFAULT_MAX_POINTS, |n| usize::try_from(n).unwrap_or(MAX_POINTS))
 }
 
 /// Read the cloud's file again where it was read from, keeping its name, placement, units and
@@ -356,9 +356,9 @@ fn reload(s: &mut Session, p: &Value) -> Result<Value> {
     let path = c.source.clone();
     let scale = unit_scale(&c.units).unwrap_or(1.0);
     let max_points = reload_limit(&c);
-    let bytes = solidcraft_io::vfs::read_design_path(&path, s.path.as_deref(), solidcraft_io::MAX_POINT_CLOUD_BYTES)
+    let bytes = torno_io::vfs::read_design_path(&path, s.path.as_deref(), torno_io::MAX_POINT_CLOUD_BYTES)
         .map_err(|e| EngineError::Other(format!("{path}: {e}")))?;
-    let read = solidcraft_io::read_point_cloud(&bytes, &path, scale, max_points).map_err(|e| EngineError::Other(format!("{path}: {e}")))?;
+    let read = torno_io::read_point_cloud(&bytes, &path, scale, max_points).map_err(|e| EngineError::Other(format!("{path}: {e}")))?;
     c.origin = read.origin;
     c.points = Points::new(read.points.into());
     c.colors = Colors(read.colors.into());
@@ -413,7 +413,7 @@ fn list(s: &mut Session, _: &Value) -> Result<Value> {
                     .map(|n| json!({"name": n, "integer": c.complex.integer(n), "span": c.span(n), "names": c.complex.names(n).map(|m| &m.values)}))
                     .collect::<Vec<_>>(),
                 "filters": c.filters,
-                "color_range": solidcraft_doc::point_cloud_distribution::color_range(c, &solidcraft_doc::point_cloud_distribution::Geometry::of(c), &c.filters),
+                "color_range": torno_doc::point_cloud_distribution::color_range(c, &torno_doc::point_cloud_distribution::Geometry::of(c), &c.filters),
                 "source": c.source,
                 "color": c.color,
                 "colored": !c.colors.is_empty(),
@@ -430,7 +430,7 @@ fn list(s: &mut Session, _: &Value) -> Result<Value> {
 #[cfg(test)]
 mod tests {
     use serde_json::json;
-    use solidcraft_doc::point_cloud::ColorBy;
+    use torno_doc::point_cloud::ColorBy;
 
     use crate::Session;
 
@@ -458,7 +458,7 @@ mod tests {
     }
 
     fn dir(test: &str) -> std::path::PathBuf {
-        let d = std::env::temp_dir().join(format!("solidcraft-pointcloud-{test}-{}", std::process::id()));
+        let d = std::env::temp_dir().join(format!("torno-pointcloud-{test}-{}", std::process::id()));
         std::fs::create_dir_all(&d).unwrap();
         d
     }
@@ -501,10 +501,10 @@ mod tests {
         s.execute("pointcloud.edit", &json!({"cloud": id, "visible": false})).unwrap();
         s.execute("edit.undo", &json!({})).unwrap();
         assert!(s.doc.point_clouds[0].visible);
-        let back = solidcraft_doc::Document::from_json(&s.doc.to_json()).unwrap();
+        let back = torno_doc::Document::from_json(&s.doc.to_json()).unwrap();
         assert_eq!(back.point_clouds, s.doc.point_clouds);
-        let file = solidcraft_io::write_design_container(&s.doc).unwrap();
-        let opened = solidcraft_io::read_design(&file).unwrap();
+        let file = torno_io::write_design_container(&s.doc).unwrap();
+        let opened = torno_io::read_design(&file).unwrap();
         assert_eq!(opened.point_clouds, s.doc.point_clouds);
         s.execute("pointcloud.delete", &json!({"cloud": id})).unwrap();
         assert!(s.doc.point_clouds.is_empty());
@@ -621,7 +621,7 @@ mod tests {
     /// call, until the server is allowed.
     #[test]
     fn a_reload_reaches_no_network_location_until_its_server_is_allowed() {
-        use solidcraft_io::vfs::{allowing_hosts, file_calls};
+        use torno_io::vfs::{allowing_hosts, file_calls};
         let d = dir("reload-network");
         let path = d.join("scan.ply");
         layered(&path, 3, false);

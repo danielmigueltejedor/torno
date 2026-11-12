@@ -91,7 +91,7 @@ impl Field {
 
     fn with(text: &str, on: bool) -> Self {
         let ctx = egui::Context::default();
-        let mut app = SolveApp::new(solidcraft_engine::Session::default(), Default::default());
+        let mut app = SolveApp::new(torno_engine::Session::default(), Default::default());
         crate::params_dialog::publish(&mut app, &ctx);
         let id = egui::Id::unique("value_step_test_field");
         let mut f = Self { on, ctx, app, text: text.into(), id, changed: false, rect: egui::Rect::NOTHING, scroll: egui::Id::NULL };
@@ -232,7 +232,7 @@ fn edge_flange(on: bool) -> Harness {
     h.app.run("sketch.rectangle.two_point", json!({"p0": [0, 0], "p1": [100, 60]})).unwrap();
     h.app.run("sketch.finish", json!({})).unwrap();
     let sk = h.app.session.doc.features[0].id;
-    h.app.session.selection = vec![solidcraft_engine::Sel::Profile { sketch: sk, index: 0 }];
+    h.app.session.selection = vec![torno_engine::Sel::Profile { sketch: sk, index: 0 }];
     h.app.start("sheet.flange");
     let d = h.app.dialog.take().unwrap();
     for (id, p) in crate::dialogs::apply_commands(&h.app, &d).unwrap() {
@@ -299,7 +299,7 @@ fn flange_height_and_bend_radius_step_with_arrows_and_wheel() {
     h.step(&json!({"widget": "OK"})).unwrap();
     h.frames(2);
     let f = h.app.session.doc.features.last().unwrap();
-    let solidcraft_engine::doc::FeatureKind::SheetFlange { height, radius, .. } = &f.kind else { panic!("flange feature: {:?}", f.kind) };
+    let torno_engine::doc::FeatureKind::SheetFlange { height, radius, .. } = &f.kind else { panic!("flange feature: {:?}", f.kind) };
     assert_eq!((height.as_str(), radius.as_deref()), ("17 mm", Some("3 mm")));
 }
 

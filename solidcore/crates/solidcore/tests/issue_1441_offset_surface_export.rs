@@ -1,6 +1,6 @@
 //! tangency-labs/solidcore#1441: an offset sheet whose face lies on an `OffsetSurface`
 //! can be exported as NURBS. The flat export (the SMLib fork's `FlatFromBrep`, ported in
-//! SolidCraft) writes a face whose surface is no `SmBSplineSurface` kind through
+//! Torno) writes a face whose surface is no `SmBSplineSurface` kind through
 //! `SmSurface::ApproximateSurface(approx tol, 5 subdivisions, copy B-splines)`; that is
 //! ported (`Surface::approximate_surface`, #1533), so the case of the issue exports: a
 //! quarter circle r 5 about +Z swept 10 along +Z, offset by 2, is a quarter cylinder r 7

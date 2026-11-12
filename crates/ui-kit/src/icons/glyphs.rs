@@ -7,7 +7,7 @@
 use std::sync::OnceLock;
 
 use egui::{Color32, Painter, Pos2, Rect, Stroke, Ui};
-use solidcraft_theme::Tokens;
+use torno_theme::Tokens;
 
 use crate::window_chrome::Caption;
 

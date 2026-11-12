@@ -7,8 +7,8 @@ use super::{
 use crate::BackingTooltipExt as _;
 use crate::{Container, Surface};
 use egui::{Response, RichText, Ui, vec2};
-use solidcraft_theme::Tokens;
 use std::sync::Arc;
+use torno_theme::Tokens;
 
 /// One alignment policy for every kit text input. Align the galley itself rather than
 /// approximating font metrics with integer margins (Plex Mono and Sans differ).
@@ -151,8 +151,8 @@ fn step_arrows<V>(ui: &mut Ui, rect: egui::Rect, width: f32, row: &str, next: im
             egui::Stroke::NONE,
         ));
         let sign = if delta > 0 { "+1" } else { "−1" };
-        arrow.widget_info(|| egui::WidgetInfo::labeled(egui::Role::Button, enabled, format!("{} {sign}", solidcraft_ui_text::tr_label(row))));
-        solidcraft_ui_registry::publish_handle(&format!("dialog:{row} {name}"), half.center());
+        arrow.widget_info(|| egui::WidgetInfo::labeled(egui::Role::Button, enabled, format!("{} {sign}", torno_ui_text::tr_label(row))));
+        torno_ui_registry::publish_handle(&format!("dialog:{row} {name}"), half.center());
         if enabled && arrow.clicked() {
             stepped = next;
         }
@@ -418,17 +418,17 @@ fn searchable_dropdown_with(
         let search = ui.add(
             text_input(egui::TextEdit::singleline(filter))
                 .id_salt(format!("{id}_search"))
-                .hint_text(solidcraft_ui_text::tr_label("Search"))
+                .hint_text(torno_ui_text::tr_label("Search"))
                 .desired_width(f32::INFINITY),
         );
         // Preferences types into its own search only while no field has the keyboard.
         if search.has_focus() {
             super::settings_search::note_key_sink(ui.ctx());
         }
-        solidcraft_ui_registry::publish_handle(&format!("dialog:{row} search"), search.rect.center());
+        torno_ui_registry::publish_handle(&format!("dialog:{row} search"), search.rect.center());
         if let Some(custom) = custom {
             let response = ui.selectable_label(false, custom);
-            solidcraft_ui_registry::publish_handle(&format!("dialog:{row} file"), response.rect.center());
+            torno_ui_registry::publish_handle(&format!("dialog:{row} file"), response.rect.center());
             if response.clicked() {
                 chosen = Some(filter.trim().to_owned());
                 ui.close();
@@ -445,7 +445,7 @@ fn searchable_dropdown_with(
                 for option in options.iter().filter(|o| o.label.to_lowercase().contains(&query)) {
                     let response = ui.selectable_label(current == option.label, option.label);
                     if let Some(handle) = option.handle {
-                        solidcraft_ui_registry::publish_handle(handle, response.rect.center());
+                        torno_ui_registry::publish_handle(handle, response.rect.center());
                     }
                     if response.clicked() {
                         chosen = Some(option.value.to_owned());
@@ -555,7 +555,7 @@ pub fn search_picker(ui: &mut Ui, p: SearchPicker<'_>) -> egui::InnerResponse<Op
         })
         .inner;
     publish(ui, &response, egui::Role::ComboBox);
-    solidcraft_ui_registry::publish_target(p.handles, response.rect);
+    torno_ui_registry::publish_target(p.handles, response.rect);
     egui::InnerResponse::new(picked, response)
 }
 
@@ -581,7 +581,7 @@ fn search_picker_popup(ui: &mut Ui, p: &SearchPicker<'_>, state: egui::Id) -> Op
             .desired_width(f32::INFINITY),
     );
     t.input_bevel(ui, &search);
-    solidcraft_ui_registry::publish_target(&format!("{}:search", p.handles), search.rect);
+    torno_ui_registry::publish_target(&format!("{}:search", p.handles), search.rect);
     // Asked until it has it: over a modal window egui drops the request of the opening's first frame.
     if !ui.data(|data| data.get_temp::<bool>(focused_id)).unwrap_or(false) {
         if search.has_focus() {
@@ -666,16 +666,16 @@ fn search_picker_popup(ui: &mut Ui, p: &SearchPicker<'_>, state: egui::Id) -> Op
     ui.allocate_ui(vec2(dimension(width), height), |ui| {
         ui.set_min_height(height);
         if let Some(model) = custom {
-            search_heading(ui, solidcraft_ui_text::tr("ui.agent_chat_custom_heading"), t.space_16);
-            let text = solidcraft_ui_text::format("ui.agent_chat_model_custom", &[("model", &compact(model, SEARCH_LABEL_CAP))]);
+            search_heading(ui, torno_ui_text::tr("ui.agent_chat_custom_heading"), t.space_16);
+            let text = torno_ui_text::format("ui.agent_chat_model_custom", &[("model", &compact(model, SEARCH_LABEL_CAP))]);
             let row = search_row(ui, &text, false);
-            solidcraft_ui_registry::publish_target(&format!("{}:custom", p.handles), row.rect);
+            torno_ui_registry::publish_target(&format!("{}:custom", p.handles), row.rect);
             if row.clicked() {
                 picked = Some(Picked::Custom(model.to_owned()));
             }
         }
         if !visible.is_empty() {
-            search_heading(ui, solidcraft_ui_text::tr("ui.agent_chat_models_heading"), t.space_16);
+            search_heading(ui, torno_ui_text::tr("ui.agent_chat_models_heading"), t.space_16);
             // Rows of one height, group headings too: only those in view are laid out.
             let list = (ui.available_height() - note_height).max(row_height);
             egui::ScrollArea::vertical()
@@ -689,14 +689,14 @@ fn search_picker_popup(ui: &mut Ui, p: &SearchPicker<'_>, state: egui::Id) -> Op
                             SearchRow::Heading(group) => search_heading(ui, group, row_height),
                             SearchRow::Group { name, count, open } => {
                                 let response = search_group_row(ui, name, *count, *open);
-                                solidcraft_ui_registry::publish_target(&format!("{}:group:{}", p.handles, name), response.rect);
+                                torno_ui_registry::publish_target(&format!("{}:group:{}", p.handles, name), response.rect);
                                 if response.clicked() {
                                     toggled = Some(((*name).to_owned(), !*open));
                                 }
                             }
                             SearchRow::Choice(choice) => {
                                 let response = search_row(ui, &compact(choice.label, SEARCH_LABEL_CAP), choice.value == p.current_value);
-                                solidcraft_ui_registry::publish_target(&format!("{}:{}", p.handles, choice.value), response.rect);
+                                torno_ui_registry::publish_target(&format!("{}:{}", p.handles, choice.value), response.rect);
                                 let response = if choice.tip.is_empty() {
                                     response
                                 } else {
@@ -818,7 +818,7 @@ fn search_group_row(ui: &mut Ui, name: &str, count: usize, open: bool) -> Respon
     if rule_from < rule_to {
         painter.hline(rule_from..=rule_to, y, egui::Stroke::new(1.0, t.border));
     }
-    response.backing_on_hover_text(solidcraft_ui_text::format("ui.agent_chat_provider_models", &[("count", &count.to_string())]))
+    response.backing_on_hover_text(torno_ui_text::format("ui.agent_chat_provider_models", &[("count", &count.to_string())]))
 }
 
 /// A `search_picker` row: as `list_picker`, but read from the left, as a list of ids is.
@@ -892,9 +892,9 @@ fn editor_reserving(ui: &mut Ui, value: &mut String, hint: &str, completion: boo
             }
         });
     }
-    solidcraft_theme::TabAccent::number_focus(ui, &response);
+    torno_theme::TabAccent::number_focus(ui, &response);
     t.input_bevel(ui, &response);
-    let label = solidcraft_ui_text::tr_label(label(ui));
+    let label = torno_ui_text::tr_label(label(ui));
     response.widget_info(|| {
         let mut info = egui::WidgetInfo::labeled(egui::Role::TextInput, ui.is_enabled(), label);
         info.current_text_value = Some(value.clone());
@@ -913,12 +913,12 @@ fn dropdown_arrow(ui: &Ui, rect: egui::Rect, _visuals: &egui::style::WidgetVisua
 
 /// Native dropdown with kit arrow and scenario option handles. Tokens: `text_dim; scope control/font tokens`.
 pub fn dropdown(ui: &mut Ui, id: &str, selected: &mut usize, options: &[&str]) -> Response {
-    let text = options.get(*selected).copied().map(solidcraft_ui_text::tr_label).unwrap_or("");
+    let text = options.get(*selected).copied().map(torno_ui_text::tr_label).unwrap_or("");
     let row = label(ui).to_string();
     dropdown_menu(ui, id, text, |ui| {
         for (index, option) in options.iter().enumerate() {
-            let response = ui.selectable_value(selected, index, solidcraft_ui_text::tr_label(option));
-            solidcraft_ui_registry::publish_target(&format!("dialog:{row}:{option}"), response.rect);
+            let response = ui.selectable_value(selected, index, torno_ui_text::tr_label(option));
+            torno_ui_registry::publish_target(&format!("dialog:{row}:{option}"), response.rect);
         }
     })
 }
@@ -932,7 +932,7 @@ pub fn dropdown_icons(ui: &mut Ui, id: &str, selected: &mut usize, options: &[(&
         for (index, (text, icon)) in options.iter().enumerate() {
             let response = ui.selectable_label(*selected == index, dropdown_icon_text(text));
             paint_dropdown_icon(ui, response.rect, icon);
-            solidcraft_ui_registry::publish_target(&format!("dialog:{row}:{text}"), response.rect);
+            torno_ui_registry::publish_target(&format!("dialog:{row}:{text}"), response.rect);
             if response.clicked() {
                 *selected = index;
             }
@@ -958,22 +958,22 @@ fn paint_dropdown_icon(ui: &Ui, rect: egui::Rect, icon: &str) {
         vec2(t.space_16, t.space_16),
     );
     crate::icons::paint_ink(ui.painter(), rect, icon, t.form_ink);
-    solidcraft_ui_registry::publish_rect(&format!("dialog:dropdown_icon:{icon}"), rect);
+    torno_ui_registry::publish_rect(&format!("dialog:dropdown_icon:{icon}"), rect);
 }
 
 /// [`dropdown`] whose options each show a picture beside them while hovered, painted by `preview`
 /// for that option's index, so a choice can be seen before it is picked. Tokens: dropdown tokens,
 /// the tooltip frame.
 pub fn dropdown_previews(ui: &mut Ui, id: &str, selected: &mut usize, options: &[&str], preview: impl Fn(&mut Ui, usize)) -> Response {
-    let text = options.get(*selected).copied().map(solidcraft_ui_text::tr_label).unwrap_or("");
+    let text = options.get(*selected).copied().map(torno_ui_text::tr_label).unwrap_or("");
     let row = label(ui).to_string();
     dropdown_menu(ui, id, text, |ui| {
         for (index, option) in options.iter().enumerate() {
-            let response = ui.selectable_value(selected, index, solidcraft_ui_text::tr_label(option));
-            solidcraft_ui_registry::publish_target(&format!("dialog:{row}:{option}"), response.rect);
+            let response = ui.selectable_value(selected, index, torno_ui_text::tr_label(option));
+            torno_ui_registry::publish_target(&format!("dialog:{row}:{option}"), response.rect);
             Container::tooltip_ui(&response, |ui| {
                 preview(ui, index);
-                solidcraft_ui_registry::publish_rect(&format!("dialog:preview:{row}:{option}"), ui.min_rect());
+                torno_ui_registry::publish_rect(&format!("dialog:preview:{row}:{option}"), ui.min_rect());
             });
         }
     })
@@ -982,14 +982,14 @@ pub fn dropdown_previews(ui: &mut Ui, id: &str, selected: &mut usize, options: &
 /// [`dropdown`] that also says whether an option was clicked, the one already shown included (a
 /// pick of the shown option changes nothing, yet it is a choice).
 pub fn dropdown_picked(ui: &mut Ui, id: &str, selected: &mut usize, options: &[&str]) -> bool {
-    let text = options.get(*selected).copied().map(solidcraft_ui_text::tr_label).unwrap_or("");
+    let text = options.get(*selected).copied().map(torno_ui_text::tr_label).unwrap_or("");
     let row = label(ui).to_string();
     let mut picked = false;
     dropdown_menu(ui, id, text, |ui| {
         for (index, option) in options.iter().enumerate() {
-            let response = ui.selectable_value(selected, index, solidcraft_ui_text::tr_label(option));
+            let response = ui.selectable_value(selected, index, torno_ui_text::tr_label(option));
             picked |= response.clicked();
-            solidcraft_ui_registry::publish_handle(&format!("dialog:{row}:{option}"), response.rect.center());
+            torno_ui_registry::publish_handle(&format!("dialog:{row}:{option}"), response.rect.center());
         }
     });
     picked
@@ -1039,7 +1039,7 @@ pub fn bounded_dropdown_menu(ui: &mut Ui, id: impl egui::AsIdSalt, current: &str
     // visual truncation must not truncate the accessible captured-source name.
     response.widget_info(|| {
         let row_label = label(ui);
-        let name = if row_label.trim().is_empty() { current } else { solidcraft_ui_text::tr_label(row_label) };
+        let name = if row_label.trim().is_empty() { current } else { torno_ui_text::tr_label(row_label) };
         let mut info = egui::WidgetInfo::labeled(egui::Role::ComboBox, ui.is_enabled(), name);
         info.current_text_value = Some(current.to_owned());
         info
@@ -1111,7 +1111,7 @@ fn dropdown_menu_width(
     // dropdown, without losing its full current value in the final announcement.
     response.widget_info(|| {
         let row_label = label(ui);
-        let name = if row_label.trim().is_empty() { current } else { solidcraft_ui_text::tr_label(row_label) };
+        let name = if row_label.trim().is_empty() { current } else { torno_ui_text::tr_label(row_label) };
         let mut info = egui::WidgetInfo::labeled(egui::Role::ComboBox, ui.is_enabled(), name);
         info.current_text_value = Some(current.to_owned());
         info
@@ -1174,9 +1174,9 @@ pub fn selection_field(ui: &mut Ui, text: &str, options: Selection) -> Response 
         false,
     );
     publish(ui, &response, egui::Role::Button);
-    solidcraft_ui_registry::publish_rect(&format!("dialog:field:{}", label(ui)), rect);
-    solidcraft_ui_registry::publish_count(&format!("dialog:selection:{}:filled", label(ui)), f64::from(filled));
-    solidcraft_ui_registry::publish_count(&format!("dialog:selection:{}:active", label(ui)), f64::from(active));
+    torno_ui_registry::publish_rect(&format!("dialog:field:{}", label(ui)), rect);
+    torno_ui_registry::publish_count(&format!("dialog:selection:{}:filled", label(ui)), f64::from(filled));
+    torno_ui_registry::publish_count(&format!("dialog:selection:{}:active", label(ui)), f64::from(active));
     response
 }
 
@@ -1228,7 +1228,7 @@ pub fn number_pair_preserving<T: egui::emath::Numeric>(
 /// Locale-aware variable-radius position editor. Tokens: `scope control/font tokens`.
 pub fn fraction_field(ui: &mut Ui, value: &mut f64) -> Response {
     let response = ui.add(egui::DragValue::new(value).speed(0.01).range(0.01..=0.99).fixed_decimals(2).custom_parser(parse_number));
-    solidcraft_ui_registry::publish_target(&format!("dialog:fraction:{}", label(ui)), response.rect);
+    torno_ui_registry::publish_target(&format!("dialog:fraction:{}", label(ui)), response.rect);
     response
 }
 
@@ -1252,7 +1252,7 @@ fn cell_editor_frame(ui: &mut Ui, id: egui::Id, value: &mut String, hint: &str, 
     let editor = text_input(egui::TextEdit::singleline(value))
         .char_limit(limit)
         .id(id)
-        .hint_text(solidcraft_ui_text::tr_label(hint))
+        .hint_text(torno_ui_text::tr_label(hint))
         .font(if frame { egui::FontId::monospace(t.font_label) } else { egui::FontId::proportional(t.font_label) })
         .background_color(if invalid { t.form_error_fill } else { t.input_fill() })
         .text_color(if invalid { t.form_error } else { t.form_ink })
@@ -1278,11 +1278,11 @@ fn cell_editor_frame(ui: &mut Ui, id: egui::Id, value: &mut String, hint: &str, 
         super::layout::publish_geometry(ui, &response);
     }
     response.widget_info(|| {
-        let mut info = egui::WidgetInfo::labeled(egui::Role::TextInput, ui.is_enabled(), solidcraft_ui_text::tr_label(label(ui)));
+        let mut info = egui::WidgetInfo::labeled(egui::Role::TextInput, ui.is_enabled(), torno_ui_text::tr_label(label(ui)));
         info.current_text_value = Some(value.clone());
         info
     });
-    solidcraft_theme::TabAccent::number_focus(ui, &response);
+    torno_theme::TabAccent::number_focus(ui, &response);
     t.input_bevel(ui, &response);
     response
 }
@@ -1327,7 +1327,7 @@ pub fn wide_cell_editor(ui: &mut Ui, id: egui::Id, value: &mut String, hint: &st
                     .return_key(None)
                     .desired_rows(1)
                     .desired_width(width)
-                    .hint_text(solidcraft_ui_text::tr_label(hint))
+                    .hint_text(torno_ui_text::tr_label(hint))
                     .font(font)
                     .background_color(if invalid { t.form_error_fill } else { t.input_fill() })
                     .text_color(if invalid { t.form_error } else { t.form_ink });
@@ -1349,7 +1349,7 @@ pub fn wide_cell_editor(ui: &mut Ui, id: egui::Id, value: &mut String, hint: &st
                 }
                 super::text_menu::menu(ui, &mut response, value, super::text_menu::Field::LINE);
                 publish(ui, &response, egui::Role::TextInput);
-                solidcraft_theme::TabAccent::number_focus(ui, &response);
+                torno_theme::TabAccent::number_focus(ui, &response);
                 t.input_bevel(ui, &response);
                 let (text, error) = note;
                 if !text.is_empty() {
@@ -1366,7 +1366,7 @@ pub fn wide_cell_editor(ui: &mut Ui, id: egui::Id, value: &mut String, hint: &st
     });
     let response = shown.inner;
     response.widget_info(|| {
-        let mut info = egui::WidgetInfo::labeled(egui::Role::TextInput, enabled, solidcraft_ui_text::tr_label(hint));
+        let mut info = egui::WidgetInfo::labeled(egui::Role::TextInput, enabled, torno_ui_text::tr_label(hint));
         info.current_text_value = Some(value.clone());
         info
     });
@@ -1402,7 +1402,7 @@ pub fn search_field(ui: &mut Ui, id: egui::Id, value: &mut String, hint: &str) -
     if response.has_focus() {
         super::settings_search::note_key_sink(ui.ctx());
     }
-    solidcraft_theme::TabAccent::number_focus(ui, &response);
+    torno_theme::TabAccent::number_focus(ui, &response);
     t.input_bevel(ui, &response);
     response
 }
@@ -1421,7 +1421,7 @@ pub fn menu_filter(ui: &mut Ui, id: egui::Id, value: &mut String, hint: &str) ->
     let glyph = egui::Rect::from_center_size(egui::pos2(rect.left() + t.space_8 + t.space_16 / 2.0, rect.center().y), vec2(t.space_16, t.space_16));
     crate::icons::paint_ink(ui.painter(), glyph, "zoom", t.form_dim);
     let field = egui::Rect::from_min_max(egui::pos2((glyph.right() + t.space_8).min(rect.right()), rect.top()), rect.max);
-    let hint_text = solidcraft_ui_text::tr_label(hint);
+    let hint_text = torno_ui_text::tr_label(hint);
     let response = ui
         .scope_builder(egui::UiBuilder::new().max_rect(field).layout(egui::Layout::left_to_right(egui::Align::Center)), |ui| {
             ui.set_clip_rect(ui.clip_rect().intersect(field));
@@ -1494,7 +1494,7 @@ pub fn slider<T: egui::emath::Numeric>(ui: &mut Ui, value: &mut T, range: std::o
     super::scope(ui, |ui| {
         let t = Tokens::get();
         ui.style_mut().drag_value_text_style = egui::TextStyle::Monospace;
-        let primary = if options.workspace_accent { solidcraft_theme::TabAccent::current(ui.ctx()).ink } else { t.form_primary };
+        let primary = if options.workspace_accent { torno_theme::TabAccent::current(ui.ctx()).ink } else { t.form_primary };
         let limits = (range.start().to_f64(), range.end().to_f64());
         let reserved = if options.show_value {
             // Reserve the actual formatted editor, including suffixes and localized Instant.
@@ -1596,9 +1596,9 @@ pub fn slider<T: egui::emath::Numeric>(ui: &mut Ui, value: &mut T, range: std::o
         };
         ui.painter().circle(center, t.space_8, fill, egui::Stroke::new(t.space_2, if off { t.form_dim } else { primary }));
         publish(ui, &response, egui::Role::Slider);
-        response.widget_info(|| egui::WidgetInfo::slider(ui.is_enabled(), value.to_f64(), solidcraft_ui_text::tr_label(label(ui))));
-        solidcraft_ui_registry::publish_rect(&format!("dialog:slider_track:{}", label(ui)), slider);
-        solidcraft_ui_registry::publish_target(&format!("dialog:slider:{}", label(ui)), response.rect);
+        response.widget_info(|| egui::WidgetInfo::slider(ui.is_enabled(), value.to_f64(), torno_ui_text::tr_label(label(ui))));
+        torno_ui_registry::publish_rect(&format!("dialog:slider_track:{}", label(ui)), slider);
+        torno_ui_registry::publish_target(&format!("dialog:slider:{}", label(ui)), response.rect);
         response
     })
 }
@@ -1665,7 +1665,7 @@ fn scalar_field_impl(ui: &mut Ui, value: &mut f64, range: std::ops::RangeInclusi
     if !plain {
         Tokens::get().input_bevel(ui, &response);
     }
-    solidcraft_ui_registry::publish_target(&format!("dialog:scalar:{}", label(ui)), response.rect);
+    torno_ui_registry::publish_target(&format!("dialog:scalar:{}", label(ui)), response.rect);
     response
 }
 
@@ -1674,14 +1674,14 @@ fn scalar_field_impl(ui: &mut Ui, value: &mut f64, range: std::ops::RangeInclusi
 pub fn length_field(ui: &mut Ui, value: &mut f64, units: &str, decimals: u8) -> Response {
     let response = ui.add(length_drag(ui, value, units, decimals));
     Tokens::get().input_bevel(ui, &response);
-    solidcraft_ui_registry::publish_target(&format!("dialog:length:{}", label(ui)), response.rect);
+    torno_ui_registry::publish_target(&format!("dialog:length:{}", label(ui)), response.rect);
     response
 }
 
 /// A model-space length with tool-specific bounds and drag step, shown in design units.
 pub fn bounded_length_field(ui: &mut Ui, value: &mut f64, units: &str, decimals: u8, range: std::ops::RangeInclusive<f64>, speed: f64) -> Response {
     let response = ui.add(length_drag(ui, value, units, decimals).range(range).speed(speed));
-    solidcraft_ui_registry::publish_target(&format!("dialog:length:{}", label(ui)), response.rect);
+    torno_ui_registry::publish_target(&format!("dialog:length:{}", label(ui)), response.rect);
     response
 }
 
@@ -1702,7 +1702,7 @@ pub fn angle_field(ui: &mut Ui, value: &mut f64) -> Response {
         ui.data_mut(|d| d.insert_temp(set, shown));
     }
     Tokens::get().input_bevel(ui, &response);
-    solidcraft_ui_registry::publish_target(&format!("dialog:angle:{}", label(ui)), response.rect);
+    torno_ui_registry::publish_target(&format!("dialog:angle:{}", label(ui)), response.rect);
     response
 }
 
@@ -1783,7 +1783,7 @@ fn bounded_number_field<T: egui::emath::Numeric>(
     Tokens::get().input_bevel(ui, &response);
     response.widget_info(|| {
         let mut info = egui::WidgetInfo::drag_value(ui.is_enabled(), value.to_f64());
-        info.label = Some(solidcraft_ui_text::tr_label(label(ui)).to_string());
+        info.label = Some(torno_ui_text::tr_label(label(ui)).to_string());
         info
     });
     super::layout::publish_geometry(ui, &response);
@@ -1831,7 +1831,7 @@ pub fn vector3_field(ui: &mut Ui, values: &mut [f64; 3], range: std::ops::RangeI
             ui.spacing_mut().interact_size.x = width;
             ui.set_clip_rect(ui.clip_rect().intersect(ui.max_rect()));
             let response = number_field(ui, value, range.clone(), 0.01, suffix);
-            solidcraft_ui_registry::publish_target(&format!("dialog:vector:{label}:{axis}"), response.rect);
+            torno_ui_registry::publish_target(&format!("dialog:vector:{label}:{axis}"), response.rect);
             changed |= response.changed();
         }
     });
@@ -1983,13 +1983,13 @@ pub fn placement_field(ui: &mut Ui, id: egui::Id, value: &mut String, hint: &str
     super::text_menu::menu(ui, &mut response, value, super::text_menu::Field::LINE);
     publish(ui, &response, egui::Role::TextInput);
     response.widget_info(|| {
-        let mut info = egui::WidgetInfo::labeled(egui::Role::TextInput, ui.is_enabled(), solidcraft_ui_text::tr_label(hint));
+        let mut info = egui::WidgetInfo::labeled(egui::Role::TextInput, ui.is_enabled(), torno_ui_text::tr_label(hint));
         info.current_text_value = Some(value.clone());
         info
     });
-    solidcraft_theme::TabAccent::number_focus(ui, &response);
+    torno_theme::TabAccent::number_focus(ui, &response);
     t.input_bevel(ui, &response);
-    response.backing_on_hover_text(solidcraft_ui_text::tr_label(hint))
+    response.backing_on_hover_text(torno_ui_text::tr_label(hint))
 }
 
 /// Attached Library dropdown and text editor inside one bordered control.
@@ -2009,15 +2009,15 @@ pub fn library_cell(ui: &mut Ui, id: egui::Id, value: &mut String, hint: &str, m
     let button = egui::Rect::from_min_max(egui::pos2(split, rect.top()), rect.max);
     t.secondary_vline(ui.painter(), split, rect.y_range(), t.dialog_rule);
     let library = super::icon_button_at(ui, button, "chevron", "Library");
-    solidcraft_ui_registry::publish_handle("dialog:menu:Library", button.center());
-    solidcraft_ui_registry::publish_rect("dialog:menu:Library", button);
+    torno_ui_registry::publish_handle("dialog:menu:Library", button.center());
+    torno_ui_registry::publish_rect("dialog:menu:Library", button);
     let popup = Container::new(ui.ctx(), Surface::Popup).menu(&library);
     let open = popup.is_open();
     popup.show(|ui| super::scope(ui, menu));
     if open {
         ui.input_mut(|i| i.consume_key(egui::Modifiers::NONE, egui::Key::Escape));
     }
-    if value.is_empty() { response.backing_on_hover_text(solidcraft_ui_text::tr_label(hint)) } else { response }
+    if value.is_empty() { response.backing_on_hover_text(torno_ui_text::tr_label(hint)) } else { response }
 }
 
 /// Inline tree-name editor in caller-owned geometry; preserves its native focus and selection ID.

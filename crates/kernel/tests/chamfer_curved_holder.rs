@@ -4,9 +4,9 @@
 //! against the round wall instead of extending that short seam outside the solid.
 
 use solidcore_record::{Loop2, Plane, Region2, Seg2, Vec2, Vec3};
-use solidcraft_geom::prelude::*;
-use solidcraft_kernel::{Body, BoolOp, boolean, chamfer, cylinder, extrude, tangent_chain};
 use std::f64::consts::PI;
+use torno_geom::prelude::*;
+use torno_kernel::{Body, BoolOp, boolean, chamfer, cylinder, extrude, tangent_chain};
 
 fn holder() -> Body {
     let segs = vec![
@@ -61,22 +61,22 @@ fn chamfer_the_top_lip_at_a_tangent_wall_junction() {
     assert!(made.validity().is_empty(), "{:?}", made.validity());
     assert_eq!(made.crossed_face_loops().unwrap(), 0);
     let history = made.history().expect("the chamfer retains exact face provenance");
-    assert!(history.faces.iter().any(|f| f.origins.iter().any(|o| matches!(o, solidcraft_kernel::history::FaceOrigin::Edge { operand: 0, .. }))));
+    assert!(history.faces.iter().any(|f| f.origins.iter().any(|o| matches!(o, torno_kernel::history::FaceOrigin::Edge { operand: 0, .. }))));
     // Fine enough that the meshes' chord error is below the tolerance: the removed volume
     // measured on meshes is 37.404 at chord 0.002, 37.672 at 0.0005, 37.761 at 0.0001 and 37.759
     // at 0.00003, converged on the expected 37.762 (the chamfer as the chord between the contacts
     // of a 2 mm ball). The planner's meshes of the two bodies differ, so their chord errors no
     // longer cancel as truck's did.
-    let mesh = |body: &Body| body.mesh(&solidcraft_kernel::MeshTolerance::chord(0.0001)).unwrap();
+    let mesh = |body: &Body| body.mesh(&torno_kernel::MeshTolerance::chord(0.0001)).unwrap();
     let before = mesh(&body).measure().volume;
     let after = mesh(&made);
     let removed = before - after.measure().volume;
     let expected = expected_removed(2.0);
     eprintln!("removed {removed:.8} mm³, expected {expected:.8} mm³");
     assert!((removed - expected).abs() < 0.03, "removed {removed}, expected {expected}");
-    assert_eq!(made.classify_point(Vec3::new(10.0, 9.5, 59.5)).unwrap(), solidcraft_kernel::PointClass::Outside, "the old corner was removed");
-    assert_eq!(made.classify_point(Vec3::new(10.0, 7.0, 59.5)).unwrap(), solidcraft_kernel::PointClass::Inside, "material behind the bevel remains");
-    assert_eq!(made.classify_point(Vec3::new(10.0, 10.0, 55.0)).unwrap(), solidcraft_kernel::PointClass::Inside, "material below the bevel remains");
+    assert_eq!(made.classify_point(Vec3::new(10.0, 9.5, 59.5)).unwrap(), torno_kernel::PointClass::Outside, "the old corner was removed");
+    assert_eq!(made.classify_point(Vec3::new(10.0, 7.0, 59.5)).unwrap(), torno_kernel::PointClass::Inside, "material behind the bevel remains");
+    assert_eq!(made.classify_point(Vec3::new(10.0, 10.0, 55.0)).unwrap(), torno_kernel::PointClass::Inside, "material below the bevel remains");
     // A closed mesh's signed volume is independent of the origin.
     let volume_about = |origin: Vec3| {
         after
@@ -99,7 +99,7 @@ fn a_chamfer_that_uses_up_the_holder_top_is_refused() {
 
 /// A plate of side `plate` with a 50 x 10 mm stadium boss, 10 mm tall, joined on top.
 fn plate_with_stadium(plate: f64) -> Body {
-    let base = solidcraft_kernel::box_solid(Vec3::new(-plate / 2.0, -plate / 2.0, 0.0), Vec3::new(plate / 2.0, plate / 2.0, 10.0)).unwrap();
+    let base = torno_kernel::box_solid(Vec3::new(-plate / 2.0, -plate / 2.0, 0.0), Vec3::new(plate / 2.0, plate / 2.0, 10.0)).unwrap();
     let segs = vec![
         Seg2::Line { a: Vec2::new(-20.0, -5.0), b: Vec2::new(20.0, -5.0) },
         Seg2::Arc { center: Vec2::new(20.0, 0.0), radius: 5.0, start: -PI / 2.0, sweep: PI },
@@ -122,7 +122,7 @@ fn one_chamfer_pick_follows_the_tangent_chain_at_any_part_size() {
         assert!(made.validity().is_empty(), "{:?}", made.validity());
         // Two straight edges (c^2/2 * 40 each) and both end arcs (Pappus, c^2/2 * 2 pi (R - c/3)).
         let expected = 40.0 + 0.5 * 2.0 * PI * (5.0 - 1.0 / 3.0);
-        let volume = |b: &Body| b.mesh(&solidcraft_kernel::MeshTolerance::chord(1e-4)).unwrap().measure().volume;
+        let volume = |b: &Body| b.mesh(&torno_kernel::MeshTolerance::chord(1e-4)).unwrap().measure().volume;
         let removed = volume(&body) - volume(&made);
         assert!((removed - expected).abs() < 0.3, "plate {plate}: removed {removed}, expected {expected}");
         assert_eq!(made.face_count(), body.face_count() + 4, "plate {plate}: one chamfer face per rim edge");

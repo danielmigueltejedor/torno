@@ -91,7 +91,7 @@ fn near(a: f64, b: f64, tol: f64) -> bool {
     (a - b).abs() <= tol
 }
 
-// ---- WR-301 / WR-302: the cube of 20 with three openings (SolidCraft rig fillets/1080) ----
+// ---- WR-301 / WR-302: the cube of 20 with three openings (Torno rig fillets/1080) ----
 
 /// A cube of 20 with three orthogonal 10 x 10 openings through it, 5 in from its sides.
 fn holed_cube(k: &mut Kernel) -> Brep {

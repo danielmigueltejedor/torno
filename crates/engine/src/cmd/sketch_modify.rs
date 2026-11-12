@@ -1,13 +1,13 @@
 //! Sketch modify tools: trim, extend, break, fillet, chamfer, offset, mirror, circular and
 //! rectangular patterns, move/copy and scale.
 
-use solidcraft_geom::prelude::*;
 use std::f64::consts::{FRAC_PI_2, PI, TAU};
+use torno_geom::prelude::*;
 
 use serde_json::{Value, json};
 use solidcore_record::{Plane, Vec2};
-use solidcraft_doc::ProfileSel;
-use solidcraft_sketch::{ConstraintKind, Curve, CurveKind, Shape, Sketch, Wire, WireSpace, intersections, intersections_within};
+use torno_doc::ProfileSel;
+use torno_sketch::{ConstraintKind, Curve, CurveKind, Shape, Sketch, Wire, WireSpace, intersections, intersections_within};
 
 use super::sketch::{add_c, coincident_points, dof_now, edit, ids_of, line_or_axis_ref, solve_current};
 use super::sketch_store;
@@ -603,7 +603,7 @@ fn trim(s: &mut Session, p: &Value) -> Result<Value> {
 /// the affected line chains before Trim, retaining their original driving distance parameters
 /// as point-line dimensions. Without a dimension, the stored distance stays a fixed distance.
 /// Closed or mixed-curve output chains still need their association.
-fn release_line_offsets(sk: &mut Sketch, doc: &solidcraft_doc::Document, ci: usize, cmd: &str) -> Result<Vec<String>> {
+fn release_line_offsets(sk: &mut Sketch, doc: &torno_doc::Document, ci: usize, cmd: &str) -> Result<Vec<String>> {
     let Some(curve) = sk.curves.get(ci) else { return Ok(Vec::new()) };
     if curve.infinite || sk.is_linked_curve(ci) || !matches!(curve.kind, CurveKind::Line { .. }) {
         return Ok(Vec::new());
@@ -1084,7 +1084,7 @@ fn separate_end(sk: &mut Sketch, ci: usize, end: usize) -> Result<()> {
     let name = format!("{}.{role}", curve.id);
     let own = match sk.add_point(pos, Some(&name)) {
         Ok(i) => i,
-        Err(solidcraft_sketch::SketchError::Duplicate(_)) => sk.add_point(pos, None)?,
+        Err(torno_sketch::SketchError::Duplicate(_)) => sk.add_point(pos, None)?,
         Err(e) => return Err(e.into()),
     };
     if let Some(c) = sk.curves.get_mut(ci) {
@@ -1205,7 +1205,7 @@ fn line_aim(sk: &Sketch, ci: usize, at: Vec2) -> Result<Option<LineAim>> {
 /// nearest `hover_pos` reaches, from the same search `sketch.extend` makes. `None` when the curve
 /// is not a line to extend, when it is an infinite line, or when the extension has nowhere to go
 /// (the end is connected to a line running on from it).
-pub fn extend_preview(sk: &solidcraft_sketch::Sketch, ci: usize, hover_pos: Vec2) -> Option<Vec2> {
+pub fn extend_preview(sk: &torno_sketch::Sketch, ci: usize, hover_pos: Vec2) -> Option<Vec2> {
     line_aim(sk, ci, hover_pos).ok().flatten().map(|aim| aim.hit)
 }
 
@@ -1446,7 +1446,7 @@ fn arc_end_held(sk: &Sketch, ci: usize, end: usize) -> bool {
         return true;
     }
     sk.constraints.iter().any(|c| {
-        use solidcraft_sketch::ConstraintKind::*;
+        use torno_sketch::ConstraintKind::*;
         match c.kind {
             Coincident { p, q } => p == end || q == end,
             Fix { p } | PointOnCurve { p, .. } | PointAlong { p, .. } | Midpoint { p, .. } => p == end,
@@ -1481,8 +1481,8 @@ fn grow_arc(sk: &mut Sketch, ci: usize, aim: ArcAim) -> Result<String> {
         pt.pos = aim.hit;
     }
     let before = sk.points.iter().map(|p| p.pos).collect::<Vec<_>>();
-    let hold = solidcraft_sketch::Hold { points: (0..sk.points.len()).filter(|i| *i != aim.end).collect(), radii: (0..sk.curves.len()).collect() };
-    let moved = solidcraft_sketch::solve_with(sk, &hold, None, solidcraft_sketch::Analysis::StatusOnly, None).ok()
+    let hold = torno_sketch::Hold { points: (0..sk.points.len()).filter(|i| *i != aim.end).collect(), radii: (0..sk.curves.len()).collect() };
+    let moved = torno_sketch::solve_with(sk, &hold, None, torno_sketch::Analysis::StatusOnly, None).ok()
         && sk.point(aim.end).is_some_and(|point| point.dist(aim.hit) <= TOL)
         && sk.points.iter().enumerate().all(|(i, point)| i == aim.end || point.pos.dist(before[i]) <= TOL);
     if !moved {
@@ -1507,7 +1507,7 @@ fn grow_arc(sk: &mut Sketch, ci: usize, aim: ArcAim) -> Result<String> {
 /// The arc `sketch.extend` would add from the end of `ci` nearest `hover_pos`, for the viewport to
 /// show before the click: the new arc as points, the growing end first. `None` when the arc cannot
 /// grow (it is already a whole circle).
-pub fn extend_arc_preview(sk: &solidcraft_sketch::Sketch, ci: usize, hover_pos: Vec2) -> Option<Vec<Vec2>> {
+pub fn extend_arc_preview(sk: &torno_sketch::Sketch, ci: usize, hover_pos: Vec2) -> Option<Vec<Vec2>> {
     let aim = arc_aim(sk, ci, hover_pos, "sketch.extend").ok().flatten()?;
     Some(aim.points())
 }
@@ -1563,7 +1563,7 @@ fn grow_line(sk: &mut Sketch, ci: usize, aim: LineAim) -> Result<String> {
     // An end held by a constraint, or lying on a circle or arc, stays where it is too: the
     // extension is a new line from it.
     let end_is_held = sk.constraints.iter().any(|c| {
-        use solidcraft_sketch::ConstraintKind::*;
+        use torno_sketch::ConstraintKind::*;
         match c.kind {
             Coincident { p, q } => p == end || q == end,
             Fix { p } => p == end,
@@ -1607,9 +1607,8 @@ fn grow_line(sk: &mut Sketch, ci: usize, aim: LineAim) -> Result<String> {
         pin(&mut attempt, end, cutter)?;
     }
     let before = sk.points.iter().map(|p| p.pos).collect::<Vec<_>>();
-    let hold =
-        solidcraft_sketch::Hold { points: (0..attempt.points.len()).filter(|i| *i != end).collect(), radii: (0..attempt.curves.len()).collect() };
-    let moved = solidcraft_sketch::solve_with(&mut attempt, &hold, None, solidcraft_sketch::Analysis::StatusOnly, None).ok()
+    let hold = torno_sketch::Hold { points: (0..attempt.points.len()).filter(|i| *i != end).collect(), radii: (0..attempt.curves.len()).collect() };
+    let moved = torno_sketch::solve_with(&mut attempt, &hold, None, torno_sketch::Analysis::StatusOnly, None).ok()
         && attempt.point(end).is_some_and(|point| point.dist(q) <= TOL)
         && attempt.points.iter().enumerate().all(|(i, point)| i == end || point.pos.dist(before[i]) <= TOL);
     if moved {
@@ -2212,7 +2211,7 @@ fn fillet(s: &mut Session, p: &Value) -> Result<Value> {
     let r_expr = req_expr(cmd, p, "radius")?;
     let corners = corner_list(p, cmd)?;
     let (out, info) = edit(s, p, cmd, false, |sk, doc| {
-        let r = doc.eval(&r_expr, solidcraft_doc::expr::Kind::Length).map_err(|e| bad(cmd, format!("radius: {e}")))?;
+        let r = doc.eval(&r_expr, torno_doc::expr::Kind::Length).map_err(|e| bad(cmd, format!("radius: {e}")))?;
         if !(r > 1e-9 && r < 1e8) {
             return Err(bad(cmd, "radius must be positive"));
         }
@@ -2739,7 +2738,7 @@ fn offset_side(sk: &mut Sketch, cmd: &str, order: &[(usize, bool)], sources: &[(
             .map(|topology| topology.roles.clone())
             .ok_or_else(|| bad(cmd, "new offset association is missing"))?;
         for (source, role) in sources.iter().zip(&roles) {
-            if role.kind == solidcraft_sketch::OffsetRoleKind::Line {
+            if role.kind == torno_sketch::OffsetRoleKind::Line {
                 let a = sk.curve_index(&source.0).ok_or_else(|| bad(cmd, "offset source line vanished"))?;
                 let b = sk.curve_index(&role.output).ok_or_else(|| bad(cmd, "offset output line vanished"))?;
                 cons.push(add_c(sk, ConstraintKind::Parallel { a, b })?);
@@ -2845,7 +2844,7 @@ fn offset_side(sk: &mut Sketch, cmd: &str, order: &[(usize, bool)], sources: &[(
     }
     let outputs = ids_of(sk, &made);
     if pieces.iter().all(|p| !matches!(p, Piece::Free(_))) {
-        sk.offsets.push(solidcraft_sketch::OffsetChain { sources: sources.to_vec(), outputs: outputs.clone(), distance: d, closed, topology: None });
+        sk.offsets.push(torno_sketch::OffsetChain { sources: sources.to_vec(), outputs: outputs.clone(), distance: d, closed, topology: None });
         sk.refresh_offsets()?;
     }
     Ok(Side { distance: d, curves: outputs, constraints: cons, association: None, param: None, unlinked_sources: None })
@@ -2858,9 +2857,9 @@ fn offset_length(s: &Session, p: &Value, key: &str, positive: bool) -> Result<(f
         Some(v) => format!("{v} mm"),
         None => expr(p, key).ok_or_else(|| bad(cmd, format!("`{key}` must be a length expression")))?.into_string(),
     };
-    let expression = s.doc.with_design_unit(&expression, solidcraft_doc::expr::Kind::Length);
-    let value = s.doc.eval(&expression, solidcraft_doc::expr::Kind::Length)?;
-    if !value.is_finite() || value.abs() <= 1e-9 || value.abs() > solidcraft_sketch::MAX_COORD || (positive && value < 0.0) {
+    let expression = s.doc.with_design_unit(&expression, torno_doc::expr::Kind::Length);
+    let value = s.doc.eval(&expression, torno_doc::expr::Kind::Length)?;
+    if !value.is_finite() || value.abs() <= 1e-9 || value.abs() > torno_sketch::MAX_COORD || (positive && value < 0.0) {
         return Err(bad(cmd, format!("`{key}` must be a {}length within the sketch bounds", if positive { "positive " } else { "finite nonzero " })));
     }
     Ok((value, expression))
@@ -2875,7 +2874,7 @@ fn offset_instances(s: &Session, p: &Value, cmd: &str) -> Result<usize> {
         Some(Value::Number(_)) => num(p, "instances").ok_or_else(|| bad(cmd, message.clone()))?,
         Some(_) => {
             let expression = expr(p, "instances").ok_or_else(|| bad(cmd, message.clone()))?.into_string();
-            s.doc.eval(&expression, solidcraft_doc::expr::Kind::Unitless).map_err(|error| bad(cmd, format!("`instances`: {error}")))?
+            s.doc.eval(&expression, torno_doc::expr::Kind::Unitless).map_err(|error| bad(cmd, format!("`instances`: {error}")))?
         }
     };
     if !count.is_finite() || count.fract() != 0.0 || !(1.0..=MAX_INSTANCES as f64).contains(&count) {
@@ -2932,7 +2931,7 @@ fn offset_group(sk: &mut Sketch, ids: &[String], eligible: &std::collections::Ha
             }
             let ci = sk.add_circle(cc, nr, Some(c), None)?;
             let outputs = ids_of(sk, &[ci]);
-            sk.offsets.push(solidcraft_sketch::OffsetChain {
+            sk.offsets.push(torno_sketch::OffsetChain {
                 sources: vec![(source.clone(), true)],
                 outputs: outputs.clone(),
                 distance: r - nr,
@@ -3004,7 +3003,7 @@ fn offset_group(sk: &mut Sketch, ids: &[String], eligible: &std::collections::Ha
         for dd in runs {
             let side = match order.as_slice() {
                 [(source, forward)] => match sk.offset_freeform(*source, *forward, dd)? {
-                    solidcraft_sketch::FreeformOffsetOutput::Linked(output) => Side {
+                    torno_sketch::FreeformOffsetOutput::Linked(output) => Side {
                         distance: dd,
                         curves: ids_of(sk, &[output]),
                         constraints: Vec::new(),
@@ -3012,7 +3011,7 @@ fn offset_group(sk: &mut Sketch, ids: &[String], eligible: &std::collections::Ha
                         param: None,
                         unlinked_sources: None,
                     },
-                    solidcraft_sketch::FreeformOffsetOutput::Unlinked(curves) => unlinked(sk, dd, &curves),
+                    torno_sketch::FreeformOffsetOutput::Unlinked(curves) => unlinked(sk, dd, &curves),
                 },
                 _ => {
                     let curves = sk.offset_freeform_chain(&order, dd)?;
@@ -3281,7 +3280,7 @@ fn offset(s: &mut Session, p: &Value) -> Result<Value> {
     };
     // A trimmed offset (a spline with another curve) is not linked to its source, so a distance
     // that names a parameter drives nothing: say so instead of leaving `param` null unexplained (#12294).
-    let ignored = |expression: &str, param: &Option<String>| param.is_none() && !solidcraft_doc::expr::references(expression).is_empty();
+    let ignored = |expression: &str, param: &Option<String>| param.is_none() && !torno_doc::expr::references(expression).is_empty();
     let warning = (ignored(&expression, &param) || expression2.as_deref().is_some_and(|e| ignored(e, &param2))).then(|| UNLINKED_OFFSET.to_string());
     reply(
         cmd,
@@ -3382,7 +3381,7 @@ fn break_offset(s: &mut Session, p: &Value) -> Result<Value> {
 
 /// A broken logical boundary becomes ordinary geometry. Keep downstream features
 /// on that exact current boundary while other associations retain their full roles.
-fn freeze_offset_profiles(doc: &mut solidcraft_doc::Document, sketch: u64, boundary: &Sketch, association: &str) -> Result<()> {
+fn freeze_offset_profiles(doc: &mut torno_doc::Document, sketch: u64, boundary: &Sketch, association: &str) -> Result<()> {
     let cmd = "sketch.offset.break";
     let mut groups = std::collections::BTreeMap::new();
     let mut work = 0usize;
@@ -3515,8 +3514,8 @@ fn copy_through(
     keep: &dyn Fn(Vec2) -> bool,
     scale_r: f64,
 ) -> Result<(Vec<usize>, Vec<(usize, usize)>)> {
-    if sk.curves.len().saturating_add(cs.len()) > solidcraft_sketch::limits::max_curves() {
-        return Err(solidcraft_sketch::SketchError::TooLarge.into());
+    if sk.curves.len().saturating_add(cs.len()) > torno_sketch::limits::max_curves() {
+        return Err(torno_sketch::SketchError::TooLarge.into());
     }
     let pts = involved_points(sk, cs, ps);
     let mut map: Vec<(usize, usize)> = Vec::new();
@@ -3575,12 +3574,11 @@ fn mirror(s: &mut Session, p: &Value) -> Result<Value> {
     let (out, info) = edit(s, p, cmd, false, |sk, _| {
         let (cs, ps) = entities(sk, p, cmd)?;
         let l = if let Some((source, geom)) = origin_axis {
-            let link =
-                sk.links.iter().find(|link| link.kind == solidcraft_sketch::LinkKind::Project && link.source == source).map(|link| link.id.clone());
+            let link = sk.links.iter().find(|link| link.kind == torno_sketch::LinkKind::Project && link.source == source).map(|link| link.id.clone());
             let link = match link {
                 Some(link) => link,
                 None => {
-                    let link = sk.add_link(solidcraft_sketch::LinkKind::Project, source, &geom)?;
+                    let link = sk.add_link(torno_sketch::LinkKind::Project, source, &geom)?;
                     // A mirror line is reference geometry: it stays out of profiles, as the
                     // sketch's own axes do.
                     for c in sk.link_curves(&link) {
@@ -3685,7 +3683,7 @@ fn transform_in_place(sk: &mut Sketch, cs: &[usize], ps: &[usize], f: &dyn Fn(Ve
 /// at odd quarter turns and stay at half turns, and a line's angle dimension turns with the line,
 /// its parameter too. Horizontal and vertical relations and dimensions cannot hold at any other
 /// angle and are removed. Every other constraint keeps its meaning under a rigid move.
-fn rotate_axis_constraints(sk: &mut Sketch, doc: &mut solidcraft_doc::Document, moved: &[usize], angle: f64) -> Result<()> {
+fn rotate_axis_constraints(sk: &mut Sketch, doc: &mut torno_doc::Document, moved: &[usize], angle: f64) -> Result<()> {
     let quarters = angle.rem_euclid(TAU) / FRAC_PI_2;
     let turns = quarters.round();
     if turns.rem_euclid(4.0) == 0.0 && (quarters - turns).abs() < 1e-10 {
@@ -3736,7 +3734,7 @@ fn rotate_axis_constraints(sk: &mut Sketch, doc: &mut solidcraft_doc::Document, 
         let Some(param) = doc.param(&name) else { continue };
         let degrees = (angle.to_degrees() * 1e6).round() / 1e6;
         // A literal becomes the new angle; a formula keeps its references and gains the turn.
-        let expr = if solidcraft_doc::expr::references(&param.expr).is_empty() {
+        let expr = if torno_doc::expr::references(&param.expr).is_empty() {
             format!("{} deg", (turned.to_degrees() * 1e6).round() / 1e6)
         } else {
             format!("({}) + {degrees} deg", param.expr)
@@ -3867,7 +3865,7 @@ fn transform(s: &mut Session, p: &Value) -> Result<Value> {
 /// The driving lengths wholly inside a transformed selection scale with it. Keep formulas
 /// tied to their user parameters, and compensate references between scaled dimensions so a
 /// dimension such as `d1 / 2` does not get the factor twice.
-fn scale_dimensions(sk: &mut Sketch, doc: &mut solidcraft_doc::Document, curves: &[usize], points: &[usize], factor: f64) -> Result<()> {
+fn scale_dimensions(sk: &mut Sketch, doc: &mut torno_doc::Document, curves: &[usize], points: &[usize], factor: f64) -> Result<()> {
     if factor == 1.0 {
         return Ok(());
     }
@@ -3899,8 +3897,8 @@ fn scale_dimensions(sk: &mut Sketch, doc: &mut solidcraft_doc::Document, curves:
         if let Some(name) = &c.param
             && let Some(param) = doc.param(name)
         {
-            let expression = if solidcraft_doc::expr::references(&param.expr).is_empty() {
-                format!("{} mm", doc.eval(name, solidcraft_doc::expr::Kind::Length)? * factor)
+            let expression = if torno_doc::expr::references(&param.expr).is_empty() {
+                format!("{} mm", doc.eval(name, torno_doc::expr::Kind::Length)? * factor)
             } else {
                 let formula = param.expr.trim().strip_prefix('=').unwrap_or(&param.expr);
                 format!("({formula}) * {factor}")
@@ -3909,9 +3907,9 @@ fn scale_dimensions(sk: &mut Sketch, doc: &mut solidcraft_doc::Document, curves:
         }
     }
     for (name, mut expression) in expressions.clone() {
-        for reference in solidcraft_doc::expr::references(&expression) {
+        for reference in torno_doc::expr::references(&expression) {
             if expressions.contains_key(&reference) {
-                expression = solidcraft_doc::expr::rename_reference(&expression, &reference, &format!("({reference} / {factor})"));
+                expression = torno_doc::expr::rename_reference(&expression, &reference, &format!("({reference} / {factor})"));
             }
         }
         doc.set_param(&name, &expression, None, None)?;

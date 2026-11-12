@@ -1,8 +1,8 @@
 use serde::{Deserialize, Serialize};
 use solidcore_record::{Plane, Vec2, Vec3};
-use solidcraft_geom::prelude::*;
-use solidcraft_kernel::Continuity;
-use solidcraft_sketch::Sketch;
+use torno_geom::prelude::*;
+use torno_kernel::Continuity;
+use torno_sketch::Sketch;
 
 use crate::construct::{AxisDef, GeoRef, PointDef};
 use crate::expr::{self, Expr, Kind};
@@ -311,7 +311,7 @@ impl ExtrudeConvention {
 }
 
 /// Extent of an extrude.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, solidcraft_derive::Walk)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, torno_derive::Walk)]
 pub struct Extent {
     #[walk(length = "Distance")]
     pub distance: Expr,
@@ -344,12 +344,12 @@ pub struct Extent {
     #[walk(angle = "Taper angle")]
     pub taper: Option<Expr>,
     /// How a taper closes the profile's sharp corners, when the user chose
-    /// ([`solidcraft_kernel::draft_corners`] says what each rule gives at each corner). Without
+    /// ([`torno_kernel::draft_corners`] says what each rule gives at each corner). Without
     /// it each profile takes preserve curvature where the kernel can build it exactly and the
     /// tangent rule where a curve that is neither a line nor an arc has a corner, and the
     /// feature's warning says so.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub corner: Option<solidcraft_kernel::DraftCorner>,
+    pub corner: Option<torno_kernel::DraftCorner>,
     /// To Object: end at the face (or vertex/point) at this point, instead of `distance`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub to: Option<FacePick>,
@@ -369,7 +369,7 @@ pub struct Extent {
 }
 
 /// Thin Extrude: a wall of constant thickness along sketch curves instead of the profiles.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, solidcraft_derive::Walk)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, torno_derive::Walk)]
 pub struct ThinWall {
     /// The sketch curves the wall follows: open chains and closed loops, joined where they
     /// meet end to end.
@@ -386,7 +386,7 @@ pub struct ThinWall {
 }
 
 /// How a swept profile turns as it follows its path.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize, solidcraft_derive::Walk)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize, torno_derive::Walk)]
 #[serde(rename_all = "snake_case")]
 pub enum SweepOrientation {
     /// Square to the path, turning with it (a rotation-minimising frame).
@@ -407,7 +407,7 @@ impl SweepOrientation {
 
 /// A sweep's or a loft's guide rail: a chain of curves of a sketch, followed from the end nearest
 /// the path's start (the loft's first section).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, solidcraft_derive::Walk)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, torno_derive::Walk)]
 pub struct SweepRail {
     pub sketch: SketchId,
     pub curves: Vec<String>,
@@ -461,7 +461,7 @@ impl ThinSide {
 }
 
 /// Revolve axis.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, solidcraft_derive::Walk)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, torno_derive::Walk)]
 #[serde(tag = "type", rename_all = "snake_case")]
 pub enum AxisRef {
     /// A line of a sketch. `sketch` names the sketch that owns the line (#6548); without it
@@ -491,7 +491,7 @@ pub enum AxisRef {
 }
 
 /// Persistent cylindrical Emboss selection, authored in the feature component frame.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, solidcraft_derive::Walk)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, torno_derive::Walk)]
 pub struct EmbossFace {
     pub body: BodyName,
     #[walk(pinned)]
@@ -611,7 +611,7 @@ impl Document {
 /// edge's own angle and height (expressions) in place of the feature's. In a design file an
 /// edge with neither is the point `[x, y, z]`, as every edge was before; one with its own
 /// values is `{"point": [x, y, z], "angle": "…", "height": "…"}`.
-#[derive(Clone, Debug, Default, PartialEq, solidcraft_derive::Walk)]
+#[derive(Clone, Debug, Default, PartialEq, torno_derive::Walk)]
 pub struct FlangeEdge {
     pub point: Position,
     #[walk(angle = "Edge angle")]
@@ -633,7 +633,7 @@ impl FlangeEdge {
 /// One segment of an edge flange's edge: a stretch of the edge as fractions of the stretch the
 /// sheet still has (`from`, `to`, 0…1), with its own angle, height and side where given (the
 /// edge's, then the feature's, where left out). See `sheet::SheetBody::add_flanges_each`.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, solidcraft_derive::Walk)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, torno_derive::Walk)]
 #[serde(deny_unknown_fields)]
 pub struct FlangeSegment {
     pub from: f64,
@@ -707,7 +707,7 @@ impl<'de> Deserialize<'de> for FlangeEdge {
 
 /// One side of an Align by frames (#6257): an origin and a z direction, found again from the
 /// geometry each time the design is evaluated, so the bodies follow it.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, solidcraft_derive::Walk)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, torno_derive::Walk)]
 #[serde(tag = "type", rename_all = "snake_case")]
 pub enum AlignFrame {
     /// A joint origin on the model (its component's coordinates): its origin and z.
@@ -733,7 +733,7 @@ impl AlignFrame {
                 (ss.plane.to_world(q.ok_or_else(|| DocError::Unknown(format!("sketch point `{point}`")))?), ss.plane.normal())
             }
             AlignFrame::SketchCurve { sketch: id, curve } => {
-                use solidcraft_sketch::CurveKind;
+                use torno_sketch::CurveKind;
                 let ss = sketch(id)?;
                 let kind = ss.sketch.curve_index(curve).and_then(|i| ss.sketch.curves.get(i)).map(|c| &c.kind);
                 let centre = match kind.ok_or_else(|| DocError::Unknown(format!("sketch curve `{curve}`")))? {
@@ -751,10 +751,10 @@ impl AlignFrame {
 }
 
 /// Feature definitions.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, solidcraft_derive::Walk)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, torno_derive::Walk)]
 #[serde(tag = "type", rename_all = "snake_case")]
 pub enum FeatureKind {
-    /// A feature a newer SolidCraft saved that this build can't read ([`crate::newer_file`]): it
+    /// A feature a newer Torno saved that this build can't read ([`crate::newer_file`]): it
     /// holds its place on the timeline, reports an error when evaluated, and goes back into the
     /// file as it came.
     NewerFileFeature {
@@ -2041,7 +2041,7 @@ pub enum FeatureKind {
         step: std::sync::Arc<str>,
         /// The file's product/assembly tree, kept for components.
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        components: Vec<solidcraft_kernel::StepNode>,
+        components: Vec<torno_kernel::StepNode>,
         /// The file's bodies (by index) this feature does not build: later instances of a part
         /// the file places more than once, shown by the other occurrences of that part's
         /// component (#1386). Empty in designs from before format 22: every body is built.
@@ -2076,7 +2076,7 @@ pub enum FeatureKind {
 /// A fillet corner set back: the vertex at `vertex`, where every edge is rounded, has its corner
 /// patch start `distance` along each of its edges from the vertex, the rounds running whole up to
 /// their sections there. One distance for all of a corner's edges.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, solidcraft_derive::Walk)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, torno_derive::Walk)]
 pub struct CornerSetback {
     pub vertex: Position,
     #[walk(length = "Setback")]
@@ -2092,7 +2092,7 @@ pub enum FilletCorner {
     Rolling,
     /// The corner set back (its distance from the fillet's `setbacks`, else 1.5 × the radius)
     /// and filled with a patch meeting the rounds and the faces round it to the second order
-    /// (`solidcraft_kernel::fillet_g2_corners`).
+    /// (`torno_kernel::fillet_g2_corners`).
     G2,
 }
 
@@ -2111,7 +2111,7 @@ pub enum FilletTurn {
     #[default]
     Mitre,
     /// The rounds end at the side edge and the corner is their section revolved about it, a
-    /// torus tangent to both (`solidcraft_kernel::FilletTurn::Swept`).
+    /// torus tangent to both (`torno_kernel::FilletTurn::Swept`).
     Swept,
 }
 
@@ -2126,10 +2126,10 @@ impl FilletTurn {
     }
 
     /// The kernel's turn.
-    pub fn kernel(self) -> solidcraft_kernel::FilletTurn {
+    pub fn kernel(self) -> torno_kernel::FilletTurn {
         match self {
-            FilletTurn::Mitre => solidcraft_kernel::FilletTurn::Mitre,
-            FilletTurn::Swept => solidcraft_kernel::FilletTurn::Swept,
+            FilletTurn::Mitre => torno_kernel::FilletTurn::Mitre,
+            FilletTurn::Swept => torno_kernel::FilletTurn::Swept,
         }
     }
 }
@@ -2154,7 +2154,7 @@ impl ExtendMode {
 }
 
 /// Where a thread runs up to instead of a length.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, solidcraft_derive::Walk)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, torno_derive::Walk)]
 #[serde(rename_all = "snake_case")]
 pub enum ThreadLimit {
     /// Where this point lies along the thread's axis (a point on a face, such as a shoulder).
@@ -2165,7 +2165,7 @@ pub enum ThreadLimit {
 
 /// A thread's runout length at one end: a length, or ISO 3508's standard (2.5 P) or short
 /// (1.25 P) runout.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, solidcraft_derive::Walk)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, torno_derive::Walk)]
 #[serde(rename_all = "snake_case")]
 pub enum ThreadRunout {
     Standard,
@@ -2177,7 +2177,7 @@ pub enum ThreadRunout {
 }
 
 /// What Extend extends up to instead of a distance.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, solidcraft_derive::Walk)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, torno_derive::Walk)]
 #[serde(rename_all = "snake_case")]
 pub enum ExtendTo {
     /// A plane.
@@ -2189,7 +2189,7 @@ pub enum ExtendTo {
 }
 
 /// How a fillet's size is given.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, solidcraft_derive::Walk)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, torno_derive::Walk)]
 #[serde(tag = "type", rename_all = "snake_case")]
 pub enum FilletStyle {
     #[default]
@@ -2258,16 +2258,16 @@ impl FilletStyle {
 
     /// The spline of a [`FilletStyle::Spline`] with its control radii `values` (the first is
     /// the feature's `radius`).
-    pub fn spline(knots: &[f64], values: Vec<f64>) -> solidcraft_kernel::RadiusSpline {
+    pub fn spline(knots: &[f64], values: Vec<f64>) -> torno_kernel::RadiusSpline {
         let degree = knots.len().saturating_sub(values.len() + 1);
-        solidcraft_kernel::RadiusSpline { degree, knots: knots.to_vec(), radii: values }
+        torno_kernel::RadiusSpline { degree, knots: knots.to_vec(), radii: values }
     }
 }
 
 /// Sketch curves a trim cuts with: chains of the curves `curves` (every curve of the sketch
 /// that is not construction geometry when empty) swept along `direction` (the sketch's normal
 /// when none) onto the surface.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, solidcraft_derive::Walk)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, torno_derive::Walk)]
 pub struct TrimCurves {
     pub sketch: SketchId,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
@@ -2277,7 +2277,7 @@ pub struct TrimCurves {
 }
 
 /// A face picked by a point on it, on a named body.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, solidcraft_derive::Walk)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, torno_derive::Walk)]
 pub struct FaceAt {
     pub body: BodyName,
     pub point: Position,
@@ -2286,7 +2286,7 @@ pub struct FaceAt {
 /// One end of a blend: a body and the points that pick the edges of its boundary chain. With two
 /// picks on the same edge the chain is that one edge; more pick a chain that runs on from pick to
 /// pick (the order of the picks does not matter).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, solidcraft_derive::Walk)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, torno_derive::Walk)]
 pub struct BlendSide {
     pub body: BodyName,
     pub edges: Vec<Position>,
@@ -2297,7 +2297,7 @@ pub struct BlendSide {
 /// on them (`edges`), or a side collapsed to the point `point` (the apex of a three-sided patch).
 /// A chain of a surface's open edges may carry `continuity` with the face beside it (G0, the
 /// default, G1 or G2).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, solidcraft_derive::Walk)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, torno_derive::Walk)]
 pub struct NetworkCurve {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub sketch: Option<SketchId>,
@@ -2315,7 +2315,7 @@ pub struct NetworkCurve {
 
 /// How a patch on a loop of edges meets the faces beside the loop: every edge with `all`, but the
 /// edges picked in `edges` with their own.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, solidcraft_derive::Walk)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, torno_derive::Walk)]
 pub struct PatchContinuity {
     #[serde(default = "patch_g0", skip_serializing_if = "is_g0")]
     pub all: Continuity,
@@ -2324,7 +2324,7 @@ pub struct PatchContinuity {
 }
 
 /// One edge of a patch's loop (a point on it) and how the patch meets the face beside it.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, solidcraft_derive::Walk)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, torno_derive::Walk)]
 pub struct EdgeContinuity {
     pub edge: Position,
     pub g: Continuity,
@@ -2433,7 +2433,7 @@ impl MeshData {
         let mut triangles = Vec::new();
         triangles.try_reserve_exact(self.triangles.len() / 3).map_err(allocation)?;
         triangles.extend_from_slice(self.triangles.as_chunks::<3>().0);
-        let mesh = solidcraft_geom::Mesh { positions, triangles, ..Default::default() };
+        let mesh = torno_geom::Mesh { positions, triangles, ..Default::default() };
         let normals = mesh.crease_corner_normals(angle_degrees.to_radians(), None).map_err(crate::DocError::Invalid)?;
         let count = normals.len().checked_mul(9).ok_or_else(|| crate::DocError::Invalid("mesh normal count overflow".into()))?;
         let mut values = Vec::new();
@@ -2445,7 +2445,7 @@ impl MeshData {
 }
 
 /// Points of a sketch, by id.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, solidcraft_derive::Walk)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, torno_derive::Walk)]
 pub struct SketchPoints {
     pub sketch: SketchId,
     pub ids: Vec<String>,
@@ -2489,7 +2489,7 @@ pub struct Component {
 }
 
 /// One loft section: profiles of a sketch.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, solidcraft_derive::Walk)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, torno_derive::Walk)]
 pub struct LoftSection {
     pub sketch: SketchId,
     #[walk(profiles_of = sketch, when = point.is_none())]
@@ -2501,7 +2501,7 @@ pub struct LoftSection {
 
 /// A section of a surface loft: one chain from a sketch (one profile's boundary, or curves
 /// meeting end to end).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, solidcraft_derive::Walk)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, torno_derive::Walk)]
 pub struct SheetSection {
     pub sketch: SketchId,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -2552,7 +2552,7 @@ fn is_zero(v: &f64) -> bool {
 }
 
 /// Hole shapes.
-#[derive(Clone, Debug, PartialEq, Default, Serialize, Deserialize, solidcraft_derive::Walk)]
+#[derive(Clone, Debug, PartialEq, Default, Serialize, Deserialize, torno_derive::Walk)]
 #[serde(tag = "type", rename_all = "snake_case")]
 pub enum HoleKind {
     /// Plain hole; blind holes get a drill point when `tip_angle` is set.
@@ -2592,7 +2592,7 @@ pub enum HoleKind {
 
 /// A Single hole's reference edge (#37): a point on a straight edge of the hole's face, and the
 /// distance of the hole's centre from that edge's line, in the face's plane.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, solidcraft_derive::Walk)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, torno_derive::Walk)]
 pub struct HoleReference {
     pub edge: Position,
     #[walk(length = "Reference distance")]
@@ -2600,7 +2600,7 @@ pub struct HoleReference {
 }
 
 /// Pattern layouts.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, solidcraft_derive::Walk)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, torno_derive::Walk)]
 #[serde(tag = "type", rename_all = "snake_case")]
 pub enum PatternKind {
     Rectangular {
@@ -2618,9 +2618,9 @@ pub enum PatternKind {
         #[walk(length = "Spacing 2")]
         spacing2: Option<Expr>,
         #[serde(default, skip_serializing_if = "default_pattern_alignment")]
-        alignment: solidcraft_sketch::PatternAlignment,
+        alignment: torno_sketch::PatternAlignment,
         #[serde(default, skip_serializing_if = "default_pattern_alignment")]
-        alignment2: solidcraft_sketch::PatternAlignment,
+        alignment2: torno_sketch::PatternAlignment,
         #[serde(default, skip_serializing_if = "std::ops::Not::not")]
         reversed: bool,
         #[serde(default, skip_serializing_if = "std::ops::Not::not")]
@@ -2639,7 +2639,7 @@ pub enum PatternKind {
         #[walk(angle = "Total angle")]
         angle: Expr,
         #[serde(default, skip_serializing_if = "default_pattern_alignment")]
-        alignment: solidcraft_sketch::PatternAlignment,
+        alignment: torno_sketch::PatternAlignment,
         #[serde(default, skip_serializing_if = "std::ops::Not::not")]
         reversed: bool,
         /// The edge or round face of the model the copies turn about, found again on each
@@ -2674,8 +2674,8 @@ pub enum PatternKind {
     },
 }
 
-fn default_pattern_alignment(alignment: &solidcraft_sketch::PatternAlignment) -> bool {
-    *alignment == solidcraft_sketch::PatternAlignment::Right
+fn default_pattern_alignment(alignment: &torno_sketch::PatternAlignment) -> bool {
+    *alignment == torno_sketch::PatternAlignment::Right
 }
 
 fn z_axis() -> Dir {
@@ -3287,7 +3287,7 @@ pub fn is_counted_body_name(name: &str) -> bool {
 /// The document.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Document {
-    /// Set when a newer SolidCraft saved the file this came from: what to tell the user, and what
+    /// Set when a newer Torno saved the file this came from: what to tell the user, and what
     /// this build couldn't read and keeps for the next save ([`crate::newer_file`]).
     #[serde(skip)]
     pub newer_file: Option<std::sync::Arc<crate::newer_file::NewerFile>>,
@@ -3891,10 +3891,10 @@ impl Document {
         for b in &mut st.bodies {
             let c = self.body_color(b);
             let face_colors = if authored_faces { self.face_colors(b) } else { self.imported_face_colors(b) };
-            let faces: Vec<solidcraft_kernel::FacePaint> =
-                face_colors.into_iter().map(|(face, l)| solidcraft_kernel::FacePaint { face, color: l.rgb(), opacity: l.opacity as f32 }).collect();
+            let faces: Vec<torno_kernel::FacePaint> =
+                face_colors.into_iter().map(|(face, l)| torno_kernel::FacePaint { face, color: l.rgb(), opacity: l.opacity as f32 }).collect();
             let opacity = self.model_body_opacity(b) as f32;
-            let paint = solidcraft_kernel::Paint { opacity, faces };
+            let paint = torno_kernel::Paint { opacity, faces };
             if c != b.body.color() || b.body.paint() != Some(&paint) {
                 b.body = b.body.clone().with_color(c).with_paint(Some(paint));
             }
@@ -4732,7 +4732,7 @@ impl Document {
             .filter_map(|p| p.count_expression.as_ref().map(|e| (p.id.clone(), e)))
             .map(|(id, e)| {
                 let n = crate::eval::val(vals, e, Kind::Unitless)?;
-                Ok((id, solidcraft_sketch::SketchPattern::circular_quantity(n)?))
+                Ok((id, torno_sketch::SketchPattern::circular_quantity(n)?))
             })
             .collect::<Result<_>>()?;
         for (id, count) in counts {
@@ -4743,7 +4743,7 @@ impl Document {
 
     /// Evaluate the retained pattern inputs before solving its associative relations.
     pub fn apply_pattern_values(&self, vals: &std::collections::BTreeMap<String, expr::Value>, sk: &mut Sketch) -> Result<()> {
-        use solidcraft_sketch::SketchPatternKind;
+        use torno_sketch::SketchPatternKind;
         self.apply_pattern_quantities(vals, sk)?;
         for index in 0..sk.patterns.len() {
             let Some(pattern) = sk.patterns.get(index) else { continue };
@@ -4790,7 +4790,7 @@ impl Document {
                     *slot = val(vals, e, Kind::Length).map_err(|error| DocError::Expr(format!("point {} {what}: {error}", p.id)))?;
                 }
             }
-            if !(at.is_finite() && at.x.abs() < solidcraft_sketch::MAX_COORD && at.y.abs() < solidcraft_sketch::MAX_COORD) {
+            if !(at.is_finite() && at.x.abs() < torno_sketch::MAX_COORD && at.y.abs() < torno_sketch::MAX_COORD) {
                 return Err(DocError::Invalid(format!("point {} is placed out of range", p.id)));
             }
             p.pos = at;
@@ -4806,7 +4806,7 @@ impl Document {
     pub fn apply_text_values(&self, vals: &std::collections::BTreeMap<String, expr::Value>, sk: &mut Sketch) -> Result<()> {
         use crate::eval::val;
         for link in &mut sk.links {
-            let solidcraft_sketch::LinkSource::Text { text, at, height, angle, exprs, .. } = &mut link.source else { continue };
+            let torno_sketch::LinkSource::Text { text, at, height, angle, exprs, .. } = &mut link.source else { continue };
             let number = |e: &Option<String>, kind: Kind, what: &str| -> Result<Option<f64>> {
                 match e {
                     None => Ok(None),
@@ -4830,7 +4830,7 @@ impl Document {
             }
             if let Some(e) = &exprs.text {
                 let words = self.eval_words(e, vals).map_err(|error| DocError::Expr(format!("text: {error}")))?;
-                if words.trim().is_empty() || words.chars().count() > solidcraft_sketch::MAX_TEXT_CHARS {
+                if words.trim().is_empty() || words.chars().count() > torno_sketch::MAX_TEXT_CHARS {
                     return Err(DocError::Invalid(format!("text: `{e}` gives no words, or too many")));
                 }
                 *text = words;
@@ -4851,15 +4851,15 @@ impl Document {
     /// those of the stored state ([`Sketch::positions_in`]), not the ones read beside a line
     /// that has moved past a point. Where the links moved so far that the solve fails or turns
     /// part of the sketch over, they are walked there in steps
-    /// ([`solidcraft_sketch::solve_after_link_move`]).
+    /// ([`torno_sketch::solve_after_link_move`]).
     pub fn solve_sketch(
         &self,
         vals: &std::collections::BTreeMap<String, expr::Value>,
         sk: &mut Sketch,
-        stored: &solidcraft_sketch::DrivingValues,
+        stored: &torno_sketch::DrivingValues,
         moved_from: Option<&Sketch>,
-    ) -> Result<solidcraft_sketch::SolveReport> {
-        self.solve_sketch_with_analysis(vals, sk, stored, moved_from, solidcraft_sketch::Analysis::Full)
+    ) -> Result<torno_sketch::SolveReport> {
+        self.solve_sketch_with_analysis(vals, sk, stored, moved_from, torno_sketch::Analysis::Full)
     }
 
     /// [`Self::solve_sketch`] with the diagnostics needed by an internal edit. Parameter
@@ -4869,10 +4869,10 @@ impl Document {
         &self,
         vals: &std::collections::BTreeMap<String, expr::Value>,
         sk: &mut Sketch,
-        stored: &solidcraft_sketch::DrivingValues,
+        stored: &torno_sketch::DrivingValues,
         moved_from: Option<&Sketch>,
-        analysis: solidcraft_sketch::Analysis,
-    ) -> Result<solidcraft_sketch::SolveReport> {
+        analysis: torno_sketch::Analysis,
+    ) -> Result<torno_sketch::SolveReport> {
         self.apply_dimension_values(vals, sk)?;
         // A text built anew since it was stored (an expression gave it other words) has other
         // outline entities: the stored sketch is taken with this sketch's, so the points still
@@ -4883,18 +4883,18 @@ impl Document {
         let offsets = !sk.offsets.is_empty() || !sk.freeform_offsets.is_empty();
         // Offsets always require another solve after refresh. Only that last report is
         // published; the first report only decides which state the second solve starts from.
-        let first_analysis = if offsets { solidcraft_sketch::Analysis::StatusOnly } else { analysis };
+        let first_analysis = if offsets { torno_sketch::Analysis::StatusOnly } else { analysis };
         // A linked or fixed point is not where the stored sketch has it.
         let given_moved = moved_from
             .is_some_and(|from| sk.points.iter().zip(&from.points).any(|(p, q)| (p.fixed || p.link.is_some()) && p.id == q.id && p.pos != q.pos));
-        let mut report = solidcraft_sketch::solve_after_edit_with_analysis(sk, stored, was(sk).as_deref(), first_analysis);
+        let mut report = torno_sketch::solve_after_edit_with_analysis(sk, stored, was(sk).as_deref(), first_analysis);
         // Links that moved far (a large change of a size upstream): when the jump fails, or
         // lands on the mirror image of a side or turn the stored sketch has, walked there in
         // steps; a turn the walk cannot avoid either is reported as one.
         if let Some(from) = moved_from.filter(|_| given_moved) {
-            let flips = if report.ok() { solidcraft_sketch::flips_from_stored(sk, from) } else { Vec::new() };
+            let flips = if report.ok() { torno_sketch::flips_from_stored(sk, from) } else { Vec::new() };
             if !report.keeps_orientation() || !flips.is_empty() {
-                match solidcraft_sketch::solve_after_link_move(sk, from, stored, first_analysis) {
+                match torno_sketch::solve_after_link_move(sk, from, stored, first_analysis) {
                     Some(walked) => report = walked,
                     None => {
                         for id in flips {
@@ -4913,9 +4913,9 @@ impl Document {
             // Source dimensions may have moved curves during the solve.
             sk.refresh_offsets()?;
             report = if report.ok() {
-                solidcraft_sketch::solve_with(sk, &solidcraft_sketch::Hold::default(), None, analysis, None)
+                torno_sketch::solve_with(sk, &torno_sketch::Hold::default(), None, analysis, None)
             } else {
-                solidcraft_sketch::solve_after_edit_with_analysis(sk, stored, was(sk).as_deref(), analysis)
+                torno_sketch::solve_after_edit_with_analysis(sk, stored, was(sk).as_deref(), analysis)
             };
             // An attachment to the old offset can prevent the source from moving at all.
             // Retry from a source-only seed, adopting it only if every constraint still holds.

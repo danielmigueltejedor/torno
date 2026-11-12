@@ -1,9 +1,9 @@
 use crate::metrics::dimension;
 use crate::test_support::*;
 use crate::*;
-use solidcraft_theme::Tokens;
+use torno_theme::Tokens;
 
-use solidcraft_ui_registry as registry;
+use torno_ui_registry as registry;
 
 #[test]
 fn non_finite_and_tiny_row_widths_are_sanitized() {
@@ -59,12 +59,12 @@ fn file_tiles_are_fixed_height_bounded_and_disabled_actions_stay_inert() {
         frame(&ctx, vec![], |ui| {
             ui.set_width(width);
             let tile = FileView::action_tile(ui, "file:new", width, "new", "New design", "Millimetres", true);
-            assert_eq!(tile.rect.height(), solidcraft_theme::Tokens::get().file_tile_height);
+            assert_eq!(tile.rect.height(), torno_theme::Tokens::get().file_tile_height);
             assert!(tile.rect.width() <= width);
             let row = FileView::nav_row(ui, "file:save", "Save", "Ctrl+S", false, false);
             assert!(!row.enabled());
             assert!(!row.clicked());
-            assert_eq!(row.rect.height(), solidcraft_theme::Tokens::get().file_nav_height);
+            assert_eq!(row.rect.height(), torno_theme::Tokens::get().file_nav_height);
         });
     }
 }
@@ -80,11 +80,9 @@ fn file_grid_has_only_between_row_gaps_and_recovery_actions_fit_narrow_widths() 
         FileView::grid(ui, "grid", 240.0, 2, |ui, _, width| {
             rects.push(FileView::action_tile(ui, "tile", width, "new", "New", "Millimetres", true).rect);
         });
-        assert!((rects[1].top() - rects[0].bottom() - solidcraft_theme::Tokens::get().file_grid_gap).abs() < 0.1);
+        assert!((rects[1].top() - rects[0].bottom() - torno_theme::Tokens::get().file_grid_gap).abs() < 0.1);
         assert!(
-            (ui.cursor().top() - before - 2.0 * solidcraft_theme::Tokens::get().file_tile_height - solidcraft_theme::Tokens::get().file_grid_gap)
-                .abs()
-                < 0.1
+            (ui.cursor().top() - before - 2.0 * torno_theme::Tokens::get().file_tile_height - torno_theme::Tokens::get().file_grid_gap).abs() < 0.1
         );
         let (recover, discard) = FileView::recovery_banner(
             ui,

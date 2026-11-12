@@ -5,7 +5,7 @@
 //! WR-468 (`fillet_through_extended_rail_end`, the fork's tangency-labs/smlib@d33890f),
 //! which is removed (#2500); both rounded the same with and without it.
 //!
-//! - The fork's own case (its capi test for SolidCraft rig fillets/4369): a 60 x 40 x 10
+//! - The fork's own case (its capi test for Torno rig fillets/4369): a 60 x 40 x 10
 //!   block rounded r 10 in plan, a boss r 10 x 10 at (12, 32) overhanging its corner, the
 //!   boss's base arc over the block rounded R 2. The round adds the material within 2 of
 //!   the boss's foot under the quarter disc over the block's outline, to 1e-7 as the

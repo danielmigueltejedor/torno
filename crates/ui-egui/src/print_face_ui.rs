@@ -3,7 +3,7 @@
 //! changes it (`dialogs_save_mesh`). Each change is a `body.print_face` command, so it undoes.
 
 use serde_json::json;
-use solidcraft_engine::Sel;
+use torno_engine::Sel;
 
 use crate::SolveApp;
 
@@ -19,7 +19,7 @@ pub(crate) fn current(app: &SolveApp, body: &str) -> Option<Sel> {
     let world = crate::open_meshing::session_world(&app.session);
     let b = world.body(body)?;
     let face = app.session.doc.print_face(&world, b)?.ok()?;
-    let point = solidcraft_engine::doc::naming::face_spot(b, face.index).map_or(face.point, |spot| spot.point);
+    let point = torno_engine::doc::naming::face_spot(b, face.index).map_or(face.point, |spot| spot.point);
     Some(Sel::Face { body: body.to_string(), index: face.index, point })
 }
 
@@ -40,23 +40,23 @@ pub(crate) fn toggle(app: &mut SolveApp) {
         _ => None,
     };
     let Some((face, body, index)) = picked else {
-        app.set_status(solidcraft_ui_text::tr("ui.print_face_pick"), true);
+        app.set_status(torno_ui_text::tr("ui.print_face_pick"), true);
         return;
     };
     let clear = is_print_face(app, &body, index);
     if set(app, &body, if clear { None } else { Some(&face) }) {
         let id = if clear { "ui.print_face_cleared" } else { "ui.print_face_set" };
-        app.set_status(solidcraft_ui_text::format(id, &[("body", &body)]), false);
+        app.set_status(torno_ui_text::format(id, &[("body", &body)]), false);
     }
 }
 
 #[cfg(test)]
 mod tests {
     use serde_json::json;
-    use solidcraft_engine::Sel;
+    use torno_engine::Sel;
 
     fn app() -> crate::SolveApp {
-        let mut app = crate::SolveApp::new(solidcraft_engine::Session::default(), crate::Services::default());
+        let mut app = crate::SolveApp::new(torno_engine::Session::default(), crate::Services::default());
         app.run("solid.box", json!({"length": 20, "width": 10, "height": 5, "corner": [0, 0, 0], "body_name": "Block"})).unwrap();
         app
     }
@@ -66,7 +66,7 @@ mod tests {
         let world = crate::open_meshing::session_world(&app.session);
         let body = world.body("Block").unwrap();
         let p = solidcore_record::Vec3::new(point[0], point[1], point[2]);
-        let index = solidcraft_engine::doc::appearance::face_index_at(body, p).unwrap();
+        let index = torno_engine::doc::appearance::face_index_at(body, p).unwrap();
         app.session.selection = vec![Sel::Face { body: "Block".into(), index, point: p }];
         index
     }

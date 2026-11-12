@@ -3,7 +3,7 @@
 
 use serde_json::json;
 use solidcore_record::Vec3;
-use solidcraft_geom::prelude::*;
+use torno_geom::prelude::*;
 
 use super::tests::{occ, place, run};
 use crate::Session;

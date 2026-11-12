@@ -1,7 +1,7 @@
 //! A cone or cylinder continued naturally past one side of a face's parameter box: the
 //! analytic itself over a wider STEP domain, so a sheet extended past a side keeps its kind.
 //!
-//! Not upstream: SolidCraft's composition (`cone_continued`), moved into the kernel so the
+//! Not upstream: Torno's composition (`cone_continued`), moved into the kernel so the
 //! modelling layer computes no geometry (docs/layers.md §1). It is an exact class at bound 0
 //! (owner rule 13564): the result is a [`Cone`] with the source's placement, radius and
 //! semi-angle (its label), and its NURBS form is proved on that one implicit surface

@@ -2,9 +2,9 @@ use super::*;
 use crate::scenario::Harness;
 use crate::viewport::NavMode;
 use serde_json::json;
-use solidcraft_viewport::StandardView;
+use torno_viewport::StandardView;
 
-/// SolidCraft's default navigation bar measured on `canvas` with `caps`.
+/// Torno's default navigation bar measured on `canvas` with `caps`.
 fn default_bar(canvas: Rect, caps: crate::navigation::NavCaps) -> Rect {
     crate::navigation_slots::install();
     crate::ui_kit::nav_bar_layout::measure(canvas, &Default::default(), |slot| caps.shows(slot), |_| 0.0).rect
@@ -34,8 +34,8 @@ fn assert_navigator_shared_zoom(app: &crate::SolveApp, camera: Camera) {
             region
                 .fit_rect_with_clearance(
                     1.0,
-                    solidcraft_engine::panels::Point { x: picture.viewport.center().x, y: picture.viewport.center().y },
-                    solidcraft_theme::Tokens::get().space_8,
+                    torno_engine::panels::Point { x: picture.viewport.center().x, y: picture.viewport.center().y },
+                    torno_theme::Tokens::get().space_8,
                 )
                 .is_some(),
             "the Render fixture must leave clear picture room: {context}; free={:?}",
@@ -140,7 +140,7 @@ fn navigator_front_probe_shares_zoom_in_classic_measured_and_unmeasured_hosts() 
         for perspective in [false, true] {
             h.app.ui.perspective = perspective;
             h.app.ui.auto_ortho_faces = false;
-            for up in [solidcraft_viewport::UpAxis::Z, solidcraft_viewport::UpAxis::Y] {
+            for up in [torno_viewport::UpAxis::Z, torno_viewport::UpAxis::Y] {
                 assert_navigator_shared_zoom(&h.app, Camera { up, fov: 0.95, ..Default::default() });
             }
         }
@@ -160,7 +160,7 @@ fn navigator_render_keeps_classic_probe_and_host_authored_lens_and_picture() {
             let picture = crate::render_workspace::picture_layout(&h.app, layout);
             let outer = h.app.viewport.rect.unwrap();
             assert!(picture.viewport.width() < outer.width(), "the portrait frame must exercise a distinct projection");
-            for up in [solidcraft_viewport::UpAxis::Z, solidcraft_viewport::UpAxis::Y] {
+            for up in [torno_viewport::UpAxis::Z, torno_viewport::UpAxis::Y] {
                 assert_navigator_shared_zoom(&h.app, Camera { up, fov, ..Default::default() });
             }
         }
@@ -240,7 +240,7 @@ fn host_picture_fit_keeps_product_lens_and_padded_corners_in_the_picture_contour
                     }
                 }
                 assert!(
-                    region.contains_rect(logical_rect(footprint.expand(solidcraft_theme::Tokens::get().space_4))),
+                    region.contains_rect(logical_rect(footprint.expand(torno_theme::Tokens::get().space_4))),
                     "{footprint:?} in {:?}",
                     egui_rect(region.domain)
                 );
@@ -444,7 +444,7 @@ fn host_fit_uses_the_actual_contour_and_model_extent_with_the_full_projection() 
             assert!(usable.contains_rect(logical_rect(control)));
             assert!(obstacles.iter().all(|obstacle| !control.intersect(*obstacle).is_positive()));
         }
-        assert!(!layout.axis_view.expand(solidcraft_theme::Tokens::get().space_4).intersect(layout.navigation).is_positive());
+        assert!(!layout.axis_view.expand(torno_theme::Tokens::get().space_4).intersect(layout.navigation).is_positive());
         for bounds in [
             Aabb3 { min: Vec3::new(-90.0, -5.0, -2.0), max: Vec3::new(110.0, 5.0, 2.0) },
             Aabb3 { min: Vec3::new(-5.0, -90.0, -2.0), max: Vec3::new(5.0, 110.0, 2.0) },
@@ -534,7 +534,7 @@ fn host_fit_keeps_thin_and_degenerate_model_footprints_padded_at_both_scales() {
                             }
                         }
                         assert!(projected.is_finite());
-                        let padding = solidcraft_theme::Tokens::get().space_8;
+                        let padding = torno_theme::Tokens::get().space_8;
                         let padded = projected.expand(padding - 0.01);
                         assert!(
                             safe.contains_rect(logical_rect(padded)),

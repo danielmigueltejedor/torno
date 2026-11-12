@@ -193,10 +193,10 @@
     "boolean2d"
   ],
   "ungraded": [
-    "flat_pattern: SolidCraft computes it"
+    "flat_pattern: Torno computes it"
   ],
   "what": "the flat pattern of 003's tray: its outline's size and area, and its four bend lines",
   "why_not": [
-    "body \"Body1\" is no kernel operation's output nor an operand: SolidCraft built it or changed the kernel's record"
+    "body \"Body1\" is no kernel operation's output nor an operand: Torno built it or changed the kernel's record"
   ]
 }

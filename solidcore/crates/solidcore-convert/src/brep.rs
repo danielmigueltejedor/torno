@@ -96,7 +96,7 @@ pub struct Order {
 }
 
 /// A kernel edge solids touch along, as [`to_record`] writes it: one record edge per pair of
-/// faces it separates (SolidCraft's `history::Piece`). An edge with uses on three or more faces
+/// faces it separates (Torno's `history::Piece`). An edge with uses on three or more faces
 /// has one [`Piece`] per record edge [`to_record`] copied it into, each with the faces of that
 /// copy's own uses (two, for the sector pairs the radial order gives); none is merged or split
 /// here.
@@ -609,7 +609,7 @@ fn data(k: &Kernel, rec: &r::Brep, bare: &[(u32, u32, u32)]) -> R<BrepData> {
     Ok(d)
 }
 
-/// The body's and each face's tolerance from the edges' and vertices' own, as SolidCraft's
+/// The body's and each face's tolerance from the edges' and vertices' own, as Torno's
 /// flat import took them (`own_tolerances`, after the capi's): the kernel's build raises every
 /// entity to the body's, so the body's is the least of the record's and its edges' and
 /// vertices', and a face's the least of its loops' edges' and vertices', at most the record's.

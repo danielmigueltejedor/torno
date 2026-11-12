@@ -12,7 +12,7 @@ use schemars::{JsonSchema, Schema, SchemaGenerator, json_schema};
 use serde::de::Error as _;
 use serde::{Deserialize, Deserializer, Serialize};
 use serde_json::{Map, Value, json};
-use solidcraft_geom::Vec3Geom;
+use torno_geom::Vec3Geom;
 
 use super::check::whole;
 use super::motion::{JointRef, PartList, require, some_study, study_ref_schema};

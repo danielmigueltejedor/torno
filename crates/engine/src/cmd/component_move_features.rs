@@ -8,7 +8,7 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 
-use solidcraft_doc::{Feature, FeatureKind, is_identity, mat_inverse, mat_mul};
+use torno_doc::{Feature, FeatureKind, is_identity, mat_inverse, mat_mul};
 
 use super::super::clipboard::explicit_planes;
 use super::*;
@@ -98,10 +98,9 @@ pub(super) fn move_features(s: &mut Session, p: &Value) -> Result<Value> {
                         let old = s.doc.feature(f.id).ok_or_else(|| bad(cmd, "attached sketch no longer exists"))?;
                         mat_mul(&to_dest, &s.doc.component_transform(old.component))
                     } else {
-                        solidcraft_doc::IDENTITY
+                        torno_doc::IDENTITY
                     };
-                    let source_delta =
-                        if moved_body { mat_mul(&to_dest, &s.doc.component_transform(anchor.component)) } else { solidcraft_doc::IDENTITY };
+                    let source_delta = if moved_body { mat_mul(&to_dest, &s.doc.component_transform(anchor.component)) } else { torno_doc::IDENTITY };
                     anchor.reframe_placement(&author_delta, &source_delta)?;
                     rewrite(&anchor.target.body, &mut anchor.path, &mut anchor.author_path);
                     if moved_body {

@@ -1,12 +1,12 @@
-//! #2307 regression (SolidCraft's `report-peg-front-chamfer-d1-then-concave-chamfer-d2`): a
+//! #2307 regression (Torno's `report-peg-front-chamfer-d1-then-concave-chamfer-d2`): a
 //! bar 40 x 16 x 10 whose far end is a half disc R8 about (40, 8), with a disc R8 about the
 //! same centre extruded 10 up on its top; its front top edge chamfered 1, then its concave
 //! arc chamfered 2. The second chamfer's chain runs on down the first chamfer's end on the
 //! cylinder, which leaves the front face tangentially: a mixed-convexity End
 //! (WR-697, the fork's 3e26f76 `CalcRailIntEndSurface`).
 //!
-//! The inputs are the bodies SolidCraft passed to each chamfer (binary SMB, written by
-//! solidcore main c002debb5). The chamfer is SolidCraft's: the nearest edge, radius
+//! The inputs are the bodies Torno passed to each chamfer (binary SMB, written by
+//! solidcore main c002debb5). The chamfer is Torno's: the nearest edge, radius
 //! `d sqrt((1 - c) / (1 + c))` from the binormals at the edge's middle, a linear section
 //! on a constant radius solver with that second radius, every corner a bevel, then
 //! `StitchAndOrient`.
@@ -40,8 +40,8 @@ use solidcore::topology::topology::NotifyRecords;
 use solidcore::topology::{edge, loopuse, EdgeId};
 use solidcore::Brep;
 
-const INPUT_1: &[u8] = include_bytes!("data/issue_2307_solidcraft_peg_before_chamfer1.smb");
-const INPUT_2: &[u8] = include_bytes!("data/issue_2307_solidcraft_peg_before_chamfer2.smb");
+const INPUT_1: &[u8] = include_bytes!("data/issue_2307_torno_peg_before_chamfer1.smb");
+const INPUT_2: &[u8] = include_bytes!("data/issue_2307_torno_peg_before_chamfer2.smb");
 
 /// Chamfer 1: the front top edge, d 1.
 const FRONT_TOP: [f64; 3] = [20.0, 0.0, 10.0];
@@ -55,7 +55,7 @@ const FORK_BOTH: f64 = 9_432.066_057_685_654;
 /// The fork's chamfer 2 on the dumped input 2.
 const FORK_TWO_ON_DUMP: f64 = 9_432.066_057_685_648;
 
-/// Every opt-in fix on (SolidCraft's pin-16 set).
+/// Every opt-in fix on (Torno's pin-16 set).
 fn kernel() -> Kernel {
     Kernel {
         fixes: UpstreamFixes::all(),
@@ -63,7 +63,7 @@ fn kernel() -> Kernel {
     }
 }
 
-/// A SolidCraft file, read under the notification naming as SolidCraft reads it.
+/// A Torno file, read under the notification naming as Torno reads it.
 fn read(k: &mut Kernel, bytes: &[u8]) -> Brep {
     let mut attributes = AttributeStore::default();
     let mut records = NotifyRecords::new();
@@ -102,7 +102,7 @@ fn pick(k: &Kernel, b: &Brep, p: [f64; 3]) -> EdgeId {
     best.1.unwrap()
 }
 
-/// SolidCraft's chamfer of the edge nearest `p` at distance `d`, the body checked sound.
+/// Torno's chamfer of the edge nearest `p` at distance `d`, the body checked sound.
 fn chamfer(k: &mut Kernel, b: &mut Brep, p: [f64; 3], d: f64) {
     let e = pick(k, b, p);
     let u0 = edge::blend_edgeuse(k, b, e).unwrap().unwrap();
@@ -170,9 +170,9 @@ fn both_chamfers_end_as_the_fork_s() {
     assert_rel(both, FORK_BOTH, "both");
 }
 
-/// Chamfer 2 on SolidCraft's input 2: the fork's value on the same input.
+/// Chamfer 2 on Torno's input 2: the fork's value on the same input.
 #[test]
-fn the_concave_arc_s_chamfer_on_solidcraft_s_input() {
+fn the_concave_arc_s_chamfer_on_torno_s_input() {
     let mut k = kernel();
     let mut b = read(&mut k, INPUT_2);
     chamfer(&mut k, &mut b, CONCAVE_ARC, 2.0);

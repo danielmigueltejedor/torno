@@ -121,6 +121,6 @@
   "ungraded": [],
   "what": "a U channel modelled with its bend radii (R2 inside, R4 outside), a 6 mm hole in one wall and a label engraved 0.2 deep in its web, converted at the bends' outer arcs",
   "why_not": [
-    "body \"Channel\" is no kernel operation's output nor an operand: SolidCraft built it or changed the kernel's record"
+    "body \"Channel\" is no kernel operation's output nor an operand: Torno built it or changed the kernel's record"
   ]
 }

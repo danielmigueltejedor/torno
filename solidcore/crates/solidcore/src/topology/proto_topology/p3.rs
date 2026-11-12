@@ -17,10 +17,10 @@
 //! Deviations:
 //! - **Vertices placed by their best edge crossing** (not upstream, WR-410,
 //!   tangency-labs/solidcore#1059, opt-in `Kernel::fixes.boolean_vertex_by_best_crossing`;
-//!   the SolidCraft fork's `FindOrCreateProtoEdge` change): after each end's proto vertex,
+//!   the Torno fork's `FindOrCreateProtoEdge` change): after each end's proto vertex,
 //!   [`ProtoTopologyManager::add_crossing`] with the angle at which the face pair's curve
 //!   crosses the edge its end lies on (`crossing_sine`).
-//! - **Removed proto edges** (SolidCraft fix, tangency-labs/smlib 93efd6d, UB-239).
+//! - **Removed proto edges** (Torno fix, tangency-labs/smlib 93efd6d, UB-239).
 //!   Upstream's `SplitIntersectingProtoEdges` deletes the combined-away proto edge while
 //!   other proto edges (overlap lists) still name it (`CombineProtoEdge` hands its
 //!   proto faces to the survivor), and later passes read it after the free. Here every
@@ -30,7 +30,7 @@
 //!   deleting a proto edge on its own (the difftest's script ops) stays upstream's.
 //!   Without it, the stale id names a deleted slot and the later passes fail with
 //!   `InvalidInput`.
-//! - **UB-241 in `GlueCoincidentBrepVertices`** (SolidCraft fix, tangency-labs/smlib
+//! - **UB-241 in `GlueCoincidentBrepVertices`** (Torno fix, tangency-labs/smlib
 //!   da8d05e): use-after-free in `GlueCoincidentBrepVertices` on the `GlueVertices`
 //!   path; the port stops before that call. The delete branch is defined and runs as
 //!   upstream.
@@ -1272,7 +1272,7 @@ impl<O: ClassObject> ProtoTopologyManager<O> {
                         }
                     } else {
                         for &edge in edges {
-                            // UB-241 (SolidCraft fix, tangency-labs/smlib da8d05e): stop
+                            // UB-241 (Torno fix, tangency-labs/smlib da8d05e): stop
                             // before the GlueVertices path; the delete branch runs as
                             // upstream.
                             let v2_deleted = deleted_v.get(jj).copied().flatten() == Some(v2);
@@ -1896,7 +1896,7 @@ fn set_slot<O: Copy>(list: &mut [Option<O>], index: usize, vertex: O) {
     }
 }
 
-/// Not upstream (WR-410; the SolidCraft fork's `sm_EdgeCrossingSine`): the sine of the
+/// Not upstream (WR-410; the Torno fork's `sm_EdgeCrossingSine`): the sine of the
 /// angle at which a curve interval's curve (`curve`, over `interval`) crosses the edge its
 /// end classification `pc` lies on, at the interval's end (`at_end`) or start; `-1` when
 /// that end is not on an edge with a curve, its parameters are unset, an evaluation
@@ -1953,7 +1953,7 @@ fn edge_crossing_sine<O: ClassObject>(
     Ok(c.cross(e).length() / len)
 }
 
-/// Not upstream (WR-410; the SolidCraft fork's `sm_CrossingSine`): the sine of the angle
+/// Not upstream (WR-410; the Torno fork's `sm_CrossingSine`): the sine of the angle
 /// at which a face pair's intersection curve crosses an edge at one end (`at_end`, else
 /// the start) of the curve interval pair `ci1`, `ci2`: the smaller of the two when both
 /// ends lie on edges, `-1` when neither does.

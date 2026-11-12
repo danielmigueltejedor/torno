@@ -9,7 +9,7 @@ use serde::de::Error as _;
 use serde::{Deserialize, Deserializer};
 use serde_json::{Value, json};
 use solidcore_record::{Vec2, Vec3};
-use solidcraft_doc::{Expr, Operation, ThinSide, Touching};
+use torno_doc::{Expr, Operation, ThinSide, Touching};
 
 use super::check::{keyed, whole};
 use crate::params;
@@ -284,7 +284,7 @@ impl JsonSchema for AxisDir {
 /// `Camera`, with finite fields, a positive distance and a field of view in [0, π), and the
 /// handlers' message, "invalid camera", for anything else (#10898).
 #[derive(Clone, Copy, Debug, PartialEq)]
-pub struct CameraParam(pub solidcraft_viewport::Camera);
+pub struct CameraParam(pub torno_viewport::Camera);
 
 impl<'de> Deserialize<'de> for CameraParam {
     fn deserialize<D: Deserializer<'de>>(d: D) -> Result<Self, D::Error> {
@@ -747,7 +747,7 @@ impl JsonSchema for ExtentKeyword {
 
 /// Extrude's distance convention, as `extent_param` reads it (serde, case-sensitive).
 #[derive(Clone, Debug, PartialEq)]
-pub struct ConventionParam(pub solidcraft_doc::ExtrudeConvention);
+pub struct ConventionParam(pub torno_doc::ExtrudeConvention);
 
 impl<'de> Deserialize<'de> for ConventionParam {
     fn deserialize<D: Deserializer<'de>>(d: D) -> Result<Self, D::Error> {
@@ -879,7 +879,7 @@ impl JsonSchema for ProfilesParam {
 /// A face given to a command, as `face::face_ref` reads it: a point on the face (`[x, y, z]`,
 /// `{x, y, z}` or `{point}`) or its name as `model.faces` lists it (1 to 512 bytes; the
 /// schema's `maxLength` counts characters, so it can't say bytes). Whether it finds a face is
-/// checked by the handler, which has the design. (Not `solidcraft_doc::FacePick`, the stored
+/// checked by the handler, which has the design. (Not `torno_doc::FacePick`, the stored
 /// pick.)
 #[derive(Clone, Debug, PartialEq)]
 pub enum FaceRef {
@@ -918,7 +918,7 @@ impl JsonSchema for FaceRef {
 /// edge (`[x, y, z]`, `{x, y, z}` or `{point}`), else `{body, index}` in the body's edge order.
 /// The index is whole-number JSON, as `Value::as_u64` reads it: JSON Schema also counts `1.0`
 /// as an integer, which the reader refuses. Whether it finds an edge is checked by the handler,
-/// which has the design. (Not `solidcraft_doc::EdgeRef`, the stored edge position.)
+/// which has the design. (Not `torno_doc::EdgeRef`, the stored edge position.)
 #[derive(Clone, Debug, PartialEq)]
 pub enum EdgeRef {
     Point(Vec3),
@@ -1074,7 +1074,7 @@ impl JsonSchema for SketchRef {
 /// A sweep's `orientation`, as `features::sweep_orientation` reads it, with its messages.
 /// `null` is the default, as the handler reads it.
 #[derive(Clone, Copy, Debug, PartialEq)]
-pub struct SweepOrientationParam(pub solidcraft_doc::SweepOrientation);
+pub struct SweepOrientationParam(pub torno_doc::SweepOrientation);
 
 impl<'de> Deserialize<'de> for SweepOrientationParam {
     fn deserialize<D: Deserializer<'de>>(d: D) -> Result<Self, D::Error> {
@@ -1114,7 +1114,7 @@ impl<'de> Deserialize<'de> for SweepTwist {
 
 /// Guide rails' `rail_fit`, as `features::rail_fit_form` reads it, with its message.
 #[derive(Clone, Copy, Debug, PartialEq)]
-pub struct RailFitParam(pub solidcraft_doc::RailFit);
+pub struct RailFitParam(pub torno_doc::RailFit);
 
 impl<'de> Deserialize<'de> for RailFitParam {
     fn deserialize<D: Deserializer<'de>>(d: D) -> Result<Self, D::Error> {
@@ -1288,7 +1288,7 @@ fn geo_problem(v: &Value) -> Option<String> {
     }
 }
 
-/// The reference types a saved reference's `type` names (`solidcraft_doc::construct::GeoRef`).
+/// The reference types a saved reference's `type` names (`torno_doc::construct::GeoRef`).
 const SAVED_REFS: [&str; 12] =
     ["point", "datum", "origin", "vertex", "edge", "face", "plane", "world", "axis", "construct_point", "sketch_point", "sketch_curve"];
 
@@ -1403,10 +1403,10 @@ impl JsonSchema for PlaneOrFace {
 /// anything up in the design: a reference that isn't a picked or saved face or edge.
 fn model_axis_problem(v: &Value) -> Option<String> {
     use crate::cmd::GeoForm;
-    use solidcraft_doc::construct::GeoRef;
+    use torno_doc::construct::GeoRef;
     geo_problem(v).or_else(|| match crate::cmd::geo_form(v) {
         Ok(GeoForm::Face(_) | GeoForm::Edge(_) | GeoForm::Saved(GeoRef::Face { .. } | GeoRef::Edge { .. })) => None,
-        _ => Some(solidcraft_doc::construct::MODEL_AXIS_REFS.to_string()),
+        _ => Some(torno_doc::construct::MODEL_AXIS_REFS.to_string()),
     })
 }
 
@@ -1475,7 +1475,7 @@ impl<'de> Deserialize<'de> for PatternAxis {
         if serde_json::from_value::<PointExpr3>(origin.clone()).is_err() {
             return Err(D::Error::custom(whole("`axis.origin` must be a point [x, y, z] of numbers or length expressions")));
         }
-        if v.get("dir").and_then(params::vec3).and_then(solidcraft_geom::Vec3Geom::normalized).is_none() {
+        if v.get("dir").and_then(params::vec3).and_then(torno_geom::Vec3Geom::normalized).is_none() {
             return Err(D::Error::custom(whole("axis needs a non-zero `dir`")));
         }
         Ok(PatternAxis(v))
@@ -1609,7 +1609,7 @@ impl JsonSchema for RevolveDirection {
 
 /// Revolve's angular start, as the handler reads `convention` (serde, case-sensitive).
 #[derive(Clone, Debug, PartialEq)]
-pub struct RevolveConventionParam(pub solidcraft_doc::RevolveConvention);
+pub struct RevolveConventionParam(pub torno_doc::RevolveConvention);
 
 impl<'de> Deserialize<'de> for RevolveConventionParam {
     fn deserialize<D: Deserializer<'de>>(d: D) -> Result<Self, D::Error> {

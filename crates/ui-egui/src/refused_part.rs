@@ -3,9 +3,9 @@
 //! part is listed (the browser), with what to do: repair the part, or look at the face.
 
 use serde_json::{Value, json};
-use solidcraft_engine::Sel;
-use solidcraft_engine::doc::kernel::SurfaceKind;
-use solidcraft_engine::doc::{FeatureKind, ModelState, PlaneRef};
+use torno_engine::Sel;
+use torno_engine::doc::kernel::SurfaceKind;
+use torno_engine::doc::{FeatureKind, ModelState, PlaneRef};
 
 use crate::SolveApp;
 
@@ -72,7 +72,7 @@ pub(crate) fn message(part: &RefusedPart, operation: Option<&str>) -> String {
         Some("intersect") => "refused.intersect",
         _ => "refused.change",
     };
-    format!("{} {}", solidcraft_ui_text::format(what, &[("body", &part.body)]), solidcraft_ui_text::tr(why_key(part)))
+    format!("{} {}", torno_ui_text::format(what, &[("body", &part.body)]), torno_ui_text::tr(why_key(part)))
 }
 
 /// What is wrong with the part, as a sentence id.
@@ -117,7 +117,7 @@ pub(crate) fn show_face(app: &mut SolveApp, part: &RefusedPart) {
     let Some(b) = world.body(&part.body) else { return };
     let mesh = b.mesh();
     let corners = mesh.tri_face.iter().zip(&mesh.triangles).filter(|(f, _)| **f as usize == face).flat_map(|(_, t)| t.iter());
-    let bounds: solidcraft_engine::geom::Aabb3 = corners.filter_map(|i| mesh.positions.get(*i as usize).copied()).collect();
+    let bounds: torno_engine::geom::Aabb3 = corners.filter_map(|i| mesh.positions.get(*i as usize).copied()).collect();
     if !bounds.is_empty() {
         app.frame_bounds(bounds);
     }
@@ -132,7 +132,7 @@ mod tests {
     #[test]
     fn a_refused_part_is_named_with_what_is_wrong_with_it() {
         crate::i18n::install();
-        let _english = solidcraft_ui_text::scope("en");
+        let _english = torno_ui_text::scope("en");
         let rounded = RefusedPart { body: "VALVE_COVER_01".into(), face: Some(412), surface: Some(SurfaceKind::Torus) };
         assert_eq!(message(&rounded, Some("join")), "Couldn't join to VALVE_COVER_01. One of its rounded faces can't be used for modelling.");
         let apart = RefusedPart { body: "Bracket".into(), face: None, surface: None };

@@ -18,12 +18,12 @@ use schemars::{JsonSchema, Schema, SchemaGenerator, json_schema};
 use serde::de::{DeserializeOwned, Error as _};
 use serde::{Deserialize, Deserializer, Serialize};
 use serde_json::{Map, Value};
-use solidcraft_doc::physical_material::ValidatedCard;
-use solidcraft_doc::render_resources::HdrId;
-use solidcraft_doc::render_settings::RenderSetup;
-use solidcraft_render::job::StudioLighting;
-use solidcraft_render::job::textures::PlanarFrame;
-use solidcraft_render::stage::Stage;
+use torno_doc::physical_material::ValidatedCard;
+use torno_doc::render_resources::HdrId;
+use torno_doc::render_settings::RenderSetup;
+use torno_render::job::StudioLighting;
+use torno_render::job::textures::PlanarFrame;
+use torno_render::stage::Stage;
 
 use super::appearance::AppearanceAssignResult;
 use super::check::whole;
@@ -364,8 +364,8 @@ pub struct StableRenderTarget {
     pub occurrence_path: Vec<u64>,
 }
 
-impl From<&solidcraft_doc::render_surface::RenderBodyTarget> for StableRenderTarget {
-    fn from(target: &solidcraft_doc::render_surface::RenderBodyTarget) -> Self {
+impl From<&torno_doc::render_surface::RenderBodyTarget> for StableRenderTarget {
+    fn from(target: &torno_doc::render_surface::RenderBodyTarget) -> Self {
         Self {
             definition: target.definition.clone(),
             feature: target.feature,

@@ -1,5 +1,5 @@
-//! Portable B-rep data, independent of a modelling backend: SolidCraft's native B-rep record.
-//! Millimetres, radians, right-handed Z-up. See SolidCraft's docs/native-brep.md for semantics.
+//! Portable B-rep data, independent of a modelling backend: Torno's native B-rep record.
+//! Millimetres, radians, right-handed Z-up. See Torno's docs/native-brep.md for semantics.
 //! Validation checks structure and resource budgets only: counts, indices, finite numbers, knot
 //! vectors, parameter ranges, topology and canonical order. It computes no geometry; the kernel
 //! checks that frames are orthonormal, planes and placements not degenerate, and that the

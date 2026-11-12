@@ -4,7 +4,7 @@
 //! [`from_parameters`](crate::surface::from_parameters), which it calls for the labels with
 //! parameters of their own.
 //!
-//! Not upstream: SolidCraft's flat-array import of faces (a revolution's exact NURBS, a ball
+//! Not upstream: Torno's flat-array import of faces (a revolution's exact NURBS, a ball
 //! patch on its net, an analytic face on its NURBS form, the recognition of revolutions and
 //! extruded circles as analytic surfaces), moved into the kernel (docs/layers.md §1).
 //!

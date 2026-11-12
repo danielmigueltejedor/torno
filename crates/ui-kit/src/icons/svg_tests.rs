@@ -57,7 +57,7 @@ fn non_blue_dashed_strokes_use_guides_but_preserve_accents_and_knockouts() {
     assert_eq!(blue.stroke, Paint::Role(active));
     for dark in [false, true] {
         for accent in std::iter::once(None).chain((0..TEST_SET.data().accent_names.len()).map(Some)) {
-            let look = Look { dark, accent, vision: solidcraft_theme::ColorVision::Off, palette: None };
+            let look = Look { dark, accent, vision: torno_theme::ColorVision::Off, palette: None };
             assert_eq!(TEST_SET.role_rgb(look, guide), TEST_SET.data().palette[usize::from(dark)][guide]);
             let pm = render(&doc, look, 64).unwrap();
             let rgb = |x, y| {
@@ -90,10 +90,10 @@ fn aliases_and_defaults_choose_the_accent() {
     assert_eq!((warm.master, warm.accent), ("bar", TEST_SET.accent_index("warm")));
     assert_eq!(TEST_SET.accent_index(""), None);
     assert_eq!(TEST_SET.accent_index("unknown"), None);
-    let look = Look { dark: false, accent: warm.accent, vision: solidcraft_theme::ColorVision::Off, palette: None };
+    let look = Look { dark: false, accent: warm.accent, vision: torno_theme::ColorVision::Off, palette: None };
     assert_eq!(TEST_SET.role_colour("active-3", look), Color32::from_rgb(0xc0, 0x40, 0x10));
     assert_eq!(TEST_SET.role_colour("gap", look), Color32::TRANSPARENT);
-    assert_eq!(TEST_SET.primary("warm_bar", true, solidcraft_theme::ColorVision::Off), Color32::from_rgb(0xd0, 0x60, 0x20));
+    assert_eq!(TEST_SET.primary("warm_bar", true, torno_theme::ColorVision::Off), Color32::from_rgb(0xd0, 0x60, 0x20));
 }
 
 #[test]
@@ -127,7 +127,7 @@ fn hostile_artwork_is_an_error_not_a_panic() {
 
 #[test]
 fn an_extended_set_draws_the_hosts_masters_first_in_the_sets_palette() {
-    let look = Look { dark: false, accent: None, vision: solidcraft_theme::ColorVision::Off, palette: None };
+    let look = Look { dark: false, accent: None, vision: torno_theme::ColorVision::Off, palette: None };
     let drawn = |set: &'static IconSet, name: &str| render(set.doc_for(set.resolve(name).master, 64).unwrap(), look, 64).unwrap().data().to_vec();
     let parsed = |src: &str| render(&EXTENDED.parse(src).unwrap(), look, 64).unwrap().data().to_vec();
     // The host's `bar` replaces the set's; the set's own masters stay.
@@ -149,7 +149,7 @@ fn an_extended_set_draws_the_hosts_masters_first_in_the_sets_palette() {
     // One palette: the set's roles and accents.
     let warm = Look { accent: EXTENDED.accent_index("warm"), ..look };
     assert_eq!(EXTENDED.role_colour("active-3", warm), TEST_SET.role_colour("active-3", warm));
-    assert_eq!(EXTENDED.primary("dot", true, solidcraft_theme::ColorVision::Off), Color32::from_rgb(0xd0, 0x60, 0x20));
+    assert_eq!(EXTENDED.primary("dot", true, torno_theme::ColorVision::Off), Color32::from_rgb(0xd0, 0x60, 0x20));
     // The set it extends is unchanged.
     assert_eq!(TEST_SET.master_ids(), ["bar", "placeholder"]);
     assert_eq!(drawn(&TEST_SET, "warm_bar"), drawn(&TEST_SET, "bar"));

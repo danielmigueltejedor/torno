@@ -1,7 +1,7 @@
 //! Assistant entry point and its status mark, shared by application chrome and previews.
 use crate::icons;
 use egui::{FontId, Rect, Response, Stroke, vec2};
-use solidcraft_theme::Tokens;
+use torno_theme::Tokens;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum AssistantEntryState {

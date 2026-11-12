@@ -6,13 +6,13 @@
 //! are merged, edges between merged faces disappear, and chains of edges through vertices that
 //! only join two pieces of one edge are counted once.
 
-use solidcraft_geom::prelude::*;
 use std::collections::{BTreeMap, HashMap, HashSet};
+use torno_geom::prelude::*;
 
 use serde::Serialize;
 use solidcore_record::Vec3;
 use solidcore_record::brep::{Brep, Loop};
-use solidcraft_geom::{Mesh, UnitVec3};
+use torno_geom::{Mesh, UnitVec3};
 
 use crate::Result;
 use crate::body::Body;
@@ -305,7 +305,7 @@ pub fn cylinder_face_at(b: &Body, p: Vec3) -> Option<CylinderFace> {
     let mut near: HashMap<u32, f64> = HashMap::new();
     for (t, f) in mesh.triangles.iter().zip(&mesh.tri_face) {
         let Some([a, bb, c]) = mesh.tri(t) else { continue };
-        let d = solidcraft_geom::compare::closest_on_triangle(p, a, bb, c).dist(p);
+        let d = torno_geom::compare::closest_on_triangle(p, a, bb, c).dist(p);
         near.entry(*f).and_modify(|x| *x = x.min(d)).or_insert(d);
     }
     let nearest = near.values().copied().fold(f64::INFINITY, f64::min);

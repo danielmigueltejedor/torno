@@ -41,9 +41,9 @@
 //! each end span and leaves every joint's conditions alone.
 
 use solidcore_record::Vec3;
-use solidcraft_geom::brep::eval::SurfaceEval;
-use solidcraft_geom::bspline::{CurveN, HPoint, MAX_SPLINE_DEGREE, NurbsSurface};
-use solidcraft_geom::prelude::*;
+use torno_geom::brep::eval::SurfaceEval;
+use torno_geom::bspline::{CurveN, HPoint, MAX_SPLINE_DEGREE, NurbsSurface};
+use torno_geom::prelude::*;
 
 use crate::body::Body;
 use crate::bridge::{Continuity, Frame};

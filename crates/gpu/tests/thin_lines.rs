@@ -1,23 +1,23 @@
 //! Lines thinner than a pixel (the grid's minor lines are 0.7 px) are drawn wherever they fall,
 //! without multisampling (#2823). A quad narrower than a pixel covers no pixel centre when it
 //! falls between two rows, so such lines came and went as the view zoomed. Skipped, with the
-//! reason printed, without a GPU adapter (`SOLIDCRAFT_REQUIRE_GPU=1` makes that a failure).
+//! reason printed, without a GPU adapter (`TORNO_REQUIRE_GPU=1` makes that a failure).
 
 use solidcore_record::Vec3;
-use solidcraft_viewport::{Camera, Rgb, Scene, SceneLine, StandardView};
-use solidcraft_viewport_gpu::GpuError;
-use solidcraft_viewport_gpu::capture::Capturer;
+use torno_viewport::{Camera, Rgb, Scene, SceneLine, StandardView};
+use torno_viewport_gpu::GpuError;
+use torno_viewport_gpu::capture::Capturer;
 
 /// Pictures drawn with one sample per pixel: with 4× multisampling a thin line covers some
 /// samples wherever it falls, which hides the fault.
 fn capturer() -> Option<&'static Capturer> {
-    static SINGLE: std::sync::OnceLock<solidcraft_viewport_gpu::Result<Capturer>> = std::sync::OnceLock::new();
-    match SINGLE.get_or_init(|| Capturer::headless_single_sample(solidcraft_gpu::env::policy().unwrap_or_else(|e| panic!("{e}")))).as_ref() {
+    static SINGLE: std::sync::OnceLock<torno_viewport_gpu::Result<Capturer>> = std::sync::OnceLock::new();
+    match SINGLE.get_or_init(|| Capturer::headless_single_sample(torno_gpu::env::policy().unwrap_or_else(|e| panic!("{e}")))).as_ref() {
         Ok(c) => {
             assert_eq!(c.samples(), 1);
             Some(c)
         }
-        Err(e @ GpuError::NoAdapter(_)) if std::env::var_os("SOLIDCRAFT_REQUIRE_GPU").is_none() => {
+        Err(e @ GpuError::NoAdapter(_)) if std::env::var_os("TORNO_REQUIRE_GPU").is_none() => {
             eprintln!("skipping: {e}");
             None
         }

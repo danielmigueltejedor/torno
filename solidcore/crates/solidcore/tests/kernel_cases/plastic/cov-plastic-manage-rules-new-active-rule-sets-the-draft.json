@@ -165,7 +165,7 @@
     "boolean"
   ],
   "ungraded": [
-    "results: SolidCraft computes it"
+    "results: Torno computes it"
   ],
   "what": "plastic.manage_rules makes a rule from the Polypropylene library rule with a 1 degree draft and makes it active; a round rest with no draft of its own takes it",
   "why_not": []

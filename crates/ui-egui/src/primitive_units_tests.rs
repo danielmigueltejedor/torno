@@ -5,7 +5,7 @@
 //! Sphere and Torus dialogs by their centre, typed or picked.
 
 use serde_json::{Value, json};
-use solidcraft_engine::Session;
+use torno_engine::Session;
 
 use crate::dialogs::{Kind, apply_commands};
 use crate::scenario::Harness;
@@ -46,7 +46,7 @@ fn fields(h: &Harness) -> Vec<(&'static str, String)> {
 /// ("Section size"), not the command's parameter name.
 fn assert_shown(h: &Harness, fields: &[(&str, String)]) {
     for (key, text) in fields {
-        let label = solidcraft_ui_text::tr(crate::dialogs::primitive_label(key));
+        let label = torno_ui_text::tr(crate::dialogs::primitive_label(key));
         assert!(label.starts_with(char::is_uppercase) && !label.contains('_'), "the {key} row is labelled {label:?}");
         let nodes = &h.output.accesskit_update.as_ref().unwrap().nodes;
         assert!(
@@ -167,7 +167,7 @@ fn a_centimetre_design_shows_centimetres() {
 
 /// The sizes a primitive feature keeps, as stored.
 fn stored(h: &Harness, id: u64) -> Vec<String> {
-    use solidcraft_engine::doc::FeatureKind;
+    use torno_engine::doc::FeatureKind;
     match h.app.session.doc.feature(id).map(|f| &f.kind) {
         Some(FeatureKind::Box { length, width, height, .. }) => vec![length.to_string(), width.to_string(), height.to_string()],
         Some(FeatureKind::Cylinder { radius, height, .. }) => vec![radius.to_string(), height.to_string()],
@@ -289,7 +289,7 @@ fn a_saved_design_that_keeps_a_radius_opens_and_edits_it_as_made() {
     h.app.run("solid.sphere", json!({"diameter": 20, "center": [50, 0, 0], "operation": "new", "name": "Ball"})).unwrap();
     let saved = h.app.session.doc.to_json().replace("(20 mm) / 2", "(20) / 2");
     assert!(saved.contains("\"(20) / 2\""), "the design keeps the older text");
-    h.app.session = Session::new(solidcraft_engine::doc::Document::from_json(&saved).unwrap());
+    h.app.session = Session::new(torno_engine::doc::Document::from_json(&saved).unwrap());
     h.app.session.refresh();
     h.app.run("document.units", json!({"units": "in"})).unwrap();
     h.frames(2);
@@ -394,7 +394,7 @@ fn a_size_switched_between_diameter_and_radius_keeps_its_unit_and_its_text() {
 fn editing_a_coil_reopens_its_dialog_filled_in_and_ok_redefines_it() {
     // #3862: Edit Feature on a coil opens the Coil dialog with every setting it was made with,
     // not the command line; OK changes what was edited and keeps the rest.
-    use solidcraft_engine::doc::{CoilSection, FeatureKind};
+    use torno_engine::doc::{CoilSection, FeatureKind};
     let mut h = design("mm");
     h.app
         .run(
@@ -523,7 +523,7 @@ fn operation_length_defaults_keep_every_other_operation_on_the_design_unit() {
 
 #[test]
 fn length_input_expressions_and_computed_values_round_trip_without_display_rounding() {
-    use solidcraft_engine::doc::expr::Kind as K;
+    use torno_engine::doc::expr::Kind as K;
     for (units, scale) in [("mm", 1.0), ("cm", 10.0), ("m", 1000.0), ("in", 25.4), ("ft", 304.8)] {
         let mut h = design(units);
         h.app.run("parameters.add", json!({"name":"span","expression":"12 mm"})).unwrap();
@@ -583,7 +583,7 @@ fn inch_extrude_secondary_lengths_and_unchanged_edit_keep_their_physical_sizes()
     let measurements = h.app.session.execute("inspect.measure", &json!({})).unwrap();
     let bbox = &measurements["bodies"][0]["bbox"];
     assert!((bbox["max"][2].as_f64().unwrap() - 9.525).abs() < 1e-6);
-    let reopened = Session::new(solidcraft_engine::doc::Document::from_json(&h.app.session.doc.to_json()).unwrap());
+    let reopened = Session::new(torno_engine::doc::Document::from_json(&h.app.session.doc.to_json()).unwrap());
     assert_eq!(reopened.doc.length_inputs(), h.app.session.doc.length_inputs());
 }
 
@@ -716,7 +716,7 @@ fn a_bare_placement_number_is_in_the_designs_units_and_negative_sizes_go_the_oth
 
 #[test]
 fn editing_a_box_or_cylinder_shows_its_placement_and_keeps_it() {
-    use solidcraft_engine::doc::FeatureKind;
+    use torno_engine::doc::FeatureKind;
     let mut h = design("mm");
     h.app.run("parameters.add", json!({"name": "w", "expression": "15 mm"})).unwrap();
     h.app.run("solid.box", json!({"length": 10, "width": 10, "height": 10, "corner": ["w", 0, 5]})).unwrap();
@@ -771,7 +771,7 @@ fn the_cylinder_dialog_takes_its_base_point() {
 #[test]
 fn a_point_picked_in_the_box_dialog_becomes_its_corner_or_centre() {
     use solidcore_record::Vec3;
-    use solidcraft_engine::Sel;
+    use torno_engine::Sel;
     let mut h = design("mm");
     // The box made here overlaps Base, which the window would join or cut (#6901): this test is
     // about where it goes, so the window keeps its New Body.
@@ -811,7 +811,7 @@ fn a_point_picked_in_the_box_dialog_becomes_its_corner_or_centre() {
 #[test]
 fn a_point_picked_in_the_box_dialog_reads_in_the_design_unit() {
     use solidcore_record::Vec3;
-    use solidcraft_engine::Sel;
+    use torno_engine::Sel;
     let mut h = design("in");
     h.app.preferences.auto_operation = false;
     h.app.run("solid.box", json!({"length": 40, "width": 30, "height": 20, "body_name": "Base"})).unwrap();
@@ -896,7 +896,7 @@ fn the_sphere_torus_and_cone_dialogs_take_their_placement() {
 
 #[test]
 fn editing_a_sphere_torus_or_cone_shows_its_placement_and_keeps_it() {
-    use solidcraft_engine::doc::FeatureKind;
+    use torno_engine::doc::FeatureKind;
     let mut h = design("mm");
     h.app.run("parameters.add", json!({"name": "off", "expression": "15 mm"})).unwrap();
     h.app.run("solid.sphere", json!({"radius": 4, "center": ["-off", 0, 5], "operation": "new"})).unwrap();
@@ -939,7 +939,7 @@ fn editing_a_sphere_torus_or_cone_shows_its_placement_and_keeps_it() {
 #[test]
 fn a_point_picked_in_the_sphere_or_torus_dialog_becomes_its_centre() {
     use solidcore_record::Vec3;
-    use solidcraft_engine::Sel;
+    use torno_engine::Sel;
     let mut h = design("mm");
     h.app.run("solid.box", json!({"length": 40, "width": 30, "height": 20, "body_name": "Base"})).unwrap();
     h.frames(2);
@@ -962,7 +962,7 @@ fn a_point_picked_in_the_sphere_or_torus_dialog_becomes_its_centre() {
 fn a_sketch_point_places_the_box_sphere_and_torus() {
     // #9403: a point of a sketch, clicked in the window or selected before it opens, is where the
     // primitive goes, where the sketch puts it in the world (here 20 mm up, on an offset plane).
-    use solidcraft_engine::Sel;
+    use torno_engine::Sel;
     let mut h = design("mm");
     h.app.run("sketch.create", json!({"plane": "XY", "offset": 20, "name": "Marks"})).unwrap();
     h.app.run("sketch.point", json!({"point": [12, 7], "id": "m"})).unwrap();
@@ -996,7 +996,7 @@ fn a_sketch_point_places_the_box_sphere_and_torus() {
 fn a_point_selected_in_the_open_sketch_still_places_the_sphere_when_the_sketch_ends() {
     // Starting the sphere finishes the sketch; the point picked in it is then the finished
     // sketch's, and still where the sphere goes.
-    use solidcraft_engine::Sel;
+    use torno_engine::Sel;
     let mut h = design("mm");
     h.app.run("sketch.create", json!({"plane": "XY", "offset": 20, "name": "Marks"})).unwrap();
     h.app.run("sketch.point", json!({"point": [12, 7], "id": "m"})).unwrap();

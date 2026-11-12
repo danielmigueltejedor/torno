@@ -26,7 +26,7 @@ impl Default for View {
     }
 }
 
-type Imported = Result<solidcraft_engine::ComputedCommands, String>;
+type Imported = Result<torno_engine::ComputedCommands, String>;
 #[derive(Clone)]
 pub(super) struct Pending {
     pub(super) result: Arc<std::sync::Mutex<std::sync::mpsc::Receiver<Imported>>>,
@@ -101,7 +101,7 @@ pub(super) fn request(app: &mut SolveApp, view: &super::View) -> Result<Value, S
         2 => ([sin * width, 0.0, cos * width], [cos * height, 0.0, -sin * height]),
         _ => ([cos * width, sin * width, 0.0], [-sin * height, cos * height, 0.0]),
     };
-    let frame = solidcraft_engine::render::job::textures::PlanarFrame { origin: [center.x, center.y, center.z], u, v };
+    let frame = torno_engine::render::job::textures::PlanarFrame { origin: [center.x, center.y, center.z], u, v };
     frame.validate().map_err(|e| e.to_string())?;
     Ok(json!({"name":app.render_workspace.view.name,"set":patch(app)?,"body_index":target.ordinal,"body_name":target.name,
         "frame":frame,"maps":{"base_color_srgb":{"path":input.path}},
@@ -217,7 +217,7 @@ pub(super) fn controls(app: &mut SolveApp, ui: &mut egui::Ui, view: &mut super::
             }
         }
         let picked = app.session.selection.iter().find_map(|sel| match sel {
-            solidcraft_engine::Sel::Body { name } | solidcraft_engine::Sel::Face { body: name, .. } => Some(name),
+            torno_engine::Sel::Body { name } | torno_engine::Sel::Face { body: name, .. } => Some(name),
             _ => None,
         });
         if view.target.is_none() {

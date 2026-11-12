@@ -1,14 +1,14 @@
-//! Components and occurrences: the design as a tree (see `solidcraft_doc` assembly docs).
+//! Components and occurrences: the design as a tree (see `torno_doc` assembly docs).
 //! New sketches and features go into the active component, authored in its frame; bodies
 //! belong to their feature's component unless moved; occurrences place components (instances
 //! share contents, "paste new" copies them) and can be grounded and moved.
 
-use solidcraft_geom::prelude::*;
 use std::collections::HashMap;
+use torno_geom::prelude::*;
 
 use serde_json::{Value, json};
 use solidcore_record::Vec3;
-use solidcraft_doc::{Feature, FeatureKind, Mat, Occurrence};
+use torno_doc::{Feature, FeatureKind, Mat, Occurrence};
 
 use super::CommandSpec;
 use crate::params::{bad, bool_, name_or_id_values, str_, string_list, vec3};
@@ -117,7 +117,7 @@ pub static COMMANDS: &[CommandSpec] = &[
             "component: id or name of a linked component; path?: its placement (occurrence ids, default its first) → in the app \
              window: open the design it links in a tab of its own with the assembly drawn around it (component.finish_edit goes \
              back); fails when it is not linked, the assembly has no file yet, something is open or running in it, or the file is \
-             missing, on a network location not allowed yet or open in another SolidCraft; asked during the agent's turn it opens \
+             missing, on a network location not allowed yet or open in another Torno; asked during the agent's turn it opens \
              once the turn ends (queued: true); elsewhere it only checks",
         ),
     CommandSpec::new("component.finish_edit", "Finish Edit", crate::checked!("component.finish_edit", finish_edit))
@@ -315,7 +315,7 @@ fn occurrence(s: &Session, p: &Value, cmd: &str) -> Result<u64> {
 }
 
 fn translation(t: Vec3) -> Mat {
-    solidcraft_doc::rigid(t, Vec3::ZERO, Vec3::Z, 0.0)
+    torno_doc::rigid(t, Vec3::ZERO, Vec3::Z, 0.0)
 }
 
 pub(crate) fn move_vector(p: &Value, key: &str, default: Vec3, coordinate: bool, cmd: &str) -> Result<Vec3> {
@@ -330,7 +330,7 @@ pub(crate) fn move_vector(p: &Value, key: &str, default: Vec3, coordinate: bool,
 }
 
 pub(super) fn valid_position(m: &Mat) -> bool {
-    solidcraft_doc::is_placement(m)
+    torno_doc::is_placement(m)
 }
 
 pub(super) fn new_component(s: &mut Session, p: &Value) -> Result<Value> {
@@ -448,7 +448,7 @@ fn list(s: &mut Session, p: &Value) -> Result<Value> {
         if !compact {
             return PlacementEntry::Full(PlacementInfo::from(o));
         }
-        let moved = o.transform.iter().flatten().zip(solidcraft_doc::IDENTITY.iter().flatten()).any(|(a, b)| (a - b).abs() > 1e-12);
+        let moved = o.transform.iter().flatten().zip(torno_doc::IDENTITY.iter().flatten()).any(|(a, b)| (a - b).abs() > 1e-12);
         PlacementEntry::Compact(CompactPlacement {
             id: o.id,
             name: o.name.clone(),
@@ -544,7 +544,7 @@ fn delete(s: &mut Session, p: &Value) -> Result<Value> {
         return Err(bad(cmd, "the design itself can't be deleted"));
     }
     let removed = s.doc_mut().remove_component_tree(id).map_err(|e| match e {
-        solidcraft_doc::DocError::Invalid(msg) => bad(cmd, msg),
+        torno_doc::DocError::Invalid(msg) => bad(cmd, msg),
         e => e.into(),
     })?;
     let gone = removed.components;
@@ -616,7 +616,7 @@ fn copy_bodies(s: &mut Session, p: &Value) -> Result<Value> {
         if made.len() == bodies.len() {
             for (copy, original) in made.iter_mut().zip(&bodies) {
                 let state = scratch.model.state();
-                let name = solidcraft_doc::copy_name(original, |n| n != copy.as_str() && state.body(n).is_some());
+                let name = torno_doc::copy_name(original, |n| n != copy.as_str() && state.body(n).is_some());
                 drop(state);
                 if name != *copy {
                     scratch.execute("body.rename", &json!({"body": copy, "name": name}))?;
@@ -700,7 +700,7 @@ pub(super) fn copy_occurrence(s: &mut Session, p: &Value) -> Result<Value> {
         placing::in_place(s, &occurrence_path(s, p, src.id, cmd)?, parent, placing::parent_path(p, cmd)?.as_deref(), t, cmd)?
     } else {
         let base = s.uncaptured_moves().get(&src.id).copied().unwrap_or(src.transform);
-        solidcraft_doc::mat_mul(&translation(t), &base)
+        torno_doc::mat_mul(&translation(t), &base)
     };
     if !valid_position(&m) {
         return Err(bad(cmd, "copy transform exceeds supported numeric range"));
@@ -738,8 +738,8 @@ fn paste_new(s: &mut Session, p: &Value) -> Result<Value> {
     let transform = match occ.as_ref().filter(|_| bool_(p, "in_place") == Some(true)) {
         Some(o) => placing::in_place(s, &occurrence_path(s, p, o.id, cmd)?, parent, placing::parent_path(p, cmd)?.as_deref(), t, cmd)?,
         None => {
-            let base = occ.as_ref().map(|o| s.uncaptured_moves().get(&o.id).copied().unwrap_or(o.transform)).unwrap_or(solidcraft_doc::IDENTITY);
-            solidcraft_doc::mat_mul(&translation(t), &base)
+            let base = occ.as_ref().map(|o| s.uncaptured_moves().get(&o.id).copied().unwrap_or(o.transform)).unwrap_or(torno_doc::IDENTITY);
+            torno_doc::mat_mul(&translation(t), &base)
         }
     };
     if !valid_position(&transform) {
@@ -799,7 +799,7 @@ fn move_occurrence(s: &mut Session, p: &Value) -> Result<Value> {
     }
     let target = absolute_target(s, p, cmd)?;
     let delta = if target.is_some() {
-        solidcraft_doc::IDENTITY
+        torno_doc::IDENTITY
     } else if let Some(m) = p.get("matrix") {
         if let Some(k) = ["translate", "axis", "angle", "origin"].into_iter().find(|k| p.get(*k).is_some()) {
             return Err(bad(cmd, format!("give either matrix or {k}, not both")));
@@ -809,7 +809,7 @@ fn move_occurrence(s: &mut Session, p: &Value) -> Result<Value> {
         let t = move_vector(p, "translate", Vec3::ZERO, true, cmd)?;
         let axis = move_vector(p, "axis", Vec3::Z, false, cmd)?;
         let angle = match p.get("angle") {
-            Some(Value::String(e)) => s.doc.eval(e, solidcraft_doc::expr::Kind::Angle).map_err(|e| bad(cmd, e.to_string()))?,
+            Some(Value::String(e)) => s.doc.eval(e, torno_doc::expr::Kind::Angle).map_err(|e| bad(cmd, e.to_string()))?,
             None => 0.0,
             Some(value) => value.as_f64().ok_or_else(|| bad(cmd, "angle must be a number or angle expression"))?,
         };
@@ -820,7 +820,7 @@ fn move_occurrence(s: &mut Session, p: &Value) -> Result<Value> {
             return Err(bad(cmd, "rotation axis must have a finite nonzero length"));
         }
         let origin = move_vector(p, "origin", Vec3::ZERO, true, cmd)?;
-        solidcraft_doc::rigid(t, origin, axis, angle)
+        torno_doc::rigid(t, origin, axis, angle)
     };
     let space = match p.get("space") {
         None => "local",
@@ -834,8 +834,8 @@ fn move_occurrence(s: &mut Session, p: &Value) -> Result<Value> {
     if let Some(target) = target {
         let local = if space == "world" {
             let placement = s.occurrence_placement_with(path.as_deref().unwrap_or(&[]), &s.uncaptured_moves())?;
-            let inverse = solidcraft_doc::mat_inverse(&placement.parent_world).ok_or_else(|| bad(cmd, "parent frame is singular"))?;
-            solidcraft_doc::mat_mul(&inverse, &target)
+            let inverse = torno_doc::mat_inverse(&placement.parent_world).ok_or_else(|| bad(cmd, "parent frame is singular"))?;
+            torno_doc::mat_mul(&inverse, &target)
         } else {
             target
         };
@@ -843,8 +843,8 @@ fn move_occurrence(s: &mut Session, p: &Value) -> Result<Value> {
     }
     let delta = if space == "world" {
         let placement = s.occurrence_placement_with(path.as_deref().unwrap_or(&[]), &s.uncaptured_moves())?;
-        let inverse = solidcraft_doc::mat_inverse(&placement.parent_world).ok_or_else(|| bad(cmd, "parent frame is singular"))?;
-        solidcraft_doc::mat_mul(&solidcraft_doc::mat_mul(&inverse, &delta), &placement.parent_world)
+        let inverse = torno_doc::mat_inverse(&placement.parent_world).ok_or_else(|| bad(cmd, "parent frame is singular"))?;
+        torno_doc::mat_mul(&torno_doc::mat_mul(&inverse, &delta), &placement.parent_world)
     } else {
         delta
     };
@@ -853,7 +853,7 @@ fn move_occurrence(s: &mut Session, p: &Value) -> Result<Value> {
     } else {
         s.uncaptured_moves().get(&id).copied().unwrap_or(o.transform)
     };
-    let next = solidcraft_doc::mat_mul(&delta, &cur);
+    let next = torno_doc::mat_mul(&delta, &cur);
     place_occurrence(s, p, id, next, cmd)
 }
 
@@ -885,7 +885,7 @@ fn absolute_target(s: &Session, p: &Value, cmd: &str) -> Result<Option<Mat>> {
     let position = move_vector(&to, "position", Vec3::ZERO, true, cmd)?;
     let axis = move_vector(&to, "axis", Vec3::Z, false, cmd)?;
     let angle = match to.get("angle") {
-        Some(Value::String(e)) => s.doc.eval(e, solidcraft_doc::expr::Kind::Angle).map_err(|e| bad(cmd, e.to_string()))?,
+        Some(Value::String(e)) => s.doc.eval(e, torno_doc::expr::Kind::Angle).map_err(|e| bad(cmd, e.to_string()))?,
         None => 0.0,
         Some(value) => value.as_f64().ok_or_else(|| bad(cmd, "to.angle must be a number or angle expression"))?,
     };
@@ -895,7 +895,7 @@ fn absolute_target(s: &Session, p: &Value, cmd: &str) -> Result<Option<Mat>> {
     if angle != 0.0 && axis.normalized().is_none() {
         return Err(bad(cmd, "to.axis must have a finite nonzero length"));
     }
-    Ok(Some(solidcraft_doc::rigid(position, Vec3::ZERO, axis, angle)))
+    Ok(Some(torno_doc::rigid(position, Vec3::ZERO, axis, angle)))
 }
 
 /// Make `next` the occurrence's placement in its parent: captured (and the joints solved) or
@@ -935,7 +935,7 @@ pub(crate) fn base_transform(value: &Value) -> std::result::Result<Mat, &'static
         || base[1][3].abs() > 1e-12
         || base[2][3].abs() > 1e-12
         || (base[3][3] - 1.0).abs() > 1e-12
-        || solidcraft_doc::mat_inverse(&base).is_none()
+        || torno_doc::mat_inverse(&base).is_none()
     {
         return Err("base_transform must be finite, affine and invertible");
     }
@@ -1038,10 +1038,10 @@ pub fn to_active_frame(s: &Session, kind: &mut FeatureKind) {
         return;
     }
     let m = s.active_component_frame();
-    if solidcraft_doc::is_identity(&m) {
+    if torno_doc::is_identity(&m) {
         return;
     }
-    if let Some(inv) = solidcraft_doc::mat_inverse(&m) {
+    if let Some(inv) = torno_doc::mat_inverse(&m) {
         kind.transform_geometry(&inv);
     }
 }
@@ -1049,7 +1049,7 @@ pub fn to_active_frame(s: &Session, kind: &mut FeatureKind) {
 fn cycle_color(s: &mut Session, p: &Value) -> Result<Value> {
     let cmd = "component.cycle_color";
     let id = component(s, p, "component", cmd)?;
-    let next = solidcraft_doc::component_color::next_color(s.doc.component_identification_color(id));
+    let next = torno_doc::component_color::next_color(s.doc.component_identification_color(id));
     let c = s.doc_mut().components.iter_mut().find(|c| c.id == id).ok_or_else(|| bad(cmd, "choose a component below the design root"))?;
     c.identification_color = Some(next);
     s.colored_components = Some(());

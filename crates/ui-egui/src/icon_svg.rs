@@ -1,15 +1,15 @@
-//! SolidCraft's icon lookups over its set (`solidcraft_look::icons::SET`), drawn by the kit's
+//! Torno's icon lookups over its set (`torno_look::icons::SET`), drawn by the kit's
 //! renderer ([`crate::ui_kit::icons`]).
 //!
 //! The masters, their colour roles, accents and aliases live in the look crate, which compiles
-//! them and installs the set at startup and in the test contexts (`solidcraft_look::install`).
-//! The lookups here ([`resolve`], [`doc_for`], …) read SolidCraft's set whether or not it is
+//! them and installs the set at startup and in the test contexts (`torno_look::install`).
+//! The lookups here ([`resolve`], [`doc_for`], …) read Torno's set whether or not it is
 //! installed; the look crate's tests hold that every master parses.
 
 pub use crate::ui_kit::icons::{
     Doc, Look, PLACEHOLDER, Palette, Resolved, audit, render, render_tinted, set_theme_palette, theme_palette, theme_palette_state,
 };
-use solidcraft_look::icons::SET;
+use torno_look::icons::SET;
 
 /// The master and accent for an app icon id: an alias (with its accent), a master of that name,
 /// or the placeholder.
@@ -22,17 +22,17 @@ pub fn doc_for(master: &str, px: u32) -> Option<&'static Doc> {
     SET.doc_for(master, px)
 }
 
-/// [`IconSet::accent_index`](crate::ui_kit::icons::IconSet::accent_index) in SolidCraft's set.
+/// [`IconSet::accent_index`](crate::ui_kit::icons::IconSet::accent_index) in Torno's set.
 pub fn accent_index(name: &str) -> Option<usize> {
     SET.accent_index(name)
 }
 
 /// Primary semantic stroke, also used by toolbar affordances. The palette owns its value.
-pub fn primary(name: &str, dark: bool, vision: solidcraft_theme::ColorVision) -> egui::Color32 {
+pub fn primary(name: &str, dark: bool, vision: torno_theme::ColorVision) -> egui::Color32 {
     SET.primary(name, dark, vision)
 }
 
-/// [`IconSet::role_colour`](crate::ui_kit::icons::IconSet::role_colour) in SolidCraft's set.
+/// [`IconSet::role_colour`](crate::ui_kit::icons::IconSet::role_colour) in Torno's set.
 pub fn role_colour(name: &str, look: Look) -> egui::Color32 {
     SET.role_colour(name, look)
 }
@@ -40,12 +40,12 @@ pub fn role_colour(name: &str, look: Look) -> egui::Color32 {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use solidcraft_look::icons::{ACCENT_NAMES, ACCENT_VARIANTS};
+    use torno_look::icons::{ACCENT_NAMES, ACCENT_VARIANTS};
 
     #[test]
     fn command_meanings_choose_the_same_accent_on_every_surface() {
         let accent = |name| resolve(name).accent.map(|i| ACCENT_NAMES[i]);
-        for c in solidcraft_engine::command_specs() {
+        for c in torno_engine::command_specs() {
             let want = if c.id.starts_with("surface.") {
                 Some("surface")
             } else if c.panel == "CONSTRAINTS" {
@@ -80,7 +80,7 @@ mod tests {
                 assert_ne!(ramp[0], ramp[1], "{} pale/medium", file.id);
                 assert_ne!(ramp[1], ramp[2], "{} medium/strong", file.id);
             }
-            for vision in solidcraft_theme::ColorVision::ALL {
+            for vision in torno_theme::ColorVision::ALL {
                 for name in ["extrude", "surface_extrude", "mesh_export", "line", "c_parallel", "construction"] {
                     let resolved = resolve(name);
                     let plain = Look { dark: file.base.is_dark(), accent: resolved.accent, vision, palette: None };
@@ -91,9 +91,9 @@ mod tests {
                     assert!(before.pixels().iter().zip(after.pixels()).all(|(a, b)| a.alpha() == b.alpha()), "{} {name} alpha", file.id);
                     for (variant, accent, role, light, dark) in ACCENT_VARIANTS {
                         let selected = match vision {
-                            solidcraft_theme::ColorVision::Off => "",
-                            solidcraft_theme::ColorVision::Protan | solidcraft_theme::ColorVision::Deutan => "red-green",
-                            solidcraft_theme::ColorVision::Tritan => "blue-yellow",
+                            torno_theme::ColorVision::Off => "",
+                            torno_theme::ColorVision::Protan | torno_theme::ColorVision::Deutan => "red-green",
+                            torno_theme::ColorVision::Tritan => "blue-yellow",
                         };
                         if *variant == selected && Some(*accent) == custom.accent {
                             assert_eq!(SET.role_rgb(custom, *role), if file.base.is_dark() { *dark } else { *light });
@@ -106,7 +106,7 @@ mod tests {
 
     #[test]
     fn command_artwork_resolves_and_construct_methods_are_distinct() {
-        let specs = solidcraft_engine::command_specs();
+        let specs = torno_engine::command_specs();
         for command in &specs {
             assert!(!resolve(command.icon).placeholder, "{}: {}", command.id, command.icon);
         }
@@ -127,7 +127,7 @@ mod tests {
             &["sketch.chamfer.equal_distance", "sketch.chamfer.distance_angle", "sketch.chamfer.two_distance"],
         ];
         for commands in families {
-            let icons: std::collections::HashSet<_> = commands.iter().map(|id| solidcraft_engine::find_command(id).unwrap().icon).collect();
+            let icons: std::collections::HashSet<_> = commands.iter().map(|id| torno_engine::find_command(id).unwrap().icon).collect();
             assert_eq!(icons.len(), commands.len(), "Sketch modes share an icon: {commands:?}");
             for icon in icons {
                 assert!(!resolve(icon).placeholder, "{icon}");
@@ -138,9 +138,9 @@ mod tests {
     #[test]
     fn contact_actions_have_distinct_icons_from_interference_analysis() {
         let mut icons = std::collections::HashSet::new();
-        let interference = solidcraft_engine::find_command("inspect.interference").unwrap().icon;
+        let interference = torno_engine::find_command("inspect.interference").unwrap().icon;
         for id in ["contact.enable_sets", "contact.enable_all", "contact.disable_all", "contact.create"] {
-            let icon = solidcraft_engine::find_command(id).unwrap().icon;
+            let icon = torno_engine::find_command(id).unwrap().icon;
             assert_ne!(icon, interference, "{id} is a contact control, not an interference result");
             assert!(icons.insert(icon), "contact controls share an icon: {id}");
             assert!(!resolve(icon).placeholder, "{id}: {icon}");

@@ -8,7 +8,7 @@
 
 use crate::ui_kit::BackingTooltipExt as _;
 use crate::ui_kit::{Container, Surface};
-use solidcraft_engine::geom::prelude::*;
+use torno_engine::geom::prelude::*;
 
 #[path = "browser_cache.rs"]
 mod cache;
@@ -128,7 +128,7 @@ fn body_placement(app: &SolveApp, body: &str) -> Option<(u64, String, Vec<u64>)>
 pub(crate) fn placement_named(app: &SolveApp, source: &str, component: u64, body: &str) -> Option<Vec<u64>> {
     let state = app.session.model.state();
     let doc = &app.session.doc;
-    let names = solidcraft_engine::doc::WorldNames::new(doc, &state);
+    let names = torno_engine::doc::WorldNames::new(doc, &state);
     doc.placements().into_iter().find(|(owner, path, _)| *owner == component && names.name(source, component, path) == body).map(|(_, path, _)| path)
 }
 
@@ -145,12 +145,12 @@ use std::sync::{Arc, Weak};
 
 use egui::{Color32, FontId, Pos2, Rect, Sense, Stroke, pos2, vec2};
 use serde_json::{Value, json};
-use solidcraft_engine::Sel;
-use solidcraft_engine::doc::{BrowserEntry, Document, FeatureKind};
+use torno_engine::Sel;
+use torno_engine::doc::{BrowserEntry, Document, FeatureKind};
 
 use crate::context_menu::Target;
 use crate::ui_kit::Item;
-use solidcraft_theme::Tokens;
+use torno_theme::Tokens;
 
 use crate::SolveApp;
 
@@ -246,7 +246,7 @@ pub struct TreeState {
     pub capture_prompt: Option<String>,
     /// The design, undo depth and visibility when the button last went down: a drag over the eyes
     /// merges the steps it made into one (`eye_drag_frame`).
-    eye_press: Option<(u64, Arc<Document>, usize, solidcraft_engine::Visibility)>,
+    eye_press: Option<(u64, Arc<Document>, usize, torno_engine::Visibility)>,
     pub(crate) content: crate::semantic_content::Frame,
     cache: Option<cache::Cache>,
 }
@@ -368,7 +368,7 @@ pub struct OccMove {
     /// Exact assembly placement used for world-space movement and the pivot.
     pub path: Vec<u64>,
     /// Effective local placement at dialog opening, including its pre-existing pending move.
-    pub baseline: Option<solidcraft_engine::doc::Mat>,
+    pub baseline: Option<torno_engine::doc::Mat>,
     pub had_pending: bool,
     /// Distances along X, Y, Z (mm) and turns about X, Y, Z (degrees) from where it was.
     pub translate: [f64; 3],
@@ -390,12 +390,12 @@ impl OccMove {
 // ---------------------------------------------------------------------------------------------
 
 /// Is a sketch shown itself (its eye)? A hidden Sketches folder or component still keeps it out
-/// of the viewport (`solidcraft_engine::view::sketch_shown`).
+/// of the viewport (`torno_engine::view::sketch_shown`).
 pub fn sketch_visible(app: &SolveApp, id: u64) -> bool {
     if app.session.visibility.hidden_sketches.contains(&id) {
         return false;
     }
-    app.session.visibility.shown_sketches.contains(&id) || !solidcraft_engine::view::sketch_consumed(&app.session, id)
+    app.session.visibility.shown_sketches.contains(&id) || !torno_engine::view::sketch_consumed(&app.session, id)
 }
 
 pub fn set_sketch_visible(app: &mut SolveApp, id: u64, on: bool) {
@@ -408,7 +408,7 @@ pub fn redefine_sketch(app: &mut SolveApp, id: u64) {
     app.tree.redefine_draft = Some(crate::sketch_attachment_ui::Draft::new(app, id));
 }
 
-fn find_group(app: &SolveApp, id: u64) -> Option<&solidcraft_engine::doc::BrowserGroup> {
+fn find_group(app: &SolveApp, id: u64) -> Option<&torno_engine::doc::BrowserGroup> {
     app.session.doc.browser_groups.iter().find(|g| g.id == id)
 }
 
@@ -526,7 +526,7 @@ pub fn group_items(app: &SolveApp, id: u64, scope: &str) -> Vec<Item> {
         v.push(paste_item(app, g.component, scope, &g.folder, Some(id)));
     }
     // A group inside this one, unless it is already as deep as groups go.
-    if app.session.doc.group_level(id) < solidcraft_engine::doc::MAX_GROUP_NESTING {
+    if app.session.doc.group_level(id) < torno_engine::doc::MAX_GROUP_NESTING {
         v.push(Item::action("ui.newGroup", "New Group", "folder").with(json!({ "component": g.component, "folder": g.folder, "parent": id })));
     }
     v.extend([
@@ -665,7 +665,7 @@ pub(crate) fn discard_eye_press(app: &mut SolveApp) {
 
 /// The Origin's own eye is not an undo step (`set_origin_shown`), so the drag's steps do not hold it:
 /// it is left out of the comparison.
-fn without_origin(mut visibility: solidcraft_engine::Visibility) -> solidcraft_engine::Visibility {
+fn without_origin(mut visibility: torno_engine::Visibility) -> torno_engine::Visibility {
     visibility.origin_hidden = None;
     visibility
 }
@@ -721,7 +721,7 @@ pub fn selection_group(app: &SolveApp, target: &Target) -> Option<Value> {
 fn group_chain(app: &SolveApp, component: u64, folder: &str, key: &str) -> Vec<u64> {
     let doc = &app.session.doc;
     std::iter::successors(doc.group_of_item(component, folder, key).map(|g| g.id), |id| doc.browser_group(*id).and_then(|g| g.parent))
-        .take(solidcraft_engine::doc::MAX_GROUP_NESTING + 1)
+        .take(torno_engine::doc::MAX_GROUP_NESTING + 1)
         .collect()
 }
 
@@ -1136,7 +1136,7 @@ impl Lit {
 
     /// The mark of a placement row: a faint bar when a lit body is placed in it or below it, or
     /// a lit sketch or plane belongs to its component or one inside it.
-    fn placement(&self, doc: &solidcraft_engine::doc::Document, path: &[u64], component: u64) -> Mark {
+    fn placement(&self, doc: &torno_engine::doc::Document, path: &[u64], component: u64) -> Mark {
         let below = self.paths.iter().any(|p| p.starts_with(path)) || self.components.iter().any(|c| doc.component_within(*c, component));
         if below { Mark::Branch } else { Mark::None }
     }
@@ -1433,12 +1433,12 @@ fn browser_collapsed_rail(app: &mut SolveApp, ui: &mut egui::Ui) {
     crate::ui_kit::disclosure(ui.painter(), disclosure.center(), false, t.text_dim);
     crate::scenario::publish_handle("left-browser-toggle", disclosure.center());
     crate::scenario::publish_target("browser:header", disclosure);
-    response.widget_info(|| egui::WidgetInfo::labeled(egui::Role::Button, ui.is_enabled(), solidcraft_ui_text::tr("ui.browser_title")));
-    if response.backing_on_hover_text(solidcraft_ui_text::tr("ui.browser_expand")).clicked() {
+    response.widget_info(|| egui::WidgetInfo::labeled(egui::Role::Button, ui.is_enabled(), torno_ui_text::tr("ui.browser_title")));
+    if response.backing_on_hover_text(torno_ui_text::tr("ui.browser_expand")).clicked() {
         app.preferences.timeline_left_browser_collapsed = false;
     }
     let galley =
-        ui.painter().layout_no_wrap(solidcraft_ui_text::tr("ui.browser_title").to_owned(), crate::ui_kit::type_face::semibold(t.font_body), t.text);
+        ui.painter().layout_no_wrap(torno_ui_text::tr("ui.browser_title").to_owned(), crate::ui_kit::type_face::semibold(t.font_body), t.text);
     let title = Rect::from_min_max(rect.min + vec2(0.0, title_top), rect.max);
     ui.painter().add(
         egui::epaint::TextShape::new(title.center() - galley.size() / 2.0, galley, t.text)
@@ -1525,7 +1525,7 @@ fn browser_header(app: &mut SolveApp, ui: &mut egui::Ui, collapsible: bool) {
     if collapsible && (response.hovered() || response.has_focus()) {
         crate::ui_kit::panel_header_hover(ui.painter(), rect);
     }
-    let title = solidcraft_ui_text::tr("ui.browser_title").to_string();
+    let title = torno_ui_text::tr("ui.browser_title").to_string();
     let kind = if collapsible { egui::Role::Button } else { egui::Role::Label };
     response.widget_info(|| egui::WidgetInfo::labeled(kind, true, &title));
     let galley = ui.painter().layout_no_wrap(title, crate::ui_kit::type_face::semibold(t.font_heading), t.text);
@@ -1537,11 +1537,11 @@ fn browser_header(app: &mut SolveApp, ui: &mut egui::Ui, collapsible: bool) {
     }
     let bodies = app.session.model.state().bodies.len();
     let key = if bodies == 1 { "ui.browser_bodies_one" } else { "ui.browser_bodies_other" };
-    let count = solidcraft_ui_text::format(key, &[("count", &bodies.to_string())]);
+    let count = torno_ui_text::format(key, &[("count", &bodies.to_string())]);
     let galley = ui.painter().layout_no_wrap(count, FontId::proportional(t.font_body), t.text_dim);
     ui.painter().galley(pos2(right - galley.size().x, rect.center().y - galley.size().y / 2.0), galley, t.text_dim);
     if collapsible {
-        let tip = solidcraft_ui_text::tr(if collapsed { "ui.browser_expand" } else { "ui.browser_collapse" });
+        let tip = torno_ui_text::tr(if collapsed { "ui.browser_expand" } else { "ui.browser_collapse" });
         if response.on_hover_cursor(egui::CursorIcon::PointingHand).backing_on_hover_text(tip).clicked() {
             if stacked {
                 app.preferences.timeline_left_browser_collapsed = !app.preferences.timeline_left_browser_collapsed;
@@ -1560,7 +1560,7 @@ fn prepare_model(app: &mut SolveApp) {
     }
 }
 
-fn model_placement(app: &mut SolveApp, path: &[u64]) -> Option<std::sync::Arc<solidcraft_engine::occurrences::OccurrencePlacement>> {
+fn model_placement(app: &mut SolveApp, path: &[u64]) -> Option<std::sync::Arc<torno_engine::occurrences::OccurrencePlacement>> {
     prepare_model(app);
     app.tree.model.as_mut()?.placement(&app.session, path)
 }
@@ -2531,7 +2531,7 @@ fn canvas_rows(app: &mut SolveApp, ui: &mut egui::Ui, depth: usize, acts: &mut A
             }
         }
         if r.double && locked {
-            app.set_status(solidcraft_ui_text::tr("browser.canvas_locked"), true);
+            app.set_status(torno_ui_text::tr("browser.canvas_locked"), true);
         } else if r.double {
             app.tree.canvas_panel = Some(CanvasPanel::new(app, id, false));
         }
@@ -2555,7 +2555,7 @@ pub fn canvas_items(app: &SolveApp, id: u64) -> Vec<Item> {
     let visible = canvas.is_some_and(|c| c.visible);
     // A locked canvas (#12310) is not moved, calibrated or deleted until it is unlocked.
     let locked = canvas.is_some_and(|c| c.locked);
-    let why = locked.then(|| solidcraft_ui_text::tr("browser.canvas_locked").to_string());
+    let why = locked.then(|| torno_ui_text::tr("browser.canvas_locked").to_string());
     vec![
         Item::action("ui.editCanvas", "Edit Canvas", "canvas").with(json!({ "canvas": id })).off_because(why.clone()),
         Item::action("ui.calibrateCanvas", "Calibrate", "measure").with(json!({ "canvas": id })).off_because(why.clone()),
@@ -2731,7 +2731,7 @@ struct Entry {
 }
 
 impl Entry {
-    fn body(app: &SolveApp, b: &solidcraft_engine::doc::ModelBody, world: String) -> Self {
+    fn body(app: &SolveApp, b: &torno_engine::doc::ModelBody, world: String) -> Self {
         // A mesh body (an imported STL, 3MF, OBJ, …) has no faces to model on; an open shell is a
         // surface body, not a solid.
         let (icon, tip) = if b.body.is_mesh() {
@@ -2748,7 +2748,7 @@ impl Entry {
             patterns: None,
             // A part the modelling kernel refuses says so (Repair Part is in its menu).
             label: if b.body.smlib_refused().is_some() {
-                solidcraft_ui_text::format("browser.needs_repair", &[("name", &b.name)])
+                torno_ui_text::format("browser.needs_repair", &[("name", &b.name)])
             } else {
                 b.name.clone()
             },
@@ -2765,21 +2765,21 @@ impl Entry {
         }
     }
 
-    fn sketch(app: &SolveApp, f: &solidcraft_engine::doc::Feature) -> Self {
+    fn sketch(app: &SolveApp, f: &torno_engine::doc::Feature) -> Self {
         let t = Tokens::get();
         let active = app.session.active_sketch == Some(f.id);
         let sketch_state = app.session.model.state().sketch(f.id).map(crate::sketch_state::SketchState::of);
         let lost = app.session.model.result(f.id).is_some_and(|result| result.error.is_some())
-            && matches!(app.session.doc.sketch_face_attachment(f.id, &app.session.model), solidcraft_engine::doc::FaceAttachmentStatus::Lost { .. });
+            && matches!(app.session.doc.sketch_face_attachment(f.id, &app.session.model), torno_engine::doc::FaceAttachmentStatus::Lost { .. });
         Self {
             key: f.id.to_string(),
             row_key: format!("s:{}", f.id),
             thing: Thing::Sketch(f.id),
             patterns: crate::sketch_pattern_tree::has_patterns(app, f.id).then(|| format!("s:{}/patterns", f.id)),
             label: if lost {
-                solidcraft_ui_text::format("browser.sketch_attachment_lost", &[("name", &crate::i18n::tr_name(&f.name))])
+                torno_ui_text::format("browser.sketch_attachment_lost", &[("name", &crate::i18n::tr_name(&f.name))])
             } else if active {
-                solidcraft_ui_text::format("browser.sketch_editing", &[("name", &crate::i18n::tr_name(&f.name))])
+                torno_ui_text::format("browser.sketch_editing", &[("name", &crate::i18n::tr_name(&f.name))])
             } else {
                 f.name.clone()
             },
@@ -2796,7 +2796,7 @@ impl Entry {
         }
     }
 
-    fn plane(app: &SolveApp, f: &solidcraft_engine::doc::Feature) -> Self {
+    fn plane(app: &SolveApp, f: &torno_engine::doc::Feature) -> Self {
         let sel = construction_sel(f);
         let thing = match &sel {
             Sel::Axis { name } => Thing::Axis(name.clone()),
@@ -2882,7 +2882,7 @@ fn entries(app: &SolveApp, comp: u64, folder: &str) -> Vec<Entry> {
     }
 }
 
-fn construction_sel(f: &solidcraft_engine::doc::Feature) -> Sel {
+fn construction_sel(f: &torno_engine::doc::Feature) -> Sel {
     let name = f.name.clone();
     match f.kind {
         FeatureKind::ConstructionPoint { .. } => Sel::ConstructionPoint { name },
@@ -2894,9 +2894,9 @@ fn construction_sel(f: &solidcraft_engine::doc::Feature) -> Sel {
 /// A folder's rows in browser order (see `Document::ordered_entries`), then the items in no list
 /// in their natural order. A group's rows are ordered the same way by its own list. `prefix` is
 /// the scope the groups' tree keys start with.
-fn arrange(doc: &solidcraft_engine::doc::Document, comp: u64, folder: &str, prefix: &str, all: Vec<Entry>) -> Vec<cache::Row> {
+fn arrange(doc: &torno_engine::doc::Document, comp: u64, folder: &str, prefix: &str, all: Vec<Entry>) -> Vec<cache::Row> {
     use cache::Row;
-    use solidcraft_engine::doc::BrowserEntry;
+    use torno_engine::doc::BrowserEntry;
     let mut index: std::collections::HashMap<String, usize> = std::collections::HashMap::with_capacity(all.len());
     for (i, e) in all.iter().enumerate() {
         index.entry(e.key.clone()).or_insert(i);
@@ -2904,7 +2904,7 @@ fn arrange(doc: &solidcraft_engine::doc::Document, comp: u64, folder: &str, pref
     let mut pool: Vec<Option<Entry>> = all.into_iter().map(Some).collect();
     let mut take = |key: &str| index.get(key).and_then(|i| pool[*i].take()).map(|e| Row::Item(Box::new(e)));
     fn build(
-        doc: &solidcraft_engine::doc::Document,
+        doc: &torno_engine::doc::Document,
         comp: u64,
         folder: &str,
         prefix: &str,
@@ -2929,7 +2929,7 @@ fn arrange(doc: &solidcraft_engine::doc::Document, comp: u64, folder: &str, pref
     let mut groups: std::collections::HashMap<u64, cache::Group> = std::collections::HashMap::new();
     for e in &order {
         if let BrowserEntry::Group(id) = e {
-            groups.extend(build(doc, comp, folder, prefix, *id, solidcraft_engine::doc::MAX_GROUP_NESTING, &mut take).map(|g| (*id, g)));
+            groups.extend(build(doc, comp, folder, prefix, *id, torno_engine::doc::MAX_GROUP_NESTING, &mut take).map(|g| (*id, g)));
         }
     }
     let mut rows = Vec::new();
@@ -3143,8 +3143,7 @@ fn folder_level(
         } else {
             &group.label
         };
-        let count =
-            if render && !gopen { solidcraft_ui_text::format("render.tree_more", &[("count", &group.count.to_string())]) } else { String::new() };
+        let count = if render && !gopen { torno_ui_text::format("render.tree_more", &[("count", &group.count.to_string())]) } else { String::new() };
         let r = draw_row(
             ui,
             ui.scope_id().with(gkey),
@@ -3191,7 +3190,7 @@ fn folder_level(
             let level = app.session.doc.group_level(id);
             let fits = |d: &Drag, parent_level: usize| {
                 let doc = &app.session.doc;
-                d.groups.iter().all(|g| !doc.group_within(id, *g) && parent_level + doc.group_height(*g) <= solidcraft_engine::doc::MAX_GROUP_NESTING)
+                d.groups.iter().all(|g| !doc.group_within(id, *g) && parent_level + doc.group_height(*g) <= torno_engine::doc::MAX_GROUP_NESTING)
             };
             if let Some((d, zone)) = drop_target_zone(ui, resp, |d: &Drag, zone| {
                 d.comp == comp && d.folder == fstatic && fits(d, if zone == DropMark::Above { level - 1 } else { level })
@@ -3463,7 +3462,7 @@ fn entry_row(
         let level = group.map_or(0, |g| doc.group_level(g));
         d.groups
             .iter()
-            .all(|g| group.is_none_or(|h| !doc.group_within(h, *g)) && level + doc.group_height(*g) <= solidcraft_engine::doc::MAX_GROUP_NESTING)
+            .all(|g| group.is_none_or(|h| !doc.group_within(h, *g)) && level + doc.group_height(*g) <= torno_engine::doc::MAX_GROUP_NESTING)
     };
     if let Some(d) = drop_target(ui, resp, |d: &Drag| d.comp == comp && d.folder == folder && !d.keys.contains(&e.key) && fits(d), DropMark::Above) {
         let before = BrowserEntry::item(&e.key);
@@ -3769,7 +3768,7 @@ pub(crate) fn occurrence_triad(app: &mut SolveApp, ui: &mut egui::Ui, painter: &
 /// value edits it in place without editing the sketch (`crate::dim_view::model_double_click`).
 pub fn dims_overlay(app: &SolveApp, ctx: &egui::Context) {
     use solidcore_record::Vec2;
-    use solidcraft_engine::sketch::{DimFrame, chain_centres, default_text, dim_layout_reaching, dim_reach};
+    use torno_engine::sketch::{DimFrame, chain_centres, default_text, dim_layout_reaching, dim_reach};
     crate::dim_view::set_model_drawn(Vec::new());
     let Some(rect) = app.viewport.rect else { return };
     if app.session.visibility.shown_dimensions.is_empty() {
@@ -3785,7 +3784,7 @@ pub fn dims_overlay(app: &SolveApp, ctx: &egui::Context) {
         .visibility
         .shown_dimensions
         .iter()
-        .filter(|id| app.session.active_sketch != Some(**id) && solidcraft_engine::view::sketch_shown(&app.session, **id))
+        .filter(|id| app.session.active_sketch != Some(**id) && torno_engine::view::sketch_shown(&app.session, **id))
     {
         let Some(ss) = st.sketch(*id) else { continue };
         let sk = &ss.sketch;
@@ -3916,7 +3915,7 @@ pub(crate) fn occurrence_origin(app: &SolveApp, occurrence: u64) -> Option<solid
     let o = app.session.doc.occurrences.iter().find(|o| o.id == occurrence)?;
     let parent = app.session.doc.component_transform(o.parent);
     let own = app.session.pending_moves.get(&occurrence).copied().unwrap_or(o.transform);
-    Some(solidcraft_engine::doc::apply_point(&solidcraft_engine::doc::mat_mul(&parent, &own), solidcore_record::Vec3::ZERO))
+    Some(torno_engine::doc::apply_point(&torno_engine::doc::mat_mul(&parent, &own), solidcore_record::Vec3::ZERO))
 }
 
 /// The names the Bodies folder lists at the top level, for tests.

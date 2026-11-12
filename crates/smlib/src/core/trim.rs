@@ -70,7 +70,7 @@ fn hole_refused() -> Error {
     Error::Exception
 }
 
-/// The capi's statuses as SolidCraft errors: an operation's own result.
+/// The capi's statuses as Torno errors: an operation's own result.
 type Out<T> = std::result::Result<T, Error>;
 
 const ONE: BrepId = BrepId::from_index(0);

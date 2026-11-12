@@ -33,7 +33,7 @@ use solidcore::topology::{edge, EdgeId, VertexId};
 use solidcore::{Brep, Kernel};
 use std::f64::consts::{FRAC_PI_2, PI};
 
-/// Half a degree: SolidCraft's smooth-edge angle.
+/// Half a degree: Torno's smooth-edge angle.
 const SMOOTH: f64 = 0.5 * PI / 180.0;
 
 fn pick(k: &Kernel, b: &Brep, q: Point3) -> EdgeId {

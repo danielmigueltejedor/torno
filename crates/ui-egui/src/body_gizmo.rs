@@ -14,8 +14,8 @@
 use super::*;
 use crate::prefs::NavigatorTexture;
 use crate::view_gizmo::Shape;
-use solidcraft_engine::geom::Mesh;
 use std::sync::{Arc, Mutex};
+use torno_engine::geom::Mesh;
 
 /// The body's bounding sphere, in the navigation cube's design units: the cube's own (half
 /// side 40, so its corners lie 40√3 from the centre).
@@ -430,7 +430,7 @@ pub(super) fn show(app: &mut SolveApp, ui: &mut egui::Ui, rect: Rect, shown: cra
 #[cfg(test)]
 mod tests {
     use super::*;
-    use solidcraft_viewport::{StandardView, UpAxis};
+    use torno_viewport::{StandardView, UpAxis};
 
     fn boxed() -> crate::scenario::Harness {
         let mut h = crate::scenario::Harness::new();

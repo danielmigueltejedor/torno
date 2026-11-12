@@ -10,15 +10,15 @@
 //! body from. No tolerance stitching is involved: two sheets of material meeting along one
 //! geometric edge keep an edge each.
 
-use solidcraft_geom::prelude::*;
 use std::collections::HashMap;
 use std::sync::Arc;
+use torno_geom::prelude::*;
 
 use solidcore_ops::pcurve;
 use solidcore_record::Vec3;
 use solidcore_record::brep::{self as b, Curve2};
-use solidcraft_geom::Ring;
-use solidcraft_geom::brep::eval::{SurfaceEval, face_flux};
+use torno_geom::Ring;
+use torno_geom::brep::eval::{SurfaceEval, face_flux};
 
 use crate::body::Body;
 use crate::{KernelError, Result, guard};
@@ -373,7 +373,7 @@ const FOLD_TOL: f64 = 1e-7;
 /// `w⁽ᵏ⁾`, then `C⁽ᵏ⁾ = (A⁽ᵏ⁾ − Σⱼ₌₁ᵏ C(k, j) w⁽ʲ⁾ C⁽ᵏ⁻ʲ⁾) / w`.
 fn curve_derivs(knots: &[f64], points: &[[f64; 4]], t: f64) -> Option<[Vec3; 4]> {
     let degree = knots.len().checked_sub(points.len() + 1)?;
-    let (first, ders) = solidcraft_geom::bspline::basis_derivatives(knots, degree, points.len(), t, 3)?;
+    let (first, ders) = torno_geom::bspline::basis_derivatives(knots, degree, points.len(), t, 3)?;
     let (mut a, mut w) = ([Vec3::ZERO; 4], [0.0f64; 4]);
     for (i, d) in ders.iter().enumerate() {
         let h = points.get(first + i)?;
@@ -439,8 +439,8 @@ fn hermite7(p: [[f64; 2]; 4], r: [[f64; 2]; 4], h: f64) -> [[f64; 2]; 8] {
 /// within [`FOLD_TOL`]. An approximation by construction from exact derivatives, like the edge
 /// itself; nothing is fitted. `None` for another face or curve, or past the piece budget.
 fn folded_pcurve(label: &b::Surface, form: Option<&b::Surface>, curve: &b::Curve, [t0, t1]: [f64; 2]) -> Option<Curve2> {
-    use solidcraft_geom::bspline::{HPoint, bezier_point};
     use std::f64::consts::{FRAC_PI_2, FRAC_PI_8, TAU};
+    use torno_geom::bspline::{HPoint, bezier_point};
     let (b::Surface::Cylinder { frame, .. } | b::Surface::Cone { frame, .. }) = label else { return None };
     let (knots, points): (&[f64], Vec<[f64; 4]>) = match curve {
         b::Curve::Spline { knots, points } => (knots, points.iter().map(|p| [p[0], p[1], p[2], 1.0]).collect()),
@@ -451,7 +451,7 @@ fn folded_pcurve(label: &b::Surface, form: Option<&b::Surface>, curve: &b::Curve
     let (o, x, y) = (v3(frame.origin), v3(frame.x_axis).normalized()?, v3(frame.y_axis).normalized()?);
     let z = x.cross(y).normalized()?;
     let on = SurfaceEval::new(form.unwrap_or(label)).ok()?;
-    let edge = solidcraft_geom::brep::eval::CurveEval::new(curve).ok()?;
+    let edge = torno_geom::brep::eval::CurveEval::new(curve).ok()?;
     let raw_angle = |t: f64| -> Option<f64> {
         let d = curve_derivs(knots, points, t)?[0] - o;
         Some(d.dot(y).atan2(d.dot(x)))
@@ -461,7 +461,7 @@ fn folded_pcurve(label: &b::Surface, form: Option<&b::Surface>, curve: &b::Curve
     let mut start = raw_angle(t0)?;
     if let Some(b::Surface::RationalSpline { u_knots, .. }) = form {
         let (lo, hi) = (*u_knots.first()?, *u_knots.last()?);
-        let inside = |a: f64| (lo - 1e-9..=hi + 1e-9).contains(&solidcraft_geom::brep::form::param(a));
+        let inside = |a: f64| (lo - 1e-9..=hi + 1e-9).contains(&torno_geom::brep::form::param(a));
         start = (-2..=2).map(|k| start + f64::from(k) * TAU).find(|a| inside(*a))?;
     }
     // The angle along the edge, unwrapped from its start, on a grid fine against the edge's spans.
@@ -735,7 +735,7 @@ fn arc_curve(a: Vec3, b: Vec3, mid: Vec3) -> Result<(b::Curve, [f64; 2])> {
 
 /// Sew the faces into a closed solid.
 pub fn sew(faces: &[FaceSpec]) -> Result<Body> {
-    let _span = solidcraft_profile::span("kernel", "sew");
+    let _span = torno_profile::span("kernel", "sew");
     sew_impl(faces, false, None).map(|(body, _)| body)
 }
 
@@ -746,7 +746,7 @@ pub fn sew(faces: &[FaceSpec]) -> Result<Body> {
 /// own; and a face whose loops meet at a vertex (a hole's corner on its face's outline) has them
 /// as one loop through it (see [`join_touching_loops`]).
 pub fn sew_touching(faces: &[FaceSpec]) -> Result<Body> {
-    let _span = solidcraft_profile::span("kernel", "sew_touching");
+    let _span = torno_profile::span("kernel", "sew_touching");
     sew_impl(faces, true, None).map(|(body, _)| body)
 }
 
@@ -1224,7 +1224,7 @@ fn sew_impl(faces: &[FaceSpec], touching: bool, sources: Option<&[Option<crate::
             }
         }
         let made = assemble(Parts { vertices, edges, faces: out, tolerance: tol }, true)?;
-        let smlib = solidcraft_smlib::Brep::from_record(&made.brep, true).map_err(|e| KernelError::smlib("sew: SMLib", e))?;
+        let smlib = torno_smlib::Brep::from_record(&made.brep, true).map_err(|e| KernelError::smlib("sew: SMLib", e))?;
         let (body, order) = crate::native::body_from_smlib_ordered(&smlib)?;
         // The face of `faces` each face of the body was built from: record face `c` is SMLib's
         // face `c`, which the order places in the body.
@@ -1343,7 +1343,7 @@ pub(crate) struct Assembled {
 /// shells (sheets) in the infinite region; everything in canonical order and validated.
 /// `solid`: every shell must be closed.
 pub(crate) fn assemble(parts: Parts, solid: bool) -> Result<Assembled> {
-    let _span = solidcraft_profile::span("kernel", "assemble");
+    let _span = torno_profile::span("kernel", "assemble");
     let fail = |m: String| KernelError::Invalid(format!("sew: {m}"));
     let Parts { vertices, edges, faces, tolerance: tol } = parts;
     let nf = faces.len();
@@ -1382,7 +1382,7 @@ pub(crate) fn assemble(parts: Parts, solid: bool) -> Result<Assembled> {
     // keeps it, and an edge the caller gave a pcurve for keeps the parameter that pcurve is on.
     let mut frames_of: Vec<Vec<b::Frame>> = vec![Vec::new(); edges.len()];
     for f in &faces {
-        let Some(frame) = solidcraft_geom::brep::form::frame_of(&f.surface) else { continue };
+        let Some(frame) = torno_geom::brep::form::frame_of(&f.surface) else { continue };
         for u in f.loops.iter().flatten() {
             if let Some(slot) = frames_of.get_mut(u.edge as usize) {
                 slot.push(frame.clone());
@@ -1405,7 +1405,7 @@ pub(crate) fn assemble(parts: Parts, solid: bool) -> Result<Assembled> {
             continue;
         }
         let (label, interval, form) =
-            solidcraft_geom::brep::form::edge(&e.curve, e.interval, frames.iter(), tol).ok_or_else(|| fail("an arc of more than one turn".into()))?;
+            torno_geom::brep::form::edge(&e.curve, e.interval, frames.iter(), tol).ok_or_else(|| fail("an arc of more than one turn".into()))?;
         labels.push((label, interval));
         forms.push(form);
     }
@@ -1435,9 +1435,9 @@ pub(crate) fn assemble(parts: Parts, solid: bool) -> Result<Assembled> {
                     .iter()
                     .map(|l| l.iter().filter_map(|&(e, forward, _)| labels.get(e as usize).map(|(c, i)| (c, *i, forward))).collect())
                     .collect();
-                let extent = solidcraft_geom::brep::form::extent(&f.surface, &boundary)
+                let extent = torno_geom::brep::form::extent(&f.surface, &boundary)
                     .ok_or_else(|| fail(format!("face {fi}: its boundary is not on its surface")))?;
-                Some(solidcraft_geom::brep::form::surface(&f.surface, extent).ok_or_else(|| fail(format!("face {fi}: more than one turn")))?)
+                Some(torno_geom::brep::form::surface(&f.surface, extent).ok_or_else(|| fail(format!("face {fi}: more than one turn")))?)
             }
             _ => None,
         };

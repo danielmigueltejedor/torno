@@ -3,8 +3,8 @@
 
 use serde_json::{Value, json};
 use solidcore_record::Vec3;
-use solidcraft_doc::joints::{Snap, XRef};
-use solidcraft_geom::prelude::*;
+use torno_doc::joints::{Snap, XRef};
+use torno_geom::prelude::*;
 
 use super::tests::{occ, place, run};
 use crate::Session;
@@ -109,7 +109,7 @@ fn a_bracket_on_a_hole_in_thin_plate_stays_on_it_as_the_plate_widens() {
         on_the_hole(&s, w);
     }
     // Saved and opened again, it still follows.
-    let dir = std::env::temp_dir().join(format!("solidcraft-joint-faces-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("torno-joint-faces-{}", std::process::id()));
     let _ = std::fs::create_dir_all(&dir);
     let path = dir.join("tray.json").to_string_lossy().to_string();
     run(&mut s, "file.save", json!({"path": path}));
@@ -147,7 +147,7 @@ fn a_circle_given_by_its_centre_follows_its_hole() {
 fn face_name(s: &mut Session, component: &str, p: Vec3) -> String {
     let st = s.model.state();
     let c = s.doc.find_component(component).unwrap_or(0);
-    solidcraft_doc::joints::face_name_at(&s.doc, &st, c, p, false).unwrap_or_default()
+    torno_doc::joints::face_name_at(&s.doc, &st, c, p, false).unwrap_or_default()
 }
 
 #[test]
@@ -236,11 +236,11 @@ fn a_face_centre_by_name_follows_its_face() {
     run(&mut s, "joint.origin", json!({"name": "End", "face": right, "x": [0, 1, 0]}));
     let frame = |s: &Session| {
         let o = s.doc.assembly.origins.iter().find(|o| o.name == "End").map(|o| o.origin.clone());
-        o.and_then(|o| solidcraft_doc::joints::resolve_origin(&s.doc, &s.model.state(), &o).ok())
+        o.and_then(|o| torno_doc::joints::resolve_origin(&s.doc, &s.model.state(), &o).ok())
     };
     for w in [300.0, 330.0, 510.0] {
         width(&mut s, w);
-        let m = frame(&s).unwrap_or(solidcraft_doc::IDENTITY);
+        let m = frame(&s).unwrap_or(torno_doc::IDENTITY);
         let (o, x, z) = (Vec3::new(m[3][0], m[3][1], m[3][2]), Vec3::new(m[0][0], m[0][1], m[0][2]), Vec3::new(m[2][0], m[2][1], m[2][2]));
         assert!(near(o, Vec3::new(w, 50.0, 0.5)) && near(z, Vec3::X) && near(x, Vec3::Y), "W = {w}: {o:?} {x:?} {z:?}");
     }
@@ -266,7 +266,7 @@ fn an_origin_without_an_end_or_turn_opens_as_before() {
 /// The frame a named joint origin resolves to: its origin and z.
 fn origin_frame(s: &Session, name: &str) -> Option<(Vec3, Vec3)> {
     let o = s.doc.assembly.origins.iter().find(|o| o.name == name)?;
-    let m = solidcraft_doc::joints::resolve_origin(&s.doc, &s.model.state(), &o.origin).ok()?;
+    let m = torno_doc::joints::resolve_origin(&s.doc, &s.model.state(), &o.origin).ok()?;
     Some((Vec3::new(m[3][0], m[3][1], m[3][2]), Vec3::new(m[2][0], m[2][1], m[2][2])))
 }
 
@@ -278,14 +278,14 @@ fn a_round_origin_saved_without_an_end_takes_the_end_it_took_before() {
     run(&mut s, "parameters.change", json!({"name": "T", "expression": "5 mm"}));
     run(&mut s, "solid.box", json!({"length": 40, "width": 40, "height": "T", "corner": [0, 0, 0]}));
     run(&mut s, "solid.hole", json!({"position": [20, 20, "T"], "diameter": 6}));
-    let wall = solidcraft_doc::joints::face_name_at(&s.doc, &s.model.state(), 0, Vec3::new(23.0, 20.0, 2.5), true).unwrap_or_default();
+    let wall = torno_doc::joints::face_name_at(&s.doc, &s.model.state(), 0, Vec3::new(23.0, 20.0, 2.5), true).unwrap_or_default();
     assert!(!wall.is_empty());
     for (name, z) in [("High", 4.0), ("Low", 1.0)] {
         let saved = json!({"name": name, "origin": {"occurrence": 0, "snap": {"face": wall, "pick": [23.0, 20.0, z], "type": "circle_center"}}});
-        let o: solidcraft_doc::joints::NamedOrigin = serde_json::from_value(saved).unwrap_or_else(|e| panic!("{e}"));
+        let o: torno_doc::joints::NamedOrigin = serde_json::from_value(saved).unwrap_or_else(|e| panic!("{e}"));
         s.doc_mut().assembly.origins.push(o);
     }
-    let dir = std::env::temp_dir().join(format!("solidcraft-joint-end-tie-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("torno-joint-end-tie-{}", std::process::id()));
     let _ = std::fs::create_dir_all(&dir);
     let path = dir.join("plate.json").to_string_lossy().to_string();
     run(&mut s, "file.save", json!({"path": path}));
@@ -312,19 +312,19 @@ fn origins_on_a_body_placed_by_an_offset_agree_named_or_not() {
     let mut s = Session::default();
     run(&mut s, "solid.box", json!({"length": 40, "width": 40, "height": 5, "corner": [0, 0, 0], "body_name": "Plate"}));
     run(&mut s, "solid.hole", json!({"position": [20, 20, 5], "diameter": 6}));
-    let offset = solidcraft_doc::rigid(Vec3::new(7.0, 0.0, 3.0), Vec3::ZERO, Vec3::X, std::f64::consts::FRAC_PI_2);
+    let offset = torno_doc::rigid(Vec3::new(7.0, 0.0, 3.0), Vec3::ZERO, Vec3::X, std::f64::consts::FRAC_PI_2);
     s.doc_mut().body_offsets.insert("Plate".into(), offset);
     s.refresh();
-    let at = |p: Vec3| solidcraft_doc::apply_point(&offset, p);
-    let up = solidcraft_doc::apply_vector(&offset, Vec3::Z);
+    let at = |p: Vec3| torno_doc::apply_point(&offset, p);
+    let up = torno_doc::apply_vector(&offset, Vec3::Z);
     let st = s.model.state();
     let (top_pick, wall_pick) = (at(Vec3::new(10.0, 10.0, 5.0)), at(Vec3::new(23.0, 20.0, 4.0)));
-    let top = solidcraft_doc::joints::face_name_at(&s.doc, &st, 0, top_pick, false);
-    let wall = solidcraft_doc::joints::face_name_at(&s.doc, &st, 0, wall_pick, true);
+    let top = torno_doc::joints::face_name_at(&s.doc, &st, 0, top_pick, false);
+    let wall = torno_doc::joints::face_name_at(&s.doc, &st, 0, wall_pick, true);
     assert!(top.is_some() && wall.is_some(), "{top:?} {wall:?}");
     let resolve = |snap: Snap| {
-        let o = solidcraft_doc::joints::JointOrigin::new(0, snap);
-        let m = solidcraft_doc::joints::resolve_origin(&s.doc, &st, &o).unwrap_or_else(|e| panic!("{e}"));
+        let o = torno_doc::joints::JointOrigin::new(0, snap);
+        let m = torno_doc::joints::resolve_origin(&s.doc, &st, &o).unwrap_or_else(|e| panic!("{e}"));
         (Vec3::new(m[3][0], m[3][1], m[3][2]), Vec3::new(m[2][0], m[2][1], m[2][2]))
     };
     // The top face's centre: by its name, and by the point alone.
@@ -356,7 +356,7 @@ fn a_round_origin_keeps_its_end_when_the_face_it_opens_onto_gets_other_neighbour
     run(&mut s, "joint.origin", json!({"occurrence": "Plate", "circle": [23, 50, 1.6], "name": "O"}));
     let top = |s: &Session| {
         let o = s.doc.assembly.origins.iter().find(|o| o.name == "O").map(|o| o.origin.clone());
-        o.and_then(|o| solidcraft_doc::joints::resolve_origin(&s.doc, &s.model.state(), &o).ok()).map(|m| (m[3][2], m[2][2]))
+        o.and_then(|o| torno_doc::joints::resolve_origin(&s.doc, &s.model.state(), &o).ok()).map(|m| (m[3][2], m[2][2]))
     };
     assert_eq!(top(&s), Some((2.0, 1.0)));
     // Thicker, the pick is nearer the bottom; without the small hole the top piece is named by
@@ -381,8 +381,8 @@ fn a_face_centre_stays_put_when_a_hole_in_its_face_moves_or_goes() {
     let top = face_name(&mut s, "Plate", pick);
     run(&mut s, "joint.origin", json!({"name": "Top", "face": top}));
     let by_point = |s: &Session| {
-        let o = solidcraft_doc::joints::JointOrigin::new(occ(s, "Plate"), Snap::FaceCenter { pick, face: None, x: None });
-        let m = solidcraft_doc::joints::resolve_origin(&s.doc, &s.model.state(), &o).ok()?;
+        let o = torno_doc::joints::JointOrigin::new(occ(s, "Plate"), Snap::FaceCenter { pick, face: None, x: None });
+        let m = torno_doc::joints::resolve_origin(&s.doc, &s.model.state(), &o).ok()?;
         Some((Vec3::new(m[3][0], m[3][1], m[3][2]), Vec3::new(m[2][0], m[2][1], m[2][2])))
     };
     let mut seen = vec![(origin_frame(&s, "Top"), by_point(&s))];
@@ -492,7 +492,7 @@ pub(crate) fn arms_apart(s: &mut Session, edit: &str, form: &str, pairs: &[(u64,
     let v = |f: &serde_json::Value, k: &str| {
         Vec3::new(f[k][0].as_f64().unwrap_or(f64::NAN), f[k][1].as_f64().unwrap_or(f64::NAN), f[k][2].as_f64().unwrap_or(f64::NAN))
     };
-    let world = |o: u64, p: Vec3| solidcraft_doc::apply_point(&solidcraft_doc::joints::occurrence_world(&s.doc, o), p);
+    let world = |o: u64, p: Vec3| torno_doc::apply_point(&torno_doc::joints::occurrence_world(&s.doc, o), p);
     let (sa, sb) = arm_spots(form, size);
     let (sa0, _) = arm_spots(form, arm_size(&[]));
     for (kind, (a, b)) in ARM_KINDS.iter().zip(pairs) {

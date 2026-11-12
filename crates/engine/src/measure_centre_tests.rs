@@ -2,8 +2,8 @@
 //! distances with the closest and farthest listed too, diameters and radii, slot sizes. Every
 //! expected value is worked out by hand from the part's dimensions.
 
-use solidcraft_geom::prelude::*;
 use std::f64::consts::{PI, TAU};
+use torno_geom::prelude::*;
 
 use serde_json::{Value, json};
 use solidcore_record::Vec3;
@@ -39,7 +39,7 @@ fn hole(s: &Session, r: f64) -> Value {
     let m = b.mesh();
     let n = m.tri_face.iter().map(|f| *f as usize + 1).max().unwrap();
     let f = (0..n)
-        .find(|&f| matches!(solidcraft_kernel::face_surface(&b.body, f), Some(solidcraft_kernel::FaceSurface::Cylinder { radius, .. }) if (radius - r).abs() < 1e-6))
+        .find(|&f| matches!(torno_kernel::face_surface(&b.body, f), Some(torno_kernel::FaceSurface::Cylinder { radius, .. }) if (radius - r).abs() < 1e-6))
         .unwrap_or_else(|| panic!("no hole of radius {r}"));
     let p = m.triangles.iter().zip(&m.tri_face).find(|(_, tf)| **tf as usize == f).and_then(|(t, _)| m.tri(t)).unwrap()[0];
     json!({"type": "face", "body": b.name, "index": f, "point": p})
@@ -362,7 +362,7 @@ fn a_slot_cut_in_a_plate_reports_its_sizes_from_an_end() {
     let m = b.mesh();
     let n = m.tri_face.iter().map(|f| *f as usize + 1).max().unwrap();
     let end = (0..n)
-        .find(|&f| matches!(solidcraft_kernel::face_surface(&b.body, f), Some(solidcraft_kernel::FaceSurface::Cylinder { radius, .. }) if (radius - 4.0).abs() < 1e-6))
+        .find(|&f| matches!(torno_kernel::face_surface(&b.body, f), Some(torno_kernel::FaceSurface::Cylinder { radius, .. }) if (radius - 4.0).abs() < 1e-6))
         .expect("slot end");
     let p = m.triangles.iter().zip(&m.tri_face).find(|(_, tf)| **tf as usize == end).and_then(|(t, _)| m.tri(t)).unwrap()[0];
     let name = body(&s);
@@ -401,12 +401,12 @@ fn a_cylinders_top_circle_is_as_long_as_its_circumference() {
 }
 
 /// The first face whose analytic surface satisfies `want`, as a pick.
-fn face_of(s: &Session, want: impl Fn(solidcraft_kernel::FaceSurface) -> bool) -> Value {
+fn face_of(s: &Session, want: impl Fn(torno_kernel::FaceSurface) -> bool) -> Value {
     let st = s.model.state();
     let b = st.bodies.first().unwrap();
     let m = b.mesh();
     let n = m.tri_face.iter().map(|f| *f as usize + 1).max().unwrap();
-    let f = (0..n).find(|&f| solidcraft_kernel::face_surface(&b.body, f).is_some_and(&want)).expect("face");
+    let f = (0..n).find(|&f| torno_kernel::face_surface(&b.body, f).is_some_and(&want)).expect("face");
     let p = m.triangles.iter().zip(&m.tri_face).find(|(_, tf)| **tf as usize == f).and_then(|(t, _)| m.tri(t)).unwrap()[0];
     json!({"type": "face", "body": b.name, "index": f, "point": p})
 }
@@ -415,7 +415,7 @@ fn face_of(s: &Session, want: impl Fn(solidcraft_kernel::FaceSurface) -> bool) -
 /// next to its area, and says it is a torus with its ring radius too.
 #[test]
 fn a_fillet_round_a_boss_reports_its_radius() {
-    use solidcraft_kernel::FaceSurface;
+    use torno_kernel::FaceSurface;
     let mut s = Session::default();
     run(&mut s, "solid.box", json!({"length": 40, "width": 40, "height": 10}));
     run(&mut s, "solid.cylinder", json!({"radius": 5, "height": 12, "base": [20, 20, 10], "operation": "join"}));
@@ -433,7 +433,7 @@ fn a_fillet_round_a_boss_reports_its_radius() {
 /// A ball's face reports its radius.
 #[test]
 fn a_sphere_face_reports_its_radius() {
-    use solidcraft_kernel::FaceSurface;
+    use torno_kernel::FaceSurface;
     let mut s = Session::default();
     run(&mut s, "solid.sphere", json!({"radius": 7, "center": [0, 0, 0]}));
     let ball = face_of(&s, |f| matches!(f, FaceSurface::Sphere { .. }));
@@ -445,7 +445,7 @@ fn a_sphere_face_reports_its_radius() {
 /// A plate with holes through STEP: the holes come back as cylinders, and measure the same.
 #[test]
 fn step_round_trip_of_a_plate_with_holes() {
-    let dir = std::env::temp_dir().join(format!("solidcraft-measure-1392-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("torno-measure-1392-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
     let path = dir.join("Plate.step");
     let mut s = Session::default();
@@ -519,7 +519,7 @@ fn box_faces_measure_by_point_only() {
         let pick = json!({"type": "face", "body": "Box", "point": point});
         let r = measure(&mut s, vec![pick.clone()]);
         assert!(close(&r["items"][0]["area_mm2"], area, 1e-9), "{r}");
-        let index = solidcraft_doc::appearance::face_index_at(s.model.state().body("Box").unwrap(), Vec3::from(point)).unwrap();
+        let index = torno_doc::appearance::face_index_at(s.model.state().body("Box").unwrap(), Vec3::from(point)).unwrap();
         let mut indexed = pick.clone();
         indexed["index"] = json!(index);
         assert_eq!(measure(&mut s, vec![indexed.clone()]), r);
@@ -670,7 +670,7 @@ fn tetra_stl(open: bool) -> String {
 
 #[test]
 fn a_watertight_mesh_keeps_its_volume_and_an_open_mesh_has_none() {
-    let dir = std::env::temp_dir().join(format!("solidcraft-measure-open-mesh-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("torno-measure-open-mesh-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&dir);
     std::fs::create_dir_all(&dir).unwrap();
     let mut s = Session::default();

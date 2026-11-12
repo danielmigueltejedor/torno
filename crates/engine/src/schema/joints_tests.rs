@@ -1,6 +1,6 @@
 use serde_json::{Value, json};
 use solidcore_record::Vec3;
-use solidcraft_doc::joints::JointKind;
+use torno_doc::joints::JointKind;
 
 use super::{
     AsBuiltJointParams, CamParams, CamResult, CouplingResult, CreateJointParams, DeleteJointParams, DeleteJointResult, DriveJointParams,
@@ -1431,7 +1431,7 @@ fn replies_of_the_rest_match_the_output_schema() {
     let name_at = |s: &mut Session, p: Vec3, circle: bool| {
         let st = s.model.state();
         let c = s.doc.find_component("Tray").unwrap_or(0);
-        solidcraft_doc::joints::face_name_at(&s.doc, &st, c, p, circle).unwrap_or_default()
+        torno_doc::joints::face_name_at(&s.doc, &st, c, p, circle).unwrap_or_default()
     };
     let wall = name_at(&mut s, Vec3::new(283.0, 50.0, 0.5), false);
     let top = name_at(&mut s, Vec3::new(150.0, 50.0, 1.0), false);

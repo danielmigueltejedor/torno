@@ -100,7 +100,7 @@ fn a_round_on_a_boss_tilted_off_the_class_keeps_its_definition() {
     assert!((got - want).abs() <= 1e-9 * want, "{got} {want}");
 }
 
-/// SolidCraft's raked wedge (`tests/data/raked_wedge_noisy_cylinders.json`): its end outline's
+/// Torno's raked wedge (`tests/data/raked_wedge_noisy_cylinders.json`): its end outline's
 /// rounds keep their definitions, the two circle-class rounds on the read-back cylinders among
 /// them; the operand's own faces, read from the record, have none.
 #[test]
@@ -135,7 +135,7 @@ fn the_raked_wedges_rounds_keep_their_definitions() {
     assert_eq!(with + without - before, chain.len());
 }
 
-/// The same wedge built here, its cylinders exact, its end outline rounded as SolidCraft's: of the
+/// The same wedge built here, its cylinders exact, its end outline rounded as Torno's: of the
 /// rounds that last call makes, how many keep a definition and how many don't.
 fn exact_wedge_rounds() -> (usize, usize) {
     use crate::sweep::{extrude, Curve, DraftCorner};

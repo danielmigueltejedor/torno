@@ -11,13 +11,13 @@
 //! The snapshot is scaled so its longest side is 2 and packed as 16-bit whole numbers of
 //! 1/10000 ([`snapshot`]): every body is the same size in the gizmo, and the stored form stays
 //! small. Faces and edges keep their identities, so the gizmo can light one face and outline it.
-use solidcraft_engine::geom::MeshGeom;
 use std::collections::{BTreeMap, HashMap};
 use std::sync::Arc;
+use torno_engine::geom::MeshGeom;
 
 use serde_json::{Value, json};
 use solidcore_record::Vec3;
-use solidcraft_engine::geom::{Mesh, Vec3Geom};
+use torno_engine::geom::{Mesh, Vec3Geom};
 
 use crate::SolveApp;
 use crate::context_menu::act;
@@ -26,7 +26,7 @@ use crate::prefs::{NavigatorStyle, NavigatorTexture};
 use crate::selection::{BODIES, SelInput};
 use crate::ui_kit;
 use crate::ui_kit::Item;
-use solidcraft_engine::Sel;
+use torno_engine::Sel;
 
 /// Bodies with more triangles cannot be the gizmo: the snapshot of one at the limit stays well
 /// inside a settings profile (about 300 KiB of its 1 MiB), and the gizmo redraws every triangle
@@ -100,7 +100,7 @@ impl Shape {
     }
 
     /// The snapshot of a body of the session's design, in the colours the viewport draws it.
-    pub fn of_body(session: &solidcraft_engine::Session, name: &str) -> Option<Shape> {
+    pub fn of_body(session: &torno_engine::Session, name: &str) -> Option<Shape> {
         let st = session.world_state().ok()?;
         let b = st.body(name)?;
         let to8 = |x: f32| (x.clamp(0.0, 1.0) * 255.0).round() as u8;
@@ -270,13 +270,13 @@ fn unpack(v: &Value, key: &str, cap: usize) -> Option<Vec<u8>> {
     if text.len() > cap.div_ceil(3) * 4 {
         return None;
     }
-    solidcraft_engine::doc::canvas::base64_decode(text)
+    torno_engine::doc::canvas::base64_decode(text)
 }
 
 /// Little-endian 16-bit words, as base64.
 fn pack<T: Copy>(words: &[T], bytes: impl Fn(T) -> [u8; 2]) -> String {
     let raw: Vec<u8> = words.iter().flat_map(|w| bytes(*w)).collect();
-    solidcraft_engine::doc::canvas::base64_encode(&raw)
+    torno_engine::doc::canvas::base64_encode(&raw)
 }
 
 /// The stored form of `mesh`, centred and scaled to longest side 2, in whole 1/10000s. Each
@@ -352,8 +352,8 @@ pub(crate) fn menu_items(app: &SolveApp) -> Vec<Item> {
         .map(|style| {
             let (label, icon) = match style {
                 NavigatorStyle::Axes => (app.tr("prefs.axes"), "origin"),
-                NavigatorStyle::Cube => (solidcraft_ui_text::tr_label("Cube"), "box"),
-                NavigatorStyle::Custom => (solidcraft_ui_text::tr_label("Custom"), "body"),
+                NavigatorStyle::Cube => (torno_ui_text::tr_label("Cube"), "box"),
+                NavigatorStyle::Custom => (torno_ui_text::tr_label("Custom"), "body"),
             };
             act("ui.navigatorStyle", label, icon).with(json!({ "style": style })).key(if app.preferences.navigator_style == style {
                 "current"
@@ -377,14 +377,14 @@ pub(crate) fn pick_style(app: &mut SolveApp, style: NavigatorStyle) {
 fn set_body(app: &mut SolveApp, name: Option<&str>) -> Result<(), String> {
     let shape = match name {
         None => None,
-        Some(name) => Some(snapshot_of(&app.session, name).map_err(|reason| solidcraft_ui_text::tr(reason).to_string())?),
+        Some(name) => Some(snapshot_of(&app.session, name).map_err(|reason| torno_ui_text::tr(reason).to_string())?),
     };
     app.view_gizmo.set(shape);
     Ok(())
 }
 
 /// The snapshot of body `name`, or why it can't be the navigator (a message id).
-fn snapshot_of(session: &solidcraft_engine::Session, name: &str) -> Result<Shape, &'static str> {
+fn snapshot_of(session: &torno_engine::Session, name: &str) -> Result<Shape, &'static str> {
     let st = session.world_state().map_err(|_| "view_gizmo.no_such_body")?;
     let body = st.body(name).ok_or("view_gizmo.no_such_body")?;
     if let Some(reason) = refusal(&body.mesh()) {
@@ -504,31 +504,31 @@ pub(crate) fn rows(app: &SolveApp, ui: &mut egui::Ui, form: &mut Form, inputs: &
         form.preview = body.map(|name| (name.to_string(), snapshot_of(&app.session, name)));
     }
     if let Some((_, Err(reason))) = &form.preview {
-        ui_kit::text(ui, solidcraft_ui_text::tr(reason), ui_kit::Text::Error("view_gizmo_refused"));
+        ui_kit::text(ui, torno_ui_text::tr(reason), ui_kit::Text::Error("view_gizmo_refused"));
     }
-    ui_kit::row(ui, solidcraft_ui_text::tr("view_gizmo.texture"), |ui| {
+    ui_kit::row(ui, torno_ui_text::tr("view_gizmo.texture"), |ui| {
         let mut texture = usize::from(form.texture == NavigatorTexture::Modeled);
         let changed = ui_kit::segmented(
             ui,
             &mut texture,
-            &[solidcraft_ui_text::tr("view_gizmo.themed"), solidcraft_ui_text::tr_label("Modeled")],
+            &[torno_ui_text::tr("view_gizmo.themed"), torno_ui_text::tr_label("Modeled")],
             ui_kit::Segments { intrinsic: true, ..Default::default() },
         );
         if changed {
             form.texture = if texture == 1 { NavigatorTexture::Modeled } else { NavigatorTexture::Themed };
         }
     });
-    let arrows = ui_kit::checkbox(ui, solidcraft_ui_text::tr("view_gizmo.arrows"), &mut form.arrows);
+    let arrows = ui_kit::checkbox(ui, torno_ui_text::tr("view_gizmo.arrows"), &mut form.arrows);
     crate::scenario::publish_target("view_gizmo:arrows", arrows.rect);
-    let home = ui_kit::checkbox(ui, solidcraft_ui_text::tr("view_gizmo.home"), &mut form.home);
+    let home = ui_kit::checkbox(ui, torno_ui_text::tr("view_gizmo.home"), &mut form.home);
     crate::scenario::publish_target("view_gizmo:home", home.rect);
-    ui_kit::text(ui, solidcraft_ui_text::tr("view_gizmo.note"), ui_kit::Text::Note("view_gizmo_note"));
+    ui_kit::text(ui, torno_ui_text::tr("view_gizmo.note"), ui_kit::Text::Note("view_gizmo_note"));
 }
 
 /// OK: the custom navigator with the panel's body (or the one it has), texture, arrows and Home.
 pub(crate) fn run_dialog(app: &mut SolveApp, form: &Form, inputs: &[SelInput]) -> Result<(), String> {
     if let Some((_, Err(reason))) = &form.preview {
-        return Err(solidcraft_ui_text::tr(reason).to_string());
+        return Err(torno_ui_text::tr(reason).to_string());
     }
     let mut params = json!({"style": NavigatorStyle::Custom, "texture": form.texture, "arrows": form.arrows, "home": form.home});
     if let (Some(body), Some(o)) = (picked(inputs), params.as_object_mut()) {
@@ -575,7 +575,7 @@ mod tests {
     use super::*;
 
     fn box_mesh() -> Arc<Mesh> {
-        let mut s = solidcraft_engine::Session::default();
+        let mut s = torno_engine::Session::default();
         s.execute("solid.box", &json!({"length": 40, "width": 20, "height": 10})).unwrap();
         s.world_state().unwrap().bodies[0].mesh()
     }
@@ -583,7 +583,7 @@ mod tests {
     #[test]
     fn a_body_at_the_aspect_limit_is_still_accepted_once_packed() {
         let bar = |thin: f64| {
-            let mut s = solidcraft_engine::Session::default();
+            let mut s = torno_engine::Session::default();
             s.execute("solid.box", &json!({"length": 50, "width": thin, "height": thin})).unwrap();
             // Turned 45 degrees about its length, so the packing rounds its thin widths.
             let mut mesh = (*s.world_state().unwrap().bodies[0].mesh()).clone();
@@ -615,7 +615,7 @@ mod tests {
             (Some([0, 128, 255]), Some([200, 30, 40]), Some([200, 30, 40]))
         );
         // A box 25 times larger snapshots to the same shape.
-        let mut s = solidcraft_engine::Session::default();
+        let mut s = torno_engine::Session::default();
         s.execute("solid.box", &json!({"length": 1000, "width": 500, "height": 250})).unwrap();
         let big = Shape::of("Big", &s.world_state().unwrap().bodies[0].mesh(), None, &BTreeMap::new()).unwrap();
         let bb = big.mesh.bounds();
@@ -684,8 +684,8 @@ mod tests {
 
     #[test]
     fn long_sticks_and_thin_sheets_are_refused_whichever_way_they_lie() {
-        let mut s = solidcraft_engine::Session::default();
-        let mesh = |s: &mut solidcraft_engine::Session, params: Value| {
+        let mut s = torno_engine::Session::default();
+        let mesh = |s: &mut torno_engine::Session, params: Value| {
             s.execute("solid.box", &params).unwrap();
             s.world_state().unwrap().bodies.last().unwrap().mesh()
         };
@@ -708,7 +708,7 @@ mod tests {
     #[test]
     fn a_body_at_the_limit_fits_in_a_settings_profile_with_room_to_spare() {
         // A sphere close to the triangle limit: as many points as a smooth body has.
-        let mut s = solidcraft_engine::Session::default();
+        let mut s = torno_engine::Session::default();
         s.execute("solid.sphere", &json!({"radius": 10})).unwrap();
         let mesh = s.world_state().unwrap().bodies[0].mesh();
         let mut big = (*mesh).clone();

@@ -869,14 +869,14 @@ pub struct VertexDefinition<O> {
     final_vtx1: Option<O>,
     /// `m_pFinalVtx2`.
     final_vtx2: Option<O>,
-    /// Not upstream (WR-410, tangency-labs/solidcore#1059; the SolidCraft fork's
+    /// Not upstream (WR-410, tangency-labs/solidcore#1059; the Torno fork's
     /// `m_dCrossingSine`): the sine of the angle at which the intersection curve that
     /// placed this definition crosses its source edge; `-1` when no such crossing placed
     /// it ([`VertexDefinition::place_by_crossing`]).
     crossing_sine: f64,
 }
 
-/// Not upstream (WR-410; the SolidCraft fork's `sm_CrossingError`): how far along its
+/// Not upstream (WR-410; the Torno fork's `sm_CrossingError`): how far along its
 /// edge a crossing at angle `asin(crossing_sine)`, whose points lie `gap` apart, may
 /// misplace a vertex definition: the gap over the sine, or `BIG_DOUBLE` when the curve
 /// runs along the edge (within the angular tolerance) or the angle is unknown.
@@ -946,7 +946,7 @@ impl<O: ClassObject> VertexDefinition<O> {
         self.position
     }
 
-    /// Not upstream (WR-410, tangency-labs/solidcore#1059; the SolidCraft fork's
+    /// Not upstream (WR-410, tangency-labs/solidcore#1059; the Torno fork's
     /// `SmVertexDefinition::PlaceByCrossing`): places this definition by another
     /// intersection curve's crossing of its source edge (`pc1`, `pc2`, the crossing's
     /// classifications against this definition's objects, at angle
@@ -2536,7 +2536,7 @@ impl<O: ClassObject> ProtoTopologyManager<O> {
     /// Drops every reference the listed proto faces (coincident proto edges) and
     /// proto edges (overlapping proto edges) hold to `pe`, before it is deleted.
     ///
-    /// SolidCraft fix tangency-labs/smlib 93efd6d (UB-239), which does this in
+    /// Torno fix tangency-labs/smlib 93efd6d (UB-239), which does this in
     /// `RemoveProtoEdge` because every library caller deletes the edge next. Upstream
     /// keeps the references, and later passes over those lists
     /// (`GlueCoincidentBrepVertices`, `Resolve`) read the edge after the free. The port
@@ -2904,7 +2904,7 @@ impl<O: ClassObject> ProtoTopologyManager<O> {
         Ok(None)
     }
 
-    /// Not upstream (WR-410, tangency-labs/solidcore#1059; the SolidCraft fork's
+    /// Not upstream (WR-410, tangency-labs/solidcore#1059; the Torno fork's
     /// `SmProtoVertex::AddCrossing`): an intersection curve crosses an edge at `pv`
     /// (`pc1`, `pc2`, the crossing's classifications, with their parameters set, at angle
     /// `asin(crossing_sine)`). The vertex definition of the crossing's source objects
@@ -3423,7 +3423,7 @@ impl<O: ClassObject> ProtoTopologyManager<O> {
 
     /// Adds `survivor` to the coincident proto edges of every listed proto face that
     /// has `removed` there and not `survivor` yet: the faces bounded by a proto edge
-    /// combined away are bounded by the one it was combined into (SolidCraft change,
+    /// combined away are bounded by the one it was combined into (Torno change,
     /// tangency-labs/smlib 93efd6d, in `SplitIntersectingProtoEdges`).
     pub fn hand_over_coincident_proto_edge(&mut self, survivor: ProtoEdgeId, removed: ProtoEdgeId) {
         for pf in self.pfs.clone() {

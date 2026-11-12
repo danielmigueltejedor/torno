@@ -5,8 +5,8 @@
 use egui::Pos2;
 use serde_json::json;
 use solidcore_record::Vec3;
-use solidcraft_engine::doc::{apply_point, joints, mat_inverse};
-use solidcraft_engine::geom::prelude::*;
+use torno_engine::doc::{apply_point, joints, mat_inverse};
+use torno_engine::geom::prelude::*;
 
 use crate::SolveApp;
 use crate::viewport::{Hit, Proj};
@@ -103,8 +103,8 @@ pub fn end(app: &mut SolveApp) {
 mod tests {
     use serde_json::{Value, json};
     use solidcore_record::Vec3;
-    use solidcraft_engine::doc::{apply_point, joints};
-    use solidcraft_engine::geom::prelude::*;
+    use torno_engine::doc::{apply_point, joints};
+    use torno_engine::geom::prelude::*;
 
     use crate::scenario::Harness;
     use crate::test_support::play;

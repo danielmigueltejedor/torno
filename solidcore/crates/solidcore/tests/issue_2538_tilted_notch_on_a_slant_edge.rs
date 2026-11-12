@@ -1,7 +1,7 @@
 //! A quarter-round notch along the tilted edge where a box's face meets a slanted face
 //! (#2538): the cut must give one closed solid of the closed-form volume.
 //!
-//! SolidCraft reports the design's cut failing with
+//! Torno reports the design's cut failing with
 //! `boolean::merge::p2::make_faceuse: upstream status 1001`, and the same cut with the
 //! tool 2 mm longer refused with `SmFace::Test #36` ("Face Surface Seam has suspicious
 //! Edge near seam"); the C++ fork refuses both. The mirror image about x = 0, whose
@@ -292,7 +292,7 @@ fn graded(k: &mut Kernel, brep: &mut Brep, what: &str) -> (f64, usize) {
         solidcore::topology::brep::p2::is_manifold_solid(brep).unwrap(),
         "{what}: the result is not a closed manifold solid"
     );
-    // Level2 runs face test 36, the one SolidCraft reports refusing this cut.
+    // Level2 runs face test 36, the one Torno reports refusing this cut.
     let check = check_brep(k, brep, CheckLevel::Level2).unwrap();
     assert!(
         check.is_valid(),
@@ -345,7 +345,7 @@ fn notch(tool: Tool, past: Past, mirror: bool, fixes: &UpstreamFixes) -> (f64, u
 /// The design of the issue (`v5`): both cap centres exactly on the box's face planes,
 /// and the seam on the line where the cylinder meets the slanted face on the material
 /// side. One closed solid of 641498.856 mm3, not a refusal, however the tool is built
-/// and whichever upstream fixes are on (SolidCraft runs all but its held-back ones).
+/// and whichever upstream fixes are on (Torno runs all but its held-back ones).
 #[test]
 fn the_design_notch_leaves_one_closed_solid() {
     let want = expected_volume(Past(0.0));

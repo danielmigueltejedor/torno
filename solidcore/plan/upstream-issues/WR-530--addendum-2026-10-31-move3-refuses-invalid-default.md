@@ -18,7 +18,7 @@ Updates: WR-530
   - `OffsetFacesExecutive::move_faces` (`offset/offset_faces.rs:907`);
   - `OffsetFacesExecutive::offset_faces_editing` (`offset_faces.rs:1439`);
   - `OffsetFacesExecutive::offset_faces` (`offset_faces.rs:1410`).
-- **Under SolidCraft's whole preset** (tangency-labs/solidcraft#8526's `fixes()`, 188 flags), the same move surfaces as 1001 from `topology::brep::p9`, through another preset flag that changes the path. That flag is not identified.
+- **Under Torno's whole preset** (tangency-labs/solidcraft#8526's `fixes()`, 188 flags), the same move surfaces as 1001 from `topology::brep::p9`, through another preset flag that changes the path. That flag is not identified.
 - **Found by:** a bisection over that preset on this input. `local_operation_step_walls` is the only flag needed for the refusal.
 - **Ruling (2026-10-31):** not a regression. The default's body fails `ValidatePointers` and has trim gaps, so refusing it is no worse than the default's invalid result. The flag is unchanged.
 - **Open-gap list:** this goes on WR-530's list of open gaps, beside the two in the 2026-10-29 addendum (`WR-530--addendum-2026-10-29-step-walls.md`): `extend_trim_edges`' 1001 on the split block's piece, and the boss wall stopping in `close_loop_gap` with 1043. It is probably the same gap as the boss wall's 1043.

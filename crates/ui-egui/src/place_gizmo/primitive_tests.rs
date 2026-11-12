@@ -3,9 +3,9 @@
 
 use serde_json::json;
 use solidcore_record::Vec3;
-use solidcraft_engine::Sel;
-use solidcraft_engine::doc::FeatureKind;
-use solidcraft_engine::geom::prelude::*;
+use torno_engine::Sel;
+use torno_engine::doc::FeatureKind;
+use torno_engine::geom::prelude::*;
 
 use super::{footprint, frame, move_to};
 use crate::dialogs::Kind;
@@ -47,10 +47,10 @@ fn drag_ok(h: &mut Harness, to: [f64; 3]) {
 }
 
 fn value(h: &Harness, e: &str) -> f64 {
-    h.app.session.doc.eval(e, solidcraft_engine::doc::expr::Kind::Length).unwrap()
+    h.app.session.doc.eval(e, torno_engine::doc::expr::Kind::Length).unwrap()
 }
 
-fn point(h: &Harness, p: &solidcraft_engine::doc::PointExpr) -> Vec3 {
+fn point(h: &Harness, p: &torno_engine::doc::PointExpr) -> Vec3 {
     Vec3::new(value(h, &p[0]), value(h, &p[1]), value(h, &p[2]))
 }
 
@@ -144,7 +144,7 @@ fn marker_moves_a_box_placed_by_its_centre_through_its_centre_fields() {
 
 #[test]
 fn a_dropped_box_stands_out_from_a_side_face_and_under_the_underside() {
-    let s = solidcraft_engine::Session::default();
+    let s = torno_engine::Session::default();
     let mut extra = serde_json::Map::new();
     let size = Vec3::new(20.0, 10.0, 6.0);
     let written = crate::primitive_placement::dropped(&s, &mut extra, Vec3::new(80.0, 25.0, 5.0), Vec3::X, size, [""; 3]);
@@ -161,13 +161,13 @@ fn a_dropped_box_stands_out_from_a_side_face_and_under_the_underside() {
 /// they say is the dropped place to the micrometre: no millimetre lost to the field's unit.
 #[test]
 fn a_dropped_box_in_a_metre_design_is_written_in_metres_at_the_dropped_place() {
-    let mut s = solidcraft_engine::Session::default();
+    let mut s = torno_engine::Session::default();
     s.execute("document.units", &json!({"units": "m"})).unwrap();
     let mut extra = serde_json::Map::new();
     let written = crate::primitive_placement::dropped(&s, &mut extra, Vec3::new(80.0123, 25.4567, 5.0), Vec3::Z, Vec3::new(20.0, 10.0, 6.0), [""; 3]);
     assert_eq!(written, Some(json!(["0.070012 m", "0.020457 m", "0.005 m"])), "centred across the top face, in metres");
     let Some(serde_json::Value::Array(corner)) = extra.get("corner") else { panic!("the corner: {extra:?}") };
-    let at: Vec<f64> = corner.iter().map(|c| s.doc.eval(c.as_str().unwrap(), solidcraft_engine::doc::expr::Kind::Length).unwrap()).collect();
+    let at: Vec<f64> = corner.iter().map(|c| s.doc.eval(c.as_str().unwrap(), torno_engine::doc::expr::Kind::Length).unwrap()).collect();
     for (got, want) in at.iter().zip([70.012, 20.457, 5.0]) {
         assert!((got - want).abs() < 1e-6, "{at:?}");
     }
@@ -223,12 +223,12 @@ fn an_empty_placement_field_counts_as_zero_for_the_marker() {
 /// inch design the corner a drop writes is 1 in back from the point, not 1 mm.
 #[test]
 fn a_dropped_box_reads_a_bare_size_expression_in_the_design_unit() {
-    let mut s = solidcraft_engine::Session::default();
+    let mut s = torno_engine::Session::default();
     s.execute("document.units", &json!({"units": "in"})).unwrap();
     let mut extra = serde_json::Map::new();
     crate::primitive_placement::dropped(&s, &mut extra, Vec3::new(50.8, 50.8, 0.0), Vec3::Z, Vec3::new(50.8, 50.8, 25.4), ["2 * 1", "2 * 1", "1"]);
     let Some(serde_json::Value::Array(corner)) = extra.get("corner") else { panic!("the corner: {extra:?}") };
-    let x = s.doc.eval(corner[0].as_str().unwrap(), solidcraft_engine::doc::expr::Kind::Length).unwrap();
+    let x = s.doc.eval(corner[0].as_str().unwrap(), torno_engine::doc::expr::Kind::Length).unwrap();
     assert!((x - 25.4).abs() < 1e-6, "1 in back from 2 in: {x} mm from {corner:?}");
 }
 

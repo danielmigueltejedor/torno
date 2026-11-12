@@ -1,5 +1,5 @@
 use serde_json::{Value, json};
-use solidcraft_doc::canvas::base64_encode;
+use torno_doc::canvas::base64_encode;
 
 use super::{
     CanvasCalibrateParams, CanvasCalibrated, CanvasDecalParams, CanvasDeleteParams, CanvasDeleted, CanvasEditParams, CanvasEdited,

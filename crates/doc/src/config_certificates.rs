@@ -2,7 +2,7 @@
 use crate::{DocError, Document, FeatureKind, ModelBody, Result, SolvedSketch};
 use serde::{Deserialize, Serialize};
 use solidcore_record::Seg2;
-use solidcraft_geom::prelude::*;
+use torno_geom::prelude::*;
 
 fn valid_signature(outer: &[String], holes: &[Vec<String>]) -> bool {
     let valid = |ids: &[String]| {
@@ -69,7 +69,7 @@ pub(crate) fn cap_key(outer: &[String], holes: &[Vec<String>]) -> String {
     }
     format!("{:x}", hash.finalize())
 }
-fn exact_region_signature(curves: &ExactSketchCurves, region: &solidcore_record::Region2) -> Option<solidcraft_kernel::CapSignature> {
+fn exact_region_signature(curves: &ExactSketchCurves, region: &solidcore_record::Region2) -> Option<torno_kernel::CapSignature> {
     if region.outer.segs.len() + region.holes.iter().map(|hole| hole.segs.len()).sum::<usize>() > 4096 || region.holes.len() > 128 {
         return None;
     }
@@ -86,9 +86,9 @@ fn exact_region_signature(curves: &ExactSketchCurves, region: &solidcore_record:
 }
 
 /// Charge all source-curve comparisons before matching; over-budget tools stay usable but uncertified.
-type CapBindings = Vec<Vec<Option<solidcraft_kernel::CapSignature>>>;
-pub(crate) fn extrude_cap_bindings(sketch: &SolvedSketch, bodies: &[solidcraft_kernel::Body], budget: usize) -> Option<CapBindings> {
-    use solidcraft_kernel::FaceSource;
+type CapBindings = Vec<Vec<Option<torno_kernel::CapSignature>>>;
+pub(crate) fn extrude_cap_bindings(sketch: &SolvedSketch, bodies: &[torno_kernel::Body], budget: usize) -> Option<CapBindings> {
+    use torno_kernel::FaceSource;
     if sketch.sketch.curves.len() > 2000 {
         return None;
     }
@@ -117,7 +117,7 @@ pub(crate) fn extrude_cap_bindings(sketch: &SolvedSketch, bodies: &[solidcraft_k
     let mut counts = std::collections::BTreeMap::new();
     let mut bindings = Vec::with_capacity(bodies.len());
     for body in bodies {
-        let mut cached: Option<(&solidcore_record::Region2, Option<solidcraft_kernel::CapSignature>)> = None;
+        let mut cached: Option<(&solidcore_record::Region2, Option<torno_kernel::CapSignature>)> = None;
         let mut values = Vec::new();
         for source in body.face_sources().into_iter().flatten() {
             let signature = if let Some(FaceSource::ExtrudeCap { region, high, .. }) = source {
@@ -156,8 +156,8 @@ pub(crate) fn extrude_cap_bindings(sketch: &SolvedSketch, bodies: &[solidcraft_k
 /// whole profile (a rectangle's four lines), so a sketch attached to a solid cap keeps its face
 /// when the extrude is made thin, and the other way round. Several regions (walls apart, or one
 /// meeting itself) are left uncertified: they keep their history names.
-pub(crate) fn thin_extrude_cap_bindings(curves: &[String], regions: usize, bodies: &[solidcraft_kernel::Body]) -> CapBindings {
-    use solidcraft_kernel::FaceSource;
+pub(crate) fn thin_extrude_cap_bindings(curves: &[String], regions: usize, bodies: &[torno_kernel::Body]) -> CapBindings {
+    use torno_kernel::FaceSource;
     let mut outer = curves.to_vec();
     outer.sort();
     outer.dedup();
@@ -337,8 +337,8 @@ pub(crate) fn cylinder_cap_role(high: bool) -> &'static str {
     if high { "top" } else { "bottom" }
 }
 
-pub(crate) fn flat_source_certificate(source: &solidcraft_kernel::FaceSource) -> Option<(u64, FaceCertificate)> {
-    use solidcraft_kernel::FaceSource;
+pub(crate) fn flat_source_certificate(source: &torno_kernel::FaceSource) -> Option<(u64, FaceCertificate)> {
+    use torno_kernel::FaceSource;
     match source {
         FaceSource::Box { producer: Some(producer), axis, high, .. } => Some((*producer, FaceCertificate::Box { axis: *axis, high: *high })),
         FaceSource::CylinderCap { producer, high, .. } => Some((*producer, FaceCertificate::CylinderCap { high: *high })),
@@ -355,8 +355,8 @@ pub(crate) fn flat_source_certificate(source: &solidcraft_kernel::FaceSource) ->
     }
 }
 
-pub(crate) fn flat_source_matches(certificate: &FaceCertificate, source: &solidcraft_kernel::FaceSource, producer: u64) -> bool {
-    use solidcraft_kernel::FaceSource;
+pub(crate) fn flat_source_matches(certificate: &FaceCertificate, source: &torno_kernel::FaceSource, producer: u64) -> bool {
+    use torno_kernel::FaceSource;
     match (certificate, source) {
         (FaceCertificate::Box { axis, high }, FaceSource::Box { producer: Some(current), axis: current_axis, high: current_high, .. }) => {
             producer == *current && axis == current_axis && high == current_high
@@ -416,14 +416,12 @@ impl<'a> ExactSketchCurves<'a> {
             if curve.construction
                 || !matches!(
                     curve.kind,
-                    solidcraft_sketch::CurveKind::Line { .. }
-                        | solidcraft_sketch::CurveKind::Arc { .. }
-                        | solidcraft_sketch::CurveKind::Circle { .. }
+                    torno_sketch::CurveKind::Line { .. } | torno_sketch::CurveKind::Arc { .. } | torno_sketch::CurveKind::Circle { .. }
                 )
             {
                 continue;
             }
-            let originals = if let solidcraft_sketch::CurveKind::Circle { c, r } = curve.kind {
+            let originals = if let torno_sketch::CurveKind::Circle { c, r } = curve.kind {
                 sketch
                     .sketch
                     .point(c)
@@ -686,12 +684,12 @@ impl Document {
             .map(|name| crate::naming::strip_piece(name).to_string())
             .ok_or_else(|| DocError::Unknown("face source name missing".into()))?;
         let origin = match body.body.face_sources().and_then(|sources| sources.get(index)).and_then(Option::as_ref) {
-            Some(solidcraft_kernel::FaceSource::Imported { producer: Some(producer), .. })
-            | Some(solidcraft_kernel::FaceSource::CertifiedExtrudeSide { producer, .. })
-            | Some(solidcraft_kernel::FaceSource::CertifiedExtrudeCap { producer, .. })
-            | Some(solidcraft_kernel::FaceSource::ShellPlanar { producer: Some(producer), .. })
-            | Some(solidcraft_kernel::FaceSource::Box { producer: Some(producer), .. })
-            | Some(solidcraft_kernel::FaceSource::CylinderCap { producer, .. }) => *producer,
+            Some(torno_kernel::FaceSource::Imported { producer: Some(producer), .. })
+            | Some(torno_kernel::FaceSource::CertifiedExtrudeSide { producer, .. })
+            | Some(torno_kernel::FaceSource::CertifiedExtrudeCap { producer, .. })
+            | Some(torno_kernel::FaceSource::ShellPlanar { producer: Some(producer), .. })
+            | Some(torno_kernel::FaceSource::Box { producer: Some(producer), .. })
+            | Some(torno_kernel::FaceSource::CylinderCap { producer, .. }) => *producer,
             _ => crate::persistent_name::made_by(&name).ok_or_else(|| DocError::Invalid("face source producer missing".into()))?,
         };
         let certificate = self.configuration_face_certificate(body, index)?;
@@ -715,7 +713,7 @@ impl Document {
         let Some(source) = body.body.face_sources().and_then(|sources| sources.get(index)).and_then(Option::as_ref) else {
             return Ok(None);
         };
-        if let solidcraft_kernel::FaceSource::ShellPlanar { producer: Some(producer), source, inner, .. } = source {
+        if let torno_kernel::FaceSource::ShellPlanar { producer: Some(producer), source, inner, .. } = source {
             if !self.feature(*producer).is_some_and(|feature| matches!(feature.kind, FeatureKind::Shell { .. })) {
                 return Err(DocError::Invalid("shell source producer missing".into()));
             }
@@ -728,7 +726,7 @@ impl Document {
             certificate.validate()?;
             return Ok(Some(certificate));
         }
-        if let solidcraft_kernel::FaceSource::Imported { item, face, payload_sha256: Some(digest), producer: Some(producer) } = source {
+        if let torno_kernel::FaceSource::Imported { item, face, payload_sha256: Some(digest), producer: Some(producer) } = source {
             if !self.feature(*producer).is_some_and(|feature| matches!(feature.kind, FeatureKind::Import { .. })) {
                 return Err(DocError::Invalid("import source producer missing".into()));
             }
@@ -737,7 +735,7 @@ impl Document {
             return Ok(Some(certificate));
         }
         let certificate = match source {
-            solidcraft_kernel::FaceSource::CertifiedExtrudeSide { producer, sketch, curve, .. } => {
+            torno_kernel::FaceSource::CertifiedExtrudeSide { producer, sketch, curve, .. } => {
                 if !self.feature(*producer).is_some_and(|feature| matches!(feature.kind, FeatureKind::Extrude { .. })) {
                     return Err(DocError::Invalid("side source producer missing".into()));
                 }
@@ -751,18 +749,18 @@ impl Document {
     pub fn strong_face_target(&self, body: &ModelBody, index: usize, point: solidcore_record::Vec3) -> Result<crate::config::ConfigFaceTarget> {
         let mut target = self.configuration_face_target(body, index, point)?;
         match body.body.face_sources().and_then(|sources| sources.get(index)).and_then(Option::as_ref) {
-            Some(solidcraft_kernel::FaceSource::Box { producer: Some(producer), axis, high, .. }) => {
+            Some(torno_kernel::FaceSource::Box { producer: Some(producer), axis, high, .. }) => {
                 target.origin_feature = *producer;
                 let axis_name = ["x", "y", "z"].get(*axis as usize).ok_or_else(|| DocError::Invalid("invalid box face axis".into()))?;
                 target.name = format!("F{producer}:{}{axis_name}", if *high { "+" } else { "-" });
                 target.certificate = Some(FaceCertificate::Box { axis: *axis, high: *high });
             }
-            Some(solidcraft_kernel::FaceSource::CylinderCap { producer, high, .. }) => {
+            Some(torno_kernel::FaceSource::CylinderCap { producer, high, .. }) => {
                 target.origin_feature = *producer;
                 target.name = format!("F{producer}:{}", cylinder_cap_role(*high));
                 target.certificate = Some(FaceCertificate::CylinderCap { high: *high });
             }
-            Some(solidcraft_kernel::FaceSource::CertifiedExtrudeCap { producer, sketch, high, outer, holes, .. }) => {
+            Some(torno_kernel::FaceSource::CertifiedExtrudeCap { producer, sketch, high, outer, holes, .. }) => {
                 target.origin_feature = *producer;
                 target.name = format!("F{producer}:cap:{}:{}", if *high { "high" } else { "low" }, cap_key(outer, holes));
                 target.certificate = Some(FaceCertificate::ExtrudeCap { sketch: *sketch, high: *high, outer: outer.clone(), holes: holes.clone() });
@@ -979,8 +977,8 @@ mod tests {
     use super::*;
     use serde_json::json;
 
-    fn solved(mut sketch: solidcraft_sketch::Sketch) -> SolvedSketch {
-        let report = solidcraft_sketch::solve(&mut sketch);
+    fn solved(mut sketch: torno_sketch::Sketch) -> SolvedSketch {
+        let report = torno_sketch::solve(&mut sketch);
         SolvedSketch {
             feature: 1,
             name: "sources".into(),
@@ -1020,7 +1018,7 @@ mod tests {
     #[test]
     fn prepared_sources_keep_exact_identity_and_reject_ambiguity() {
         use solidcore_record::Vec2;
-        let mut sketch = solidcraft_sketch::Sketch::new();
+        let mut sketch = torno_sketch::Sketch::new();
         sketch.add_line(Vec2::ZERO, Vec2::new(10., 0.), None, None, Some("line")).unwrap();
         sketch.add_circle(Vec2::new(20., 0.), 2., None, Some("circle")).unwrap();
         let construction = sketch.add_line(Vec2::ZERO, Vec2::new(10., 0.), None, None, Some("construction")).unwrap();
@@ -1037,7 +1035,7 @@ mod tests {
         // A prepared pass borrows one immutable evaluated sketch, so an upstream edit
         // necessarily prepares fresh sources rather than retaining stale coordinates.
         let mut moved = sketch.clone();
-        moved.sketch = solidcraft_sketch::Sketch::new();
+        moved.sketch = torno_sketch::Sketch::new();
         moved.sketch.add_line(Vec2::new(0., 1.), Vec2::new(10., 1.), None, None, Some("line")).unwrap();
         assert_eq!(ExactSketchCurves::new(&moved).find(&partial), None);
     }
@@ -1046,7 +1044,7 @@ mod tests {
     fn a_curve_drawn_over_a_projected_boundary_is_the_source() {
         use solidcore_record::Vec2;
         // A face sketch's live boundary, with a profile edge traced over it (issue #489).
-        let mut sketch = solidcraft_sketch::Sketch::new();
+        let mut sketch = torno_sketch::Sketch::new();
         let projected = sketch.add_line(Vec2::ZERO, Vec2::new(10., 0.), None, None, Some("edge")).unwrap();
         sketch.curves[projected].link = Some("boundary".into());
         let sketch = solved(sketch);
@@ -1069,7 +1067,7 @@ mod tests {
     #[ignore = "manual optimized certification microbenchmark; no timing assertion"]
     fn benchmark_prepared_extrude_sources() {
         use solidcore_record::Vec2;
-        let mut sketch = solidcraft_sketch::Sketch::new();
+        let mut sketch = torno_sketch::Sketch::new();
         for i in 0..1000 {
             let y = i as f64;
             sketch.add_line(Vec2::new(0., y), Vec2::new(10., y), None, None, None).unwrap();

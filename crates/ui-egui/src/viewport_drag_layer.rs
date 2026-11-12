@@ -10,8 +10,8 @@
 use std::hash::{Hash, Hasher};
 use std::sync::Arc;
 
-use solidcraft_engine::doc::{Document, Mat, ModelState};
-use solidcraft_engine::geom::Aabb3;
+use torno_engine::doc::{Document, Mat, ModelState};
+use torno_engine::geom::Aabb3;
 
 use super::{GpuScene, SolveApp};
 use crate::gpu::MovingLayer;
@@ -155,7 +155,7 @@ fn moved_bodies(from: &ModelState, now: &ModelState) -> Option<Moved> {
             return None;
         }
         let d = body.display_moved_from(from.bodies.get(i)?)?;
-        if d == solidcraft_engine::doc::IDENTITY {
+        if d == torno_engine::doc::IDENTITY {
             continue;
         }
         match &delta {
@@ -165,7 +165,7 @@ fn moved_bodies(from: &ModelState, now: &ModelState) -> Option<Moved> {
         }
         *moving.get_mut(i)? = true;
     }
-    Some(Moved { moving, from: order, delta: delta.unwrap_or(solidcraft_engine::doc::IDENTITY) })
+    Some(Moved { moving, from: order, delta: delta.unwrap_or(torno_engine::doc::IDENTITY) })
 }
 
 /// `moved`, with a layer's `dragged` bodies when none is moved: back where the layer's world has
@@ -184,7 +184,7 @@ fn still_dragged(moved: Moved, dragged: &[bool]) -> Moved {
 fn moved_boxes(boxes: &[(String, Aabb3)], moved: &Moved) -> Option<Vec<(String, Aabb3)>> {
     let shifted = |bb: &Aabb3| {
         let mut b = Aabb3::EMPTY;
-        super::box_corners(bb).into_iter().for_each(|p| b.add(solidcraft_engine::doc::apply_point(&moved.delta, p)));
+        super::box_corners(bb).into_iter().for_each(|p| b.add(torno_engine::doc::apply_point(&moved.delta, p)));
         b
     };
     moved
@@ -237,7 +237,7 @@ pub(super) fn scenes(app: &mut SolveApp) -> Option<MovingLayer> {
                 .filter(|(_, (b, (_, bb)))| !bb.is_empty() && app.body_visible(&b.name))
                 .flat_map(|(i, (_, (_, bb)))| {
                     let moved = layer.moving.get(i).copied().unwrap_or(false);
-                    super::box_corners(bb).map(|p| if moved { solidcraft_engine::doc::apply_point(&layer.delta, p) } else { p })
+                    super::box_corners(bb).map(|p| if moved { torno_engine::doc::apply_point(&layer.delta, p) } else { p })
                 })
                 .collect::<Vec<_>>();
             sc.ground_ao = super::ground_ao(app, super::frame_bounds(app, corners.into_iter()));
@@ -290,8 +290,8 @@ mod tests {
     use serde_json::json;
 
     /// A session with a body that stays and a placed copy of a part, moved off the part.
-    fn two_parts() -> (solidcraft_engine::Session, u64) {
-        let mut s = solidcraft_engine::Session::default();
+    fn two_parts() -> (torno_engine::Session, u64) {
+        let mut s = torno_engine::Session::default();
         s.execute("solid.box", &json!({"length": 5, "width": 5, "height": 5, "body_name": "Stays"})).unwrap();
         let first = s.execute("component.create", &json!({"name": "Part"})).unwrap()["occurrence"].as_u64().unwrap();
         s.execute("solid.box", &json!({"length": 2, "width": 3, "height": 4, "body_name": "Block", "operation": "new"})).unwrap();
@@ -326,7 +326,7 @@ mod tests {
         let moving = world.bodies.iter().find(|b| before.body(&b.name).is_some_and(|w| w.mesh_bounds().min.x != b.mesh_bounds().min.x)).unwrap();
         let moving = moving.name.clone();
         let select = |app: &mut SolveApp, names: &[&str]| {
-            app.session.selection = names.iter().map(|n| solidcraft_engine::Sel::Body { name: (*n).to_string() }).collect();
+            app.session.selection = names.iter().map(|n| torno_engine::Sel::Body { name: (*n).to_string() }).collect();
             super::super::build_highlight(app)
         };
         let stays = select(&mut app, &["Stays"]);
@@ -378,7 +378,7 @@ mod tests {
         app.run("occurrence.move", json!({"occurrence": dragged, "base_transform": base, "translate": [4, 0, 0], "capture": false})).unwrap();
         assert!(drawable(&app), "a plain drag is drawn as a layer");
         let at = solidcore_record::Vec3::new(2.5, 2.5, 5.0);
-        app.session.isocurves.push(solidcraft_engine::IsoPick { body: "Stays".into(), at, count: 3 });
+        app.session.isocurves.push(torno_engine::IsoPick { body: "Stays".into(), at, count: 3 });
         assert!(!drawable(&app), "with isocurves shown the model is drawn whole");
     }
 

@@ -1,4 +1,4 @@
-//! #2009 group A: statuses SMLib drops and the SolidCraft fork passes on, behind
+//! #2009 group A: statuses SMLib drops and the Torno fork passes on, behind
 //! `UpstreamFixes::brep_edit_statuses_pass_on` (WR-658). No input fails these calls on
 //! valid geometry, so each test injects the callee's failure and checks that the
 //! status reaches the caller with the flag on and is dropped with it off.

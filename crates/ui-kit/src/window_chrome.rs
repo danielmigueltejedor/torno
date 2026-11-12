@@ -11,7 +11,7 @@
 //!
 //! The resize zones are as wide as Windows' own resize border at the window's scale
 //! ([`resize_border_px`]), corners win where they overlap the edges ([`resize_hit`]). An app that
-//! answers the system's hit test itself (SolidCraft's `apps/solidcraft/src/native_frame.rs`) uses
+//! answers the system's hit test itself (Torno's `apps/torno/src/native_frame.rs`) uses
 //! them there, so the OS shows its resize cursors and resizes from the first frame; elsewhere egui
 //! zones above everything else start an OS resize ([`resize_zones`]). The web build has neither.
 //!
@@ -31,7 +31,7 @@ use egui::{
     Color32, CursorIcon, Id, LayerId, Order, PointerButton, Pos2, Rect, ResizeDirection, Sense, Stroke, Ui, ViewportBuilder, ViewportCommand, pos2,
     vec2,
 };
-use solidcraft_theme::Tokens;
+use torno_theme::Tokens;
 
 pub mod native_menu;
 

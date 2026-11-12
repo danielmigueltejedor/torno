@@ -54,12 +54,12 @@
 //!   [`UpstreamFixes::ssi_trace_tangent_curves_once`](crate::kernel::UpstreamFixes::ssi_trace_tangent_curves_once)
 //!   a traced curve removes, before it is flushed, the start points left in a tangent
 //!   cluster with either of its ends (`SurfaceIntersector::remove_end_tangent_clusters`);
-//!   the SolidCraft fork's tangency-labs/smlib@0ce09f2. Off by default (upstream
+//!   the Torno fork's tangency-labs/smlib@0ce09f2. Off by default (upstream
 //!   behaviour).
 //! - **Opt-in fix (WR-77, #393, #2110).** With
 //!   [`UpstreamFixes::ssi_split_curves_at_singular_points`](crate::kernel::UpstreamFixes::ssi_split_curves_at_singular_points)
 //!   the curves are split at the singular points they pass through after the tangent
-//!   nodes are added (`super::singular_splits`); the SolidCraft fork's
+//!   nodes are added (`super::singular_splits`); the Torno fork's
 //!   tangency-labs/smlib@3c9d1d3. Off by default (upstream behaviour).
 //! - **Empty trace (WR-80).** A curve is traced back the other way
 //!   ([`SurfaceIntersector::trace_back`], part 4) only when `TraceCurve` produced

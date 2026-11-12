@@ -5,7 +5,7 @@
 //! one order more is held. Only a round of the ball's circle (a constant radius) between
 //! NURBS faces is enclosed.
 //!
-//! Not in the pinned upstream: the SolidCraft fork's `source/SMLib/src/SmFilletSection.cpp`
+//! Not in the pinned upstream: the Torno fork's `source/SMLib/src/SmFilletSection.cpp`
 //! (tangency-labs/smlib@c5b6bb7, smlib#101, merged at 852dd8c). A round of one radius
 //! is built on such a face as its definition (WR-714) where
 //! [`crate::kernel::UpstreamFixes::fillet_round_as_definition`] builds the inner one.

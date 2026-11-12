@@ -1,8 +1,8 @@
 use super::*;
 use crate::job::{ReflectionBody, ReflectionMode, ReflectionOptions};
 use crate::lighting::{HdrSource, environment_input::EnvironmentInput};
-use solidcraft_geom::{Aabb3, Mesh};
 use std::sync::Arc;
+use torno_geom::{Aabb3, Mesh};
 
 fn environment() -> EnvironmentInput {
     let mut bytes = b"#?RADIANCE\nFORMAT=32-bit_rle_rgbe\nPRIMARIES=0.64 0.33 0.30 0.60 0.15 0.06 0.3127 0.3290\n\n-Y 2 +X 4\n".to_vec();
@@ -51,8 +51,8 @@ fn scene(face_override: bool) -> ProductScene {
 }
 
 fn task(samples: u8, selected: bool, face_override: bool, shadows: bool) -> ImageTask {
-    let mut camera = solidcraft_viewport::Camera { distance: 50.0, ..Default::default() };
-    camera.set_view(solidcraft_viewport::StandardView::Top);
+    let mut camera = torno_viewport::Camera { distance: 50.0, ..Default::default() };
+    camera.set_view(torno_viewport::StandardView::Top);
     let options = RaytraceOptions {
         threads: 1,
         lights: Some(Vec::new()),
@@ -216,8 +216,8 @@ fn request_admission_and_task_slot_caps_are_not_expanded() {
 // Fixed spatial-generator reuse regressions. Source written; execution pending.
 
 fn spatial_reuse_fixture(s: u8, r: u8, selected: bool, face_override: bool, shadows: bool) -> ImageTask {
-    let mut camera = solidcraft_viewport::Camera { distance: 50.0, ..Default::default() };
-    camera.set_view(solidcraft_viewport::StandardView::Top);
+    let mut camera = torno_viewport::Camera { distance: 50.0, ..Default::default() };
+    camera.set_view(torno_viewport::StandardView::Top);
     let options = RaytraceOptions {
         threads: 1,
         primary_samples: s,

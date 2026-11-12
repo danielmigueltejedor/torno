@@ -1,13 +1,13 @@
 //! Bounded immutable file capture; decoding is deferred to the admitted worker.
 use crate::{Result, params::bad};
 use serde::Deserialize;
-use solidcraft_geom::MeshGeom;
-use solidcraft_render::{
+use std::sync::Arc;
+use torno_geom::MeshGeom;
+use torno_render::{
     ProductScene,
     job::textures::{BaseColorMode, MAX_TEXTURE_BINDINGS, MAX_TEXTURE_SOURCE_BYTES, PlanarFrame, RuntimeTextures, TextureBinding, TextureMap},
     texture_input::MapRole,
 };
-use std::sync::Arc;
 
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -39,7 +39,7 @@ fn load(
     remaining: &mut u64,
     command: &str,
     captured: &mut std::collections::BTreeMap<(String, u8), TextureMap>,
-    resources: Option<&solidcraft_doc::render_texture_resources::TextureResources>,
+    resources: Option<&torno_doc::render_texture_resources::TextureResources>,
 ) -> Result<TextureMap> {
     if path.is_empty() || path.len() > 4096 || path.chars().any(char::is_control) {
         return Err(bad(command, "texture path must be a bounded local path"));
@@ -55,9 +55,9 @@ fn load(
     if let Some(map) = captured.get(&key) {
         return Ok(map.clone());
     }
-    let maximum = (*remaining).min(solidcraft_render::texture_input::MAX_TEXTURE_BYTES as u64);
+    let maximum = (*remaining).min(torno_render::texture_input::MAX_TEXTURE_BYTES as u64);
     let bytes = if let Some(key) = path.strip_prefix("embedded://") {
-        let id: solidcraft_doc::render_resources::HdrId = serde_json::from_value(serde_json::json!(key)).map_err(|e| bad(command, e.to_string()))?;
+        let id: torno_doc::render_resources::HdrId = serde_json::from_value(serde_json::json!(key)).map_err(|e| bad(command, e.to_string()))?;
         let resource = resources
             .ok_or_else(|| bad(command, "embedded texture resources are unavailable"))?
             .required(&id)
@@ -72,7 +72,7 @@ fn load(
     } else if let Some(key) = path.strip_prefix("builtin://") {
         super::library::texture_bytes(key, role, maximum, command)?
     } else {
-        solidcraft_io::vfs::read(path, maximum as usize).map_err(|e| bad(command, format!("could not capture texture: {e}")))?
+        torno_io::vfs::read(path, maximum as usize).map_err(|e| bad(command, format!("could not capture texture: {e}")))?
     };
     if bytes.is_empty() {
         return Err(bad(command, "texture file must not be empty"));
@@ -121,7 +121,7 @@ pub(super) fn capture(scene: &ProductScene, overrides: &[Override], command: &st
 pub(super) fn capture_with_resources(
     scene: &ProductScene,
     overrides: &[Override],
-    resources: Option<&solidcraft_doc::render_texture_resources::TextureResources>,
+    resources: Option<&torno_doc::render_texture_resources::TextureResources>,
     command: &str,
 ) -> Result<Option<Arc<RuntimeTextures>>> {
     capture_with_resources_and_filtering(scene, overrides, resources, command, false)
@@ -130,7 +130,7 @@ pub(super) fn capture_with_resources(
 pub(super) fn capture_with_resources_and_filtering(
     scene: &ProductScene,
     overrides: &[Override],
-    resources: Option<&solidcraft_doc::render_texture_resources::TextureResources>,
+    resources: Option<&torno_doc::render_texture_resources::TextureResources>,
     command: &str,
     filtering: bool,
 ) -> Result<Option<Arc<RuntimeTextures>>> {
@@ -186,18 +186,18 @@ pub(super) fn capture_with_resources_and_filtering(
 mod tests {
     use super::*;
     use serde_json::json;
-    use solidcraft_geom::{Aabb3, Mesh};
+    use torno_geom::{Aabb3, Mesh};
     #[test]
     fn unsupported_or_stale_map_targets_fail_before_file_io() {
         let scene = ProductScene {
             bounds: Aabb3::EMPTY,
-            meshes: vec![solidcraft_render::ProductMesh {
+            meshes: vec![torno_render::ProductMesh {
                 name: "Glass".into(),
                 mesh: Arc::new(Mesh::default()),
                 color: [255; 3],
                 opacity: 1.,
                 surface: None,
-                transmission: Some(solidcraft_render::transmission::Transmission::new(solidcore_record::Vec3::ZERO, Some(1.)).unwrap()),
+                transmission: Some(torno_render::transmission::Transmission::new(solidcore_record::Vec3::ZERO, Some(1.)).unwrap()),
                 faces: vec![],
             }],
         };

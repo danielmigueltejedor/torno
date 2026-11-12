@@ -19,7 +19,7 @@
 //! undefined; there it is taken from the nearest sample where it is defined, so a pcurve runs
 //! straight into the pole, and where two uses meet at a pole the loop runs along the pole's line.
 //!
-//! Origin: SolidCraft's `crates/geom/src/brep/pcurve.rs` (MIT OR Apache-2.0), moved here with its
+//! Origin: Torno's `crates/geom/src/brep/pcurve.rs` (MIT OR Apache-2.0), moved here with its
 //! history (RFC 0003, 1.5 and 1.8). It takes the kernel's evaluation types ([`super::geometry`]);
 //! the structural checks of a record (counts, budgets, a use's interval in its curve's natural
 //! range) are the caller's, before it converts the record (`solidcore-ops`' `pcurve`).

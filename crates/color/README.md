@@ -1,4 +1,4 @@
-# solidcraft-color
+# torno-color
 
 Colour rules and data that any crate may share. It has no dependencies and holds no app types,
 so the renderer, the document, the importers and the UI theme all use the same rule and the same

@@ -4,7 +4,7 @@
 //! `capi/src/smlib_imprint.cpp` (`smlib_imprint`).
 //!
 //! As there, every operation works on copies of its operands (`SmApiBrepCopy`): `SM_API` edits
-//! the first operand in place and consumes the second, and a SolidCraft body never changes.
+//! the first operand in place and consumes the second, and a Torno body never changes.
 
 use std::sync::PoisonError;
 
@@ -22,7 +22,7 @@ use solidcore::topology::{Brep, edge};
 use super::{Body, run_on};
 use crate::{BooleanOp, Error, Result};
 
-/// What an operation's `SM_API` call gave, before it is a SolidCraft result: the capi's
+/// What an operation's `SM_API` call gave, before it is a Torno result: the capi's
 /// statuses besides success.
 enum Done {
     Body(Box<Brep>),

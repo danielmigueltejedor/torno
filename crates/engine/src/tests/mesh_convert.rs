@@ -1,12 +1,12 @@
 use super::*;
 use solidcore_record::Vec3;
-use solidcraft_doc::{Document, FeatureKind, MeshData};
+use torno_doc::{Document, FeatureKind, MeshData};
 
 /// A design whose only feature imports a 10 x 20 x 30 mm box as the mesh body `Mesh`. The
 /// schema tests (`schema/mesh_tests.rs`) convert it too.
 pub(crate) fn imported_box() -> Session {
-    let body = solidcraft_kernel::box_solid(Vec3::ZERO, Vec3::new(10., 20., 30.)).unwrap();
-    let mesh = body.mesh(&solidcraft_kernel::MeshTolerance::chord(0.01)).unwrap();
+    let body = torno_kernel::box_solid(Vec3::ZERO, Vec3::new(10., 20., 30.)).unwrap();
+    let mesh = body.mesh(&torno_kernel::MeshTolerance::chord(0.01)).unwrap();
     let mut doc = Document::default();
     doc.add_feature(
         FeatureKind::MeshImport {
@@ -139,7 +139,7 @@ fn exported_binary_stl_with_a_bore_reconstructs_analytic_faces() {
     run(&mut s, "sketch.circle.center", json!({"center":[10,10],"radius":4}));
     run(&mut s, "sketch.finish", json!({}));
     run(&mut s, "solid.extrude", json!({"sketch":"Section","profiles":[{"point":[30,10]}],"distance":15,"body_name":"Bracket"}));
-    let path = std::env::temp_dir().join(format!("solidcraft-mesh-convert-{}.stl", std::process::id()));
+    let path = std::env::temp_dir().join(format!("torno-mesh-convert-{}.stl", std::process::id()));
     run(&mut s, "file.save_mesh", json!({"path":path}));
     run(&mut s, "doc.open", json!({"path":path}));
     let name = s.model.state().bodies[0].name.clone();
@@ -148,7 +148,7 @@ fn exported_binary_stl_with_a_bore_reconstructs_analytic_faces() {
     let body = &state.bodies[0].body;
     assert!(!body.is_mesh());
     assert!(body.validity().is_empty());
-    assert_eq!(solidcraft_kernel::measure(body).unwrap().merged.face_types.get("cylinder"), Some(&1));
+    assert_eq!(torno_kernel::measure(body).unwrap().merged.face_types.get("cylinder"), Some(&1));
     // The L's six sides, the two caps and the bore, one full-turn wall.
     assert_eq!(body.faces(0.01).unwrap().len(), 9);
     std::fs::remove_file(path).unwrap();
@@ -166,10 +166,10 @@ fn stl_export_is_closed_where_faces_meet() {
     let state = s.model.state();
     for name in ["BoxFillet", "CylHole"] {
         let body = &state.bodies.iter().find(|b| b.name == name).unwrap().body;
-        let expected = solidcraft_kernel::measure(body).unwrap().volume;
-        for format in [solidcraft_io::Format::StlBinary, solidcraft_io::Format::StlAscii] {
-            let bytes = solidcraft_io::export(&state, &[name.to_string()], format, name).unwrap();
-            let tris = solidcraft_io::read_stl(&bytes).unwrap();
+        let expected = torno_kernel::measure(body).unwrap().volume;
+        for format in [torno_io::Format::StlBinary, torno_io::Format::StlAscii] {
+            let bytes = torno_io::export(&state, &[name.to_string()], format, name).unwrap();
+            let tris = torno_io::read_stl(&bytes).unwrap();
             let key = |p: [f32; 3]| p.map(f32::to_bits);
             let mut edges = std::collections::HashMap::new();
             for t in &tris {
@@ -183,8 +183,8 @@ fn stl_export_is_closed_where_faces_meet() {
             let p = |v: [f32; 3]| Vec3::new(v[0] as f64, v[1] as f64, v[2] as f64);
             let v: f64 = tris.iter().map(|t| p(t[0]).dot(p(t[1]).cross(p(t[2]))) / 6.0).sum();
             assert!((v - expected).abs() <= expected * 1e-3, "{name} {format:?}: STL volume {v}, body {expected}");
-            let mf = solidcraft_io::export(&state, &[name.to_string()], solidcraft_io::Format::ThreeMf, name).unwrap();
-            let (objs, _) = solidcraft_io::read_3mf(&mf).unwrap();
+            let mf = torno_io::export(&state, &[name.to_string()], torno_io::Format::ThreeMf, name).unwrap();
+            let (objs, _) = torno_io::read_3mf(&mf).unwrap();
             assert_eq!(tris.len(), objs.iter().map(|o| o.triangles.len()).sum::<usize>(), "{name} {format:?}: STL and 3MF triangles");
         }
     }
@@ -250,7 +250,7 @@ pub(crate) static CHOSEN_PROGRAMS: std::sync::Mutex<()> = std::sync::Mutex::new(
 fn save_mesh_with_a_chosen_program_writes_the_file_where_asked_and_sends_it_there() {
     use std::os::unix::fs::PermissionsExt;
     let _turn = CHOSEN_PROGRAMS.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-    let dir = std::env::temp_dir().join(format!("solidcraft-save-mesh-send-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("torno-save-mesh-send-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&dir);
     std::fs::create_dir_all(&dir).unwrap();
     let (script, seen, out) = (dir.join("fake-slicer"), dir.join("seen"), dir.join("part.stl"));
@@ -297,7 +297,7 @@ fn save_mesh_accepts_the_path_of_a_listed_appimage_and_refuses_the_others() {
     use crate::slicers::{Slicer, TEST_DETECTED, test_support::fake_program};
     let _turn = CHOSEN_PROGRAMS.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
     let _reset = MadeUp;
-    let dir = std::env::temp_dir().join(format!("solidcraft-save-mesh-listed-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("torno-save-mesh-listed-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&dir);
     std::fs::create_dir_all(&dir).unwrap();
     let seen = dir.join("seen");
@@ -345,7 +345,7 @@ fn save_mesh_with_a_cold_prusaslicer_3_waits_for_it_before_sending() {
     use crate::slicers::{Slicer, TEST_BUSCTL, TEST_DETECTED, test_support::fake_program};
     let _turn = CHOSEN_PROGRAMS.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
     let _reset = MadeUp;
-    let dir = std::env::temp_dir().join(format!("solidcraft-save-mesh-cold-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("torno-save-mesh-cold-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&dir);
     let launcher_dir = dir.join("slic3r-app-launcher");
     std::fs::create_dir_all(&launcher_dir).unwrap();
@@ -381,7 +381,7 @@ fn save_mesh_with_a_cold_prusaslicer_3_waits_for_it_before_sending() {
 #[test]
 fn unsaved_designs_of_one_name_send_to_different_files_and_one_design_to_one() {
     use std::os::unix::fs::PermissionsExt;
-    let dir = std::env::temp_dir().join(format!("solidcraft-open-in-slicer-uid-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("torno-open-in-slicer-uid-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&dir);
     std::fs::create_dir_all(&dir).unwrap();
     let script = dir.join("fake-slicer");
@@ -412,7 +412,7 @@ fn unsaved_designs_of_one_name_send_to_different_files_and_one_design_to_one() {
 fn the_first_save_as_changes_the_file_name_once() {
     use std::os::unix::fs::PermissionsExt;
     let _turn = CHOSEN_PROGRAMS.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-    let dir = std::env::temp_dir().join(format!("solidcraft-open-in-slicer-saveas-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("torno-open-in-slicer-saveas-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&dir);
     std::fs::create_dir_all(&dir).unwrap();
     let script = dir.join("fake-slicer");
@@ -443,7 +443,7 @@ fn send_to_slicer_writes_3mf_and_starts_the_program_with_it() {
     use std::os::unix::fs::PermissionsExt;
     let _turn = CHOSEN_PROGRAMS.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
     let mut s = imported_box();
-    let dir = std::env::temp_dir().join(format!("solidcraft-open-in-slicer-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("torno-open-in-slicer-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&dir);
     std::fs::create_dir_all(&dir).unwrap();
     let (script, seen) = (dir.join("fake-slicer"), dir.join("seen"));
@@ -519,7 +519,7 @@ fn open_in_easyprint_hands_the_host_a_3mf_or_an_stl_that_reads_back() {
         FeatureKind::MeshImport { meshes, .. } => meshes[0].triangles.len() / 3,
         other => panic!("{other:?}"),
     };
-    let tris = solidcraft_io::read_stl(&seen[1].1).unwrap();
+    let tris = torno_io::read_stl(&seen[1].1).unwrap();
     assert_eq!(tris.len(), imported);
     let key = |p: [f32; 3]| p.map(f32::to_bits);
     let mut sides = std::collections::HashMap::<_, i32>::new();
@@ -585,7 +585,7 @@ fn open_in_easyprint_reports_a_host_that_cannot_start_and_a_model_over_the_limit
 
 fn insert_box_mesh(s: &mut Session, suffix: &str) -> (String, u64) {
     let mut source = imported_box();
-    let path = std::env::temp_dir().join(format!("solidcraft-convert-component-{}-{suffix}.stl", std::process::id()));
+    let path = std::env::temp_dir().join(format!("torno-convert-component-{}-{suffix}.stl", std::process::id()));
     run(&mut source, "file.save_mesh", json!({"path":path}));
     let result = run(s, "file.insert_mesh", json!({"path":path,"name":"Mesh 1"}));
     std::fs::remove_file(path).unwrap();

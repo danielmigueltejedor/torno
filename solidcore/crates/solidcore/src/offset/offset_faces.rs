@@ -1,5 +1,5 @@
 //! Not upstream: moving faces of a solid along their normals, the tangent blends on them
-//! following (the SolidCraft fork's `SmOffsetFacesExecutive`, WR-615).
+//! following (the Torno fork's `SmOffsetFacesExecutive`, WR-615).
 //!
 //! Fork: tangency-labs/smlib a96ce9f, 607d617, 758829c and 9504880 (opt-in), `source/SMLib/src/SmOffsetFaces.cpp`,
 //! `source/SMLib/inc/SmOffsetFaces.h` and `SM_AI_FOLLOWED_BLEND` (`SmAttribute.h`). Pinned

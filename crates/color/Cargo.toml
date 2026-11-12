@@ -1,5 +1,5 @@
 [package]
-name = "solidcraft-color"
+name = "torno-color"
 description = "Colour rules and data any crate may share: the sRGB transfer function and the surface analysis palette"
 version.workspace = true
 edition.workspace = true

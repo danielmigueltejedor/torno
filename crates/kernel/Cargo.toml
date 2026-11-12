@@ -1,6 +1,6 @@
 [package]
-name = "solidcraft-kernel"
-description = "SolidCraft B-rep kernel boundary: solids, extrude/revolve/booleans/fillets, meshes, measures and STEP, behind our own API (implemented with solidcore)"
+name = "torno-kernel"
+description = "Torno B-rep kernel boundary: solids, extrude/revolve/booleans/fillets, meshes, measures and STEP, behind our own API (implemented with solidcore)"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
@@ -12,9 +12,9 @@ workspace = true
 solidcore-record = { workspace = true }
 solidcore-ops = { workspace = true }
 solidcore-tess = { workspace = true }
-solidcraft-geom = { workspace = true }
-solidcraft-smlib = { workspace = true }
-solidcraft-profile = { workspace = true }
+torno-geom = { workspace = true }
+torno-smlib = { workspace = true }
+torno-profile = { workspace = true }
 solidcore-step = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
@@ -27,5 +27,5 @@ web-time = { workspace = true }
 rayon = { workspace = true }
 
 [dev-dependencies]
-solidcraft-profile = { workspace = true, features = ["enabled"] }
+torno-profile = { workspace = true, features = ["enabled"] }
 proptest = { version = "1", default-features = false, features = ["std"] }

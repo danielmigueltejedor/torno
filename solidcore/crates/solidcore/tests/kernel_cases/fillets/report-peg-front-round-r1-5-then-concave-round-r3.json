@@ -181,7 +181,7 @@
     "blend_dropping"
   ],
   "ungraded": [
-    "continuity: SolidCraft computes it"
+    "continuity: Torno computes it"
   ],
   "what": "as report-peg-front-round-then-concave-round-r2 with unequal radii: the front top edge r1.5, then the concave arc r3",
   "why_not": []

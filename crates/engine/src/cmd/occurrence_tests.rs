@@ -1,7 +1,7 @@
 // Exact occurrence workflows through the same commands used by the Browser.
 use crate::Session;
 use serde_json::{Value, json};
-use solidcraft_geom::prelude::*;
+use torno_geom::prelude::*;
 
 fn run(s: &mut Session, command: &str, p: Value) -> Value {
     s.execute(command, &p).unwrap()
@@ -78,7 +78,7 @@ fn component_ids_take_priority_over_numeric_names_and_survive_reopen() {
     }
     run(&mut s, "component.activate", json!({"component":"03"}));
     assert_eq!(s.active_component, zero_name);
-    let mut reopened = Session::opened(solidcraft_doc::Document::from_json(&s.doc.to_json()).unwrap(), None);
+    let mut reopened = Session::opened(torno_doc::Document::from_json(&s.doc.to_json()).unwrap(), None);
     run(&mut reopened, "component.rename", json!({"component":target.to_string(),"name":"Renamed"}));
     assert_eq!(reopened.doc.components.iter().find(|component| component.id == named).unwrap().name, "3");
     assert_eq!(reopened.doc.find_component("Renamed"), Some(target));
@@ -464,8 +464,8 @@ fn duplicate_nested_labels_use_full_path_and_reopen_undo_preserve_placements() {
     let (parent_component, parent) = created(&mut s, "Parent");
     let (_, child) = created(&mut s, "Child");
     run(&mut s, "solid.box", json!({"length":1,"width":1,"height":1}));
-    let parent2 = s.doc_mut().add_occurrence(parent_component, 0, solidcraft_doc::IDENTITY).unwrap();
-    let parent3 = s.doc_mut().add_occurrence(parent_component, 0, solidcraft_doc::IDENTITY).unwrap();
+    let parent2 = s.doc_mut().add_occurrence(parent_component, 0, torno_doc::IDENTITY).unwrap();
+    let parent3 = s.doc_mut().add_occurrence(parent_component, 0, torno_doc::IDENTITY).unwrap();
     for o in s.doc_mut().occurrences.iter_mut().filter(|o| o.id == parent2 || o.id == parent3) {
         o.name = "Same".into();
     }
@@ -473,7 +473,7 @@ fn duplicate_nested_labels_use_full_path_and_reopen_undo_preserve_placements() {
     let a = s.occurrence_bodies(&[parent2, child], false).unwrap()[0].clone();
     let b = s.occurrence_bodies(&[parent3, child], false).unwrap()[0].clone();
     assert_ne!(a, b);
-    let mut reopened = Session::new(solidcraft_doc::format::read(&s.doc.to_json()).unwrap());
+    let mut reopened = Session::new(torno_doc::format::read(&s.doc.to_json()).unwrap());
     assert_eq!(reopened.occurrence_bodies(&[parent2, child], false).unwrap()[0], a);
     assert_eq!(reopened.occurrence_bodies(&[parent3, child], false).unwrap()[0], b);
     run(&mut reopened, "selection.delete", json!({"occurrences":[parent3]}));
@@ -492,7 +492,7 @@ fn compact_duplicated_assembly_exact_resolution_and_expansion_limit() {
         let component = s.doc_mut().add_component(Some(&format!("Level{i}")), parent).unwrap();
         let occurrence = s.doc.occurrence_of(component).unwrap().id;
         path.push(occurrence);
-        s.doc_mut().add_occurrence(component, parent, solidcraft_doc::IDENTITY).unwrap();
+        s.doc_mut().add_occurrence(component, parent, torno_doc::IDENTITY).unwrap();
         parent = component;
     }
     assert!(s.occurrence_placement(&path).is_ok());
@@ -600,7 +600,7 @@ fn isolate_nested_child_hides_ancestor_material_and_sibling() {
         .add_occurrence(
             child_component,
             parent_component,
-            solidcraft_doc::rigid(solidcore_record::Vec3::new(20.0, 0.0, 0.0), solidcore_record::Vec3::ZERO, solidcore_record::Vec3::Z, 0.0),
+            torno_doc::rigid(solidcore_record::Vec3::new(20.0, 0.0, 0.0), solidcore_record::Vec3::ZERO, solidcore_record::Vec3::Z, 0.0),
         )
         .unwrap();
     s.refresh();
@@ -764,14 +764,14 @@ fn instance_styles_follow_source_identity_after_collision_rename_and_pending_mov
         assert!((measured["bodies"][0]["mass_g"].as_f64().unwrap() - 0.068).abs() < 1e-8);
     }
     let definition = s.model.state();
-    assert_eq!(solidcraft_kernel::measure(&definition.body("Shared Renamed").unwrap().body).unwrap().bbox.min, solidcore_record::Vec3::ZERO);
+    assert_eq!(torno_kernel::measure(&definition.body("Shared Renamed").unwrap().body).unwrap().bbox.min, solidcore_record::Vec3::ZERO);
     let painted = s.doc.painted(&world);
     let secondname = s.occurrence_bodies(&[second], false).unwrap()[0].clone();
     let body = painted.body(&secondname).unwrap();
     assert_eq!(body.body.color(), Some([1.0, 0.0, 0.0]));
     assert!(body.body.paint().unwrap().faces.iter().any(|f| f.color == [0.0, 1.0, 0.0]));
-    let bytes = solidcraft_io::export(&painted, &[secondname], solidcraft_io::Format::Step, "InstanceStyles").unwrap();
-    let imported = solidcraft_kernel::step_import(&String::from_utf8(bytes).unwrap()).unwrap();
+    let bytes = torno_io::export(&painted, &[secondname], torno_io::Format::Step, "InstanceStyles").unwrap();
+    let imported = torno_kernel::step_import(&String::from_utf8(bytes).unwrap()).unwrap();
     assert_eq!(imported.bodies.len(), 1);
     assert_eq!(imported.bodies[0].body.color(), Some([1.0, 0.0, 0.0]));
     assert!(imported.bodies[0].body.paint().unwrap().faces.iter().any(|f| f.color == [0.0, 1.0, 0.0]));
@@ -779,7 +779,7 @@ fn instance_styles_follow_source_identity_after_collision_rename_and_pending_mov
 
 /// A design file path in a fresh temporary folder (removed by the caller).
 fn temp_design(tag: &str, ext: &str) -> (std::path::PathBuf, String) {
-    let dir = std::env::temp_dir().join(format!("solidcraft-visibility-{tag}-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("torno-visibility-{tag}-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&dir);
     std::fs::create_dir_all(&dir).unwrap();
     let path = dir.join(format!("design.{ext}")).to_string_lossy().to_string();
@@ -791,7 +791,7 @@ fn temp_design(tag: &str, ext: &str) -> (std::path::PathBuf, String) {
 /// hidden), the design then has unsaved changes, and showing it again is saved the same way.
 #[test]
 fn hidden_placements_and_bodies_are_saved_with_the_design() {
-    let (dir, path) = temp_design("saved", "solidcraft");
+    let (dir, path) = temp_design("saved", "torno");
     let mut s = Session::default();
     run(&mut s, "solid.box", json!({"length":4,"width":4,"height":4,"body_name":"Base"}));
     let (component, first) = created(&mut s, "Part");
@@ -837,7 +837,7 @@ fn designs_without_saved_visibility_open_unchanged() {
     let (dir, path) = temp_design("legacy", "json");
     let mut s = Session::default();
     run(&mut s, "solid.box", json!({"length":4,"width":4,"height":4,"body_name":"Base"}));
-    let mut legacy: Value = serde_json::from_slice(&solidcraft_io::write_design(&s.doc)).unwrap();
+    let mut legacy: Value = serde_json::from_slice(&torno_io::write_design(&s.doc)).unwrap();
     assert!(legacy.get("visibility").is_none(), "nothing hidden: no visibility in the file");
     legacy["format"] = json!("solidcraft/15");
     std::fs::write(&path, serde_json::to_vec(&legacy).unwrap()).unwrap();
@@ -870,7 +870,7 @@ fn saved_box_design(path: &std::path::Path, height: f64) {
 
 #[test]
 fn a_linked_design_brings_its_bodies_in_and_follows_edits_to_the_part_file() {
-    let dir = std::env::temp_dir().join(format!("solidcraft-linked-design-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("torno-linked-design-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
     let part = dir.join("plate.solidcraft");
     // Given a part saved in its own design: a 10 x 20 x 30 plate.
@@ -896,7 +896,7 @@ fn a_linked_design_brings_its_bodies_in_and_follows_edits_to_the_part_file() {
 /// on a sketch on its face is refused with the reason, and the plate stays as the file has it.
 #[test]
 fn a_cut_or_join_from_the_top_level_into_a_linked_part_is_refused() {
-    let dir = std::env::temp_dir().join(format!("solidcraft-linked-cut-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("torno-linked-cut-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
     let part = dir.join("plate.solidcraft");
     saved_box_design(&part, 30.0);
@@ -911,7 +911,7 @@ fn a_cut_or_join_from_the_top_level_into_a_linked_part_is_refused() {
         .iter()
         .rev()
         .find_map(|f| match &f.kind {
-            solidcraft_doc::FeatureKind::Sketch { plane: solidcraft_doc::PlaneRef::Face { plane, .. }, .. } => Some(*plane),
+            torno_doc::FeatureKind::Sketch { plane: torno_doc::PlaneRef::Face { plane, .. }, .. } => Some(*plane),
             _ => None,
         })
         .unwrap();
@@ -1025,7 +1025,7 @@ fn matrix_move_turns_a_quarter_and_moves() {
 /// joins it in one piece instead of starting a body of the active component's own.
 #[test]
 fn a_stood_up_nested_step_part_is_cut_and_joined_from_its_face() {
-    let dir = std::env::temp_dir().join(format!("solidcraft-nested-stood-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("torno-nested-stood-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
     let path = dir.join("nested.step");
     let mut src = Session::default();
@@ -1035,7 +1035,7 @@ fn a_stood_up_nested_step_part_is_cut_and_joined_from_its_face() {
     run(&mut src, "occurrence.move", json!({"occurrence": carrier, "translate": [12, 7, 5], "axis": [0, 0, 1], "angle": "30 deg"}));
     run(&mut src, "occurrence.move", json!({"occurrence": nested, "translate": [3, 11, 2], "axis": [0, 1, 0], "angle": "20 deg"}));
     // The middle of the top face, in the file's frame: the imported root's.
-    let top = solidcraft_doc::apply_point(&src.doc.component_transform(part), solidcore_record::Vec3::new(20.0, 12.0, 10.0));
+    let top = torno_doc::apply_point(&src.doc.component_transform(part), solidcore_record::Vec3::new(20.0, 12.0, 10.0));
     run(&mut src, "file.export", json!({"path": path, "format": "step"}));
 
     // #5679: the same from the top level, where the part is two moved and turned levels down
@@ -1043,7 +1043,7 @@ fn a_stood_up_nested_step_part_is_cut_and_joined_from_its_face() {
     for top_level in [false, true] {
         let mut s = Session::default();
         run(&mut s, "doc.open", json!({"path": path, "up": "y"}));
-        let at = solidcraft_doc::apply_point(&s.doc.component_transform(s.active_component), top);
+        let at = torno_doc::apply_point(&s.doc.component_transform(s.active_component), top);
         if top_level {
             run(&mut s, "component.activate", json!({"component": "root"}));
         }
@@ -1056,7 +1056,7 @@ fn a_stood_up_nested_step_part_is_cut_and_joined_from_its_face() {
             .iter()
             .rev()
             .find_map(|f| match &f.kind {
-                solidcraft_doc::FeatureKind::Sketch { plane: solidcraft_doc::PlaneRef::Face { plane, .. }, .. } => Some(plane.to_local(local)),
+                torno_doc::FeatureKind::Sketch { plane: torno_doc::PlaneRef::Face { plane, .. }, .. } => Some(plane.to_local(local)),
                 _ => None,
             })
             .unwrap();
@@ -1096,7 +1096,7 @@ fn matrix_move_orthonormalises_rounding_and_refuses_what_is_not_rigid() {
     let e = 3e-10;
     let nearly = json!([cos + e, -sin, 0, 5, sin, cos - e, e, 0, 0, -e, 1.0 + e, 0]);
     let r = run(&mut s, "occurrence.move", json!({"occurrence": occ, "matrix": nearly, "space": "world"}));
-    let m: solidcraft_doc::Mat = serde_json::from_value(r["transform"].clone()).unwrap();
+    let m: torno_doc::Mat = serde_json::from_value(r["transform"].clone()).unwrap();
     for i in 0..3 {
         for j in 0..3 {
             let dot: f64 = (0..3).map(|k| m[i][k] * m[j][k]).sum();
@@ -1139,7 +1139,7 @@ fn matrix_move_orthonormalises_rounding_and_refuses_what_is_not_rigid() {
 /// turned component cut from a root plate) removes 10 x 10 x 5 of it, not 10 x 10 x 10.
 #[test]
 fn combine_across_a_turned_occurrence_meets_the_tool_where_it_is_shown() {
-    let volume = |s: &Session, name: &str| s.model.state().body(name).map(|b| solidcraft_kernel::measure(&b.body).unwrap().volume).unwrap_or(0.0);
+    let volume = |s: &Session, name: &str| s.model.state().body(name).map(|b| torno_kernel::measure(&b.body).unwrap().volume).unwrap_or(0.0);
     let turned = |s: &mut Session, body: Value| {
         created(s, "Part");
         run(s, "solid.box", body);
@@ -1170,7 +1170,7 @@ fn combine_across_a_turned_occurrence_meets_the_tool_where_it_is_shown() {
 /// far where it is shown.
 #[test]
 fn joins_into_a_moved_occurrence_meet_the_tool_where_it_is_shown() {
-    let volume = |s: &Session, name: &str| s.model.state().body(name).map(|b| solidcraft_kernel::measure(&b.body).unwrap().volume).unwrap_or(0.0);
+    let volume = |s: &Session, name: &str| s.model.state().body(name).map(|b| torno_kernel::measure(&b.body).unwrap().volume).unwrap_or(0.0);
     let mut s = Session::default();
     created(&mut s, "Part");
     run(&mut s, "solid.box", json!({"length": 10, "width": 10, "height": 10, "body_name": "A"}));
@@ -1242,7 +1242,7 @@ fn component_delete_removes_joints_to_its_occurrences_and_undo_restores_them() {
 /// session, the sketch, the middle of the top face in the root's frame, the face's outward
 /// normal and that middle in the sketch's coordinates.
 fn nested_part_face_sketch() -> (Session, u64, solidcore_record::Vec3, solidcore_record::Vec3, solidcore_record::Vec2) {
-    let dir = std::env::temp_dir().join(format!("solidcraft-nested-scope-{}-{:?}", std::process::id(), std::thread::current().id()));
+    let dir = std::env::temp_dir().join(format!("torno-nested-scope-{}-{:?}", std::process::id(), std::thread::current().id()));
     std::fs::create_dir_all(&dir).unwrap();
     let path = dir.join("nested.step");
     let mut src = Session::default();
@@ -1251,16 +1251,14 @@ fn nested_part_face_sketch() -> (Session, u64, solidcore_record::Vec3, solidcore
     run(&mut src, "solid.box", json!({"length": 40, "width": 24, "height": 10, "body_name": "NestedBlock"}));
     run(&mut src, "occurrence.move", json!({"occurrence": carrier, "translate": [12, 7, 5], "axis": [0, 0, 1], "angle": "30 deg"}));
     run(&mut src, "occurrence.move", json!({"occurrence": nested, "translate": [3, 11, 2], "axis": [0, 1, 0], "angle": "20 deg"}));
-    let top = solidcraft_doc::apply_point(&src.doc.component_transform(part), solidcore_record::Vec3::new(20.0, 12.0, 10.0));
+    let top = torno_doc::apply_point(&src.doc.component_transform(part), solidcore_record::Vec3::new(20.0, 12.0, 10.0));
     run(&mut src, "file.export", json!({"path": path, "format": "step"}));
     let mut s = Session::default();
     run(&mut s, "doc.open", json!({"path": path, "up": "y"}));
     let _ = std::fs::remove_dir_all(&dir);
-    let at = solidcraft_doc::apply_point(&s.doc.component_transform(s.active_component), top);
+    let at = torno_doc::apply_point(&s.doc.component_transform(s.active_component), top);
     let sketch = run(&mut s, "sketch.create", json!({"plane": {"face": [at.x, at.y, at.z]}, "project_edges": false}))["sketch"].as_u64().unwrap();
-    let Some(solidcraft_doc::FeatureKind::Sketch { plane: solidcraft_doc::PlaneRef::Face { plane, .. }, .. }) =
-        s.doc.feature(sketch).map(|f| &f.kind)
-    else {
+    let Some(torno_doc::FeatureKind::Sketch { plane: torno_doc::PlaneRef::Face { plane, .. }, .. }) = s.doc.feature(sketch).map(|f| &f.kind) else {
         panic!("a sketch on the face")
     };
     let (normal, centre) = (plane.normal(), plane.to_local(top));
@@ -1295,7 +1293,7 @@ fn a_loft_from_a_nested_step_parts_face_joins_it() {
     let (mut s, sketch, top, _, c) = nested_part_face_sketch();
     run(&mut s, "sketch.circle.center", json!({"center": [c.x, c.y], "radius": 3}));
     run(&mut s, "sketch.finish", json!({}));
-    let at = solidcraft_doc::apply_point(&s.doc.component_transform(s.active_component), top);
+    let at = torno_doc::apply_point(&s.doc.component_transform(s.active_component), top);
     let high =
         run(&mut s, "sketch.create", json!({"plane": {"face": [at.x, at.y, at.z]}, "offset": 5, "project_edges": false}))["sketch"].as_u64().unwrap();
     run(&mut s, "sketch.circle.center", json!({"center": [c.x, c.y], "radius": 3}));
@@ -1311,7 +1309,7 @@ fn a_sweep_from_a_nested_step_parts_face_joins_it() {
     run(&mut s, "sketch.circle.center", json!({"center": [c.x, c.y], "radius": 3}));
     run(&mut s, "sketch.finish", json!({}));
     let root = s.doc.component_transform(s.active_component);
-    let (a, b) = (solidcraft_doc::apply_point(&root, top), solidcraft_doc::apply_point(&root, top + n * 5.0));
+    let (a, b) = (torno_doc::apply_point(&root, top), torno_doc::apply_point(&root, top + n * 5.0));
     let path = run(&mut s, "sketch.create", json!({"plane": "XY"}))["sketch"].as_u64().unwrap();
     run(&mut s, "sketch.options", json!({"sketch_3d": true}));
     let wire = run(&mut s, "sketch.line3d", json!({"points": [[a.x, a.y, a.z], [b.x, b.y, b.z]]}))["curves"][0].as_str().unwrap().to_string();
@@ -1495,7 +1493,7 @@ fn reparent_carries_a_face_sketch_made_through_another_placement_of_the_parent()
     assert_eq!(out["path"], json!([child]));
     assert!(s.model.results.iter().all(|r| r.error.is_none()), "the sketch still finds its face");
     let sketch = s.doc.features.iter().find(|f| f.name == "OnTop").unwrap();
-    let solidcraft_doc::FeatureKind::Sketch { plane, .. } = &sketch.kind else { panic!("OnTop is no sketch") };
+    let torno_doc::FeatureKind::Sketch { plane, .. } = &sketch.kind else { panic!("OnTop is no sketch") };
     let anchor = crate::cmd::sketch::face::anchor(plane).unwrap();
     assert_eq!(anchor.path, vec![child], "{anchor:?}");
 }
@@ -1561,7 +1559,7 @@ fn a_paste_new_copy_is_independent_of_its_original() {
     run(&mut s, "component.paste_new", json!({"component": part}));
     run(&mut s, "timeline.edit", json!({"feature": "Extrude1 (2)", "set": {"extent": {"distance": "30"}}}));
     let state = s.model.state();
-    let volume = |name: &str| solidcraft_kernel::measure(&state.body(name).unwrap().body).unwrap().volume;
+    let volume = |name: &str| torno_kernel::measure(&state.body(name).unwrap().body).unwrap().volume;
     assert!((volume("Block") - 500.0).abs() < 1e-6, "the original is as it was");
     assert!((volume("Block (2)") - 3000.0).abs() < 1e-6, "the copy changed");
 }
@@ -1581,7 +1579,7 @@ fn pasted_and_moved_things_survive_reopening() {
     run(&mut s, "component.activate", json!({"component": 0}));
     run(&mut s, "occurrence.reparent", json!({"occurrence": b_at, "parent": a}));
     let before = s.world_state().unwrap();
-    let mut reopened = Session { doc: solidcraft_doc::Document::from_json(&s.doc.to_json()).unwrap().into(), ..Session::default() };
+    let mut reopened = Session { doc: torno_doc::Document::from_json(&s.doc.to_json()).unwrap().into(), ..Session::default() };
     reopened.refresh();
     let after = reopened.world_state().unwrap();
     for name in ["Cube", "Cube (2)", "Pin"] {
@@ -1705,7 +1703,7 @@ fn join_extrude_to_a_body_of_another_component_leaves_that_body_alone() {
     for (name, component) in [("Shell", shell), ("Connector", connector), ("PCB", pcb)] {
         assert_eq!(s.doc.model_body_component(st.body(name).unwrap()), component, "{name} stays in its component");
     }
-    let volume = |name: &str| solidcraft_kernel::measure(&st.body(name).unwrap().body).unwrap().volume;
+    let volume = |name: &str| torno_kernel::measure(&st.body(name).unwrap().body).unwrap().volume;
     let pi = std::f64::consts::PI;
     assert!((volume("Shell") - 8000.0).abs() < 1e-3, "the shell is unchanged: {}", volume("Shell"));
     assert!((volume("Connector") - (pi * 36.0 * 10.0 + pi * 16.0 * 10.0)).abs() < 1.0, "the connector took the boss: {}", volume("Connector"));
@@ -1717,7 +1715,7 @@ fn join_extrude_to_a_body_of_another_component_leaves_that_body_alone() {
 /// times about the Z axis of component Part, then Part moved.
 #[test]
 fn a_pattern_of_another_components_body_follows_its_own_component_when_moved() {
-    let boxes = |st: &solidcraft_doc::ModelState| -> Vec<String> {
+    let boxes = |st: &torno_doc::ModelState| -> Vec<String> {
         st.bodies
             .iter()
             .map(|b| {
@@ -1731,7 +1729,7 @@ fn a_pattern_of_another_components_body_follows_its_own_component_when_moved() {
     created(&mut s, "Part");
     run(&mut s, "solid.pattern.circular", json!({"axis": "Z", "bodies": ["Body1"], "count": 4}));
     run(&mut s, "occurrence.move", json!({"occurrence": "Part:1", "translate": [6, -14, -3]}));
-    let mut fresh = solidcraft_doc::Model::new();
+    let mut fresh = torno_doc::Model::new();
     fresh.no_cache = true;
     fresh.evaluate(&s.doc);
     assert_eq!(boxes(&s.model.state()), boxes(&fresh.state()), "the kept model against a fresh evaluation");
@@ -1846,7 +1844,7 @@ fn occurrence_align_keeps_every_pick_and_reports_shared_definitions() {
     run(&mut s, "solid.box", json!({"length": 10, "width": 10, "height": 4, "body_name": "Plate"}));
     run(&mut s, "component.activate", json!({"component": "root"}));
     let b = run(&mut s, "occurrence.copy", json!({"component": frame, "translate": [0, 50, 0]}))["occurrence"].as_u64().unwrap();
-    let origin = |s: &Session, path: &[u64]| solidcraft_doc::apply_point(&s.occurrence_placement(path).unwrap().world, solidcore_record::Vec3::ZERO);
+    let origin = |s: &Session, path: &[u64]| torno_doc::apply_point(&s.occurrence_placement(path).unwrap().world, solidcore_record::Vec3::ZERO);
     let (a0, ab0, b0, bb0) = (origin(&s, &[a]), origin(&s, &[a, bracket]), origin(&s, &[b]), origin(&s, &[b, bracket]));
 
     assert!(!s.occurrence_shared(&[a]) && !s.occurrence_shared(&[b]), "top-level placements are their own");
@@ -1895,7 +1893,7 @@ fn a_body_copied_in_another_design_pastes_as_an_imported_body() {
     assert!(was.min.dist(is.min) < 1e-6 && was.max.dist(is.max) < 1e-6, "{was:?} vs {is:?}");
     let state = s.model.state();
     assert_eq!(s.doc.model_body_component(state.body("Cube (2)").unwrap()), a);
-    assert!(matches!(&s.doc.find_feature("Import1").unwrap().kind, solidcraft_doc::FeatureKind::Import { file, .. } if file == "Bracket (pasted)"));
+    assert!(matches!(&s.doc.find_feature("Import1").unwrap().kind, torno_doc::FeatureKind::Import { file, .. } if file == "Bracket (pasted)"));
     run(&mut s, "edit.undo", json!({}));
     assert!(s.model.state().body("Cube (2)").is_none());
 }

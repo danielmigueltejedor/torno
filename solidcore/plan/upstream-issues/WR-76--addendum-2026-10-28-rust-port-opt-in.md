@@ -15,7 +15,7 @@
   3. Tangential tracing can stop part way; the trace from the other end then runs on
      over the first curve.
 - **Rust port:** `Kernel::fixes.ssi_trace_tangent_curves_once` (`UpstreamFixes`, off by
-  default), the SolidCraft fork's tangency-labs/smlib@0ce09f2:
+  default), the Torno fork's tangency-labs/smlib@0ce09f2:
   `AddStartPoint` keeps one start point per tangent cluster
   (`SurfaceIntersector::is_same_tangent_cluster`: same boundary side on both surfaces,
   within `10 sqrt(tol (1 + size))`, surfaces within `tol` at three boundary points in

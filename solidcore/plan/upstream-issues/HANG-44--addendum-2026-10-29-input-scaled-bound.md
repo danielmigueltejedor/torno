@@ -4,7 +4,7 @@ Updates: HANG-44
 - **Severity:** Hang
 - **Area:**
 - **What changed:** the fixed `MAX_OFFSET_SAMPLES = 16 384` refused a legitimate
-  offset: shelling a C++-swept bar (issue #1476, SolidCraft rig case shell/566) offsets
+  offset: shelling a C++-swept bar (issue #1476, Torno rig case shell/566) offsets
   bend walls whose curves have 125 and 127 cubic Bezier segments, and at
   `approximation_tol_3d = 1e-5` `N_CrvOffsetPtSampling` asks for 37 625 and 38 227
   samples. That is the least upstream samples on those segments: each takes
@@ -26,7 +26,7 @@ Updates: HANG-44
   ceiling bounds the quadratic knot removal for any input.
 - **Timings** (opt-level 3, `--profile difftest`, shared machine):
   - the swept bar's shell (`crates/solidcore/tests/issue_1476_swept_bar_shell.rs`)
-    with SolidCraft's opt-in fixes, which offsets both 38 000-sample curves: 6.4 s for
+    with Torno's opt-in fixes, which offsets both 38 000-sample curves: 6.4 s for
     the whole shell (255 s in a debug build); with the default fixes it takes a path
     that never samples that many (1.2 s);
   - one curve of 127 cubic segments at `1e-5` (38 227 samples): 2.1 s to 3.6 s;

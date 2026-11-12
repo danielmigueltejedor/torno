@@ -24,10 +24,10 @@ reviews:
         Not defaults: bug fixes and more correct results, kernel or geometry result changes, new options that are off by default, and CI or tooling config. Don't flag purely additive changes: a new command, a new setting whose default keeps today's behaviour, or a new option that appears only when someone chooses it. Don't flag bug fixes that only turn a crash or an error into the result the feature always promised.
         When you flag one, start the comment with "Changes a default:", say what a user sees before and after, whether a setting keeps the old behaviour, and whether the PR description's `Changes a default:` line says so.
 
-    # Where code goes, SolidCraft or SolidCore: solidcore/docs/layers.md.
+    # Where code goes, Torno or SolidCore: solidcore/docs/layers.md.
     - path: "{apps,crates}/**"
       instructions: |
-        Layers (solidcore/docs/layers.md): SolidCraft is a consumer of solidcore. It holds state,
+        Layers (solidcore/docs/layers.md): Torno is a consumer of solidcore. It holds state,
         selection, commands, settings, history and UI, and computes no geometry.
         - Flag any new geometric computation here: a dot or cross product, normalising, sqrt or trig
           on coordinates, a solve, a derivative, an intersection, a fit, a distance or area. Say which

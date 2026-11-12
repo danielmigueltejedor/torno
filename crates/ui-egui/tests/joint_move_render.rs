@@ -4,13 +4,13 @@ mod raster;
 use egui::{ColorImage, Event, PointerButton, Pos2, Rect, TextureId, vec2};
 use serde_json::json;
 use solidcore_record::Vec3;
-use solidcraft_engine::Sel;
-use solidcraft_engine::geom::prelude::*;
-use solidcraft_ui_egui::{
+use std::collections::HashMap;
+use torno_engine::Sel;
+use torno_engine::geom::prelude::*;
+use torno_ui_egui::{
     scenario::{self, Harness},
     viewport,
 };
-use std::collections::HashMap;
 
 fn bearing(kind: &str) -> (Harness, u64) {
     let mut h = Harness::new();
@@ -53,7 +53,7 @@ fn frame(h: &mut Harness, textures: &mut HashMap<TextureId, ColorImage>, events:
 fn save_frame(h: &mut Harness, textures: &mut HashMap<TextureId, ColorImage>, mut out: egui::FullOutput, path: &std::path::Path) {
     let rect = h.app.viewport.rect.unwrap();
     // This is the app's actual themed model render; handles and panels are actual egui output.
-    let png = solidcraft_ui_egui::control::view_png(&h.app, rect.width().round() as u32, rect.height().round() as u32).unwrap();
+    let png = torno_ui_egui::control::view_png(&h.app, rect.width().round() as u32, rect.height().round() as u32).unwrap();
     let model = image::load_from_memory(&png).unwrap().to_rgba8();
     let id = TextureId::User(77);
     textures.insert(id, ColorImage::from_rgba_unmultiplied([model.width() as usize, model.height() as usize], model.as_raw()));
@@ -80,16 +80,16 @@ fn save_frame(h: &mut Harness, textures: &mut HashMap<TextureId, ColorImage>, mu
 fn joint_move_has_readable_rotation_and_translation_in_both_themes() {
     let dir = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../target/joint-move-review");
     std::fs::create_dir_all(&dir).unwrap();
-    solidcraft_ui_egui::gpu::install_cpu_picture_renderer();
+    torno_ui_egui::gpu::install_cpu_picture_renderer();
     for dark in [false, true] {
         for (kind, name) in [("revolute", "rotation"), ("slider", "translation"), ("cylindrical", "combined")] {
             let (mut h, joint) = bearing(kind);
             h.app.ui.dark = dark;
             h.app.preferences.theme = if dark { "dark" } else { "light" }.into();
             h.ctx = egui::Context::default();
-            solidcraft_ui_egui::fonts::setup_fonts(&h.ctx);
-            solidcraft_theme::set_dark(dark);
-            solidcraft_theme::apply(&h.ctx);
+            torno_ui_egui::fonts::setup_fonts(&h.ctx);
+            torno_theme::set_dark(dark);
+            torno_theme::apply(&h.ctx);
             let mut textures = HashMap::new();
             raster::paint(&mut h, &mut textures, vec![]);
             h.app.start("occurrence.move");
@@ -101,7 +101,7 @@ fn joint_move_has_readable_rotation_and_translation_in_both_themes() {
                 .shapes
                 .iter()
                 .filter_map(|s| match &s.shape {
-                    egui::Shape::Path(path) if path.points.len() == 3 && path.fill == solidcraft_theme::Tokens::get().joint_manipulator => {
+                    egui::Shape::Path(path) if path.points.len() == 3 && path.fill == torno_theme::Tokens::get().joint_manipulator => {
                         Some(&path.points)
                     }
                     _ => None,
@@ -159,9 +159,9 @@ fn joint_move_zero_degree_warning_is_readable_in_both_themes() {
         h.app.ui.dark = dark;
         h.app.preferences.theme = if dark { "dark" } else { "light" }.into();
         h.ctx = egui::Context::default();
-        solidcraft_ui_egui::fonts::setup_fonts(&h.ctx);
-        solidcraft_theme::set_dark(dark);
-        solidcraft_theme::apply(&h.ctx);
+        torno_ui_egui::fonts::setup_fonts(&h.ctx);
+        torno_theme::set_dark(dark);
+        torno_theme::apply(&h.ctx);
         let mut textures = HashMap::new();
         for _ in 0..4 {
             frame(&mut h, &mut textures, vec![]);

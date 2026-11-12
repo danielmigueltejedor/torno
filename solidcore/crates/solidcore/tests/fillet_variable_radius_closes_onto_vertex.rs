@@ -7,12 +7,12 @@
 //! vertex is the law curve's at the end of its domain, not read through an extension an
 //! earlier evaluation past the edge cached (which rounds the curve's 0 to 3e-15).
 //!
-//! - The law alone: SolidCraft's taper law (cubic, 8 uniform spans, 13.5 down to 0) evaluated
+//! - The law alone: Torno's taper law (cubic, 8 uniform spans, 13.5 down to 0) evaluated
 //!   past its domain (which caches the extension), then at its ends and inside: bit for bit the
 //!   values of a law that never extended, exactly 0 and 13.5 at its ends.
-//! - SolidCraft #11360's `fillet_fit_taper_closes_to_a_point` (its #293): a wedge against a
+//! - Torno #11360's `fillet_fit_taper_closes_to_a_point` (its #293): a wedge against a
 //!   wall, its top face closing to a point at x = 40, the top front edge rounded with the
-//!   cubic radius law SolidCraft's taper fit builds (8 spans, control radii 0.9 of the room
+//!   cubic radius law Torno's taper fit builds (8 spans, control radii 0.9 of the room
 //!   along the edge at their Greville positions), 13.5 at x = 0 down to 0 at the point. The
 //!   wedge is the triangle (0, 0), (40, 0), (0, 20) extruded 15 along z, the wall the
 //!   quadrilateral (40, 0), (0, 20), (0, 30), (40, 30) from z = -15 to 30, joined; the edge
@@ -21,12 +21,12 @@
 //!   box corner as before. Its sections are the circles each ball touches the round along,
 //!   shifted `-r r' / |c'|` from the great circle, on every kernel (the G^n section's flag,
 //!   `fillet_gn_section_generator`, is retired: WR-685 addendum 2026-11-06), and it removes
-//!   the balls' union. Its volume 22.594877 is not a closed form but SolidCraft's numerical
+//!   the balls' union. Its volume 22.594877 is not a closed form but Torno's numerical
 //!   integration of that union (`removed_by_balls` in its
 //!   `variable_radius_down_to_zero_at_one_end`, which checks it to 1e-5). The great circles
 //!   removed `(1 - pi/4) L r0^2 / 3 = 22.8909`.
 //!
-//!   Each is checked to 1e-4 relative, as SolidCraft checks it.
+//!   Each is checked to 1e-4 relative, as Torno checks it.
 //!
 //! Each built through the fillet executive (`SetFilletParameters` with the B-spline law, the
 //! corners, `DoFilleting`, `StitchAndOrient`), with the fixes each test names.
@@ -113,7 +113,7 @@ fn pick(k: &Kernel, b: &Brep, at: [f64; 3]) -> EdgeId {
     best.unwrap().0
 }
 
-/// SolidCraft's taper of `radius` on this edge, from x = 0: the cubic radius spline of 8
+/// Torno's taper of `radius` on this edge, from x = 0: the cubic radius spline of 8
 /// uniform spans whose control radii are `min(radius, 0.9 room)` at the ends (the room 15 at
 /// x = 0, the front face's height under the top face's 20; 0 at the point) and `0.9 room` at
 /// the inner Greville positions, `room(u) = min(radius / 0.9, 15, 20 (1 - u))`.
@@ -137,7 +137,7 @@ fn taper(radius: f64) -> (Vec<f64>, Vec<f64>) {
     (knots, radii)
 }
 
-/// SolidCraft's adapter's `law_along`: the law as a B-spline with the radius as its x and
+/// Torno's adapter's `law_along`: the law as a B-spline with the radius as its x and
 /// its Greville abscissa as its y, reversed when `start` is nearer the end of the edge's
 /// interval.
 fn law_along(
@@ -365,7 +365,7 @@ fn taper_closing_to_a_point_rounds_the_wedge() {
 }
 
 /// A box edge's radius running linearly from 4 to 0 (and 0 to 4) closes the round to the box
-/// corner: 7 faces, the corner kept, removing the balls' union (module docs; SolidCraft's
+/// corner: 7 faces, the corner kept, removing the balls' union (module docs; Torno's
 /// numerical reference), with no fixes and with every fix. Checked to 1e-4 relative.
 #[test]
 fn linear_radius_to_zero_closes_a_box_round_to_the_corner() {

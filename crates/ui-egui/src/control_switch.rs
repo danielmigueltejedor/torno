@@ -1,15 +1,15 @@
 //! "Let AI agents connect" turned on and off while the app runs: the app's control channel (MCP)
 //! opens on the port in Preferences > AI > Agents through MCP, moves when the port changes, and
 //! closes when the setting is turned off. A port named at launch (`--control PORT`,
-//! `SOLIDCRAFT_CONTROL_PORT`) wins for that run; the settings then wait for the next launch.
+//! `TORNO_CONTROL_PORT`) wins for that run; the settings then wait for the next launch.
 //!
-//! The app (`apps/solidcraft`) owns the listener and its token file; this module only decides
+//! The app (`apps/torno`) owns the listener and its token file; this module only decides
 //! when to start or stop it, through the [`Starter`] the app installs.
 
 use std::sync::mpsc::Receiver;
 
-use solidcraft_control::ControlRequest;
-use solidcraft_control::auth::Listen;
+use torno_control::ControlRequest;
+use torno_control::auth::Listen;
 
 use crate::SolveApp;
 
@@ -30,7 +30,7 @@ pub struct Started {
 /// Why the channel did not start.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum StartError {
-    /// Another program (or another SolidCraft) listens on the port.
+    /// Another program (or another Torno) listens on the port.
     PortTaken(u16),
     /// Anything else, as the system said it.
     Failed(String),
@@ -93,11 +93,11 @@ pub fn wanted(app: &SolveApp) -> Option<u16> {
 /// The app's default port takes the next free one when it is taken, as it always has; any other
 /// port is exactly that port, so the panel can say it is taken.
 fn listen_on(port: u16) -> Listen {
-    if port == solidcraft_engine::control_auth::APP.default_port { Listen::Default } else { Listen::Exact(port) }
+    if port == torno_engine::control_auth::APP.default_port { Listen::Default } else { Listen::Exact(port) }
 }
 
 /// At launch: install `starter` and open the channel the launch or the settings ask for.
-/// `launch_port`: the port `--control`/`SOLIDCRAFT_CONTROL_PORT` named, which wins.
+/// `launch_port`: the port `--control`/`TORNO_CONTROL_PORT` named, which wins.
 pub fn launch(app: &mut SolveApp, starter: Starter, launch_port: Option<u16>) {
     let switch = &mut app.control_switch;
     switch.starter = Some(starter);
@@ -182,7 +182,7 @@ mod tests {
         Box::new(move |listen| {
             let port = match listen {
                 Listen::Exact(p) => p,
-                Listen::Default => solidcraft_engine::control_auth::APP.default_port,
+                Listen::Default => torno_engine::control_auth::APP.default_port,
             };
             log.lock().unwrap().push(format!("start {listen:?}"));
             if taken.contains(&port) {
@@ -206,7 +206,7 @@ mod tests {
         let mut app = SolveApp::new(Default::default(), Default::default());
         assert!(!app.preferences.agent_control, "off until the user turns it on");
         app.preferences.agent_control = true;
-        assert_eq!(app.preferences.agent_control_port, solidcraft_engine::control_auth::APP.default_port);
+        assert_eq!(app.preferences.agent_control_port, torno_engine::control_auth::APP.default_port);
         let log = Log::default();
         launch(&mut app, starter(&log, &[]), None);
         assert_eq!(take(&log), ["start Default"]);

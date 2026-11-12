@@ -32,6 +32,6 @@
   "ungraded": [],
   "what": "a scale factor of 0 flattens the body to a sheet: refused",
   "why_not": [
-    "the failure is SolidCraft's, not a kernel operation's: step 2 (solid.scale): scale factors must be positive"
+    "the failure is Torno's, not a kernel operation's: step 2 (solid.scale): scale factors must be positive"
   ]
 }

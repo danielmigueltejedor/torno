@@ -10,8 +10,8 @@ use std::sync::Arc;
 
 use serde_json::Value;
 use solidcore_record::Vec3;
-use solidcraft_doc::Document;
-use solidcraft_doc::joints::JointKind;
+use torno_doc::Document;
+use torno_doc::joints::JointKind;
 
 use super::analysis::{MAX_BUDGET_S, checked_pairs, part_place};
 use super::contact_sweep::{ContactGeometry, Gap, ran_out};

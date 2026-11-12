@@ -4,8 +4,8 @@
 
 use serde_json::{Value, json};
 use solidcore_record::{Vec2, Vec3};
-use solidcraft_geom::prelude::*;
-use solidcraft_sketch::{CurveKind, LinkSource, Sketch};
+use torno_geom::prelude::*;
+use torno_sketch::{CurveKind, LinkSource, Sketch};
 
 use crate::Session;
 
@@ -261,11 +261,7 @@ fn a_line_dimensioned_to_a_projected_edge_gets_no_parallel() {
         run(&mut s, "sketch.line", json!({"points": [[-4, 7], [10, 7]], "ids": ["l"]}));
         run(&mut s, "sketch.dimension", json!({"entities": entities, "value": "12"}));
         let sk = sketch(&s);
-        assert!(
-            !sk.constraints.iter().any(|c| matches!(c.kind, solidcraft_sketch::ConstraintKind::Parallel { .. })),
-            "{entities}: {:?}",
-            sk.constraints
-        );
+        assert!(!sk.constraints.iter().any(|c| matches!(c.kind, torno_sketch::ConstraintKind::Parallel { .. })), "{entities}: {:?}", sk.constraints);
     }
 }
 
@@ -288,7 +284,7 @@ fn a_line_parallel_to_a_free_line_still_keeps_parallel_to_the_axis() {
         let axis: Vec<usize> = (0..sk.curves.len()).filter(|c| sk.curves[*c].link.is_some()).collect();
         sk.constraints
             .iter()
-            .filter(|c| matches!(c.kind, solidcraft_sketch::ConstraintKind::Parallel { a, b } if axis.contains(&a) || axis.contains(&b)))
+            .filter(|c| matches!(c.kind, torno_sketch::ConstraintKind::Parallel { a, b } if axis.contains(&a) || axis.contains(&b)))
             .count()
     };
     for fixed in [false, true] {
@@ -325,7 +321,7 @@ fn a_line_with_an_angle_gets_no_parallel_to_the_axis() {
     run(&mut s, "sketch.dimension", json!({"entities": ["l"], "type": "angle", "value": "0 deg"}));
     run(&mut s, "sketch.dimension", json!({"entities": ["l", {"axis": "X"}], "value": "12"}));
     let sk = sketch(&s);
-    assert!(!sk.constraints.iter().any(|c| matches!(c.kind, solidcraft_sketch::ConstraintKind::Parallel { .. })), "{:?}", sk.constraints);
+    assert!(!sk.constraints.iter().any(|c| matches!(c.kind, torno_sketch::ConstraintKind::Parallel { .. })), "{:?}", sk.constraints);
 }
 
 #[test]
@@ -334,7 +330,7 @@ fn the_axis_survives_save_and_load() {
     run(&mut s, "sketch.line", json!({"points": [[-4, 0], [10, 0]], "ids": ["a"]}));
     run(&mut s, "sketch.constraint.symmetry", json!({"a": "a.start", "b": "a.end", "line": "y"}));
     run(&mut s, "sketch.finish", json!({}));
-    let doc = solidcraft_doc::Document::from_json(&s.doc.to_json()).unwrap();
+    let doc = torno_doc::Document::from_json(&s.doc.to_json()).unwrap();
     let id = doc.find_feature("Sketch1").map(|f| f.id).unwrap();
     let sk = doc.sketch(id).unwrap();
     assert_eq!(axis_lines(sk).len(), 1);

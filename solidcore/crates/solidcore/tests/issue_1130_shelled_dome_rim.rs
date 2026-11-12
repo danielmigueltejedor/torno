@@ -1,4 +1,4 @@
-//! tangency-labs/solidcore#1130 (regression): in the SolidCraft fork's C++, a
+//! tangency-labs/solidcore#1130 (regression): in the Torno fork's C++, a
 //! dome shelled 2 inward, open at its base, gets an inner rim marched on the offset
 //! faces' tangent (G1R) B-spline extensions, a cubic within 6.5e-7 of the circle r18
 //! (rig shell/4847). Not reproduced in the port: the stock shell's rim is the exact

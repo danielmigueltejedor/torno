@@ -1,13 +1,13 @@
-use solidcraft_geom::tess::EvaluateMesh as _;
 use std::collections::HashMap;
+use torno_geom::tess::EvaluateMesh as _;
 
 use solidcore_record::Vec3;
-use solidcraft_geom::Mesh;
+use torno_geom::Mesh;
 
 use solidcore_record::brep::Curve;
 use solidcore_tess::PlanStats;
-use solidcraft_geom::prelude::*;
-use solidcraft_geom::tess::TessPlan;
+use torno_geom::prelude::*;
+use torno_geom::tess::TessPlan;
 
 use crate::{Body, BoolOp};
 
@@ -201,11 +201,11 @@ fn faces_and_edges_keep_the_body_order() {
 
 /// Side-by-side wireframes, the body's mesh at the chord alone (left) and the plan at the
 /// display angle (right):
-/// `SOLIDCRAFT_TESS_SVG=<dir> cargo test -p solidcraft-kernel render_wireframes -- --ignored`.
+/// `TORNO_TESS_SVG=<dir> cargo test -p torno-kernel render_wireframes -- --ignored`.
 #[test]
 #[ignore]
 fn render_wireframes() {
-    let Ok(dir) = std::env::var("SOLIDCRAFT_TESS_SVG") else { return };
+    let Ok(dir) = std::env::var("TORNO_TESS_SVG") else { return };
     let tol = 0.02;
     let bx = ok(crate::box_solid(Vec3::ZERO, Vec3::new(10.0, 10.0, 4.0)));
     let pin = ok(crate::cylinder(Vec3::new(5.0, 5.0, -1.0), Vec3::Z, 2.0, 6.0));
@@ -386,7 +386,7 @@ fn closed_display_mesh(name: &str, b: &Body, tol: f64) -> Mesh {
 /// the mesh has no crack along it and nothing degenerate at the pole.
 #[test]
 fn a_half_sphere_from_smlib_is_closed_along_its_seam() {
-    use solidcraft_smlib::{BooleanOp, Brep as S};
+    use torno_smlib::{BooleanOp, Brep as S};
     let Ok(ball) = S::make_sphere([0.0; 3], 12.0) else { panic!("sphere") };
     let Ok(lid) = S::make_box([-20.0, -20.0, 0.0], [40.0, 40.0, 20.0]) else { panic!("box") };
     let Ok(Some(half)) = ball.boolean(&lid, BooleanOp::Subtract) else { panic!("cut") };
@@ -418,7 +418,7 @@ fn display_plans_stay_within_the_chord_tolerance() {
 /// SMLib's torus is one face bounded by its two seams: a grid over the whole parameter box.
 #[test]
 fn an_smlib_torus_stays_within_the_chord_tolerance() {
-    let Ok(ring) = solidcraft_smlib::Brep::make_torus([0.0; 3], 22.0, 4.0) else { panic!("torus") };
+    let Ok(ring) = torno_smlib::Brep::make_torus([0.0; 3], 22.0, 4.0) else { panic!("torus") };
     let body = ok(crate::native::body_from_smlib(&ring));
     for tol in [0.1, 0.01] {
         let m = closed_display_mesh("SMLib torus", &body, tol);
@@ -433,14 +433,14 @@ fn an_smlib_torus_stays_within_the_chord_tolerance() {
 
 /// A groove of trapezoid `section` (radius, axial offset) in the plane through the z axis along
 /// y, carried `turns` turns of `pitch` about z from `base`, as an SMLib solid.
-fn smlib_groove(section: [(f64, f64); 4], base: f64, pitch: f64, turns: f64) -> solidcraft_smlib::Brep {
+fn smlib_groove(section: [(f64, f64); 4], base: f64, pitch: f64, turns: f64) -> torno_smlib::Brep {
     use solidcore_record::{Loop2, Vec2};
     smlib_screw(Loop2::polygon(&section.map(|(r, z)| Vec2::new(r, z))), base, pitch, turns)
 }
 
 /// The `section` (radius, axial offset) in the plane through the z axis along y, carried
 /// `turns` turns of `pitch` about z from `base`, as an SMLib solid.
-fn smlib_screw(section: solidcore_record::Loop2, base: f64, pitch: f64, turns: f64) -> solidcraft_smlib::Brep {
+fn smlib_screw(section: solidcore_record::Loop2, base: f64, pitch: f64, turns: f64) -> torno_smlib::Brep {
     use solidcore_record::{Plane, Region2};
     let origin = Vec3::new(0.0, 0.0, base);
     let plane = Plane { origin, x: Vec3::Y, y: Vec3::Z };
@@ -451,8 +451,8 @@ fn smlib_screw(section: solidcore_record::Loop2, base: f64, pitch: f64, turns: f
     ok(crate::native::smlib_body(&groove))
 }
 
-fn smlib_cut(a: &solidcraft_smlib::Brep, b: &solidcraft_smlib::Brep) -> solidcraft_smlib::Brep {
-    match a.boolean(b, solidcraft_smlib::BooleanOp::Subtract) {
+fn smlib_cut(a: &torno_smlib::Brep, b: &torno_smlib::Brep) -> torno_smlib::Brep {
+    match a.boolean(b, torno_smlib::BooleanOp::Subtract) {
         Ok(Some(r)) => r,
         other => panic!("cut: {other:?}"),
     }
@@ -483,13 +483,13 @@ fn iso_groove(p: f64, d: f64, wall: f64, internal: bool) -> [(f64, f64); 4] {
 /// parabolic segment) that flat triangles bridge rather than follow: a face no wider than its
 /// chords sag (the thread's crest band where it runs out through the block's end, 0.06 mm sag
 /// at 0.1) takes up to that much more or less area however it is triangulated inside.
-fn assert_faces_lie_flat(name: &str, plan: &solidcraft_geom::tess::TessPlan, tol: f64) {
+fn assert_faces_lie_flat(name: &str, plan: &torno_geom::tess::TessPlan, tol: f64) {
     for fp in &plan.faces {
         let Some(s) = fp.surface.and_then(|i| plan.surfaces.get(i as usize)) else { continue };
         let at = |i: u32| {
             fp.fixed.get(i as usize).copied().unwrap_or_else(|| {
                 let q = fp.uv[i as usize];
-                solidcraft_geom::tess::from_kernel(s.eval(q[0], q[1]).0)
+                torno_geom::tess::from_kernel(s.eval(q[0], q[1]).0)
             })
         };
         let (mut flat, mut surface) = (0.0, 0.0);
@@ -506,7 +506,7 @@ fn assert_faces_lie_flat(name: &str, plan: &solidcraft_geom::tess::TessPlan, tol
                     for &(di, dj) in pieces {
                         let (x, y) = ((i as f64 + di) / N as f64, (j as f64 + dj) / N as f64);
                         let q = [a[0] + (b[0] - a[0]) * x + (c[0] - a[0]) * y, a[1] + (b[1] - a[1]) * x + (c[1] - a[1]) * y];
-                        if let Some((_, su, sv)) = s.derivs(q[0], q[1]).map(solidcraft_geom::tess::from_kernel3) {
+                        if let Some((_, su, sv)) = s.derivs(q[0], q[1]).map(torno_geom::tess::from_kernel3) {
                             surface += su.cross(sv).len() * area / (N * N) as f64;
                         }
                     }
@@ -536,7 +536,7 @@ fn assert_faces_lie_flat(name: &str, plan: &solidcraft_geom::tess::TessPlan, tol
 /// now comes from the display plan, inside the block and with the analytic volume.
 #[test]
 fn a_modelled_thread_in_a_bore_meshes_inside_its_block() {
-    use solidcraft_smlib::Brep as S;
+    use torno_smlib::Brep as S;
     let (Ok(block), Ok(bore)) = (S::make_box([-10.0, -10.0, 0.0], [20.0, 20.0, 10.0]), S::make_cylinder([0.0, 0.0, -1.0], 3.5, 12.0)) else {
         panic!("stock")
     };
@@ -567,7 +567,7 @@ fn a_modelled_thread_in_a_bore_meshes_inside_its_block() {
 /// and off the surface by more than the tolerance); it is its boundary nodes alone now.
 #[test]
 fn a_thread_root_band_running_out_through_an_end_face_lies_on_its_surface() {
-    let Ok(shaft) = solidcraft_smlib::Brep::make_cylinder([0.0; 3], 5.0, 30.0) else { panic!("shaft") };
+    let Ok(shaft) = torno_smlib::Brep::make_cylinder([0.0; 3], 5.0, 30.0) else { panic!("shaft") };
     let threaded = smlib_cut(&shaft, &smlib_groove(iso_groove(1.5, 10.0, 5.0, false), -1.5, 1.5, 11.0));
     let body = ok(crate::native::body_from_smlib(&threaded));
     let m = ok(body.mesh(&crate::MeshTolerance::chord(0.01)));
@@ -592,7 +592,7 @@ fn a_thread_root_band_running_out_through_an_end_face_lies_on_its_surface() {
 #[test]
 fn the_halves_of_a_split_smlib_coil_measure_as_the_whole() {
     use solidcore_record::{Loop2, Vec2};
-    use solidcraft_smlib::{BooleanOp, Brep as S};
+    use torno_smlib::{BooleanOp, Brep as S};
     let coil = smlib_screw(Loop2::circle(Vec2::new(20.0, 0.0), 1.0), 0.0, 4.0, 6.0);
     let Ok(top) = S::make_box([-30.0, -30.0, 12.5], [60.0, 60.0, 30.0]) else { panic!("box") };
     let (Ok(Some(upper)), Ok(Some(lower))) = (coil.boolean(&top, BooleanOp::Intersect), coil.boolean(&top, BooleanOp::Subtract)) else {

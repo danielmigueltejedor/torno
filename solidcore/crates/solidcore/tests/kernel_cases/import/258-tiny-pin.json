@@ -59,6 +59,6 @@
   "ungraded": [],
   "what": "a STEP pin 0.5 mm across, 2 mm long: meshed 1.16 mm off at a 0.5 mm tolerance",
   "why_not": [
-    "body \"tiny_pin\" is no kernel operation's output nor an operand: SolidCraft built it or changed the kernel's record"
+    "body \"tiny_pin\" is no kernel operation's output nor an operand: Torno built it or changed the kernel's record"
   ]
 }

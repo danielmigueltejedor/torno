@@ -1,6 +1,6 @@
 //! tangency-labs/solidcore#1474 (WR-499): a block 40 x 30 x 5 with a cylinder r 10.5
 //! standing on its top, the cylinder's axis on the block's front edge so half of it
-//! overhangs (SolidCraft rig case fillets/4174). Rounding the concave arc where the
+//! overhangs (Torno rig case fillets/4174). Rounding the concave arc where the
 //! cylinder meets the top with R 2 fails with status 1001: at each end of the arc the
 //! overhang's rim continues it tangentially with the opposite convexity, and
 //! `SmFilletNx1Corner::MakeCornerTopology` takes that rim as the corner's side edge.

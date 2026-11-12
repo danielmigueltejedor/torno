@@ -1,4 +1,4 @@
-//! #2652 (solidcraft#11848; the generic blend, hub #2243): a round whose ball is as wide as
+//! #2652 (torno#11848; the generic blend, hub #2243): a round whose ball is as wide as
 //! a face it rolls on, where that face is a B-spline. The rule (jyviko on #2659): the event
 //! holds only where the face's radius across the edge is the ball's along the whole edge;
 //! a face as wide as the ball along part of the edge only is refused, naming the smallest
@@ -55,7 +55,7 @@ use solidcore::topology::brep::validation::{check_brep, CheckLevel};
 use solidcore::topology::{edge, vertex, EdgeId, FaceId};
 use solidcore::{Brep, Kernel, SolidError};
 
-/// SolidCraft's fix list (`tests/kernel_cases/fixes.json`).
+/// Torno's fix list (`tests/kernel_cases/fixes.json`).
 fn kernel() -> Kernel {
     let names: Vec<String> = serde_json::from_str(include_str!("kernel_cases/fixes.json")).unwrap();
     let mut f = UpstreamFixes::default();
@@ -421,7 +421,7 @@ fn ball_centre(k: &Kernel, s: &Surface, r: f64) -> Option<Point3> {
     })
 }
 
-/// The twisted disc of solidcraft#11848 (2 slots), its side edges rounded 2 mm, then its
+/// The twisted disc of torno#11848 (2 slots), its side edges rounded 2 mm, then its
 /// top outline 2 mm: over each side round's top edge the ball is as wide as the side round.
 /// With the side rounds their definitions, the walls' 2 mm rounds everywhere (#13774), the
 /// ball is as wide as the side round along the whole edge: its offset of the side round
@@ -746,7 +746,7 @@ fn profile(n: usize) -> Vec<Piece> {
     pieces
 }
 
-/// The twist's v knots, as SolidCraft's sweep makes them (the corpus entry's walls): cubic,
+/// The twist's v knots, as Torno's sweep makes them (the corpus entry's walls): cubic,
 /// 28 spans, the interior knots `k / 30` for `k = 2 .. 28`.
 fn twist_knots() -> (Vec<f64>, Vec<usize>) {
     let mut knots = vec![0.0];

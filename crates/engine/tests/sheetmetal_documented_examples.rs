@@ -1,9 +1,9 @@
-//! The two worked examples in `skills/solidcraft-sheetmetal/reference.md` build to the volumes the
+//! The two worked examples in `skills/torno-sheetmetal/reference.md` build to the volumes the
 //! skill documents: a 2 mm, K 0.5, R 1 mm base 200 × 100 mm with two stretches on the back edge
 //! (90°/20 mm over 150 mm, then 45°/15 mm over 50 mm) and the three-stretch variant. A change that
 //! moves the bend geometry shows up here as a different volume.
 use serde_json::{Value, json};
-use solidcraft_engine::Session;
+use torno_engine::Session;
 
 fn run(s: &mut Session, id: &str, params: Value) -> Value {
     s.execute(id, &params).unwrap_or_else(|e| panic!("{id} {params}: {e}"))

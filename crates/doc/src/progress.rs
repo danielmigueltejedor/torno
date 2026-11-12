@@ -31,7 +31,7 @@ pub struct Progress {
     /// The latest such model and when it was offered.
     partial: std::sync::Mutex<(Option<Partial>, Option<web_time::Instant>)>,
     /// Over the kernel work of the watched evaluation ([`watch`]): stopped on Cancel.
-    stop: solidcraft_kernel::Stop,
+    stop: torno_kernel::Stop,
 }
 
 /// The model as far as an evaluation has built it, placed in the world as the design places it.
@@ -58,7 +58,7 @@ impl Default for Progress {
             item: std::sync::Mutex::new(None),
             partial_wanted: AtomicBool::new(false),
             partial: std::sync::Mutex::new((None, None)),
-            stop: solidcraft_kernel::Stop::new(),
+            stop: torno_kernel::Stop::new(),
         }
     }
 }
@@ -120,7 +120,7 @@ pub fn item(current: Option<(&str, usize, usize)>) {
 /// The kernel's long work (STEP import) reports to the same progress and stops on Cancel.
 struct KernelWatch(Arc<Progress>);
 
-impl solidcraft_kernel::watch::Watch for KernelWatch {
+impl torno_kernel::watch::Watch for KernelWatch {
     fn cancelled(&self) -> bool {
         self.0.is_cancelled()
     }
@@ -157,7 +157,7 @@ pub fn watch<R>(progress: Arc<Progress>, f: impl FnOnce() -> R) -> R {
         }
     }
     let _restore = Restore(Some(previous));
-    stop.within(|| solidcraft_kernel::watch::watching(kernel, f))
+    stop.within(|| torno_kernel::watch::watching(kernel, f))
 }
 
 /// Entered at the start of an evaluation; the guard leaves it.
@@ -287,10 +287,10 @@ mod tests {
     fn cancel_stops_the_kernel_work_under_the_watch() {
         use solidcore_record::Vec3;
         // Two cylinders crossing at right angles: a boolean only the kernel answers.
-        let a = solidcraft_kernel::cylinder(Vec3::new(0.0, 0.0, -10.0), Vec3::Z, 3.0, 20.0).unwrap();
-        let b = solidcraft_kernel::cylinder(Vec3::new(-10.0, 0.0, 0.0), Vec3::X, 2.0, 20.0).unwrap();
-        let design = solidcraft_kernel::Stop::new();
-        let union = || design.within(|| solidcraft_kernel::boolean(&a, &b, solidcraft_kernel::BoolOp::Union));
+        let a = torno_kernel::cylinder(Vec3::new(0.0, 0.0, -10.0), Vec3::Z, 3.0, 20.0).unwrap();
+        let b = torno_kernel::cylinder(Vec3::new(-10.0, 0.0, 0.0), Vec3::X, 2.0, 20.0).unwrap();
+        let design = torno_kernel::Stop::new();
+        let union = || design.within(|| torno_kernel::boolean(&a, &b, torno_kernel::BoolOp::Union));
         let p = Arc::new(Progress::default());
         assert!(watch(p.clone(), union).is_ok_and(|u| u.is_some()), "a watch alone stops nothing");
         p.cancel();

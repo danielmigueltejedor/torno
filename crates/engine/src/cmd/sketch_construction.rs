@@ -3,8 +3,8 @@
 
 use serde_json::{Value, json};
 use solidcore_record::{Seg2, Vec2};
-use solidcraft_geom::prelude::*;
-use solidcraft_sketch::{ConstraintKind, CurveKind, Sketch};
+use torno_geom::prelude::*;
+use torno_sketch::{ConstraintKind, CurveKind, Sketch};
 
 use super::sketch::{CONNECT_TOL, add_c, curve_ref, edit, ids_of, line_or_axis_ref, line_pts, req_parg, result};
 use super::{CommandSpec, in_sketch};
@@ -135,7 +135,7 @@ fn offset_side(signed: f64) -> f64 {
 
 /// The typed offset as its driving parameter and the length in millimetres. `name = expression`
 /// defines the user parameter `name`, the same way a dimension does.
-fn typed_offset(doc: &mut solidcraft_doc::Document, p: &Value, mode: &str) -> Result<Option<(String, f64)>> {
+fn typed_offset(doc: &mut torno_doc::Document, p: &Value, mode: &str) -> Result<Option<(String, f64)>> {
     // `offset` is optional. A missing key and JSON null both mean "through `at`", as `length` does.
     if p.get("offset").is_none_or(Value::is_null) {
         return Ok(None);
@@ -144,19 +144,19 @@ fn typed_offset(doc: &mut solidcraft_doc::Document, p: &Value, mode: &str) -> Re
         return Err(bad(CMD, "`offset` applies to a parallel, horizontal or vertical construction line"));
     }
     let raw = expr(p, "offset").ok_or_else(|| bad(CMD, "`offset` must be a positive length or expression"))?;
-    let (defines, rhs) = match solidcraft_doc::expr::definition(raw.as_str()) {
+    let (defines, rhs) = match torno_doc::expr::definition(raw.as_str()) {
         Some((name, "")) => return Err(bad(CMD, format!("offset: `{name} =` needs a value after the `=`"))),
         Some((name, rhs)) => (Some(name), rhs),
         None => (None, raw.as_str()),
     };
-    let rhs = doc.with_design_unit(rhs, solidcraft_doc::expr::Kind::Length);
-    let mm = doc.eval(&rhs, solidcraft_doc::expr::Kind::Length).map_err(|e| bad(CMD, format!("offset: {e}")))?;
+    let rhs = doc.with_design_unit(rhs, torno_doc::expr::Kind::Length);
+    let mm = doc.eval(&rhs, torno_doc::expr::Kind::Length).map_err(|e| bad(CMD, format!("offset: {e}")))?;
     if !mm.is_finite() || mm <= 1e-9 || mm >= 1e9 {
         return Err(bad(CMD, "offset must be positive and within the model's size limits"));
     }
-    let unit = solidcraft_doc::expr::length_unit_or_mm(&doc.units).to_string();
+    let unit = torno_doc::expr::length_unit_or_mm(&doc.units).to_string();
     let stored = if let Some(name) = defines {
-        if let Some(problem) = solidcraft_doc::Document::param_name_problem(name) {
+        if let Some(problem) = torno_doc::Document::param_name_problem(name) {
             return Err(bad(CMD, format!("offset: {problem}")));
         }
         if doc.param(name).is_some() {
@@ -333,8 +333,8 @@ fn run(s: &mut Session, p: &Value, default_mode: &str) -> Result<Value> {
         params["at"] = json!([at.pos().x, at.pos().y]);
         let angle_expression = if mode == "angle" {
             let e = expr(&p, "angle").ok_or_else(|| bad(CMD, "`angle` must be an angle or expression"))?;
-            let e = doc.with_design_unit(e.as_str(), solidcraft_doc::expr::Kind::Angle);
-            let radians = doc.eval(&e, solidcraft_doc::expr::Kind::Angle).map_err(|e| bad(CMD, format!("angle: {e}")))?;
+            let e = doc.with_design_unit(e.as_str(), torno_doc::expr::Kind::Angle);
+            let radians = doc.eval(&e, torno_doc::expr::Kind::Angle).map_err(|e| bad(CMD, format!("angle: {e}")))?;
             if !radians.is_finite() || radians.abs() > 1e9 {
                 return Err(bad(CMD, "angle is outside the supported range"));
             }
@@ -371,8 +371,8 @@ fn run(s: &mut Session, p: &Value, default_mode: &str) -> Result<Value> {
             }
             Some(_) => {
                 let e = expr(&p, "length").ok_or_else(|| bad(CMD, "`length` must be a length or expression"))?;
-                let e = doc.with_design_unit(e.as_str(), solidcraft_doc::expr::Kind::Length);
-                let value = doc.eval(&e, solidcraft_doc::expr::Kind::Length).map_err(|e| bad(CMD, format!("length: {e}")))?;
+                let e = doc.with_design_unit(e.as_str(), torno_doc::expr::Kind::Length);
+                let value = doc.eval(&e, torno_doc::expr::Kind::Length).map_err(|e| bad(CMD, format!("length: {e}")))?;
                 if !(value > 1e-9 && value < 1e8) {
                     return Err(bad(CMD, "length must be positive"));
                 }
@@ -432,7 +432,7 @@ fn run(s: &mut Session, p: &Value, default_mode: &str) -> Result<Value> {
             cons.push(sk.add_constraint(k, parameter)?);
         }
         if let Some((e, value)) = &length {
-            let unit = solidcraft_doc::expr::length_unit_or_mm(&doc.units).to_string();
+            let unit = torno_doc::expr::length_unit_or_mm(&doc.units).to_string();
             let parameter = doc.new_model_param(e, &unit);
             cons.push(sk.add_constraint(ConstraintKind::Length { l, value: *value }, Some(parameter))?);
         }

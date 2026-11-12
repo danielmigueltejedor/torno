@@ -49,7 +49,7 @@ const RADIUS: f64 = 0.5;
 /// A point on the R2 corner arc at x > 0.
 const CORNER: [f64; 3] = [3.414_213_56, 32.525_324_7, 2.0];
 
-/// Every opt-in fix on except `geometric_g2_continuity` (SolidCraft's set, as in the issue),
+/// Every opt-in fix on except `geometric_g2_continuity` (Torno's set, as in the issue),
 /// with WR-674 as given.
 fn kernel(wr674: bool) -> Kernel {
     let mut k = Kernel::new(&KernelOptions::default());
@@ -157,7 +157,7 @@ fn the_corner_arc_rounds_alone_with_flat_ends() {
     );
 }
 
-/// `DoFilleting` alone (as SolidCraft drives the executive) builds the same closed body.
+/// `DoFilleting` alone (as Torno drives the executive) builds the same closed body.
 #[test]
 fn do_filleting_builds_the_closed_body() {
     let mut k = kernel(true);

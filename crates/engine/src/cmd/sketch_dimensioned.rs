@@ -12,7 +12,7 @@
 //! Z direction; the UI routes the 3D tools through `tools::draw`, which asks `dimension_roles`.
 use serde_json::{Map, Value, json};
 use solidcore_record::Vec3;
-use solidcraft_doc::expr::{Kind, definition};
+use torno_doc::expr::{Kind, definition};
 
 use crate::{
     Result, Session,

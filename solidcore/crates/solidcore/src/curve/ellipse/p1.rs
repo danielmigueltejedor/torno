@@ -3235,7 +3235,7 @@ mod tests {
 
     /// WR-741's near-line ellipse as the part's last cut leaves it: a slanted face meets a
     /// notch cylinder of radius 8 whose axis it nearly holds, in an ellipse of radii 1.8e7
-    /// and 8 over 1.3e-4 degrees (SolidCraft's `periph_case_R` minus `t24`; its data as the
+    /// and 8 over 1.3e-4 degrees (Torno's `periph_case_R` minus `t24`; its data as the
     /// cut made them), with its NURB's middle control point moved by `moved` across the
     /// line (along y, the ellipse's minor axis).
     fn near_line_ellipse(k: &Kernel, moved: f64) -> Ellipse {

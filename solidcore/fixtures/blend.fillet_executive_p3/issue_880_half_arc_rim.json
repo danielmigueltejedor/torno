@@ -3,7 +3,7 @@
     {
       "name": "issue-880-half-arc-rim-0-setbacks-1-2",
       "upstream_ref": "source/SM_API/inc/SmApiBrep.h:214 (SmApiCreateLinearSweep); source/SMLib/inc/SmFilletStandardSolver.h:30 (SmConstantRadiusFS pdOptSecondRadius)",
-      "note": "tangency-labs/solidcore#880, closer rebuild: SolidCraft's build::cylinder (6c60f1a9) extrudes Loop2::circle_from(0, 5, SEAM_ANGLE = 0.6131 rad), two half-circle arcs, on Plane::from_normal((0, 0, -10), (1, 0, 2)) (x = Z x n = (0, 1, 0), y = n x x), 40 along the normal; cut by the box above z = 10. The rim is two half-ellipse edges meeting at the seam lines; this case chamfers the first (rim_nth 0). Setback 1 on the cut face (leaning along +Z) and 2 down the wall, as the issue.",
+      "note": "tangency-labs/solidcore#880, closer rebuild: Torno's build::cylinder (6c60f1a9) extrudes Loop2::circle_from(0, 5, SEAM_ANGLE = 0.6131 rad), two half-circle arcs, on Plane::from_normal((0, 0, -10), (1, 0, 2)) (x = Z x n = (0, 1, 0), y = n x x), 40 along the normal; cut by the box above z = 10. The rim is two half-ellipse edges meeting at the seam lines; this case chamfers the first (rim_nth 0). Setback 1 on the cut face (leaning along +Z) and 2 down the wall, as the issue.",
       "inputs": {
         "two_offset_chamfer": {
           "radius": 5.0,
@@ -55,7 +55,7 @@
     {
       "name": "issue-880-half-arc-rim-0-setbacks-1-1",
       "upstream_ref": "source/SM_API/inc/SmApiBrep.h:214 (SmApiCreateLinearSweep); source/SMLib/inc/SmFilletStandardSolver.h:30 (SmConstantRadiusFS pdOptSecondRadius)",
-      "note": "tangency-labs/solidcore#880, closer rebuild: SolidCraft's build::cylinder (6c60f1a9) extrudes Loop2::circle_from(0, 5, SEAM_ANGLE = 0.6131 rad), two half-circle arcs, on Plane::from_normal((0, 0, -10), (1, 0, 2)) (x = Z x n = (0, 1, 0), y = n x x), 40 along the normal; cut by the box above z = 10. The rim is two half-ellipse edges meeting at the seam lines; this case chamfers the first (rim_nth 0). Control: equal setbacks.",
+      "note": "tangency-labs/solidcore#880, closer rebuild: Torno's build::cylinder (6c60f1a9) extrudes Loop2::circle_from(0, 5, SEAM_ANGLE = 0.6131 rad), two half-circle arcs, on Plane::from_normal((0, 0, -10), (1, 0, 2)) (x = Z x n = (0, 1, 0), y = n x x), 40 along the normal; cut by the box above z = 10. The rim is two half-ellipse edges meeting at the seam lines; this case chamfers the first (rim_nth 0). Control: equal setbacks.",
       "inputs": {
         "two_offset_chamfer": {
           "radius": 5.0,
@@ -107,7 +107,7 @@
     {
       "name": "issue-880-half-arc-rim-1-setbacks-1-2",
       "upstream_ref": "source/SM_API/inc/SmApiBrep.h:214 (SmApiCreateLinearSweep); source/SMLib/inc/SmFilletStandardSolver.h:30 (SmConstantRadiusFS pdOptSecondRadius)",
-      "note": "tangency-labs/solidcore#880, closer rebuild: SolidCraft's build::cylinder (6c60f1a9) extrudes Loop2::circle_from(0, 5, SEAM_ANGLE = 0.6131 rad), two half-circle arcs, on Plane::from_normal((0, 0, -10), (1, 0, 2)) (x = Z x n = (0, 1, 0), y = n x x), 40 along the normal; cut by the box above z = 10. The rim is two half-ellipse edges meeting at the seam lines; this case chamfers the second (rim_nth 1). Setback 1 on the cut face (leaning along +Z) and 2 down the wall, as the issue.",
+      "note": "tangency-labs/solidcore#880, closer rebuild: Torno's build::cylinder (6c60f1a9) extrudes Loop2::circle_from(0, 5, SEAM_ANGLE = 0.6131 rad), two half-circle arcs, on Plane::from_normal((0, 0, -10), (1, 0, 2)) (x = Z x n = (0, 1, 0), y = n x x), 40 along the normal; cut by the box above z = 10. The rim is two half-ellipse edges meeting at the seam lines; this case chamfers the second (rim_nth 1). Setback 1 on the cut face (leaning along +Z) and 2 down the wall, as the issue.",
       "inputs": {
         "two_offset_chamfer": {
           "radius": 5.0,
@@ -159,7 +159,7 @@
     {
       "name": "issue-880-half-arc-rim-1-setbacks-1-1",
       "upstream_ref": "source/SM_API/inc/SmApiBrep.h:214 (SmApiCreateLinearSweep); source/SMLib/inc/SmFilletStandardSolver.h:30 (SmConstantRadiusFS pdOptSecondRadius)",
-      "note": "tangency-labs/solidcore#880, closer rebuild: SolidCraft's build::cylinder (6c60f1a9) extrudes Loop2::circle_from(0, 5, SEAM_ANGLE = 0.6131 rad), two half-circle arcs, on Plane::from_normal((0, 0, -10), (1, 0, 2)) (x = Z x n = (0, 1, 0), y = n x x), 40 along the normal; cut by the box above z = 10. The rim is two half-ellipse edges meeting at the seam lines; this case chamfers the second (rim_nth 1). Control: equal setbacks.",
+      "note": "tangency-labs/solidcore#880, closer rebuild: Torno's build::cylinder (6c60f1a9) extrudes Loop2::circle_from(0, 5, SEAM_ANGLE = 0.6131 rad), two half-circle arcs, on Plane::from_normal((0, 0, -10), (1, 0, 2)) (x = Z x n = (0, 1, 0), y = n x x), 40 along the normal; cut by the box above z = 10. The rim is two half-ellipse edges meeting at the seam lines; this case chamfers the second (rim_nth 1). Control: equal setbacks.",
       "inputs": {
         "two_offset_chamfer": {
           "radius": 5.0,

@@ -54,6 +54,6 @@
   "ungraded": [],
   "what": "a large thin blank folded across its whole width with the fixed point exactly on the sheet's top face",
   "why_not": [
-    "body \"Body1\" is no kernel operation's output nor an operand: SolidCraft built it or changed the kernel's record"
+    "body \"Body1\" is no kernel operation's output nor an operand: Torno built it or changed the kernel's record"
   ]
 }

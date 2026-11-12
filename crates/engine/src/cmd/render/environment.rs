@@ -1,17 +1,17 @@
 //! Runtime environment inputs. Captures bytes through the caller's scoped VFS.
 use crate::{Result, params::bad};
 use serde::Deserialize;
-use solidcraft_doc::render_resources::{HdrId, HdrResources};
-use solidcraft_render::lighting::{
+use std::sync::Arc;
+use torno_doc::render_resources::{HdrId, HdrResources};
+use torno_render::lighting::{
     MAX_HDR_BYTES,
     environment::{EnvironmentResource, EnvironmentSource, SkyGradient},
 };
-use std::sync::Arc;
 
 pub(super) const CONTRACT: crate::schema::TypedContract<crate::schema::render::EnvironmentParams> = crate::schema::TypedContract::new();
 
 pub(super) fn set(s: &mut crate::Session, params: &serde_json::Value) -> Result<serde_json::Value> {
-    use solidcraft_doc::render_settings::{RenderJob, SkyEnvironment};
+    use torno_doc::render_settings::{RenderJob, SkyEnvironment};
     let command = "render.environment.set";
     let input: crate::schema::render::EnvironmentParams = serde_json::from_value(params.clone()).map_err(|e| bad(command, e.to_string()))?;
     if input.rotation_deg.is_none() && input.intensity.is_none() {
@@ -115,7 +115,7 @@ impl Input {
                 if path.is_empty() || path.len() > 4096 || path.chars().any(char::is_control) {
                     return Err(bad(command, "bounded HDR path required"));
                 }
-                let bytes = solidcraft_io::vfs::read(path, MAX_HDR_BYTES).map_err(|e| bad(command, format!("could not capture HDR: {e}")))?;
+                let bytes = torno_io::vfs::read(path, MAX_HDR_BYTES).map_err(|e| bad(command, format!("could not capture HDR: {e}")))?;
                 if expected_sha256.is_some_and(|id| id != HdrId::of(&bytes)) {
                     return Err(bad(command, "HDR file changed since selection; inspect and select it again"));
                 }

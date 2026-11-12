@@ -93,6 +93,6 @@
   "ungraded": [],
   "what": "an R7 round of the outer top edge of a 2 mm wall alone: past the sharp inside corner it would cut through the wall into the hollow, opening a slit along it, so it is refused, naming the largest radius that fits",
   "why_not": [
-    "the failure is SolidCraft's, not a kernel operation's: step 3 (solid.fillet): not supported yet: the round of radius 7 mm on the edge at (0.000, 32.000, 42.000) would cut through the material behind it into the hollow at (0.000, 30.000, 40.000) and open the part; the largest radius that fits is 6.828 mm"
+    "the failure is Torno's, not a kernel operation's: step 3 (solid.fillet): not supported yet: the round of radius 7 mm on the edge at (0.000, 32.000, 42.000) would cut through the material behind it into the hollow at (0.000, 30.000, 40.000) and open the part; the largest radius that fits is 6.828 mm"
   ]
 }

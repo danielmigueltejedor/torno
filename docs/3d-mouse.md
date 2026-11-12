@@ -1,6 +1,6 @@
 # 3D mouse
 
-On Windows, macOS and Linux, SolidCraft detects a connected 3D mouse through its HID multi-axis
+On Windows, macOS and Linux, Torno detects a connected 3D mouse through its HID multi-axis
 controller interface: a 3Dconnexion SpaceNavigator or SpaceMouse, or a homemade device that
 declares itself one. Move the cap to pan and zoom, and tilt or twist it to rotate the 3D view.
 By default, zoom can pass through the model and orbit turns around the view's centre, as in earlier
@@ -26,14 +26,14 @@ switch; **Reverse zoom direction** under Wheel and trackpad reverses the wheel o
 it too, through the browser; Firefox needs a 3DxWare setting first (see
 [Getting started › 3D mouse in the browser](book/src/guide/getting-started.md#3d-mouse-in-the-browser)).
 
-With 3DxWare on Windows, SolidCraft follows 3DxWare's profile for it when there is one, and
+With 3DxWare on Windows, Torno follows 3DxWare's profile for it when there is one, and
 3DxWare's object mode (tilt to roll, twist to spin) until there is. The mouse-wheel turns that
 3DxWare makes from the cap's motion are ignored, so the view doesn't zoom in steps as the cap tilts.
 
-On Linux SolidCraft reads the 3D mouse through `spacenavd` when that daemon runs (its socket
+On Linux Torno reads the 3D mouse through `spacenavd` when that daemon runs (its socket
 `/var/run/spnav.sock`), so what you set in `spnavcfg` (swapped or inverted axes, sensitivity, dead
 zones) applies as it does in other programs, and no udev rule is needed. With nothing set there,
-the motion is the same as without the daemon. Without `spacenavd`, SolidCraft reads `/dev/hidrawN`
+the motion is the same as without the daemon. Without `spacenavd`, Torno reads `/dev/hidrawN`
 directly, so the logged-in user needs access to the device. A udev rule that adds the `uaccess`
 tag does that, for example
 `/etc/udev/rules.d/70-3d-mouse.rules` for USB devices with 3Dconnexion's vendor id, and for its
@@ -50,37 +50,37 @@ vendor and product id. Reload with `sudo udevadm control --reload && sudo udevad
 replug the device. The Flatpak sandbox does not expose hidraw devices, so the 3D mouse only works
 with native builds there for now.
 
-On Windows and macOS, with more than one 3D mouse connected, SolidCraft reads the one in use.
+On Windows and macOS, with more than one 3D mouse connected, Torno reads the one in use.
 For example, a 3Dconnexion Universal Receiver with nothing paired may sit next to a SpaceMouse
 on a cable. The first device found is read until another one moves, and then that one is. The
 Navigation page names the device being read, and its calibration applies.
 
-SolidCraft finds the axes from the device's report descriptor, so it doesn't matter how a device
+Torno finds the axes from the device's report descriptor, so it doesn't matter how a device
 lays them out: translation and rotation in separate reports (3Dconnexion's wired devices), all six
 in one (its wireless ones and most homemade devices), after the buttons, or narrower than 16 bits.
 Each axis is scaled from the range the descriptor declares.
 
-On macOS SolidCraft talks to the 3Dconnexion driver (3DxWare) when it is installed, through the
+On macOS Torno talks to the 3Dconnexion driver (3DxWare) when it is installed, through the
 driver's client API (`crates/threedx-client`; the framework is loaded at run time, never bundled).
-The driver keeps the device to itself, and sends it only to a program it can identify: SolidCraft
-as an `.app` (the packaged app). Without the driver, or with its helper not running, SolidCraft reads the device through IOKit like on Windows.
+The driver keeps the device to itself, and sends it only to a program it can identify: Torno
+as an `.app` (the packaged app). Without the driver, or with its helper not running, Torno reads the device through IOKit like on Windows.
 
-SolidCraft does not follow 3DxWare's profile on macOS. Its default is 3DxWare's object mode.
+Torno does not follow 3DxWare's profile on macOS. Its default is 3DxWare's object mode.
 
 ## Device apps: the navigation bridge
 
 Some homemade input devices come with a program of their own that reads the device and turns its
 knobs, rings and buttons into navigation (profiles, sensitivity, button actions). Such a program can
-move SolidCraft's view directly instead of emulating mouse drags, so the mouse pointer stays the
+move Torno's view directly instead of emulating mouse drags, so the mouse pointer stays the
 user's and both can be used at once. Turn on **Navigate with a device app on this computer** in
 Preferences › Navigation › 3D mouse (off by default) and set the port the program listens on
 (8765 unless the program says otherwise). The desktop app then connects to `127.0.0.1:<port>`,
 retries every second while nothing answers, and shows **Connected** with the program's name once it
 is. Only the window with focus moves, and not on the start page or while a file dialog is open.
 
-The program is the server; SolidCraft connects and first sends one line,
-`{"t":"hello","app":"solidcraft","version":"<version>"}`. Then the program sends one JSON object per
-line (UTF-8, `\n`-terminated, at most 4096 bytes); anything else, and any message SolidCraft doesn't
+The program is the server; Torno connects and first sends one line,
+`{"t":"hello","app":"torno","version":"<version>"}`. Then the program sends one JSON object per
+line (UTF-8, `\n`-terminated, at most 4096 bytes); anything else, and any message Torno doesn't
 know, is ignored:
 
 | Message | Meaning |

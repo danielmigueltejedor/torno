@@ -4,9 +4,9 @@
 use crate::test_support::app_with_script as app_with;
 use serde_json::json;
 use solidcore_record::{Vec2, Vec3};
-use solidcraft_engine::doc::expr::Kind as ValueKind;
-use solidcraft_engine::geom::prelude::*;
-use solidcraft_engine::{Sel, Session};
+use torno_engine::doc::expr::Kind as ValueKind;
+use torno_engine::geom::prelude::*;
+use torno_engine::{Sel, Session};
 
 #[test]
 fn material_selector_starts_with_the_assigned_material() {
@@ -72,7 +72,7 @@ fn material_selector_supports_custom_materials_faces_and_default_without_editing
     let mut app = material_selector_fixture();
     app.run("material.create", json!({"name":"Synthetic material","density_g_cm3":0.8})).unwrap();
     app.run("material.assign", json!({"bodies":["Plate","Block"],"material":"Synthetic material"})).unwrap();
-    app.session = Session::new(solidcraft_engine::doc::Document::from_json(&app.session.doc.to_json()).unwrap());
+    app.session = Session::new(torno_engine::doc::Document::from_json(&app.session.doc.to_json()).unwrap());
     for selection in [vec![material_body("Plate"), material_body("Block")], vec![Sel::Face { body: "Plate".into(), index: 0, point: Vec3::ZERO }]] {
         app.session.selection = selection;
         let before = app.session.doc.to_json();
@@ -127,7 +127,7 @@ fn confirming_coplanar_body_faces_uses_one_atomic_extrusion() {
     assert!(h.app.dialog.is_none(), "busy={}, dialog={:?}", h.app.applying.is_some(), h.app.dialog);
     assert_eq!(h.app.session.doc.features.len(), 5);
     assert_eq!(h.app.session.undo.len(), undo + 1);
-    let volume = solidcraft_engine::doc::kernel::measure(&h.app.session.model.state().body("Plate").unwrap().body).unwrap().volume;
+    let volume = torno_engine::doc::kernel::measure(&h.app.session.model.state().body("Plate").unwrap().body).unwrap().volume;
     assert!((volume - 11_968.0).abs() < 1e-5, "{volume}");
 }
 
@@ -156,7 +156,7 @@ fn confirming_faces_in_different_planes_extrudes_each_from_the_picked_body() {
     let undo = h.app.session.undo.len();
     h.step(&json!({"key":"Enter"})).unwrap();
     assert!(h.app.dialog.is_none(), "dialog={:?}", h.app.dialog);
-    let volume = solidcraft_engine::doc::kernel::measure(&h.app.session.model.state().body("Block").unwrap().body).unwrap().volume;
+    let volume = torno_engine::doc::kernel::measure(&h.app.session.model.state().body("Block").unwrap().body).unwrap().volume;
     // The block, and a prism of 10 mm on each of the three faces: 3000 + 10000 + 1200 + 750.
     assert!((volume - 14_950.0).abs() < 1e-5, "{volume}");
     assert_eq!(h.app.session.undo.len(), undo + 1, "one undo step");
@@ -182,7 +182,7 @@ fn feature_mirror_and_patterns_reopen_as_feature_replays_even_for_body_creators(
         app.session.execute(cmd, &params).unwrap();
         let feature = app.session.doc.features.last().unwrap().clone();
         // Exercise the save/reopen boundary as well as reopening the feature editor.
-        app.session = Session::new(solidcraft_engine::doc::Document::from_json(&app.session.doc.to_json()).unwrap());
+        app.session = Session::new(torno_engine::doc::Document::from_json(&app.session.doc.to_json()).unwrap());
         let d = crate::dialogs::for_feature(&app, feature.id, None).unwrap();
         assert_eq!(d.inputs[0].accept, crate::selection::FEATURES, "{cmd}");
         assert_eq!(d.inputs[0].items, vec![Sel::Feature { id: app.session.doc.features[0].id }]);
@@ -207,7 +207,7 @@ fn a_body_mirror_reopens_with_its_bodies_and_operation() {
         let body = crate::open_meshing::session_world(&app.session).bodies[0].name.clone();
         app.session.execute("solid.mirror", &json!({"bodies":[body],"plane":"YZ","combine":combine})).unwrap();
         let feature = app.session.doc.features.last().unwrap().clone();
-        app.session = Session::new(solidcraft_engine::doc::Document::from_json(&app.session.doc.to_json()).unwrap());
+        app.session = Session::new(torno_engine::doc::Document::from_json(&app.session.doc.to_json()).unwrap());
         if from_timeline {
             app.session.selection = vec![Sel::Feature { id: feature.id }];
         }
@@ -252,7 +252,7 @@ fn offset_plane_on_a_face_reopens_with_the_face() {
     assert!(app.session.model.results.iter().all(|r| r.error.is_none()), "{:?}", app.session.model.results);
     let state = app.session.model.state();
     let plane = state.construct.iter().find(|c| c.name == "Side").map(|c| c.geom.clone());
-    assert!(matches!(plane, Some(solidcraft_engine::doc::construct::ConstructGeom::Plane(pl)) if (pl.origin.y + 10.0).abs() < 1e-9), "{plane:?}");
+    assert!(matches!(plane, Some(torno_engine::doc::construct::ConstructGeom::Plane(pl)) if (pl.origin.y + 10.0).abs() < 1e-9), "{plane:?}");
 }
 
 #[test]
@@ -382,7 +382,7 @@ fn feature_mirror_picks_clear_preview_and_replay_the_source_cut() {
     h.step(&json!({"until":{"dialog":null,"features":4}})).unwrap();
     let state = h.app.session.world_state().unwrap();
     assert_eq!(state.bodies.len(), 1, "a mirrored hole cuts the plate instead of copying it");
-    assert_eq!(state.bodies[0].body.classify_point(Vec3::new(70.0, 25.0, 2.5)).unwrap(), solidcraft_engine::kernel::PointClass::Outside);
+    assert_eq!(state.bodies[0].body.classify_point(Vec3::new(70.0, 25.0, 2.5)).unwrap(), torno_engine::kernel::PointClass::Outside);
     let mirror = h.app.session.doc.features.last().unwrap().id;
     let reopened = crate::dialogs::for_feature(&h.app, mirror, None).unwrap();
     assert_eq!(reopened.inputs[0].accept, crate::selection::FEATURES);
@@ -404,7 +404,7 @@ fn a_face_extrude_keeps_the_picked_body_when_faces_coincide() {
     let after = app.session.model.state();
     assert_eq!(after.bodies.len(), 2);
     assert!(after.body("Other").unwrap().body.same(&before.body("Other").unwrap().body));
-    assert_eq!(after.body("Wall").unwrap().body.classify_point(Vec3::new(49.0, 15.0, 10.0)).unwrap(), solidcraft_engine::kernel::PointClass::Inside);
+    assert_eq!(after.body("Wall").unwrap().body.classify_point(Vec3::new(49.0, 15.0, 10.0)).unwrap(), torno_engine::kernel::PointClass::Inside);
 }
 
 #[test]
@@ -432,10 +432,10 @@ fn path_plane_click_retains_source_and_previews_then_edits_in_place() {
     let history = h.app.session.undo.len();
     let count = h.app.session.doc.features.len();
     let preview = h.app.session.preview_visible_world(&commands).unwrap();
-    let built = crate::preview::compute(&h.app.session, &commands, crate::preview::Colors::from_tokens(&solidcraft_theme::Tokens::dark())).unwrap();
+    let built = crate::preview::compute(&h.app.session, &commands, crate::preview::Colors::from_tokens(&torno_theme::Tokens::dark())).unwrap();
     assert!(!built.scene.xray.is_empty(), "construction preview must contain visible geometry");
     let plane = preview.after.construct.last().unwrap();
-    let solidcraft_engine::doc::construct::ConstructGeom::Plane(pl) = plane.geom else { panic!("plane") };
+    let torno_engine::doc::construct::ConstructGeom::Plane(pl) = plane.geom else { panic!("plane") };
     assert!(pl.origin.dist(Vec3::new(20.0, 27.5, 25.0)) < 1e-6);
     assert_eq!(h.app.session.doc.features.len(), count);
     assert_eq!(h.app.session.undo.len(), history);
@@ -453,7 +453,7 @@ fn path_plane_click_retains_source_and_previews_then_edits_in_place() {
     h.step(&json!({"key":"Enter"})).unwrap();
     assert!(h.app.dialog.is_none(), "{:?}", h.app.dialog);
     assert_eq!(h.app.session.doc.features.len(), count + 1);
-    let p = solidcraft_engine::view::construction_planes(&h.app.session).into_iter().find(|p| p.0 == feature.id).unwrap().2;
+    let p = torno_engine::view::construction_planes(&h.app.session).into_iter().find(|p| p.0 == feature.id).unwrap().2;
     assert!(p.origin.dist(Vec3::new(15.0, 23.75, 17.5)) < 1e-6, "{p:?}");
     h.app.run("edit.undo", json!({})).unwrap();
     assert_eq!(h.app.session.doc.feature(feature.id).unwrap().kind, feature.kind);
@@ -472,7 +472,7 @@ fn cylinder_emboss_empty_target_face_applies_automatic_wrap_and_deboss() {
             .body("Sleeve")
             .unwrap()
             .body
-            .mesh(&solidcraft_engine::kernel::MeshTolerance::chord(1e-4))
+            .mesh(&torno_engine::kernel::MeshTolerance::chord(1e-4))
             .unwrap()
             .measure()
             .volume;
@@ -497,8 +497,7 @@ fn cylinder_emboss_empty_target_face_applies_automatic_wrap_and_deboss() {
         let preview = h.app.session.preview_world(&commands).unwrap();
         let expected = if deboss { -19.0 } else { 21.0 };
         let preview_delta =
-            preview.after.body("Sleeve").unwrap().body.mesh(&solidcraft_engine::kernel::MeshTolerance::chord(1e-4)).unwrap().measure().volume
-                - initial;
+            preview.after.body("Sleeve").unwrap().body.mesh(&torno_engine::kernel::MeshTolerance::chord(1e-4)).unwrap().measure().volume - initial;
         assert!(
             (preview_delta - expected).abs() < 0.05,
             "deboss={deboss}, preview delta={preview_delta}, expected={expected}, commands={commands:?}"
@@ -506,7 +505,7 @@ fn cylinder_emboss_empty_target_face_applies_automatic_wrap_and_deboss() {
         h.step(&json!({"key":"Enter"})).unwrap();
         assert!(h.app.dialog.is_none(), "{:?}", h.app.dialog);
         let feature = h.app.session.doc.features.last().unwrap().clone();
-        let solidcraft_engine::doc::FeatureKind::Emboss { face: Some(face), deboss: actual, .. } = &feature.kind else {
+        let torno_engine::doc::FeatureKind::Emboss { face: Some(face), deboss: actual, .. } = &feature.kind else {
             panic!("automatic Apply must save its cylinder anchor: {:?}", feature.kind)
         };
         assert_eq!(*actual, deboss);
@@ -519,7 +518,7 @@ fn cylinder_emboss_empty_target_face_applies_automatic_wrap_and_deboss() {
                 .body("Sleeve")
                 .unwrap()
                 .body
-                .mesh(&solidcraft_engine::kernel::MeshTolerance::chord(1e-4))
+                .mesh(&torno_engine::kernel::MeshTolerance::chord(1e-4))
                 .unwrap()
                 .measure()
                 .volume
@@ -596,7 +595,7 @@ fn cylinder_emboss_edit_retains_second_source_and_author_paths_and_all_profiles(
         .as_u64()
         .unwrap();
     let before = h.app.session.doc.feature(feature).unwrap().clone();
-    let solidcraft_engine::doc::FeatureKind::Emboss { face: Some(face), .. } = &before.kind else { panic!("selected face") };
+    let torno_engine::doc::FeatureKind::Emboss { face: Some(face), .. } = &before.kind else { panic!("selected face") };
     assert_eq!(face.path, vec![source_second]);
     assert_eq!(face.author_path, vec![author_second]);
     h.app.run("component.activate", json!({"component":"root"})).unwrap();
@@ -624,7 +623,7 @@ fn cylinder_emboss_edit_retains_second_source_and_author_paths_and_all_profiles(
     let preview = h.app.session.preview_world(&commands).unwrap();
     let volume = preview.after.body(&target).unwrap().mesh().measure().volume;
     assert!(volume > preview.before.body(&target).unwrap().mesh().measure().volume + 10.0);
-    let colors = crate::preview::Colors::from_tokens(&solidcraft_theme::Tokens::get());
+    let colors = crate::preview::Colors::from_tokens(&torno_theme::Tokens::get());
     let built = crate::preview::compute(&h.app.session, &commands, colors).unwrap();
     assert!(built.replaced.contains(&target) && !built.scene.tris.is_empty(), "{:?}", built.replaced);
     let source_first = h.app.session.doc.occurrence_of(source).unwrap().id;
@@ -1027,11 +1026,11 @@ fn fillet_face_then_press_pull_edits_its_fillet() {
     // On the front round: its axis runs along X at y 3, z 17.
     let p = Vec3::new(20.0, 3.0 - 3.0 * std::f64::consts::FRAC_1_SQRT_2, 17.0 + 3.0 * std::f64::consts::FRAC_1_SQRT_2);
     let round = |app: &SolveApp| {
-        let names = solidcraft_engine::doc::naming::face_names_at(&app.session.model.state(), &[p]);
+        let names = torno_engine::doc::naming::face_names_at(&app.session.model.state(), &[p]);
         assert!(names[0].contains("blend"), "{names:?}");
         let st = app.session.model.state();
         let b = st.body("Body1").unwrap();
-        let index = solidcraft_engine::doc::naming::face_names(b).iter().position(|n| *n == names[0]).unwrap();
+        let index = torno_engine::doc::naming::face_names(b).iter().position(|n| *n == names[0]).unwrap();
         Sel::Face { body: "Body1".into(), index, point: p }
     };
     let mut app = app_with(script.clone());
@@ -1063,11 +1062,11 @@ fn chamfer_face_then_press_pull_edits_its_chamfer() {
     // The middle of the chamfer's face, from (37, 0) to (40, 3).
     let p = Vec3::new(38.5, 1.5, 10.0);
     let bevel = |app: &SolveApp| {
-        let names = solidcraft_engine::doc::naming::face_names_at(&app.session.model.state(), &[p]);
+        let names = torno_engine::doc::naming::face_names_at(&app.session.model.state(), &[p]);
         assert!(names[0].contains("blend"), "{names:?}");
         let st = app.session.model.state();
         let b = st.body("Body1").unwrap();
-        let index = solidcraft_engine::doc::naming::face_names(b).iter().position(|n| *n == names[0]).unwrap();
+        let index = torno_engine::doc::naming::face_names(b).iter().position(|n| *n == names[0]).unwrap();
         Sel::Face { body: "Body1".into(), index, point: p }
     };
     let mut app = app_with(script.clone());
@@ -1099,7 +1098,7 @@ fn press_pull_on_a_blend_face_puts_the_arrow_on_the_clicked_edge() {
     ]);
     // The script, the body, a point on the clicked blend face, its edge, the feature's first edge.
     let cases = [
-        (solidcraft_engine::sample::script(), "Plate", Vec3::new(74.0 + r, 44.0 + r, 4.0), Vec3::new(80.0, 50.0, 4.0), Vec3::new(0.0, 0.0, 4.0)),
+        (torno_engine::sample::script(), "Plate", Vec3::new(74.0 + r, 44.0 + r, 4.0), Vec3::new(80.0, 50.0, 4.0), Vec3::new(0.0, 0.0, 4.0)),
         (chamfered, "Body1", Vec3::new(20.0, 29.0, 19.0), Vec3::new(20.0, 30.0, 20.0), Vec3::new(20.0, 0.0, 20.0)),
     ];
     for (script, body, p, clicked, first) in cases {
@@ -1107,10 +1106,10 @@ fn press_pull_on_a_blend_face_puts_the_arrow_on_the_clicked_edge() {
             h.app.session.run_script(&script).unwrap();
             h.frames(2);
             h.step(&json!({"call": "ui.view", "params": {"view": "fit"}})).unwrap();
-            let names = solidcraft_engine::doc::naming::face_names_at(&h.app.session.model.state(), &[p]);
+            let names = torno_engine::doc::naming::face_names_at(&h.app.session.model.state(), &[p]);
             assert!(names[0].contains("blend"), "{names:?}");
             let st = h.app.session.model.state();
-            let index = solidcraft_engine::doc::naming::face_names(st.body(body).unwrap()).iter().position(|n| *n == names[0]).unwrap();
+            let index = torno_engine::doc::naming::face_names(st.body(body).unwrap()).iter().position(|n| *n == names[0]).unwrap();
             Sel::Face { body: body.into(), index, point: p }
         };
         // The arrow is nearer `want` than `other` on screen.
@@ -1194,7 +1193,7 @@ fn hole_at_sketch_points() {
         {"command": "sketch.point", "params": {"point": [30, 20], "id": "h2"}},
         {"command": "sketch.finish", "params": {}},
     ]));
-    let sk = app.session.doc.features.iter().find(|f| matches!(f.kind, solidcraft_engine::doc::FeatureKind::Sketch { .. })).unwrap().id;
+    let sk = app.session.doc.features.iter().find(|f| matches!(f.kind, torno_engine::doc::FeatureKind::Sketch { .. })).unwrap().id;
     app.start("solid.hole");
     let mut d = app.dialog.clone().unwrap();
     if let Kind::Hole { opts, .. } = &mut d.kind {
@@ -1457,8 +1456,7 @@ fn fillet_radius_fit_reduces_and_shows_the_applied_radius() {
     let (id, p) = apply_commands(&app, &d).unwrap().remove(0);
     assert_eq!(p["fit"], json!("reduce"));
     let job =
-        crate::preview::compute(&app.session, &[(id.clone(), p.clone())], crate::preview::Colors::from_tokens(&solidcraft_theme::Tokens::dark()))
-            .unwrap();
+        crate::preview::compute(&app.session, &[(id.clone(), p.clone())], crate::preview::Colors::from_tokens(&torno_theme::Tokens::dark())).unwrap();
     assert_eq!(job.applied, Some((3.0, 3.0)));
     // Applied and edited again, the fillet keeps its fit.
     app.session.execute(&id, &p).unwrap();
@@ -1467,7 +1465,7 @@ fn fillet_radius_fit_reduces_and_shows_the_applied_radius() {
     assert_eq!(e.extra.get("fit"), Some(&json!("reduce")));
     // Its edit preview shows the radius it uses too.
     let cmds = apply_commands(&app, &e).unwrap();
-    let job = crate::preview::compute(&app.session, &cmds, crate::preview::Colors::from_tokens(&solidcraft_theme::Tokens::dark())).unwrap();
+    let job = crate::preview::compute(&app.session, &cmds, crate::preview::Colors::from_tokens(&torno_theme::Tokens::dark())).unwrap();
     assert_eq!(job.applied, Some((3.0, 3.0)));
 }
 
@@ -1578,12 +1576,10 @@ fn variable_fillet_mid_radii_round_trip() {
 pub(crate) fn thread_face(app: &SolveApp, body: &str) -> Sel {
     let state = app.session.world_state().unwrap();
     let body_state = state.body(body).unwrap();
-    let index = solidcraft_engine::doc::naming::face_spots(body_state)
+    let index = torno_engine::doc::naming::face_spots(body_state)
         .into_iter()
         .enumerate()
-        .find_map(|(index, spot)| {
-            spot.filter(|spot| matches!(spot.surface, Some(solidcraft_engine::kernel::FaceSurface::Cylinder { .. }))).map(|_| index)
-        })
+        .find_map(|(index, spot)| spot.filter(|spot| matches!(spot.surface, Some(torno_engine::kernel::FaceSurface::Cylinder { .. }))).map(|_| index))
         .unwrap();
     let mesh = body_state.mesh();
     let point = mesh
@@ -1749,7 +1745,7 @@ fn modeled_thread_survives_timeline_double_click_and_ok() {
         assert!(h.app.dialog.is_none(), "{:?}", h.app.dialog);
         assert!(h.app.applying.is_none() && !h.app.preview.active && h.app.preview.replaced.is_empty());
         assert_eq!(h.app.session.doc.marker, None);
-        assert!(matches!(h.app.session.doc.feature(id).unwrap().kind, solidcraft_engine::doc::FeatureKind::Thread { modeled: true, .. }));
+        assert!(matches!(h.app.session.doc.feature(id).unwrap().kind, torno_engine::doc::FeatureKind::Thread { modeled: true, .. }));
         let result = h.app.session.model.result(id).unwrap();
         assert!(!result.skipped && result.error.is_none(), "{result:?}");
         let edited_volume = h.app.session.world_state().unwrap().body("Body1").unwrap().mesh().measure().volume;
@@ -1796,7 +1792,7 @@ fn a_thread_edit_switched_to_cosmetic_applies_after_a_body_is_hidden() {
     h.frames(4);
     assert!(h.app.dialog.is_none(), "{:?}", h.app.dialog.as_ref().and_then(|d| d.error.clone()));
     assert_eq!(h.app.session.doc.marker, None);
-    assert!(matches!(h.app.session.doc.feature(id).unwrap().kind, solidcraft_engine::doc::FeatureKind::Thread { modeled: false, .. }));
+    assert!(matches!(h.app.session.doc.feature(id).unwrap().kind, torno_engine::doc::FeatureKind::Thread { modeled: false, .. }));
 }
 
 #[test]
@@ -1859,7 +1855,7 @@ fn thread_choices_apply_a_fine_pitch_and_partial_modelled_thread() {
     assert!(before - after > 1.0, "the selected fine pitch must cut the shaft");
     let id = result["feature"].as_u64().unwrap();
     let kind = &h.app.session.doc.feature(id).unwrap().kind;
-    assert!(matches!(kind, solidcraft_engine::doc::FeatureKind::Thread { designation: Some(d), length: Some(l), modeled: true, .. }
+    assert!(matches!(kind, torno_engine::doc::FeatureKind::Thread { designation: Some(d), length: Some(l), modeled: true, .. }
         if d == "M8x1" && l == "4 mm"));
 }
 
@@ -1903,7 +1899,7 @@ fn thread_choices_preserve_custom_saved_pairs_and_offer_large_fine_pitches() {
             let (command, params) = apply_commands(&h.app, h.app.dialog.as_ref().unwrap()).unwrap().remove(0);
             assert_eq!(params["params"]["designation"], "M56x2");
             h.app.session.execute(&command, &params).unwrap();
-            let mut reopened = solidcraft_engine::doc::Document::from_json(&h.app.session.doc.to_json()).unwrap();
+            let mut reopened = torno_engine::doc::Document::from_json(&h.app.session.doc.to_json()).unwrap();
             // This test submits the edit command directly; finish the editor's rollback
             // before checking the complete saved design.
             reopened.marker = None;
@@ -1934,7 +1930,7 @@ fn thread_choices_can_start_without_a_face_and_recover_from_invalid_text() {
     // The coarse pitch is written as ISO 261 writes it: without the pitch.
     assert!(matches!(&h.app.dialog.as_ref().unwrap().kind, Kind::Thread { designation, .. } if designation == "M8"));
     if let Kind::Thread { designation, .. } = &h.app.dialog.as_ref().unwrap().kind {
-        assert_eq!(solidcraft_engine::doc::parse_metric_thread(designation), Some((8.0, 1.25)));
+        assert_eq!(torno_engine::doc::parse_metric_thread(designation), Some((8.0, 1.25)));
     }
     assert!(apply_commands(&h.app, h.app.dialog.as_ref().unwrap()).is_err(), "a face is still required");
 }
@@ -2219,7 +2215,7 @@ fn surface_dialogs_make_their_commands() {
 
 #[test]
 fn fair_surface_dialog_defaults_picks_and_edit_values() {
-    use solidcraft_engine::doc::{BodyName, FeatureKind, IDENTITY};
+    use torno_engine::doc::{BodyName, FeatureKind, IDENTITY};
     let mut app = app_with(json!([]));
     let mut d = start(&mut app, vec![Sel::Body { name: "Sheet".into() }], "surface.fair");
     assert_eq!(d.inputs.len(), 1);
@@ -2253,8 +2249,8 @@ fn fair_surface_dialog_defaults_picks_and_edit_values() {
 
 #[test]
 fn match_surface_dialog_defaults_picks_and_edit_values() {
-    use solidcraft_engine::doc::kernel::Continuity;
-    use solidcraft_engine::doc::{BodyName, FeatureKind, IDENTITY, Position};
+    use torno_engine::doc::kernel::Continuity;
+    use torno_engine::doc::{BodyName, FeatureKind, IDENTITY, Position};
     let mut app = app_with(json!([{"command":"solid.box", "params":{"length":10,"width":10,"height":10,"body_name":"Target"}}]));
     let mut d = start(&mut app, vec![Sel::Body { name: "Sheet".into() }], "surface.match");
     assert_eq!(d.inputs.len(), 3);
@@ -2321,8 +2317,8 @@ fn fair_surface_tolerance_is_a_length_in_the_design_unit() {
 /// body has geometry at the same point (here the seam the two boxes share).
 #[test]
 fn fair_and_match_picks_reopen_on_their_saved_bodies() {
-    use solidcraft_engine::doc::kernel::Continuity;
-    use solidcraft_engine::doc::{BodyName, FacePick, FeatureKind, IDENTITY, Position};
+    use torno_engine::doc::kernel::Continuity;
+    use torno_engine::doc::{BodyName, FacePick, FeatureKind, IDENTITY, Position};
     let app = app_with(json!([
         {"command":"solid.box", "params":{"corner":[0,0,0],"length":10,"width":10,"height":10,"body_name":"Src"}},
         {"command":"solid.box", "params":{"corner":[10,0,0],"length":10,"width":10,"height":10,"body_name":"Target","operation":"new"}}
@@ -2878,7 +2874,7 @@ fn patch_dialog_takes_continuity_and_points_and_brings_them_back() {
     d.inputs[0].items = rim;
     d.inputs[1].items = vec![Sel::Vertex { body: "Tube".into(), point: Vec3::new(0.0, 0.0, 36.0) }];
     if let Kind::Surface(crate::dialogs_surface::Surf::Patch { continuity }) = &mut d.kind {
-        *continuity = solidcraft_engine::kernel::Continuity::G1;
+        *continuity = torno_engine::kernel::Continuity::G1;
     }
     let (id, p) = apply_commands(&app, &d).unwrap().remove(0);
     assert_eq!((id.as_str(), &p["continuity"], &p["points"]), ("surface.patch", &json!("g1"), &json!([[0.0, 0.0, 36.0]])), "{p}");
@@ -2888,7 +2884,7 @@ fn patch_dialog_takes_continuity_and_points_and_brings_them_back() {
     // Edit Feature: G1 again, and the point (on no face) kept as it was.
     let fid = app.session.doc.features.last().unwrap().id;
     let back = crate::dialogs::for_feature(&app, fid, None).unwrap();
-    assert!(matches!(back.kind, Kind::Surface(crate::dialogs_surface::Surf::Patch { continuity: solidcraft_engine::kernel::Continuity::G1 })));
+    assert!(matches!(back.kind, Kind::Surface(crate::dialogs_surface::Surf::Patch { continuity: torno_engine::kernel::Continuity::G1 })));
     let (_, p) = apply_commands(&app, &back).unwrap().remove(0);
     assert_eq!((&p["params"]["continuity"], &p["params"]["points"]), (&json!("g1"), &json!([[0.0, 0.0, 36.0]])), "{p}");
 }
@@ -2907,7 +2903,7 @@ fn patch_dialog_rows_are_translated() {
         assert!(h.widget(through).is_some(), "{lang}: the points input must show {through:?}");
         // The continuity in the language too, in words (the code is in the hover text).
         if let Some(crate::dialogs::Dialog { kind: Kind::Surface(crate::dialogs_surface::Surf::Patch { continuity }), .. }) = h.app.dialog.as_mut() {
-            *continuity = solidcraft_engine::kernel::Continuity::G1;
+            *continuity = torno_engine::kernel::Continuity::G1;
         }
         h.frames(2);
         assert!(h.widget(tangent).is_some(), "{lang}: the Tangent choice must show {tangent:?}");
@@ -2931,8 +2927,7 @@ fn midplane_asks_for_two_planes_then_builds_the_one_between_them() {
     h.app.dialog.as_mut().unwrap().inputs[1].items = vec![Sel::Plane { name: "Shelf".into() }];
     h.step(&json!({"key":"Enter"})).unwrap();
     assert!(h.app.dialog.is_none(), "{:?}", h.app.dialog.as_ref().and_then(|d| d.error.clone()));
-    let (_, _, pl) =
-        solidcraft_engine::view::construction_planes(&h.app.session).into_iter().find(|(_, name, _)| name != "Shelf").expect("the midplane");
+    let (_, _, pl) = torno_engine::view::construction_planes(&h.app.session).into_iter().find(|(_, name, _)| name != "Shelf").expect("the midplane");
     assert!(pl.normal().cross(Vec3::Z).len() < 1e-6, "{pl:?}");
     assert!((pl.origin.z - 10.0).abs() < 1e-6, "{pl:?}");
 }
@@ -2956,7 +2951,7 @@ fn offset_plane_through_a_picked_vertex() {
     assert!(h.app.dialog.is_none(), "{:?}", h.app.dialog.as_ref().and_then(|d| d.error.clone()));
     h.frames(3);
     axis_point_evidence(&mut h, "axis-point-result");
-    let (id, _, pl) = solidcraft_engine::view::construction_planes(&h.app.session).into_iter().next().expect("the plane");
+    let (id, _, pl) = torno_engine::view::construction_planes(&h.app.session).into_iter().next().expect("the plane");
     assert!(pl.normal().cross(Vec3::Z).len() < 1e-6 && (pl.origin.z - 20.0).abs() < 1e-6, "{pl:?}");
     let reopened = crate::dialogs::for_feature(&h.app, id, None).unwrap();
     assert_eq!(reopened.inputs[0].items, vec![Sel::Plane { name: "XY".into() }]);
@@ -3008,11 +3003,8 @@ fn plane_at_angle_direction_only_shows_a_pivot_and_applies() {
     let (cmd, params) = commands.into_iter().next().unwrap();
     h.app.dialog = None;
     let id = h.app.run(&cmd, params).unwrap()["feature"].as_u64().unwrap();
-    let pl = solidcraft_engine::view::construction_planes(&h.app.session)
-        .into_iter()
-        .find(|(fid, _, _)| *fid == id)
-        .map(|(_, _, pl)| pl)
-        .expect("the plane");
+    let pl =
+        torno_engine::view::construction_planes(&h.app.session).into_iter().find(|(fid, _, _)| *fid == id).map(|(_, _, pl)| pl).expect("the plane");
     assert!(pl.origin.dist(Vec3::new(40.0, 0.0, 40.0)) < 1e-3, "{pl:?}");
     assert!(pl.normal().cross(Vec3::X).len() < 1e-6, "{pl:?}");
     let reopened = crate::dialogs::for_feature(&h.app, id, None).unwrap();
@@ -3068,7 +3060,7 @@ fn check_offset_plane_wire_point(index: usize, point: Vec3) {
     assert_eq!(commands[0].1["through"], json!({"sketch":sketch,"point":format!("{wire}:{index}")}));
     axis_point_evidence(&mut h, &format!("3d-node-offset-plane-{index}"));
     h.step(&json!({"key":"Enter"})).unwrap();
-    let (feature, _, plane) = solidcraft_engine::view::construction_planes(&h.app.session).into_iter().next().unwrap();
+    let (feature, _, plane) = torno_engine::view::construction_planes(&h.app.session).into_iter().next().unwrap();
     assert!((plane.origin.z - point.z).abs() < 1e-9);
     let reopened = crate::dialogs::for_feature(&h.app, feature, None).unwrap();
     assert_eq!(reopened.inputs[1].items, vec![Sel::SketchPoint { id: format!("{sketch}:{wire}:{index}") }]);
@@ -3260,7 +3252,7 @@ fn axis_through_two_preselected_planes_builds_their_intersection() {
     assert_eq!((d.inputs[0].items.len(), d.inputs[1].items.len()), (1, 1), "each plane fills one input");
     h.step(&json!({"key":"Enter"})).unwrap();
     assert!(h.app.dialog.is_none(), "{:?}", h.app.dialog.as_ref().and_then(|d| d.error.clone()));
-    let axes = solidcraft_engine::view::construction_axes(&h.app.session);
+    let axes = torno_engine::view::construction_axes(&h.app.session);
     let (_, _, _, dir) = axes.first().expect("the axis");
     assert!(dir.cross(Vec3::X).len() < 1e-6, "XY and XZ meet along X: {dir:?}");
 }
@@ -3278,12 +3270,12 @@ fn plane_through_two_picked_edges() {
     d.inputs[1].items = vec![edge(Vec3::new(0.0, 10.0, 20.0))];
     h.step(&json!({"key":"Enter"})).unwrap();
     assert!(h.app.dialog.is_none(), "{:?}", h.app.dialog.as_ref().and_then(|d| d.error.clone()));
-    let (_, _, pl) = solidcraft_engine::view::construction_planes(&h.app.session).into_iter().next().expect("the plane");
+    let (_, _, pl) = torno_engine::view::construction_planes(&h.app.session).into_iter().next().expect("the plane");
     assert!(pl.normal().cross(Vec3::Z).len() < 1e-6 && (pl.origin.z - 20.0).abs() < 1e-6, "the top face's plane: {pl:?}");
 }
 
 fn axis_point_evidence(h: &mut crate::scenario::Harness, name: &str) {
-    if let Ok(dir) = std::env::var("SOLIDCRAFT_AXIS_POINT_EVIDENCE") {
+    if let Ok(dir) = std::env::var("TORNO_AXIS_POINT_EVIDENCE") {
         // Real egui output, with the font/icon texture deltas retained for the rasteriser.
         h.ctx = egui::Context::default();
         crate::fonts::setup_bundled_fonts(&h.ctx);
@@ -3331,7 +3323,7 @@ fn plane_through_axis_and_point_preselects_creates_and_reopens_exact_references(
     assert!(h.app.dialog.is_none(), "{:?}", h.app.dialog.as_ref().and_then(|d| d.error.clone()));
     h.frames(3);
     axis_point_evidence(&mut h, "axis-point-result");
-    let (id, _, pl) = solidcraft_engine::view::construction_planes(&h.app.session).into_iter().next().unwrap();
+    let (id, _, pl) = torno_engine::view::construction_planes(&h.app.session).into_iter().next().unwrap();
     assert!(pl.normal().dot(Vec3::Z).abs() < 1e-6);
     assert!((Vec3::new(20., 10., 0.) - pl.origin).dot(pl.normal()).abs() < 1e-6);
     let before = h.app.session.doc.to_json();
@@ -3357,7 +3349,7 @@ fn plane_through_axis_and_point_edit_replaces_only_the_picked_saved_reference() 
     }
     h.step(&json!({"key":"Enter"})).unwrap();
     assert!(h.app.dialog.is_none(), "{:?}", h.app.dialog.as_ref().and_then(|d| d.error.clone()));
-    let (_, _, pl) = solidcraft_engine::view::construction_planes(&h.app.session).into_iter().next().unwrap();
+    let (_, _, pl) = torno_engine::view::construction_planes(&h.app.session).into_iter().next().unwrap();
     assert!(pl.normal().cross(Vec3::Z).len() < 1e-6, "Y and fixed [10,0,0] define XY: {pl:?}");
     let definition = h.app.run("timeline.inspect", json!({"feature":"Fence"})).unwrap();
     assert_eq!(definition["definition"]["plane"]["point"], json!({"type":"point","p":[10.,0.,0.]}));
@@ -3393,9 +3385,9 @@ fn point_along_path_has_its_position_and_missing_picks_are_named() {
 /// mesh selected first it takes it, and OK rebuilds it as faces.
 #[test]
 fn convert_mesh_asks_for_the_body_and_converts_the_selected_one() {
-    use solidcraft_engine::doc::{Document, FeatureKind, MeshData};
-    let body = solidcraft_engine::kernel::box_solid(Vec3::ZERO, Vec3::new(10., 20., 30.)).unwrap();
-    let mesh = body.mesh(&solidcraft_engine::kernel::MeshTolerance::chord(0.01)).unwrap();
+    use torno_engine::doc::{Document, FeatureKind, MeshData};
+    let body = torno_engine::kernel::box_solid(Vec3::ZERO, Vec3::new(10., 20., 30.)).unwrap();
+    let mesh = body.mesh(&torno_engine::kernel::MeshTolerance::chord(0.01)).unwrap();
     let mut doc = Document::default();
     doc.add_feature(
         FeatureKind::MeshImport {
@@ -3574,7 +3566,7 @@ fn face_then_revolve_turns_the_face() {
     }
     let st = crate::open_meshing::session_world(&app.session);
     let made = st.bodies.iter().find(|b| b.name != "Body1").expect("the revolve makes a new body");
-    let v = solidcraft_engine::doc::kernel::measure(&made.body).unwrap().volume;
+    let v = torno_engine::doc::kernel::measure(&made.body).unwrap().volume;
     let want = std::f64::consts::PI * 40.0 * 40.0 * 20.0;
     assert!((v - want).abs() < want * 1e-3, "{v} vs {want}");
 }
@@ -3604,7 +3596,7 @@ fn a_loft_from_a_profile_to_a_sketch_point_is_a_pyramid() {
         app.run(&cmd, p).unwrap();
     }
     let st = crate::open_meshing::session_world(&app.session);
-    let v = solidcraft_engine::doc::kernel::measure(&st.bodies[0].body).unwrap().volume;
+    let v = torno_engine::doc::kernel::measure(&st.bodies[0].body).unwrap().volume;
     assert!((v - 4000.0).abs() < 4.0, "{v}");
 }
 
@@ -3627,7 +3619,7 @@ fn a_pipe_cuts_from_its_window_and_keeps_the_cut_when_edited() {
     let volume = |app: &SolveApp| {
         let st = crate::open_meshing::session_world(&app.session);
         assert_eq!(st.bodies.len(), 1, "one body: {:?}", st.bodies.iter().map(|b| &b.name).collect::<Vec<_>>());
-        solidcraft_engine::doc::kernel::measure(&st.bodies[0].body).unwrap().volume
+        torno_engine::doc::kernel::measure(&st.bodies[0].body).unwrap().volume
     };
     let before = volume(&app);
     for (cmd, p) in cmds {
@@ -3667,7 +3659,7 @@ fn construction_points_fill_three_point_plane_dialog() {
     for (cmd, params) in commands {
         h.app.run(&cmd, params).unwrap();
     }
-    let planes = solidcraft_engine::view::construction_planes(&h.app.session);
+    let planes = torno_engine::view::construction_planes(&h.app.session);
     assert_eq!(planes.len(), 1);
     assert!((planes[0].2.origin.z - 10.0).abs() < 1e-9);
     assert!(planes[0].2.normal().dot(Vec3::Z).abs() > 1.0 - 1e-9);
@@ -3691,8 +3683,7 @@ fn extrude_takes_every_profile_of_a_sketch_clicked_in_the_browser() {
     h.step(&json!({"click": {"browser": "Sketch1"}})).unwrap();
     h.frames(2);
     let d = h.app.dialog.as_ref().expect("Extrude stays open");
-    let first =
-        h.app.session.doc.features.iter().find(|f| matches!(f.kind, solidcraft_engine::doc::FeatureKind::Sketch { .. })).map(|f| f.id).unwrap();
+    let first = h.app.session.doc.features.iter().find(|f| matches!(f.kind, torno_engine::doc::FeatureKind::Sketch { .. })).map(|f| f.id).unwrap();
     assert_eq!(
         d.inputs[0].items,
         vec![Sel::Profile { sketch: first, index: 0 }, Sel::Profile { sketch: first, index: 1 }],

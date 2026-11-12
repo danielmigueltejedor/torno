@@ -11,8 +11,8 @@
 
 use serde_json::{Map, Value};
 use solidcore_record::Vec3;
-use solidcraft_doc::{Mat, apply_point, apply_vector, is_identity, map_point_expr, map_vector_expr, mat_inverse};
-use solidcraft_geom::prelude::*;
+use torno_doc::{Mat, apply_point, apply_vector, is_identity, map_point_expr, map_vector_expr, mat_inverse};
+use torno_geom::prelude::*;
 
 use crate::Session;
 
@@ -157,7 +157,7 @@ fn pt(p: Vec3) -> Value {
 /// The frame of the body a world point lies on (the nearest), or of the named body, with the
 /// bodies whose faces meet there: the first is the body under the point, and more than one
 /// means the pick is ambiguous.
-fn frame_at(s: &Session, world: &solidcraft_doc::ModelState, f: &Frames, p: Vec3, body: Option<&str>) -> Option<(Mat, Vec<String>)> {
+fn frame_at(s: &Session, world: &torno_doc::ModelState, f: &Frames, p: Vec3, body: Option<&str>) -> Option<(Mat, Vec<String>)> {
     if let Some(b) = body
         && let Some((_, own, m)) = f.bodies(s).iter().find(|(w, _, _)| w == b)
     {
@@ -211,7 +211,7 @@ struct Mapper<'a> {
     /// The session the body frames are read from (only when a pick needs them).
     s: &'a Session,
     /// The placed model the picks are on.
-    world: &'a solidcraft_doc::ModelState,
+    world: &'a torno_doc::ModelState,
     f: Frames,
     /// The frame of the command's first pick (its directions turn with it).
     first: Option<Mat>,
@@ -256,11 +256,11 @@ impl Mapper<'_> {
     }
 
     /// Coordinates such as `["w / 2", 0, 0]`, mapped without evaluating their expressions.
-    fn map_expr(&mut self, m: &Mat, v: &Value, map: fn(&Mat, &mut solidcraft_doc::PointExpr)) -> Option<Value> {
+    fn map_expr(&mut self, m: &Mat, v: &Value, map: fn(&Mat, &mut torno_doc::PointExpr)) -> Option<Value> {
         let a = v.as_array().filter(|a| a.len() == 3)?;
         let c = |i: usize| match a.get(i)? {
-            Value::Number(n) => n.as_f64().filter(|x| x.is_finite()).map(|x| solidcraft_doc::Expr::new(format!("{x}"))),
-            Value::String(e) => Some(solidcraft_doc::Expr::new(e.as_str())),
+            Value::Number(n) => n.as_f64().filter(|x| x.is_finite()).map(|x| torno_doc::Expr::new(format!("{x}"))),
+            Value::String(e) => Some(torno_doc::Expr::new(e.as_str())),
             _ => None,
         };
         let mut p = [c(0)?, c(1)?, c(2)?];
@@ -559,7 +559,7 @@ pub(crate) fn split_move(s: &Session, params: &Value) -> crate::Result<Option<Ve
 }
 
 /// [`to_local`] on the placed model `world`.
-fn map_local(s: &Session, world: &solidcraft_doc::ModelState, id: &str, params: &Value) -> Option<Value> {
+fn map_local(s: &Session, world: &torno_doc::ModelState, id: &str, params: &Value) -> Option<Value> {
     if id == "library.apply" {
         // Library targets are the same world selections as appearance.assign,
         // nested one level down. Convert at the outer boundary exactly once;
@@ -583,7 +583,7 @@ fn map_local(s: &Session, world: &solidcraft_doc::ModelState, id: &str, params: 
         // component is active. Body-relative picks still use the picked body's frame.
         let mut context = s.scratch();
         context.active_component = feature.component;
-        if let solidcraft_doc::FeatureKind::Emboss { face: Some(face), .. } = &feature.kind {
+        if let torno_doc::FeatureKind::Emboss { face: Some(face), .. } = &feature.kind {
             context.active_occurrence_path = (!face.author_path.is_empty()).then(|| face.author_path.clone());
         }
         // Nothing to map (a surface revolve has no picks; a design with no placed component needs
@@ -599,8 +599,8 @@ fn map_local(s: &Session, world: &solidcraft_doc::ModelState, id: &str, params: 
         // Feature. Keep its exact saved values instead of an affine round trip.
         if let (
             "solid.revolve" | "surface.revolve",
-            solidcraft_doc::FeatureKind::Revolve { axis: solidcraft_doc::AxisRef::Line { origin, dir }, .. }
-            | solidcraft_doc::FeatureKind::SurfaceRevolve { axis: solidcraft_doc::AxisRef::Line { origin, dir }, .. },
+            torno_doc::FeatureKind::Revolve { axis: torno_doc::AxisRef::Line { origin, dir }, .. }
+            | torno_doc::FeatureKind::SurfaceRevolve { axis: torno_doc::AxisRef::Line { origin, dir }, .. },
         ) = (cmd, &feature.kind)
             && let Ok(at) = s.doc.eval_point(origin)
         {
@@ -625,8 +625,8 @@ fn map_local(s: &Session, world: &solidcraft_doc::ModelState, id: &str, params: 
             }
         }
         let points = match (&feature.kind, cmd) {
-            (solidcraft_doc::FeatureKind::Revolve { to, .. }, "solid.revolve") => [("to", *to), ("from", None)],
-            (solidcraft_doc::FeatureKind::Extrude { extent, .. }, "solid.extrude") => [("to", extent.to), ("from", extent.from)],
+            (torno_doc::FeatureKind::Revolve { to, .. }, "solid.revolve") => [("to", *to), ("from", None)],
+            (torno_doc::FeatureKind::Extrude { extent, .. }, "solid.extrude") => [("to", extent.to), ("from", extent.from)],
             _ => [("to", None), ("from", None)],
         };
         for (key, point) in points {
@@ -662,7 +662,7 @@ fn map_local(s: &Session, world: &solidcraft_doc::ModelState, id: &str, params: 
         // The constructor can then name local model picks and retain their exact references.
         let mut kind = crate::cmd::plane_axis_point_kind(s, params).ok()?;
         kind.transform_geometry(&mat_inverse(&s.active_component_frame())?);
-        let solidcraft_doc::FeatureKind::ConstructionPlane { plane: solidcraft_doc::PlaneRef::AxisPoint { axis, point } } = kind else {
+        let torno_doc::FeatureKind::ConstructionPlane { plane: torno_doc::PlaneRef::AxisPoint { axis, point } } = kind else {
             return None;
         };
         let mut out = params.clone();
@@ -680,7 +680,7 @@ fn map_local(s: &Session, world: &solidcraft_doc::ModelState, id: &str, params: 
         let key = params.get("sketch").and_then(|value| value.as_str().map(str::to_string).or_else(|| value.as_u64().map(|id| id.to_string())))?;
         let feature = s.doc.find_feature(&key)?;
         let path = crate::cmd::author_path_for_rebind(s, feature, params, id).ok()?;
-        let frame = solidcraft_doc::EmbossFace::component_frame(&s.placed_document(), feature.component, &path).ok()?;
+        let frame = torno_doc::EmbossFace::component_frame(&s.placed_document(), feature.component, &path).ok()?;
         command_frames.active = frame;
         command_frames.sketch = frame;
     }
@@ -766,7 +766,7 @@ fn map_local(s: &Session, world: &solidcraft_doc::ModelState, id: &str, params: 
 }
 
 /// A placement point as saved: a plain number stays a number, an expression is its text.
-fn placement_point(p: &solidcraft_doc::PointExpr) -> Value {
+fn placement_point(p: &torno_doc::PointExpr) -> Value {
     Value::Array(
         p.iter()
             .map(|e| e.as_str().trim().parse::<f64>().ok().filter(|x| x.is_finite()).map_or_else(|| Value::from(e.as_str()), Value::from))
@@ -775,8 +775,8 @@ fn placement_point(p: &solidcraft_doc::PointExpr) -> Value {
 }
 
 /// A primitive's saved placement inputs, in its component's frame, for redefining it with `cmd`.
-fn primitive_placement(kind: &solidcraft_doc::FeatureKind, cmd: &str) -> Vec<(&'static str, Value)> {
-    use solidcraft_doc::FeatureKind as Feature;
+fn primitive_placement(kind: &torno_doc::FeatureKind, cmd: &str) -> Vec<(&'static str, Value)> {
+    use torno_doc::FeatureKind as Feature;
     let point = placement_point;
     match (kind, cmd) {
         (Feature::Box { corner, .. }, "solid.box") => vec![("corner", point(corner))],

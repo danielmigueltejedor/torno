@@ -55,7 +55,7 @@ The `review_edge_constant` curves are points (three equal control points). `|C'|
 rounding noise there, about 1e-17, so its error relative to itself is O(1). The embedded
 estimate passed it. The fifth divided difference does not: at 1e-9 over [0, 1] the steps
 underflow. With the default kernel the failure is hidden as 0, which is exact. With
-`integrator_propagates_failure`, which SolidCraft sets, the length errors with
+`integrator_propagates_failure`, which Torno sets, the length errors with
 `mass::integrator::step_control` 1001. The root is that the error scale has no floor at the
 integrand's own rounding (about ε·max|P|·p/Δknot, not ε·|C'|). Choosing that floor, or making
 a span that is a point to rounding exact zero, is left for a decision.

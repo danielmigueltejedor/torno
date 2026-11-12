@@ -496,7 +496,7 @@ mod tests {
     #[test]
     fn the_module_tree_leaves_out_test_modules_and_follows_paths() {
         let unique = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos();
-        let root = std::env::temp_dir().join(format!("solidcraft-mesh-decisions-{}-{unique}", std::process::id()));
+        let root = std::env::temp_dir().join(format!("torno-mesh-decisions-{}-{unique}", std::process::id()));
         let src = root.join("crates/doc/src");
         std::fs::create_dir_all(src.join("eval")).unwrap();
         std::fs::create_dir_all(root.join("crates/engine/src")).unwrap();

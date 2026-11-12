@@ -70,10 +70,10 @@
     "boolean2d"
   ],
   "ungraded": [
-    "results: SolidCraft computes it"
+    "results: Torno computes it"
   ],
   "what": "sheet.path_flange along one line drawn 45 degrees down and out from the top edge of a 100 x 60 x 2 base, 20 long: a single bend down",
   "why_not": [
-    "body \"Body1\" is no kernel operation's output nor an operand: SolidCraft built it or changed the kernel's record"
+    "body \"Body1\" is no kernel operation's output nor an operand: Torno built it or changed the kernel's record"
   ]
 }

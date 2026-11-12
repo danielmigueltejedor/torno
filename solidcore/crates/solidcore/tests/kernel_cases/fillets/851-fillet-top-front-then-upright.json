@@ -226,8 +226,8 @@
     "blend_dropping"
   ],
   "ungraded": [
-    "continuity: SolidCraft computes it",
-    "watertight: SolidCraft computes it"
+    "continuity: Torno computes it",
+    "watertight: Torno computes it"
   ],
   "what": "on #851's knife-edge part (tessellation/1263): the top front edge R2, then the front upright at the arc R2 as a fillet of its own",
   "why_not": []

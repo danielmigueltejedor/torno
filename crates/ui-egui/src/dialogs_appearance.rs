@@ -6,8 +6,8 @@
 use crate::ui_kit::BackingTooltipExt as _;
 use egui::Color32;
 use serde_json::{Value, json};
-use solidcraft_engine::Sel;
-use solidcraft_engine::doc::pbr_appearance::PbrParameters;
+use torno_engine::Sel;
+use torno_engine::doc::pbr_appearance::PbrParameters;
 
 use crate::SolveApp;
 use crate::dialogs::{Kind, combo};
@@ -201,12 +201,12 @@ pub fn start(app: &SolveApp, id: &str) -> Option<(Kind, Vec<SelInput>)> {
         let faces = app.session.selection.iter().any(|s| matches!(s, Sel::Face { .. }))
             && !app.session.selection.iter().any(|s| matches!(s, Sel::Body { .. }));
         let state = crate::open_meshing::session_world(&app.session);
-        let body_look = |body: &solidcraft_engine::doc::ModelBody| {
+        let body_look = |body: &torno_engine::doc::ModelBody| {
             app.session.doc.model_body_look(body).or_else(|| {
                 (body.body.paint().is_some() || body.imported.is_some() || body.body.color().is_some()).then(|| {
                     let color =
                         app.session.doc.body_color(body).map(|rgb| rgb.map(|v| (v.clamp(0.0, 1.0) * 255.0).round() as u8)).unwrap_or([196, 199, 204]);
-                    solidcraft_engine::doc::appearance::Look::custom(color, app.session.doc.model_body_opacity(body))
+                    torno_engine::doc::appearance::Look::custom(color, app.session.doc.model_body_opacity(body))
                 })
             })
         };
@@ -256,7 +256,7 @@ pub(crate) fn apply_params(targets: &[Sel], color: [u8; 3], opacity: f64, look: 
     if !faces.is_empty() {
         p["faces"] = json!(faces);
         // An engine without face looks: their bodies.
-        if bodies.is_empty() && solidcraft_engine::find_command("appearance.list").is_none() {
+        if bodies.is_empty() && torno_engine::find_command("appearance.list").is_none() {
             let mut owners: Vec<String> =
                 targets.iter().filter_map(|x| if let Sel::Face { body, .. } = x { Some(body.clone()) } else { None }).collect();
             owners.dedup();
@@ -385,9 +385,7 @@ pub fn rows(app: &mut SolveApp, ui: &mut egui::Ui, k: &mut Ap, inputs: &mut [Sel
     // Apply To: bodies or faces (the input follows).
     if let Some(component) = &k.component {
         ui_kit::row(ui, "Apply To", |ui| ui_kit::text(ui, &format!("Component: {component}"), ui_kit::Text::Cell));
-        if ui_kit::row(ui, "", |ui| ui_kit::button(ui, solidcraft_ui_text::tr_label("Select bodies or faces instead"), ui_kit::Button::Normal))
-            .clicked()
-        {
+        if ui_kit::row(ui, "", |ui| ui_kit::button(ui, torno_ui_text::tr_label("Select bodies or faces instead"), ui_kit::Button::Normal)).clicked() {
             k.component = None;
         }
     } else {
@@ -464,7 +462,7 @@ pub fn rows(app: &mut SolveApp, ui: &mut egui::Ui, k: &mut Ap, inputs: &mut [Sel
             });
         }
         if ui_kit::button(ui, "Remove override", ui_kit::Button::Enabled(has_target))
-            .backing_on_hover_text(solidcraft_ui_text::tr_label("Restore the inherited component or physical material appearance"))
+            .backing_on_hover_text(torno_ui_text::tr_label("Restore the inherited component or physical material appearance"))
             .clicked()
             && let Some(p) = clear_params(k, &picked)
         {
@@ -525,7 +523,7 @@ pub fn rows(app: &mut SolveApp, ui: &mut egui::Ui, k: &mut Ap, inputs: &mut [Sel
         .filter(|(_, l)| matches_library_filter(l, (k.category != 0).then_some(want.as_str()), &query, k.only_available))
         .collect();
     if shown.is_empty() {
-        ui_kit::text(ui, solidcraft_ui_text::tr_label("No matching appearances"), ui_kit::Text::Note("appearances_empty"));
+        ui_kit::text(ui, torno_ui_text::tr_label("No matching appearances"), ui_kit::Text::Note("appearances_empty"));
     }
     ui_kit::swatch_grid(ui, &shown, |ui, (i, l)| {
         let picked_look = k.look.as_deref() == Some(l.name.as_str()) && k.pbr == l.pbr;
@@ -596,7 +594,7 @@ fn target_names(targets: &[Sel]) -> String {
 #[cfg(test)]
 mod tests {
     use solidcore_record::Vec3;
-    use solidcraft_engine::Session;
+    use torno_engine::Session;
 
     use super::*;
     use crate::Services;
@@ -1005,7 +1003,7 @@ mod tests {
 
     #[test]
     fn actual_pack_provider_all_ids_requirements_and_disabled_glass_survive_ui_parsing() {
-        use solidcraft_engine::doc::appearance_pack::STARTER_PACK;
+        use torno_engine::doc::appearance_pack::STARTER_PACK;
         let mut app = app();
         let looks = library(&mut app);
         for preset in STARTER_PACK {
@@ -1021,12 +1019,12 @@ mod tests {
         assert!(pack.len() >= 40);
         assert!(pack.iter().filter(|look| preset_available(look)).count() >= 34);
         assert!(pack.iter().filter(|look| !preset_available(look)).count() >= 6);
-        for &(name, color, opacity) in solidcraft_engine::doc::appearance::LIBRARY {
+        for &(name, color, opacity) in torno_engine::doc::appearance::LIBRARY {
             let look = looks.iter().find(|look| look.name == name).unwrap();
             assert_eq!((look.color, look.opacity, look.pbr, look.preset.as_ref()), (color, opacity, None, None));
         }
         // The six published finishes remain independent of starter metadata.
-        for &(name, color, metallic, roughness) in solidcraft_engine::doc::appearance::OPAQUE_FINISHES {
+        for &(name, color, metallic, roughness) in torno_engine::doc::appearance::OPAQUE_FINISHES {
             let matching: Vec<_> = looks.iter().filter(|look| look.name == name).collect();
             assert_eq!(matching.len(), 1);
             let look = matching[0];
@@ -1045,7 +1043,7 @@ mod tests {
 
     #[test]
     fn manual_edit_of_selected_or_reopened_pack_look_does_not_resolve_preset_again() {
-        use solidcraft_engine::doc::appearance_pack::STARTER_PACK;
+        use torno_engine::doc::appearance_pack::STARTER_PACK;
         for reopened in [false, true] {
             let mut app = app();
             let preset = STARTER_PACK.iter().find(|p| p.is_opaque()).unwrap();
@@ -1072,7 +1070,7 @@ mod tests {
 
     #[test]
     fn manual_edit_of_published_finish_keeps_scalar_override_after_selection_and_editor_reopen() {
-        for &(name, ..) in solidcraft_engine::doc::appearance::OPAQUE_FINISHES {
+        for &(name, ..) in torno_engine::doc::appearance::OPAQUE_FINISHES {
             for reopened in [false, true] {
                 let mut app = app();
                 let look = library(&mut app).into_iter().find(|look| look.name == name).unwrap();
@@ -1143,7 +1141,7 @@ mod tests {
         let available = rows.iter().filter(|row| row.get("available").and_then(Value::as_bool) != Some(false)).count();
         let selectable: Vec<_> = library(&mut h.app).into_iter().filter(preset_available).collect();
         assert_eq!(selectable.len(), available);
-        for preset in solidcraft_engine::doc::appearance_pack::STARTER_PACK {
+        for preset in torno_engine::doc::appearance_pack::STARTER_PACK {
             assert_eq!(selectable.iter().any(|look| look.name == preset.name), preset.is_opaque());
         }
     }

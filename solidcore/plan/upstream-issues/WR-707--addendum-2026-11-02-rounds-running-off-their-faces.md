@@ -6,14 +6,14 @@ Updates: WR-707
 - **Area:** Blends
 - **Status in the port:** the same flag, `UpstreamFixes::fillet_refuse_rounds_breaking_through`, off by default. Nothing changes with it off: the pinned behaviour, which difftest gates, does not reach the test.
 - **Location:** `crates/solidcore/src/blend/fillet_executive/session/band_cuts.rs`, `section_breaks_through` (called by `band_breaks_through_the_part`).
-- **What happened:** the first version refused a convex blend wherever its section crossed any face of the part inside that face. A blend whose section runs off its face also crosses faces: past a cliff (the body's bottom face), into a notch, a hole or an opening. The construction trims the blend to those faces, and fork 5e8c9c1 builds such blends. With every flag on, five SolidCraft rig cases were refused (`SolidError::FilletRefused`, `NoRoomReason::BreaksThrough`). With only this flag off, each one built to its expected volume:
+- **What happened:** the first version refused a convex blend wherever its section crossed any face of the part inside that face. A blend whose section runs off its face also crosses faces: past a cliff (the body's bottom face), into a notch, a hole or an opening. The construction trims the blend to those faces, and fork 5e8c9c1 builds such blends. With every flag on, five Torno rig cases were refused (`SolidError::FilletRefused`, `NoRoomReason::BreaksThrough`). With only this flag off, each one built to its expected volume:
   - `1080-chamfer-runs-into-openings-cut-by-them` (fit 4.99): 3350;
   - `1080-fillet-notched-block-top-outline-r8` (fit 7.0018): 10198.718039;
   - `324-fillet-over-hole-cut-by-overlong-cylinder` (fit 2.563): 7580.287315;
   - `every-hole-top-rim-r12-past-plate-bottom` (fit 10.004): 13726.857967;
   - `190-fillet-disc-rim-past-its-2mm-wall`: 957.692239.
 
-  A round over a through hole that lies between its rails was refused the same way, and so was SolidCraft's `4782-fillet-bar-edge-wider-than-both-faces`: an R10 round of a 5 x 5 bar, which the fork does not build yet. The construction builds both to their closed forms (the bar: 80 times the area of the bar's square inside the circle of centre (10, -5) and radius 10, 630.2934873).
+  A round over a through hole that lies between its rails was refused the same way, and so was Torno's `4782-fillet-bar-edge-wider-than-both-faces`: an R10 round of a 5 x 5 bar, which the fork does not build yet. The construction builds both to their closed forms (the bar: 80 times the area of the bar's square inside the circle of centre (10, -5) and radius 10, 630.2934873).
 - **What changes:** a section breaks through only where it leaves the part's material and comes back into it through an inner face. The section is split at every point where it meets a face, and each piece between two such points is classified by its middle. A piece breaks through when all of these hold:
   - it lies outside the material;
   - one of its ends crosses a face inside that face;

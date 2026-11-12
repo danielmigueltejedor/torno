@@ -28,7 +28,7 @@ use solidcore::topology::brep::validation::{check_brep, CheckLevel};
 use solidcore::topology::edge;
 use solidcore::{Brep, Kernel};
 
-/// #387's half circle (centre (0, 50), r 40) as SolidCraft's record has it: a rational
+/// #387's half circle (centre (0, 50), r 40) as Torno's record has it: a rational
 /// quadratic in four equal spans, weights 1, .75, .5, .5, .75, 1 (the same control points
 /// as `nurbs::b_spline_surface::p2`'s unit test).
 const HALF: [(f64, f64); 6] = [

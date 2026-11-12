@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use serde_json::json;
-use solidcraft_engine::Sel;
+use torno_engine::Sel;
 
 use crate::test_support::{click, component_box as fixture};
 
@@ -29,7 +29,7 @@ fn pending_and_reverted_moves_replace_cached_transforms() {
     h.app.run("occurrence.move", json!({"occurrence":occurrence,"translate":[20,0,0],"capture":false})).unwrap();
     let moved = super::model_placement(&mut h.app, &[occurrence]).unwrap();
     assert!(!Arc::ptr_eq(&first, &moved));
-    assert!((solidcraft_engine::doc::apply_point(&moved.world, solidcore_record::Vec3::ZERO).x - 20.0).abs() < 1e-9);
+    assert!((torno_engine::doc::apply_point(&moved.world, solidcore_record::Vec3::ZERO).x - 20.0).abs() < 1e-9);
     h.app.run("component.revert_position", json!({"occurrences":[occurrence]})).unwrap();
     let reverted = super::model_placement(&mut h.app, &[occurrence]).unwrap();
     assert!(!Arc::ptr_eq(&moved, &reverted));
@@ -76,7 +76,7 @@ fn body_index_and_placements_follow_geometry_undo_and_document_identity() {
     assert_eq!(super::model_placement(&mut h.app, &[occurrence]).unwrap().bodies.len(), 1);
     assert_eq!(super::entries(&h.app, component, "bodies").len(), 1);
     // A separate session can have the same revision and the same occurrence ids.
-    h.app.session = solidcraft_engine::Session::default();
+    h.app.session = torno_engine::Session::default();
     assert!(super::model_placement(&mut h.app, &[occurrence]).is_none());
     assert!(super::model_children(&h.app, 0).is_empty());
     assert!(super::entries(&h.app, component, "bodies").is_empty());
@@ -324,7 +324,7 @@ fn render_browser_swatch_resolves_face_body_component_then_physical_material() {
     h.app.run("appearance.assign", json!({"body":"Body1","faces":[point],"appearance":"ABS - Red"})).unwrap();
     let state = crate::open_meshing::session_world(&h.app.session);
     let body = state.body("Body1").unwrap();
-    let face = solidcraft_engine::doc::appearance::face_index_at(body, point).unwrap();
+    let face = torno_engine::doc::appearance::face_index_at(body, point).unwrap();
     h.app.run("select.set", json!({"items":[Sel::Face{body:"Body1".into(),index:face,point}]})).unwrap();
     let resolved = swatch(&h);
     assert_eq!(resolved.name, "ABS - Red");
@@ -567,7 +567,7 @@ fn feature_editor_browser_rows_follow_the_marker_and_return_after_cancel() {
 fn the_edited_sketch_is_marked_in_the_users_language() {
     let mut h = crate::scenario::Harness::new();
     h.app.run("sketch.create", json!({"plane":"XY","name":"Sketch1"})).unwrap();
-    let _japanese = solidcraft_ui_text::scope("ja");
+    let _japanese = torno_ui_text::scope("ja");
     let rows = super::entries(&h.app, 0, "sketches");
     assert_eq!(rows.iter().map(|r| r.label.as_str()).collect::<Vec<_>>(), ["スケッチ1  (編集中)"]);
 }
@@ -681,7 +681,7 @@ fn a_body_keeps_a_faint_bar_while_one_of_its_faces_is_selected() {
     let body = super::model_placement(&mut h.app, &[occurrence]).unwrap().bodies[0].world.clone();
     let point = solidcore_record::Vec3::new(0.0, 5.0, 5.0);
     let state = crate::open_meshing::session_world(&h.app.session);
-    let face = solidcraft_engine::doc::appearance::face_index_at(state.body(&body).unwrap(), point).unwrap();
+    let face = torno_engine::doc::appearance::face_index_at(state.body(&body).unwrap(), point).unwrap();
     let row = |app: &mut crate::SolveApp| {
         let lit = super::Lit::of(app);
         lit.row(app, &super::entries(app, component, "bodies")[0])

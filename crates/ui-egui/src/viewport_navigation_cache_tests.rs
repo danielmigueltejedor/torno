@@ -1,7 +1,7 @@
 use super::*;
 
 fn app() -> SolveApp {
-    let mut session = solidcraft_engine::Session::default();
+    let mut session = torno_engine::Session::default();
     session.execute("solid.box", &json!({"length":40,"width":30,"height":20})).unwrap();
     let mut app = SolveApp::new(session, crate::Services::default());
     app.home.open = false;
@@ -114,7 +114,7 @@ fn shadow_cache_follows_visibility_and_world_up() {
     assert_ne!(first.key, hidden.key);
     assert!(hidden.bytes.is_empty());
     app.session.visibility.hidden_bodies.clear();
-    app.cam.up = solidcraft_viewport::UpAxis::Y;
+    app.cam.up = torno_viewport::UpAxis::Y;
     let turned = shadow_geometry(&app, &st);
     assert_ne!(first.key, turned.key);
     assert_ne!(first.bytes, turned.bytes);
@@ -146,7 +146,7 @@ fn face_feedback_reuses_geometry_but_retains_fresh_pick_points() {
 /// new hover used to dominate the frame; cached membership must still follow real edits.
 #[test]
 fn active_assembly_membership_is_reused_and_follows_edits_and_activation() {
-    let mut s = solidcraft_engine::Session::default();
+    let mut s = torno_engine::Session::default();
     let a = s.execute("component.create", &json!({"name":"A"})).unwrap()["component"].as_u64().unwrap();
     s.execute("solid.box", &json!({"length":10,"width":10,"height":10})).unwrap();
     s.execute("component.create", &json!({"name":"Child"})).unwrap();

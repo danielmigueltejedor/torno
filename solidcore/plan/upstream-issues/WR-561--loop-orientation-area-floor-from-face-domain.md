@@ -6,7 +6,7 @@
   - A hole of radius 0.002 in a 3000 x 1000 plate is about 4e-12 of the face.
   - `MakeEdgeInFace` forces the 3D path while it builds an extrusion's caps. There the face split keeps such a hole's loop the wrong way round on both caps: the volume is 2.5e-5 too large, and the check reports "Face Loop has bad orientation".
 - **Trigger:** extruding a 3000 x 1000 plate profile with a hole of radius 0.002 (tangency-labs/solidcore#1523).
-- **How found:** SolidCraft's extrudes on SMLib (#1523).
+- **How found:** Torno's extrudes on SMLib (#1523).
 - **Confirmed:** by the fork's C++ test (`capi/tests/sweeps.cpp`, "extrude plate with a tiny hole", tangency-labs/smlib 54ca3e0). For the Rust port, see the test below.
 - **Fix:** tangency-labs/smlib@54ca3e0: the floor is 1e-8 of the loop's own bounding box, dimensionless too (`dAreaFloor * dBoxU * dBoxV`, the box's width and height over the face domain's). A box with no width or no height (not above `SM_EFF_ZERO`) bounds no area, and that pass decides nothing.
 - **Rust port:** behaves as upstream by default. `Kernel::fixes.loop_orientation_floor_from_loop_box` ports the fork's change in `topology::face::p3` (`loop_orientation_3d`).

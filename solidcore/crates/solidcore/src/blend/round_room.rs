@@ -1,7 +1,7 @@
 //! Rounds refused for the room they leave or take: what the refusal found, as data
 //! ([`RoundRefusal`], carried by [`SolidError::RoundRefused`]).
 //!
-//! Not upstream: SolidCraft's checks around its fillet commands (its `blend.rs` `closed`,
+//! Not upstream: Torno's checks around its fillet commands (its `blend.rs` `closed`,
 //! `blend_variable.rs` `taper`), made the kernel's so that every application gets them.
 //! The room a variable round's band has along a straight edge between planes is
 //! [`crate::blend::band_room`]'s.

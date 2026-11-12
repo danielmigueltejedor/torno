@@ -15,15 +15,15 @@
 //! drawn triangles (#1064). Display only: the reference mesh the model reads, exports and the
 //! B-rep never change.
 
-use solidcraft_engine::geom::prelude::*;
 use std::collections::HashMap;
 use std::sync::Arc;
+use torno_engine::geom::prelude::*;
 
 use solidcore_record::Vec3;
 use solidcore_tess::TessPlan;
-use solidcraft_engine::doc::ModelBody;
-use solidcraft_engine::doc::display_quality::{DisplayQuality, MAX_REFINE, refinement_for};
-use solidcraft_engine::geom::{Aabb3, Mesh};
+use torno_engine::doc::ModelBody;
+use torno_engine::doc::display_quality::{DisplayQuality, MAX_REFINE, refinement_for};
+use torno_engine::geom::{Aabb3, Mesh};
 
 /// Most triangles all refined bodies may draw together (on top of the rest of the model).
 pub(crate) const TRIANGLE_BUDGET: usize = 6_000_000;
@@ -38,11 +38,11 @@ const MAX_JOBS: usize = 2;
 /// A refined plan and its CPU mesh (none: the body has no plan at that step).
 pub(crate) type Refined = Option<(Arc<TessPlan>, Arc<Mesh>)>;
 
-/// Whether the viewport refines at all: `SOLIDCRAFT_DISPLAY_REFINE=0` turns it off (to compare
+/// Whether the viewport refines at all: `TORNO_DISPLAY_REFINE=0` turns it off (to compare
 /// pictures and frame times with and without it).
 pub(crate) fn enabled() -> bool {
     static ON: std::sync::OnceLock<bool> = std::sync::OnceLock::new();
-    *ON.get_or_init(|| std::env::var("SOLIDCRAFT_DISPLAY_REFINE").map_or(true, |v| v != "0"))
+    *ON.get_or_init(|| std::env::var("TORNO_DISPLAY_REFINE").map_or(true, |v| v != "0"))
 }
 
 /// What keeps a body's identity ([`body_id`]) its own while the cache holds it.
@@ -73,7 +73,7 @@ pub(crate) struct Lens {
 
 impl Lens {
     /// The view of `cam` in a viewport `height_px` physical pixels high.
-    pub fn new(cam: &solidcraft_viewport::Camera, height_px: f64) -> Lens {
+    pub fn new(cam: &torno_viewport::Camera, height_px: f64) -> Lens {
         let perspective = cam.fov > 0.0;
         let scale = if perspective { height_px / (2.0 * (cam.fov * 0.5).tan()) } else { height_px / (2.0 * cam.half_height()) };
         Lens { eye: cam.eye(), back: cam.back(), scale, perspective, near: (cam.distance * 1e-2).max(1e-3) }
@@ -412,10 +412,10 @@ fn mesh_bytes(m: &Mesh) -> usize {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use solidcraft_viewport::Camera;
+    use torno_viewport::Camera;
 
     fn cylinder() -> ModelBody {
-        let body = solidcraft_engine::kernel::cylinder(Vec3::ZERO, Vec3::Z, 10.0, 20.0).unwrap();
+        let body = torno_engine::kernel::cylinder(Vec3::ZERO, Vec3::Z, 10.0, 20.0).unwrap();
         ModelBody::new("Body1".into(), body, 1)
     }
 
@@ -471,10 +471,7 @@ mod tests {
             .zip(&mesh.tri_face)
             // The side wall's own triangles: the flat caps have corners on the rim too.
             .filter(|(_, f)| {
-                matches!(
-                    solidcraft_engine::kernel::face_surface(&b.body, **f as usize),
-                    Some(solidcraft_engine::kernel::FaceSurface::Cylinder { .. })
-                )
+                matches!(torno_engine::kernel::face_surface(&b.body, **f as usize), Some(torno_engine::kernel::FaceSurface::Cylinder { .. }))
             })
             .map(|(t, _)| t.map(|i| mesh.positions[i as usize]))
             .filter(|t| t.iter().all(|p| (r(*p) - 10.0).abs() < 1e-9))

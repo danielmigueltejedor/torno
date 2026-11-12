@@ -4,17 +4,17 @@
 //! a midpoint or a curve adds the matching constraint; lining up adds none. The suppress-snap
 //! chord is configurable (default Ctrl/Cmd or Alt/Option; see `prefs::suppress_sketch_snap`).
 
-use solidcraft_engine::geom::prelude::*;
 use std::cell::{Cell, RefCell};
+use torno_engine::geom::prelude::*;
 
 use egui::{Align2, FontId, Stroke};
 use serde_json::{Value, json};
 use solidcore_record::Vec2;
-use solidcraft_engine::sketch::{ConstraintKind, CurveKind, Sketch};
+use torno_engine::sketch::{ConstraintKind, CurveKind, Sketch};
 
 use crate::SolveApp;
 use crate::viewport::Proj;
-use solidcraft_theme::Tokens;
+use torno_theme::Tokens;
 
 /// What the dragged point snapped to.
 #[derive(Clone, Debug, PartialEq)]
@@ -91,7 +91,7 @@ pub fn find(sk: &Sketch, moving: &[(usize, Vec2)], exclude: &[usize], mm_px: f64
         return keep(None);
     }
     let id = |i: usize| sk.points.get(i).map(|p| p.id.clone()).unwrap_or_default();
-    let visible = solidcraft_engine::view::SketchPointVisibility::new(sk);
+    let visible = torno_engine::view::SketchPointVisibility::new(sk);
     let targets: Vec<(usize, Vec2)> =
         sk.points.iter().enumerate().filter(|(i, p)| !exclude.contains(i) && visible.takes(p)).map(|(i, p)| (i, p.pos)).collect();
     let free_curves: Vec<usize> =
@@ -264,7 +264,7 @@ pub fn show(app: &SolveApp, painter: &egui::Painter, proj: &Proj) {
     if !label.is_empty() {
         let r = egui::Rect::from_min_size(sp + egui::vec2(12.0, -24.0), egui::vec2(24.0, 14.0));
         painter.rect_filled(r, tk.radius_sm.saturating_sub(1), tk.accent_soft);
-        painter.text(r.center(), Align2::CENTER_CENTER, label, FontId::proportional(solidcraft_theme::Tokens::get().font_micro), tk.text);
+        painter.text(r.center(), Align2::CENTER_CENTER, label, FontId::proportional(torno_theme::Tokens::get().font_micro), tk.text);
     }
     crate::scenario::publish_count("drag_guides", s.guides.len() as f64);
 }
@@ -288,7 +288,7 @@ mod tests {
     /// A centre rectangle 30 × 20 round `center`, as Center Rectangle draws it: the centre `p5`
     /// held at the middle of the diagonal `l5`.
     fn centre_rectangle(center: [f64; 2]) -> Sketch {
-        let mut s = solidcraft_engine::Session::default();
+        let mut s = torno_engine::Session::default();
         let _ = s.execute("sketch.create", &json!({"plane": "XY"}));
         let corner = [center[0] + 15.0, center[1] + 10.0];
         let _ = s.execute("sketch.rectangle.center", &json!({"center": center, "corner": corner}));

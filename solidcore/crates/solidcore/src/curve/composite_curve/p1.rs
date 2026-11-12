@@ -1644,7 +1644,7 @@ pub enum OffsetCornerType {
     FilletCorner = 1,
     /// `SM_OC_LINEAR_CHAMFER`: the extension lines trimmed by a chamfer line.
     LinearChamfer = 2,
-    /// `SM_OC_CURVE_EXTENSION` (SolidCraft change, tangency-labs/smlib 54148db): each
+    /// `SM_OC_CURVE_EXTENSION` (Torno change, tangency-labs/smlib 54148db): each
     /// offset continues as its own curve to where the two meet. Only
     /// `PrimitiveCreation::create_taper_extrude` takes it: there each wall continues as
     /// its own surface (a line's plane, an arc's cone) and neighbouring walls meet along

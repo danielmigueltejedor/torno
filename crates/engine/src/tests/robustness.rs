@@ -1,9 +1,9 @@
-//! Cases found by the robustness runs (`solidcraft-cli fuzz`, docs/robustness.md), cut down to
+//! Cases found by the robustness runs (`torno-cli fuzz`, docs/robustness.md), cut down to
 //! the steps that matter, and a fixed set of seeds that must keep running clean.
 
-use solidcraft_geom::MeshGeom;
-use solidcraft_geom::tess::EvaluateMesh as _;
 use std::f64::consts::PI;
+use torno_geom::MeshGeom;
+use torno_geom::tess::EvaluateMesh as _;
 
 use serde_json::{Value, json};
 
@@ -63,7 +63,7 @@ fn cut_whose_end_touches_an_arc_side_leaves_no_sliver() {
         ]))
     };
     let (touching, clear) = (plate(-10.0), plate(-10.1));
-    let area = |s: &Session| s.model.state().bodies.iter().map(|b| solidcraft_kernel::measure(&b.body).map(|m| m.area).unwrap_or(0.0)).sum::<f64>();
+    let area = |s: &Session| s.model.state().bodies.iter().map(|b| torno_kernel::measure(&b.body).map(|m| m.area).unwrap_or(0.0)).sum::<f64>();
     let dv = total_volume(&clear) - total_volume(&touching);
     assert!((dv - PI * 25.0 * 0.1).abs() < 1e-4, "volume: clear − touching = {dv}, not π 5² 0.1");
     let da = area(&touching) - area(&clear);
@@ -177,7 +177,7 @@ fn shell_thicker_than_a_step_says_so() {
 }
 
 fn total_volume(s: &Session) -> f64 {
-    s.model.state().bodies.iter().map(|b| solidcraft_kernel::measure(&b.body).map(|m| m.volume).unwrap_or(0.0)).sum()
+    s.model.state().bodies.iter().map(|b| torno_kernel::measure(&b.body).map(|m| m.volume).unwrap_or(0.0)).sum()
 }
 
 /// Volume of a box L×W×H with its vertical edges rounded (R) and its bottom loop filleted
@@ -387,12 +387,7 @@ fn knife_edge_part() -> Session {
 
 /// The volume of the session's bodies through the display plan.
 fn planned_volume(s: &Session) -> f64 {
-    s.model
-        .state()
-        .bodies
-        .iter()
-        .map(|b| b.body.mesh_plan(&solidcraft_kernel::MeshTolerance::chord(2e-4)).unwrap().evaluate_mesh().measure().volume)
-        .sum()
+    s.model.state().bodies.iter().map(|b| b.body.mesh_plan(&torno_kernel::MeshTolerance::chord(2e-4)).unwrap().evaluate_mesh().measure().volume).sum()
 }
 
 /// #851: the arc's top edge runs out tangent to the back face at the knife edge's top. The blend

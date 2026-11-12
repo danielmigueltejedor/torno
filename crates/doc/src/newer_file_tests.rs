@@ -1,4 +1,4 @@
-//! Designs a newer SolidCraft saved: they open, say so, and saving loses nothing.
+//! Designs a newer Torno saved: they open, say so, and saving loses nothing.
 
 use serde_json::{Value, json};
 
@@ -7,7 +7,7 @@ use crate::{Document, FeatureKind, Model, PlaneRef};
 
 /// A real design: a sketched disc and its extrusion, and a parameter.
 fn design() -> Document {
-    use solidcraft_sketch::Sketch;
+    use torno_sketch::Sketch;
     let mut d = Document::new("Plate");
     d.set_param("depth", "5 mm", Some("mm"), None).unwrap();
     let mut sketch = Sketch::new();
@@ -55,10 +55,7 @@ fn one_format_newer_with_nothing_unknown_opens_with_the_same_bodies() {
     assert_eq!(bodies.len(), 1);
     assert_eq!(opened.features, original.features);
     let notice = opened.newer_file.as_ref().unwrap().notice();
-    assert_eq!(
-        notice,
-        format!("Saved by a newer SolidCraft (format {}, this version reads up to {FORMAT}). If something's missing, update.", FORMAT + 1)
-    );
+    assert_eq!(notice, format!("Saved by a newer Torno (format {}, this version reads up to {FORMAT}). If something's missing, update.", FORMAT + 1));
     assert!(opened.newer_file.as_ref().unwrap().not_understood.is_empty());
     // Saved, it still says what it is; read again, the same.
     let again = saved(&opened);
@@ -74,7 +71,7 @@ fn an_unknown_change_opens_with_a_warning_and_stays_on_the_file() {
     let opened = Document::from_json(&file.to_string()).unwrap();
     let report = opened.newer_file.as_ref().unwrap();
     assert_eq!(report.unknown_changes, ["a-later-change"]);
-    assert!(report.notice().contains("a-later-change") && report.notice().starts_with("Saved by a newer SolidCraft"), "{}", report.notice());
+    assert!(report.notice().contains("a-later-change") && report.notice().starts_with("Saved by a newer Torno"), "{}", report.notice());
     assert_eq!(built(&opened), built(&original));
     let again = saved(&opened);
     assert_eq!(again["format"], json!(format_string(FORMAT)));
@@ -104,7 +101,7 @@ fn an_unknown_feature_kind_opens_the_rest_and_reports_that_feature() {
     assert_eq!(bodies.len(), 1, "the pad after it still builds");
     assert!(errors[0].is_none() && errors[2].is_none(), "{errors:?}");
     let why = errors[1].as_deref().unwrap();
-    assert!(why.contains("newer SolidCraft") && why.contains("gyroid_lattice"), "{why}");
+    assert!(why.contains("newer Torno") && why.contains("gyroid_lattice"), "{why}");
 }
 
 #[test]
@@ -203,7 +200,7 @@ fn a_feature_this_version_reads_wrongly_is_kept_whole() {
     file["features"][1]["operation"] = json!("weave");
     let opened = Document::from_json(&file.to_string()).unwrap();
     assert!(matches!(&opened.features[1].kind, FeatureKind::NewerFileFeature { raw } if raw.kind() == "extrude"));
-    assert!(built(&opened).1[1].as_deref().unwrap().contains("newer SolidCraft"));
+    assert!(built(&opened).1[1].as_deref().unwrap().contains("newer Torno"));
     assert_eq!(saved(&opened)["features"][1], file["features"][1]);
 }
 
@@ -212,7 +209,7 @@ fn what_truly_cant_be_read_says_why() {
     for (text, says) in [
         ("not json", "HDR resource admission"),
         ("{\"format\":\"solidcraft/0\",\"name\":\"x\"}", "format 0"),
-        ("{\"format\":\"someone-else/9\"}", "not a SolidCraft design (format `someone-else/9`)"),
+        ("{\"format\":\"someone-else/9\"}", "not a Torno design (format `someone-else/9`)"),
     ] {
         let why = Document::from_json(text).unwrap_err().to_string();
         assert!(why.contains(says), "{text}: {why}");

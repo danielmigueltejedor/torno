@@ -895,10 +895,10 @@ fn hostile_topology_is_an_error_never_a_panic() {
     }
 }
 
-/// The step-conformance parts (SolidCraft's tests/step-conformance, CC0): every one reads, its
+/// The step-conformance parts (Torno's tests/step-conformance, CC0): every one reads, its
 /// faces facing out of its material; the NURBS cylinder, dome and torus ring, whose faces wind
 /// around a spline closed on itself in u without a seam edge, get one along its boundary column.
-/// The parts live in SolidCraft's tree, where solidcore is vendored; outside it this has nothing
+/// The parts live in Torno's tree, where solidcore is vendored; outside it this has nothing
 /// to read.
 #[test]
 fn step_conformance_parts() {
@@ -921,13 +921,13 @@ fn step_conformance_parts() {
     }
 }
 
-/// Every solid of every STEP file in `SOLIDCRAFT_STEP_CORPUS` (the tangency-labs/models files)
+/// Every solid of every STEP file in `TORNO_STEP_CORPUS` (the tangency-labs/models files)
 /// read into schema 4: solids read and refused (by reason), faces, edges, time. Run with
 /// `--ignored --nocapture`.
 #[test]
-#[ignore = "needs SOLIDCRAFT_STEP_CORPUS"]
+#[ignore = "needs TORNO_STEP_CORPUS"]
 fn corpus_solids_read_into_schema_4() {
-    let Ok(dir) = std::env::var("SOLIDCRAFT_STEP_CORPUS") else { return };
+    let Ok(dir) = std::env::var("TORNO_STEP_CORPUS") else { return };
     let mut paths: Vec<_> = std::fs::read_dir(&dir).into_iter().flatten().flatten().map(|e| e.path()).collect();
     paths.sort();
     for path in paths.iter().filter(|p| p.extension().is_some_and(|e| e.eq_ignore_ascii_case("step") || e.eq_ignore_ascii_case("stp"))) {

@@ -1,12 +1,12 @@
 //! Design properties (#1015): `document.metadata` reads the design's `metadata` object, and
 //! `document.metadata.set` and `document.metadata.remove` change it, each in one undo step. The
-//! keys SolidCraft reads, and the checks a change gets, are `solidcraft_doc::metadata`'s
+//! keys Torno reads, and the checks a change gets, are `torno_doc::metadata`'s
 //! (`KEYS`, the rows the design takes); keys other tools wrote are kept as they are. The UI's Design
 //! Properties dialog, scripts and MCP agents all go through these commands. A change evaluates
 //! nothing: properties are no geometry.
 
 use serde_json::{Map, Value, json};
-use solidcraft_doc::metadata::{self, BOM_TYPE, MAX_KEYS, Owner};
+use torno_doc::metadata::{self, BOM_TYPE, MAX_KEYS, Owner};
 
 use super::CommandSpec;
 use crate::params::{bad, str_};
@@ -26,7 +26,7 @@ pub static COMMANDS: &[CommandSpec] = &[
         .contract(&READ_CONTRACT)
         .output(output_schema_for::<MetadataResult>)
         .params(
-            "→ metadata: the design's metadata object as saved (other tools' keys too); properties: each of SolidCraft's design \
+            "→ metadata: the design's metadata object as saved (other tools' keys too); properties: each of Torno's design \
              properties (project, part number, revision…), its text or null (absent, or not text)",
         ),
     CommandSpec::new("document.metadata.set", "Change Design Properties", crate::checked!("document.metadata.set", set))
@@ -35,7 +35,7 @@ pub static COMMANDS: &[CommandSpec] = &[
         .contract(&SET_CONTRACT)
         .output(output_schema_for::<MetadataSetResult>)
         .params(
-            "key and value, or values: {key: value, …} (all or nothing, one undo step). SolidCraft's keys, the ones document.metadata's \
+            "key and value, or values: {key: value, …} (all or nothing, one undo step). Torno's keys, the ones document.metadata's \
              properties lists, take text (\"\" or null removes); another tool's data goes under its reverse-DNS key such as \
              com.example.tool (an object; null removes) → metadata, changed: [keys]",
         ),
@@ -125,7 +125,7 @@ mod tests {
 
     /// A folder of its own for one test's files.
     fn scratch(name: &str) -> std::path::PathBuf {
-        let dir = std::env::temp_dir().join(format!("solidcraft-metadata-{}-{name}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("torno-metadata-{}-{name}", std::process::id()));
         let _ = std::fs::remove_dir_all(&dir);
         std::fs::create_dir_all(&dir).unwrap();
         dir
@@ -196,7 +196,7 @@ mod tests {
     fn other_tools_keys_and_odd_values_survive_open_edit_and_save() {
         let dir = scratch("roundtrip");
         // A design another tool added metadata to by hand: a namespaced object with every kind of
-        // JSON value, a well-known key of the wrong type, a key a newer SolidCraft might read, and
+        // JSON value, a well-known key of the wrong type, a key a newer Torno might read, and
         // numbers no feature input could hold.
         let foreign = json!({
             "author": 42,
@@ -205,7 +205,7 @@ mod tests {
             "org.printfarm": {"slicer_profile": "PETG-0.2"},
             "future_key": ["kept"],
         });
-        let mut design: Value = serde_json::from_str(&solidcraft_doc::Document::new("Foreign").to_json()).unwrap();
+        let mut design: Value = serde_json::from_str(&torno_doc::Document::new("Foreign").to_json()).unwrap();
         design["metadata"] = foreign.clone();
         let plain = dir.join("foreign.json");
         std::fs::write(&plain, serde_json::to_string_pretty(&design).unwrap()).unwrap();
@@ -235,17 +235,17 @@ mod tests {
     fn a_design_without_properties_saves_as_before() {
         let mut s = Session::default();
         run(&mut s, "solid.box", json!({"length": 10, "width": 10, "height": 10}));
-        let before = solidcraft_io::write_design(&s.doc);
+        let before = torno_io::write_design(&s.doc);
         run(&mut s, "document.metadata.set", json!({"key": "author", "value": "Jane"}));
         run(&mut s, "document.metadata.remove", json!({"key": "author"}));
-        assert_eq!(solidcraft_io::write_design(&s.doc), before, "byte for byte");
+        assert_eq!(torno_io::write_design(&s.doc), before, "byte for byte");
         assert!(!String::from_utf8_lossy(&before).contains("\"metadata\""));
     }
 
     #[test]
     fn exports_carry_the_properties_and_never_other_tools_keys() {
         // `file.export` hands the design's properties to the writers; the mapping itself is
-        // tested in solidcraft-io.
+        // tested in torno-io.
         let dir = scratch("export");
         let mut s = Session::default();
         run(&mut s, "solid.box", json!({"length": 10, "width": 10, "height": 10}));
@@ -267,7 +267,7 @@ mod tests {
         assert!(step.contains("('Jane Doe'),('ACME')"), "{}", &step[..400]);
         let iges = String::from_utf8(text(&mut s, "part.igs")).unwrap();
         assert!(iges.contains("8HJane Doe") && iges.contains("4HACME"), "{}", &iges[..600]);
-        // 3MF model metadata is checked where it is written (solidcraft-io); here: it exports.
+        // 3MF model metadata is checked where it is written (torno-io); here: it exports.
         assert!(!text(&mut s, "part.3mf").is_empty());
         for out in [step.as_bytes(), iges.as_bytes()] {
             let found = |needle: &str| out.windows(needle.len()).any(|w| w == needle.as_bytes());
@@ -328,7 +328,7 @@ mod tests {
         revision_c.metadata.set(Owner::Design, "author", json!("Jane")).unwrap();
         let path = dir.join("bracket-rev-c.json");
         std::fs::write(&path, revision_c.to_json()).unwrap();
-        let (read, _) = solidcraft_io::read_design_file(path.to_str().unwrap(), None::<fn(solidcraft_io::DesignPreview)>).unwrap();
+        let (read, _) = torno_io::read_design_file(path.to_str().unwrap(), None::<fn(torno_io::DesignPreview)>).unwrap();
         assert!(read.differs_only_in_part_properties(&s.doc), "the two revisions differ only in their properties");
 
         run(&mut s, "doc.open", json!({"path": path}));
@@ -352,7 +352,7 @@ mod tests {
         }
         assert_eq!(properties.as_object().map(Map::len), Some(keys.len()), "{properties}");
         let refused = s.execute("document.metadata.set", &json!({"key": "colour", "value": "red"})).unwrap_err().to_string();
-        assert!(refused.contains("`colour` is not a design property: SolidCraft's are project, part_number,"), "{refused}");
+        assert!(refused.contains("`colour` is not a design property: Torno's are project, part_number,"), "{refused}");
     }
 
     #[test]

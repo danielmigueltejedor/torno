@@ -3,7 +3,7 @@ use crate::ui_kit::{Container, LayoutMode, SHELL_GAP, Surface, within};
 use egui::{Rect, pos2};
 
 use crate::SolveApp;
-use solidcraft_theme::Tokens;
+use torno_theme::Tokens;
 
 /// The viewport's top corners are rounded concentrically with the cards: the card margin plus the
 /// card radius.
@@ -113,9 +113,9 @@ pub(crate) fn fit_rects(app: &SolveApp) -> Vec<Rect> {
 
 /// Actual persistent workspace footprints for the opt-in host. Transient menus
 /// remain input shields, without becoming targets for framing or control placement.
-pub(crate) fn host_usable(app: &SolveApp) -> solidcraft_engine::panels::PanelResult<crate::panel_runtime::HostUsableRegion> {
+pub(crate) fn host_usable(app: &SolveApp) -> torno_engine::panels::PanelResult<crate::panel_runtime::HostUsableRegion> {
     use crate::panel_runtime::{MAX_USABLE_OBSTACLES, egui_rect, logical_rect, resolve_usable_region};
-    use solidcraft_engine::panels::{Rule, error};
+    use torno_engine::panels::{Rule, error};
     let frame = app.universal_panel_frame().ok_or_else(|| error(Rule::Lifecycle, "universal host geometry is unavailable"))?;
     let windows = app.viewport.host_windows.as_ref().ok_or_else(|| error(Rule::CollectionLimit, "persistent window footprint limit"))?;
     let mut obstacles = frame.layout.usable.obstacles.clone();

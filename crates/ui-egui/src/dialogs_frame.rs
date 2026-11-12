@@ -3,10 +3,10 @@
 //! picked in another sketch. Anchor, angle and mirror place the section on each line.
 
 use serde_json::{Map, Value, json};
-use solidcraft_engine::Sel;
-use solidcraft_engine::doc::expr::Kind as ValueKind;
-use solidcraft_engine::doc::frame::{self, MemberProfile};
-use solidcraft_engine::doc::{FeatureKind, ProfileSel};
+use torno_engine::Sel;
+use torno_engine::doc::expr::Kind as ValueKind;
+use torno_engine::doc::frame::{self, MemberProfile};
+use torno_engine::doc::{FeatureKind, ProfileSel};
 
 use crate::SolveApp;
 use crate::dialogs::{Kind, check, curves_sketch, form_row, profile_indices, put, shown_expr};
@@ -70,7 +70,7 @@ pub fn start(_app: &SolveApp, id: &str) -> Option<(Kind, Vec<SelInput>)> {
 }
 
 fn tr(text: &str) -> &str {
-    solidcraft_ui_text::tr_label(text)
+    torno_ui_text::tr_label(text)
 }
 
 /// The dialog's own rows (after the selection inputs); true when Enter was pressed in a value.

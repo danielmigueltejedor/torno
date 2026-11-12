@@ -1,4 +1,4 @@
-//! SolidCraft's token contract: every colour and size a UI component draws with ([`Tokens`]), SolidCraft's light and
+//! Torno's token contract: every colour and size a UI component draws with ([`Tokens`]), Torno's light and
 //! dark values written in code (a dark theme, the default, a blue-grey in the spirit of desktop CAD tools, viewport
 //! #2e3440, and a light one), colour vision modes, tab accents, and the per-thread and per-context theme state a host
 //! sets. With nothing set, components draw with the built-in dark tokens. It holds no data files and knows no theme
@@ -13,7 +13,7 @@ pub use palettes::icon_strokes;
 
 use egui::{Color32, Stroke};
 use serde::{Deserialize, Serialize};
-use solidcraft_color::AnalysisColors;
+use torno_color::AnalysisColors;
 
 /// Expanded Wide hosts compose controls and content in one total row below
 /// this logical height. Independent of pixel density and user UI scaling.
@@ -137,7 +137,7 @@ impl Surfaces {
 fn oklab_blend(from: Color32, to: Color32, fraction: f32) -> Color32 {
     let lab = |color: Color32| {
         let [r, g, b, a] = color.to_srgba_unmultiplied();
-        let decode = solidcraft_color::srgb::decode8;
+        let decode = torno_color::srgb::decode8;
         let (r, g, b) = (decode(r), decode(g), decode(b));
         let l = (0.4122214708 * r + 0.5363325363 * g + 0.0514459929 * b).cbrt();
         let m = (0.2119034982 * r + 0.6806995451 * g + 0.1073969566 * b).cbrt();
@@ -384,7 +384,7 @@ pub struct Custom {
 
 /// Use a theme file's palette for its base, or the built-in palettes (`None`). Returns whether
 /// that changed anything (the visuals follow on the next [`apply`]). This sets tokens only: a host with an icon
-/// renderer sets that renderer's palette with it (SolidCraft: `theme::set_file_palette`).
+/// renderer sets that renderer's palette with it (Torno: `theme::set_file_palette`).
 pub fn set_custom(custom: Option<Custom>) -> bool {
     let changed = CUSTOM.with(|c| c.replace(custom) != custom);
     if changed {
@@ -406,7 +406,7 @@ pub fn custom() -> Option<Custom> {
 
 /// Draw with `tokens` as the theme's palette for the current base until the returned guard drops, which restores the
 /// previous one, even when a test's assertion fails. Like [`set_custom`] it sets tokens only, not a host's icon
-/// palette (SolidCraft: `theme::scoped_file`).
+/// palette (Torno: `theme::scoped_file`).
 pub fn scoped_tokens(tokens: Tokens) -> impl Drop {
     struct Restore(Option<Custom>);
     impl Drop for Restore {
@@ -556,7 +556,7 @@ pub fn installed_tabs() -> TabTable {
 /// WCAG contrast of two opaque sRGB colours.
 pub fn contrast_ratio(a: Color32, b: Color32) -> f64 {
     let luminance = |c: Color32| {
-        let linear = solidcraft_color::srgb::decode8;
+        let linear = torno_color::srgb::decode8;
         0.2126 * linear(c.r()) + 0.7152 * linear(c.g()) + 0.0722 * linear(c.b())
     };
     let (a, b) = (luminance(a), luminance(b));
@@ -604,7 +604,7 @@ pub fn panel_surface_fill(fill: Color32, tokens: &Tokens, requested: f32) -> Opt
 }
 
 fn panel_luminance(color: Color32) -> f64 {
-    let decode = solidcraft_color::srgb::decode8;
+    let decode = torno_color::srgb::decode8;
     0.2126 * decode(color.r()) + 0.7152 * decode(color.g()) + 0.0722 * decode(color.b())
 }
 
@@ -634,7 +634,7 @@ pub fn panel_surface_readable(fill: Color32, tokens: &Tokens) -> bool {
 /// then round outward to cover framebuffer quantization. This intentionally
 /// overestimates uncertainty instead of promising threshold contrast falsely.
 pub fn panel_composite_bounds(source: Color32, background: Color32) -> (Color32, Color32) {
-    use solidcraft_color::srgb::{decode, encode};
+    use torno_color::srgb::{decode, encode};
     if source.a() == 255 {
         // Flat opaque integer colours survive the shader's <0.5-byte dither and
         // final nearest-byte conversion unchanged on either framebuffer format.
@@ -1251,7 +1251,7 @@ pub struct Tokens {
     pub continuity: [Color32; 4],
     pub analysis: AnalysisColors,
     pub icons: IconColors,
-    /// The SolidCraft mark on the application bar: light, mid and dark faces (the gaps between
+    /// The Torno mark on the application bar: light, mid and dark faces (the gaps between
     /// them show the bar).
     pub logo: [Color32; 3],
 }

@@ -1,13 +1,13 @@
-# solidcraft-viewport
+# torno-viewport
 
 The viewport renderer the Craft apps share, so each of them frames, projects, shades and draws a
 picture the same way. It takes solidcore-tess's display meshes and plain data (colours, boxes,
 lines) and knows no app's geometry or document types, no GPU API and no UI toolkit, so an app's
-engine and command line can use it. Its only workspace dependency is `solidcraft-color`.
+engine and command line can use it. Its only workspace dependency is `torno-color`.
 
 It holds the view maths, the description of a picture and its CPU rasterizer, the surface shading
-models and the section hatches. Two crates build on it: `solidcraft-viewport-gpu` (the wgpu
-pipelines, offscreen pictures and plan evaluation) and `solidcraft-viewport-egui` (the viewport in
+models and the section hatches. Two crates build on it: `torno-viewport-gpu` (the wgpu
+pipelines, offscreen pictures and plan evaluation) and `torno-viewport-egui` (the viewport in
 an egui window). Product rendering (render jobs, the path tracer, studio, film, textures) stays in
 the app.
 

@@ -11,7 +11,7 @@
 //! | [`SweepOptions`]  | `SmSweepOptions`  |
 //!
 //! Deviations: co-ported by `sweep.api_brep` (only `SmSweepOptions`); `SmBoolean`
-//! flags are `bool`. [`SweepOptions::profile_at_path_start`] is the SolidCraft fork's
+//! flags are `bool`. [`SweepOptions::profile_at_path_start`] is the Torno fork's
 //! `bProfileAtPathStart` (tangency-labs/smlib 2dd71a0, WR-522, #1450), off by default.
 
 pub mod model;
@@ -38,7 +38,7 @@ pub struct SweepOptions {
     /// `bMoveToProfile`: move the result back to the original position of the
     /// profile (otherwise it lies at the path).
     pub move_to_profile: bool,
-    /// `bProfileAtPathStart` (the SolidCraft fork's option, tangency-labs/smlib
+    /// `bProfileAtPathStart` (the Torno fork's option, tangency-labs/smlib
     /// 2dd71a0, #1450; not in SMLib 1.0.1): sweep the profile where it lies. The
     /// path's start is its reference point, so the profile keeps its place relative to
     /// the path (`move_profile_center_to_path` and `move_to_profile` then change

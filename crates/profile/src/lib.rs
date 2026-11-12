@@ -1,11 +1,11 @@
-//! Where SolidCraft spends its time: nested, timed spans on every thread, for SMLib's C API
+//! Where Torno spends its time: nested, timed spans on every thread, for SMLib's C API
 //! calls (timed by the C API itself), kernel operations, feature evaluation, commands and the
 //! stages of a STEP or IGES import.
 //!
 //! - **Compiled in** with the `enabled` feature, which every app turns on by default (its own
 //!   `profile` feature), so a release can be profiled; a build without it records nothing and
 //!   every call here is an empty inline function.
-//! - **Off at run time** until [`set_enabled`] (`SOLIDCRAFT_PROFILE=1`, the CLI's `--profile`, the
+//! - **Off at run time** until [`set_enabled`] (`TORNO_PROFILE=1`, the CLI's `--profile`, the
 //!   app's preference, the `diagnostics.profile` command). Off, a span costs one relaxed atomic
 //!   load.
 //! - **Two outputs:** an aggregate per span name ([`report`]: count, total, self time, longest),
@@ -78,7 +78,7 @@ impl Report {
         rows
     }
 
-    /// Self time per category, the most first: where the time went (SMLib or SolidCraft).
+    /// Self time per category, the most first: where the time went (SMLib or Torno).
     pub fn by_category(&self) -> Vec<(&'static str, Duration)> {
         let mut out: Vec<(&'static str, Duration)> = Vec::new();
         for r in &self.rows {
@@ -530,7 +530,7 @@ mod imp {
             Ok(())
         };
         sep(w)?;
-        serde_json::to_writer(&mut *w, &json!({"ph": "M", "name": "process_name", "pid": 1, "tid": 0, "args": {"name": "SolidCraft"}}))?;
+        serde_json::to_writer(&mut *w, &json!({"ph": "M", "name": "process_name", "pid": 1, "tid": 0, "args": {"name": "Torno"}}))?;
         for (tid, name) in &threads {
             sep(w)?;
             serde_json::to_writer(&mut *w, &json!({"ph": "M", "name": "thread_name", "pid": 1, "tid": tid, "args": {"name": name}}))?;

@@ -1,5 +1,5 @@
 use serde_json::{Value, json};
-use solidcraft_doc::render_settings::RenderSetup;
+use torno_doc::render_settings::RenderSetup;
 
 use super::{GetParams, RenderSettingsGot, RenderSettingsSaved, SETUP_FIELDS, SetParams};
 use crate::Session;

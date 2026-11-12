@@ -8,23 +8,23 @@
 //! face's surface; a sketch curve is one patch per segment swept along the direction (a line a
 //! plane strip, an arc swept square to its sketch a cylinder strip, any other segment its exact
 //! rational Bézier extruded), an open curve's ends continued by lines past the body. SMLib cuts
-//! the faces where the patches meet them ([`solidcraft_smlib::Brep::split_faces`]), its own
+//! the faces where the patches meet them ([`torno_smlib::Brep::split_faces`]), its own
 //! intersection curves trimmed to each face, and slices a body with one patch
-//! ([`solidcraft_smlib::Brep::split_body`]); the history is SMLib's own.
+//! ([`torno_smlib::Brep::split_body`]); the history is SMLib's own.
 //!
 //! Which side of a tool a point is on is its offset along the normal of the nearest patch
 //! ([`ToolSide`]): each patch's surface is prepared once (its projection grid kept), never per
 //! point. Every patch's normal points to the tool's positive side: a plane's normal, a face's
 //! outward side, the left of a sketch curve (inside a closed one, counter-clockwise).
 
-use solidcraft_geom::prelude::*;
 use std::f64::consts::TAU;
+use torno_geom::prelude::*;
 
 use solidcore_record::brep::{self, Frame, Surface};
 use solidcore_record::{Plane, Seg2, Vec2, Vec3};
-use solidcraft_geom::Aabb3;
-use solidcraft_geom::brep::eval::{CurveEval, SurfaceEval};
-use solidcraft_geom::tess::uv::Starts;
+use torno_geom::Aabb3;
+use torno_geom::brep::eval::{CurveEval, SurfaceEval};
+use torno_geom::tess::uv::Starts;
 
 use crate::body::Body;
 use crate::history::{EdgeOrigin, FaceOrigin, History};
@@ -419,21 +419,21 @@ pub(crate) fn regions(split: &Body, tool: &SplitTool) -> Result<(Vec<usize>, usi
 }
 
 /// SMLib's surfaces of the tool's patches, in the tool's order, each reaching past `reach`.
-fn smlib_tools(groups: &[Vec<Patch>], reach: &Aabb3) -> Result<Vec<solidcraft_smlib::ssi::Surface>> {
+fn smlib_tools(groups: &[Vec<Patch>], reach: &Aabb3) -> Result<Vec<torno_smlib::ssi::Surface>> {
     let mut out = Vec::new();
     for p in groups.iter().flatten() {
         let b = p.bounded(reach)?;
         if b.domain.iter().any(|r| !(r[0] < r[1])) {
             continue;
         }
-        out.push(solidcraft_smlib::ssi::Surface::from_record(&b.surface, b.domain).map_err(|e| failed("split tool", e))?);
+        out.push(torno_smlib::ssi::Surface::from_record(&b.surface, b.domain).map_err(|e| failed("split tool", e))?);
     }
     Ok(out)
 }
 
 /// A result checked by SMLib and brought back with its history over `[body]`.
-fn brought_back(name: &str, body: &Body, ob: &solidcraft_smlib::history::Order, r: &solidcraft_smlib::Brep) -> Result<(Body, History)> {
-    let check = r.check(solidcraft_smlib::CheckLevel::All).map_err(|e| failed(name, e))?;
+fn brought_back(name: &str, body: &Body, ob: &torno_smlib::history::Order, r: &torno_smlib::Brep) -> Result<(Body, History)> {
+    let check = r.check(torno_smlib::CheckLevel::All).map_err(|e| failed(name, e))?;
     if !check.is_valid() {
         return Err(failed(name, format!("SMLib's check refuses the result: {check}")));
     }
@@ -445,7 +445,7 @@ fn brought_back(name: &str, body: &Body, ob: &solidcraft_smlib::history::Order, 
 }
 
 /// `body` in SMLib, tagged as operand 0, with its record's order.
-fn tagged(name: &str, body: &Body) -> Result<(solidcraft_smlib::Brep, solidcraft_smlib::history::Order)> {
+fn tagged(name: &str, body: &Body) -> Result<(torno_smlib::Brep, torno_smlib::history::Order)> {
     let (sb, ob) = crate::native::smlib_body_ordered(body)?;
     let ob = ob.ok_or_else(|| failed(name, "SMLib numbers the body's faces unlike its record"))?;
     Ok((sb.tagged(0).map_err(|e| failed(name, e))?, ob))
@@ -460,7 +460,7 @@ pub fn split_faces(body: &Body, faces: &[usize], tool: &SplitTool) -> Result<Bod
 
 /// Like [`split_faces`], with the body face each face of the result came from (in face order).
 pub fn split_faces_with_map(body: &Body, faces: &[usize], tool: &SplitTool) -> Result<(Body, Vec<usize>)> {
-    let _span = solidcraft_profile::span("kernel", "split_faces_with_map");
+    let _span = torno_profile::span("kernel", "split_faces_with_map");
     let (b, map, made) = split(body, faces, tool)?;
     if let Some((missed, _)) = faces.iter().zip(&made).find(|(_, m)| **m == 0) {
         return Err(invalid(format!("the tool does not cross face {missed}")));
@@ -499,7 +499,7 @@ fn split(body: &Body, faces: &[usize], tool: &SplitTool) -> Result<(Body, Vec<us
             .map(|f| if ob.faces.is_empty() { Some(*f) } else { ob.faces.iter().position(|c| c == f) })
             .collect::<Option<_>>()
             .ok_or_else(|| failed(NAME, "a listed face is not in SMLib's body"))?;
-        let refs: Vec<&solidcraft_smlib::ssi::Surface> = tools.iter().collect();
+        let refs: Vec<&torno_smlib::ssi::Surface> = tools.iter().collect();
         let (r, made) = sb.split_faces(&at, &refs).map_err(|e| failed(NAME, e))?.ok_or_else(missed)?;
         let (out, h) = brought_back(NAME, body, &ob, &r)?;
         let map = h
@@ -545,7 +545,7 @@ fn new_lines(split: &Body, h: &History) -> Result<Vec<Vec<Vec3>>> {
 /// face order. A body the tool misses comes back whole. Each part's history is over `[body]`:
 /// its faces the body's (or pieces of them), the section new.
 pub fn split_body(body: &Body, tool: &SplitTool) -> Result<Vec<Body>> {
-    let _span = solidcraft_profile::span("kernel", "split_body");
+    let _span = torno_profile::span("kernel", "split_body");
     body.require_brep(SPLIT_BODY)?;
     if let SplitTool::Face { body: sheet, face } = tool {
         let faces = smooth_sheet(sheet, *face)?;
@@ -572,7 +572,7 @@ const SPLIT_BODY: &str = "split body";
 fn sliced(
     body: &Body,
     flip: bool,
-    cut: impl FnOnce(&solidcraft_smlib::Brep) -> solidcraft_smlib::Result<Option<(solidcraft_smlib::Brep, solidcraft_smlib::Brep)>>,
+    cut: impl FnOnce(&torno_smlib::Brep) -> torno_smlib::Result<Option<(torno_smlib::Brep, torno_smlib::Brep)>>,
 ) -> Result<Vec<Body>> {
     let counts = record::counts(&[body]);
     let whole = || crate::boolean_record::operand(body, 0, &counts);
@@ -642,7 +642,7 @@ fn smooth_sheet(sheet: &Body, face: usize) -> Result<Vec<usize>> {
 
 /// `body` cut in two by the faces `faces` of the surface body `sheet` as they are (a smooth sheet
 /// of several faces, bounded where they end), its sides those of `sheet`'s face `face`: SMLib's
-/// slice by the sheet ([`solidcraft_smlib::Brep::split_body_by_sheet`]). A sheet that does not
+/// slice by the sheet ([`torno_smlib::Brep::split_body_by_sheet`]). A sheet that does not
 /// cross the body cuts nothing.
 fn split_by_sheet(body: &Body, sheet: &Body, face: usize, faces: &[usize]) -> Result<Vec<Body>> {
     let picked: Vec<(usize, bool)> = faces.iter().map(|f| (*f, false)).collect();

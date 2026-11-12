@@ -16,7 +16,7 @@ use egui::{Color32, Mesh, Pos2, Rect, Sense, Stroke, Ui, vec2};
 
 use crate::ui_kit;
 
-use solidcraft_theme::Tokens;
+use torno_theme::Tokens;
 
 /// The part of a range a gesture moves, and that playing moves.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
@@ -207,9 +207,7 @@ fn paint_bars(painter: &egui::Painter, rect: Rect, axis: [f64; 2], bars: &Bars, 
                 continue;
             }
             let colour = match bars.ramp {
-                Some([a, z]) if z > a => {
-                    crate::theme::model_color(solidcraft_engine::doc::point_cloud::height_ramp((lo + width / 2.0 - a) / (z - a)))
-                }
+                Some([a, z]) if z > a => crate::theme::model_color(torno_engine::doc::point_cloud::height_ramp((lo + width / 2.0 - a) / (z - a))),
                 _ => bars.colours.get(s).copied().unwrap_or(ink),
             };
             mesh.add_colored_rect(Rect::from_min_max(Pos2::new(x0, y - h), Pos2::new(x1, y)), colour);

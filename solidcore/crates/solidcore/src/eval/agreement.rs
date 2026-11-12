@@ -12,7 +12,7 @@
 //! an edge's for its pcurves, an edge's and its vertex's together where they meet, a vertex's on
 //! its surface. A point that cannot be evaluated is an error, never a panic.
 //!
-//! Origin: SolidCraft's `crates/geom/src/brep/geometry.rs` (MIT OR Apache-2.0), moved here with
+//! Origin: Torno's `crates/geom/src/brep/geometry.rs` (MIT OR Apache-2.0), moved here with
 //! its history (RFC 0003). It reads the record through a plain view of it ([`Edge`], [`Vertex`],
 //! [`Face`]) in the kernel's evaluation types, which `solidcore-ops`' `record_check::agreement`
 //! builds from a record.

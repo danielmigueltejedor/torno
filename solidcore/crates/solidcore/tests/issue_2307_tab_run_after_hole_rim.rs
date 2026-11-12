@@ -1,6 +1,6 @@
-//! #2307 regression (SolidCraft's `fillet_tabbed_plate_outer_loop_and_partial_selection_after_hole`):
+//! #2307 regression (Torno's `fillet_tabbed_plate_outer_loop_and_partial_selection_after_hole`):
 //! the tabbed plate (R25 disc with a tab, 2 thick) with its hole r 1.5 at (0, 262/9) and the
-//! hole's top rim already rounded r 0.5, read from the binary SMB SolidCraft wrote. The tab's
+//! hole's top rim already rounded r 0.5, read from the binary SMB Torno wrote. The tab's
 //! run on the top face (its two sides, its two R2 corners and its top, tangent through the
 //! corners, ending at the sharp concave corners at x = +-4) is rounded r 0.5 together.
 //!
@@ -45,7 +45,7 @@ use solidcore::Brep;
 
 const RADIUS: f64 = 0.5;
 
-/// The SolidCraft points on the five edges (the README of the SolidCraft repro).
+/// The Torno points on the five edges (the README of the Torno repro).
 const PICKS: [[f64; 3]; 5] = [
     [3.999_999_997_492_012, 27.894_518_234_675_537, 2.0],
     [3.414_213_559_875_010_5, 32.525_324_672_801_695, 2.0],
@@ -54,7 +54,7 @@ const PICKS: [[f64; 3]; 5] = [
     [-4.000_000_002_508_774_5, 27.894_518_234_296_79, 2.0],
 ];
 
-/// Every opt-in fix on (SolidCraft's pin-16 set).
+/// Every opt-in fix on (Torno's pin-16 set).
 fn kernel() -> Kernel {
     Kernel {
         fixes: UpstreamFixes::all(),
@@ -62,9 +62,9 @@ fn kernel() -> Kernel {
     }
 }
 
-/// The SolidCraft file, read under the notification naming as SolidCraft reads it.
+/// The Torno file, read under the notification naming as Torno reads it.
 fn body(k: &mut Kernel) -> Brep {
-    let bytes = include_bytes!("data/issue_2307_solidcraft_plate_hole_rim.smb").to_vec();
+    let bytes = include_bytes!("data/issue_2307_torno_plate_hole_rim.smb").to_vec();
     let mut attributes = AttributeStore::default();
     let mut records = NotifyRecords::new();
     let mut env = TopologyEnv {
@@ -177,7 +177,7 @@ fn rounded() -> f64 {
 }
 
 #[test]
-fn the_input_is_solidcraft_s_plate() {
+fn the_input_is_torno_s_plate() {
     let mut k = kernel();
     let mut b = body(&mut k);
     assert_eq!(b.face_list().len(), 10);

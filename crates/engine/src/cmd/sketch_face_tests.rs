@@ -1,7 +1,7 @@
 use crate::Session;
 use serde_json::{Value, json};
 use solidcore_record::Vec3;
-use solidcraft_geom::prelude::*;
+use torno_geom::prelude::*;
 
 fn run(s: &mut Session, command: &str, params: Value) -> Value {
     s.execute(command, &params).unwrap_or_else(|error| panic!("{command} {params}: {error}"))
@@ -42,7 +42,7 @@ fn exact_selected_base_follows_height_and_never_retargets_control() {
     assert!(s.model.state().body("Badge").is_none());
     assert!((s.world_state().unwrap().body("Control").unwrap().mesh().bounds().max.z - 30.).abs() < 1e-6);
     let before = s.doc.to_json();
-    let reopened = Session::new(solidcraft_doc::Document::from_json(&before).unwrap());
+    let reopened = Session::new(torno_doc::Document::from_json(&before).unwrap());
     assert!(reopened.model.result(sketch).unwrap().error.is_some());
 }
 #[test]
@@ -70,7 +70,7 @@ fn explicit_rebind_preserves_geometry_dimensions_context_and_one_undo() {
     assert_eq!(s.doc.to_json(), before);
     assert!(s.model.result(id).unwrap().error.is_some());
     run(&mut s, "edit.redo", json!({}));
-    let reopened = Session::new(solidcraft_doc::Document::from_json(&s.doc.to_json()).unwrap());
+    let reopened = Session::new(torno_doc::Document::from_json(&s.doc.to_json()).unwrap());
     assert!((reopened.model.state().sketch(id).unwrap().plane.origin.z - 30.).abs() < 1e-6);
 }
 #[test]
@@ -102,7 +102,7 @@ fn unsupported_face_has_explicit_fixed_alternative_and_no_live_projection() {
     assert_eq!(s.doc.to_json(), before);
     pick["fixed"] = json!(true);
     let id = run(&mut s, "sketch.create", json!({"plane":pick}))["sketch"].as_u64().unwrap();
-    assert!(matches!(s.doc.feature(id).unwrap().kind, solidcraft_doc::FeatureKind::Sketch { plane: solidcraft_doc::PlaneRef::Custom { .. }, .. }));
+    assert!(matches!(s.doc.feature(id).unwrap().kind, torno_doc::FeatureKind::Sketch { plane: torno_doc::PlaneRef::Custom { .. }, .. }));
     assert!(s.doc.sketch(id).unwrap().links.is_empty());
 }
 #[test]
@@ -148,7 +148,7 @@ fn default_certified_borders_follow_width_and_height_with_stable_entities() {
     let max_y = sketch.sketch.points.iter().map(|point| point.pos.y).fold(f64::NEG_INFINITY, f64::max);
     let min_y = sketch.sketch.points.iter().map(|point| point.pos.y).fold(f64::INFINITY, f64::min);
     assert!(((max_x - min_x) * (max_y - min_y) - 160.).abs() < 1e-5);
-    let reopened = Session::new(solidcraft_doc::Document::from_json(&s.doc.to_json()).unwrap());
+    let reopened = Session::new(torno_doc::Document::from_json(&s.doc.to_json()).unwrap());
     assert!(reopened.model.state().sketch(id).unwrap().sketch.links.iter().all(|link| !link.lost));
 }
 
@@ -193,7 +193,7 @@ fn exact_nested_source_and_cross_owner_pending_paths_capture_only_involved_posit
     let before = s.doc.to_json();
     let pending = s.pending_moves.clone();
     let id = run(&mut s, "sketch.create", json!({"plane":pick,"project_edges":false}))["sketch"].as_u64().unwrap();
-    let solidcraft_doc::FeatureKind::Sketch { plane, .. } = &s.doc.feature(id).unwrap().kind else { panic!("not sketch") };
+    let torno_doc::FeatureKind::Sketch { plane, .. } = &s.doc.feature(id).unwrap().kind else { panic!("not sketch") };
     let anchor = super::anchor(plane).unwrap();
     assert_eq!(anchor.path, vec![second, child_occ]);
     assert_eq!(anchor.author_path, vec![author["occurrence"].as_u64().unwrap()]);
@@ -204,7 +204,7 @@ fn exact_nested_source_and_cross_owner_pending_paths_capture_only_involved_posit
     assert_eq!(s.doc.to_json(), before);
     assert_eq!(s.pending_moves, pending);
     run(&mut s, "edit.redo", json!({}));
-    let mut reopened = Session::new(solidcraft_doc::Document::from_json(&saved).unwrap());
+    let mut reopened = Session::new(torno_doc::Document::from_json(&saved).unwrap());
     assert!(reopened.model.result(id).unwrap().error.is_none());
     run(&mut reopened, "component.activate", json!({"component":0}));
     let original = reopened.doc.to_json();
@@ -243,7 +243,7 @@ fn fixed_rebind_freezes_current_resized_borders_and_only_detaches_auto_links() {
         visible.curves.iter().map(|curve| curve.id.clone()).collect::<Vec<_>>()
     );
     assert_eq!(fixed.points.iter().map(|point| point.pos).collect::<Vec<_>>(), visible.points.iter().map(|point| point.pos).collect::<Vec<_>>());
-    let reopened = Session::new(solidcraft_doc::Document::from_json(&s.doc.to_json()).unwrap());
+    let reopened = Session::new(torno_doc::Document::from_json(&s.doc.to_json()).unwrap());
     assert!(reopened.model.result(id).unwrap().error.is_none());
     run(&mut s, "edit.undo", json!({}));
     assert_eq!(s.doc.to_json(), before);
@@ -267,13 +267,13 @@ fn strict_anchor_timeline_copy_remaps_producer_and_refuses_external_translation_
     let pasted = run(&mut s, "timeline.paste", json!({"translate":[30,0,0]}));
     assert!(pasted["errors"].as_array().unwrap().is_empty(), "{pasted}");
     let new_id = pasted["pasted"][1]["id"].as_u64().unwrap();
-    let solidcraft_doc::FeatureKind::Sketch { plane, .. } = &s.doc.feature(new_id).unwrap().kind else { panic!("not sketch") };
+    let torno_doc::FeatureKind::Sketch { plane, .. } = &s.doc.feature(new_id).unwrap().kind else { panic!("not sketch") };
     let anchor = super::anchor(plane).unwrap();
     assert_ne!(anchor.target.origin_feature, s.doc.find_feature("BaseFeature").unwrap().id);
     assert_ne!(anchor.target.body, "Base");
     assert!(s.model.state().sketch(new_id).unwrap().sketch.links.iter().all(|link| !link.lost));
     assert!(s.model.state().sketch(id).unwrap().sketch.links.iter().all(|link| !link.lost));
-    let reopened = Session::new(solidcraft_doc::Document::from_json(&s.doc.to_json()).unwrap());
+    let reopened = Session::new(torno_doc::Document::from_json(&s.doc.to_json()).unwrap());
     assert!(reopened.model.result(new_id).unwrap().error.is_none());
 }
 
@@ -288,14 +288,10 @@ fn strict_anchor_deep_clone_is_independent_and_rename_preserves_certified_projec
     let height = s.doc.find_feature("BaseFeature").unwrap().param_names[2].clone();
     let pasted = run(&mut s, "component.paste_new", json!({"component":part["component"],"translate":[30,0,0]}));
     let owner = pasted["component"].as_u64().unwrap();
-    let new_feature = s
-        .doc
-        .features
-        .iter()
-        .find(|feature| feature.component == owner && matches!(feature.kind, solidcraft_doc::FeatureKind::Sketch { .. }))
-        .unwrap();
+    let new_feature =
+        s.doc.features.iter().find(|feature| feature.component == owner && matches!(feature.kind, torno_doc::FeatureKind::Sketch { .. })).unwrap();
     let new_id = new_feature.id;
-    let solidcraft_doc::FeatureKind::Sketch { plane, .. } = &new_feature.kind else { panic!("not sketch") };
+    let torno_doc::FeatureKind::Sketch { plane, .. } = &new_feature.kind else { panic!("not sketch") };
     let anchor = super::anchor(plane).unwrap();
     let body = anchor.target.body.clone();
     assert_eq!(anchor.component, owner);
@@ -305,7 +301,7 @@ fn strict_anchor_deep_clone_is_independent_and_rename_preserves_certified_projec
     run(&mut s, "body.rename", json!({"body":body,"name":"Independent"}));
     assert!(s.model.result(new_id).unwrap().error.is_none());
     assert!(s.model.state().sketch(new_id).unwrap().sketch.links.iter().all(|link| !link.lost));
-    let reopened = Session::new(solidcraft_doc::Document::from_json(&s.doc.to_json()).unwrap());
+    let reopened = Session::new(torno_doc::Document::from_json(&s.doc.to_json()).unwrap());
     assert!(reopened.model.result(new_id).unwrap().error.is_none());
 }
 
@@ -326,7 +322,7 @@ fn legacy_or_fixed_rebind_needs_explicit_author_path_for_repeated_owner() {
     assert!(error.to_string().contains("ambiguous"), "{error}");
     assert_eq!(s.doc.to_json(), before);
     run(&mut s, "sketch.redefine", json!({"sketch":id,"plane":pick,"author_path":[second]}));
-    let solidcraft_doc::FeatureKind::Sketch { plane, .. } = &s.doc.feature(id).unwrap().kind else { panic!("not sketch") };
+    let torno_doc::FeatureKind::Sketch { plane, .. } = &s.doc.feature(id).unwrap().kind else { panic!("not sketch") };
     assert_eq!(super::anchor(plane).unwrap().author_path, vec![second]);
     assert_eq!(s.active_component, 0);
 }
@@ -393,12 +389,12 @@ fn freezing_rebuilt_arc_borders_keeps_authored_dimension_entity_indices() {
     let dimension = frozen
         .constraints
         .iter()
-        .find(|constraint| matches!(constraint.kind, solidcraft_sketch::ConstraintKind::Radius { c, .. } if c == circle_index))
+        .find(|constraint| matches!(constraint.kind, torno_sketch::ConstraintKind::Radius { c, .. } if c == circle_index))
         .unwrap();
-    assert!((solidcraft_sketch::measure_dimension(frozen, &dimension.kind).unwrap() - 2.).abs() < 1e-6);
+    assert!((torno_sketch::measure_dimension(frozen, &dimension.kind).unwrap() - 2.).abs() < 1e-6);
     assert_eq!(frozen.curves.iter().map(|curve| &curve.id).collect::<Vec<_>>(), visible.curves.iter().map(|curve| &curve.id).collect::<Vec<_>>());
     assert!(s.model.result(id).unwrap().error.is_none());
-    let reopened = Session::new(solidcraft_doc::Document::from_json(&s.doc.to_json()).unwrap());
+    let reopened = Session::new(torno_doc::Document::from_json(&s.doc.to_json()).unwrap());
     assert!(reopened.model.result(id).unwrap().error.is_none());
     run(&mut s, "edit.undo", json!({}));
     assert_eq!(s.doc.to_json(), before);
@@ -411,8 +407,8 @@ fn angled_attachment_tracks_source_plane_and_reopens() {
     let pick = top_pick(&s, "Base");
     let id = run(&mut s, "sketch.create", json!({"plane":pick,"project_edges":false}))["sketch"].as_u64().unwrap();
     run(&mut s, "sketch.finish", json!({}));
-    let solidcraft_doc::FeatureKind::Sketch { plane, .. } = &mut s.doc_mut().feature_mut(id).unwrap().kind else { panic!("not sketch") };
-    *plane = solidcraft_doc::PlaneRef::AtAngle {
+    let torno_doc::FeatureKind::Sketch { plane, .. } = &mut s.doc_mut().feature_mut(id).unwrap().kind else { panic!("not sketch") };
+    *plane = torno_doc::PlaneRef::AtAngle {
         base: Box::new(plane.clone()),
         axis_origin: Vec3::ZERO,
         axis_dir: Vec3::X,
@@ -427,13 +423,13 @@ fn angled_attachment_tracks_source_plane_and_reopens() {
     let placed = s.model.state().sketch(id).unwrap().plane;
     assert!((placed.origin.y + 20.).abs() < 1e-6);
     assert!(placed.origin.z.abs() < 1e-6);
-    let reopened = Session::new(solidcraft_doc::Document::from_json(&s.doc.to_json()).unwrap());
+    let reopened = Session::new(torno_doc::Document::from_json(&s.doc.to_json()).unwrap());
     assert_eq!(reopened.model.state().sketch(id).unwrap().plane, placed);
 }
 
 #[test]
 fn rounded_enclosure_shell_side_and_floor_attach_through_width_wall_and_reopen() {
-    use solidcraft_doc::{FeatureKind, config::FaceCertificate, face_anchor::plane_face_anchor};
+    use torno_doc::{FeatureKind, config::FaceCertificate, face_anchor::plane_face_anchor};
     let mut s = Session::default();
     for (name, expression) in [("width", "80 mm"), ("depth", "60 mm"), ("height", "30 mm"), ("wall", "2 mm")] {
         run(&mut s, "parameters.add", json!({"name":name,"expression":expression}));
@@ -494,7 +490,7 @@ fn rounded_enclosure_shell_side_and_floor_attach_through_width_wall_and_reopen()
     }
     run(&mut s, "parameters.change", json!({"name":"width","expression":"100 mm"}));
     run(&mut s, "parameters.change", json!({"name":"wall","expression":"3 mm"}));
-    let reopened = Session::new(solidcraft_doc::Document::from_json(&s.doc.to_json()).unwrap());
+    let reopened = Session::new(torno_doc::Document::from_json(&s.doc.to_json()).unwrap());
     for session in [&s, &reopened] {
         for id in [side, floor] {
             let result = session.model.result(id).unwrap();
@@ -510,9 +506,9 @@ fn rounded_enclosure_shell_side_and_floor_attach_through_width_wall_and_reopen()
         assert!((state.sketch(side).unwrap().plane.origin.x - 50.).abs() < 1e-6);
         assert!((state.sketch(floor).unwrap().plane.origin.z - 3.).abs() < 1e-6);
         assert!(state.sketch(floor).unwrap().plane.normal().dot(Vec3::Z) > 0.999);
-        let mesh = state.body("Case").unwrap().body.mesh(&solidcraft_kernel::MeshTolerance::chord(1e-4)).unwrap();
+        let mesh = state.body("Case").unwrap().body.mesh(&torno_kernel::MeshTolerance::chord(1e-4)).unwrap();
         let case = &state.body("Case").unwrap().body;
-        let corners: Vec<_> = (0..case.face_count()).filter(|i| matches!(solidcraft_kernel::face_surface(case, *i), Some(solidcraft_kernel::FaceSurface::Cylinder { radius, .. }) if (radius - 6.).abs() < 1e-6)).collect();
+        let corners: Vec<_> = (0..case.face_count()).filter(|i| matches!(torno_kernel::face_surface(case, *i), Some(torno_kernel::FaceSurface::Cylinder { radius, .. }) if (radius - 6.).abs() < 1e-6)).collect();
         assert_eq!(corners.len(), 4, "later port/boss features must not subdivide untouched outer corners");
         for index in corners {
             let points: Vec<_> = mesh
@@ -556,14 +552,14 @@ fn offset_rectangle_pocket_has_one_logical_outer_wall_and_closed_face_projection
     run(&mut s, "sketch.finish", json!({}));
     run(&mut s, "solid.extrude", json!({"sketch":control_sketch,"distance":10,"operation":"new","body_name":"Control"}));
     let untouched = s.model.state().body("Control").unwrap().body.clone();
-    let before_control = solidcraft_kernel::step_export(&[&untouched], "control snapshot").unwrap();
+    let before_control = torno_kernel::step_export(&[&untouched], "control snapshot").unwrap();
     let pick = top_pick(&s, "Stock");
     let pocket = run(&mut s, "sketch.create", json!({"plane":pick}))["sketch"].as_u64().unwrap();
     let side = {
         let state = s.model.state();
         let sk = &state.sketch(pocket).unwrap().sketch;
         let curve = sk.curves.iter().find(|c| c.id == "l1").unwrap();
-        let solidcraft_sketch::CurveKind::Line { a, b } = curve.kind else { panic!() };
+        let torno_sketch::CurveKind::Line { a, b } = curve.kind else { panic!() };
         sk.point(a).unwrap() + sk.point(b).unwrap()
     };
     let outer = run(&mut s, "sketch.offset", json!({"curves":["l1"],"distance":0.3425231845240546,"side":[side.x,side.y]}))["curves"].clone();
@@ -572,10 +568,10 @@ fn offset_rectangle_pocket_has_one_logical_outer_wall_and_closed_face_projection
     run(&mut s, "solid.extrude", json!({"sketch":pocket,"profiles":[{"curves":inner}],"distance":-9,"operation":"cut"}));
     let control = s.model.state().body("Control").unwrap().body.clone();
     assert!(control.same(&untouched), "a separate body crossing the cutter end plane remains the exact same solid");
-    assert_eq!(solidcraft_kernel::step_export(&[&control], "control snapshot").unwrap(), before_control);
+    assert_eq!(torno_kernel::step_export(&[&control], "control snapshot").unwrap(), before_control);
     let state = s.model.state();
     let body = state.body("Stock").unwrap();
-    let display = body.body.mesh(&solidcraft_kernel::MeshTolerance::chord(0.01)).unwrap();
+    let display = body.body.mesh(&torno_kernel::MeshTolerance::chord(0.01)).unwrap();
     let face = body
         .body
         .faces(0.01)
@@ -587,7 +583,7 @@ fn offset_rectangle_pocket_has_one_logical_outer_wall_and_closed_face_projection
     assert_eq!(display.surface_patch(face.index).len(), 1);
     let attached = run(&mut s, "sketch.create", json!({"plane":{"body":"Stock","index":face.index,"face":[30,0,0.5]}}))["sketch"].as_u64().unwrap();
     run(&mut s, "sketch.finish", json!({}));
-    let reopened = Session::new(solidcraft_doc::Document::from_json(&s.doc.to_json()).unwrap());
+    let reopened = Session::new(torno_doc::Document::from_json(&s.doc.to_json()).unwrap());
     for session in [&s, &reopened] {
         let result = session.model.result(attached).unwrap();
         assert!(result.error.is_none(), "{:?}", result.error);
@@ -596,14 +592,14 @@ fn offset_rectangle_pocket_has_one_logical_outer_wall_and_closed_face_projection
         let sketch = &state.sketch(attached).unwrap().sketch;
         assert!(sketch.links.iter().all(|link| !link.lost));
         assert_eq!(sketch.curves.len(), 4, "whole outer-wall rectangle has no floor-height stations");
-        let mesh = state.body("Stock").unwrap().body.mesh(&solidcraft_kernel::MeshTolerance::chord(0.01)).unwrap();
+        let mesh = state.body("Stock").unwrap().body.mesh(&torno_kernel::MeshTolerance::chord(0.01)).unwrap();
         assert!(mesh.contains(Vec3::new(0., 0., 0.5)));
         assert!(!mesh.contains(Vec3::new(0., 0., 5.)));
         assert!(mesh.contains(Vec3::new(28., 0., 5.)));
         let control = &state.body("Control").unwrap().body;
         assert_eq!(control.faces(0.01).unwrap().len(), 6);
         assert_eq!(control.edges(0.01).unwrap().len(), 12);
-        let control_mesh = control.mesh(&solidcraft_kernel::MeshTolerance::chord(0.01)).unwrap();
+        let control_mesh = control.mesh(&torno_kernel::MeshTolerance::chord(0.01)).unwrap();
         assert!((control_mesh.measure().volume - 160.).abs() < 1e-6);
         assert!(control_mesh.contains(Vec3::new(102., 102., 0.5)));
         assert!(control_mesh.contains(Vec3::new(102., 102., 5.)));
@@ -654,7 +650,7 @@ fn save_and_reopen(s: &mut Session, dir: &std::path::Path, name: &str) -> Sessio
 /// it) stays attached to that face, and a square drawn on it extrudes out of the face, fresh and
 /// after the result is saved and opened again.
 fn sketch_and_extrude_on_every_flat_face(s: &Session, dir: &std::path::Path, label: &str) -> usize {
-    use solidcraft_doc::FaceAttachmentStatus;
+    use torno_doc::FaceAttachmentStatus;
     let faces = flat_faces(s);
     let before = timeline_errors(s);
     for (body, index, point, normal) in &faces {
@@ -691,7 +687,7 @@ fn sketch_and_extrude_on_every_flat_face(s: &Session, dir: &std::path::Path, lab
 #[test]
 fn every_flat_face_of_one_sketch_extruded_up_and_down_takes_an_attached_sketch() {
     let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../tests/action_matrix/designs");
-    let dir = std::env::temp_dir().join(format!("solidcraft-up-down-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("torno-up-down-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
     let script: Value = serde_json::from_str(&std::fs::read_to_string(root.join("up-down-join.json")).unwrap()).unwrap();
     let mut s = Session::default();
@@ -786,7 +782,7 @@ fn a_face_picked_by_point_on_a_block_with_many_faces_is_found() {
     run(&mut s, "solid.hole", json!({"sketch":"Drills","diameter":0.8}));
     let body = s.model.state().body("Block").unwrap().body.clone();
     // The search's own mesh (sketch_face: the tolerance it meshes the body at).
-    let mesh = body.mesh(&solidcraft_kernel::MeshTolerance::chord((body.size() * 1e-4).max(1e-5))).unwrap();
+    let mesh = body.mesh(&torno_kernel::MeshTolerance::chord((body.size() * 1e-4).max(1e-5))).unwrap();
     let (faces, triangles) = (body.face_count(), mesh.triangles.len());
     assert!(faces > 256 && faces * triangles > 2_000_000 && faces + triangles < 2_000_000, "{faces} faces, {triangles} triangles");
     run(&mut s, "sketch.create", json!({"plane":{"face":[19,19,20],"fixed":true}}));
@@ -840,13 +836,13 @@ fn a_sketch_on_the_ring_of_a_lid_underside_parted_by_its_lip_keeps_the_cap() {
     s.run_script(&script).unwrap();
     let world = s.world_state().unwrap();
     let lid = world.body("Lid").unwrap();
-    let names = solidcraft_doc::naming::face_names(lid);
+    let names = torno_doc::naming::face_names(lid);
     let down: Vec<usize> = (0..names.len())
         .filter(|index| lid.body.planar_face(*index).is_some_and(|plane| plane.normal().dot(-Vec3::Z) > 0.999 && (plane.origin.z - 25.).abs() < 1e-6))
         .collect();
     assert!(down.len() > 1, "the lip parts the lid's underside: {down:?}");
     let at = Vec3::new(12.0, 29.266_666_666_665, 25.0);
-    let under = solidcraft_doc::naming::face_name_at_body(lid, at);
+    let under = torno_doc::naming::face_name_at_body(lid, at);
     let ring = *down.iter().find(|index| under.as_ref() == Some(&names[**index])).unwrap_or_else(|| panic!("the ring ({under:?}), among {names:?}"));
     let pick = json!({"body":"Lid","index":ring,"face":[at.x, at.y, at.z]});
     drop(world);
@@ -881,7 +877,7 @@ fn activate_part_makes_the_sketch_in_the_faces_component() {
             assert_eq!(owner, component);
             assert_eq!((s.active_component, s.active_occurrence_path.clone()), (component, Some(vec![occurrence])));
             assert_eq!(out["activated"], json!({"component": component, "path": [occurrence]}));
-            let solidcraft_doc::FeatureKind::Sketch { plane, .. } = &s.doc.feature(id).unwrap().kind else { panic!("not sketch") };
+            let torno_doc::FeatureKind::Sketch { plane, .. } = &s.doc.feature(id).unwrap().kind else { panic!("not sketch") };
             assert_eq!(super::anchor(plane).unwrap().author_path, vec![occurrence]);
         } else {
             assert_eq!(owner, 0);

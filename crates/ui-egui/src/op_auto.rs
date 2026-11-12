@@ -16,7 +16,7 @@
 //!   the feature's `targets` ([`scope_targets`]).
 
 use serde_json::Value;
-use solidcraft_engine::Addition;
+use torno_engine::Addition;
 
 use crate::SolveApp;
 use crate::dialogs::{Dialog, Kind, OPS};
@@ -72,7 +72,7 @@ fn operation(kind: &mut Kind) -> Option<&mut usize> {
 }
 
 /// What a check found, with the Join it evaluated when the material joins.
-type Found = (Option<Addition>, Option<solidcraft_engine::Evaluated>);
+type Found = (Option<Addition>, Option<torno_engine::Evaluated>);
 
 /// The finished checks and the one running, for the open window.
 #[derive(Default)]
@@ -80,11 +80,11 @@ pub struct OpCheck {
     /// The running check: its key, commands, the design revision it started on, its result.
     running: Option<(u64, Vec<(String, Value)>, u64, std::sync::mpsc::Receiver<Found>)>,
     /// What stops the running check's evaluation ([`OpCheck::abandon`]).
-    progress: Option<std::sync::Arc<solidcraft_engine::doc::progress::Progress>>,
+    progress: Option<std::sync::Arc<torno_engine::doc::progress::Progress>>,
     done: Option<(u64, Option<Addition>)>,
     /// The Join the last check evaluated, with its commands and the design revision: OK of the
     /// same commands takes it rather than computing it again.
-    joined: Option<(Vec<(String, Value)>, u64, solidcraft_engine::Evaluated)>,
+    joined: Option<(Vec<(String, Value)>, u64, torno_engine::Evaluated)>,
 }
 
 impl OpCheck {
@@ -120,7 +120,7 @@ impl OpCheck {
     }
 
     /// The Join a check evaluated for exactly `cmds` at `revision`, for OK.
-    pub(crate) fn joined_for(&self, cmds: &[(String, Value)], revision: u64) -> Option<solidcraft_engine::Evaluated> {
+    pub(crate) fn joined_for(&self, cmds: &[(String, Value)], revision: u64) -> Option<torno_engine::Evaluated> {
         self.joined.as_ref().filter(|(c, r, _)| c == cmds && *r == revision).map(|(_, _, e)| e.clone())
     }
 
@@ -129,7 +129,7 @@ impl OpCheck {
     fn result(
         &mut self,
         key: u64,
-        ahead: impl FnOnce() -> solidcraft_engine::Ahead,
+        ahead: impl FnOnce() -> torno_engine::Ahead,
         cmds: Vec<(String, Value)>,
         revision: u64,
         inside: bool,
@@ -146,14 +146,14 @@ impl OpCheck {
     }
 
     #[cfg(not(target_arch = "wasm32"))]
-    fn start(&mut self, key: u64, ahead: solidcraft_engine::Ahead, cmds: Vec<(String, Value)>, revision: u64, inside: bool) {
+    fn start(&mut self, key: u64, ahead: torno_engine::Ahead, cmds: Vec<(String, Value)>, revision: u64, inside: bool) {
         let (tx, rx) = std::sync::mpsc::channel();
         let job = cmds.clone();
-        let progress = std::sync::Arc::new(solidcraft_engine::doc::progress::Progress::default());
+        let progress = std::sync::Arc::new(torno_engine::doc::progress::Progress::default());
         let watching = progress.clone();
         let spawned = std::thread::Builder::new().name("operation check".into()).spawn(move || {
             let found = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
-                solidcraft_engine::doc::progress::watch(watching, || ahead.addition(&job, inside))
+                torno_engine::doc::progress::watch(watching, || ahead.addition(&job, inside))
             }))
             .unwrap_or((None, None));
             let _ = tx.send(found);
@@ -169,7 +169,7 @@ impl OpCheck {
 
     /// No threads on the web: check right away.
     #[cfg(target_arch = "wasm32")]
-    fn start(&mut self, key: u64, ahead: solidcraft_engine::Ahead, cmds: Vec<(String, Value)>, revision: u64, inside: bool) {
+    fn start(&mut self, key: u64, ahead: torno_engine::Ahead, cmds: Vec<(String, Value)>, revision: u64, inside: bool) {
         let (result, evaluated) = ahead.addition(&cmds, inside);
         self.done = Some((key, result));
         self.joined = evaluated.map(|e| (cmds, revision, e));
@@ -229,7 +229,7 @@ pub fn update(app: &mut SolveApp, d: &mut Dialog, ctx: &egui::Context) {
         return;
     }
     // No shown body to join: nothing to check.
-    if solidcraft_engine::shown_scope(&app.session).is_some_and(|shown| shown.is_empty()) {
+    if torno_engine::shown_scope(&app.session).is_some_and(|shown| shown.is_empty()) {
         if let Some(slot) = operation(&mut d.kind) {
             *slot = NEW;
         }
@@ -311,7 +311,7 @@ pub fn scope_targets(app: &SolveApp, d: &Dialog, cmds: &mut [(String, Value)]) -
     if rule(&d.kind).is_none() || d.editing.is_some() {
         return Ok(());
     }
-    let Some(shown) = solidcraft_engine::shown_scope(&app.session) else { return Ok(()) };
+    let Some(shown) = torno_engine::shown_scope(&app.session) else { return Ok(()) };
     for (_, p) in cmds {
         let changes = p.get("operation").and_then(Value::as_str).is_some_and(|o| OPS.contains(&o) && o != "new");
         let named = ["targets", "participants"].iter().any(|k| p.get(*k).and_then(Value::as_array).is_some_and(|a| !a.is_empty()));
@@ -319,7 +319,7 @@ pub fn scope_targets(app: &SolveApp, d: &Dialog, cmds: &mut [(String, Value)]) -
             continue;
         }
         if shown.is_empty() {
-            return Err(solidcraft_ui_text::tr("dialog.no_shown_body").to_string());
+            return Err(torno_ui_text::tr("dialog.no_shown_body").to_string());
         }
         if let Some(map) = p.as_object_mut() {
             map.insert("targets".into(), Value::from(shown.clone()));

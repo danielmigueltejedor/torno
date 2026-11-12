@@ -56,6 +56,6 @@
   "ungraded": [],
   "what": "a 20 x 20 tab folded 90 degrees on a line 1 mm inside its root, where the bend zone stays clear of the blank's outline",
   "why_not": [
-    "body \"Body1\" is no kernel operation's output nor an operand: SolidCraft built it or changed the kernel's record"
+    "body \"Body1\" is no kernel operation's output nor an operand: Torno built it or changed the kernel's record"
   ]
 }

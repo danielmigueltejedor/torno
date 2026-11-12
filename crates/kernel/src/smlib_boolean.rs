@@ -7,7 +7,7 @@
 pub(crate) use smlib::{boolean as smlib_boolean, union_all as smlib_union_all};
 
 mod smlib {
-    use solidcraft_smlib::{BooleanOp, CheckLevel};
+    use torno_smlib::{BooleanOp, CheckLevel};
 
     use crate::body::Body;
     use crate::history::History;
@@ -50,8 +50,8 @@ mod smlib {
     /// The union of `bodies` in one SMLib call, each tagged as its own operand, checked once:
     /// the result's history is over `bodies` in order. At least one body.
     pub(crate) fn union_all(bodies: &[&Body]) -> Result<Body> {
-        if bodies.len() > solidcraft_smlib::MAX_UNION_BREPS {
-            return Err(KernelError::Invalid(format!("a union takes at most {} bodies", solidcraft_smlib::MAX_UNION_BREPS)));
+        if bodies.len() > torno_smlib::MAX_UNION_BREPS {
+            return Err(KernelError::Invalid(format!("a union takes at most {} bodies", torno_smlib::MAX_UNION_BREPS)));
         }
         let mut operands = Vec::with_capacity(bodies.len());
         let mut tagged = Vec::with_capacity(bodies.len());
@@ -66,9 +66,9 @@ mod smlib {
                 v
             });
         }
-        let refs: Vec<&solidcraft_smlib::Brep> = tagged.iter().collect();
-        let r = solidcraft_smlib::Brep::union_all(&refs).map_err(|e| failed("operation", e))?;
-        let operand_refs: Vec<&solidcraft_smlib::Brep> = operands.iter().collect();
+        let refs: Vec<&torno_smlib::Brep> = tagged.iter().collect();
+        let r = torno_smlib::Brep::union_all(&refs).map_err(|e| failed("operation", e))?;
+        let operand_refs: Vec<&torno_smlib::Brep> = operands.iter().collect();
         let step = checked(&r, &operand_refs)?;
         let (body, or) = body_from_smlib_ordered(&r)?;
         let history = match (orders, or) {
@@ -83,14 +83,14 @@ mod smlib {
 
     /// `body`, decoded from `r`, keeping `r` for the check at the end of its feature when the
     /// step left it there.
-    fn left(body: Body, step: Step, r: solidcraft_smlib::Brep) -> Body {
+    fn left(body: Body, step: Step, r: torno_smlib::Brep) -> Body {
         if step == Step::Defer { body.left_unchecked("SMLib boolean", Checked::Combined, r) } else { body }
     }
 
     /// An error unless SMLib's check accepts `r`, the result of combining `operands` (checked
     /// here unless the evaluation's validation mode leaves it to the feature's end,
     /// `crate::validation`): what was done with the check.
-    fn checked(r: &solidcraft_smlib::Brep, operands: &[&solidcraft_smlib::Brep]) -> Result<Step> {
+    fn checked(r: &torno_smlib::Brep, operands: &[&torno_smlib::Brep]) -> Result<Step> {
         let step = crate::validation::step();
         if step != Step::Check {
             return Ok(step);

@@ -1,14 +1,14 @@
 use super::super::{Executor, JobOptions, Task, open_headless};
 use super::*;
 use solidcore_record::Vec3;
-use solidcraft_geom::Mesh;
-use solidcraft_geom::MeshGeom;
-use solidcraft_render::{
+use std::sync::Arc;
+use torno_geom::Mesh;
+use torno_geom::MeshGeom;
+use torno_render::{
     ProductMesh, ProductScene,
     job::{CancelToken, ImageRequest, ImageWork, TaskPoll},
 };
-use solidcraft_viewport::{Camera, StandardView, surface::OpaqueSurface};
-use std::sync::Arc;
+use torno_viewport::{Camera, StandardView, surface::OpaqueSurface};
 
 type Guide = [[f64; 4]; 6];
 fn dot(a: [f64; 3], b: [f64; 3]) -> f64 {
@@ -192,8 +192,8 @@ fn context() -> Option<Arc<Context>> {
         Err(e) => {
             // The path tracer runs on Vulkan or Metal only: where the backends in use leave both out
             // (`WGPU_BACKEND=dx12`), it is unavailable by design, not missing.
-            let available = !solidcraft_viewport_gpu::select::path_backends().is_empty();
-            assert!(!available || std::env::var_os("SOLIDCRAFT_REQUIRE_GPU").is_none(), "required GPU unavailable: {e}");
+            let available = !torno_viewport_gpu::select::path_backends().is_empty();
+            assert!(!available || std::env::var_os("TORNO_REQUIRE_GPU").is_none(), "required GPU unavailable: {e}");
             return None;
         }
     };
@@ -274,8 +274,8 @@ fn denoise_admission_counts_guides_and_ping_pong_only_when_enabled() {
     let large_filtered = super::super::admission(&scene, &large, JobOptions { denoise: true, ..Default::default() }).unwrap();
     assert_eq!(large_filtered.pixel_scratch_bytes - large_plain.pixel_scratch_bytes, 2000 * 2000 * 128);
     assert!(large_filtered.estimated_total_bytes > 512 * 1024 * 1024);
-    assert!(large_filtered.estimated_total_bytes <= solidcraft_render::job::GPU_PATH_LIMITS.max_scratch_bytes);
-    let excessive = ImageRequest { width: (solidcraft_render::job::GPU_PATH_LIMITS.max_dimension + 1) as u32, ..request.clone() };
+    assert!(large_filtered.estimated_total_bytes <= torno_render::job::GPU_PATH_LIMITS.max_scratch_bytes);
+    let excessive = ImageRequest { width: (torno_render::job::GPU_PATH_LIMITS.max_dimension + 1) as u32, ..request.clone() };
     for denoise in [false, true] {
         assert!(super::super::admission(&scene, &excessive, JobOptions { denoise, ..Default::default() }).is_err());
     }
@@ -325,10 +325,8 @@ fn gpu_atrous_matches_f64_with_firefly_line_and_material_boundary() {
     };
     let raw = make("denoise fixture raw", &bytes);
     let dummy = make("denoise unused geometry", &[0; 64]);
-    let options = JobOptions {
-        denoise_settings: solidcraft_render::job::DenoiseSettings { firefly_suppression: true, ..Default::default() },
-        ..Default::default()
-    };
+    let options =
+        JobOptions { denoise_settings: torno_render::job::DenoiseSettings { firefly_suppression: true, ..Default::default() }, ..Default::default() };
     let mut task = Task::new(context.clone(), plane(), request(13), options, CancelToken::default()).unwrap();
     task.sample = samples;
     let filter = Resources::new(&context, &task.uniform, [&dummy, &dummy, &dummy, &dummy, &dummy], &raw, bytes.len() as u64, false).unwrap();
@@ -426,7 +424,7 @@ fn optical_box() -> Mesh {
 
 #[test]
 fn gpu_denoise_optical_guides_track_branches_and_certified_snell_endpoints() {
-    use solidcraft_render::{
+    use torno_render::{
         glass_model::{GlassModel, ThinFilm},
         job::{AreaLight, AreaLights, StudioLighting, ThinLens},
         transmission::Transmission,
@@ -442,7 +440,7 @@ fn gpu_denoise_optical_guides_track_branches_and_certified_snell_endpoints() {
     let base = optical_plane(0.0, Vec3::ZERO);
     let options = JobOptions { samples: 1, max_depth: 4, denoise: true, ..Default::default() };
     let probe = |meshes: Vec<ProductMesh>, options| {
-        let bounds = meshes.iter().fold(solidcraft_geom::Aabb3::EMPTY, |bounds, body| bounds.union(&body.mesh.bounds()));
+        let bounds = meshes.iter().fold(torno_geom::Aabb3::EMPTY, |bounds, body| bounds.union(&body.mesh.bounds()));
         let task = Task::new(context.clone(), ProductScene { meshes, bounds }, image.clone(), options, CancelToken::default()).unwrap();
         let filter = task.denoiser.as_ref().unwrap();
         filter.generate_guides(&task).unwrap();
@@ -565,9 +563,9 @@ fn gpu_denoise_preflight_reports_limits_without_changing_document() {
     let Some(context) = context() else {
         return;
     };
-    let mut session = solidcraft_engine::Session::default();
-    session.set_render_job_host(Some(solidcraft_render::job::CpuHost::cooperative())).unwrap();
-    session.register_render_job_host(solidcraft_render::job::ImageHost::with_executor(Arc::new(Executor { context })).unwrap()).unwrap();
+    let mut session = torno_engine::Session::default();
+    session.set_render_job_host(Some(torno_render::job::CpuHost::cooperative())).unwrap();
+    session.register_render_job_host(torno_render::job::ImageHost::with_executor(Arc::new(Executor { context })).unwrap()).unwrap();
     session.execute("solid.box", &serde_json::json!({"length":2,"width":2,"height":1})).unwrap();
     let before = session.doc.to_json();
     let mut params = serde_json::json!({"progressive":true,"denoise":true,"settings":{"width":8,"height":8}});
@@ -592,7 +590,7 @@ fn gpu_denoise_preflight_reports_limits_without_changing_document() {
 
 #[test]
 fn gpu_denoise_controls_match_f64_keep_alpha_and_leave_raw_unchanged() {
-    use solidcraft_render::job::DenoiseSettings;
+    use torno_render::job::DenoiseSettings;
     let Some(context) = context() else { return };
     let (mut input, mut guides) = fixture(13);
     input[6 * 13 + 6] = [512.0, 128.0, 32.0, 1.0];
@@ -708,7 +706,7 @@ fn gpu_supersampling_raw_master_uses_linear_rgba_and_selected_output_size() {
                 .push(std::array::from_fn(|channel| (positions.into_iter().map(|index| f64::from(input[index][channel])).sum::<f64>() / 4.0) as f32));
         }
     }
-    let mut expected_exr = solidcraft_render::job::linear_exr::ExrTask::new(4, 4, expected, CancelToken::default()).unwrap();
+    let mut expected_exr = torno_render::job::linear_exr::ExrTask::new(4, 4, expected, CancelToken::default()).unwrap();
     while !expected_exr.step(4).unwrap() {}
     let (expected_exr, _) = expected_exr.finish().unwrap();
     let mut png = None;
@@ -787,7 +785,7 @@ fn gpu_filter_windows_keep_three_pass_halos_firefly_support_and_actual_frame_edg
     let dummy = make("unused filter geometry", &[0; 64]);
     let options = JobOptions {
         denoise: true,
-        denoise_settings: solidcraft_render::job::DenoiseSettings { passes: 3, strength: 1.0, firefly_suppression: true, optical_filter: true },
+        denoise_settings: torno_render::job::DenoiseSettings { passes: 3, strength: 1.0, firefly_suppression: true, optical_filter: true },
         ..Default::default()
     };
     let mut task = Task::new(context.clone(), plane(), request(40), JobOptions { denoise: false, ..options }, CancelToken::default()).unwrap();
@@ -914,7 +912,7 @@ fn read_test_production_budgets(task: &Task) -> Vec<u32> {
 
 #[test]
 fn gpu_paged_film_matches_raw_finished_png_diagnostic_masks_and_complete_adaptive_previews() {
-    use solidcraft_render::job::{DenoiseSettings, adaptive::AdaptiveSampling, bloom::Bloom, finishing::Finishing};
+    use torno_render::job::{DenoiseSettings, adaptive::AdaptiveSampling, bloom::Bloom, finishing::Finishing};
     let Some(context) = context() else { return };
     let image = ImageRequest { width: 8, height: 21, ..request(8) };
     for adaptive in [false, true] {
@@ -1015,7 +1013,7 @@ fn gpu_paged_partial_pass_cancellation_publishes_no_preview_or_final_artifact() 
     assert_eq!(task.sample, 0);
     assert!(task.take_preview().is_none());
     token.cancel();
-    assert_eq!(task.step(1).err().unwrap().code, solidcraft_render::job::ErrorCode::Cancelled);
+    assert_eq!(task.step(1).err().unwrap().code, torno_render::job::ErrorCode::Cancelled);
     assert!(task.take_preview().is_none());
     assert!(task.take_linear_exr().is_none());
     assert!(task.take_denoise_mask().is_none());

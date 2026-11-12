@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Export chosen reference materials through a trusted card-capable SolidCraft CLI.
+"""Export chosen reference materials through a trusted card-capable Torno CLI.
 
 A fresh command-line session creates no geometry or body assignments. The native
 application owns library-v2 serialization and content revisions. All output stays
@@ -50,11 +50,11 @@ def selection(ids: list[str] | None, acknowledge: bool) -> dict:
                          'extended_property_ids': [row['id'] for row in native['not_projected']]})
     p.require(selected, "No selected reference has a supported point density")
     p.require(before == input_pins(), "Source revision changed during plan preparation")
-    return {'schema': 'solidcraft-physical-library-plan/1', 'executed': False,
+    return {'schema': 'torno-physical-library-plan/1', 'executed': False,
             'reference_selection_required': True, 'assigns_bodies': False,
             'id': PACK_ID, 'input_sha256': before, 'materials': selected, 'omitted': omitted,
             'preserve_extended_profiles': True,
-            'required_contract': 'material.create physical_card, material.inspect, solidcraft-library/2'}
+            'required_contract': 'material.create physical_card, material.inspect, torno-library/2'}
 
 
 def registry_check(registry: object) -> None:
@@ -112,7 +112,7 @@ def library_command(path: Path) -> dict:
     return {'command': 'library.export', 'params': {
         'path': str(path), 'id': PACK_ID, 'name': 'Physical references - select grade and conditions',
         'format': 'solidcraft-library/2', 'overwrite': False,
-        'provenance': {'license': 'MIT OR Apache-2.0', 'author': 'SolidCraft contributors',
+        'provenance': {'license': 'MIT OR Apache-2.0', 'author': 'Torno contributors',
                        'source_url': 'https://github.com/0xlillith/solidcraft/tree/assets/material-physical-properties/assets/render/physical'}}}
 
 
@@ -148,7 +148,7 @@ def export(cli: Path, plan: dict) -> dict:
     verify_catalog(restored, plan)
     p.require(restored == catalog, "Cold reopen changed the native material library")
     p.require(before == input_pins(), "Source revision changed during library export")
-    receipt = {'schema': 'solidcraft-physical-library-export-receipt/1', 'status': 'pass',
+    receipt = {'schema': 'torno-physical-library-export-receipt/1', 'status': 'pass',
                'cli_sha256': p.sha(cli), 'input_sha256': before, 'library_sha256': p.sha(output),
                'material_count': len(plan['materials']), 'omitted': plan['omitted'],
                'native_inspection': True, 'cold_reopen': True, 'body_assignment': False,

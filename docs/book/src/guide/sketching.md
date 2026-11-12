@@ -98,7 +98,7 @@ constraint status and **Finish Sketch** button remain visible.
 Hover over a circle or arc centre, or the midpoint of a straight sketch edge, then move
 horizontally or vertically to see a dotted alignment guide. The guide connects that reference
 to the cursor's projection on the sketch axis, within the viewport; it disappears when you
-move away from the axis. SolidCraft keeps the two most recent of these references and can
+move away from the axis. Torno keeps the two most recent of these references and can
 draw both guides. One guide on its own does not move the cursor. While a drawing tool (Line,
 Rectangle, Circle, Arc, Polygon, Slot, Point…) waits for a point, any sketch point is a
 reference too: the end of a line or arc, a rectangle's corner, or a free point. Preferences ›
@@ -218,7 +218,7 @@ becomes a dimension of that side, and the other sides stay equal to it.
 **Text** is set in the built-in font (Liberation Sans) unless it is given another: `sketch.text` and
 `sketch.edit_text` take a `font`, the family or full name of an installed font ("DejaVu Sans") or the path
 of a `.ttf` / `.otf` file, and the **Edit Text** dialog has a **Font** field for it. An unknown font is an
-error, and the font is kept with the text in the design, so the text stays editable in it. `SOLIDCRAFT_FONT_DIRS`
+error, and the font is kept with the text in the design, so the text stays editable in it. `TORNO_FONT_DIRS`
 adds folders to the ones searched for installed fonts. A text's `height`, its `angle` and each coordinate of
 its `at` can be expressions of the design's parameters, given as strings (`"height": "plate_height / 10"`,
 `"at": ["plate_width / 2", 5]`): the text keeps the expression and follows the parameters when they change, and
@@ -394,7 +394,7 @@ Scripts use the same command, with a midpoint reference in the `points` array:
 
 `mode` can be `horizontal` or `vertical`; omitting it chooses from the current positions.
 
-The solver is SolidCraft's own (damped Gauss–Newton with degree-of-freedom analysis). Constraints:
+The solver is Torno's own (damped Gauss–Newton with degree-of-freedom analysis). Constraints:
 coincident, horizontal/vertical, parallel, perpendicular, tangent, equal, concentric, collinear,
 midpoint, symmetry, fix, curvature (G2) and polygon. **Sketch Dimension** (D) adds linear,
 aligned, horizontal, vertical, point-to-line, line-to-circle, point-to-circle, circle-to-circle,

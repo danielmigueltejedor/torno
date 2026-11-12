@@ -12,14 +12,14 @@
 
 use serde_json::{Map, Value, json};
 use solidcore_record::Vec3;
-use solidcraft_engine::Session;
-use solidcraft_engine::doc::expr::Kind as ValueKind;
-use solidcraft_engine::geom::prelude::*;
+use torno_engine::Session;
+use torno_engine::doc::expr::Kind as ValueKind;
+use torno_engine::geom::prelude::*;
 
 use crate::selection::{EDGES, EXTERNAL_POINTS, FACES, ORIGIN, POINTS, SelInput, VERTICES};
 use crate::ui_kit::{self, choice_row, expr_row};
-use solidcraft_engine::Sel;
-use solidcraft_ui_text::tr;
+use torno_engine::Sel;
+use torno_ui_text::tr;
 
 /// The placement keys a primitive's dialog offers, the choice's first option first.
 fn keys(cmd: &str) -> &'static [&'static str] {
@@ -167,8 +167,8 @@ pub(crate) fn dropped(s: &Session, extra: &mut Map<String, Value>, p: Vec3, n: V
     let at = |c: f64, size: f64, text: &str, axis: Vec3| {
         let f = behind(axis);
         // A size typed as `l = 20` is placed by its value: `l` exists only once the box does.
-        let text = solidcraft_engine::doc::expr::definition(text).map_or(text, |(_, rhs)| rhs).trim();
-        if f == 0.0 || text.is_empty() || solidcraft_engine::doc::expr::is_literal(text) {
+        let text = torno_engine::doc::expr::definition(text).map_or(text, |(_, rhs)| rhs).trim();
+        if f == 0.0 || text.is_empty() || torno_engine::doc::expr::is_literal(text) {
             return um(c - f * size);
         }
         // A bare number in it has the design's unit, as OK reads the size.

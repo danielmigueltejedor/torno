@@ -5,8 +5,8 @@ use crate::{
     render_surface::{RenderBodyTarget, bounded_sequence},
 };
 use serde::{Deserialize, Serialize};
-use solidcraft_viewport::clear_coat::ClearCoat;
 use std::collections::BTreeSet;
+use torno_viewport::clear_coat::ClearCoat;
 
 /// Matches the existing runtime clear-coat override bound for either executor.
 pub const MAX_COAT_BINDINGS: usize = 64;

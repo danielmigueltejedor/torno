@@ -407,7 +407,7 @@
     "exporter_commit": "0a79d0874400c8508f5bb6df1406b783f47090ca",
     "fixes_source": "04b4b2db6:crates/solidcore/tests/kernel_cases/fixes.json",
     "solidcore": "8ddce901671f1cebd9214a31d21895d725e886c8",
-    "solidcraft": "8f264574875d46860614e9381ee5f8222db7b7a6"
+    "torno": "8f264574875d46860614e9381ee5f8222db7b7a6"
   },
   "expressible": false,
   "gallery_note": "the boss's base rounded R1 all round: at each of its four corners the two straight rounds join through a quarter torus swept about the corner's vertical edge.",
@@ -458,7 +458,7 @@
     "blend_dropping"
   ],
   "ungraded": [
-    "continuity: SolidCraft computes it"
+    "continuity: Torno computes it"
   ],
   "what": "the same boss's base rounds turned Swept: at each convex corner the section is revolved about the vertical corner edge through the corner's 90 degrees, a torus piece G1 to both rounds",
   "why_not": []

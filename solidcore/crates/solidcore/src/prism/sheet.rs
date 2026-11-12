@@ -2,7 +2,7 @@
 //! for the faces a sheet is built from. The planar booleans of `solidcore-ops` are a recipe over
 //! these and the kernel's 2D boolean.
 //!
-//! Not upstream: SolidCraft's planar regions (`prism.rs`, `sheets`), the geometric steps moved
+//! Not upstream: Torno's planar regions (`prism.rs`, `sheets`), the geometric steps moved
 //! into the kernel (docs/layers.md §1).
 //!
 //! Deviations: none (no upstream counterpart). No recursion.

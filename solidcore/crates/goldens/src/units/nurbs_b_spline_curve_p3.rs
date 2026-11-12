@@ -31,7 +31,7 @@
 //! `AssertNoPeriodicJump` runs on built-in cases (`jump_*`, see [`jump_cases`]).
 //! `fixtures/nurbs.b_spline_curve_p3/zero_speed_end.json` checks curves with a
 //! zero-speed end (coincident end control points, a second derivative that does not
-//! vanish: the shape the SolidCraft fork's tangency-labs/smlib#76 6ca3405 accepts at a
+//! vanish: the shape the Torno fork's tangency-labs/smlib#76 6ca3405 accepts at a
 //! vertex where an edge's faces touch, WR-668) and ordinary coincident-point faults,
 //! as free curves: the pinned check, and the opt-in's, which needs an edge, both
 //! refuse them.

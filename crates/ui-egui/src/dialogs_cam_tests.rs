@@ -1,7 +1,7 @@
 use serde_json::json;
 use solidcore_record::Vec3;
-use solidcraft_engine::Session;
-use solidcraft_engine::geom::prelude::*;
+use torno_engine::Session;
+use torno_engine::geom::prelude::*;
 
 use super::*;
 use crate::Services;
@@ -98,7 +98,7 @@ fn a_picked_cam_edge_makes_the_cam() {
     assert_eq!(l.lift.len(), 360);
     // A quarter turn lowers the knife tappet from 40 to √(30² − 10²).
     app.run("joint.drive", json!({"joint": "Cam", "value": 90})).unwrap();
-    let v = solidcraft_engine::doc::joints::joint_values(&app.session.doc.assembly).get(&joint(&app, "Tappet")).cloned().unwrap_or_default();
+    let v = torno_engine::doc::joints::joint_values(&app.session.doc.assembly).get(&joint(&app, "Tappet")).cloned().unwrap_or_default();
     assert!((v.first().copied().unwrap_or(f64::NAN) - (800f64.sqrt() - 40.0)).abs() < 1e-3, "{v:?}");
 }
 
@@ -106,9 +106,9 @@ fn a_picked_cam_edge_makes_the_cam() {
 #[test]
 fn the_cam_dialog_labels_translate() {
     crate::i18n::install();
-    let de = solidcraft_ui_text::Locale::for_language("de");
+    let de = torno_ui_text::Locale::for_language("de");
     for (english, german) in [("Cam", "Nocken"), ("Follower", "Stößel"), ("Roller", "Rolle"), ("Tip (optional)", "Spitze (optional)")] {
         assert_eq!(de.label(english), german);
     }
-    assert_eq!(solidcraft_ui_text::Locale::for_language("zh").label("Knife edge"), "尖顶");
+    assert_eq!(torno_ui_text::Locale::for_language("zh").label("Knife edge"), "尖顶");
 }

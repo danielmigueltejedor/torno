@@ -3,7 +3,7 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const info = require('./needs-info.js');
 
-const repo = { owner: 'tangency-labs', repo: 'solidcraft' };
+const repo = { owner: 'tangency-labs', repo: 'torno' };
 const NOW = Date.parse('2026-10-18T12:00:00Z');
 const DAY = 24 * 3600 * 1000;
 const ago = (ms) => new Date(NOW - ms).toISOString();
@@ -62,7 +62,7 @@ test('missing: reproducible, long, app-filed and non-bug issues are left alone',
   assert.deepEqual(info.missing('Feature request: dark mode', 'please'), []);
   assert.deepEqual(info.missing('[FEAT] threads', 'please'), []);
   assert.deepEqual(info.missing('How do I draw a polygon?', ''), []);
-  assert.deepEqual(info.missing('Crash: SolidCraft 0.15.0 ended without a clean exit', ''), []);
+  assert.deepEqual(info.missing('Crash: Torno 0.15.0 ended without a clean exit', ''), []);
 });
 
 const opened = (title, body, login = 'reporter') => ({
@@ -76,7 +76,7 @@ test('an opened thin report is labelled and asked once', async () => {
   assert.deepEqual(find(calls, 'addLabels')[1].labels, ['needs-info']);
   const body = find(calls, 'comment')[1].body;
   assert.match(body, /Steps to reproduce/);
-  assert.match(body, /SolidCraft version/);
+  assert.match(body, /Torno version/);
   assert.match(body, /14 days/);
 });
 

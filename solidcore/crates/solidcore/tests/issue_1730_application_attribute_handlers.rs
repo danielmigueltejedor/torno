@@ -2,7 +2,7 @@
 //! SMLib's `Split`, `Merge`, `Coincident` and `Copy` handlers and edits attributes the
 //! target object already carries, as an application's `SmAttribute` subclass does.
 //!
-//! The reference type is the issue's `Tag` (SolidCraft's tag history): a set of
+//! The reference type is the issue's `Tag` (Torno's tag history): a set of
 //! origins, a set of edges and an `at` list of points. Its split, merge and coincident
 //! handlers `join` the origins into the target's Tag (or add a Tag with an empty `at`),
 //! and its copy is SMLib's default, so a copy onto an object that already has a Tag

@@ -1,7 +1,7 @@
 //! Transient pointer capture. This module prepares candidates but never dispatches
 //! or commits them: the retained runtime owns lifecycle/native side effects.
 
-use solidcraft_engine::panels::*;
+use torno_engine::panels::*;
 
 use super::LocalScope;
 use super::layout::{
@@ -1241,7 +1241,7 @@ pub(crate) fn keyboard_resize_action(
             _ => Err(error(Rule::Availability, "focused control has no neighbour split")),
         };
     }
-    let step = solidcraft_theme::Tokens::get().space_8.max(HOST_DRAG_THRESHOLD);
+    let step = torno_theme::Tokens::get().space_8.max(HOST_DRAG_THRESHOLD);
     let (dx, dy) = match action {
         ResizeLeft => (-step, 0.0),
         ResizeRight => (step, 0.0),

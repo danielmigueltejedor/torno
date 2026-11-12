@@ -1,8 +1,8 @@
 use crate::scenario::Harness;
 use serde_json::json;
-use solidcraft_engine::Sel;
-use solidcraft_engine::doc::{FeatureKind, PlaneRef};
-use solidcraft_engine::geom::prelude::*;
+use torno_engine::Sel;
+use torno_engine::doc::{FeatureKind, PlaneRef};
+use torno_engine::geom::prelude::*;
 
 fn tool(h: &Harness) -> Option<&str> {
     h.app.tool.as_ref().map(|t| t.cmd)
@@ -405,7 +405,7 @@ fn the_kept_sketch_tab_sits_after_model_and_its_tools_start_a_sketch() {
     assert!(!crate::workspace::visible_tabs(&h.app).contains(&"SKETCH"), "off by default");
     h.call("ui.prefs", json!({"sketch_tab_always": true}));
     assert_eq!(crate::workspace::visible_tabs(&h.app)[..2], ["MODEL", "SKETCH"]);
-    let info = |h: &Harness, id: &str| crate::render_workspace::interactive_command_info(&h.app, solidcraft_engine::find_command(id).unwrap());
+    let info = |h: &Harness, id: &str| crate::render_workspace::interactive_command_info(&h.app, torno_engine::find_command(id).unwrap());
     assert!(info(&h, "sketch.line").enabled && info(&h, "sketch.project").enabled);
     assert!(!info(&h, "sketch.dimension").enabled && !info(&h, "sketch.trim").enabled && !info(&h, "sketch.finish").enabled);
 
@@ -458,7 +458,7 @@ fn line_chain(h: &mut Harness, points: &[[i32; 3]]) {
 
 /// Each line of the active sketch, as (start, end).
 fn lines(h: &Harness) -> Vec<([f64; 2], [f64; 2])> {
-    use solidcraft_engine::sketch::Shape;
+    use torno_engine::sketch::Shape;
     let sid = h.app.session.active_sketch.unwrap();
     let state = h.app.session.model.state();
     let sketch = &state.sketch(sid).unwrap().sketch;
@@ -479,7 +479,7 @@ fn assert_line(line: ([f64; 2], [f64; 2]), start: [f64; 2], end: [f64; 2]) {
 /// mistake it for a point removed by Undo (#11181), including when Undo restores that start.
 #[test]
 fn a_line_starts_on_a_curve_or_midpoint_and_keeps_that_snap_after_undo() {
-    use solidcraft_engine::sketch::ConstraintKind;
+    use torno_engine::sketch::ConstraintKind;
     for construction in [false, true] {
         for (start, midpoint) in [([20.0, 10.0], false), ([37.5, 10.0], true)] {
             let mut h = Harness::new();
@@ -540,7 +540,7 @@ fn a_line_starts_at_a_curve_crossing_and_keeps_it_after_undo() {
         let state = h.app.session.world_state().unwrap();
         let sketch = &state.sketch(h.app.session.active_sketch.unwrap()).unwrap().sketch;
         assert_eq!(
-            sketch.constraints.iter().filter(|c| matches!(c.kind, solidcraft_engine::sketch::ConstraintKind::PointOnCurve { .. })).count(),
+            sketch.constraints.iter().filter(|c| matches!(c.kind, torno_engine::sketch::ConstraintKind::PointOnCurve { .. })).count(),
             2,
             "the new line stays on both crossing curves"
         );
@@ -555,7 +555,7 @@ fn a_line_starts_at_a_curve_crossing_and_keeps_it_after_undo() {
 /// edge (#11272), a rectangle's edge (#11291) and a point part-way along a line (#11223).
 #[test]
 fn a_line_starts_on_a_snap_point_of_an_existing_shape() {
-    use solidcraft_engine::sketch::{ConstraintKind, CurveKind};
+    use torno_engine::sketch::{ConstraintKind, CurveKind};
     let edge = [25.0 + 10.0 * std::f64::consts::FRAC_1_SQRT_2, -15.0 + 10.0 * std::f64::consts::FRAC_1_SQRT_2];
     for (case, shape, start, end) in [
         ("line midpoint", "guide", [-10.0, 10.0], [-5.0, 30.0]),
@@ -588,7 +588,7 @@ fn a_line_starts_on_a_snap_point_of_an_existing_shape() {
         // The rectangle's left edge is the one at x = -35.
         let target = match shape {
             "box" => (0..sketch.curves.len())
-                .find(|&c| matches!(sketch.shape(c), Some(solidcraft_engine::sketch::Shape::Line { a, b }) if a.x == -35.0 && b.x == -35.0))
+                .find(|&c| matches!(sketch.shape(c), Some(torno_engine::sketch::Shape::Line { a, b }) if a.x == -35.0 && b.x == -35.0))
                 .unwrap(),
             "round" => sketch.curves.iter().position(|c| matches!(c.kind, CurveKind::Circle { .. })).unwrap(),
             id => sketch.curve_index(id).unwrap(),
@@ -614,7 +614,7 @@ fn a_line_starts_on_a_snap_point_of_an_existing_shape() {
 /// failure with #11369, #11449, #11465, #11736 and #12571.
 #[test]
 fn a_line_starts_on_projected_geometry_and_in_construction_mode() {
-    use solidcraft_engine::sketch::{ConstraintKind, CurveKind};
+    use torno_engine::sketch::{ConstraintKind, CurveKind};
     for case in ["projected X axis", "projected YZ plane", "face edge", "construction on a rectangle edge"] {
         let mut h = Harness::new();
         // Where the first click goes and where the line ends, in world coordinates.

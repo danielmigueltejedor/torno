@@ -8,7 +8,7 @@
 //! one (see `slicers::TargetKind`) and send through this same function.
 
 use serde_json::{Value, json};
-use solidcraft_io::Format;
+use torno_io::Format;
 
 use super::easyprint::{Exported, export_bodies};
 use super::export_laid_to;
@@ -58,7 +58,7 @@ pub(super) struct Send<'a> {
     pub parts: Vec<(String, Vec<String>)>,
     pub format: Format,
     /// Only for [`Dest::Path`]; the slicer folder's file is always standard.
-    pub quality: solidcraft_io::MeshQuality,
+    pub quality: torno_io::MeshQuality,
     pub dest: Dest<'a>,
     pub single_instance: bool,
     pub wait: Wait,
@@ -162,7 +162,7 @@ mod tests {
     /// A "PrusaSlicer 3" whose launcher logs what it is started with, and a `busctl` that says the
     /// slicer is not up for the first `cold` looks and is up after that.
     fn setup(tag: &str, cold: u32) -> (std::path::PathBuf, Slicer, String) {
-        let root = std::env::temp_dir().join(format!("solidcraft-send-{tag}-{}", std::process::id()));
+        let root = std::env::temp_dir().join(format!("torno-send-{tag}-{}", std::process::id()));
         let _ = std::fs::remove_dir_all(&root);
         let launcher_dir = root.join("slic3r-app-launcher");
         std::fs::create_dir_all(&launcher_dir).unwrap();

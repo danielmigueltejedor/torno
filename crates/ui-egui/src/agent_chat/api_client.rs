@@ -1,7 +1,7 @@
-//! The API backend (desktop only): a model behind an endpoint SolidCraft talks to itself, either
+//! The API backend (desktop only): a model behind an endpoint Torno talks to itself, either
 //! OpenAI-compatible (Ollama, LM Studio, OpenAI, any URL the user gives) or Anthropic-compatible
-//! (the Anthropic Messages API, or an endpoint that speaks it). SolidCraft runs the tool loop
-//! itself, with the same tools the ACP agents get: it starts the same MCP server (`solidcraft-cli
+//! (the Anthropic Messages API, or an endpoint that speaks it). Torno runs the tool loop
+//! itself, with the same tools the ACP agents get: it starts the same MCP server (`torno-cli
 //! mcp --connect` to the chat's own endpoint) and is its client, so every tool call passes the
 //! same gate, limits and folder checks. The key, when there is one, comes from the system keychain
 //! for this connection only.
@@ -35,7 +35,7 @@ const MAX_HISTORY_IMAGES: usize = 2;
 const DROPPED_VIEW_NOTE: &str = "[an earlier picture of the view, removed to keep the request small]";
 const DROPPED_THINKING_NOTE: &str = "[earlier reasoning, removed with older history]";
 /// How long one tool call may take (it may wait for the user's Allow, declined after four
-/// minutes). It does not depend on the endpoint's request timeout: a tool call is SolidCraft's own
+/// minutes). It does not depend on the endpoint's request timeout: a tool call is Torno's own
 /// work and the user's answer, never a wait for the model, so a longer request timeout does not
 /// need a longer tool timeout.
 const TOOL_TIMEOUT: Duration = Duration::from_secs(330);
@@ -66,7 +66,7 @@ static GO_GEMINI_CALL_COUNTER: AtomicU64 = AtomicU64::new(1);
 fn new_session_id() -> String {
     let n = GO_SESSION_COUNTER.fetch_add(1, Ordering::Relaxed);
     let t = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map(|d| d.as_nanos()).unwrap_or(0);
-    format!("solidcraft-{t:x}-{n:x}-{:x}", std::process::id())
+    format!("torno-{t:x}-{n:x}-{:x}", std::process::id())
 }
 
 /// Whether `base_url` is an OpenCode Go endpoint: model requests to all of them
@@ -672,7 +672,7 @@ pub struct ApiBackend {
 impl ApiBackend {
     pub fn start(cfg: ApiConfig, ctx: StartContext) -> Result<ApiBackend, String> {
         if cfg.key.is_some() && !super::agents::key_allowed_for(&cfg.base_url, cfg.protocol == Protocol::OpenAi && cfg.allow_insecure_http) {
-            return Err(solidcraft_ui_text::tr("ui.ai_key_needs_https").to_string());
+            return Err(torno_ui_text::tr("ui.ai_key_needs_https").to_string());
         }
         // One stable session ID per chat for OpenCode Go's routing and prompt cache.
         let session_id = new_session_id();
@@ -680,7 +680,7 @@ impl ApiBackend {
         let mcp = match &ctx.bridge {
             Some(b) => {
                 let argv = vec![b.cli.to_string_lossy().into_owned(), "mcp".into(), "--connect".into(), format!("127.0.0.1:{}", b.port)];
-                Some(AgentProcess::spawn(&argv, &ctx.cwd, &["SOLIDCRAFT_CONTROL_TOKEN"], || {})?)
+                Some(AgentProcess::spawn(&argv, &ctx.cwd, &["TORNO_CONTROL_TOKEN"], || {})?)
             }
             None => None,
         };
@@ -864,7 +864,7 @@ impl Worker {
 
     /// One MCP request to the server; its `result`.
     fn mcp_call(&mut self, method: &str, params: Value) -> Result<Value, String> {
-        let Some(m) = self.mcp.as_ref() else { return Err("no SolidCraft tools in this session".into()) };
+        let Some(m) = self.mcp.as_ref() else { return Err("no Torno tools in this session".into()) };
         self.next += 1;
         let id = self.next;
         m.send(&json!({"jsonrpc": "2.0", "id": id, "method": method, "params": params}));
@@ -887,9 +887,9 @@ impl Worker {
                     }
                     return Ok(v.get("result").cloned().unwrap_or(Value::Null));
                 }
-                Ok(FromAgent::Exited(_)) => return Err("the SolidCraft tools stopped".into()),
+                Ok(FromAgent::Exited(_)) => return Err("the Torno tools stopped".into()),
                 Err(std::sync::mpsc::RecvTimeoutError::Timeout) if std::time::Instant::now() < deadline => {}
-                Err(_) => return Err("the SolidCraft tools did not answer".into()),
+                Err(_) => return Err("the Torno tools did not answer".into()),
             }
         }
     }
@@ -900,7 +900,7 @@ impl Worker {
         }
         self.mcp_call(
             "initialize",
-            json!({"protocolVersion": "2025-06-18", "capabilities": {}, "clientInfo": {"name": "solidcraft-agent-chat", "version": env!("CARGO_PKG_VERSION")}}),
+            json!({"protocolVersion": "2025-06-18", "capabilities": {}, "clientInfo": {"name": "torno-agent-chat", "version": env!("CARGO_PKG_VERSION")}}),
         )?;
         if let Some(m) = &self.mcp {
             m.send(&json!({"jsonrpc": "2.0", "method": "notifications/initialized"}));
@@ -1295,7 +1295,7 @@ impl Worker {
 
 /// What the chat says when a request ran out of time: the limit, and where to raise it.
 pub fn timed_out(limit_s: u64) -> String {
-    solidcraft_ui_text::format("ui.ai_request_timed_out", &[("seconds", &limit_s.to_string())])
+    torno_ui_text::format("ui.ai_request_timed_out", &[("seconds", &limit_s.to_string())])
 }
 
 /// A failed request as people read it: one that ran into the endpoint's request timeout (the
@@ -1309,10 +1309,10 @@ pub fn http_error(status: u16, body: &Value) -> String {
     let detail =
         body.pointer("/error/message").or_else(|| body.get("error")).and_then(Value::as_str).unwrap_or("").chars().take(300).collect::<String>();
     let what = match status {
-        401 | 403 => solidcraft_ui_text::tr("ui.ai_http_key"),
-        404 => solidcraft_ui_text::tr("ui.ai_http_not_found"),
-        429 => solidcraft_ui_text::tr("ui.ai_http_busy"),
-        413 => solidcraft_ui_text::tr("ui.ai_http_too_large"),
+        401 | 403 => torno_ui_text::tr("ui.ai_http_key"),
+        404 => torno_ui_text::tr("ui.ai_http_not_found"),
+        429 => torno_ui_text::tr("ui.ai_http_busy"),
+        413 => torno_ui_text::tr("ui.ai_http_too_large"),
         _ => "",
     };
     format!(
@@ -1643,7 +1643,7 @@ fn anthropic_headers(base_url: &str, key: Option<&str>) -> Result<Vec<(String, S
     let mut headers = vec![("anthropic-version".to_string(), ANTHROPIC_VERSION.to_string())];
     if let Some(k) = key {
         if !super::agents::key_safe_for(base_url) {
-            return Err(solidcraft_ui_text::tr("ui.ai_key_needs_https").to_string());
+            return Err(torno_ui_text::tr("ui.ai_key_needs_https").to_string());
         }
         headers.push(("x-api-key".to_string(), k.to_string()));
     }
@@ -1670,7 +1670,7 @@ pub fn anthropic_model_list(http: &HttpFn, base_url: &str, key: Option<&str>) ->
 pub fn test_anthropic_endpoint(http: &HttpFn, base_url: &str, key: Option<&str>, model: &str) -> Result<String, String> {
     let model = model.trim();
     if model.is_empty() {
-        return Err(solidcraft_ui_text::tr("ui.ai_need_model").to_string());
+        return Err(torno_ui_text::tr("ui.ai_need_model").to_string());
     }
     let mut headers = anthropic_headers(base_url, key)?;
     headers.push(("Content-Type".to_string(), "application/json".to_string()));
@@ -1687,7 +1687,7 @@ pub fn test_anthropic_endpoint(http: &HttpFn, base_url: &str, key: Option<&str>,
     if status != 200 {
         return Err(http_error(status, &v));
     }
-    Ok(solidcraft_ui_text::format("ui.ai_test_answered", &[("model", model)]))
+    Ok(torno_ui_text::format("ui.ai_test_answered", &[("model", model)]))
 }
 
 /// A tool call's result as text for the model, and whether it failed.
@@ -1741,7 +1741,7 @@ fn tool_title(name: &str, args: &Value) -> String {
 /// endpoint should be, say): an error, so the picker says so and asks again later.
 fn listed_models(body: &Value, name_key: &str) -> Result<Vec<(String, Option<String>)>, String> {
     let Some(entries) = body.get("data").and_then(Value::as_array) else {
-        return Err(solidcraft_ui_text::tr("ui.agent_chat_models_not_a_list").to_string());
+        return Err(torno_ui_text::tr("ui.agent_chat_models_not_a_list").to_string());
     };
     Ok(entries
         .iter()
@@ -1771,7 +1771,7 @@ pub fn model_list(http: &HttpFn, base_url: &str, key: Option<&str>, allow_insecu
     let mut headers = Vec::new();
     if let Some(k) = key {
         if !super::agents::key_allowed_for(base_url, allow_insecure_http) {
-            return Err(solidcraft_ui_text::tr("ui.ai_key_needs_https").to_string());
+            return Err(torno_ui_text::tr("ui.ai_key_needs_https").to_string());
         }
         headers.push(("Authorization".to_string(), format!("Bearer {k}")));
     }
@@ -1783,16 +1783,13 @@ pub fn test_endpoint(http: &HttpFn, base_url: &str, key: Option<&str>, model: &s
     let mut headers = Vec::new();
     if let Some(k) = key {
         if !super::agents::key_allowed_for(base_url, allow_insecure_http) {
-            return Err(solidcraft_ui_text::tr("ui.ai_key_needs_https").to_string());
+            return Err(torno_ui_text::tr("ui.ai_key_needs_https").to_string());
         }
         headers.push(("Authorization".to_string(), format!("Bearer {k}")));
     }
     let models = model_entries(http, base_url, headers)?;
     let found = model.is_empty() || models.iter().any(|m| m.id == model);
-    Ok(solidcraft_ui_text::format(
-        if found { "ui.ai_test_ok" } else { "ui.ai_test_no_model" },
-        &[("count", &models.len().to_string()), ("model", model)],
-    ))
+    Ok(torno_ui_text::format(if found { "ui.ai_test_ok" } else { "ui.ai_test_no_model" }, &[("count", &models.len().to_string()), ("model", model)]))
 }
 
 #[cfg(test)]
@@ -1902,7 +1899,7 @@ mod tests {
     }
 
     /// A scripted endpoint: one answer with a tool call, then a plain answer. The loop runs the
-    /// tool (here without SolidCraft tools: an unknown tool fails) and reports the turn's end.
+    /// tool (here without Torno tools: an unknown tool fails) and reports the turn's end.
     #[test]
     fn the_tool_loop_runs_calls_and_ends_the_turn() {
         let answers = std::sync::Mutex::new(vec![
@@ -2679,7 +2676,7 @@ mod tests {
     /// picker says why and asks again later; a list with nothing in it is a list.
     #[test]
     fn an_answer_that_is_no_model_list_is_an_error() {
-        let expected = solidcraft_ui_text::tr("ui.agent_chat_models_not_a_list").to_string();
+        let expected = torno_ui_text::tr("ui.agent_chat_models_not_a_list").to_string();
         let page: HttpFn = Arc::new(|_: &HttpRequest| Ok((200, b"<!doctype html><html><body>Control UI</body></html>".to_vec())));
         assert_eq!(model_list(&page, "http://localhost:18789/v1", None, false).unwrap_err(), expected);
         assert_eq!(anthropic_model_list(&page, "http://localhost:18789/v1", None).unwrap_err(), expected);
@@ -3002,7 +2999,7 @@ mod tests {
     }
 
     /// A scripted Anthropic endpoint: one answer with a tool call, then a plain answer. The loop
-    /// runs the tool (here without SolidCraft tools: an unknown tool fails) and reports the end.
+    /// runs the tool (here without Torno tools: an unknown tool fails) and reports the end.
     #[test]
     fn the_anthropic_tool_loop_runs_calls_and_ends_the_turn() {
         let answers = std::sync::Mutex::new(vec![

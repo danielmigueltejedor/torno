@@ -17,10 +17,10 @@
 //! disagree are the hole's corners, where a section ends on a plane: the round's G1 seam with the
 //! plane, whose 1 / r jump every round has along its whole length, ends there, and no surface is
 //! G2 to both the round and the plane at that point. The patch passes from one to the other
-//! within 15% of each side from the corner (`solidcraft_geom::fill_matched::FADE_SHARE`) and
+//! within 15% of each side from the corner (`torno_geom::fill_matched::FADE_SHARE`) and
 //! is G2 along the rest of every seam.
 
-use solidcraft_geom::fill_matched::MatchedFill;
+use torno_geom::fill_matched::MatchedFill;
 
 use crate::body::Body;
 use crate::{KernelError, Result};

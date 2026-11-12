@@ -1,8 +1,8 @@
-//! Not upstream (SolidCraft's draft, tangency-labs/smlib#27, #53): the surface a face of a
+//! Not upstream (Torno's draft, tangency-labs/smlib#27, #53): the surface a face of a
 //! solid takes when it is drafted, turned by an angle about its line or circle on a neutral
 //! plane so that it leans in going along a pull direction, kept with its definition.
 //!
-//! | Rust | SolidCraft |
+//! | Rust | Torno |
 //! |------|-----------|
 //! | [`Draft`] | `smlib_draft`'s `unit` checks of the neutral normal and the pull |
 //! | [`draft_surface`] | `draft_faces`: a plane tilted, a cone or cylinder about the pull drafted |
@@ -18,8 +18,8 @@
 //! sin α = (d × n) · p > 0 (α the angle between the hinge and the pull, in the face), the
 //! normal goes to n cos φ + (d × n) sin φ (Rodrigues' formula) with sin φ = sin θ / sin α,
 //! so that its component along the pull is sin θ; a draft steeper than the hinge allows
-//! (|sin θ| > sin α) is refused. For p along N, α is square and φ = θ: SolidCraft's turn
-//! about n × p. SolidCraft hinged the plane on the face's internal point moved along the
+//! (|sin θ| > sin α) is refused. For p along N, α is square and φ = θ: Torno's turn
+//! about n × p. Torno hinged the plane on the face's internal point moved along the
 //! pull onto the neutral plane, about n × p: for a pull oblique to N that line is not on the
 //! neutral plane's trace, and the plane depends on which interior point the face gives. A
 //! face parallel to the neutral plane, or so near it that its hinge is not proved, is
@@ -38,7 +38,7 @@
 //! the direction away from the axis at a corner of its net, a polynomial in the stored
 //! numbers enclosed in rounded interval arithmetic, refused where the enclosure holds 0.
 //!
-//! **What is proved.** The input thresholds are SolidCraft's acceptance tests on the input
+//! **What is proved.** The input thresholds are Torno's acceptance tests on the input
 //! (a plane within 1e-6 of parallel to the pull, a pull or axis at least 1e-12 out of the
 //! neutral plane, an axis within 1e-9 of the pull), compared as computed. The geometric
 //! decisions (the hinge's existence and conditioning, the side a plane leans to, a cone's
@@ -544,7 +544,7 @@ fn cone_edit<T>(r: Result<T>) -> Result<std::result::Result<T, DraftRefusal>> {
 }
 
 impl Cone {
-    /// Not upstream (SolidCraft's `drafted_cone`, tangency-labs/smlib#27, #53): the cone a
+    /// Not upstream (Torno's `drafted_cone`, tangency-labs/smlib#27, #53): the cone a
     /// face on this cone or cylinder about the pull becomes drafted by `draft`, about its
     /// circle on the neutral plane, so that it leans in going along the pull; `outward`,
     /// whether the face's outer faceuse runs with the surface's normal, says whether the face
@@ -935,7 +935,7 @@ mod tests {
     /// The neutral plane oblique to the pull: the hinge is the line where the face's plane
     /// meets it, x = 10 and 0.6 y + 0.8 z = 0, and the normal turns towards N's part in the
     /// face's plane, (0, 0.6, 0.8): the plane through (10, 0, 0) with normal
-    /// (cos t, 0.6 sin t, 0.8 sin t). SolidCraft's hinge (the face's interior point moved along
+    /// (cos t, 0.6 sin t, 0.8 sin t). Torno's hinge (the face's interior point moved along
     /// the pull onto the neutral plane, about n x p) gives the plane
     /// cos t (x - 10) + sin t (z + 0.75 y) = 0 through an interior point at height y: a
     /// different plane for every y.
@@ -972,7 +972,7 @@ mod tests {
                 normal: Vec3::new(c, 0.6 * sn, 0.8 * sn)
             }
         ));
-        // SolidCraft's: the plane's offset at the origin depends on the interior point
+        // Torno's: the plane's offset at the origin depends on the interior point
         let old = |y: f64| {
             let inside = Point3::new(10.0, y, 5.0);
             let big_n = draft.neutral_normal();

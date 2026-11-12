@@ -158,12 +158,12 @@
     "extrude"
   ],
   "ungraded": [
-    "results: SolidCraft computes it"
+    "results: Torno computes it"
   ],
   "what": "a crank-slider driven to 90 degrees",
   "why_not": [
-    "body \"CrankBox\" is no kernel operation's output nor an operand: SolidCraft built it or changed the kernel's record",
-    "body \"RodBox\" is no kernel operation's output nor an operand: SolidCraft built it or changed the kernel's record",
-    "body \"SliderBox\" is no kernel operation's output nor an operand: SolidCraft built it or changed the kernel's record"
+    "body \"CrankBox\" is no kernel operation's output nor an operand: Torno built it or changed the kernel's record",
+    "body \"RodBox\" is no kernel operation's output nor an operand: Torno built it or changed the kernel's record",
+    "body \"SliderBox\" is no kernel operation's output nor an operand: Torno built it or changed the kernel's record"
   ]
 }

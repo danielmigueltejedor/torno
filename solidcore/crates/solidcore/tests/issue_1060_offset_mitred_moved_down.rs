@@ -1,4 +1,4 @@
-//! #1060 (WR-615, fork tangency-labs/smlib a96ce9f; SolidCraft rig 4492), the rig of
+//! #1060 (WR-615, fork tangency-labs/smlib a96ce9f; Torno rig 4492), the rig of
 //! `issue_1060_offset_mitred_rounded_box_top` moved the other way: the 40 x 30 x 10 box
 //! with its four top edges rounded r 3 (mitred at the top corners) has its top face offset
 //! by -6, into the body, to z 4 (the rounds still fit). The four rounds come off together

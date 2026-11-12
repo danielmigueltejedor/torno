@@ -1,7 +1,7 @@
 //! The analytic surface a revolved profile curve sweeps: a cylinder, cone, sphere or
-//! torus bounded to the curve and the turn (SolidCraft change).
+//! torus bounded to the curve and the turn (Torno change).
 //!
-//! Upstream: none. SolidCraft fix tangency-labs/smlib 0b143f7 (branch
+//! Upstream: none. Torno fix tangency-labs/smlib 0b143f7 (branch
 //! `port-revolve-analytic`, tangency-labs/solidcore#545). At `c9c5979`
 //! `SmPrimitiveCreation::CreateRotationalSweep` makes analytic faces only for a
 //! one-curve profile (`sm_CreateAnalyticRotationalSweep`). Each curve of a longer
@@ -12,7 +12,7 @@
 //!
 //! | Rust                    | Upstream      |
 //! |-------------------------|---------------|
-//! | [`analytic_revolution`] | (SolidCraft)  |
+//! | [`analytic_revolution`] | (Torno)  |
 //!
 //! Deviations: not in upstream. The surface is laid out as `sm_CreateRotSrf`'s B-spline
 //! surface of revolution: `u` the turn (`0` at the curve, rising with the rotation about

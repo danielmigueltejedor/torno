@@ -1,6 +1,6 @@
 //! Crash reports, for agents and people (see `crate::crash` and docs/crash-reports.md): list
 //! them, read one, delete them. They live on this computer and are never sent anywhere. And the
-//! profiler (`solidcraft_profile`, docs/perf.md): where the time goes, SMLib's calls to commands.
+//! profiler (`torno_profile`, docs/perf.md): where the time goes, SMLib's calls to commands.
 
 use serde_json::Value;
 
@@ -27,7 +27,7 @@ pub static COMMANDS: &[CommandSpec] = &[
         .params(
             "limit?: number (default 20). Lists this computer's crash reports, newest first: {dir, reports: [{id, kind, time, message, \
              command, count, version, path, replayable}]}. kind: command_panic | panic | kernel_panic_recovered | unclean_exit. \
-             Read one with diagnostics.crash_report; reproduce it with `solidcraft-cli crashes replay <id>`",
+             Read one with diagnostics.crash_report; reproduce it with `torno-cli crashes replay <id>`",
         ),
     CommandSpec::new("diagnostics.crash_report", "Crash Report", crate::checked!("diagnostics.crash_report", read))
         .icon("bug_report")
@@ -37,7 +37,7 @@ pub static COMMANDS: &[CommandSpec] = &[
         .params(
             "id: report id. The whole report: message, location, backtrace, app version and commit, system, the command that \
              crashed and the recent ones, notes, and design_path / replay_path when the crash can be replayed \
-             (`solidcraft-cli run <replay_path> --in <design_path>`)",
+             (`torno-cli run <replay_path> --in <design_path>`)",
         ),
     CommandSpec::new("diagnostics.crash_reports.clear", "Delete Crash Reports", crate::checked!("diagnostics.crash_reports.clear", clear))
         .icon("delete")
@@ -57,7 +57,7 @@ pub static COMMANDS: &[CommandSpec] = &[
              self_ms, share}], rows: [{category, name, count, total_ms, self_ms, max_ms}], rows_total, trace?}, the rows the most \
              self time first. Categories: solidcore (the kernel's calls), kernel, feature (one per feature \
              computed, by its type), doc, command, import (STEP/IGES stages), io. Self time is a span's time less the spans \
-             inside it; total counts its outermost run only. Recording also starts with SOLIDCRAFT_PROFILE=1, the CLI's \
+             inside it; total counts its outermost run only. Recording also starts with TORNO_PROFILE=1, the CLI's \
              --profile and the app's preference; off, it costs nothing measurable. Read-only",
         ),
     CommandSpec::new("diagnostics.validation", "Validation", crate::checked!("diagnostics.validation", validation))
@@ -82,7 +82,7 @@ pub static COMMANDS: &[CommandSpec] = &[
             "mode: panic | kernel | worker | worker_raw | abort. Checks that crash reports work: panic = an internal error in this \
              command (caught; the design is unchanged), kernel = one inside the geometry kernel (caught), worker / worker_raw = \
              one on a Rayon worker, caught inside / outside the kernel's guard, abort = the app ends at once (reported at the \
-             next start). Only when the SOLIDCRAFT_CRASH_TEST environment variable is set",
+             next start). Only when the TORNO_CRASH_TEST environment variable is set",
         ),
 ];
 
@@ -121,11 +121,11 @@ fn clear(_: &mut Session, p: &Value) -> Result<Value> {
 }
 
 fn crash_test_enabled(_: &Session) -> std::result::Result<(), String> {
-    if solidcraft_geom::env::var_os("CRASH_TEST").is_some() { Ok(()) } else { Err("set SOLIDCRAFT_CRASH_TEST to use the crash test".into()) }
+    if torno_geom::env::var_os("CRASH_TEST").is_some() { Ok(()) } else { Err("set TORNO_CRASH_TEST to use the crash test".into()) }
 }
 
 /// `diagnostics.crash_test`: the one deliberate panic. It proves the crash reports work, and runs
-/// only when asked for with SOLIDCRAFT_CRASH_TEST. `mode` picks where the internal error happens
+/// only when asked for with TORNO_CRASH_TEST. `mode` picks where the internal error happens
 /// ([`CrashTestMode`](crate::schema::diagnostics::CrashTestMode)); every mode but `abort` ends
 /// in a caught error.
 #[allow(clippy::panic)]
@@ -134,15 +134,15 @@ fn crash_test(_: &mut Session, p: &Value) -> Result<Value> {
     match str_(p, "mode") {
         Some("panic") => std::panic::panic_any(String::from("crash test: an internal error in a command")),
         Some("kernel") => {
-            solidcraft_kernel::crash_test()?;
+            torno_kernel::crash_test()?;
             Err(EngineError::Other("crash test: the kernel error was not caught".into()))
         }
         Some("worker") => {
-            solidcraft_kernel::crash_test_worker_panic("an internal error in the kernel on a worker")?;
+            torno_kernel::crash_test_worker_panic("an internal error in the kernel on a worker")?;
             Err(EngineError::Other("crash test: the kernel error was not caught".into()))
         }
         Some("worker_raw") => {
-            solidcraft_kernel::crash_test_worker_panic_raw("a worker panic in a command")?;
+            torno_kernel::crash_test_worker_panic_raw("a worker panic in a command")?;
             Err(EngineError::Other("crash test: the worker panic was not resumed".into()))
         }
         Some("abort") => std::process::abort(),
@@ -160,7 +160,7 @@ fn validation(s: &mut Session, p: &Value) -> Result<Value> {
         None | Some(Value::Null) => None,
         Some(v) => Some(
             v.as_str()
-                .and_then(solidcraft_kernel::Validation::parse)
+                .and_then(torno_kernel::Validation::parse)
                 .ok_or_else(|| bad(cmd, format!("`mode` {}", crate::schema::diagnostics::VALIDATION_MODES)))?,
         ),
     };
@@ -191,20 +191,20 @@ fn profile(_: &mut Session, p: &Value) -> Result<Value> {
         None | Some(Value::Null) => None,
         Some(_) => Some(str_(p, "trace").filter(|t| !t.trim().is_empty() && t.len() < 4096).ok_or_else(|| bad(cmd, "`trace` must be a file path"))?),
     };
-    let report = solidcraft_profile::report();
+    let report = torno_profile::report();
     let mut out = crate::schema::diagnostics::ProfileReport::new(&report, top);
     if let Some(path) = trace {
         let mut bytes = Vec::new();
-        solidcraft_profile::write_chrome_trace(&mut bytes).map_err(|e| bad(cmd, format!("trace: {e}")))?;
-        solidcraft_io::vfs::write(path, &bytes).map_err(|e| EngineError::Other(format!("{path}: {e}")))?;
+        torno_profile::write_chrome_trace(&mut bytes).map_err(|e| bad(cmd, format!("trace: {e}")))?;
+        torno_io::vfs::write(path, &bytes).map_err(|e| EngineError::Other(format!("{path}: {e}")))?;
         out.trace = Some(path.to_string());
     }
     if reset == Some(true) {
-        solidcraft_profile::reset();
+        torno_profile::reset();
     }
     if let Some(on) = enabled {
-        solidcraft_profile::set_enabled(on);
-        out.enabled = solidcraft_profile::enabled();
+        torno_profile::set_enabled(on);
+        out.enabled = torno_profile::enabled();
     }
     serde_json::to_value(out).map_err(|e| EngineError::Other(format!("{cmd}: {e}")))
 }

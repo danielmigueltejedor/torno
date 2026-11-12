@@ -153,7 +153,7 @@ CARGO_BUILD_JOBS=2 CARGO_TARGET_DIR=bin/checks nice -n 10 cargo test --profile d
 ```
 
 Result: 4 passed, 1 failed. The failing test is
-`with_solidcraft_s_fixes_the_cases_have_the_fork_s_marks_after_the_exact_classes`.
+`with_torno_s_fixes_the_cases_have_the_fork_s_marks_after_the_exact_classes`.
 Its `tee_is_fitted` case expects `OverTolerance(0.00147)` but receives
 `Built { problems: ["no round face"], off: 0.0 }`. This test enables all
 UpstreamFixes except geometric_g2_continuity, including the dependency's
@@ -261,7 +261,7 @@ The deterministic crease regressions preceded the frozen-plan/enclosure
 implementation. Initial polynomial primitives and their tests shared the first
 regression commit; that history has not been rewritten. The production crease
 remains a known-defect reproduction, and the conditional APIs never supply a
-production surface. No SolidCraft gallery case changes state, so no gallery
+production surface. No Torno gallery case changes state, so no gallery
 row/image change is claimed.
 ## Verification after the final main merge
 

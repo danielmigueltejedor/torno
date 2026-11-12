@@ -32,6 +32,6 @@
   "ungraded": [],
   "what": "the three edges at one box corner rounded r3, Corners: Curvature set back exactly 3, the radius: refused, naming the least setback",
   "why_not": [
-    "the failure is SolidCraft's, not a kernel operation's: step 2 (solid.fillet): invalid input: the setback must be more than the radius (3 mm) at the corner (40.000, 30.000, 20.000): the rounds' contact lines meet 3 mm from it along its edges, and the corner's patch starts past that"
+    "the failure is Torno's, not a kernel operation's: step 2 (solid.fillet): invalid input: the setback must be more than the radius (3 mm) at the corner (40.000, 30.000, 20.000): the rounds' contact lines meet 3 mm from it along its edges, and the corner's patch starts past that"
   ]
 }

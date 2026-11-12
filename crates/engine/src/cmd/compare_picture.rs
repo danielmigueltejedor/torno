@@ -5,7 +5,7 @@ use std::collections::{HashMap, VecDeque};
 use std::io::Cursor;
 
 use serde_json::{Value, json};
-use solidcraft_doc::canvas::base64_encode;
+use torno_doc::canvas::base64_encode;
 
 use super::CommandSpec;
 use super::silhouette::{self, Silhouette};
@@ -75,7 +75,7 @@ fn run(s: &mut Session, p: &Value) -> Result<Value> {
     let model = silhouette::outline(s, &camera, wanted.as_deref(), rows)?;
 
     // The picture side: decode, crop, and find the part.
-    let bytes = solidcraft_io::vfs::read(reference, MAX_REFERENCE_BYTES).map_err(|e| bad(CMD, format!("{reference}: {e}")))?;
+    let bytes = torno_io::vfs::read(reference, MAX_REFERENCE_BYTES).map_err(|e| bad(CMD, format!("{reference}: {e}")))?;
     let img = decode(&bytes)?;
     let img = apply_crop(img, p.get("crop_px"), p.get("crop_fraction"))?;
     let picture = if part_fills_crop {

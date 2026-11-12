@@ -5,9 +5,9 @@
 #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 use crate::Session;
 use serde_json::{Value, json};
-use solidcraft_doc::FaceAttachmentStatus;
-use solidcraft_doc::config::FaceCertificate;
-use solidcraft_geom::prelude::*;
+use torno_doc::FaceAttachmentStatus;
+use torno_doc::config::FaceCertificate;
+use torno_geom::prelude::*;
 
 fn run(s: &mut Session, command: &str, params: Value) -> Value {
     s.execute(command, &params).unwrap_or_else(|e| panic!("{command} {params}: {e}"))
@@ -35,7 +35,7 @@ fn no_errors(s: &Session) {
 }
 
 fn reopened(s: &Session) -> Session {
-    let mut t = Session::new(solidcraft_doc::Document::from_json(&s.doc.to_json()).unwrap());
+    let mut t = Session::new(torno_doc::Document::from_json(&s.doc.to_json()).unwrap());
     t.refresh();
     no_errors(&t);
     t
@@ -288,7 +288,7 @@ fn counterbore_floors_and_their_pattern_copies_take_a_sketch() {
 fn flat_faces(s: &Session) -> Vec<(usize, solidcore_record::Vec3)> {
     let state = s.model.state();
     let body = &state.bodies[0].body;
-    let mesh = body.mesh(&solidcraft_kernel::MeshTolerance::chord(0.01)).unwrap();
+    let mesh = body.mesh(&torno_kernel::MeshTolerance::chord(0.01)).unwrap();
     (0..body.face_count())
         .filter(|index| body.planar_face(*index).is_some())
         .filter_map(|index| {
@@ -420,7 +420,7 @@ fn the_face_a_split_cuts_takes_a_sketch_and_an_offset_plane_that_follow_the_plan
             let feature = s.doc.find_feature(name).map(|f| f.id).unwrap();
             let state = s.model.state();
             match state.construct.iter().find(|c| c.feature == feature).map(|c| &c.geom) {
-                Some(solidcraft_doc::construct::ConstructGeom::Plane(p)) => *p,
+                Some(torno_doc::construct::ConstructGeom::Plane(p)) => *p,
                 other => panic!("{tool} {name}: {other:?}"),
             }
         };

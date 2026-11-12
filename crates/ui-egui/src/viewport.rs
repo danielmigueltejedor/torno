@@ -6,19 +6,19 @@ use crate::ui_kit::{Container, Surface};
 use egui::{Align2, Color32, FontId, Pos2, Rect, Sense, Shape, Stroke, pos2, vec2};
 use serde_json::json;
 use solidcore_record::{Plane, Vec2, Vec3};
-use solidcraft_engine::Sel;
-use solidcraft_engine::geom::prelude::*;
-use solidcraft_engine::sketch::CurveKind;
-use solidcraft_engine::view::{GridFade, GridPlane, colors, grid_ext, grid_lines, grid_plane, grid_step, sketch_lines_with_sampler};
-use solidcraft_viewport::{Camera, Mat4, Rgb};
 use std::hash::{Hash, Hasher};
+use torno_engine::Sel;
+use torno_engine::geom::prelude::*;
+use torno_engine::sketch::CurveKind;
+use torno_engine::view::{GridFade, GridPlane, colors, grid_ext, grid_lines, grid_plane, grid_step, sketch_lines_with_sampler};
+use torno_viewport::{Camera, Mat4, Rgb};
 
 use crate::gpu::{Frame, GpuScene, GpuTarget, SceneSlot};
 use crate::navigation::{CameraInput, NavCaps, orbit_drag};
 use crate::selection::{BoxSel, origin_quads, origin_size, ray_quad};
 use crate::{SolveApp, icons};
-use solidcraft_theme::Tokens;
-use solidcraft_viewport_egui::ViewportCallback;
+use torno_theme::Tokens;
+use torno_viewport_egui::ViewportCallback;
 
 #[cfg(test)]
 #[path = "viewport_appearance_tests.rs"]
@@ -98,7 +98,7 @@ pub struct ViewportState {
     pick_bounds: std::sync::Mutex<Option<BodyBounds>>,
     /// The sketches' box in the world of one world state (held, as `pick_bounds` is). Every
     /// `projection` reads it, several times a frame, and each sketch's box samples its curves.
-    sketch_bounds: std::sync::Mutex<Option<(std::sync::Arc<solidcraft_engine::doc::ModelState>, solidcraft_engine::geom::Aabb3)>>,
+    sketch_bounds: std::sync::Mutex<Option<(std::sync::Arc<torno_engine::doc::ModelState>, torno_engine::geom::Aabb3)>>,
     /// Membership of the active assembly placement, shared by model and feedback rendering.
     active_bodies: std::sync::Mutex<Option<ActiveBodies>>,
     /// The model scene's blocks of bodies by key, from the last scene built.
@@ -120,7 +120,7 @@ pub struct ViewportState {
     /// Each shown body mesh's section index (the mesh held, so its address stays its own): a
     /// Section Analysis dragged or tilted cuts through it.
     section_index: std::sync::Mutex<
-        std::collections::HashMap<usize, (std::sync::Arc<solidcraft_engine::geom::Mesh>, std::sync::Arc<solidcraft_engine::view::SectionIndex>)>,
+        std::collections::HashMap<usize, (std::sync::Arc<torno_engine::geom::Mesh>, std::sync::Arc<torno_engine::view::SectionIndex>)>,
     >,
     /// Each body mesh's picking index (made the first time a pick reaches the body), kept while
     /// the mesh is part of the world state.
@@ -149,7 +149,7 @@ pub struct ViewportState {
     pub(crate) corner_ok: bool,
     pub gpu: Option<GpuTarget>,
     /// The GPU plan evaluation still compiling: `gpu.tess` once it is ready (#4860).
-    pub(crate) tess_ready: Option<solidcraft_viewport_egui::TessReady>,
+    pub(crate) tess_ready: Option<torno_viewport_egui::TessReady>,
     /// What the GPU drew last frame, shared with the renderer (the frame-rate details, #2548).
     pub(crate) draw_stats: Option<crate::gpu::DrawStatsHandle>,
     /// The status line has said the view is drawn at a lower quality ([`DrawStats::lowered`]).
@@ -427,7 +427,7 @@ fn rgba(c: Rgb) -> [u8; 4] {
     [c.0, c.1, c.2, 255]
 }
 
-fn scene_bounds(app: &SolveApp) -> solidcraft_engine::geom::Aabb3 {
+fn scene_bounds(app: &SolveApp) -> torno_engine::geom::Aabb3 {
     let mut b = model_bounds(app);
     if !app.preview.bounds.is_empty() {
         b = b.union(&app.preview.bounds);
@@ -455,9 +455,9 @@ pub fn scene_radius(app: &SolveApp) -> f64 {
 /// camera does. One cut from the scene or the camera instead reached through a small part in a
 /// large assembly, and reached further with every step of zoom out.
 ///
-/// [`DisplayQuality::chord`]: solidcraft_engine::doc::display_quality::DisplayQuality::chord
+/// [`DisplayQuality::chord`]: torno_engine::doc::display_quality::DisplayQuality::chord
 pub(crate) fn pick_slack(size: f64) -> f64 {
-    use solidcraft_engine::doc::display_quality::DisplayQuality;
+    use torno_engine::doc::display_quality::DisplayQuality;
     // The coarsest level, so the slack covers the mesh at any display quality.
     DisplayQuality::Coarse.chord(size) * 4.0
 }
@@ -479,31 +479,31 @@ pub fn projection(app: &SolveApp, rect: Rect) -> Proj {
         cam.fov = app.view_fov();
     }
     let aspect = rect.width() as f64 / rect.height().max(1.0) as f64;
-    Proj { cam, vp: cam.view_proj_bounds(aspect, &solidcraft_engine::render::view_bounds(&scene_bounds(app))), rect }
+    Proj { cam, vp: cam.view_proj_bounds(aspect, &torno_engine::render::view_bounds(&scene_bounds(app))), rect }
 }
 
 /// The far plane the picture's projection uses: the grid's fade ends before that plane cuts the
 /// ground (#4214). The scene's radius is not the radius the picture frames, so the planes of the
 /// projection itself are the ones that count.
 fn picture_far(app: &SolveApp, cam: &Camera) -> f64 {
-    cam.clip_bounds(&solidcraft_engine::render::view_bounds(&scene_bounds(app))).1
+    cam.clip_bounds(&torno_engine::render::view_bounds(&scene_bounds(app))).1
 }
 
 /// Sketches drawn in the viewport: the active one, and finished ones not yet used by a feature.
 pub(crate) fn visible_sketches(app: &SolveApp) -> Vec<u64> {
     let st = crate::open_meshing::shown_world(app);
-    st.sketches.iter().filter(|s| solidcraft_engine::view::sketch_shown(&app.session, s.feature)).map(|s| s.feature).collect()
+    st.sketches.iter().filter(|s| torno_engine::view::sketch_shown(&app.session, s.feature)).map(|s| s.feature).collect()
 }
 
 /// What Home, Fit and the orbit pivot frame: the bodies and sketches shown now, where they are
-/// now (see [`solidcraft_engine::view::bounds`]).
-pub fn view_bounds(app: &SolveApp) -> solidcraft_engine::geom::Aabb3 {
+/// now (see [`torno_engine::view::bounds`]).
+pub fn view_bounds(app: &SolveApp) -> torno_engine::geom::Aabb3 {
     // Bodies still being meshed after an open frame the view by their outlines.
     // A model that cannot be placed shows no placed bodies (see `open_meshing::session_world`).
     if crate::open_meshing::framing(app) {
-        return solidcraft_engine::view::unmeshed_bounds(&app.session).unwrap_or(solidcraft_engine::geom::Aabb3::EMPTY);
+        return torno_engine::view::unmeshed_bounds(&app.session).unwrap_or(torno_engine::geom::Aabb3::EMPTY);
     }
-    let own = solidcraft_engine::view::bounds(&app.session).unwrap_or(solidcraft_engine::geom::Aabb3::EMPTY);
+    let own = torno_engine::view::bounds(&app.session).unwrap_or(torno_engine::geom::Aabb3::EMPTY);
     crate::edit_in_place::bounds(app).map_or(own, |context| if own.is_empty() { context } else { own.union(&context) })
 }
 
@@ -516,12 +516,12 @@ pub(crate) fn in_view_centre(app: &SolveApp, proj: &Proj) -> Option<Vec3> {
     let b = body_bounds(app, &st)
         .iter()
         .filter(|(name, b)| !b.is_empty() && app.session.body_visible(name) && in_view(proj, b))
-        .fold(solidcraft_engine::geom::Aabb3::EMPTY, |a, (_, b)| a.union(b));
+        .fold(torno_engine::geom::Aabb3::EMPTY, |a, (_, b)| a.union(b));
     (!b.is_empty()).then(|| b.center())
 }
 
 /// Does the view show part of box `b`? A box partly behind the eye counts.
-fn in_view(proj: &Proj, b: &solidcraft_engine::geom::Aabb3) -> bool {
+fn in_view(proj: &Proj, b: &torno_engine::geom::Aabb3) -> bool {
     let mut seen = Rect::NOTHING;
     let mut behind = 0;
     for i in 0..8 {
@@ -564,7 +564,7 @@ fn base_scene_key(app: &SolveApp) -> u64 {
     app.preferences.vertex_markers.hash(&mut h);
     // The cached ground AO receiver and the ellipse share the selected ground plane.
     app.preferences.ground_shadow_follows_model.hash(&mut h);
-    solidcraft_engine::doc::display_quality::current().hash(&mut h);
+    torno_engine::doc::display_quality::current().hash(&mut h);
     // How bodies are drawn: from their plans on the GPU, or built here (until the evaluation
     // shader has compiled, #4860).
     app.viewport.gpu.is_some_and(|g| g.tess).hash(&mut h);
@@ -584,8 +584,8 @@ fn base_scene_key(app: &SolveApp) -> u64 {
     app.preview.rolled_back.hash(&mut h);
     app.preferences.cosmetic_threads.hash(&mut h);
     app.preferences.section_hatch.hash(&mut h);
-    solidcraft_theme::is_dark().hash(&mut h);
-    solidcraft_theme::vision().hash(&mut h);
+    torno_theme::is_dark().hash(&mut h);
+    torno_theme::vision().hash(&mut h);
     // Two themes may share a light/dark base while drawing different geometry colours.
     crate::theme_files::color_key(&Tokens::base()).hash(&mut h);
     app.session.active_sketch.hash(&mut h);
@@ -661,8 +661,8 @@ fn sketch_color(t: &Tokens, c: Rgb) -> [u8; 4] {
 pub(crate) type ActiveBodyNames = std::sync::Arc<std::collections::HashSet<String>>;
 
 struct ActiveBodies {
-    doc: std::sync::Arc<solidcraft_engine::doc::Document>,
-    state: std::sync::Arc<solidcraft_engine::doc::ModelState>,
+    doc: std::sync::Arc<torno_engine::doc::Document>,
+    state: std::sync::Arc<torno_engine::doc::ModelState>,
     path: Vec<u64>,
     names: ActiveBodyNames,
 }
@@ -695,7 +695,7 @@ pub(crate) fn active_body_names(app: &SolveApp) -> Option<ActiveBodyNames> {
 }
 
 /// With a component active, bodies outside it are drawn faded.
-pub(crate) fn body_faded(app: &SolveApp, b: &solidcraft_engine::doc::ModelBody, active_bodies: &Option<ActiveBodyNames>) -> bool {
+pub(crate) fn body_faded(app: &SolveApp, b: &torno_engine::doc::ModelBody, active_bodies: &Option<ActiveBodyNames>) -> bool {
     let s = &app.session;
     if let Some(names) = active_bodies {
         !names.contains(&b.name)
@@ -722,22 +722,22 @@ fn supersampling(app: &mut SolveApp, ctx: &egui::Context, view_proj: [[f32; 4]; 
 /// still for a moment, fewer while it moves, so orbiting with AO on stays quick.
 /// The shader's sky (#7974): the world's up direction, and 1 to shade in linear light with a sky
 /// fill (Preferences › Graphics), else zero.
-pub(crate) fn sky_uniform(on: bool, up: solidcraft_viewport::UpAxis) -> [f32; 4] {
+pub(crate) fn sky_uniform(on: bool, up: torno_viewport::UpAxis) -> [f32; 4] {
     if !on {
         return [0.0; 4];
     }
     match up {
-        solidcraft_viewport::UpAxis::Z => [0.0, 0.0, 1.0, 1.0],
-        solidcraft_viewport::UpAxis::Y => [0.0, 1.0, 0.0, 1.0],
+        torno_viewport::UpAxis::Z => [0.0, 0.0, 1.0, 1.0],
+        torno_viewport::UpAxis::Y => [0.0, 1.0, 0.0, 1.0],
     }
 }
 
 fn ao_samples(app: &mut SolveApp, ctx: &egui::Context, view_proj: [[f32; 4]; 4], size_px: [f32; 2]) -> u32 {
     // Without AO (off, or wireframe) the count is unused: no repaint is asked for it.
     if !app.preferences.ambient_occlusion || app.ui.visual_style == 2 || view_settled(app, ctx, view_proj, size_px) {
-        solidcraft_viewport_gpu::view::AO_SAMPLES
+        torno_viewport_gpu::view::AO_SAMPLES
     } else {
-        solidcraft_viewport_gpu::view::AO_SAMPLES_MOVING
+        torno_viewport_gpu::view::AO_SAMPLES_MOVING
     }
 }
 
@@ -778,18 +778,18 @@ const DRAW_DRAG_MIN: f32 = 24.0;
 /// body or face) are drawn from their plans where the device evaluates them; faded and
 /// see-through ones (sorted and blended per triangle) are built here. A body seen up close is
 /// drawn from its refined plan ([`crate::display_lod`]).
-fn drawn_plan(app: &SolveApp, b: &solidcraft_engine::doc::ModelBody, opaque: bool) -> Option<std::sync::Arc<solidcore_tess::TessPlan>> {
+fn drawn_plan(app: &SolveApp, b: &torno_engine::doc::ModelBody, opaque: bool) -> Option<std::sync::Arc<solidcore_tess::TessPlan>> {
     let shaded = app.ui.visual_style != 2;
     (shaded && opaque && app.viewport.gpu.is_some_and(|g| g.tess))
-        .then(|| refined(app, b).map(|(plan, _)| plan).or_else(|| b.gpu_plan_at(solidcraft_engine::doc::display_quality::current())))
+        .then(|| refined(app, b).map(|(plan, _)| plan).or_else(|| b.gpu_plan_at(torno_engine::doc::display_quality::current())))
         .flatten()
-        .filter(|plan| plan.vertex_count() <= solidcraft_viewport_gpu::MAX_BATCH)
+        .filter(|plan| plan.vertex_count() <= torno_viewport_gpu::MAX_BATCH)
 }
 
 /// The refined plan and mesh `b` is drawn from, when the view has it drawn finer than the chosen
 /// display quality (#1320).
-fn refined(app: &SolveApp, b: &solidcraft_engine::doc::ModelBody) -> crate::display_lod::Refined {
-    app.viewport.lod.lock().ok()?.refined(b, solidcraft_engine::doc::display_quality::current())
+fn refined(app: &SolveApp, b: &torno_engine::doc::ModelBody) -> crate::display_lod::Refined {
+    app.viewport.lod.lock().ok()?.refined(b, torno_engine::doc::display_quality::current())
 }
 
 /// Changes whenever a body's refinement changes (the scene and highlight keys).
@@ -801,11 +801,7 @@ fn lod_generation(app: &SolveApp) -> u64 {
 /// CPU, the same triangles the GPU draws) or [`drawn_mesh`]. A face highlighted over the model
 /// must use the same triangles: another triangulation of the same face fights it at equal depth
 /// and shimmers.
-fn shown_mesh(
-    app: &SolveApp,
-    b: &solidcraft_engine::doc::ModelBody,
-    active_bodies: &Option<ActiveBodyNames>,
-) -> std::sync::Arc<solidcraft_engine::geom::Mesh> {
+fn shown_mesh(app: &SolveApp, b: &torno_engine::doc::ModelBody, active_bodies: &Option<ActiveBodyNames>) -> std::sync::Arc<torno_engine::geom::Mesh> {
     if let Some((_, mesh)) = refined(app, b) {
         // Refined: faces drawn from the refined plan on the GPU or built from its mesh here.
         return mesh;
@@ -824,11 +820,11 @@ fn shown_mesh(
 /// (#1320), the reference mesh at Normal display quality, else the plan's mesh at the chosen
 /// quality (finer or coarser faces and edges alike), falling back to the reference mesh when the
 /// body has no plan.
-fn drawn_mesh(app: &SolveApp, b: &solidcraft_engine::doc::ModelBody) -> std::sync::Arc<solidcraft_engine::geom::Mesh> {
+fn drawn_mesh(app: &SolveApp, b: &torno_engine::doc::ModelBody) -> std::sync::Arc<torno_engine::geom::Mesh> {
     if crate::render_workspace::active(app) {
         return b.mesh();
     }
-    use solidcraft_engine::doc::display_quality::{DisplayQuality, current};
+    use torno_engine::doc::display_quality::{DisplayQuality, current};
     if let Some((_, mesh)) = refined(app, b) {
         return mesh;
     }
@@ -837,20 +833,17 @@ fn drawn_mesh(app: &SolveApp, b: &solidcraft_engine::doc::ModelBody) -> std::syn
 
 /// The move a Move dialog's earlier types made to body `name`, if it is one they moved
 /// (`dialogs_move::chained`): its edges, faces and centres are shown where that move puts them.
-fn chain_of(chain: Option<&(Vec<String>, solidcraft_engine::doc::Mat)>, name: &str) -> Option<solidcraft_engine::doc::Mat> {
+fn chain_of(chain: Option<&(Vec<String>, torno_engine::doc::Mat)>, name: &str) -> Option<torno_engine::doc::Mat> {
     chain.filter(|(names, _)| names.iter().any(|n| n == name)).map(|(_, c)| *c)
 }
 
 /// `mesh` moved by `chain`, or as it is without one.
-fn carried_mesh(
-    chain: Option<solidcraft_engine::doc::Mat>,
-    mesh: std::sync::Arc<solidcraft_engine::geom::Mesh>,
-) -> std::sync::Arc<solidcraft_engine::geom::Mesh> {
+fn carried_mesh(chain: Option<torno_engine::doc::Mat>, mesh: std::sync::Arc<torno_engine::geom::Mesh>) -> std::sync::Arc<torno_engine::geom::Mesh> {
     let Some(c) = chain else { return mesh };
     let mut m = (*mesh).clone();
-    m.positions.iter_mut().for_each(|p| *p = solidcraft_engine::doc::apply_point(&c, *p));
-    m.normals.iter_mut().for_each(|n| *n = solidcraft_engine::doc::apply_vector(&c, *n));
-    m.edges.iter_mut().flatten().for_each(|p| *p = solidcraft_engine::doc::apply_point(&c, *p));
+    m.positions.iter_mut().for_each(|p| *p = torno_engine::doc::apply_point(&c, *p));
+    m.normals.iter_mut().for_each(|n| *n = torno_engine::doc::apply_vector(&c, *n));
+    m.edges.iter_mut().flatten().for_each(|p| *p = torno_engine::doc::apply_point(&c, *p));
     std::sync::Arc::new(m)
 }
 
@@ -882,7 +875,7 @@ fn update_refinement(app: &mut SolveApp, ctx: &egui::Context, proj: &Proj) {
     if app.viewport.gpu.is_none() || !crate::display_lod::enabled() {
         return; // The CPU picture draws the reference mesh.
     }
-    let q = solidcraft_engine::doc::display_quality::current();
+    let q = torno_engine::doc::display_quality::current();
     // Nothing to choose again while the view, the model and the planning stand still.
     let mut h = std::collections::hash_map::DefaultHasher::new();
     scene_key(app).hash(&mut h);
@@ -953,7 +946,7 @@ struct ResolvedAppearance {
     component: Option<Color32>,
     body: Option<Color32>,
     opacity: f64,
-    face_looks: std::collections::HashMap<usize, solidcraft_engine::doc::appearance::Look>,
+    face_looks: std::collections::HashMap<usize, torno_engine::doc::appearance::Look>,
 }
 
 /// [`ViewportState::appearance`]: resolved bodies by name, with their geometry key and the
@@ -974,7 +967,7 @@ struct AppearanceCache {
 
 /// A hash per body of the face appearances that name it, in design order (a later assignment
 /// wins). Rebuilt when the document changes.
-fn face_appearance_hashes(doc: &solidcraft_engine::doc::Document) -> std::collections::HashMap<String, u64> {
+fn face_appearance_hashes(doc: &torno_engine::doc::Document) -> std::collections::HashMap<String, u64> {
     use std::hash::Hasher as _;
     let mut out: std::collections::HashMap<String, u64> = std::collections::HashMap::new();
     for f in &doc.appearances.faces {
@@ -986,7 +979,7 @@ fn face_appearance_hashes(doc: &solidcraft_engine::doc::Document) -> std::collec
     out
 }
 
-fn hash_look(look: Option<&solidcraft_engine::doc::appearance::Look>, h: &mut impl std::hash::Hasher) {
+fn hash_look(look: Option<&torno_engine::doc::appearance::Look>, h: &mut impl std::hash::Hasher) {
     use std::hash::Hash as _;
     match look {
         Some(l) => {
@@ -1011,8 +1004,8 @@ fn hash_look(look: Option<&solidcraft_engine::doc::appearance::Look>, h: &mut im
 /// What a body's resolved look depends on: its geometry (imported paint), the body/component
 /// looks, its material and that material's look, its face appearances, and component colouring.
 fn body_appearance_key(
-    doc: &solidcraft_engine::doc::Document,
-    b: &solidcraft_engine::doc::ModelBody,
+    doc: &torno_engine::doc::Document,
+    b: &torno_engine::doc::ModelBody,
     faces: &std::collections::HashMap<String, u64>,
     colored: bool,
 ) -> u64 {
@@ -1033,10 +1026,10 @@ fn body_appearance_key(
     h.finish()
 }
 
-fn resolve_appearance(app: &SolveApp, b: &solidcraft_engine::doc::ModelBody) -> ResolvedAppearance {
+fn resolve_appearance(app: &SolveApp, b: &torno_engine::doc::ModelBody) -> ResolvedAppearance {
     let s = &app.session;
     ResolvedAppearance {
-        component: solidcraft_engine::view::component_color(s, b.component).map(|[r, g, b]| Color32::from_rgb(r, g, b)),
+        component: torno_engine::view::component_color(s, b.component).map(|[r, g, b]| Color32::from_rgb(r, g, b)),
         body: body_color(&s.doc, b),
         opacity: s.doc.model_body_opacity(b),
         face_looks: if s.colored_components.is_none() { s.doc.face_colors(b).into_iter().collect() } else { Default::default() },
@@ -1057,7 +1050,7 @@ fn plan_class(app: &SolveApp, faces: &[crate::gpu::TriClass]) -> Option<crate::g
 
 /// The classes [`build_scene`] gives `b`'s faces: faded outside the active component, else
 /// see-through below full opacity (the body's, or a face's own look).
-fn face_classes(app: &SolveApp, b: &solidcraft_engine::doc::ModelBody, active_bodies: &Option<ActiveBodyNames>) -> Vec<crate::gpu::TriClass> {
+fn face_classes(app: &SolveApp, b: &torno_engine::doc::ModelBody, active_bodies: &Option<ActiveBodyNames>) -> Vec<crate::gpu::TriClass> {
     if body_faded(app, b, active_bodies) {
         return vec![crate::gpu::TriClass::Faded; b.body.face_count()];
     }
@@ -1072,7 +1065,7 @@ fn face_classes(app: &SolveApp, b: &solidcraft_engine::doc::ModelBody, active_bo
 
 /// Whether the model scene draws `b` from its plan's GPU-evaluated triangles (and with which
 /// class), as [`build_scene`] decides: a live preview stands in for none.
-fn model_plan_class(app: &SolveApp, b: &solidcraft_engine::doc::ModelBody, active_bodies: &Option<ActiveBodyNames>) -> Option<crate::gpu::TriClass> {
+fn model_plan_class(app: &SolveApp, b: &torno_engine::doc::ModelBody, active_bodies: &Option<ActiveBodyNames>) -> Option<crate::gpu::TriClass> {
     if app.preview.effective_replaced().contains(&b.name) {
         return None;
     }
@@ -1083,7 +1076,7 @@ fn model_plan_class(app: &SolveApp, b: &solidcraft_engine::doc::ModelBody, activ
 /// (held, so no other mesh can take their addresses while the block is kept).
 pub(crate) struct CachedBlock {
     bytes: std::sync::Arc<crate::gpu::BlockBytes>,
-    meshes: Vec<std::sync::Arc<solidcraft_engine::geom::Mesh>>,
+    meshes: Vec<std::sync::Arc<torno_engine::geom::Mesh>>,
     /// Each body's share of the block: its vertices, its opaque runs of them (whole-body
     /// highlights draw those again), and the face classes the runs were built from.
     ranges: Vec<BodyRange>,
@@ -1101,11 +1094,11 @@ struct BodyRange {
 /// [`ViewportState::mesh_bounds`]: each box by the shared mesh it was measured on (held, so its
 /// address stays its own) and the placement that moved it ([`ModelBody::mesh_in_place`]).
 ///
-/// [`ModelBody::mesh_in_place`]: solidcraft_engine::doc::ModelBody::mesh_in_place
-type MeshBounds = std::collections::HashMap<(usize, [u64; 16]), (std::sync::Arc<solidcraft_engine::geom::Mesh>, solidcraft_engine::geom::Aabb3)>;
+/// [`ModelBody::mesh_in_place`]: torno_engine::doc::ModelBody::mesh_in_place
+type MeshBounds = std::collections::HashMap<(usize, [u64; 16]), (std::sync::Arc<torno_engine::geom::Mesh>, torno_engine::geom::Aabb3)>;
 
 /// [`ViewportState::instanced_tris`].
-type InstancedTris = std::collections::HashMap<usize, (std::sync::Arc<solidcraft_engine::geom::Mesh>, std::sync::Arc<crate::gpu::SharedTris>)>;
+type InstancedTris = std::collections::HashMap<usize, (std::sync::Arc<torno_engine::geom::Mesh>, std::sync::Arc<crate::gpu::SharedTris>)>;
 
 /// A body alone is drawn as an instance of its triangles (shared vertices, indexed) from this many
 /// triangles: a large imported mesh. Smaller ones are drawn so only when placed more than once.
@@ -1113,7 +1106,7 @@ pub(crate) const INSTANCE_ALONE: usize = 50_000;
 
 /// Shared vertices made ahead, off the window thread ([`warm_shared_tris`]), by mesh address
 /// (the mesh held, so its address stays its own), until a scene takes them.
-static WARMED: std::sync::Mutex<Vec<(std::sync::Arc<solidcraft_engine::geom::Mesh>, std::sync::Arc<crate::gpu::SharedTris>)>> =
+static WARMED: std::sync::Mutex<Vec<(std::sync::Arc<torno_engine::geom::Mesh>, std::sync::Arc<crate::gpu::SharedTris>)>> =
     std::sync::Mutex::new(Vec::new());
 /// Most meshes kept warmed and not taken yet (a design opened and closed before it was drawn).
 const MAX_WARMED: usize = 8;
@@ -1122,7 +1115,7 @@ const MAX_WARMED: usize = 8;
 /// background mesher, after a file is opened or inserted): welding a scanned part takes a
 /// noticeable part of a second, which the window thread would otherwise spend on the first frame
 /// that shows it.
-pub(crate) fn warm_shared_tris(mesh: &std::sync::Arc<solidcraft_engine::geom::Mesh>) {
+pub(crate) fn warm_shared_tris(mesh: &std::sync::Arc<torno_engine::geom::Mesh>) {
     if mesh.triangles.len() < INSTANCE_ALONE || WARMED.lock().map_or(true, |w| w.iter().any(|(m, _)| std::sync::Arc::ptr_eq(m, mesh))) {
         return;
     }
@@ -1136,7 +1129,7 @@ pub(crate) fn warm_shared_tris(mesh: &std::sync::Arc<solidcraft_engine::geom::Me
 }
 
 /// The shared vertices made ahead for `mesh`, taken from the warmed ones.
-fn taken_shared_tris(mesh: &std::sync::Arc<solidcraft_engine::geom::Mesh>) -> Option<std::sync::Arc<crate::gpu::SharedTris>> {
+fn taken_shared_tris(mesh: &std::sync::Arc<torno_engine::geom::Mesh>) -> Option<std::sync::Arc<crate::gpu::SharedTris>> {
     let mut warmed = WARMED.lock().ok()?;
     let at = warmed.iter().position(|(m, _)| std::sync::Arc::ptr_eq(m, mesh))?;
     Some(warmed.remove(at).1)
@@ -1148,9 +1141,9 @@ struct BodyDraw {
     /// The body's name in the world state, for the highlight's lookup of its triangles.
     name: String,
     /// Its mesh where it stands, or (with `place`) the shared mesh `place` moves there.
-    mesh: std::sync::Arc<solidcraft_engine::geom::Mesh>,
+    mesh: std::sync::Arc<torno_engine::geom::Mesh>,
     /// The move from `mesh` to where the body stands, for a body drawn as an instance.
-    place: Option<solidcraft_engine::doc::Mat>,
+    place: Option<torno_engine::doc::Mat>,
     /// The palette index of each face's colour, and the body's fallback.
     face_colors: Vec<crate::gpu::PaletteIndex>,
     body_color: crate::gpu::PaletteIndex,
@@ -1202,7 +1195,7 @@ impl BodyDraw {
                 out.triangle([a.0, b.0, c.0], [a.1, b.1, c.1], color(ti), class(ti));
             }
         }
-        let at = |p: Vec3| self.place.as_ref().map_or(p, |m| solidcraft_engine::doc::apply_point(m, p)).to_f32();
+        let at = |p: Vec3| self.place.as_ref().map_or(p, |m| torno_engine::doc::apply_point(m, p)).to_f32();
         for (ei, e) in m.edges.iter().enumerate().filter(|_| edges) {
             if !m.edge_visible(ei) || (shaded && !m.shaded_edge_visible(ei)) {
                 continue;
@@ -1236,7 +1229,7 @@ const VERTEX_MARKER_PX: f32 = 4.0;
 /// Where `mesh`'s vertices are: the ends of the edges a vertex can be picked from, each once. A
 /// mesh body's outlines (no B-rep edges) have none; ends of tangent edges the shaded view leaves
 /// out are kept, as they can still be picked.
-fn vertex_markers(mesh: &solidcraft_engine::geom::Mesh) -> Vec<Vec3> {
+fn vertex_markers(mesh: &torno_engine::geom::Mesh) -> Vec<Vec3> {
     let mut seen = std::collections::HashSet::new();
     let mut out = Vec::new();
     for (ei, e) in mesh.edges.iter().enumerate() {
@@ -1384,9 +1377,9 @@ fn reindex_block(block: CachedBlock, draws: &[BodyDraw]) -> CachedBlock {
 /// than once, and large bodies ([`INSTANCE_ALONE`]), with each body's placement.
 struct Instances {
     /// Each candidate body's shared mesh, placement and eligibility for existing LODs, by name.
-    candidates: std::collections::HashMap<String, (std::sync::Arc<solidcraft_engine::geom::Mesh>, solidcraft_engine::doc::Mat, bool)>,
+    candidates: std::collections::HashMap<String, (std::sync::Arc<torno_engine::geom::Mesh>, torno_engine::doc::Mat, bool)>,
     /// The meshes drawn as instances, in the order their first placement came, by address.
-    meshes: Vec<(std::sync::Arc<solidcraft_engine::geom::Mesh>, crate::gpu::InstancedMesh)>,
+    meshes: Vec<(std::sync::Arc<torno_engine::geom::Mesh>, crate::gpu::InstancedMesh)>,
     /// Where a mesh's look already is in `meshes`, so placing a body is a lookup, not a scan.
     by_mesh: std::collections::HashMap<(usize, crate::gpu::InstanceLook), usize>,
     kept: InstancedTris,
@@ -1399,7 +1392,7 @@ impl Instances {
     ///
     /// A scene of only some of the bodies (`whole` false: a drag's layer and the model beside
     /// it) leaves the kept triangles of the others where they are.
-    fn new(app: &SolveApp, shown: &[&solidcraft_engine::doc::ModelBody], shaded: bool, whole: bool) -> Instances {
+    fn new(app: &SolveApp, shown: &[&torno_engine::doc::ModelBody], shaded: bool, whole: bool) -> Instances {
         let kept = app.viewport.instanced_tris.lock().map(|mut k| if whole { std::mem::take(&mut *k) } else { k.clone() }).unwrap_or_default();
         let mut candidates = std::collections::HashMap::new();
         if shaded {
@@ -1424,11 +1417,11 @@ impl Instances {
     /// `look`): its shared mesh and placement.
     fn place(
         &mut self,
-        b: &solidcraft_engine::doc::ModelBody,
+        b: &torno_engine::doc::ModelBody,
         col: crate::gpu::PaletteIndex,
         look: crate::gpu::InstanceLook,
         oit: bool,
-    ) -> Option<(std::sync::Arc<solidcraft_engine::geom::Mesh>, solidcraft_engine::doc::Mat)> {
+    ) -> Option<(std::sync::Arc<torno_engine::geom::Mesh>, torno_engine::doc::Mat)> {
         let (mesh, m, lod_eligible) = self.candidates.get(&b.name)?.clone();
         // A smaller single reference mesh formerly used the sorted CPU glass stream.
         if !lod_eligible && matches!(look, crate::gpu::InstanceLook::Glass | crate::gpu::InstanceLook::Faded) && !oit {
@@ -1486,11 +1479,8 @@ impl Instances {
 
 /// The shared mesh `b`'s faces are drawn from and the move that places it ([`drawn_mesh`]
 /// without making the moved copy); `None` for a body drawn finer than its display quality.
-fn shared_mesh(
-    app: &SolveApp,
-    b: &solidcraft_engine::doc::ModelBody,
-) -> Option<(std::sync::Arc<solidcraft_engine::geom::Mesh>, solidcraft_engine::doc::Mat)> {
-    use solidcraft_engine::doc::display_quality::{DisplayQuality, current};
+fn shared_mesh(app: &SolveApp, b: &torno_engine::doc::ModelBody) -> Option<(std::sync::Arc<torno_engine::geom::Mesh>, torno_engine::doc::Mat)> {
+    use torno_engine::doc::display_quality::{DisplayQuality, current};
     if refined(app, b).is_some() {
         return None;
     }
@@ -1518,7 +1508,7 @@ pub(crate) fn build_scene(app: &SolveApp) -> GpuScene {
 
 /// Section: the outline of each body where the plane cuts it, in the view's text colour (#4146),
 /// and the cut solid bodies' hatches by part on their palette entries.
-fn section_outlines(sc: &mut GpuScene, app: &SolveApp, st: &solidcraft_engine::doc::ModelState) {
+fn section_outlines(sc: &mut GpuScene, app: &SolveApp, st: &torno_engine::doc::ModelState) {
     let Some((o, n)) = section_plane(app) else { return };
     let s = &app.session;
     let active_bodies = active_body_names(app);
@@ -1533,7 +1523,7 @@ fn section_outlines(sc: &mut GpuScene, app: &SolveApp, st: &solidcraft_engine::d
         let key = std::sync::Arc::as_ptr(&mesh) as usize;
         let index = match kept.remove(&key).filter(|(m, _)| std::sync::Arc::ptr_eq(m, &mesh)) {
             Some((_, index)) => index,
-            None => std::sync::Arc::new(solidcraft_engine::view::SectionIndex::new(&mesh)),
+            None => std::sync::Arc::new(torno_engine::view::SectionIndex::new(&mesh)),
         };
         let segments = index.segments(&mesh, o, n);
         for (a, c) in &segments {
@@ -1546,9 +1536,9 @@ fn section_outlines(sc: &mut GpuScene, app: &SolveApp, st: &solidcraft_engine::d
         }
     }
     // Each cut body's hatch on all its palette entries (its colour, faces and placements).
-    let parts: Vec<solidcraft_viewport::hatch::CutPart> =
-        cuts.iter().map(|(name, segments)| solidcraft_viewport::hatch::CutPart { seed: solidcraft_viewport::hatch::seed(name), segments }).collect();
-    let hatches = solidcraft_viewport::hatch::hatches(&parts, n);
+    let parts: Vec<torno_viewport::hatch::CutPart> =
+        cuts.iter().map(|(name, segments)| torno_viewport::hatch::CutPart { seed: torno_viewport::hatch::seed(name), segments }).collect();
+    let hatches = torno_viewport::hatch::hatches(&parts, n);
     let arena = app.viewport.palette.lock().unwrap_or_else(|e| e.into_inner());
     let palette = std::sync::Arc::make_mut(&mut sc.palette);
     for ((name, _), hatch) in cuts.iter().zip(hatches) {
@@ -1619,7 +1609,7 @@ fn keep_body_tris(app: &SolveApp, made: &std::collections::HashMap<u64, CachedBl
 /// it holds by key. `whole`: all of the shown bodies (see [`Instances::new`]).
 fn body_scene(
     app: &SolveApp,
-    st: &solidcraft_engine::doc::ModelState,
+    st: &torno_engine::doc::ModelState,
     takes: impl Fn(usize) -> bool,
     whole: bool,
     kept: &mut std::collections::HashMap<u64, CachedBlock>,
@@ -1641,10 +1631,9 @@ fn body_scene(
     // Every shown body, and the ones this scene takes. The arena and the appearance cache
     // keep every shown body, so a scene of some of them (a drag drawn as a layer) leaves the
     // others' slots and looks as they were.
-    let visible = |b: &&solidcraft_engine::doc::ModelBody| app.body_visible(&b.name) && !app.preview.effective_replaced().contains(&b.name);
+    let visible = |b: &&torno_engine::doc::ModelBody| app.body_visible(&b.name) && !app.preview.effective_replaced().contains(&b.name);
     let shown_names: Vec<&str> = st.bodies.iter().filter(visible).map(|b| b.name.as_str()).collect();
-    let shown: Vec<&solidcraft_engine::doc::ModelBody> =
-        st.bodies.iter().enumerate().filter(|(i, b)| takes(*i) && visible(b)).map(|(_, b)| b).collect();
+    let shown: Vec<&torno_engine::doc::ModelBody> = st.bodies.iter().enumerate().filter(|(i, b)| takes(*i) && visible(b)).map(|(_, b)| b).collect();
     let mut arena = app.viewport.palette.lock().unwrap_or_else(|e| e.into_inner());
     arena.sync(shown_names.iter().copied());
     // Allocate every body's slots before the scene's palette is copied, so the stable prefix
@@ -1671,7 +1660,7 @@ fn body_scene(
     // are drawn as instances of them: one copy of the triangles on the GPU, and none moved on
     // the CPU.
     let mut instances = Instances::new(app, &shown, shaded, whole);
-    let mut thread_budget = solidcraft_engine::cosmetic_threads::Budget::default();
+    let mut thread_budget = torno_engine::cosmetic_threads::Budget::default();
     for (b, slots) in shown.into_iter().zip(slots) {
         let faded = body_faded(app, b, &active_bodies);
         let identity = match appearance.keys.get(&b.name).copied() {
@@ -1705,7 +1694,7 @@ fn body_scene(
             && resolved.face_looks.values().all(|l| l.opacity >= 0.999)
         {
             let mesh = shown_mesh(app, b, &active_bodies);
-            for (a, c) in solidcraft_engine::cosmetic_threads::segments_with_budget(b, &mesh, &st.threads, &mut thread_budget) {
+            for (a, c) in torno_engine::cosmetic_threads::segments_with_budget(b, &mesh, &st.threads, &mut thread_budget) {
                 sc.line(a.to_f32(), c.to_f32(), slots.edge, 0.85, false);
             }
         }
@@ -1819,9 +1808,9 @@ fn body_scene(
 /// `continuity` tokens by its verdict ([`SeamVerdict::of`]): curvature continuous (G2 and up),
 /// tangent with a curvature jump (G1), a crease (G0), and faces that do not meet.
 ///
-/// [`SeamVerdict::of`]: solidcraft_engine::kernel::SeamVerdict::of
-pub(crate) fn continuity_color(t: &Tokens, order: Option<solidcraft_engine::kernel::Continuity>) -> Color32 {
-    use solidcraft_engine::kernel::SeamVerdict as V;
+/// [`SeamVerdict::of`]: torno_engine::kernel::SeamVerdict::of
+pub(crate) fn continuity_color(t: &Tokens, order: Option<torno_engine::kernel::Continuity>) -> Color32 {
+    use torno_engine::kernel::SeamVerdict as V;
     let [smooth, jump, sharp, gap] = t.continuity;
     match V::of(order) {
         V::Smooth => smooth,
@@ -1833,7 +1822,7 @@ pub(crate) fn continuity_color(t: &Tokens, order: Option<solidcraft_engine::kern
 
 /// The stroke width of a measured seam: 2.6 px, and one more for each order past G2 the
 /// curvature-continuous seams meet (G3, G4), which share G2's colour.
-pub(crate) fn seam_width(order: Option<solidcraft_engine::kernel::Continuity>) -> f32 {
+pub(crate) fn seam_width(order: Option<torno_engine::kernel::Continuity>) -> f32 {
     let past_g2 = order.map_or(0, |g| g.order().saturating_sub(2));
     2.6 + past_g2 as f32
 }
@@ -1878,14 +1867,14 @@ pub(crate) fn build_sketch_scene(app: &SolveApp, proj: &Proj) -> GpuScene {
         // camera's Z-up frame), or the upright origin plane facing the view when the ground is
         // seen edge-on.
         let (c, u, v, slant, ext, far_reach, w3): (Vec3, Vec3, Vec3, f64, f64, f64, Box<dyn Fn(Vec3) -> [f32; 3]>) = if let Some(pl) = &sketch_plane {
-            let (c, u, v) = solidcraft_engine::view::sketch_grid_frame(pl, app.cam.target, major);
+            let (c, u, v) = torno_engine::view::sketch_grid_frame(pl, app.cam.target, major);
             // How steeply the sketch's plane is seen: the grid reaches as far on it as the view
             // is wide, so the fade with the distance does too (#4214). The sketch's plane is in
             // the world, as the camera's direction is.
             let n = u.cross(v);
             let slant = app.cam.back().dot(n);
             let ext = grid_ext(app.cam.half_height(), major, slant);
-            let far_reach = solidcraft_engine::view::grid_far_reach(&proj.cam, picture_far(app, &proj.cam), c, n);
+            let far_reach = torno_engine::view::grid_far_reach(&proj.cam, picture_far(app, &proj.cam), c, n);
             (c, u, v, slant, ext, far_reach, Box::new(|p| p.to_f32()))
         } else {
             let tf = app.cam.to_frame(app.cam.target);
@@ -1912,8 +1901,7 @@ pub(crate) fn build_sketch_scene(app: &SolveApp, proj: &Proj) -> GpuScene {
             let snap = |a: Vec3| a * ((centre.dot(a) / major).round() * major);
             let c = snap(u) + snap(v);
             // The far plane cuts the ground, and the grid's plane is the camera's frame's.
-            let far_reach =
-                solidcraft_engine::view::grid_far_reach(&proj.cam, picture_far(app, &proj.cam), app.cam.from_frame(c), app.cam.from_frame(n));
+            let far_reach = torno_engine::view::grid_far_reach(&proj.cam, picture_far(app, &proj.cam), app.cam.from_frame(c), app.cam.from_frame(n));
             (c, u, v, slant, ext, far_reach, Box::new(|p| app.cam.from_frame(p).to_f32()))
         };
         // The grid fades out with the distance from the middle of the view (#4214): it used to
@@ -1955,7 +1943,7 @@ pub(crate) fn build_sketch_scene(app: &SolveApp, proj: &Proj) -> GpuScene {
         // goes missing rather than a curve.
         let mut typed_curves: std::collections::HashMap<usize, Vec<Vec<Vec3>>> = match typed {
             Some(_) => (0..ss.sketch.curves.len())
-                .filter(|i| solidcraft_engine::view::sketch_curve_visible(&ss.sketch, *i))
+                .filter(|i| torno_engine::view::sketch_curve_visible(&ss.sketch, *i))
                 .map(|i| (i, uncached.curve(&ss.sketch, i, &ss.plane, proj, ppp)))
                 .collect(),
             None => std::collections::HashMap::new(),
@@ -2033,14 +2021,14 @@ pub(crate) fn build_sketch_scene(app: &SolveApp, proj: &Proj) -> GpuScene {
 #[derive(Clone)]
 struct ShadowGeometry {
     key: u64,
-    state: std::sync::Arc<solidcraft_engine::doc::ModelState>,
+    state: std::sync::Arc<torno_engine::doc::ModelState>,
     bytes: std::sync::Arc<Vec<u8>>,
     palette: std::sync::Arc<crate::gpu::Palette>,
 }
 
 /// Changing sides of the ground only changes whether this small shadow is drawn; it never
 /// rebuilds the model's bodies or uploads their plans and colours again.
-fn shadow_geometry(app: &SolveApp, st: &std::sync::Arc<solidcraft_engine::doc::ModelState>) -> ShadowGeometry {
+fn shadow_geometry(app: &SolveApp, st: &std::sync::Arc<torno_engine::doc::ModelState>) -> ShadowGeometry {
     let key = scene_key(app);
     if let Some(geometry) =
         app.viewport.shadow.lock().ok().and_then(|c| c.as_ref().filter(|c| c.key == key && std::sync::Arc::ptr_eq(&c.state, st)).cloned())
@@ -2057,19 +2045,19 @@ fn shadow_geometry(app: &SolveApp, st: &std::sync::Arc<solidcraft_engine::doc::M
 }
 
 /// Each shown body's box in the camera's Z-up frame (the ground is its XY plane).
-fn ground_boxes(app: &SolveApp, st: &std::sync::Arc<solidcraft_engine::doc::ModelState>) -> Vec<solidcraft_engine::geom::Aabb3> {
+fn ground_boxes(app: &SolveApp, st: &std::sync::Arc<torno_engine::doc::ModelState>) -> Vec<torno_engine::geom::Aabb3> {
     let boxes = body_bounds(app, st);
     let shown = st.bodies.iter().zip(boxes.iter()).filter(|(x, (_, bb))| !bb.is_empty() && app.body_visible(&x.name));
     shown.map(|(_, (_, bb))| frame_bounds(app, box_corners(bb).into_iter())).collect()
 }
 
 /// The box around all shown bodies in the camera's Z-up frame.
-fn ground_bounds(app: &SolveApp, st: &std::sync::Arc<solidcraft_engine::doc::ModelState>) -> solidcraft_engine::geom::Aabb3 {
-    ground_boxes(app, st).iter().fold(solidcraft_engine::geom::Aabb3::EMPTY, |a, b| a.union(b))
+fn ground_bounds(app: &SolveApp, st: &std::sync::Arc<torno_engine::doc::ModelState>) -> torno_engine::geom::Aabb3 {
+    ground_boxes(app, st).iter().fold(torno_engine::geom::Aabb3::EMPTY, |a, b| a.union(b))
 }
 
 /// The corners of a box.
-fn box_corners(bb: &solidcraft_engine::geom::Aabb3) -> [Vec3; 8] {
+fn box_corners(bb: &torno_engine::geom::Aabb3) -> [Vec3; 8] {
     std::array::from_fn(|i| {
         Vec3::new(
             if i & 1 == 0 { bb.min.x } else { bb.max.x },
@@ -2081,18 +2069,18 @@ fn box_corners(bb: &solidcraft_engine::geom::Aabb3) -> [Vec3; 8] {
 
 /// The ground the model's ambient occlusion darkens (#3413) under the bodies whose box in the
 /// camera's frame is `bounds`; none in Wireframe.
-fn ground_ao(app: &SolveApp, bounds: solidcraft_engine::geom::Aabb3) -> Option<solidcraft_viewport_gpu::view::GroundAo> {
+fn ground_ao(app: &SolveApp, bounds: torno_engine::geom::Aabb3) -> Option<torno_viewport_gpu::view::GroundAo> {
     if app.ui.visual_style == 2 {
         return None;
     }
     let radius = (bounds.diagonal() * 0.04).clamp(1e-4, 1e6) as f32;
-    solidcraft_viewport_gpu::view::GroundAo::new(solidcraft_engine::render::view_bounds(&bounds), ground_height(app, bounds), app.cam.up, radius)
+    torno_viewport_gpu::view::GroundAo::new(torno_engine::render::view_bounds(&bounds), ground_height(app, bounds), app.cam.up, radius)
 }
 
 /// The box around `corners` in the camera's Z-up frame.
-fn frame_bounds(app: &SolveApp, corners: impl Iterator<Item = Vec3>) -> solidcraft_engine::geom::Aabb3 {
+fn frame_bounds(app: &SolveApp, corners: impl Iterator<Item = Vec3>) -> torno_engine::geom::Aabb3 {
     // The bodies' box in the camera's Z-up frame (the ground is its XY plane).
-    let mut b = solidcraft_engine::geom::Aabb3::EMPTY;
+    let mut b = torno_engine::geom::Aabb3::EMPTY;
     for p in corners {
         b.add(app.cam.to_frame(p));
     }
@@ -2100,7 +2088,7 @@ fn frame_bounds(app: &SolveApp, corners: impl Iterator<Item = Vec3>) -> solidcra
 }
 
 /// Both ground effects share the selected plane, independent of the origin grid.
-fn ground_height(app: &SolveApp, bounds: solidcraft_engine::geom::Aabb3) -> f64 {
+fn ground_height(app: &SolveApp, bounds: torno_engine::geom::Aabb3) -> f64 {
     // Raised bodies cast onto the origin. Keep the plane below lower bodies, and
     // retain the former floating ground when requested.
     let ground = if app.preferences.ground_shadow_follows_model { bounds.min.z } else { bounds.min.z.min(0.0) };
@@ -2108,14 +2096,14 @@ fn ground_height(app: &SolveApp, bounds: solidcraft_engine::geom::Aabb3) -> f64 
 }
 
 /// A soft dark ellipse on the ground under each group of shown bodies (darkest in the middle).
-fn ground_shadow(sc: &mut GpuScene, app: &SolveApp, framed: Vec<solidcraft_engine::geom::Aabb3>) {
-    let all = framed.iter().fold(solidcraft_engine::geom::Aabb3::EMPTY, |a, b| a.union(b));
+fn ground_shadow(sc: &mut GpuScene, app: &SolveApp, framed: Vec<torno_engine::geom::Aabb3>) {
+    let all = framed.iter().fold(torno_engine::geom::Aabb3::EMPTY, |a, b| a.union(b));
     if all.is_empty() {
         return;
     }
     // Every ellipse lies on the lowest body's ground, so none floats beside a lower body.
     let z = ground_height(app, all);
-    let dark = if solidcraft_theme::viewport_dark() { 150 } else { 80 };
+    let dark = if torno_theme::viewport_dark() { 150 } else { 80 };
     for b in shadow_groups(framed) {
         let (c, (rx, ry)) = (b.center(), shadow_radii(&b));
         if !(rx > 0.0 && ry > 0.0) {
@@ -2127,7 +2115,7 @@ fn ground_shadow(sc: &mut GpuScene, app: &SolveApp, framed: Vec<solidcraft_engin
 }
 
 /// The half-axes of the ground shadow's ellipse under a box (in the camera's Z-up frame).
-fn shadow_radii(b: &solidcraft_engine::geom::Aabb3) -> (f64, f64) {
+fn shadow_radii(b: &torno_engine::geom::Aabb3) -> (f64, f64) {
     let size = b.size();
     (size.x * 0.62 + size.z * 0.15, size.y * 0.62 + size.z * 0.15)
 }
@@ -2135,18 +2123,18 @@ fn shadow_radii(b: &solidcraft_engine::geom::Aabb3) -> (f64, f64) {
 /// The boxes the ground shadow draws one ellipse under each (#10442): bodies whose boxes meet on
 /// the ground share one, and bodies apart get one each. One ellipse over all of them was darkest
 /// in its middle, which for two bodies side by side is the empty gap between them.
-fn shadow_groups(mut boxes: Vec<solidcraft_engine::geom::Aabb3>) -> Vec<solidcraft_engine::geom::Aabb3> {
+fn shadow_groups(mut boxes: Vec<torno_engine::geom::Aabb3>) -> Vec<torno_engine::geom::Aabb3> {
     // More groups than this is a crowd (an array, an assembly): one ellipse under it all, as
     // before, keeps the scene small.
     const MOST: usize = 64;
-    let meet = |a: &solidcraft_engine::geom::Aabb3, b: &solidcraft_engine::geom::Aabb3| {
+    let meet = |a: &torno_engine::geom::Aabb3, b: &torno_engine::geom::Aabb3| {
         a.min.x <= b.max.x && b.min.x <= a.max.x && a.min.y <= b.max.y && b.min.y <= a.max.y
     };
     // Merge until no two groups meet: a merged box can reach a group it missed before.
     let mut merged = true;
     while merged && boxes.len() > 1 {
         merged = false;
-        let mut out: Vec<solidcraft_engine::geom::Aabb3> = Vec::with_capacity(boxes.len());
+        let mut out: Vec<torno_engine::geom::Aabb3> = Vec::with_capacity(boxes.len());
         for b in boxes {
             match out.iter_mut().find(|o| meet(o, &b)) {
                 Some(o) => {
@@ -2156,7 +2144,7 @@ fn shadow_groups(mut boxes: Vec<solidcraft_engine::geom::Aabb3>) -> Vec<solidcra
                 None => out.push(b),
             }
             if out.len() > MOST {
-                return vec![out.iter().fold(solidcraft_engine::geom::Aabb3::EMPTY, |a, b| a.union(b))];
+                return vec![out.iter().fold(torno_engine::geom::Aabb3::EMPTY, |a, b| a.union(b))];
             }
         }
         boxes = out;
@@ -2293,7 +2281,7 @@ fn selected_plane(app: &SolveApp) -> Option<Plane> {
 
 /// Origin or construction plane `name`.
 fn named_plane(app: &SolveApp, name: &str) -> Option<Plane> {
-    solidcraft_engine::view::construction_planes(&app.session)
+    torno_engine::view::construction_planes(&app.session)
         .into_iter()
         .find(|(_, n, _)| n == name)
         .map(|(_, _, p)| p)
@@ -2325,7 +2313,7 @@ pub fn origin_axes(app: &SolveApp) -> Vec<(&'static str, Vec3)> {
 /// from, to).
 pub fn construction_axis_segments(app: &SolveApp) -> Vec<(String, Vec3, Vec3)> {
     let axes: Vec<_> =
-        solidcraft_engine::view::construction_axes(&app.session).into_iter().filter(|(_, n, _, _)| app.session.construction_visible(n)).collect();
+        torno_engine::view::construction_axes(&app.session).into_iter().filter(|(_, n, _, _)| app.session.construction_visible(n)).collect();
     if axes.is_empty() {
         return Vec::new();
     }
@@ -2340,7 +2328,7 @@ pub fn construction_axis_segments(app: &SolveApp) -> Vec<(String, Vec3, Vec3)> {
 
 /// How far an axis through `o` along `d` is drawn: across the model's box `bb` where it passes
 /// it (a little past it either side), at least the origin axes' length around `o`.
-fn axis_span(app: &SolveApp, bb: &solidcraft_engine::geom::Aabb3, o: Vec3, d: Vec3) -> (Vec3, Vec3) {
+fn axis_span(app: &SolveApp, bb: &torno_engine::geom::Aabb3, o: Vec3, d: Vec3) -> (Vec3, Vec3) {
     let h = origin_size(app.cam.half_height()) * AXIS_LEN;
     let (mut lo, mut hi) = (-h, h);
     if !bb.is_empty() {
@@ -2370,7 +2358,7 @@ pub(crate) fn round_pick_feedback(app: &SolveApp) -> (Vec<(Vec3, Vec3)>, Vec<Vec
     let hovered = app.viewport.hover.as_ref().and_then(|h| d.candidate(s, h));
     let chained = crate::dialogs_move::chained(app);
     let carry = |body: &str, p: Vec3, dir: Vec3| match chain_of(chained.as_ref(), body) {
-        Some(c) => (solidcraft_engine::doc::apply_point(&c, p), solidcraft_engine::doc::apply_vector(&c, dir)),
+        Some(c) => (torno_engine::doc::apply_point(&c, p), torno_engine::doc::apply_vector(&c, dir)),
         None => (p, dir),
     };
     if inp.accept == crate::selection::AXIS_PICKS {
@@ -2400,7 +2388,7 @@ pub(crate) fn round_pick_feedback(app: &SolveApp) -> (Vec<(Vec3, Vec3)>, Vec<Vec
 
 /// Construction points shown: (name, position).
 pub fn construction_points(app: &SolveApp) -> Vec<(String, Vec3)> {
-    solidcraft_engine::view::construction_points(&app.session)
+    torno_engine::view::construction_points(&app.session)
         .into_iter()
         .filter(|(_, n, _)| app.session.construction_visible(n))
         .map(|(_, n, p)| (n, p))
@@ -2414,11 +2402,11 @@ pub fn construction_quads(app: &SolveApp) -> Vec<(String, Vec3, [Vec3; 4])> {
     let h = origin_size(app.cam.half_height()) * 1.2;
     let st = crate::open_meshing::shown_world(app);
     let bodies = body_bounds(app, &st);
-    solidcraft_engine::view::construction_planes(&app.session)
+    torno_engine::view::construction_planes(&app.session)
         .into_iter()
         .filter(|(_, n, _)| app.session.construction_visible(n))
         .map(|(_, name, pl)| {
-            let mut r = solidcraft_engine::geom::Aabb2 { min: Vec2::new(-h, -h), max: Vec2::new(h, h) };
+            let mut r = torno_engine::geom::Aabb2 { min: Vec2::new(-h, -h), max: Vec2::new(h, h) };
             for (_, b) in bodies.iter() {
                 r = r.union(&plane_cover(&pl, b));
             }
@@ -2430,8 +2418,8 @@ pub fn construction_quads(app: &SolveApp) -> Vec<(String, Vec3, [Vec3; 4])> {
 
 /// The rectangle in `pl` that covers box `b` seen along the plane's normal, with a tenth of its
 /// size to spare round it, where the plane passes through the box; empty where it misses it.
-fn plane_cover(pl: &Plane, b: &solidcraft_engine::geom::Aabb3) -> solidcraft_engine::geom::Aabb2 {
-    let mut r = solidcraft_engine::geom::Aabb2::EMPTY;
+fn plane_cover(pl: &Plane, b: &torno_engine::geom::Aabb3) -> torno_engine::geom::Aabb2 {
+    let mut r = torno_engine::geom::Aabb2::EMPTY;
     if b.is_empty() {
         return r;
     }
@@ -2447,7 +2435,7 @@ fn plane_cover(pl: &Plane, b: &solidcraft_engine::geom::Aabb3) -> solidcraft_eng
         r.add(pl.to_local(c));
     }
     if !(below && above) || r.is_empty() {
-        return solidcraft_engine::geom::Aabb2::EMPTY;
+        return torno_engine::geom::Aabb2::EMPTY;
     }
     let size = r.size();
     r.inflated(size.x.max(size.y) * 0.1)
@@ -2458,8 +2446,8 @@ fn plane_cover(pl: &Plane, b: &solidcraft_engine::geom::Aabb3) -> solidcraft_eng
 /// Bounding boxes of the shown model's bodies (cached until the model changes).
 pub(crate) fn body_bounds(
     app: &SolveApp,
-    st: &std::sync::Arc<solidcraft_engine::doc::ModelState>,
-) -> std::sync::Arc<Vec<(String, solidcraft_engine::geom::Aabb3)>> {
+    st: &std::sync::Arc<torno_engine::doc::ModelState>,
+) -> std::sync::Arc<Vec<(String, torno_engine::geom::Aabb3)>> {
     if let Ok(mut g) = app.viewport.pick_bounds.lock() {
         if let Some((k, b)) = g.as_ref()
             && std::sync::Arc::ptr_eq(k, st)
@@ -2499,20 +2487,20 @@ pub(crate) fn body_bounds(
 }
 
 /// `boxes` are the boxes of `st`'s bodies (worked out without its meshes).
-fn known_body_bounds(app: &SolveApp, st: &std::sync::Arc<solidcraft_engine::doc::ModelState>, boxes: Vec<(String, solidcraft_engine::geom::Aabb3)>) {
+fn known_body_bounds(app: &SolveApp, st: &std::sync::Arc<torno_engine::doc::ModelState>, boxes: Vec<(String, torno_engine::geom::Aabb3)>) {
     if let Ok(mut g) = app.viewport.pick_bounds.lock() {
         *g = Some((st.clone(), std::sync::Arc::new(boxes)));
     }
 }
 
-type BodyBounds = (std::sync::Arc<solidcraft_engine::doc::ModelState>, std::sync::Arc<Vec<(String, solidcraft_engine::geom::Aabb3)>>);
+type BodyBounds = (std::sync::Arc<torno_engine::doc::ModelState>, std::sync::Arc<Vec<(String, torno_engine::geom::Aabb3)>>);
 
 /// The model's extent: bodies (from the cached boxes) and sketches.
-pub fn model_bounds(app: &SolveApp) -> solidcraft_engine::geom::Aabb3 {
+pub fn model_bounds(app: &SolveApp) -> torno_engine::geom::Aabb3 {
     let st = crate::open_meshing::shown_world(app);
-    let bodies = body_bounds(app, &st).iter().fold(solidcraft_engine::geom::Aabb3::EMPTY, |a, (_, x)| a.union(x));
+    let bodies = body_bounds(app, &st).iter().fold(torno_engine::geom::Aabb3::EMPTY, |a, (_, x)| a.union(x));
     let mut b = bodies.union(&sketch_bounds(app, &st));
-    for c in solidcraft_engine::view::shown_point_clouds(&app.session) {
+    for c in torno_engine::view::shown_point_clouds(&app.session) {
         for p in c.world_corners().into_iter().flatten() {
             b.add(p);
         }
@@ -2525,14 +2513,14 @@ pub fn model_bounds(app: &SolveApp) -> solidcraft_engine::geom::Aabb3 {
 
 /// The box of every sketch of `st` in the world, kept for that state: a design with hundreds of
 /// sketches spent most of each frame sampling their splines again for `projection`.
-fn sketch_bounds(app: &SolveApp, st: &std::sync::Arc<solidcraft_engine::doc::ModelState>) -> solidcraft_engine::geom::Aabb3 {
+fn sketch_bounds(app: &SolveApp, st: &std::sync::Arc<torno_engine::doc::ModelState>) -> torno_engine::geom::Aabb3 {
     if let Ok(g) = app.viewport.sketch_bounds.lock()
         && let Some((k, b)) = g.as_ref()
         && std::sync::Arc::ptr_eq(k, st)
     {
         return *b;
     }
-    let mut b = solidcraft_engine::geom::Aabb3::EMPTY;
+    let mut b = torno_engine::geom::Aabb3::EMPTY;
     for ss in &st.sketches {
         if let Some((lo, hi)) = ss.sketch.bounds() {
             for p in [lo, hi] {
@@ -2547,7 +2535,7 @@ fn sketch_bounds(app: &SolveApp, st: &std::sync::Arc<solidcraft_engine::doc::Mod
 }
 
 /// Where a ray enters a box (None: it misses).
-pub(crate) fn ray_box(o: Vec3, d: Vec3, b: &solidcraft_engine::geom::Aabb3, pad: f64) -> Option<f64> {
+pub(crate) fn ray_box(o: Vec3, d: Vec3, b: &torno_engine::geom::Aabb3, pad: f64) -> Option<f64> {
     let (mut t0, mut t1) = (f64::NEG_INFINITY, f64::INFINITY);
     for (oo, dd, lo, hi) in [(o.x, d.x, b.min.x, b.max.x), (o.y, d.y, b.min.y, b.max.y), (o.z, d.z, b.min.z, b.max.z)] {
         let (lo, hi) = (lo - pad, hi + pad);
@@ -2582,7 +2570,7 @@ pub(crate) fn ray_segment_closest(o: Vec3, d: Vec3, a: Vec3, b: Vec3) -> Vec3 {
 }
 
 /// A box's outline on screen, grown by `px` (None: behind the eye).
-pub(crate) fn screen_box(proj: &Proj, b: &solidcraft_engine::geom::Aabb3, px: f32) -> Option<Rect> {
+pub(crate) fn screen_box(proj: &Proj, b: &torno_engine::geom::Aabb3, px: f32) -> Option<Rect> {
     let mut r = Rect::NOTHING;
     for i in 0..8 {
         let p = Vec3::new(
@@ -2608,7 +2596,7 @@ fn picking_3d_curve_points(app: &SolveApp) -> bool {
         && app.dialog.as_ref().is_none_or(|d| matches!(d.kind, crate::dialogs::Kind::OffsetPlane { .. } | crate::dialogs::Kind::Construct { .. }))
 }
 
-fn edge_pickable(app: &SolveApp, mesh: &solidcraft_engine::geom::Mesh, index: usize) -> bool {
+fn edge_pickable(app: &SolveApp, mesh: &torno_engine::geom::Mesh, index: usize) -> bool {
     mesh.edge_pickable(index) || (measuring_mesh_edges(app) && mesh.display_only_edges && mesh.edge_visible(index))
 }
 
@@ -2776,22 +2764,22 @@ fn pick_hits(app: &SolveApp, proj: &Proj, pos: Pos2, other_sketch_points: bool, 
     // Bodies a Move dialog's earlier types moved are picked where they stand, as the preview
     // draws them: their mesh placed, and their box, moved on by that move.
     let chained = crate::dialogs_move::chained(app);
-    let carry = |b: &solidcraft_engine::doc::ModelBody| chain_of(chained.as_ref(), &b.name);
-    let placed = |b: &solidcraft_engine::doc::ModelBody| {
+    let carry = |b: &torno_engine::doc::ModelBody| chain_of(chained.as_ref(), &b.name);
+    let placed = |b: &torno_engine::doc::ModelBody| {
         let (m, place) = b.mesh_in_place();
-        (m, carry(b).map_or(place, |c| solidcraft_engine::doc::mat_mul(&c, &place)))
+        (m, carry(b).map_or(place, |c| torno_engine::doc::mat_mul(&c, &place)))
     };
-    let body_box = |i: usize, b: &solidcraft_engine::doc::ModelBody| {
+    let body_box = |i: usize, b: &torno_engine::doc::ModelBody| {
         let (_, bb) = bounds.get(i)?;
         let Some(c) = carry(b) else { return Some(*bb) };
-        let mut moved = solidcraft_engine::geom::Aabb3::EMPTY;
+        let mut moved = torno_engine::geom::Aabb3::EMPTY;
         for k in 0..8 {
             let corner = Vec3::new(
                 if k & 1 == 0 { bb.min.x } else { bb.max.x },
                 if k & 2 == 0 { bb.min.y } else { bb.max.y },
                 if k & 4 == 0 { bb.min.z } else { bb.max.z },
             );
-            moved.add(solidcraft_engine::doc::apply_point(&c, corner));
+            moved.add(torno_engine::doc::apply_point(&c, corner));
         }
         Some(moved)
     };
@@ -2807,7 +2795,7 @@ fn pick_hits(app: &SolveApp, proj: &Proj, pos: Pos2, other_sketch_points: bool, 
     {
         let mut mids = Near::new(all);
         for (i, curve) in ss.sketch.curves.iter().enumerate() {
-            if !solidcraft_engine::view::sketch_curve_visible(&ss.sketch, i) {
+            if !torno_engine::view::sketch_curve_visible(&ss.sketch, i) {
                 continue;
             }
             if let Some(at) = crate::selection::line_midpoint(&ss.sketch, i)
@@ -2850,7 +2838,7 @@ fn pick_hits(app: &SolveApp, proj: &Proj, pos: Pos2, other_sketch_points: bool, 
     for ss in point_sketches.iter().filter_map(|sid| st.sketch(*sid)) {
         let sid = ss.feature;
         let shown = snapping.then(|| crate::dialogs::SnapPoints::of(&ss.sketch));
-        let visible = solidcraft_engine::view::SketchPointVisibility::new(&ss.sketch);
+        let visible = torno_engine::view::SketchPointVisibility::new(&ss.sketch);
         if picking_3d_curve_points(app) && !ss.sketch.view.hide_points {
             for wire in &ss.sketch.wires {
                 for (index, at) in wire.fit.iter().enumerate() {
@@ -2903,7 +2891,7 @@ fn pick_hits(app: &SolveApp, proj: &Proj, pos: Pos2, other_sketch_points: bool, 
         // yield so a drawn rectangle on a face is not refused as projected geometry (#8979).
         let trim_prefers_free = app.tool.as_ref().is_some_and(|t| matches!(t.cmd, "sketch.trim" | "sketch.extend" | "sketch.break"));
         for (i, c) in ss.sketch.curves.iter().enumerate() {
-            if !solidcraft_engine::view::sketch_curve_visible(&ss.sketch, i) {
+            if !torno_engine::view::sketch_curve_visible(&ss.sketch, i) {
                 continue;
             }
             let straight = matches!(c.kind, CurveKind::Line { .. });
@@ -3042,8 +3030,8 @@ fn pick_hits(app: &SolveApp, proj: &Proj, pos: Pos2, other_sketch_points: bool, 
         // In the part's own frame, as for faces; its points are moved back to where it stands.
         let (m, place) = placed(b);
         let Some((lo, ld)) = local_ray(&place, o, d) else { continue };
-        let moved = !solidcraft_engine::doc::is_identity(&place);
-        let at = |p: Vec3| if moved { solidcraft_engine::doc::apply_point(&place, p) } else { p };
+        let moved = !torno_engine::doc::is_identity(&place);
+        let at = |p: Vec3| if moved { torno_engine::doc::apply_point(&place, p) } else { p };
         // Only the segments that can come near the cursor, from the index, in the order a scan
         // of every edge would meet them, so ties go the same way.
         let near = crate::pick_index::segments_near(app.viewport.pick_index.of(&m).as_deref(), &m, lo, ld, reach);
@@ -3183,7 +3171,7 @@ fn pick_hits(app: &SolveApp, proj: &Proj, pos: Pos2, other_sketch_points: bool, 
 
 /// The section cut shown now: the open Section Analysis dialog's plane, else the session's.
 /// The active sketch's display options (defaults when not sketching).
-pub fn active_view(app: &SolveApp) -> solidcraft_engine::sketch::SketchView {
+pub fn active_view(app: &SolveApp) -> torno_engine::sketch::SketchView {
     let st = crate::open_meshing::shown_world(app);
     app.session.active_sketch.and_then(|s| st.sketch(s)).map(|ss| ss.sketch.view.clone()).unwrap_or_default()
 }
@@ -3242,9 +3230,9 @@ fn feature_parts(app: &SolveApp, id: u64, shown_only: bool) -> Vec<Sel> {
             out.push(Sel::Body { name: b.name.clone() });
             continue;
         }
-        let names = solidcraft_engine::doc::naming::face_names(b);
+        let names = torno_engine::doc::naming::face_names(b);
         let m = b.mesh();
-        for (index, _) in names.iter().enumerate().filter(|(_, n)| solidcraft_engine::doc::persistent_name::made_by(n) == Some(id)) {
+        for (index, _) in names.iter().enumerate().filter(|(_, n)| torno_engine::doc::persistent_name::made_by(n) == Some(id)) {
             if let Some(point) = first_triangle_point(&m, index) {
                 out.push(Sel::Face { body: b.name.clone(), index, point });
             }
@@ -3260,14 +3248,14 @@ fn feature_parts(app: &SolveApp, id: u64, shown_only: bool) -> Vec<Sel> {
 }
 
 /// A point on face `index` of `m`: the middle of its first triangle.
-fn first_triangle_point(m: &solidcraft_engine::geom::Mesh, index: usize) -> Option<solidcore_record::Vec3> {
+fn first_triangle_point(m: &torno_engine::geom::Mesh, index: usize) -> Option<solidcore_record::Vec3> {
     m.triangles.iter().zip(&m.tri_face).find_map(|(t, f)| (*f as usize == index).then(|| m.tri(t)).flatten().map(|[a, b, c]| (a + b + c) / 3.0))
 }
 
 /// The faces a feature changed, for the states either side of it, on the bodies as they are now:
 /// a face whose name is new, or whose area, centroid or plane moved. A face a later feature
 /// renamed is found again by its plane and nearest centre.
-fn changed_faces(app: &SolveApp, id: u64, now: &solidcraft_engine::doc::ModelState, shown_only: bool) -> Vec<Sel> {
+fn changed_faces(app: &SolveApp, id: u64, now: &torno_engine::doc::ModelState, shown_only: bool) -> Vec<Sel> {
     let Some(index) = app.session.doc.features.iter().position(|f| f.id == id) else { return Vec::new() };
     let after = match app.session.doc.features.get(index + 1) {
         Some(next) => app.session.model.state_before(next.id),
@@ -3280,8 +3268,8 @@ fn changed_faces(app: &SolveApp, id: u64, now: &solidcraft_engine::doc::ModelSta
             continue;
         }
         let (Some(now_body), Some(old)) = (now.body(&b.name), before.body(&b.name)) else { continue };
-        let names = solidcraft_engine::doc::naming::face_names(b);
-        let old_names = solidcraft_engine::doc::naming::face_names(old);
+        let names = torno_engine::doc::naming::face_names(b);
+        let old_names = torno_engine::doc::naming::face_names(old);
         // A body the feature left as it was (same record, same face names) has no face it
         // changed. Skip it before `faces`, which meshes the body each time: a picked sketch
         // comes here on every highlight rebuild, and with hundreds of bodies that took seconds.
@@ -3318,13 +3306,13 @@ fn changed_faces(app: &SolveApp, id: u64, now: &solidcraft_engine::doc::ModelSta
 /// Face `name` of `now` (or the nearest face on its plane when a later feature renamed it),
 /// with a point on it.
 fn current_face(
-    now: &solidcraft_engine::doc::ModelBody,
+    now: &torno_engine::doc::ModelBody,
     name: &str,
-    sample: &solidcraft_engine::kernel::FaceInfo,
+    sample: &torno_engine::kernel::FaceInfo,
     tol: f64,
 ) -> Option<(usize, solidcore_record::Vec3)> {
     let m = now.mesh();
-    let names = solidcraft_engine::doc::naming::face_names(now);
+    let names = torno_engine::doc::naming::face_names(now);
     if let Some(index) = names.iter().position(|n| n == name) {
         return first_triangle_point(&m, index).map(|point| (index, point));
     }
@@ -3377,20 +3365,20 @@ fn displayed_selection(app: &SolveApp, item: &Sel) -> Vec<Sel> {
 
 /// The box around what is selected (bodies, faces, edges, vertices, sketch curves and the
 /// bodies of selected features), where it is shown.
-pub fn selection_bounds(app: &SolveApp) -> Option<solidcraft_engine::geom::Aabb3> {
+pub fn selection_bounds(app: &SolveApp) -> Option<torno_engine::geom::Aabb3> {
     bounds_of(app, app.session.selection.iter().flat_map(|item| displayed_selection(app, item)))
 }
 
 /// The box around the geometry a feature made (its bodies, or its faces on bodies later features
 /// changed), also where a dialog's preview stands in for it: a pattern of the feature previews
 /// the body the feature is on. None when the feature made nothing.
-pub(crate) fn feature_bounds(app: &SolveApp, id: u64) -> Option<solidcraft_engine::geom::Aabb3> {
+pub(crate) fn feature_bounds(app: &SolveApp, id: u64) -> Option<torno_engine::geom::Aabb3> {
     bounds_of(app, feature_parts(app, id, false).into_iter())
 }
 
-fn bounds_of(app: &SolveApp, items: impl Iterator<Item = Sel>) -> Option<solidcraft_engine::geom::Aabb3> {
+fn bounds_of(app: &SolveApp, items: impl Iterator<Item = Sel>) -> Option<torno_engine::geom::Aabb3> {
     let st = crate::open_meshing::shown_world(app);
-    let mut b = solidcraft_engine::geom::Aabb3::EMPTY;
+    let mut b = torno_engine::geom::Aabb3::EMPTY;
     for s in items {
         match &s {
             Sel::Body { name } => {
@@ -3460,7 +3448,7 @@ fn bounds_of(app: &SolveApp, items: impl Iterator<Item = Sel>) -> Option<solidcr
 /// The section as the shader's clip plane (normal, d), zero when there is none.
 /// The surface analysis for the shader (see `gpu::Frame::analysis`).
 fn analysis_uniform(app: &SolveApp) -> [f32; 8] {
-    solidcraft_viewport_gpu::view::analysis_uniform(app.session.analysis.map(|a| a.mode()), crate::access::map(app).as_ref())
+    torno_viewport_gpu::view::analysis_uniform(app.session.analysis.map(|a| a.mode()), crate::access::map(app).as_ref())
 }
 
 /// Why the model cannot be placed, across the bottom of the viewport, while it cannot: the
@@ -3478,9 +3466,9 @@ fn placement_note(app: &SolveApp, painter: &egui::Painter, rect: Rect) {
 pub(crate) type AnalysisLegend = (&'static str, Option<String>, Vec<(Color32, String, bool)>);
 
 pub(crate) fn analysis_legend_data(app: &SolveApp) -> Option<AnalysisLegend> {
-    use solidcraft_engine::SurfaceAnalysis as A;
+    use torno_engine::SurfaceAnalysis as A;
     let t = Tokens::get();
-    let tr = solidcraft_ui_text::tr_label;
+    let tr = torno_ui_text::tr_label;
     let col = |c: [f32; 3]| {
         let u = |x: f32| (x.clamp(0.0, 1.0) * 255.0).round() as u8;
         Color32::from_rgb(u(c[0]), u(c[1]), u(c[2]))
@@ -3784,7 +3772,7 @@ pub(crate) fn dialog_pick(app: &mut SolveApp, hit: &Hit, sel: Sel) {
 
 /// The edge a selection refers to now: by index if it still passes through the stored point,
 /// otherwise the edge nearest the point.
-fn edge_of(m: &solidcraft_engine::geom::Mesh, index: usize, point: Vec3) -> Option<&Vec<Vec3>> {
+fn edge_of(m: &torno_engine::geom::Mesh, index: usize, point: Vec3) -> Option<&Vec<Vec3>> {
     let tol = m.bounds().diagonal().max(1.0) * 1e-6;
     let near = |e: &Vec<Vec3>| e.windows(2).map(|w| point.dist_to_segment(w[0], w[1])).fold(f64::INFINITY, f64::min);
     if let Some(e) = m.edges.get(index)
@@ -3795,13 +3783,13 @@ fn edge_of(m: &solidcraft_engine::geom::Mesh, index: usize, point: Vec3) -> Opti
     m.edges.iter().min_by(|a, b| near(a).total_cmp(&near(b))).filter(|e| near(e) < tol * 1e3)
 }
 
-fn face_tris(sc: &mut GpuScene, m: &solidcraft_engine::geom::Mesh, face: usize, col: [u8; 4], lit: bool) {
+fn face_tris(sc: &mut GpuScene, m: &torno_engine::geom::Mesh, face: usize, col: [u8; 4], lit: bool) {
     mesh_tris(sc, m, col, lit, |f| f as usize == face);
 }
 
 /// Emit a set of faces in one mesh pass. Whole-body feedback must not scan every triangle
 /// again for each face of a detailed imported part.
-fn mesh_tris(sc: &mut GpuScene, m: &solidcraft_engine::geom::Mesh, col: [u8; 4], lit: bool, takes: impl Fn(u32) -> bool) {
+fn mesh_tris(sc: &mut GpuScene, m: &torno_engine::geom::Mesh, col: [u8; 4], lit: bool, takes: impl Fn(u32) -> bool) {
     let col = sc.color(col);
     for (t, f) in m.triangles.iter().zip(&m.tri_face) {
         if !takes(*f) {
@@ -3856,7 +3844,7 @@ fn edge_lines(sc: &mut GpuScene, e: &[Vec3], cols: EdgeColours, w: f32, normals:
 /// ones found at the segment's ends; zero where none is found), so its highlight can be lifted
 /// over a face seen at a grazing angle (`GpuScene::lifted_line`). One pass over the mesh's
 /// vertices: the tessellation shares the edge's points with the faces on either side.
-fn edge_normals(m: &solidcraft_engine::geom::Mesh, e: &[Vec3]) -> Vec<[[f32; 3]; 2]> {
+fn edge_normals(m: &torno_engine::geom::Mesh, e: &[Vec3]) -> Vec<[[f32; 3]; 2]> {
     let tol = m.bounds().diagonal().max(1.0) * 1e-7;
     let key = |p: Vec3| ((p.x / tol).round() as i64, (p.y / tol).round() as i64, (p.z / tol).round() as i64);
     let mut at: std::collections::HashMap<(i64, i64, i64), Vec<Vec3>> = e.iter().map(|p| (key(*p), Vec::new())).collect();
@@ -3881,7 +3869,7 @@ fn edge_normals(m: &solidcraft_engine::geom::Mesh, e: &[Vec3]) -> Vec<[[f32; 3];
 }
 
 /// The outline of a highlighted face where the model hides it (dimmed).
-fn hidden_face_outline(sc: &mut GpuScene, m: &solidcraft_engine::geom::Mesh, face: usize, col: Color32) {
+fn hidden_face_outline(sc: &mut GpuScene, m: &torno_engine::geom::Mesh, face: usize, col: Color32) {
     let col = sc.color(c4(col.gamma_multiply(0.45)));
     for (ei, e) in m.edges.iter().enumerate() {
         let on = m.edge_faces.get(ei).is_some_and(|f| f.iter().any(|x| *x as usize == face));
@@ -3994,7 +3982,7 @@ fn highlight_geometry_key(app: &SolveApp) -> u64 {
     app.dialog.as_ref().and_then(|d| d.list_hover.as_ref()).map(|(_, item)| format!("{item:?}")).hash(&mut h);
     // Which mesh lights a face follows how the model draws its body (see `shown_mesh`), and at
     // which display quality its plan and edges are made.
-    solidcraft_engine::doc::display_quality::current().hash(&mut h);
+    torno_engine::doc::display_quality::current().hash(&mut h);
     lod_generation(app).hash(&mut h);
     // Whole-body highlights redraw the model scene's own blocks: they must be the scene's
     // current ones (their keys and the bodies' ranges in them).
@@ -4012,8 +4000,8 @@ fn highlight_geometry_key(app: &SolveApp) -> u64 {
     (app.dialog.is_some(), app.tool.is_some()).hash(&mut h);
     // Which input is active decides what a round edge or face under the cursor stands for.
     app.dialog.as_ref().and_then(|d| d.active_input()).map(|i| i.accept).hash(&mut h);
-    solidcraft_theme::is_dark().hash(&mut h);
-    solidcraft_theme::vision().hash(&mut h);
+    torno_theme::is_dark().hash(&mut h);
+    torno_theme::vision().hash(&mut h);
     // Two themes may share a light/dark base while drawing different geometry colours.
     crate::theme_files::color_key(&Tokens::base()).hash(&mut h);
     app.preview.effective_replaced().hash(&mut h);
@@ -4046,7 +4034,7 @@ fn image_target_outlines(app: &SolveApp) -> bool {
 
 /// Display-only triangle-mesh polylines are not modeling edges. Targets without
 /// drawable pickable boundaries keep their existing face/body fill feedback.
-fn has_pickable_outline(mesh: &solidcraft_engine::geom::Mesh) -> bool {
+fn has_pickable_outline(mesh: &torno_engine::geom::Mesh) -> bool {
     mesh.edges.iter().enumerate().any(|(index, edge)| edge.len() >= 2 && mesh.edge_pickable(index))
 }
 
@@ -4071,8 +4059,8 @@ pub(crate) fn highlight_key(app: &SolveApp) -> u64 {
 #[derive(Clone)]
 struct HoverBlock {
     key: u64,
-    state: std::sync::Arc<solidcraft_engine::doc::ModelState>,
-    doc: std::sync::Arc<solidcraft_engine::doc::Document>,
+    state: std::sync::Arc<torno_engine::doc::ModelState>,
+    doc: std::sync::Arc<torno_engine::doc::Document>,
     /// The colours the block's palette indices refer to.
     palette: std::sync::Arc<crate::gpu::Palette>,
     block: crate::gpu::SceneBlock,
@@ -4097,7 +4085,7 @@ struct HoverBlock {
 /// (every triangle of every body, again), while the model already had them all on the GPU.
 fn highlight_plan(
     app: &SolveApp,
-    b: &solidcraft_engine::doc::ModelBody,
+    b: &torno_engine::doc::ModelBody,
     active_bodies: &Option<ActiveBodyNames>,
 ) -> Option<std::sync::Arc<solidcore_tess::TessPlan>> {
     if crate::render_workspace::active(app) {
@@ -4109,7 +4097,7 @@ fn highlight_plan(
 /// Whether the model draws a whole body opaque on the GPU, rather than building it on the CPU:
 /// a live preview stands in for none, faded and see-through bodies stay on the CPU, and face
 /// opacities matter only where faces are shaded.
-fn highlight_opaque(app: &SolveApp, b: &solidcraft_engine::doc::ModelBody, active_bodies: &Option<ActiveBodyNames>) -> bool {
+fn highlight_opaque(app: &SolveApp, b: &torno_engine::doc::ModelBody, active_bodies: &Option<ActiveBodyNames>) -> bool {
     if crate::render_workspace::active(app) || app.preview.effective_replaced().contains(&b.name) {
         return false;
     }
@@ -4131,7 +4119,7 @@ struct HighlightInstances {
 impl HighlightInstances {
     /// Add the body at `color`, when the model draws it as an instanced placement of an opaque
     /// shared mesh; `false` when it does not (the caller builds its feedback on the CPU).
-    fn add(&mut self, app: &SolveApp, b: &solidcraft_engine::doc::ModelBody, color: crate::gpu::PaletteIndex) -> bool {
+    fn add(&mut self, app: &SolveApp, b: &torno_engine::doc::ModelBody, color: crate::gpu::PaletteIndex) -> bool {
         // A live preview stands in for the body; a body with face appearances of its own is built
         // on the CPU, never as an instance. A faded or see-through placement is lit like an opaque
         // one: the highlight colour is the placement's own here, not the model's.
@@ -4185,7 +4173,7 @@ impl HighlightInstances {
 /// costs no CPU work, where copying every triangle did (a whole assembly hovered at once stalled
 /// the window). See-through and faded bodies have no range here: they are not in the block's
 /// opaque triangles, and the CPU feedback colours them.
-fn highlight_block_tris(app: &SolveApp, b: &solidcraft_engine::doc::ModelBody) -> Option<crate::gpu::BlockTris> {
+fn highlight_block_tris(app: &SolveApp, b: &torno_engine::doc::ModelBody) -> Option<crate::gpu::BlockTris> {
     if crate::render_workspace::active(app) || app.preview.effective_replaced().contains(&b.name) {
         return None;
     }
@@ -4197,18 +4185,18 @@ fn highlight_block_tris(app: &SolveApp, b: &solidcraft_engine::doc::ModelBody) -
 /// every body, so a highlight with thousands of bodies selected looked up each of them that way.
 /// A name held by more than one body finds the first, as `ModelState::body` does.
 ///
-/// [`ModelState::body`]: solidcraft_engine::doc::ModelState::body
+/// [`ModelState::body`]: torno_engine::doc::ModelState::body
 struct BodiesByName<'a> {
-    state: &'a solidcraft_engine::doc::ModelState,
-    map: Option<std::collections::HashMap<&'a str, &'a solidcraft_engine::doc::ModelBody>>,
+    state: &'a torno_engine::doc::ModelState,
+    map: Option<std::collections::HashMap<&'a str, &'a torno_engine::doc::ModelBody>>,
 }
 
 impl<'a> BodiesByName<'a> {
-    fn new(state: &'a solidcraft_engine::doc::ModelState) -> Self {
+    fn new(state: &'a torno_engine::doc::ModelState) -> Self {
         Self { state, map: None }
     }
 
-    fn get(&mut self, name: &str) -> Option<&'a solidcraft_engine::doc::ModelBody> {
+    fn get(&mut self, name: &str) -> Option<&'a torno_engine::doc::ModelBody> {
         let state = self.state;
         // Last inserted wins: the bodies go in from the last, so the first of a name is kept.
         let map = self.map.get_or_insert_with(|| state.bodies.iter().rev().map(|b| (b.name.as_str(), b)).collect());
@@ -4230,7 +4218,7 @@ struct WholeBody {
 /// none applies (wireframe, a live preview standing in for the body): the caller copies it.
 fn light_whole_body(
     app: &SolveApp,
-    b: &solidcraft_engine::doc::ModelBody,
+    b: &torno_engine::doc::ModelBody,
     active_bodies: &Option<ActiveBodyNames>,
     lit: WholeBody,
     body_slots: &crate::scene_palette::PaletteArena,
@@ -4289,7 +4277,7 @@ pub(crate) fn build_highlight(app: &SolveApp) -> GpuScene {
     // moves its bodies' triangles on the GPU from where the drag found them: those are built
     // where they stand.
     let dragged = drag_layer::dragged_names(app);
-    let gpu_lit = |b: &solidcraft_engine::doc::ModelBody| !dragged.contains(b.name.as_str());
+    let gpu_lit = |b: &torno_engine::doc::ModelBody| !dragged.contains(b.name.as_str());
     // Faces lit over the model use the triangles the model shows them with.
     let product = crate::render_workspace::active(app);
     let outlines = image_target_outlines(app);
@@ -4300,10 +4288,10 @@ pub(crate) fn build_highlight(app: &SolveApp) -> GpuScene {
     let dragging = crate::dialogs_move::dragging(app);
     let moving = |name: &str| dragging && chain_of(live.as_ref(), name).is_some();
     let chained = live.as_ref().filter(|_| !dragging);
-    let carry = |b: &solidcraft_engine::doc::ModelBody| chain_of(chained, &b.name);
+    let carry = |b: &torno_engine::doc::ModelBody| chain_of(chained, &b.name);
     let replaced = |name: &str| moving(name) || (app.preview.effective_replaced().iter().any(|n| n == name) && chain_of(chained, name).is_none());
-    let shown = |b: &solidcraft_engine::doc::ModelBody| carried_mesh(carry(b), if product { b.mesh() } else { shown_mesh(app, b, &active_bodies) });
-    let drawn = |b: &solidcraft_engine::doc::ModelBody| carried_mesh(carry(b), drawn_mesh(app, b));
+    let shown = |b: &torno_engine::doc::ModelBody| carried_mesh(carry(b), if product { b.mesh() } else { shown_mesh(app, b, &active_bodies) });
+    let drawn = |b: &torno_engine::doc::ModelBody| carried_mesh(carry(b), drawn_mesh(app, b));
     let items = app.highlighted();
     let sketches = selected_sketches(app, &items);
     let mut sel = Vec::new();
@@ -4542,7 +4530,7 @@ pub(crate) fn build_highlight(app: &SolveApp) -> GpuScene {
             // they are. Not a hidden sketch's either, as a hidden body's edge isn't drawn: hiding
             // the sketch leaves nothing of it on screen (#13026).
             Sel::Profile { sketch, index }
-                if crate::dim_view::previewed_sketch(app) != Some(*sketch) && solidcraft_engine::view::sketch_shown(&app.session, *sketch) =>
+                if crate::dim_view::previewed_sketch(app) != Some(*sketch) && torno_engine::view::sketch_shown(&app.session, *sketch) =>
             {
                 profile_fill(&mut feedback, app, *sketch, *index, t.sel_profile, t.sel_profile_edge)
             }
@@ -4785,13 +4773,13 @@ pub(crate) fn build_highlight(app: &SolveApp) -> GpuScene {
         sc.recoloured = recoloured;
     }
 
-    if solidcraft_engine::geom::env::var_os("PROFILE_FRAMES").is_some() {
+    if torno_engine::geom::env::var_os("PROFILE_FRAMES").is_some() {
         let in_blocks = |f: fn(&crate::gpu::SceneBlock) -> usize| sc.blocks.iter().map(f).sum::<usize>();
         let tris = sc.tris.len() + in_blocks(|b| b.bytes.vertices.len());
         let lines = sc.lines.len() + in_blocks(|b| b.bytes.lines.len());
         let hidden = sc.hidden.len() + in_blocks(|b| b.bytes.hidden.len());
         eprintln!(
-            "SolidCraft highlight: {:.0} ms, hovered {} bodies, planned {} hover + {} selected, blocks {} hover + {} selected, instanced {} hover + {} selected, CPU triangles {tris} B, lines {lines} B, hidden {hidden} B",
+            "Torno highlight: {:.0} ms, hovered {} bodies, planned {} hover + {} selected, blocks {} hover + {} selected, instanced {} hover + {} selected, CPU triangles {tris} B, lines {lines} B, hidden {hidden} B",
             crate::now_ms() - began,
             hovered.len(),
             sc.hover_planned.len(),
@@ -4806,7 +4794,7 @@ pub(crate) fn build_highlight(app: &SolveApp) -> GpuScene {
 }
 
 /// A body's display colour (appearance, material or imported colour), if it has one.
-fn body_color(doc: &solidcraft_engine::doc::Document, b: &solidcraft_engine::doc::ModelBody) -> Option<Color32> {
+fn body_color(doc: &torno_engine::doc::Document, b: &torno_engine::doc::ModelBody) -> Option<Color32> {
     let to8 = |x: f32| (x.clamp(0.0, 1.0) * 255.0).round() as u8;
     doc.body_color(b).map(|[r, g, b]| Color32::from_rgb(to8(r), to8(g), to8(b)))
 }
@@ -4820,12 +4808,12 @@ fn body_rgb(app: &SolveApp, name: &str) -> (u8, u8, u8) {
 
 /// The ray `o` + t `d` in the frame of a mesh that `place` (a rigid move) puts in the world, with
 /// the same t along it; `None` for a move with no inverse.
-pub(crate) fn local_ray(place: &solidcraft_engine::doc::Mat, o: Vec3, d: Vec3) -> Option<(Vec3, Vec3)> {
-    if solidcraft_engine::doc::is_identity(place) {
+pub(crate) fn local_ray(place: &torno_engine::doc::Mat, o: Vec3, d: Vec3) -> Option<(Vec3, Vec3)> {
+    if torno_engine::doc::is_identity(place) {
         return Some((o, d));
     }
-    let back = solidcraft_engine::doc::mat_inverse(place)?;
-    Some((solidcraft_engine::doc::apply_point(&back, o), solidcraft_engine::doc::apply_vector(&back, d)))
+    let back = torno_engine::doc::mat_inverse(place)?;
+    Some((torno_engine::doc::apply_point(&back, o), torno_engine::doc::apply_vector(&back, d)))
 }
 
 pub(crate) fn polyline_mid(pts: &[Vec3]) -> Vec3 {
@@ -4868,7 +4856,7 @@ pub fn sketch_point_at(app: &SolveApp, proj: &Proj, pos: Pos2) -> Option<(Vec2, 
     if crate::drag_snap::suppressed() {
         return Some((lp, None));
     }
-    let (minor, fine) = solidcraft_engine::view::sketch_grid_step(app.cam.half_height());
+    let (minor, fine) = torno_engine::view::sketch_grid_step(app.cam.half_height());
     if let Some(p) = crate::sketch_tools::refine_snap(app, proj, &ss.sketch, &ss.plane, lp) {
         return Some(p);
     }
@@ -4881,9 +4869,9 @@ pub fn sketch_point_at(app: &SolveApp, proj: &Proj, pos: Pos2) -> Option<(Vec2, 
     // The crossing of the drawn grid's lines takes the pointer when the pointer means one; with
     // the preference off the point lands on the finer lattice only, as before (#7114).
     if app.preferences.sketch_snap_to_visible_grid {
-        Some((solidcraft_engine::view::sketch_grid_point(lp, minor, fine), None))
+        Some((torno_engine::view::sketch_grid_point(lp, minor, fine), None))
     } else {
-        Some((solidcraft_engine::view::sketch_grid_lattice(lp, fine), None))
+        Some((torno_engine::view::sketch_grid_lattice(lp, fine), None))
     }
 }
 
@@ -4994,7 +4982,7 @@ pub fn show(app: &mut SolveApp, ui: &mut egui::Ui) {
     crate::select_other::hover_override(app);
     list_hover(app);
     let painter = ui.painter_at(rect);
-    solidcraft_viewport_egui::paint_background(&painter, rect, t.viewport_top, t.viewport_bottom);
+    torno_viewport_egui::paint_background(&painter, rect, t.viewport_top, t.viewport_bottom);
     crate::gpu::paint_background_picture(app, &painter, rect);
 
     // ---- model ----
@@ -5052,7 +5040,7 @@ pub fn show(app: &mut SolveApp, ui: &mut egui::Ui) {
             pv_key: app.preview.key,
             pv_slot: app.preview.slot.clone(),
             pv_hide: app.preview.rolled_back,
-            preview_bounds: (app.preview.active && !app.preview.rolled_back).then_some(solidcraft_engine::render::view_bounds(&app.preview.bounds)),
+            preview_bounds: (app.preview.active && !app.preview.rolled_back).then_some(torno_engine::render::view_bounds(&app.preview.bounds)),
             clip: section_clip(app),
             cap: {
                 let [r, g, b, _] = t.section_cap.to_normalized_gamma_f32();
@@ -5485,7 +5473,7 @@ pub fn show(app: &mut SolveApp, ui: &mut egui::Ui) {
                         .and_then(|i| sk.curves.get(i))
                         .and_then(|c| c.link.as_deref())
                         .or_else(|| sk.resolve_point(id).and_then(|i| sk.points.get(i)).and_then(|p| p.link.as_deref()))?;
-                    sk.link(link).filter(|l| l.kind == solidcraft_engine::sketch::LinkKind::Text).map(|l| l.id.clone())
+                    sk.link(link).filter(|l| l.kind == torno_engine::sketch::LinkKind::Text).map(|l| l.id.clone())
                 });
                 if let Some(link) = link
                     && let Some(q) = on_plane(app, a)
@@ -5538,7 +5526,7 @@ pub fn show(app: &mut SolveApp, ui: &mut egui::Ui) {
                     if r.get("retry").and_then(serde_json::Value::as_bool) == Some(true) && !resp.drag_stopped() {
                         ui.ctx().request_repaint();
                     }
-                    r.get("at").and_then(solidcraft_engine::params::vec2).unwrap_or(q)
+                    r.get("at").and_then(torno_engine::params::vec2).unwrap_or(q)
                 }
                 Err(_) => from,
             };
@@ -5798,9 +5786,9 @@ fn agent_chip(app: &mut SolveApp, ui: &egui::Ui, view: Rect, taken: &[Rect]) -> 
     let painter = ui.painter().clone();
     if let Some((since, label)) = app.agent_computing() {
         let seconds = ((crate::now_ms() - since) / 1000.0).floor().max(0.0);
-        let computing = solidcraft_ui_text::format("dialog.computing", &[("seconds", &format!("{seconds:.0}"))]);
+        let computing = torno_ui_text::format("dialog.computing", &[("seconds", &format!("{seconds:.0}"))]);
         let galley = painter.layout_no_wrap(format!("{label} · {computing}"), FontId::proportional(t.font_label), t.text);
-        let stop = painter.layout_no_wrap(solidcraft_ui_text::tr("ui.agent_chat_stop").to_string(), FontId::proportional(t.font_label), t.text);
+        let stop = painter.layout_no_wrap(torno_ui_text::tr("ui.agent_chat_stop").to_string(), FontId::proportional(t.font_label), t.text);
         let size = vec2(galley.size().x + stop.size().x + 54.0, galley.size().y.max(stop.size().y) + 8.0);
         // Above the navigation bar while it sits on the bottom edge; a bar on top leaves the bottom free.
         let nav = app
@@ -5822,9 +5810,9 @@ fn agent_chip(app: &mut SolveApp, ui: &egui::Ui, view: Rect, taken: &[Rect]) -> 
         let pos = r.min;
         crate::scenario::publish_rect("agent:chip", r);
         painter.rect_filled(r, t.radius_sm, t.overlay);
-        painter.rect_stroke(r, t.radius_sm, Stroke::new(1.0, solidcraft_look::pointer::agent()), egui::StrokeKind::Inside);
+        painter.rect_stroke(r, t.radius_sm, Stroke::new(1.0, torno_look::pointer::agent()), egui::StrokeKind::Inside);
         egui::Spinner::new()
-            .color(solidcraft_look::pointer::agent())
+            .color(torno_look::pointer::agent())
             .size(t.space_12)
             .paint_at(ui, Rect::from_center_size(pos2(r.left() + 13.0, r.center().y), vec2(12.0, 12.0)));
         painter.galley(pos + vec2(26.0, 4.0), galley.clone(), t.text);
@@ -5927,18 +5915,16 @@ pub(crate) fn transient_messages(app: &mut SolveApp, ui: &egui::Ui, viewport: Re
     }
     // The 3D mouse calibration offer: text and actions from its module, drawn by the shared toast.
     if let Some(offer) = crate::space_mouse_offer::due(app, ui.ctx()) {
-        let labels: Vec<String> = offer.actions.iter().map(|action| solidcraft_ui_text::tr(action.label()).to_string()).collect();
+        let labels: Vec<String> = offer.actions.iter().map(|action| torno_ui_text::tr(action.label()).to_string()).collect();
         let labels: Vec<(&str, ToastKind)> = labels.iter().map(String::as_str).zip(offer.actions.iter().map(|action| action.kind())).collect();
-        let tips: Vec<&str> = offer.actions.iter().map(|action| action.tip().map_or("", solidcraft_ui_text::tr)).collect();
+        let tips: Vec<&str> = offer.actions.iter().map(|action| action.tip().map_or("", torno_ui_text::tr)).collect();
         let extras = ToastExtras {
             close: Some("toast:space_mouse_offer:close"),
             countdown: Some((crate::space_mouse_offer::left(app, ui.ctx()), crate::space_mouse_offer::SHOW_SECONDS)),
             tips: &tips,
             ..Default::default()
         };
-        if let Some(toast) =
-            paint_toast_ext(ui, free, solidcraft_ui_text::tr("ui.3d_mouse_offer").to_string(), ToastLead::Dot(false), &labels, extras)
-        {
+        if let Some(toast) = paint_toast_ext(ui, free, torno_ui_text::tr("ui.3d_mouse_offer").to_string(), ToastLead::Dot(false), &labels, extras) {
             let r = toast.rect;
             crate::scenario::publish_rect("toast:space_mouse_offer", r);
             for (index, button) in toast.buttons.iter().enumerate() {
@@ -5968,12 +5954,12 @@ pub(crate) fn transient_messages(app: &mut SolveApp, ui: &egui::Ui, viewport: Re
         let shown_ms = crate::now_ms() - at;
         if shown_ms < STATUS_TOAST_MS {
             let undo = app.status_undo;
-            let actions = if undo { vec![(solidcraft_ui_text::tr_label("Undo"), ToastKind::Secondary)] } else { Vec::new() };
+            let actions = if undo { vec![(torno_ui_text::tr_label("Undo"), ToastKind::Secondary)] } else { Vec::new() };
             let extras = ToastExtras {
                 close: Some("toast:status:close"),
                 countdown: Some((countdown_left(0.0, shown_ms / 1000.0, STATUS_TOAST_MS / 1000.0), STATUS_TOAST_MS / 1000.0)),
                 // Without Undo, a click anywhere else on it opens the run's messages.
-                card_hint: (!undo).then(|| solidcraft_ui_text::tr("messages.chip_hint")),
+                card_hint: (!undo).then(|| torno_ui_text::tr("messages.chip_hint")),
                 ..Default::default()
             };
             if let Some(toast) = paint_toast_ext(ui, free, msg, ToastLead::Dot(error), &actions, extras) {
@@ -6007,7 +5993,7 @@ pub(crate) fn transient_messages(app: &mut SolveApp, ui: &egui::Ui, viewport: Re
     }
     if let Some(since) = computing_since {
         let seconds = ((crate::now_ms() - since) / 1000.0).floor().max(0.0);
-        let text = solidcraft_ui_text::format("dialog.computing", &[("seconds", &format!("{seconds:.0}"))]);
+        let text = torno_ui_text::format("dialog.computing", &[("seconds", &format!("{seconds:.0}"))]);
         // A history command or a delete's check can be given up on (#8266); a feature edit
         // applying has the dialog's Cancel instead.
         let cancel = app.tr_label("Cancel").to_string();
@@ -6299,7 +6285,7 @@ fn toast_close(ui: &egui::Ui, rect: Rect, id: egui::Id, left: Option<f32>) -> eg
     }
     let ink = if lit && ui.is_enabled() { t.text } else { t.text_dim };
     crate::icons::paint_ink(painter, Rect::from_center_size(centre, vec2(t.space_10, t.space_10)), "close", ink);
-    let label = solidcraft_ui_text::tr("ui.close");
+    let label = torno_ui_text::tr("ui.close");
     response.widget_info(|| egui::WidgetInfo::labeled(egui::Role::Button, ui.is_enabled(), label));
     if response.hovered() && ui.is_enabled() {
         ui.ctx().set_cursor_icon(egui::CursorIcon::PointingHand);
@@ -6505,7 +6491,7 @@ fn point_at_midpoint(app: &SolveApp, hit: Hit) -> Hit {
         let sk = &ss.sketch;
         let line = sk.curve_index(id)?;
         sk.constraints.iter().filter(|c| !c.driven).find_map(|c| match c.kind {
-            solidcraft_engine::sketch::ConstraintKind::Midpoint { p, l } if l == line => sk.points.get(p).map(|q| (q.id.clone(), q.pos)),
+            torno_engine::sketch::ConstraintKind::Midpoint { p, l } if l == line => sk.points.get(p).map(|q| (q.id.clone(), q.pos)),
             _ => None,
         })
     });
@@ -6548,7 +6534,7 @@ fn dragged_with(app: &SolveApp, id: &str) -> Vec<String> {
 
 /// What a click on `sel` picks: its pieces ([`grouped_selection`]), and for a letter of a sketch
 /// text the whole text, unless Shift is held (Shift picks the one letter).
-pub(crate) fn picked_selection(s: &solidcraft_engine::Session, sel: &Sel) -> Vec<Sel> {
+pub(crate) fn picked_selection(s: &torno_engine::Session, sel: &Sel) -> Vec<Sel> {
     if let Sel::Profile { sketch, index } = sel
         && !crate::sketch_text::one_letter()
         && let Some(letters) = crate::sketch_text::text_profiles(s, *sketch, *index)
@@ -6560,7 +6546,7 @@ pub(crate) fn picked_selection(s: &solidcraft_engine::Session, sel: &Sel) -> Vec
 
 /// Expand a visible rim or surface into the kernel pieces a command needs. The original
 /// face pick keeps its point (used by tools such as Hole and construction geometry).
-pub(crate) fn grouped_selection(s: &solidcraft_engine::Session, sel: &Sel) -> Vec<Sel> {
+pub(crate) fn grouped_selection(s: &torno_engine::Session, sel: &Sel) -> Vec<Sel> {
     let st = crate::open_meshing::session_world(s);
     match sel {
         Sel::Edge { body, index, .. } => {
@@ -6601,7 +6587,7 @@ pub(crate) fn grouped_selection(s: &solidcraft_engine::Session, sel: &Sel) -> Ve
 }
 
 /// Measure keeps one entry per visible item, rather than using its two slots for kernel halves.
-pub(crate) fn measurement_selection(s: &solidcraft_engine::Session, sel: &Sel) -> Sel {
+pub(crate) fn measurement_selection(s: &torno_engine::Session, sel: &Sel) -> Sel {
     let pieces = grouped_selection(s, sel);
     let mut representative = sel.clone();
     match &mut representative {
@@ -6656,7 +6642,7 @@ fn box_select(app: &mut SolveApp, proj: &Proj, bx: BoxSel, add: bool) {
             {
                 continue;
             }
-            if !solidcraft_engine::view::sketch_curve_visible(&ss.sketch, i) {
+            if !torno_engine::view::sketch_curve_visible(&ss.sketch, i) {
                 continue;
             }
             let sampled = if bx.crossing {
@@ -6668,15 +6654,13 @@ fn box_select(app: &mut SolveApp, proj: &Proj, bx: BoxSel, add: bool) {
             let takes = if bx.crossing {
                 parts.iter().any(|part| bx.takes(part))
             } else {
-                sampled.quality == solidcraft_engine::render::SamplingQuality::Complete
-                    && !parts.is_empty()
-                    && parts.iter().all(|part| bx.takes(part))
+                sampled.quality == torno_engine::render::SamplingQuality::Complete && !parts.is_empty() && parts.iter().all(|part| bx.takes(part))
             };
             if takes {
                 out.push(Sel::SketchCurve { id: c.id.clone(), sketch: None });
             }
         }
-        let visible = solidcraft_engine::view::SketchPointVisibility::new(&ss.sketch);
+        let visible = torno_engine::view::SketchPointVisibility::new(&ss.sketch);
         for (i, p) in ss.sketch.points.iter().enumerate().filter(|_| !off("sketch") && !off("sketch_points")) {
             if accepts.is_none_or(|a| a & crate::selection::SKETCH_POINTS != 0)
                 && i != 0
@@ -7037,7 +7021,7 @@ pub(crate) fn standalone_points(app: &SolveApp) -> Vec<Vec3> {
             out.extend(sk.wires.iter().flat_map(|wire| wire.fit.iter().copied()));
         }
         let used: std::collections::HashSet<usize> = sk.curves.iter().flat_map(|c| c.kind.point_ids()).collect();
-        let visible = solidcraft_engine::view::SketchPointVisibility::new(sk);
+        let visible = torno_engine::view::SketchPointVisibility::new(sk);
         for (i, p) in sk.points.iter().enumerate().skip(1) {
             if !used.contains(&i) && p.link.is_none() && visible.takes(p) {
                 out.push(ss.plane.to_world(p.pos));
@@ -7067,7 +7051,7 @@ fn overlays(app: &SolveApp, painter: &egui::Painter, proj: &Proj) {
             && let Ok(sketch) = sketch.parse::<u64>()
             // Only a drawn wire's node: a planar point's ring is drawn with the sketch's own points.
             && st.sketch(sketch).is_some_and(|ss| ss.sketch.point_index(point).is_none())
-            && let Some(at) = solidcraft_engine::doc::construct::sketch_point_position(&st, sketch, point)
+            && let Some(at) = torno_engine::doc::construct::sketch_point_position(&st, sketch, point)
             && let Some(pos) = proj.to_screen(at)
         {
             painter.circle_stroke(pos, 6.0, Stroke::new(2.0, t.sel_edge));
@@ -7095,7 +7079,7 @@ fn overlays(app: &SolveApp, painter: &egui::Painter, proj: &Proj) {
     let locked = sk.locked_points();
     let conflict = Conflict::of(app, sk, &ss.report);
     let virtual_corners: Vec<usize> = sk.virtual_corners().into_iter().map(|(i, _)| i).collect();
-    let visible = solidcraft_engine::view::SketchPointVisibility::new(sk);
+    let visible = torno_engine::view::SketchPointVisibility::new(sk);
     let selected: std::collections::HashSet<_> = app
         .highlighted()
         .iter()
@@ -7144,15 +7128,15 @@ fn overlays(app: &SolveApp, painter: &egui::Painter, proj: &Proj) {
     // Sketch status, unless the status bar shows it (#7243).
     if let Some(r) = app.viewport.layout.as_ref().map(|l| l.content).filter(|_| !crate::status_bar::shown(app)) {
         let status = if !ss.report.ok() {
-            solidcraft_ui_text::tr("sketch.status_conflict").to_string()
+            torno_ui_text::tr("sketch.status_conflict").to_string()
         } else if !crate::sketch_palette::has_geometry(sk) {
-            solidcraft_ui_text::tr("ui.no_geometry_yet").to_string()
+            torno_ui_text::tr("ui.no_geometry_yet").to_string()
         } else if ss.report.dof == 0 {
-            solidcraft_ui_text::tr("sketch.status_fully_constrained").to_string()
+            torno_ui_text::tr("sketch.status_fully_constrained").to_string()
         } else if ss.report.dof == 1 {
-            solidcraft_ui_text::tr("ui.1_degree_of_freedom").to_string()
+            torno_ui_text::tr("ui.1_degree_of_freedom").to_string()
         } else {
-            solidcraft_ui_text::format("sketch.degrees_of_freedom", &[("count", &ss.report.dof.to_string())])
+            torno_ui_text::format("sketch.degrees_of_freedom", &[("count", &ss.report.dof.to_string())])
         };
         let msg = format!("{} — {status}", crate::i18n::tr_name(&ss.name));
         let c = if ss.report.ok() { v.sketch_accent } else { v.error };
@@ -7171,7 +7155,7 @@ pub(crate) struct Conflict {
 }
 
 impl Conflict {
-    pub(crate) fn of(app: &SolveApp, sk: &solidcraft_engine::sketch::Sketch, report: &solidcraft_engine::sketch::SolveReport) -> Conflict {
+    pub(crate) fn of(app: &SolveApp, sk: &torno_engine::sketch::Sketch, report: &torno_engine::sketch::SolveReport) -> Conflict {
         let mut out = Conflict::default();
         if !app.preferences.sketch_conflict_colour || report.failing.is_empty() {
             return out;
@@ -7210,8 +7194,8 @@ impl Conflict {
 /// diamond round each untied one (it touches another curve only by position), told apart by
 /// shape. Both are warnings, not errors: an open sketch (a sweep path, an axis) is valid.
 fn loose_end_markers(
-    sk: &solidcraft_engine::sketch::Sketch,
-    ends: &solidcraft_engine::sketch::EndReport,
+    sk: &torno_engine::sketch::Sketch,
+    ends: &torno_engine::sketch::EndReport,
     plane: &solidcore_record::Plane,
     painter: &egui::Painter,
     proj: &Proj,
@@ -7232,10 +7216,10 @@ fn loose_end_markers(
 /// dark or the light theme and a colour vision mode, from the tokens the window draws with, so the
 /// picture matches the window. The light theme's tokens (Off) are the engine's own colours, so a light
 /// render is unchanged.
-pub(crate) fn scene_palette(dark: bool, mode: solidcraft_theme::ColorVision) -> solidcraft_engine::view::Palette {
-    let t = if dark == solidcraft_theme::viewport_dark() && mode == solidcraft_theme::vision() { Tokens::view() } else { Tokens::themed(dark, mode) };
+pub(crate) fn scene_palette(dark: bool, mode: torno_theme::ColorVision) -> torno_engine::view::Palette {
+    let t = if dark == torno_theme::viewport_dark() && mode == torno_theme::vision() { Tokens::view() } else { Tokens::themed(dark, mode) };
     let rgb = |c: Color32| Rgb(c.r(), c.g(), c.b());
-    solidcraft_engine::view::Palette {
+    torno_engine::view::Palette {
         background: (rgb(t.viewport_top), rgb(t.viewport_bottom)),
         grid: rgb(t.grid),
         grid_major: rgb(t.grid_major),
@@ -7482,7 +7466,7 @@ fn signed_axis_view(app: &mut SolveApp, ui: &mut egui::Ui, rect: Rect) {
         hover: ui.input(|i| i.pointer.hover_pos()).filter(|p| ui.is_enabled() && ui.rect_contains_pointer(rect) && !crate::shell::covered(app, *p)),
         orbiting,
         snap_hint: !app.preferences.free_orbit,
-        home_label: solidcraft_ui_text::tr_label("Home view").to_owned(),
+        home_label: torno_ui_text::tr_label("Home view").to_owned(),
     };
     // The compass returns a tip or Home; its drag came from `axis_view_orbit` above.
     match crate::view_compass::show(ui, &compass) {
@@ -7523,7 +7507,7 @@ pub(crate) fn nearest_quarter_turn(yaw: f64) -> f64 {
 /// Turn the view to face the selected planar face or plane, else the active sketch; asked again
 /// while it already faces it, from the other side (#1886).
 pub fn look_at_selection(app: &mut SolveApp) {
-    if solidcraft_engine::find_command("view.normal_to").is_some_and(|command| command.info(&app.session).disabled_reason.is_none()) {
+    if torno_engine::find_command("view.normal_to").is_some_and(|command| command.info(&app.session).disabled_reason.is_none()) {
         app.start("view.normal_to");
     } else {
         crate::dialogs::look_at_sketch_again(app);
@@ -7544,7 +7528,7 @@ mod tests {
     #[test]
     fn a_dragged_component_is_drawn_as_a_layer_built_once() {
         for wire in [false, true] {
-            let mut s = solidcraft_engine::Session::default();
+            let mut s = torno_engine::Session::default();
             s.execute("solid.box", &json!({"length": 5, "width": 5, "height": 5, "body_name": "Stays"})).unwrap();
             let first = s.execute("component.create", &json!({"name": "Part"})).unwrap()["occurrence"].as_u64().unwrap();
             s.execute("solid.box", &json!({"length": 2, "width": 3, "height": 4, "body_name": "Block", "operation": "new"})).unwrap();
@@ -7633,7 +7617,7 @@ mod tests {
     /// again) and take them once more at the next step.
     #[test]
     fn a_drag_back_where_it_began_keeps_its_layer() {
-        let mut s = solidcraft_engine::Session::default();
+        let mut s = torno_engine::Session::default();
         s.execute("solid.box", &json!({"length": 5, "width": 5, "height": 5, "body_name": "Stays"})).unwrap();
         let first = s.execute("component.create", &json!({"name": "Part"})).unwrap()["occurrence"].as_u64().unwrap();
         s.execute("solid.box", &json!({"length": 2, "width": 3, "height": 4, "body_name": "Block", "operation": "new"})).unwrap();
@@ -7669,9 +7653,9 @@ mod tests {
 
     #[test]
     fn raised_bodies_cast_ground_shadows_at_the_origin() -> Result<(), Box<dyn std::error::Error>> {
-        use solidcraft_viewport::UpAxis;
+        use torno_viewport::UpAxis;
         for (up, translate, coordinate) in [(UpAxis::Z, [0, 0, 13], 2), (UpAxis::Y, [0, 13, 0], 1)] {
-            let mut session = solidcraft_engine::Session::default();
+            let mut session = torno_engine::Session::default();
             session.execute("solid.box", &json!({"length": 12, "width": 12, "height": 30, "body_name": "Raised"}))?;
             session.execute("solid.move", &json!({"bodies": ["Raised"], "translate": translate}))?;
             let mut app = SolveApp::new(session, crate::Services::default());
@@ -7689,10 +7673,10 @@ mod tests {
 
     #[test]
     fn ground_shadow_keeps_legacy_placement_and_stays_below_low_bodies() -> Result<(), Box<dyn std::error::Error>> {
-        use solidcraft_viewport::UpAxis;
+        use torno_viewport::UpAxis;
         for (up, coordinate) in [(UpAxis::Z, 2), (UpAxis::Y, 1)] {
             for (height, follows_model, expected) in [(13, true, 13.0), (-7, false, -7.0), (-7, true, -7.0), (0, false, 0.0)] {
-                let mut session = solidcraft_engine::Session::default();
+                let mut session = torno_engine::Session::default();
                 session.execute("solid.box", &json!({"length": 12, "width": 12, "height": 30, "body_name": "Box"}))?;
                 let mut translate = [0; 3];
                 translate[coordinate] = height;
@@ -7732,7 +7716,7 @@ mod tests {
 
     #[test]
     fn ground_shadow_does_not_enter_see_through_geometry() -> Result<(), Box<dyn std::error::Error>> {
-        let mut session = solidcraft_engine::Session::default();
+        let mut session = torno_engine::Session::default();
         session.execute("solid.box", &json!({"length": 30, "width": 30, "height": 10}))?;
         let app = SolveApp::new(session, crate::Services::default());
         let mut scene = GpuScene::default();
@@ -7751,7 +7735,7 @@ mod tests {
     /// middle (#10442); bodies that meet keep sharing one.
     #[test]
     fn ground_shadow_leaves_the_gap_between_bodies_apart() -> Result<(), Box<dyn std::error::Error>> {
-        use solidcraft_engine::geom::Aabb3;
+        use torno_engine::geom::Aabb3;
         let block = |x0: f64| Aabb3 { min: Vec3::new(x0, -30.0, 0.0), max: Vec3::new(x0 + 40.0, 30.0, 20.0) };
         let (left, right) = (block(-60.0), block(20.0));
         let groups = shadow_groups(vec![left, right]);
@@ -7770,7 +7754,7 @@ mod tests {
         let crowd: Vec<_> = (0..100).map(|i| block(f64::from(i) * 100.0)).collect();
         assert_eq!(shadow_groups(crowd).len(), 1);
 
-        let mut session = solidcraft_engine::Session::default();
+        let mut session = torno_engine::Session::default();
         for x in [-60, 20] {
             session.execute("solid.box", &json!({"length": 40, "width": 60, "height": 20, "corner": [x, -30, 0], "operation": "new"}))?;
         }
@@ -7787,7 +7771,7 @@ mod tests {
     /// dialog waits for a plane.
     #[test]
     fn origin_point_hides_behind_bodies_like_the_axes_and_planes() {
-        let mut s = solidcraft_engine::Session::default();
+        let mut s = torno_engine::Session::default();
         s.execute("solid.cylinder", &json!({"radius": 20, "height": 40})).unwrap();
         let mut app = SolveApp::new(s, crate::Services::default());
         app.fit_view();
@@ -7811,7 +7795,7 @@ mod tests {
         assert!(!origin_hidden_by_body(&app, &proj), "wireframe hides nothing");
         app.ui.visual_style = 0;
         // A body away from the origin leaves the point drawn.
-        let mut s = solidcraft_engine::Session::default();
+        let mut s = torno_engine::Session::default();
         s.execute("solid.box", &json!({"length": 20, "width": 20, "height": 20, "center": [200.0, 200.0, 200.0]})).unwrap();
         let mut app = SolveApp::new(s, crate::Services::default());
         app.fit_view();
@@ -7826,7 +7810,7 @@ mod tests {
             ("sketch.spline3d", json!([[10, 20, 30], [20, 25, 40], [30, 20, 30]]), false),
             ("sketch.spline3d", json!([[10, 20, 30], [20, 20, 30], [30, 20, 30]]), false),
         ] {
-            let mut s = solidcraft_engine::Session::default();
+            let mut s = torno_engine::Session::default();
             s.execute("sketch.create", &json!({"plane":"XZ", "offset":7})).unwrap();
             s.execute("sketch.options", &json!({"sketch_3d":true})).unwrap();
             let id = s.execute(command, &json!({"points":points})).unwrap()["curves"][0].as_str().unwrap().to_string();
@@ -7848,7 +7832,7 @@ mod tests {
 
     #[test]
     fn plane_at_angle_uses_3d_wire_endpoints_in_model_space() {
-        let mut s = solidcraft_engine::Session::default();
+        let mut s = torno_engine::Session::default();
         s.execute("sketch.create", &json!({"plane":"XZ", "offset":7})).unwrap();
         s.execute("sketch.options", &json!({"sketch_3d":true})).unwrap();
         let id = s.execute("sketch.line3d", &json!({"points":[[10,20,30],[30,20,30]]})).unwrap()["curves"][0].as_str().unwrap().to_string();
@@ -7867,7 +7851,7 @@ mod tests {
         for (command, params) in crate::dialogs::apply_commands(&app, &dialog).unwrap() {
             app.run(&command, params).unwrap();
         }
-        let planes = solidcraft_engine::view::construction_planes(&app.session);
+        let planes = torno_engine::view::construction_planes(&app.session);
         let plane = &planes.last().unwrap().2;
         assert!(plane.normal().dist(-Vec3::Y) < 1e-9);
         assert!(plane.origin.dist(Vec3::new(0., 50., 10.)) < 1e-9, "{plane:?}");
@@ -7875,7 +7859,7 @@ mod tests {
 
     #[test]
     fn point_pick_tie_at_origin_prefers_the_drawn_point_after_deleting_coincident() {
-        let mut s = solidcraft_engine::Session::default();
+        let mut s = torno_engine::Session::default();
         s.execute("sketch.create", &json!({"plane": "XY"})).unwrap();
         let drawn = s.execute("sketch.point", &json!({"point": [0, 0], "id": "drawn"})).unwrap();
         let constraint = drawn["constraints"][0].as_str().unwrap();
@@ -7915,13 +7899,13 @@ mod tests {
     /// against the sides and four against the top face. The tool lit the face under the pointer,
     /// though its click takes only edges, and the face's outline covered the colours of its
     /// edges. Rendered offscreen with bodies built on the CPU and evaluated on the GPU (skipped
-    /// without a GPU adapter); with `SOLIDCRAFT_CONTINUITY_TOP_SHOT` set, the pictures are
+    /// without a GPU adapter); with `TORNO_CONTINUITY_TOP_SHOT` set, the pictures are
     /// written there (`-cpu.png`, `-gpu.png`).
     #[cfg(not(target_arch = "wasm32"))]
     #[test]
     fn continuity_colours_stay_on_the_edges_of_the_face_under_the_pointer() {
-        use solidcraft_engine::kernel::SeamVerdict;
-        let mut s = solidcraft_engine::Session::default();
+        use torno_engine::kernel::SeamVerdict;
+        let mut s = torno_engine::Session::default();
         s.execute("solid.box", &json!({"length": 60, "width": 40, "height": 20, "body_name": "B"})).unwrap();
         s.execute("solid.fillet", &json!({"edges": [[30, 0, 20], [30, 40, 20], [0, 20, 20], [60, 20, 20]], "radius": 6})).unwrap();
         let mut app = SolveApp::new(s, crate::Services::default());
@@ -7968,14 +7952,14 @@ mod tests {
                 proj.cam.back().to_f32(),
                 eye,
                 SIZE,
-                tess.then_some(solidcraft_viewport_gpu::SHADER),
+                tess.then_some(torno_viewport_gpu::SHADER),
                 [0.0; 8],
                 crate::gpu::analysis_colors(&t.analysis),
             ) else {
                 eprintln!("skipping: no GPU adapter");
                 return;
             };
-            if let Ok(path) = std::env::var("SOLIDCRAFT_CONTINUITY_TOP_SHOT")
+            if let Ok(path) = std::env::var("TORNO_CONTINUITY_TOP_SHOT")
                 && let Some(png) = image::RgbaImage::from_raw(SIZE, SIZE, img.clone())
             {
                 png.save(path.replace(".png", if tess { "-gpu.png" } else { "-cpu.png" })).unwrap();
@@ -8016,7 +8000,7 @@ mod tests {
     /// nothing in the smooth or gap colours.
     #[test]
     fn continuity_seams_take_their_colours_from_the_theme() {
-        let mut s = solidcraft_engine::Session::default();
+        let mut s = torno_engine::Session::default();
         s.execute("solid.box", &json!({"length": 20, "width": 20, "height": 20})).unwrap();
         s.execute("solid.fillet", &json!({"edges": [[20, 20, 10]], "radius": 4})).unwrap();
         s.execute("inspect.continuity", &json!({})).unwrap();
@@ -8091,7 +8075,7 @@ mod tests {
         let faces = h.app.session.isocurve_lines();
         assert_eq!(faces.len(), 2, "{:?}", h.app.status);
         // Each piece's lines up the face (x held) and across it (z held), by where they are held.
-        let held = |lines: &[solidcraft_engine::kernel::IsoLine], k: usize| {
+        let held = |lines: &[torno_engine::kernel::IsoLine], k: usize| {
             let mut at: Vec<f64> = lines
                 .iter()
                 .filter_map(|l| {
@@ -8120,8 +8104,8 @@ mod tests {
     #[cfg(not(target_arch = "wasm32"))]
     #[test]
     fn bodies_evaluated_on_the_gpu_look_like_bodies_built_on_the_cpu() {
-        let mut s = solidcraft_engine::Session::default();
-        s.run_script(&solidcraft_engine::sample::script()).unwrap();
+        let mut s = torno_engine::Session::default();
+        s.run_script(&torno_engine::sample::script()).unwrap();
         let mut app = SolveApp::new(s, crate::Services::default());
         app.fit_view();
         const SIZE: u32 = 256;
@@ -8132,7 +8116,7 @@ mod tests {
             let proj = projection(&app, rect);
             let e = proj.cam.eye().to_f32();
             let eye = [e[0], e[1], e[2], if proj.cam.fov > 0.0 { 1.0 } else { 0.0 }];
-            let (planned, shader) = (scene.planned.len(), tess.then_some(solidcraft_viewport_gpu::SHADER));
+            let (planned, shader) = (scene.planned.len(), tess.then_some(torno_viewport_gpu::SHADER));
             (
                 planned,
                 scene.tris.len(),
@@ -8182,8 +8166,8 @@ mod tests {
             return;
         };
         assert!(!tess, "the rejected shader built a pipeline");
-        let mut s = solidcraft_engine::Session::default();
-        s.run_script(&solidcraft_engine::sample::script()).unwrap();
+        let mut s = torno_engine::Session::default();
+        s.run_script(&torno_engine::sample::script()).unwrap();
         let mut app = SolveApp::new(s, crate::Services::default());
         app.fit_view();
         app.viewport.gpu = Some(GpuTarget { format: egui_wgpu::wgpu::TextureFormat::Rgba8Unorm, depth: None, samples: 1, tess, oit: false });
@@ -8217,8 +8201,8 @@ mod tests {
     /// count once it has held still for `SS_SETTLE`, and the full count whenever AO is off.
     #[test]
     fn ambient_occlusion_takes_fewer_samples_while_the_view_moves() {
-        use solidcraft_viewport_gpu::view::{AO_SAMPLES, AO_SAMPLES_MOVING};
-        let mut app = SolveApp::new(solidcraft_engine::Session::default(), crate::Services::default());
+        use torno_viewport_gpu::view::{AO_SAMPLES, AO_SAMPLES_MOVING};
+        let mut app = SolveApp::new(torno_engine::Session::default(), crate::Services::default());
         let ctx = egui::Context::default();
         let size = [800.0, 600.0];
         let view = |x: f32| {
@@ -8258,8 +8242,8 @@ mod tests {
     #[cfg(not(target_arch = "wasm32"))]
     #[test]
     fn supersampling_draws_the_same_model_with_smooth_edges() {
-        let mut s = solidcraft_engine::Session::default();
-        s.run_script(&solidcraft_engine::sample::script()).unwrap();
+        let mut s = torno_engine::Session::default();
+        s.run_script(&torno_engine::sample::script()).unwrap();
         let mut app = SolveApp::new(s, crate::Services::default());
         app.fit_view();
         app.viewport.gpu = Some(GpuTarget { format: egui_wgpu::wgpu::TextureFormat::Rgba8Unorm, depth: None, samples: 1, tess: false, oit: false });
@@ -8314,8 +8298,8 @@ mod tests {
     #[cfg(not(target_arch = "wasm32"))]
     #[test]
     fn ambient_occlusion_draws_no_copies_of_a_part() {
-        use solidcraft_viewport_gpu::view::{AO_SAMPLES, AO_SAMPLES_MOVING};
-        let mut s = solidcraft_engine::Session::default();
+        use torno_viewport_gpu::view::{AO_SAMPLES, AO_SAMPLES_MOVING};
+        let mut s = torno_engine::Session::default();
         s.execute("solid.box", &json!({"length": 300, "width": 300, "height": 4, "corner": [-150, -150, -4], "body_name": "plate"})).unwrap();
         s.execute("solid.box", &json!({"length": 30, "width": 160, "height": 16, "corner": [0, -80, 0], "operation": "new", "body_name": "block"}))
             .unwrap();
@@ -8323,7 +8307,7 @@ mod tests {
         s.execute("solid.box", &json!({"length": 20, "width": 20, "height": 16, "corner": [-110, 60, 0], "operation": "new", "body_name": "marker"}))
             .unwrap();
         let mut app = SolveApp::new(s, crate::Services::default());
-        let (yaw, pitch) = solidcraft_viewport::StandardView::Top.angles();
+        let (yaw, pitch) = torno_viewport::StandardView::Top.angles();
         app.cam = Camera { target: Vec3::new(-30.0, 0.0, 0.0), yaw, pitch, roll: 0.0, distance: 200.0, fov: 0.0, ..Default::default() };
         app.ui.perspective = false;
         app.ui.show_grid = false;
@@ -8417,7 +8401,7 @@ mod tests {
     #[cfg(not(target_arch = "wasm32"))]
     #[test]
     fn faded_and_see_through_bodies_are_drawn_from_their_plans_with_oit() {
-        let mut s = solidcraft_engine::Session::default();
+        let mut s = torno_engine::Session::default();
         let part = s.execute("component.create", &json!({"name": "Part"})).unwrap()["component"].as_u64().unwrap();
         s.execute("solid.box", &json!({"length": 30, "width": 30, "height": 30, "corner": [0, 0, 0], "operation": "new", "body_name": "Glass"}))
             .unwrap();
@@ -8465,7 +8449,7 @@ mod tests {
                 proj.cam.back().to_f32(),
                 eye,
                 SIZE,
-                tess.then_some(solidcraft_viewport_gpu::SHADER),
+                tess.then_some(torno_viewport_gpu::SHADER),
                 [0.0; 8],
                 crate::gpu::analysis_colors(&Tokens::get().analysis),
             )
@@ -8488,7 +8472,7 @@ mod tests {
     #[cfg(not(target_arch = "wasm32"))]
     #[test]
     fn a_hovered_face_lights_whole_over_a_body_drawn_from_its_plan() {
-        let mut s = solidcraft_engine::Session::default();
+        let mut s = torno_engine::Session::default();
         s.execute("solid.box", &json!({"length": 40, "width": 40, "height": 40, "corner": [0, 0, 0], "operation": "new"})).unwrap();
         s.execute("solid.box", &json!({"length": 16, "width": 16, "height": 20, "corner": [12, 12, 20], "operation": "cut"})).unwrap();
         s.execute("solid.cylinder", &json!({"base": [33, 33, 40], "diameter": 10, "height": 10, "operation": "join"})).unwrap();
@@ -8506,7 +8490,7 @@ mod tests {
             let proj = projection(&app, rect);
             let e = proj.cam.eye().to_f32();
             let eye = [e[0], e[1], e[2], if proj.cam.fov > 0.0 { 1.0 } else { 0.0 }];
-            let shader = tess.then_some(solidcraft_viewport_gpu::SHADER);
+            let shader = tess.then_some(torno_viewport_gpu::SHADER);
             crate::gpu::render_offscreen(
                 scene,
                 Some(highlight),
@@ -8569,7 +8553,7 @@ mod tests {
     /// of their own under the temporary folder, and says where.
     #[cfg(not(target_arch = "wasm32"))]
     fn keep_failed_pictures(name: &str, pictures: &[(&str, &Vec<u8>)], size: u32) -> String {
-        let dir = std::env::temp_dir().join(format!("solidcraft-{name}-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("torno-{name}-{}", std::process::id()));
         let saved = std::fs::create_dir_all(&dir).is_ok()
             && pictures.iter().all(|(file, rgba)| {
                 image::RgbaImage::from_raw(size, size, rgba.to_vec()).is_some_and(|img| img.save(dir.join(format!("{file}.png"))).is_ok())
@@ -8584,7 +8568,7 @@ mod tests {
     #[cfg(not(target_arch = "wasm32"))]
     #[test]
     fn the_highlight_scenes_own_block_is_drawn() {
-        let mut s = solidcraft_engine::Session::default();
+        let mut s = torno_engine::Session::default();
         s.execute("solid.box", &json!({"length": 40, "width": 30, "height": 20, "corner": [0, 0, 0], "operation": "new"})).unwrap();
         let mut app = SolveApp::new(s, crate::Services::default());
         app.fit_view();
@@ -8631,7 +8615,7 @@ mod tests {
     #[cfg(not(target_arch = "wasm32"))]
     #[test]
     fn an_origin_plane_on_a_face_is_tinted_evenly() {
-        let mut s = solidcraft_engine::Session::default();
+        let mut s = torno_engine::Session::default();
         s.execute("solid.box", &json!({"length": 40, "width": 30, "height": 10, "corner": [0, 0, 0]})).unwrap();
         let mut app = SolveApp::new(s, crate::Services::default());
         app.cam = Camera {
@@ -8794,8 +8778,8 @@ mod tests {
     /// mode's axis colours, so the two can't drift apart.
     #[test]
     fn pictures_are_drawn_in_the_windows_theme() {
-        use solidcraft_engine::view::Palette;
-        use solidcraft_theme::ColorVision;
+        use torno_engine::view::Palette;
+        use torno_theme::ColorVision;
         assert_eq!(scene_palette(false, ColorVision::Off), Palette::DEFAULT, "the light theme is the engine's colours");
         let rgb = |c: Color32| Rgb(c.r(), c.g(), c.b());
         let (p, t) = (scene_palette(true, ColorVision::Off), Tokens::dark());
@@ -8834,7 +8818,7 @@ mod tests {
         }
         let mut h = crate::scenario::Harness::new();
         h.app.run("solid.box", json!({"length": 40, "width": 30, "height": 20})).unwrap();
-        h.app.cam = solidcraft_engine::view::home_camera(&h.app.session).unwrap();
+        h.app.cam = torno_engine::view::home_camera(&h.app.session).unwrap();
         for dark in [false, true, false] {
             h.app.ui.dark = dark;
             let img = crate::control::view_rgba(&h.app, 160, 120).unwrap();
@@ -8906,7 +8890,7 @@ mod tests {
         }
         let mut h = crate::scenario::Harness::new();
         h.app.run("solid.box", json!({"length":40,"width":30,"height":20})).unwrap();
-        let cam = solidcraft_engine::view::home_camera(&h.app.session).unwrap();
+        let cam = torno_engine::view::home_camera(&h.app.session).unwrap();
         let whole = pixels(&mut h, cam);
         let before = h.app.session.doc.clone();
         let undo = h.app.session.undo.len();
@@ -9032,7 +9016,7 @@ mod tests {
         let id = h.app.session.doc.find_feature("Outline").unwrap().id;
         h.app.session.selection = vec![Sel::Feature { id }];
         h.frames(2);
-        let ((), work) = solidcraft_engine::kernel::profile::capture(|| {
+        let ((), work) = torno_engine::kernel::profile::capture(|| {
             for _ in 0..3 {
                 build_highlight(&h.app);
             }
@@ -9044,7 +9028,7 @@ mod tests {
     #[test]
     fn history_marker_shows_only_its_sketch_without_changing_visibility() -> Result<(), Box<dyn std::error::Error>> {
         for explicitly_hidden in [false, true] {
-            let mut app = SolveApp::new(solidcraft_engine::Session::default(), crate::Services::default());
+            let mut app = SolveApp::new(torno_engine::Session::default(), crate::Services::default());
             app.ui.show_grid = false;
             let mut sketches = Vec::new();
             for (name, x) in [("First", 0), ("Second", 30)] {
@@ -9075,7 +9059,7 @@ mod tests {
 
     #[test]
     fn timeline_modifier_highlight_follows_edits_and_rollback() {
-        let mut app = SolveApp::new(solidcraft_engine::Session::default(), crate::Services::default());
+        let mut app = SolveApp::new(torno_engine::Session::default(), crate::Services::default());
         app.run("solid.box", json!({"length":20,"width":20,"height":20})).unwrap();
         let id = app.run("solid.fillet", json!({"edges":[[0,0,10]],"radius":2})).unwrap()["feature"].as_u64().unwrap();
         // A later chamfer changes the same body without consuming the fillet.
@@ -9096,7 +9080,7 @@ mod tests {
 
     #[test]
     fn timeline_modifier_highlight_follows_component_instances() {
-        let mut app = SolveApp::new(solidcraft_engine::Session::default(), crate::Services::default());
+        let mut app = SolveApp::new(torno_engine::Session::default(), crate::Services::default());
         app.run("component.create", json!({"name":"Part","grounded":false})).unwrap();
         app.run("solid.box", json!({"length":20,"width":20,"height":20})).unwrap();
         let id = app.run("solid.fillet", json!({"edges":[[0,0,10]],"radius":2})).unwrap()["feature"].as_u64().unwrap();
@@ -9117,7 +9101,7 @@ mod tests {
     /// A design with a part (`command` with `params`, see [`PARTS`]) placed three times (one
     /// placement turned), drawn on a device that builds bodies on the CPU.
     fn three_placed_parts((command, params): (&str, &str)) -> SolveApp {
-        let mut app = SolveApp::new(solidcraft_engine::Session::default(), crate::Services::default());
+        let mut app = SolveApp::new(torno_engine::Session::default(), crate::Services::default());
         app.ui.ground_shadow = false;
         app.set_origin_shown(false);
         app.viewport.gpu = Some(GpuTarget { format: egui_wgpu::wgpu::TextureFormat::Rgba8Unorm, depth: None, samples: 1, tess: false, oit: false });
@@ -9194,7 +9178,7 @@ mod tests {
     fn imported_mesh_edges_draw_in_each_style_without_brep_picks() {
         let h = crate::scenario::Harness::new();
         let path = h.dir.join("box.3mf");
-        let mut app = SolveApp::new(solidcraft_engine::Session::default(), crate::Services::default());
+        let mut app = SolveApp::new(torno_engine::Session::default(), crate::Services::default());
         app.run("solid.box", json!({"length":20,"width":20,"height":10})).unwrap();
         app.run("file.save_mesh", json!({"path":path})).unwrap();
         app.run("file.new", json!({})).unwrap();
@@ -9233,7 +9217,7 @@ mod tests {
     fn mesh_outline_hover_cache_follows_measure_and_preserves_modeling_picks() {
         let h = crate::scenario::Harness::new();
         let path = h.dir.join("box.stl");
-        let mut app = SolveApp::new(solidcraft_engine::Session::default(), crate::Services::default());
+        let mut app = SolveApp::new(torno_engine::Session::default(), crate::Services::default());
         app.run("solid.box", json!({"length":20,"width":30,"height":10})).unwrap();
         app.run("file.save_mesh", json!({"path":path})).unwrap();
         app.run("file.new", json!({})).unwrap();
@@ -9260,17 +9244,17 @@ mod tests {
         assert!(crate::open_meshing::session_world(&app.session).bodies[0].mesh().display_only_edges);
     }
 
-    /// Manual GPU benchmark: 25 placements of the mesh `SOLIDCRAFT_BENCH_MESH` (an STL, OBJ or
-    /// 3MF) drawn offscreen at 3600 × 2190 px (divided by `SOLIDCRAFT_BENCH_DIV`) with 4× MSAA
+    /// Manual GPU benchmark: 25 placements of the mesh `TORNO_BENCH_MESH` (an STL, OBJ or
+    /// 3MF) drawn offscreen at 3600 × 2190 px (divided by `TORNO_BENCH_DIV`) with 4× MSAA
     /// while the camera turns, each frame waited for: the placements' own triangles (`merged`, as
     /// before instancing) and as instances. Prints the median frame time of each.
     #[cfg(not(target_arch = "wasm32"))]
     #[test]
-    #[ignore = "manual: SOLIDCRAFT_BENCH_MESH=part.stl cargo test --release -p solidcraft-ui-egui --lib -- --ignored instanced_scene_gpu_benchmark --nocapture"]
+    #[ignore = "manual: TORNO_BENCH_MESH=part.stl cargo test --release -p torno-ui-egui --lib -- --ignored instanced_scene_gpu_benchmark --nocapture"]
     fn instanced_scene_gpu_benchmark() {
         use egui_wgpu::wgpu;
-        let Some(path) = std::env::var_os("SOLIDCRAFT_BENCH_MESH") else { return };
-        let mut app = SolveApp::new(solidcraft_engine::Session::default(), crate::Services::default());
+        let Some(path) = std::env::var_os("TORNO_BENCH_MESH") else { return };
+        let mut app = SolveApp::new(torno_engine::Session::default(), crate::Services::default());
         app.ui.ground_shadow = false;
         app.set_origin_shown(false);
         let component = app.run("file.insert_mesh", json!({"path": path.to_string_lossy()})).unwrap()["component"].clone();
@@ -9280,17 +9264,17 @@ mod tests {
         for k in 1..25 {
             app.run("occurrence.copy", json!({"component":component,"translate":[f64::from(k % 5) * step, f64::from(k / 5) * step, 0.0]})).unwrap();
         }
-        // `SOLIDCRAFT_BENCH_OPACITY=0.5`: every placement see-through.
-        if let Some(opacity) = std::env::var("SOLIDCRAFT_BENCH_OPACITY").ok().and_then(|v| v.parse::<f64>().ok()) {
+        // `TORNO_BENCH_OPACITY=0.5`: every placement see-through.
+        if let Some(opacity) = std::env::var("TORNO_BENCH_OPACITY").ok().and_then(|v| v.parse::<f64>().ok()) {
             app.run("appearance.assign", json!({"components": [component.to_string()], "color": "#b4b8bc", "opacity": opacity})).unwrap();
         }
         let Some((_, device, queue)) = crate::gpu::offscreen_device() else {
             eprintln!("skipping: no GPU adapter");
             return;
         };
-        let scale: u32 = std::env::var("SOLIDCRAFT_BENCH_DIV").ok().and_then(|v| v.parse().ok()).unwrap_or(1).max(1);
+        let scale: u32 = std::env::var("TORNO_BENCH_DIV").ok().and_then(|v| v.parse().ok()).unwrap_or(1).max(1);
         let (w, h, samples) = (3600u32 / scale, 2190u32 / scale, 4u32);
-        let depth = solidcraft_viewport_gpu::depth_format(&device, true);
+        let depth = torno_viewport_gpu::depth_format(&device, true);
         let format = wgpu::TextureFormat::Rgba8Unorm;
         app.viewport.gpu = Some(GpuTarget { format, depth: Some(depth), samples, tess: false, oit: false });
         app.fit_view();
@@ -9319,8 +9303,8 @@ mod tests {
         let st = crate::open_meshing::session_world(&app.session);
         let seen = st.bodies.iter().filter(|b| proj.to_screen(b.mesh_bounds().center()).is_some_and(|p| rect.contains(p))).count();
         eprintln!("{w} x {h} px: {seen} of {} placements in view", st.bodies.len());
-        // `SOLIDCRAFT_BENCH_CLOSE=1`: close up on the middle placement, most of the others out of view.
-        if std::env::var("SOLIDCRAFT_BENCH_CLOSE").is_ok_and(|v| v == "1") {
+        // `TORNO_BENCH_CLOSE=1`: close up on the middle placement, most of the others out of view.
+        if std::env::var("TORNO_BENCH_CLOSE").is_ok_and(|v| v == "1") {
             let middle = st.bodies.iter().map(|b| b.mesh_bounds()).nth(12).unwrap_or_default();
             app.cam.target = middle.center();
             app.cam.distance = middle.diagonal() * 1.5;
@@ -9340,9 +9324,9 @@ mod tests {
             t.elapsed().as_secs_f64(),
             lod.instanced.iter().map(|m| m.levels.iter().map(|(t, e)| (t.indices.len() / 3, *e)).collect::<Vec<_>>()).collect::<Vec<_>>()
         );
-        // `SOLIDCRAFT_BENCH_PNG=dir`: the view drawn from each placement's own triangles, in full
-        // as instances, and from the levels (`SOLIDCRAFT_BENCH_PNG_ONLY=1`: then stop).
-        if let Some(dir) = std::env::var_os("SOLIDCRAFT_BENCH_PNG") {
+        // `TORNO_BENCH_PNG=dir`: the view drawn from each placement's own triangles, in full
+        // as instances, and from the levels (`TORNO_BENCH_PNG_ONLY=1`: then stop).
+        if let Some(dir) = std::env::var_os("TORNO_BENCH_PNG") {
             const SIDE: u32 = 1024;
             let rect = Rect::from_min_size(Pos2::ZERO, vec2(SIDE as f32, SIDE as f32));
             let proj = projection(&app, rect);
@@ -9359,13 +9343,13 @@ mod tests {
                     None,
                     [0.0; 8],
                     crate::gpu::analysis_colors(&Tokens::get().analysis),
-                ) && let Some(png) = solidcraft_viewport::png(SIDE as usize, SIDE as usize, rgba)
+                ) && let Some(png) = torno_viewport::png(SIDE as usize, SIDE as usize, rgba)
                 {
                     let _ = std::fs::write(std::path::Path::new(&dir).join(format!("{name}.png")), png);
                 }
             }
         }
-        if std::env::var_os("SOLIDCRAFT_BENCH_PNG_ONLY").is_some() {
+        if std::env::var_os("TORNO_BENCH_PNG_ONLY").is_some() {
             return;
         }
         for (label, scene) in [("own triangles", scene.clone().merged()), ("instanced", scene), ("instanced, levels of detail", lod)] {
@@ -9404,7 +9388,7 @@ mod tests {
                     outline: true,
                     eye: [e[0], e[1], e[2], if proj.cam.fov > 0.0 { 1.0 } else { 0.0 }],
                     ao_radius: 0.0,
-                    ao_samples: solidcraft_viewport_gpu::view::AO_SAMPLES,
+                    ao_samples: torno_viewport_gpu::view::AO_SAMPLES,
                     sky: [0.0; 4],
                     ssaa: 1.0,
                     hover_tint: [0.0; 3],
@@ -9431,9 +9415,9 @@ mod tests {
                             depth_stencil_attachment: Some(wgpu::RenderPassDepthStencilAttachment {
                                 view: &depth_view,
                                 depth_ops: Some(wgpu::Operations {
-                                    load: wgpu::LoadOp::Clear(solidcraft_viewport_gpu::view::far_depth(
-                                        solidcraft_viewport_gpu::view::reversed_depth(Some(depth)),
-                                    )),
+                                    load: wgpu::LoadOp::Clear(torno_viewport_gpu::view::far_depth(torno_viewport_gpu::view::reversed_depth(Some(
+                                        depth,
+                                    )))),
                                     store: wgpu::StoreOp::Discard,
                                 }),
                                 stencil_ops: Some(wgpu::Operations { load: wgpu::LoadOp::Clear(0), store: wgpu::StoreOp::Discard }),
@@ -9465,7 +9449,7 @@ mod tests {
 
     #[test]
     fn small_reference_meshes_reuse_display_triangles_when_their_occurrence_moves() {
-        use solidcraft_engine::doc::{Document, FeatureKind, MeshData};
+        use torno_engine::doc::{Document, FeatureKind, MeshData};
         let mut doc = Document::default();
         let component = doc.add_component(Some("Part"), 0).unwrap();
         let occurrence = doc.occurrences.iter_mut().find(|o| o.component == component).unwrap();
@@ -9480,7 +9464,7 @@ mod tests {
         }];
         let id = doc.add_feature(FeatureKind::MeshImport { file: "small.stl".into(), meshes }, Some("Mesh")).unwrap();
         doc.feature_mut(id).unwrap().component = component;
-        let mut app = SolveApp::new(solidcraft_engine::Session::new(doc), crate::Services::default());
+        let mut app = SolveApp::new(torno_engine::Session::new(doc), crate::Services::default());
         app.ui.ground_shadow = false;
         app.ui.visual_style = 1;
         app.viewport.gpu = Some(GpuTarget { format: egui_wgpu::wgpu::TextureFormat::Rgba8Unorm, depth: None, samples: 1, tess: false, oit: false });
@@ -9510,7 +9494,7 @@ mod tests {
     }
 
     fn single_reference_grid(n: u32) -> SolveApp {
-        use solidcraft_engine::doc::{Document, FeatureKind, MeshData};
+        use torno_engine::doc::{Document, FeatureKind, MeshData};
         let mut doc = Document::default();
         let positions = (0..=n).flat_map(|y| (0..=n).flat_map(move |x| [f64::from(x), f64::from(y), 0.0])).collect();
         let triangles = (0..n)
@@ -9523,7 +9507,7 @@ mod tests {
             .collect();
         let meshes = vec![MeshData { name: "Grid".into(), positions, triangles, color: None, corner_normals: Default::default() }];
         doc.add_feature(FeatureKind::MeshImport { file: "grid.stl".into(), meshes }, Some("Grid")).unwrap();
-        let mut app = SolveApp::new(solidcraft_engine::Session::new(doc), crate::Services::default());
+        let mut app = SolveApp::new(torno_engine::Session::new(doc), crate::Services::default());
         app.ui.ground_shadow = false;
         app.ui.visual_style = 1;
         app.viewport.gpu = Some(GpuTarget { format: egui_wgpu::wgpu::TextureFormat::Rgba8Unorm, depth: None, samples: 1, tess: false, oit: false });
@@ -9569,7 +9553,7 @@ mod tests {
     /// opened or inserted) are the ones its first scene draws: that frame welds nothing.
     #[test]
     fn a_large_meshs_shared_vertices_are_made_ahead_of_its_first_scene() {
-        use solidcraft_engine::doc::{Document, FeatureKind, MeshData};
+        use torno_engine::doc::{Document, FeatureKind, MeshData};
         // A flat grid of 160 × 160 squares: 51 200 triangles, each corner its own vertex.
         let n = 160u32;
         let corners: Vec<[u32; 2]> =
@@ -9583,7 +9567,7 @@ mod tests {
             corner_normals: Default::default(),
         }];
         doc.add_feature(FeatureKind::MeshImport { file: "grid.stl".into(), meshes }, Some("Grid")).unwrap();
-        let mut app = SolveApp::new(solidcraft_engine::Session::new(doc), crate::Services::default());
+        let mut app = SolveApp::new(torno_engine::Session::new(doc), crate::Services::default());
         app.viewport.gpu = Some(GpuTarget { format: egui_wgpu::wgpu::TextureFormat::Rgba8Unorm, depth: None, samples: 1, tess: false, oit: false });
         let (mesh, _) = crate::open_meshing::session_world(&app.session).bodies[0].mesh_in_place();
         assert!(mesh.triangles.len() >= INSTANCE_ALONE);
@@ -9599,7 +9583,7 @@ mod tests {
     /// A design with one imported mesh of about 100 000 triangles (a sphere of radius 50, each
     /// corner its own point, as an STL is read), drawn on a device that builds bodies on the CPU.
     fn large_scan() -> SolveApp {
-        use solidcraft_engine::doc::{Document, FeatureKind, MeshData};
+        use torno_engine::doc::{Document, FeatureKind, MeshData};
         let n = 160u32;
         let at = |i: u32, j: u32| {
             let (t, p) = (std::f64::consts::PI * f64::from(i) / f64::from(n), std::f64::consts::TAU * f64::from(j) / f64::from(2 * n));
@@ -9619,7 +9603,7 @@ mod tests {
             corner_normals: Default::default(),
         }];
         doc.add_feature(FeatureKind::MeshImport { file: "scan.stl".into(), meshes }, Some("Scan")).unwrap();
-        let mut app = SolveApp::new(solidcraft_engine::Session::new(doc), crate::Services::default());
+        let mut app = SolveApp::new(torno_engine::Session::new(doc), crate::Services::default());
         app.ui.ground_shadow = false;
         app.set_origin_shown(false);
         app.viewport.gpu = Some(GpuTarget { format: egui_wgpu::wgpu::TextureFormat::Rgba8Unorm, depth: None, samples: 1, tess: false, oit: false });
@@ -9704,7 +9688,7 @@ mod tests {
         assert!(glass.glass.is_empty(), "no triangle sorted one by one");
         assert!(!glass.clone().merged().glass.is_empty());
         // One placement active (as right after the part is made): the others faded.
-        let mut context = SolveApp::new(solidcraft_engine::Session::default(), crate::Services::default());
+        let mut context = SolveApp::new(torno_engine::Session::default(), crate::Services::default());
         context.viewport.gpu = app.viewport.gpu;
         context.ui.ground_shadow = false;
         context.set_origin_shown(false);
@@ -9768,10 +9752,7 @@ mod tests {
                 let local = mesh.bounds();
                 (
                     b.name.clone(),
-                    solidcraft_engine::doc::apply_point(
-                        &m,
-                        Vec3::new((local.min.x + local.max.x) / 2.0, (local.min.y + local.max.y) / 2.0, local.max.z),
-                    ),
+                    torno_engine::doc::apply_point(&m, Vec3::new((local.min.x + local.max.x) / 2.0, (local.min.y + local.max.y) / 2.0, local.max.z)),
                 )
             })
             .collect();
@@ -9787,7 +9768,7 @@ mod tests {
             assert!(point.dist(*top) < 0.05, "{point:?} vs {top:?}");
         }
         assert!(
-            st.bodies.iter().all(|b| b.cached_mesh().is_none() || b.mesh_in_place().1 == solidcraft_engine::doc::IDENTITY),
+            st.bodies.iter().all(|b| b.cached_mesh().is_none() || b.mesh_in_place().1 == torno_engine::doc::IDENTITY),
             "a moved copy was made to pick"
         );
     }
@@ -9885,7 +9866,7 @@ mod tests {
     fn edge_between_two_faces_picks_along_its_whole_length() {
         for style in [0u8, 2] {
             let ctx = crate::fonts::test_context();
-            let mut app = SolveApp::new(solidcraft_engine::Session::default(), crate::Services::default());
+            let mut app = SolveApp::new(torno_engine::Session::default(), crate::Services::default());
             app.run("solid.box", json!({"length":200,"width":120,"height":160})).unwrap();
             app.set_origin_shown(false);
             app.ui.visual_style = style;
@@ -9936,7 +9917,7 @@ mod tests {
     }
 
     fn hover_app(gpu: bool) -> SolveApp {
-        let mut s = solidcraft_engine::Session::default();
+        let mut s = torno_engine::Session::default();
         s.execute("sketch.create", &json!({"plane": "XY"})).unwrap();
         s.execute("sketch.point", &json!({"point": [0, 0]})).unwrap();
         let mut app = SolveApp::new(s, crate::Services::default());
@@ -10314,7 +10295,7 @@ mod tests {
     #[test]
     fn touchpad_motion_does_not_move_the_camera_under_a_canvas_triad() {
         let ctx = crate::fonts::test_context();
-        let mut s = solidcraft_engine::Session::default();
+        let mut s = torno_engine::Session::default();
         s.execute("solid.box", &json!({"length":20,"width":20,"height":20})).unwrap();
         s.selection = vec![Sel::Body { name: "Body1".into() }];
         let mut app = SolveApp::new(s, crate::Services::default());
@@ -10511,7 +10492,7 @@ mod tests {
 
     fn device_face_app(gpu: bool) -> SolveApp {
         let mut app = hover_app(gpu);
-        app.session = solidcraft_engine::Session::default();
+        app.session = torno_engine::Session::default();
         app.session.execute("solid.box", &json!({"length":40,"width":40,"height":40,"corner":[-20,-20,-20]})).unwrap();
         app.set_origin_shown(false);
         app.cam.target = Vec3::ZERO;
@@ -10619,7 +10600,7 @@ mod tests {
         use crate::space_mouse::{DeviceMotion, Motion};
         for gpu in [false, true] {
             let ctx = crate::fonts::test_context();
-            let mut s = solidcraft_engine::Session::default();
+            let mut s = torno_engine::Session::default();
             s.execute("solid.box", &json!({"length": 40, "width": 30, "height": 20})).unwrap();
             let mut app = SolveApp::new(s, crate::Services::default());
             app.set_origin_shown(false);
@@ -10672,7 +10653,7 @@ mod tests {
         app.viewport.spin = false;
         hover_frame(&mut app, &ctx, vec![]);
         assert!(app.viewport.hover.is_some());
-        app.cam_anim = Some(solidcraft_viewport::CameraAnim::new(app.cam, app.cam, 0.0));
+        app.cam_anim = Some(torno_viewport::CameraAnim::new(app.cam, app.cam, 0.0));
         for _ in 0..3 {
             hover_frame(&mut app, &ctx, vec![]);
             assert!(app.viewport.hover.is_none());
@@ -10687,7 +10668,7 @@ mod tests {
     /// exactly triangles the model draws, never another triangulation (#1064).
     #[test]
     fn a_refined_body_highlights_on_its_drawn_triangles() {
-        use solidcraft_engine::doc::display_quality::current;
+        use torno_engine::doc::display_quality::current;
         let tris_of = |bytes: &[u8]| -> Vec<[u32; 9]> {
             bytes
                 .chunks(3 * crate::gpu::TRI_SIZE)
@@ -10701,7 +10682,7 @@ mod tests {
                 })
                 .collect()
         };
-        let mesh_tris = |m: &solidcraft_engine::geom::Mesh| -> std::collections::HashSet<[u32; 9]> {
+        let mesh_tris = |m: &torno_engine::geom::Mesh| -> std::collections::HashSet<[u32; 9]> {
             let mut sc = GpuScene::default();
             for f in 0..m.tri_face.iter().map(|f| *f as usize + 1).max().unwrap_or(0) {
                 face_tris(&mut sc, m, f, [0; 4], true);
@@ -10741,7 +10722,7 @@ mod tests {
     }
 
     fn cylinder_app() -> SolveApp {
-        let mut s = solidcraft_engine::Session::default();
+        let mut s = torno_engine::Session::default();
         s.execute("solid.cylinder", &json!({"radius": 10, "height": 20})).unwrap();
         let mut app = SolveApp::new(s, crate::Services::default());
         app.set_origin_shown(false);
@@ -10752,7 +10733,7 @@ mod tests {
     /// circle sweep one full-turn wall with its seam edge, and each rim is one closed edge, as
     /// SMLib's own cylinder has (a rim or wall in pieces now comes only from an import).
     fn arcs_cylinder_app() -> SolveApp {
-        let mut s = solidcraft_engine::Session::default();
+        let mut s = torno_engine::Session::default();
         s.execute("sketch.create", &json!({"plane": "XY"})).unwrap();
         s.execute("sketch.arc.three_point", &json!({"start": [10, 0], "end": [-10, 0], "through": [0, 10]})).unwrap();
         s.execute("sketch.arc.three_point", &json!({"start": [-10, 0], "end": [10, 0], "through": [0, -10]})).unwrap();
@@ -10828,7 +10809,7 @@ mod tests {
         app.session.selection = vec![Sel::Profile { sketch, index: 0 }];
         assert!(!build_highlight(&app).merged().trans.is_empty(), "a shown sketch's picked profile is filled");
         crate::browser::set_sketch_visible(&mut app, sketch, false);
-        assert!(!solidcraft_engine::view::sketch_shown(&app.session, sketch));
+        assert!(!torno_engine::view::sketch_shown(&app.session, sketch));
         assert!(build_highlight(&app).merged().trans.is_empty(), "a hidden sketch leaves no filled profile behind");
     }
 
@@ -10914,7 +10895,7 @@ mod tests {
         let mut app = cylinder_app();
         app.viewport.gpu = Some(GpuTarget { format: egui_wgpu::wgpu::TextureFormat::Rgba8Unorm, depth: None, samples: 1, tess: true, oit: false });
         let body = crate::open_meshing::session_world(&app.session).bodies[0].clone();
-        let plan = body.gpu_plan_at(solidcraft_engine::doc::display_quality::current()).expect("the test body is drawn from a plan");
+        let plan = body.gpu_plan_at(torno_engine::doc::display_quality::current()).expect("the test body is drawn from a plan");
         app.viewport.hover_bodies = vec![body.name.clone()];
         let hovered = build_highlight(&app);
         assert_eq!(hovered.hover_planned.len(), 1, "the whole hovered body is lit from its plan");
@@ -10941,7 +10922,7 @@ mod tests {
         assert!(built.blocks.iter().all(|b| b.bytes.vertices.is_empty()), "no copy of the body's triangles");
         // Two occurrences of one component are drawn as placements of its shared triangles: the
         // highlight draws those placements again, in its colour.
-        let mut s = solidcraft_engine::Session::default();
+        let mut s = torno_engine::Session::default();
         s.execute("solid.cylinder", &json!({"radius": 10, "height": 20, "body_name": "Sleeve"})).unwrap();
         let made = s.execute("component.from_bodies", &json!({"bodies": ["Sleeve"]})).unwrap();
         let part = made["components"][0]["component"].as_u64().unwrap();
@@ -10977,7 +10958,7 @@ mod tests {
     #[test]
     fn faded_and_see_through_bodies_light_as_their_copies_did() {
         const SIZE: u32 = 128;
-        let mut s = solidcraft_engine::Session::default();
+        let mut s = torno_engine::Session::default();
         s.execute("solid.box", &json!({"length": 30, "width": 20, "height": 10, "corner": [0, 0, 0], "body_name": "Plate"})).unwrap();
         s.execute("solid.cylinder", &json!({"base": [45, 10, 0], "diameter": 12, "height": 25, "body_name": "Post"})).unwrap();
         s.execute("component.from_bodies", &json!({"bodies": ["Post"]})).unwrap();
@@ -11039,7 +11020,7 @@ mod tests {
         }
     }
 
-    fn app_body(app: &SolveApp, name: &str) -> solidcraft_engine::doc::ModelBody {
+    fn app_body(app: &SolveApp, name: &str) -> torno_engine::doc::ModelBody {
         app.session.world_state().unwrap().body(name).cloned().unwrap()
     }
 
@@ -11073,7 +11054,7 @@ mod tests {
 
     #[test]
     fn smooth_wall_display_preserves_wireframe_and_edge_selection() {
-        let mut s = solidcraft_engine::Session::default();
+        let mut s = torno_engine::Session::default();
         let sketch = s.execute("sketch.create", &json!({"plane":"XY"})).unwrap()["sketch"].as_u64().unwrap();
         // A circle r10 drawn as eight cubic sketch splines, each the same eighth-arc turned by 45
         // degrees, so every two neighbours meet with one tangent and one curvature (G2).
@@ -11120,22 +11101,22 @@ mod tests {
         let mut without_display_mask = (*mesh).clone();
         without_display_mask.smooth_edges.clear();
         assert_eq!(mesh.surface_patch(mesh.edge_faces[smooth][0] as usize), without_display_mask.surface_patch(mesh.edge_faces[smooth][0] as usize));
-        let cam = solidcraft_engine::view::home_camera(&app.session).unwrap();
-        let cpu = solidcraft_engine::view::scene(&app.session, &cam).unwrap();
-        let actual_edges = cpu.lines.iter().filter(|line| line.color == solidcraft_engine::view::colors::EDGE).count();
+        let cam = torno_engine::view::home_camera(&app.session).unwrap();
+        let cpu = torno_engine::view::scene(&app.session, &cam).unwrap();
+        let actual_edges = cpu.lines.iter().filter(|line| line.color == torno_engine::view::colors::EDGE).count();
         assert_eq!(actual_edges, mesh.edges.iter().enumerate().filter(|(i, _)| mesh.shaded_edge_visible(*i)).count());
-        if let Ok(directory) = solidcraft_engine::geom::env::var("SMOOTH_SCREENSHOTS").ok_or(()) {
+        if let Ok(directory) = torno_engine::geom::env::var("SMOOTH_SCREENSHOTS").ok_or(()) {
             std::fs::create_dir_all(&directory).unwrap();
             for (name, old_edges, wireframe) in [("after", false, false), ("before", true, false), ("wireframe", true, true)] {
-                let mut scene = solidcraft_engine::view::scene(&app.session, &cam).unwrap();
-                scene.lines.retain(|line| line.color == solidcraft_engine::view::colors::EDGE);
+                let mut scene = torno_engine::view::scene(&app.session, &cam).unwrap();
+                scene.lines.retain(|line| line.color == torno_engine::view::colors::EDGE);
                 if old_edges {
                     scene.lines.clear();
                     for (i, edge) in mesh.edges.iter().enumerate() {
                         if mesh.edge_pickable(i) {
-                            scene.lines.push(solidcraft_viewport::SceneLine {
+                            scene.lines.push(torno_viewport::SceneLine {
                                 points: edge.clone(),
-                                color: solidcraft_engine::view::colors::EDGE,
+                                color: torno_engine::view::colors::EDGE,
                                 alpha: 1.0,
                                 width: 1.2,
                                 on_top: false,
@@ -11147,7 +11128,7 @@ mod tests {
                     scene.meshes.clear();
                 }
                 assert!(crate::gpu::test_picture_renderer(), "SMOOTH_SCREENSHOTS needs a GPU");
-                let png = solidcraft_engine::capture::png(&scene, &cam, 1200, 800).unwrap();
+                let png = torno_engine::capture::png(&scene, &cam, 1200, 800).unwrap();
                 std::fs::write(std::path::Path::new(&directory).join(format!("smooth-walls-{name}.png")), png.bytes).unwrap();
             }
         }
@@ -11155,7 +11136,7 @@ mod tests {
 
     #[test]
     fn certified_small_crease_overrides_old_seam_fit_for_picking_and_patches() {
-        let mut s = solidcraft_engine::Session::default();
+        let mut s = torno_engine::Session::default();
         let sketch = s.execute("sketch.create", &json!({"plane":"XY"})).unwrap()["sketch"].as_u64().unwrap();
         let step = std::f64::consts::TAU / 8.;
         let k = 4. / 3. * (step / 4.).tan() * 10.;
@@ -12119,7 +12100,7 @@ mod tests {
     #[test]
     fn trackpad_gestures_over_dialogs_do_not_move_the_view() {
         let ctx = crate::fonts::test_context();
-        let mut app = SolveApp::new(solidcraft_engine::Session::default(), crate::Services::default());
+        let mut app = SolveApp::new(torno_engine::Session::default(), crate::Services::default());
         assert!(app.preferences.trackpad_pan);
         crate::help::run(&mut app, &ctx, "shortcuts");
         let mut time = 0.0;
@@ -12187,7 +12168,7 @@ mod tests {
     fn shortcuts_window_wheel_does_not_zoom_the_viewport() {
         for smooth in [true, false] {
             let ctx = crate::fonts::test_context();
-            let mut app = SolveApp::new(solidcraft_engine::Session::default(), crate::Services::default());
+            let mut app = SolveApp::new(torno_engine::Session::default(), crate::Services::default());
             app.preferences.smooth_wheel_zoom = smooth;
             app.preferences.trackpad_pan = false;
             crate::help::run(&mut app, &ctx, "shortcuts");
@@ -12498,7 +12479,7 @@ mod tests {
 
     #[test]
     fn cosmetic_threads_use_depth_tested_lines_and_keep_selection_and_wireframe() {
-        let mut s = solidcraft_engine::Session::default();
+        let mut s = torno_engine::Session::default();
         s.execute("solid.cylinder", &json!({"radius":3,"height":10})).unwrap();
         // A pick in the middle of a face free at both ends names the end the thread starts from.
         s.execute("solid.thread", &json!({"face":[3,0,5],"designation":"M6","length":5,"from":[3,0,0]})).unwrap();
@@ -12533,7 +12514,7 @@ mod tests {
         app.session.visibility.hidden_bodies.push("Body1".into());
         assert_eq!(count(build_scene(&app)), 0);
         app.session.visibility.hidden_bodies.clear();
-        app.session.doc_mut().appearances.bodies.insert("Body1".into(), solidcraft_engine::doc::appearance::Look::custom([150, 150, 150], 0.5));
+        app.session.doc_mut().appearances.bodies.insert("Body1".into(), torno_engine::doc::appearance::Look::custom([150, 150, 150], 0.5));
         assert_eq!(count(build_scene(&app)), 0, "transparent bodies omit cosmetic strokes");
         app.session.doc_mut().appearances.bodies.clear();
         app.session.execute("component.create", &json!({"name":"Other active component"})).unwrap();
@@ -12543,7 +12524,7 @@ mod tests {
     #[test]
     fn cosmetic_threads_preference_controls_internal_and_external_markings_without_editing_the_design() {
         for internal in [false, true] {
-            let mut s = solidcraft_engine::Session::default();
+            let mut s = torno_engine::Session::default();
             let face = if internal {
                 s.execute("solid.box", &json!({"length":20,"width":20,"height":10})).unwrap();
                 s.execute("solid.hole", &json!({"position":[10,10,10],"direction":[0,0,-1],"diameter":5})).unwrap();
@@ -12582,7 +12563,7 @@ mod tests {
 
     #[test]
     fn cosmetic_thread_scene_is_bounded_for_many_occurrences_and_cached_across_camera_moves() {
-        let mut s = solidcraft_engine::Session::default();
+        let mut s = torno_engine::Session::default();
         let c = s.execute("component.create", &json!({"name":"Threaded pegs"})).unwrap();
         s.execute("solid.cylinder", &json!({"radius":3,"height":20})).unwrap();
         s.execute("solid.thread", &json!({"face":[3,0,10],"designation":"M6"})).unwrap();
@@ -12602,7 +12583,7 @@ mod tests {
             .filter(|line| line.get(28..32) == Some(0.85f32.to_le_bytes().as_slice()))
             .count();
         eprintln!("96 occurrence viewport scene: {strokes} cosmetic strokes, {:?}", started.elapsed());
-        assert!(strokes > 1000 && strokes <= solidcraft_engine::cosmetic_threads::MAX_SCENE_SEGMENTS);
+        assert!(strokes > 1000 && strokes <= torno_engine::cosmetic_threads::MAX_SCENE_SEGMENTS);
         let marked_occurrences: std::collections::HashSet<i32> = scene
             .lines
             .as_chunks::<{ crate::gpu::LINE_SIZE }>()
@@ -12621,12 +12602,12 @@ mod tests {
 
     #[test]
     fn section_outlines_follow_the_cut() {
-        let mut s = solidcraft_engine::Session::default();
+        let mut s = torno_engine::Session::default();
         s.execute("solid.box", &json!({"length": 40, "width": 30, "height": 20})).unwrap();
         let st = s.model.state();
         let m = st.bodies[0].mesh();
         let (o, n) = (Vec3::new(0.0, 15.0, 0.0), Vec3::new(0.0, -1.0, 0.0));
-        let segs = solidcraft_engine::view::section_segments(&m, o, n);
+        let segs = torno_engine::view::section_segments(&m, o, n);
         assert!(segs.len() >= 4, "{segs:?}");
         // On the plane (a hair to the kept side) and around the 40 x 20 cut.
         let mut len = 0.0;
@@ -12636,14 +12617,14 @@ mod tests {
         }
         assert!((len - 120.0).abs() < 0.5, "outline length {len}");
         // A plane that misses the body cuts nothing.
-        assert!(solidcraft_engine::view::section_segments(&m, Vec3::new(0.0, 99.0, 0.0), n).is_empty());
+        assert!(torno_engine::view::section_segments(&m, Vec3::new(0.0, 99.0, 0.0), n).is_empty());
     }
 
     /// Tilting a section keeps each body's section index: one serves every normal, so a tilt
     /// drag does not rebuild it every frame (#10373).
     #[test]
     fn tilting_the_section_keeps_its_index() {
-        let mut s = solidcraft_engine::Session::default();
+        let mut s = torno_engine::Session::default();
         s.execute("solid.box", &json!({"length": 40, "width": 30, "height": 20})).unwrap();
         let o = Vec3::new(0.0, 15.0, 0.0);
         s.section = Some((o, Vec3::new(0.0, -1.0, 0.0)));
@@ -12663,7 +12644,7 @@ mod tests {
 
     #[test]
     fn selection_shows_where_the_model_hides_it() {
-        let mut s = solidcraft_engine::Session::default();
+        let mut s = torno_engine::Session::default();
         s.execute("solid.box", &json!({"length": 40, "width": 30, "height": 20})).unwrap();
         let mut app = SolveApp::new(s, crate::Services::default());
         assert!(build_highlight(&app).merged().hidden.is_empty());
@@ -12719,7 +12700,7 @@ mod tests {
     #[test]
     fn axis_snap_selects_all_directions_in_both_up_frames() {
         assert_eq!(snap_directions().count(), 26);
-        for up in [solidcraft_viewport::UpAxis::Z, solidcraft_viewport::UpAxis::Y] {
+        for up in [torno_viewport::UpAxis::Z, torno_viewport::UpAxis::Y] {
             for d in snap_directions() {
                 let mut cam = Camera { up, ..Camera::default() };
                 cam = cam.looking_from(cam.from_frame(d + Vec3::new(0.05, 0.03, 0.02)));
@@ -12742,7 +12723,7 @@ mod tests {
             assert!(h.app.viewport.orbit_free.is_some());
             match reset {
                 0 => h.app.fit_view(),
-                1 => h.app.set_up_axis(solidcraft_viewport::UpAxis::Y),
+                1 => h.app.set_up_axis(torno_viewport::UpAxis::Y),
                 _ => crate::documents::new_design(&mut h.app),
             }
             assert!(h.app.viewport.orbit_free.is_none());
@@ -12982,7 +12963,7 @@ mod tests {
 
     #[test]
     fn construction_point_is_pickable_only_while_visible() {
-        let mut s = solidcraft_engine::Session::default();
+        let mut s = torno_engine::Session::default();
         s.execute("construct.point.vertex", &json!({"point":{"point":[20,15,10]},"name":"Point1"})).unwrap();
         s.execute("construct.axis.two_points", &json!({"a":{"point":[-20,0,10]},"b":{"point":[-20,0,30]},"name":"Axis1"})).unwrap();
         let mut app = SolveApp::new(s, crate::Services::default());
@@ -13010,7 +12991,7 @@ mod tests {
 
     #[test]
     fn construction_axes_span_the_model_and_points_show() {
-        let mut s = solidcraft_engine::Session::default();
+        let mut s = torno_engine::Session::default();
         s.execute("solid.box", &json!({"length": 40, "width": 30, "height": 20})).unwrap();
         s.execute("construct.axis.two_points", &json!({"a": {"vertex": [0, 0, 20]}, "b": {"vertex": [40, 30, 20]}})).unwrap();
         s.execute("construct.point.vertex", &json!({"point": {"vertex": [40, 0, 20]}})).unwrap();
@@ -13038,9 +13019,9 @@ mod tests {
     #[cfg(not(target_arch = "wasm32"))]
     #[test]
     fn draft_analysis_on_the_gpu_draws_the_modes_colours_and_stripes() {
-        use solidcraft_theme::ColorVision;
-        let mut s = solidcraft_engine::Session::default();
-        s.run_script(&solidcraft_engine::sample::script()).unwrap();
+        use torno_theme::ColorVision;
+        let mut s = torno_engine::Session::default();
+        s.run_script(&torno_engine::sample::script()).unwrap();
         let mut app = SolveApp::new(s, crate::Services::default());
         app.fit_view();
         app.run("inspect.draft", json!({"pull": [-1, -1, 0]})).unwrap();
@@ -13049,7 +13030,7 @@ mod tests {
         let proj = projection(&app, Rect::from_min_size(Pos2::ZERO, vec2(SIZE as f32, SIZE as f32)));
         let e = proj.cam.eye().to_f32();
         let eye = [e[0], e[1], e[2], if proj.cam.fov > 0.0 { 1.0 } else { 0.0 }];
-        let render = |c: &solidcraft_color::AnalysisColors| {
+        let render = |c: &torno_color::AnalysisColors| {
             crate::gpu::render_offscreen(
                 build_scene(&app),
                 None,
@@ -13064,7 +13045,7 @@ mod tests {
         };
         let off = Tokens::themed(false, ColorVision::Off).analysis;
         let protan = Tokens::themed(false, ColorVision::Protan).analysis;
-        let flat = solidcraft_color::AnalysisColors { hatch: false, ..protan };
+        let flat = torno_color::AnalysisColors { hatch: false, ..protan };
         let (Some(a), Some(b), Some(c)) = (render(&off), render(&protan), render(&flat)) else {
             eprintln!("skipping: no GPU adapter");
             return;
@@ -13098,7 +13079,7 @@ mod tests {
     #[cfg(not(target_arch = "wasm32"))]
     #[test]
     fn the_view_picture_draws_in_the_colour_vision_mode() {
-        use solidcraft_theme::ColorVision;
+        use torno_theme::ColorVision;
         if !crate::gpu::test_picture_renderer() {
             return;
         }
@@ -13107,8 +13088,8 @@ mod tests {
         h.app.run("sketch.create", json!({"plane": "XY"})).unwrap();
         let made = h.app.run("sketch.line", json!({"points": [[-30, -20], [30, 20]]})).unwrap();
         h.app.run("sketch.constraint.fix", json!({"entity": made["created"]["curves"][0]})).unwrap();
-        let mut cam = solidcraft_engine::view::home_camera(&h.app.session).unwrap();
-        cam.set_view(solidcraft_viewport::StandardView::Top);
+        let mut cam = torno_engine::view::home_camera(&h.app.session).unwrap();
+        cam.set_view(torno_viewport::StandardView::Top);
         h.app.cam = cam;
         let count = |h: &crate::scenario::Harness, c: Color32| {
             let img = crate::control::view_rgba(&h.app, 320, 240).unwrap();
@@ -13126,7 +13107,7 @@ mod tests {
     /// changes, and nothing else (the light theme in Off is the engine's own colours).
     #[test]
     fn picture_palette_follows_the_colour_vision_mode() {
-        use solidcraft_theme::ColorVision;
+        use torno_theme::ColorVision;
         let rgb = |c: Color32| Rgb(c.r(), c.g(), c.b());
         let off = scene_palette(false, ColorVision::Off);
         let rg = scene_palette(false, ColorVision::Protan);
@@ -13146,7 +13127,7 @@ mod tests {
     #[cfg(not(target_arch = "wasm32"))]
     #[test]
     fn colour_vision_mode_reaches_the_frame_and_the_view_caches() {
-        use solidcraft_theme::ColorVision;
+        use torno_theme::ColorVision;
         let mut h = crate::scenario::Harness::new();
         h.app.preferences.language = "en".into();
         h.app.home.open = false;
@@ -13157,13 +13138,13 @@ mod tests {
         let before = keys(&h.app);
         h.step(&json!({"click":{"handle":"dialog:Mode:Deutan"}})).unwrap();
         h.frame();
-        assert_eq!(solidcraft_theme::vision(), ColorVision::Deutan);
-        assert_eq!(Tokens::get(), Tokens::themed(solidcraft_theme::is_dark(), ColorVision::Deutan));
+        assert_eq!(torno_theme::vision(), ColorVision::Deutan);
+        assert_eq!(Tokens::get(), Tokens::themed(torno_theme::is_dark(), ColorVision::Deutan));
         let after = keys(&h.app);
         assert!(before.0 != after.0 && before.1 != after.1, "both caches are keyed on the mode");
         h.call("ui.prefs", json!({"button": "cancel"}));
         h.frame();
-        assert_eq!((h.app.preferences.color_vision, solidcraft_theme::vision()), (ColorVision::Off, ColorVision::Off));
+        assert_eq!((h.app.preferences.color_vision, torno_theme::vision()), (ColorVision::Off, ColorVision::Off));
         assert_eq!(keys(&h.app), before);
         // `ui.render` shows the mode too: a fixed sketch line in Deutan's value (in the light
         // theme, where the red-green table changes it; the render follows the theme).
@@ -13402,7 +13383,7 @@ mod view_home_tests;
 #[cfg(test)]
 mod grid_plane_tests {
     use super::*;
-    use solidcraft_viewport::{StandardView, UpAxis};
+    use torno_viewport::{StandardView, UpAxis};
 
     fn plane(view: StandardView, up: UpAxis) -> (Vec3, Vec3) {
         let (yaw, pitch) = view.angles();
@@ -13482,7 +13463,7 @@ mod grid_plane_tests {
     #[test]
     fn the_viewport_keeps_the_grid_plane_between_frames() {
         let rect = Rect::from_min_size(Pos2::ZERO, egui::vec2(800.0, 600.0));
-        let mut app = SolveApp::new(solidcraft_engine::Session::default(), crate::Services::default());
+        let mut app = SolveApp::new(torno_engine::Session::default(), crate::Services::default());
         app.preferences.grid_follows_view = true;
         app.cam.yaw = 0.0;
         app.cam.pitch = 0.0;
@@ -13503,7 +13484,7 @@ mod grid_plane_tests {
     #[test]
     fn create_sketch_previews_the_plane_under_the_pointer_on_the_grid() {
         let rect = Rect::from_min_size(Pos2::ZERO, egui::vec2(800.0, 600.0));
-        let mut app = SolveApp::new(solidcraft_engine::Session::default(), crate::Services::default());
+        let mut app = SolveApp::new(torno_engine::Session::default(), crate::Services::default());
         app.ui.show_grid = true;
         app.preferences.grid_follows_view = false;
         let grid = |app: &SolveApp| -> Vec<[f32; 3]> {
@@ -13545,7 +13526,7 @@ mod grid_plane_tests {
     #[test]
     fn a_selected_plane_previews_on_the_grid_before_create_sketch() {
         let rect = Rect::from_min_size(Pos2::ZERO, egui::vec2(800.0, 600.0));
-        let mut app = SolveApp::new(solidcraft_engine::Session::default(), crate::Services::default());
+        let mut app = SolveApp::new(torno_engine::Session::default(), crate::Services::default());
         app.ui.show_grid = true;
         app.preferences.grid_follows_view = false;
         let on = |app: &SolveApp, axis: usize| {
@@ -13642,7 +13623,7 @@ mod grid_plane_tests {
     #[test]
     fn the_grid_covers_the_middle_of_the_view_when_the_target_is_off_the_ground() {
         let rect = Rect::from_min_size(Pos2::ZERO, egui::vec2(1280.0, 720.0));
-        let mut app = SolveApp::new(solidcraft_engine::Session::default(), crate::Services::default());
+        let mut app = SolveApp::new(torno_engine::Session::default(), crate::Services::default());
         app.ui.show_grid = true;
         app.ui.perspective = false;
         // The camera of the report.
@@ -13675,7 +13656,7 @@ mod grid_plane_tests {
     #[test]
     fn the_grid_fades_out_with_the_distance_from_the_middle_of_the_view() {
         let rect = Rect::from_min_size(Pos2::ZERO, egui::vec2(800.0, 600.0));
-        let mut app = SolveApp::new(solidcraft_engine::Session::default(), crate::Services::default());
+        let mut app = SolveApp::new(torno_engine::Session::default(), crate::Services::default());
         app.ui.show_grid = true;
         app.ui.perspective = false;
         // A top view: the ground is the XY plane, and the grid is centred on the target.
@@ -13731,7 +13712,7 @@ mod grid_plane_tests {
         let rect = Rect::from_min_size(Pos2::ZERO, egui::vec2(800.0, 600.0));
         // The strongest alpha a line across X at `x` is drawn with, at a half height of `hh`.
         let alpha_at = |hh: f64, x: f32| {
-            let mut app = SolveApp::new(solidcraft_engine::Session::default(), crate::Services::default());
+            let mut app = SolveApp::new(torno_engine::Session::default(), crate::Services::default());
             app.ui.show_grid = true;
             app.ui.perspective = false;
             app.cam.pitch = std::f64::consts::FRAC_PI_2;
@@ -13776,7 +13757,7 @@ mod grid_plane_tests {
     #[test]
     fn the_picture_and_the_window_draw_the_same_grid_on_a_sketch_plane() {
         let rect = Rect::from_min_size(Pos2::ZERO, egui::vec2(800.0, 600.0));
-        let mut app = SolveApp::new(solidcraft_engine::Session::default(), crate::Services::default());
+        let mut app = SolveApp::new(torno_engine::Session::default(), crate::Services::default());
         app.run("sketch.create", json!({"plane": "XY"})).unwrap();
         app.ui.perspective = false;
         app.cam.fov = 0.0;
@@ -13785,11 +13766,11 @@ mod grid_plane_tests {
         app.cam.target = Vec3::ZERO;
         app.cam.distance = 100.0;
         // The grid's centre, as both draw it: the sketch plane's, round the view's target.
-        let plane = solidcraft_engine::view::open_sketch_plane(&app.session).unwrap().unwrap();
+        let plane = torno_engine::view::open_sketch_plane(&app.session).unwrap().unwrap();
         let (_, major) = grid_step(app.cam.half_height());
-        let (centre, _, _) = solidcraft_engine::view::sketch_grid_frame(&plane, app.cam.target, major);
+        let (centre, _, _) = torno_engine::view::sketch_grid_frame(&plane, app.cam.target, major);
         // How far the picture's grid reaches from that centre.
-        let scene = solidcraft_engine::view::scene(&app.session, &app.cam).unwrap();
+        let scene = torno_engine::view::scene(&app.session, &app.cam).unwrap();
         let picture = scene.grid.iter().flat_map(|l| l.points.iter()).map(|p| (*p - centre).len()).fold(0.0_f64, f64::max);
         // How far the window's grid reaches: the same points, as bytes.
         let under = build_sketch_scene(&app, &projection(&app, rect)).under;
@@ -13819,7 +13800,7 @@ mod grid_plane_tests {
     fn the_grid_fades_out_in_the_picture_instead_of_ending_in_a_cut() {
         const SIZE: u32 = 512;
         let rect = Rect::from_min_size(Pos2::ZERO, egui::vec2(SIZE as f32, SIZE as f32));
-        let mut app = SolveApp::new(solidcraft_engine::Session::default(), crate::Services::default());
+        let mut app = SolveApp::new(torno_engine::Session::default(), crate::Services::default());
         app.ui.show_grid = true;
         app.ui.perspective = true;
         // A low view of the ground: the far ground is in the picture, where the grid used to end
@@ -13900,7 +13881,7 @@ mod grid_plane_tests {
     #[test]
     fn an_open_sketch_always_shows_a_grid_on_its_plane() {
         let rect = Rect::from_min_size(Pos2::ZERO, egui::vec2(800.0, 600.0));
-        let mut app = SolveApp::new(solidcraft_engine::Session::default(), crate::Services::default());
+        let mut app = SolveApp::new(torno_engine::Session::default(), crate::Services::default());
         app.ui.show_grid = false;
         let grid = |app: &SolveApp| build_sketch_scene(app, &projection(app, rect)).under;
         assert!(grid(&app).is_empty(), "no grid outside a sketch with the switch off");
@@ -13926,7 +13907,7 @@ mod grid_plane_tests {
         let rect = Rect::from_min_size(Pos2::ZERO, egui::vec2(800.0, 600.0));
         let grid = |app: &SolveApp| !build_sketch_scene(app, &projection(app, rect)).under.is_empty();
         for switch in [false, true] {
-            let mut app = SolveApp::new(solidcraft_engine::Session::default(), crate::Services::default());
+            let mut app = SolveApp::new(torno_engine::Session::default(), crate::Services::default());
             app.ui.show_grid = switch;
             app.run("sketch.create", json!({"plane": "XY"})).unwrap();
             assert!(grid(&app) && crate::control::window_guides(&app).grid, "switch {switch}: the sketch's grid shows");
@@ -13943,7 +13924,7 @@ mod grid_plane_tests {
 
     #[test]
     fn imported_scene_projection_toggle_keeps_front_components_in_clip_range() {
-        use solidcraft_engine::doc::{Document, FeatureKind, MeshData};
+        use torno_engine::doc::{Document, FeatureKind, MeshData};
         let mut doc = Document::default();
         let meshes = [-10_000.0, 10_000.0]
             .into_iter()
@@ -13957,7 +13938,7 @@ mod grid_plane_tests {
             })
             .collect();
         doc.add_feature(FeatureKind::MeshImport { file: "synthetic.stl".into(), meshes }, Some("Panels")).unwrap();
-        let mut app = SolveApp::new(solidcraft_engine::Session::new(doc), crate::Services::default());
+        let mut app = SolveApp::new(torno_engine::Session::new(doc), crate::Services::default());
         app.cam.yaw = 0.0;
         app.cam.pitch = 0.0;
         app.fit_view();
@@ -13995,7 +13976,7 @@ mod grid_plane_tests {
     #[test]
     fn an_open_sketch_is_drawn_orthographic() {
         let rect = Rect::from_min_size(Pos2::ZERO, egui::vec2(800.0, 600.0));
-        let mut app = SolveApp::new(solidcraft_engine::Session::default(), crate::Services::default());
+        let mut app = SolveApp::new(torno_engine::Session::default(), crate::Services::default());
         app.ui.perspective = true;
         assert!(projection(&app, rect).cam.fov > 0.0);
         app.run("sketch.create", json!({"plane": "XZ"})).unwrap();
@@ -14011,7 +13992,7 @@ mod grid_plane_tests {
     #[test]
     fn auto_ortho_faces_follows_camera_alignment() {
         let rect = Rect::from_min_size(Pos2::ZERO, egui::vec2(800.0, 600.0));
-        let mut app = SolveApp::new(solidcraft_engine::Session::default(), crate::Services::default());
+        let mut app = SolveApp::new(torno_engine::Session::default(), crate::Services::default());
         assert!(!app.ui.auto_ortho_faces, "the option is off by default");
         app.ui.auto_ortho_faces = true;
         for view in [StandardView::Front, StandardView::Top, StandardView::Left] {
@@ -14027,7 +14008,7 @@ mod grid_plane_tests {
         assert_eq!(projection(&app, rect).cam.fov, 0.0);
         // The preference round-trips through the saved prefs.
         let saved = app.prefs();
-        let mut fresh = SolveApp::new(solidcraft_engine::Session::default(), crate::Services::default());
+        let mut fresh = SolveApp::new(torno_engine::Session::default(), crate::Services::default());
         fresh.load_prefs(&saved);
         assert!(fresh.ui.auto_ortho_faces, "the option is kept between runs");
         // With the mode off, the manual preference rules again (default orthographic).
@@ -14069,7 +14050,7 @@ mod grid_plane_tests {
     #[test]
     fn the_field_of_view_preference_drives_the_projection() {
         let rect = Rect::from_min_size(Pos2::ZERO, egui::vec2(800.0, 600.0));
-        let mut app = SolveApp::new(solidcraft_engine::Session::default(), crate::Services::default());
+        let mut app = SolveApp::new(torno_engine::Session::default(), crate::Services::default());
         app.run("solid.box", json!({"length": 40, "width": 30, "height": 20})).unwrap();
         assert_eq!(projection(&app, rect).cam.fov, 0.0, "Perspective view off: parallel");
         app.ui.perspective = true;
@@ -14094,7 +14075,7 @@ mod grid_plane_tests {
     /// tool while remaining off by default.
     #[test]
     fn create_sketch_shows_the_origin_planes_through_the_model() {
-        let mut app = SolveApp::new(solidcraft_engine::Session::default(), crate::Services::default());
+        let mut app = SolveApp::new(torno_engine::Session::default(), crate::Services::default());
         app.run("solid.box", json!({"length":40,"width":40,"height":40})).unwrap();
         app.set_origin_shown(false);
         assert!(origin_planes(&app).is_empty());
@@ -14121,7 +14102,7 @@ mod grid_plane_tests {
     /// plane's browser row under the pointer lights it the same way.
     #[test]
     fn create_sketch_lights_the_plane_under_the_pointer_or_its_browser_row() {
-        let mut app = SolveApp::new(solidcraft_engine::Session::default(), crate::Services::default());
+        let mut app = SolveApp::new(torno_engine::Session::default(), crate::Services::default());
         app.start("sketch.create");
         let plain = build_highlight(&app).xray;
         app.viewport.hover = Some(Hit::Plane { name: "XZ".into(), point: Vec3::ZERO });
@@ -14164,7 +14145,7 @@ mod grid_plane_tests {
     #[test]
     fn the_preference_draws_finished_sketches_through_bodies() {
         let rect = Rect::from_min_size(Pos2::ZERO, egui::vec2(800.0, 600.0));
-        let mut app = SolveApp::new(solidcraft_engine::Session::default(), crate::Services::default());
+        let mut app = SolveApp::new(torno_engine::Session::default(), crate::Services::default());
         app.run("sketch.create", json!({"plane": "XY"})).unwrap();
         app.run("sketch.rectangle.two_point", json!({"p0": [-10, -10], "p1": [10, 10]})).unwrap();
         app.run("sketch.finish", json!({})).unwrap();
@@ -14183,7 +14164,7 @@ mod grid_plane_tests {
     /// objects it doesn't.
     #[test]
     fn a_dialog_picking_a_plane_shows_the_origin_planes() {
-        let mut app = SolveApp::new(solidcraft_engine::Session::default(), crate::Services::default());
+        let mut app = SolveApp::new(torno_engine::Session::default(), crate::Services::default());
         app.run("solid.box", json!({"length":40,"width":40,"height":40})).unwrap();
         app.set_origin_shown(false);
         app.start("solid.mirror");
@@ -14203,7 +14184,7 @@ mod grid_plane_tests {
     /// as today; other dialogs that pick a plane keep the reveal (#2581).
     #[test]
     fn project_leaves_hidden_origin_planes_hidden() {
-        let mut app = SolveApp::new(solidcraft_engine::Session::default(), crate::Services::default());
+        let mut app = SolveApp::new(torno_engine::Session::default(), crate::Services::default());
         app.run("solid.box", json!({"length":40,"width":40,"height":40})).unwrap();
         app.run("sketch.create", json!({"plane": "XY"})).unwrap();
         app.set_origin_shown(false);
@@ -14226,7 +14207,7 @@ mod grid_plane_tests {
     /// (same gate [`show`] uses via [`preview_should_roll_back`]).
     #[test]
     fn preview_rollback_stays_off_while_manipulator_dragging() {
-        let mut s = solidcraft_engine::Session::default();
+        let mut s = torno_engine::Session::default();
         s.execute("sketch.create", &json!({"plane": "xy"})).unwrap();
         s.execute("sketch.line", &json!({"points": [[0, 0], [20, 0]]})).unwrap();
         s.execute("sketch.finish", &json!({})).unwrap();
@@ -14249,7 +14230,7 @@ mod standalone_point_tests {
     /// sketch draws none.
     #[test]
     fn a_finished_sketch_shows_its_standalone_points() {
-        let mut app = SolveApp::new(solidcraft_engine::Session::default(), crate::Services::default());
+        let mut app = SolveApp::new(torno_engine::Session::default(), crate::Services::default());
         app.run("sketch.create", json!({"plane": "XY"})).unwrap();
         app.run("sketch.rectangle.two_point", json!({"p0": [0, 0], "p1": [20, 10]})).unwrap();
         app.run("sketch.point", json!({"point": [5, 4]})).unwrap();
@@ -14271,7 +14252,7 @@ mod feature_highlight_tests {
     /// the feature still lights the faces it changed.
     #[test]
     fn a_feature_whose_face_was_renamed_later_still_lights_it() {
-        let mut s = solidcraft_engine::Session::default();
+        let mut s = torno_engine::Session::default();
         s.execute("solid.box", &json!({"length": 40, "width": 30, "height": 20, "body_name": "Base"})).unwrap();
         let first =
             s.execute("solid.offset_face", &json!({"faces": [[20, 15, 20]], "distance": 5, "name": "Raise"})).unwrap()["feature"].as_u64().unwrap();
@@ -14285,7 +14266,7 @@ mod feature_highlight_tests {
     /// 12 mm away: the join reports no history, and the bigger body meshes those walls differently.
     #[test]
     fn a_joined_tab_does_not_light_round_walls_it_never_touched() {
-        let mut s = solidcraft_engine::Session::default();
+        let mut s = torno_engine::Session::default();
         let reach = 57.0_f64.sqrt(); // Where a circle of radius 11 meets y = ±8.
         s.execute("sketch.create", &json!({"plane": "XY"})).unwrap();
         s.execute("sketch.rectangle.two_point", &json!({"p0": [-20, -8], "p1": [20, 8]})).unwrap();

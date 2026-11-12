@@ -30,8 +30,8 @@ submitting; do not publish an empty resource table.
 | --- | --- | --- |
 | Tip | Link to a focused explanation. | Credit and permission to reuse. |
 | Demo | Link to a short recording or reproducible recipe. | Credit and licence. |
-| Model | Link to an original SolidCraft design or an openly licensed model. | Credit and licence. |
-| Screenshot | Link to or embed an actual SolidCraft result, with descriptive alternative text. | Credit and licence. |
+| Model | Link to an original Torno design or an openly licensed model. | Credit and licence. |
+| Screenshot | Link to or embed an actual Torno result, with descriptive alternative text. | Credit and licence. |
 
 #### See also
 

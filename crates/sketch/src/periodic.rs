@@ -2,7 +2,7 @@
 use crate::model::in_range;
 use crate::{MAX_SPLINE_POINTS, Sketch, SketchError};
 use solidcore_record::Vec2;
-use solidcraft_geom::prelude::*;
+use torno_geom::prelude::*;
 
 type Result<T> = std::result::Result<T, SketchError>;
 fn bad() -> SketchError {

@@ -7,7 +7,7 @@
 //!
 //! The body is a frustum of base radius 3, top radius 2 and height 4, its seam edge
 //! replaced by the same line turned about the axis by an arc `offset` long at the base.
-//! The SolidCraft case behind it is a threaded insert whose thread flanks are cones
+//! The Torno case behind it is a threaded insert whose thread flanks are cones
 //! like this one (16 of 313 faces).
 #![allow(
     clippy::unwrap_used,

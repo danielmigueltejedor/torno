@@ -1,5 +1,5 @@
 use serde_json::json;
-use solidcraft_ui_egui::scenario::Harness;
+use torno_ui_egui::scenario::Harness;
 
 fn sketch() -> Harness {
     let mut h = Harness::new();
@@ -17,7 +17,7 @@ fn starts_at_centre(h: &Harness) -> bool {
     let st = h.app.session.world_state().unwrap();
     let sk = &st.sketch(h.app.session.active_sketch.unwrap()).unwrap().sketch;
     let centre = sk.resolve_point("c1.center").unwrap();
-    sk.curves.iter().any(|c| matches!(c.kind, solidcraft_engine::sketch::CurveKind::Line { a, b } if a == centre || b == centre))
+    sk.curves.iter().any(|c| matches!(c.kind, torno_engine::sketch::CurveKind::Line { a, b } if a == centre || b == centre))
 }
 
 /// Hovering a circle's edge wakes its centre: it is drawn, and a click 12 points from it (beyond

@@ -3,9 +3,9 @@
 
 use solidcore_record::Vec3;
 use solidcore_record::brep::{Brep, Curve};
-use solidcraft_geom::UnitVec3;
-use solidcraft_geom::brep::eval::CurveEval;
-use solidcraft_geom::prelude::*;
+use torno_geom::UnitVec3;
+use torno_geom::brep::eval::CurveEval;
+use torno_geom::prelude::*;
 
 use crate::Body;
 use crate::offset::{Surf, surf_of};

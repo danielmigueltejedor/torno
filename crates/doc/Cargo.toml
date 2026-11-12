@@ -1,6 +1,6 @@
 [package]
-name = "solidcraft-doc"
-description = "SolidCraft document model: parameters and expressions, sketches and features on a parametric timeline, incremental evaluation"
+name = "torno-doc"
+description = "Torno document model: parameters and expressions, sketches and features on a parametric timeline, incremental evaluation"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
@@ -9,16 +9,16 @@ license.workspace = true
 workspace = true
 
 [dependencies]
-solidcraft-viewport = { workspace = true }
+torno-viewport = { workspace = true }
 solidcore-record = { workspace = true }
 solidcore-tess = { workspace = true }
-solidcraft-color = { workspace = true }
-solidcraft-geom = { workspace = true }
-solidcraft-sketch = { workspace = true }
-solidcraft-kernel = { workspace = true }
-solidcraft-profile = { workspace = true }
-solidcraft-render = { workspace = true }
-solidcraft-derive = { workspace = true }
+torno-color = { workspace = true }
+torno-geom = { workspace = true }
+torno-sketch = { workspace = true }
+torno-kernel = { workspace = true }
+torno-profile = { workspace = true }
+torno-render = { workspace = true }
+torno-derive = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true, features = ["raw_value"] }
 thiserror = { workspace = true }

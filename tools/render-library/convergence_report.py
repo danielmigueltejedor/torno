@@ -1,4 +1,4 @@
-"""Compare equal-sample native SolidCraft raw EXRs and estimate seed-to-seed noise."""
+"""Compare equal-sample native Torno raw EXRs and estimate seed-to-seed noise."""
 
 import argparse
 from collections import defaultdict
@@ -14,7 +14,7 @@ import OpenEXR
 
 
 CHANNELS = ("R", "G", "B", "A")
-SOFTWARE = {"cpu": "SolidCraft native CPU raytrace", "gpu": "SolidCraft native GPU path"}
+SOFTWARE = {"cpu": "Torno native CPU raytrace", "gpu": "Torno native GPU path"}
 CHROMATICITIES = (0.64, 0.33, 0.30, 0.60, 0.15, 0.06, 0.3127, 0.3290)
 LUMINANCE_WEIGHTS = (0.2126, 0.7152, 0.0722)
 ROW_BLOCK = 64

@@ -3,7 +3,7 @@
 //! numbers times the context's unit, written as the same products, so every comparison is
 //! exact.
 //!
-//! Origin: the data cases of SolidCraft's `crates/kernel/src/step_in/tests.rs` at `a5b71ca2`
+//! Origin: the data cases of Torno's `crates/kernel/src/step_in/tests.rs` at `a5b71ca2`
 //! (`hand_written_part_in_inches_with_colour`, `two_instance_assembly`,
 //! `assembly_cycles_are_bounded`, `exponential_assemblies_are_bounded`), checking the data the
 //! import builds from instead of the bodies it builds.
@@ -105,7 +105,7 @@ fn placement(origin: [f64; 3], axis: Option<[f64; 3]>, ref_direction: Option<[f6
     })
 }
 
-/// A part in inches with a colour: SolidCraft's `hand_written_part_in_inches_with_colour`. The
+/// A part in inches with a colour: Torno's `hand_written_part_in_inches_with_colour`. The
 /// definition's shape is an empty representation linked to the one with the solid.
 #[test]
 fn a_part() {
@@ -383,7 +383,7 @@ fn an_assembly_with_a_shared_sub_assembly() {
     );
 }
 
-/// SolidCraft's `exponential_assemblies_are_bounded`: P0 uses P1 twice, P1 uses P2 twice, … 30
+/// Torno's `exponential_assemblies_are_bounded`: P0 uses P1 twice, P1 uses P2 twice, … 30
 /// levels. Reading is linear (31 definitions, 60 occurrences); expanding stops at
 /// [`MAX_VISITS`]. Three levels expand to 1 + 2 + 4 + 8 instances.
 #[test]
@@ -634,7 +634,7 @@ fn refusals_say_why() {
         t += &product(70, "B");
         t
     };
-    // A contains B contains A (SolidCraft's `assembly_cycles_are_bounded`).
+    // A contains B contains A (Torno's `assembly_cycles_are_bounded`).
     let cycle = two()
         + "#90=NEXT_ASSEMBLY_USAGE_OCCURRENCE('1','','',#50,#70,$);\n#91=NEXT_ASSEMBLY_USAGE_OCCURRENCE('2','','',#70,#50,$);\n";
     assert_eq!(refused(&cycle), "assembly cycle");

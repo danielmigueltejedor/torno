@@ -4,4 +4,4 @@ allow-expect-in-tests = true
 allow-panic-in-tests = true
 allow-indexing-slicing-in-tests = true
 # Proper nouns that appear in docs without backticks.
-doc-valid-idents = ["SMLib", "NLib", "NVIDIA", "SolidCraft", "OpenUSD", "..", ]
+doc-valid-idents = ["SMLib", "NLib", "NVIDIA", "Torno", "OpenUSD", "..", ]

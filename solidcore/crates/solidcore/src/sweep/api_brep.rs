@@ -14,7 +14,7 @@
 //! | [`create_pipe_sweep`]                        | `SmApiCreatePipeSweep`                         |
 //! | [`create_sweep_along_planar_path`]           | `SmApiCreateSweepAlongPlanarPath`              |
 //! | [`create_curve_sweep`], [`CurveSweep`]       | `SmApiCreateCurveSweep`                        |
-//! | [`create_curve_sweep_with_placements`], [`PlacedCurveSweep`] | `SmApiCreateCurveSweep` with the SolidCraft fork's `pOptPlacements` |
+//! | [`create_curve_sweep_with_placements`], [`PlacedCurveSweep`] | `SmApiCreateCurveSweep` with the Torno fork's `pOptPlacements` |
 //! | [`create_curve_sweep_from_faces`]            | `SmApiCreateCurveSweepFromFaces`               |
 //! | [`create_curve_sweep_from_edges`]            | `SmApiCreateCurveSweepFromEdges`               |
 //! | [`create_taper_extrude`]                     | `SmApiCreateTaperExtrude`                      |
@@ -72,7 +72,7 @@
 //!   [`PrimitiveModel`]. Path and scale curves become their `SmBSplineCurve` part.
 //!   The faces and edges of the curve sweeps are `(&Brep, id)` pairs: upstream
 //!   objects reach their own B-rep.
-//! - **SolidCraft fork (tangency-labs/smlib 5d3939e, WR-523, #1450).** The fork's
+//! - **Torno fork (tangency-labs/smlib 5d3939e, WR-523, #1450).** The fork's
 //!   optional `pOptPlacements` output of `SmApiCreateCurveSweep` is the sibling
 //!   [`create_curve_sweep_with_placements`], so [`create_curve_sweep`] keeps its
 //!   signature and does no extra work; the fork's `bProfileAtPathStart` is
@@ -122,7 +122,7 @@ const OP_NON_MANIFOLD: &str = "sweep::api_brep::non_manifold_sweep";
 pub use crate::curve::composite_curve::OffsetCornerType;
 
 /// Why a draft corner was refused, and where (`SmTaperCornerRefusal`,
-/// `pOptRefusedCorner`; SolidCraft change).
+/// `pOptRefusedCorner`; Torno change).
 pub use crate::primitive::primitive_creation::p2::{CornerRefusal, TaperCornerRefusal};
 
 /// The result of [`create_taper_extrude_with_corner`]: the solid, or the corner the
@@ -151,7 +151,7 @@ pub struct CurveSweep {
 }
 
 /// A curve sweep and where it placed the profile (the outputs of
-/// [`create_curve_sweep_with_placements`]; the SolidCraft fork's `pOptPlacements`).
+/// [`create_curve_sweep_with_placements`]; the Torno fork's `pOptPlacements`).
 #[derive(Debug)]
 pub struct PlacedCurveSweep {
     /// The swept solid and its faces, as [`create_curve_sweep`] returns them.
@@ -507,7 +507,7 @@ pub fn create_curve_sweep(
 }
 
 /// [`create_curve_sweep`] that also says where it placed the profile
-/// (`SmApiCreateCurveSweep` with the SolidCraft fork's `pOptPlacements`,
+/// (`SmApiCreateCurveSweep` with the Torno fork's `pOptPlacements`,
 /// tangency-labs/smlib 5d3939e, WR-523, #1450): the rigid motions carrying the profile
 /// curves as given onto the first, middle and last sections the sweep placed. Each
 /// placement maps the global system onto the motion's image (`transform_point` of a
@@ -697,7 +697,7 @@ pub fn create_taper_extrude(
 }
 
 /// [`create_taper_extrude`] with the corner rule as an argument and a refused corner
-/// as part of the result (SolidCraft change, tangency-labs/smlib 54148db: the fork's
+/// as part of the result (Torno change, tangency-labs/smlib 54148db: the fork's
 /// `SmApiCreateTaperExtrude(..., eCorner, rpResult, pOptRefusal, pOptRefusedCorner)`).
 ///
 /// - [`OffsetCornerType::LinearExtension`]: tangent lines across a corner's gap; with
@@ -1461,7 +1461,7 @@ mod tests {
     /// A quarter disc of radius 20 turned a whole turn about z: a dome. Its arc is a
     /// sketch's arc through (20, 0), a rounded (14.142136, 14.142136) and (0, 20), whose
     /// centre (c, 0, c), c = 1.28e-6, is off the axis by far less than the B-rep
-    /// tolerance (SolidCraft rig shell/4847, #1123).
+    /// tolerance (Torno rig shell/4847, #1123).
     fn rounded_quarter_disc(k: &mut Kernel) -> Brep {
         k.fixes.revolve_analytic_profile_faces = true;
         let (c, r, a0) = (

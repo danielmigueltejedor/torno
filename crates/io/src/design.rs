@@ -14,7 +14,7 @@ pub use thumbnail::{THUMBNAIL_SIZE, read_design_thumbnail, read_design_thumbnail
 
 use serde_json::{Map, Value, json};
 use sha2::{Digest, Sha256};
-use solidcraft_doc::{Document, FeatureKind, MeshData};
+use torno_doc::{Document, FeatureKind, MeshData};
 
 use crate::{IoError, Result, design_metadata::replace};
 
@@ -190,7 +190,7 @@ pub fn write_design_container_with_cache(
     doc: &Document,
     compression: DesignCompression,
     preview: Option<&DesignPreview>,
-    geometry: Option<&solidcraft_doc::SavedModel>,
+    geometry: Option<&torno_doc::SavedModel>,
 ) -> Result<Vec<u8>> {
     write_design_container_with_thumbnail(doc, compression, preview, geometry, None)
 }
@@ -201,10 +201,10 @@ pub fn write_design_container_with_thumbnail(
     doc: &Document,
     compression: DesignCompression,
     preview: Option<&DesignPreview>,
-    geometry: Option<&solidcraft_doc::SavedModel>,
+    geometry: Option<&torno_doc::SavedModel>,
     thumbnail: Option<&[u8]>,
 ) -> Result<Vec<u8>> {
-    let _span = solidcraft_profile::span("io", "write_design_container_with_thumbnail");
+    let _span = torno_profile::span("io", "write_design_container_with_thumbnail");
     write_container(doc, compression, preview, geometry, thumbnail, max_design())
 }
 
@@ -214,7 +214,7 @@ fn write_container(
     doc: &Document,
     compression: DesignCompression,
     preview: Option<&DesignPreview>,
-    geometry: Option<&solidcraft_doc::SavedModel>,
+    geometry: Option<&torno_doc::SavedModel>,
     thumbnail: Option<&[u8]>,
     budget: usize,
 ) -> Result<Vec<u8>> {
@@ -256,11 +256,11 @@ fn write_container(
     }
     let mut canvases = Vec::with_capacity(doc.canvases.len());
     for canvas in &doc.canvases {
-        if canvas.data.len() > solidcraft_doc::canvas::MAX_CANVAS_BYTES.div_ceil(3) * 4 {
+        if canvas.data.len() > torno_doc::canvas::MAX_CANVAS_BYTES.div_ceil(3) * 4 {
             return Err(invalid("canvas too large"));
         }
         let bytes = canvas.bytes().ok_or_else(|| invalid("invalid canvas base64"))?;
-        if !matches!(canvas.format.as_str(), "png" | "jpeg") || bytes.len() > solidcraft_doc::canvas::MAX_CANVAS_BYTES {
+        if !matches!(canvas.format.as_str(), "png" | "jpeg") || bytes.len() > torno_doc::canvas::MAX_CANVAS_BYTES {
             return Err(invalid("invalid canvas format or size"));
         }
         let blob = writer.blob(&bytes, &canvas.format, false)?;
@@ -302,7 +302,7 @@ fn write_container(
         replacements.insert("render".into(), render);
     }
     let mut metadata = replace(doc, replacements).map_err(invalid)?;
-    solidcraft_doc::newer_file::restore(doc, &mut metadata);
+    torno_doc::newer_file::restore(doc, &mut metadata);
     let metadata = serde_json::to_vec(&metadata).map_err(invalid)?;
     writer.part("document.json", &metadata, true)?;
     // What a newer build's file holds beside the design goes back as it came.
@@ -441,7 +441,7 @@ fn decode_mesh(bytes: &[u8], mesh: &mut MeshData) -> Result<()> {
 
 /// A point cloud's points and colours: the magic, the point count and whether there are
 /// colours (u64 each, little-endian), then x, y, z per point (f32) and r, g, b per point.
-fn encode_cloud(cloud: &solidcraft_doc::point_cloud::PointCloud) -> Result<Vec<u8>> {
+fn encode_cloud(cloud: &torno_doc::point_cloud::PointCloud) -> Result<Vec<u8>> {
     let n = cloud.points.len();
     let colored = !cloud.colors.is_empty();
     let size = n
@@ -460,8 +460,8 @@ fn encode_cloud(cloud: &solidcraft_doc::point_cloud::PointCloud) -> Result<Vec<u
     Ok(bytes)
 }
 
-fn decode_cloud(bytes: &[u8], cloud: &mut solidcraft_doc::point_cloud::PointCloud) -> Result<()> {
-    use solidcraft_doc::point_cloud::{Colors, MAX_POINTS, Points};
+fn decode_cloud(bytes: &[u8], cloud: &mut torno_doc::point_cloud::PointCloud) -> Result<()> {
+    use torno_doc::point_cloud::{Colors, MAX_POINTS, Points};
     if bytes.get(..8) != Some(POINTS_MAGIC.as_slice()) {
         return Err(invalid("unsupported point cloud blob version"));
     }
@@ -740,7 +740,7 @@ impl<R: Read + Seek> DesignContainerReader<R> {
     }
 
     /// The saved model, when this build wrote it for exactly this document.
-    pub fn geometry(&mut self) -> Option<solidcraft_doc::SavedModel> {
+    pub fn geometry(&mut self) -> Option<torno_doc::SavedModel> {
         let document = self.reader.document(16 << 20).ok()?;
         native_cache::read_geometry_with(&mut self.reader, &document).ok()
     }
@@ -751,7 +751,7 @@ impl<R: Read + Seek> DesignContainerReader<R> {
     }
 
     /// [`Self::geometry`] when [`Self::read_document`] follows: it validates the document.
-    fn geometry_before_document(&mut self) -> Option<solidcraft_doc::SavedModel> {
+    fn geometry_before_document(&mut self) -> Option<torno_doc::SavedModel> {
         let document = self.reader.document(16 << 20).ok()?;
         native_cache::read_geometry_before_document(&mut self.reader, &document).ok()
     }
@@ -763,11 +763,11 @@ pub(super) fn read(bytes: &[u8]) -> Result<Document> {
 
 /// Open from disk (or browser VFS), publishing only provisional display before
 /// authoritative blob hydration, with the model the file keeps when this build saved it for
-/// exactly this document ([`solidcraft_doc::Model::adopt`] takes it as the evaluation). Desktop
+/// exactly this document ([`torno_doc::Model::adopt`] takes it as the evaluation). Desktop
 /// keeps one seekable file handle instead of buffering the complete archive. JSON continues
 /// through the normal migrations.
-pub fn read_design_file(path: &str, notify: Option<impl FnOnce(DesignPreview)>) -> Result<(Document, Option<solidcraft_doc::SavedModel>)> {
-    let _span = solidcraft_profile::span("io", "read_design_file");
+pub fn read_design_file(path: &str, notify: Option<impl FnOnce(DesignPreview)>) -> Result<(Document, Option<torno_doc::SavedModel>)> {
+    let _span = torno_profile::span("io", "read_design_file");
     let mut source = open_regular_file(path)?;
     if is_container_source(&mut source)? {
         let mut reader = DesignContainerReader::new(source)?;
@@ -848,7 +848,7 @@ fn hydrate_newer<R: Read + Seek>(doc: &mut Document, metadata: &Value, container
         };
         if let Err(why) = readable {
             file.not_understood.push(format!("feature `{}` ({why})", feature.name));
-            feature.kind = FeatureKind::NewerFileFeature { raw: solidcraft_doc::newer_file::RawFeature(Box::new(value.clone())) };
+            feature.kind = FeatureKind::NewerFileFeature { raw: torno_doc::newer_file::RawFeature(Box::new(value.clone())) };
         }
     }
     let canvases_read = doc.canvases.iter().enumerate().all(|(i, canvas)| {
@@ -902,7 +902,7 @@ pub(crate) fn is_container_version(format: &str) -> bool {
 }
 
 /// Whether a feature this build couldn't read refers to this blob.
-fn foreign_mentions(features: &[solidcraft_doc::Feature], name: &str) -> bool {
+fn foreign_mentions(features: &[torno_doc::Feature], name: &str) -> bool {
     fn names(value: &Value, name: &str) -> bool {
         match value {
             Value::String(s) => s == name,
@@ -916,14 +916,14 @@ fn foreign_mentions(features: &[solidcraft_doc::Feature], name: &str) -> bool {
 
 fn read_document<R: Read + Seek>(reader: &mut PackageReader<R>) -> Result<Document> {
     if drawing::container_kind(reader)? == FileKind::Drawing {
-        return Err(IoError::Invalid("this file is a SolidCraft drawing, not a design: open it as a drawing".into()));
+        return Err(IoError::Invalid("this file is a Torno drawing, not a design: open it as a drawing".into()));
     }
     let bytes = reader.document(max_design())?;
     let mut metadata: Value = serde_json::from_slice(&bytes).map_err(invalid)?;
     // A newer build's file opens whatever it holds: what doesn't read here is kept (`newer_file`).
     let container: Value = serde_json::from_slice(&reader.limited_part("container.json", 4096)?).map_err(invalid)?;
     let newer_container = !is_known_container(&container);
-    let newer = newer_container || std::str::from_utf8(&bytes).is_ok_and(solidcraft_doc::format::says_newer);
+    let newer = newer_container || std::str::from_utf8(&bytes).is_ok_and(torno_doc::format::says_newer);
     // HDR's typed JSON representation is deliberately strict: no empty placeholders or
     // container-only blob fields may reach the document deserializer. A newer build's section that
     // doesn't pass stays as it is, which the document reader then leaves out.
@@ -954,9 +954,9 @@ fn read_document<R: Read + Seek>(reader: &mut PackageReader<R>) -> Result<Docume
     // Binary arrays have their own equivalent numeric/index validation below.
     let mut doc = Document::from_json(text)?;
     if newer_container && doc.newer_file.is_none() {
-        let current = solidcraft_doc::format::FORMAT;
+        let current = torno_doc::format::FORMAT;
         let says = container.get("format").and_then(Value::as_str).unwrap_or("a later container").to_string();
-        let mut file = solidcraft_doc::newer_file::NewerFile::default();
+        let mut file = torno_doc::newer_file::NewerFile::default();
         (file.format, file.reads_up_to, file.unknown_changes) = (current, current, vec![says]);
         doc.newer_file = Some(Arc::new(file));
     }
@@ -990,10 +990,10 @@ fn read_document<R: Read + Seek>(reader: &mut PackageReader<R>) -> Result<Docume
         }
         let value = metadata.get("canvases").and_then(|v| v.get(index)).ok_or_else(|| invalid("missing canvas metadata"))?;
         let bytes = reader.blob(value, "image_blob", &canvas.format)?;
-        if bytes.len() > solidcraft_doc::canvas::MAX_CANVAS_BYTES {
+        if bytes.len() > torno_doc::canvas::MAX_CANVAS_BYTES {
             return Err(invalid("canvas too large"));
         }
-        canvas.data = solidcraft_doc::canvas::base64_encode(bytes).into();
+        canvas.data = torno_doc::canvas::base64_encode(bytes).into();
     }
     for (index, cloud) in doc.point_clouds.iter_mut().enumerate() {
         if !cloud.points.is_empty() || !cloud.colors.is_empty() {
@@ -1012,7 +1012,7 @@ fn check_hdr_manifest(bytes: &[u8]) -> Result<()> {
         Deserialize,
         de::{MapAccess, Visitor},
     };
-    use solidcraft_doc::render_resources::{HdrId, MAX_HDR_RESOURCES};
+    use torno_doc::render_resources::{HdrId, MAX_HDR_RESOURCES};
     #[derive(Default, Deserialize)]
     struct Render {
         #[serde(default, deserialize_with = "resources")]
@@ -1088,7 +1088,7 @@ fn check_hdr_manifest(bytes: &[u8]) -> Result<()> {
 }
 
 fn hydrate_hdr_resources<R: Read + Seek>(metadata: &mut Value, reader: &mut PackageReader<R>) -> Result<bool> {
-    use solidcraft_doc::render_resources::{HdrId, MAX_HDR_RESOURCE_BYTES, MAX_HDR_RESOURCES, encode_hdr_base64};
+    use torno_doc::render_resources::{HdrId, MAX_HDR_RESOURCE_BYTES, MAX_HDR_RESOURCES, encode_hdr_base64};
 
     let Some(resources) = metadata.get_mut("render").and_then(|render| render.get_mut("resources")) else {
         return Ok(false);
@@ -1106,7 +1106,7 @@ fn hydrate_hdr_resources<R: Read + Seek>(metadata: &mut Value, reader: &mut Pack
         {
             return Err(invalid("HDR metadata requires radiance_hdr, empty data and one blob; inline data plus blob is ambiguous"));
         }
-        let remaining = MAX_HDR_RESOURCE_BYTES.saturating_sub(total).min(solidcraft_doc::render_resources::MAX_HDR_BYTES);
+        let remaining = MAX_HDR_RESOURCE_BYTES.saturating_sub(total).min(torno_doc::render_resources::MAX_HDR_BYTES);
         let bytes = reader.limited_blob(value, "hdr_blob", "hdr", remaining)?;
         if HdrId::of(bytes) != id {
             return Err(invalid("HDR resource key does not match its blob hash"));
@@ -1127,7 +1127,7 @@ fn check_texture_manifest(bytes: &[u8]) -> Result<()> {
         Deserialize,
         de::{MapAccess, Visitor},
     };
-    use solidcraft_doc::{
+    use torno_doc::{
         render_resources::HdrId,
         render_texture_resources::{MAX_TEXTURE_RESOURCES, TextureProvenance},
     };
@@ -1215,7 +1215,7 @@ fn check_texture_manifest(bytes: &[u8]) -> Result<()> {
     Ok(())
 }
 fn hydrate_texture_resources<R: Read + Seek>(metadata: &mut Value, reader: &mut PackageReader<R>) -> Result<bool> {
-    use solidcraft_doc::{
+    use torno_doc::{
         render_resources::{HdrId, encode_hdr_base64},
         render_texture_resources::{MAX_TEXTURE_BYTES, MAX_TEXTURE_RESOURCE_BYTES, MAX_TEXTURE_RESOURCES},
     };
@@ -1346,7 +1346,7 @@ mod tests {
 
     /// A saved model of one state holding `bodies`, none made by rounds (no document evaluated
     /// it: enough for the container, which stores whatever model it is given).
-    fn saved_model(bodies: Vec<solidcraft_kernel::Body>) -> solidcraft_doc::SavedModel {
+    fn saved_model(bodies: Vec<torno_kernel::Body>) -> torno_doc::SavedModel {
         let records: Vec<Value> = (0..bodies.len())
             .map(|i| json!({"name": format!("Body{i}"), "feature": 1, "component": 0, "key": "0000000000000001", "names": 0, "body": i}))
             .collect();
@@ -1354,7 +1354,7 @@ mod tests {
             "bodies": [[0, bodies.len()]], "sketches": [], "body_counter": 7, "sheets": [], "construct": [], "threads": [],
             "sketch_key_set": 0, "blend_edges": {}, "fitted": {}, "tapered": {},
         });
-        solidcraft_doc::SavedModel {
+        torno_doc::SavedModel {
             records: json!({
                 "features": [{"id": 1, "fingerprint": "0000000000000000", "ms": 0.0, "skipped": false, "state": 0}],
                 "states": [state], "model_bodies": records, "names": [{"faces": [], "info": []}], "sketches": [], "sheets": [],
@@ -1364,8 +1364,8 @@ mod tests {
         }
     }
 
-    fn native_geometry() -> solidcraft_doc::SavedModel {
-        saved_model(vec![solidcraft_kernel::box_solid(solidcore_record::Vec3::ZERO, solidcore_record::Vec3::new(10., 20., 30.)).unwrap()])
+    fn native_geometry() -> torno_doc::SavedModel {
+        saved_model(vec![torno_kernel::box_solid(solidcore_record::Vec3::ZERO, solidcore_record::Vec3::new(10., 20., 30.)).unwrap()])
     }
 
     #[test]
@@ -1383,12 +1383,12 @@ mod tests {
         let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
         let read = |p: std::path::PathBuf| std::fs::read_to_string(&p).unwrap_or_else(|e| panic!("{}: {e}", p.display()));
         let workspace = read(root.join("Cargo.toml"));
-        // `solidcraft-geom = { path = "crates/geom" }`: a workspace crate's folder.
+        // `torno-geom = { path = "crates/geom" }`: a workspace crate's folder.
         let folder = |name: &str| {
             let prefix = format!("{name} = {{ path = \"crates/");
             workspace.lines().find_map(|l| l.strip_prefix(prefix.as_str())?.split('"').next().map(str::to_string))
         };
-        let keyed: Vec<&str> = env!("SOLIDCRAFT_EVALUATION_CRATES").split(',').collect();
+        let keyed: Vec<&str> = env!("TORNO_EVALUATION_CRATES").split(',').collect();
         let (mut todo, mut seen) = (vec!["doc".to_string()], BTreeSet::new());
         while let Some(krate) = todo.pop() {
             if !seen.insert(krate.clone()) {
@@ -1399,7 +1399,7 @@ mod tests {
             for line in read(root.join("crates").join(&krate).join("Cargo.toml")).lines() {
                 if line.starts_with('[') {
                     built_with = line.ends_with("dependencies]") && !line.contains("dev-dependencies");
-                } else if built_with && let Some(dir) = line.split(" = ").next().filter(|n| n.starts_with("solidcraft-")).and_then(folder) {
+                } else if built_with && let Some(dir) = line.split(" = ").next().filter(|n| n.starts_with("torno-")).and_then(folder) {
                     todo.push(dir);
                 }
             }
@@ -1431,11 +1431,11 @@ mod tests {
     #[test]
     fn model_cache_stores_repeated_parts_once_and_keeps_placed_copies() {
         use solidcore_record::Vec3;
-        let part = solidcraft_kernel::box_solid(Vec3::ZERO, Vec3::new(10., 20., 30.)).unwrap();
-        let share = solidcraft_kernel::DisplayShare::new(part.clone());
+        let part = torno_kernel::box_solid(Vec3::ZERO, Vec3::new(10., 20., 30.)).unwrap();
+        let share = torno_kernel::DisplayShare::new(part.clone());
         let mut bodies = vec![part.clone(), part.clone()];
         for x in [50., 90.] {
-            let moved = solidcraft_kernel::transform(&part, Vec3::new(x, 0., 0.), Vec3::ZERO, Vec3::Z, 0.).unwrap();
+            let moved = torno_kernel::transform(&part, Vec3::new(x, 0., 0.), Vec3::ZERO, Vec3::Z, 0.).unwrap();
             let t = [[1., 0., 0., 0.], [0., 1., 0., 0.], [0., 0., 1., 0.], [x, 0., 0., 1.]];
             bodies.push(moved.with_display_share(&share, t));
         }
@@ -1452,7 +1452,7 @@ mod tests {
         assert_eq!(copies[1].1[3][0], 90.);
         assert!(read.bodies[0].display_share().is_none());
         for (a, b) in model.bodies.iter().zip(&read.bodies) {
-            assert_eq!(solidcraft_kernel::encode_native_body(a).unwrap(), solidcraft_kernel::encode_native_body(b).unwrap());
+            assert_eq!(torno_kernel::encode_native_body(a).unwrap(), torno_kernel::encode_native_body(b).unwrap());
         }
     }
 
@@ -1462,10 +1462,10 @@ mod tests {
     #[test]
     fn the_model_cache_manifest_is_what_a_json_tree_writes() {
         use solidcore_record::Vec3;
-        let part = solidcraft_kernel::box_solid(Vec3::ZERO, Vec3::new(10., 20., 30.)).unwrap();
-        let share = solidcraft_kernel::DisplayShare::new(part.clone());
+        let part = torno_kernel::box_solid(Vec3::ZERO, Vec3::new(10., 20., 30.)).unwrap();
+        let share = torno_kernel::DisplayShare::new(part.clone());
         let t = [[1., 0., 0., 0.], [0., 1., 0., 0.], [0., 0., 1., 0.], [50.5, -0.25, 1e-7, 1.]];
-        let moved = solidcraft_kernel::transform(&part, Vec3::new(50.5, -0.25, 1e-7), Vec3::ZERO, Vec3::Z, 0.).unwrap();
+        let moved = torno_kernel::transform(&part, Vec3::new(50.5, -0.25, 1e-7), Vec3::ZERO, Vec3::Z, 0.).unwrap();
         let model = saved_model(vec![part.clone(), moved.with_display_share(&share, t)]);
         let bytes = write_design_container_with_cache(&document(), DesignCompression::Fast, None, Some(&model)).unwrap();
         let manifest = &parts(&bytes)["cache/model.json"];
@@ -1482,11 +1482,11 @@ mod tests {
     fn model_cache_keeps_mesh_bodies_with_the_rest_of_the_model() {
         use solidcore_record::Vec3;
         let corners = [Vec3::ZERO, Vec3::new(10., 0., 0.), Vec3::new(0., 10., 0.), Vec3::new(0., 0., 10.)];
-        let tetra = solidcraft_kernel::mesh_body(&corners, &[[0, 2, 1], [0, 1, 3], [0, 3, 2], [1, 2, 3]])
+        let tetra = torno_kernel::mesh_body(&corners, &[[0, 2, 1], [0, 1, 3], [0, 3, 2], [1, 2, 3]])
             .unwrap()
             .with_color(Some([0.25, 0.5, 0.75]))
-            .with_paint(Some(solidcraft_kernel::Paint { opacity: 0.5, faces: Vec::new() }));
-        let block = solidcraft_kernel::box_solid(Vec3::new(40., 0., 0.), Vec3::new(60., 20., 20.)).unwrap();
+            .with_paint(Some(torno_kernel::Paint { opacity: 0.5, faces: Vec::new() }));
+        let block = torno_kernel::box_solid(Vec3::new(40., 0., 0.), Vec3::new(60., 20., 20.)).unwrap();
         let model = saved_model(vec![block, tetra.clone()]);
         let doc = document();
         let bytes = write_design_container_with_cache(&doc, DesignCompression::Fast, None, Some(&model)).unwrap();
@@ -1495,7 +1495,7 @@ mod tests {
         assert_eq!(manifest["slices"].as_array().unwrap().len(), 2);
         let read = DesignContainerReader::new(Cursor::new(&bytes)).unwrap().geometry().unwrap();
         assert_eq!(read.records, model.records);
-        assert_eq!(solidcraft_kernel::encode_native_body(&read.bodies[0]).unwrap(), solidcraft_kernel::encode_native_body(&model.bodies[0]).unwrap());
+        assert_eq!(torno_kernel::encode_native_body(&read.bodies[0]).unwrap(), torno_kernel::encode_native_body(&model.bodies[0]).unwrap());
         let mesh = &read.bodies[1];
         assert_eq!(mesh.triangle_mesh(), tetra.triangle_mesh());
         assert_eq!((mesh.color(), mesh.paint()), (tetra.color(), tetra.paint()));
@@ -1588,9 +1588,9 @@ mod tests {
     /// A saved model of four features (5, 50, 20 and 1 ms) whose states each hold the eight
     /// bodies all of them share and eight of their own (a body each feature replaces). No
     /// document evaluated it.
-    fn timeline_model() -> solidcraft_doc::SavedModel {
+    fn timeline_model() -> torno_doc::SavedModel {
         let bodies: Vec<_> = (0..40)
-            .map(|i| solidcraft_kernel::box_solid(solidcore_record::Vec3::ZERO, solidcore_record::Vec3::new(10. + f64::from(i), 20., 30.)).unwrap())
+            .map(|i| torno_kernel::box_solid(solidcore_record::Vec3::ZERO, solidcore_record::Vec3::new(10. + f64::from(i), 20., 30.)).unwrap())
             .collect();
         let records: Vec<Value> = (0..40)
             .map(|i| json!({"name": format!("Body{i}"), "feature": 1 + i / 8, "component": 0, "key": "0000000000000001", "names": 0, "body": i}))
@@ -1610,7 +1610,7 @@ mod tests {
             .enumerate()
             .map(|(i, ms)| json!({"id": i + 1, "fingerprint": "0000000000000000", "ms": ms, "skipped": false, "state": i}))
             .collect();
-        solidcraft_doc::SavedModel {
+        torno_doc::SavedModel {
             records: json!({
                 "features": features, "states": states, "model_bodies": records, "names": [{"faces": [], "info": []}], "sketches": [],
                 "sheets": [], "threads": [], "validation": "each_feature", "rounds": [], "sketch_key_sets": [{"set": [], "drop": []}],
@@ -1690,7 +1690,7 @@ mod tests {
             let (manifest, payload) = native_cache::encode_model(&thin, document, usize::MAX).unwrap();
             (manifest.len(), payload.len())
         };
-        let encoded = |i: usize| solidcraft_kernel::encode_native_body(&model.bodies[i]).unwrap().len();
+        let encoded = |i: usize| torno_kernel::encode_native_body(&model.bodies[i]).unwrap().len();
         // What a state's own bodies add: more than the records of the caches below, so the sizes
         // below pick one set of states each.
         let own = (8..40).step_by(8).map(|s| (s..s + 8).map(encoded).sum::<usize>()).min().unwrap();
@@ -1711,7 +1711,7 @@ mod tests {
         let part = model.bodies[0].clone();
         model.bodies.iter_mut().for_each(|b| *b = part.clone());
         let document = b"{}";
-        let size = |m: &solidcraft_doc::SavedModel| {
+        let size = |m: &torno_doc::SavedModel| {
             let (manifest, payload) = native_cache::encode_model(m, document, usize::MAX).unwrap();
             (manifest.len() + payload.len(), serde_json::from_slice::<Value>(&manifest).unwrap()["slices"].as_array().unwrap().len())
         };
@@ -1746,9 +1746,9 @@ mod tests {
         // markings inline) under the current format: never misread.
         let manifest: Value = serde_json::from_slice(&original["cache/model.json"]).unwrap();
         let mut older = manifest.clone();
-        older["format"] = json!("solidcraft-model-cache/4");
+        older["format"] = json!("torno-model-cache/4");
         let mut before_markings = manifest.clone();
-        before_markings["format"] = json!("solidcraft-model-cache/8");
+        before_markings["format"] = json!("torno-model-cache/8");
         let mut markings_inline = manifest.clone();
         markings_inline["model"].as_object_mut().unwrap().remove("threads");
         let mut inline = manifest.clone();
@@ -1771,7 +1771,7 @@ mod tests {
         assert_eq!(crate::read_design(&bytes).unwrap().to_json(), doc.to_json());
     }
 
-    /// #7168: a design saved by another version of SolidCraft (another version number and commit)
+    /// #7168: a design saved by another version of Torno (another version number and commit)
     /// whose model was computed by the same evaluation source opens from its model cache, so an
     /// update that changed only the interface or the commands does not evaluate every design again.
     /// One computed by other evaluation source (a kernel or codec change) is evaluated again.
@@ -1898,7 +1898,7 @@ mod tests {
         for bytes in [crate::write_design(&doc), write_design_container(&doc).unwrap()] {
             let back = crate::read_design(&bytes).unwrap();
             assert_eq!(back, doc);
-            let mut model = solidcraft_doc::Model::new();
+            let mut model = torno_doc::Model::new();
             model.evaluate(&back);
             let mesh = model.state().bodies[0].mesh();
             assert!((mesh.normals[0].x - 2f64.sqrt().recip()).abs() < 1e-12);
@@ -1941,13 +1941,13 @@ mod tests {
         other.color = None;
         doc.add_feature(FeatureKind::MeshImport { file: "example.obj".into(), meshes: vec![mesh(), other] }, None).unwrap();
         let id = doc.allocate_id().unwrap();
-        doc.canvases.push(solidcraft_doc::canvas::Canvas {
+        doc.canvases.push(torno_doc::canvas::Canvas {
             id,
             name: "Reference".into(),
             format: "png".into(),
-            data: solidcraft_doc::canvas::base64_encode(b"original image bytes").into(),
+            data: torno_doc::canvas::base64_encode(b"original image bytes").into(),
             pixels: [1, 1],
-            plane: solidcraft_doc::PlaneRef::Origin { name: "XY".into() },
+            plane: torno_doc::PlaneRef::Origin { name: "XY".into() },
             center: Vec2::new(0.0, 0.0),
             width: 10.0,
             angle: 0.0,
@@ -1967,7 +1967,7 @@ mod tests {
         let doc = document();
         let mut entries = parts(&write_design_container(&doc).unwrap());
         let mut metadata: Value = serde_json::from_slice(&entries["document.json"]).unwrap();
-        let newer = solidcraft_doc::format::format_string(solidcraft_doc::format::FORMAT + 1);
+        let newer = torno_doc::format::format_string(torno_doc::format::FORMAT + 1);
         metadata["format"] = json!(newer);
         let payload = b"a future payload".to_vec();
         let blob = format!("blobs/{}.lattice", digest(&payload));
@@ -2266,8 +2266,8 @@ mod tests {
     /// compresses; otherwise it is repetitive like the text of a real large export.
     fn padded_step(length: usize, noisy: bool) -> String {
         use solidcore_record::Vec3;
-        let cube = solidcraft_kernel::box_solid(Vec3::ZERO, Vec3::new(10.0, 20.0, 30.0)).unwrap();
-        let step = solidcraft_kernel::step_export(&[&cube], "padded").unwrap();
+        let cube = torno_kernel::box_solid(Vec3::ZERO, Vec3::new(10.0, 20.0, 30.0)).unwrap();
+        let step = torno_kernel::step_export(&[&cube], "padded").unwrap();
         let (head, tail) = step.split_at(step.find("DATA;").unwrap() + 5);
         let end = length - tail.len() - 2;
         let mut out = String::with_capacity(length);
@@ -2399,7 +2399,7 @@ mod tests {
             let bytes = write_design_container_with_compression(&doc, policy).unwrap();
             let mut entries = parts(&bytes);
             let mut metadata: Value = serde_json::from_slice(&entries["document.json"]).unwrap();
-            assert_eq!(metadata["format"], solidcraft_doc::format::format_string(solidcraft_doc::format::FORMAT));
+            assert_eq!(metadata["format"], torno_doc::format::format_string(torno_doc::format::FORMAT));
             let blob = metadata["features"][0]["meshes"][0]["mesh_blob"].as_str().unwrap();
             let mut archive = zip::ZipArchive::new(Cursor::new(&bytes)).unwrap();
             assert_eq!(archive.by_name(blob).unwrap().compression(), method);
@@ -2538,9 +2538,9 @@ mod tests {
     fn metadata_round_trip_preserves_new_and_existing_fields() {
         let mut doc = Document::new("Empty");
         doc.units = "in".into();
-        doc.named_views.push(solidcraft_doc::NamedView { name: "View".into(), ..Default::default() });
+        doc.named_views.push(torno_doc::NamedView { name: "View".into(), ..Default::default() });
         doc.param_comments.insert("test".into(), "metadata".into());
-        let setup = solidcraft_doc::render_settings::RenderSetup { exposure_ev: 1.5, ..Default::default() };
+        let setup = torno_doc::render_settings::RenderSetup { exposure_ev: 1.5, ..Default::default() };
         std::sync::Arc::make_mut(&mut doc.render).setups.insert("Studio".into(), setup);
         // Design properties and other tools' data (#1015), kept as they are in both forms.
         doc.metadata = serde_json::from_value(json!({
@@ -2575,7 +2575,7 @@ mod tests {
 
     #[test]
     fn embedded_hdr_is_one_required_blob_shared_by_cpu_gpu_and_strictly_hydrated() {
-        use solidcraft_doc::{render_resources::HdrResource, render_settings::RenderSettings};
+        use torno_doc::{render_resources::HdrResource, render_settings::RenderSettings};
         let mut source = b"#?RADIANCE\nFORMAT=32-bit_rle_rgbe\nPRIMARIES=0.64 0.33 0.30 0.60 0.15 0.06 0.3127 0.3290\n\n-Y 2 +X 4\n".to_vec();
         for _ in 0..8 {
             source.extend_from_slice(&[128, 64, 32, 129]);
@@ -2634,7 +2634,7 @@ mod tests {
 
     #[test]
     fn embedded_texture_container_keeps_exact_blobs_provenance_and_offline_bindings() {
-        use solidcraft_doc::{
+        use torno_doc::{
             render_settings::{GpuJob, RenderJob, RenderSetup},
             render_surface::{EmbeddedSurfaceKind, EmbeddedSurfaceSource, RenderBodyTarget, SavedSurface, SurfaceSource},
             render_texture_resources::{TextureProvenance, TextureResource},
@@ -2643,7 +2643,7 @@ mod tests {
         let resource = TextureResource::new(
             source.clone(),
             TextureProvenance {
-                author: "Original SolidCraft test".into(),
+                author: "Original Torno test".into(),
                 source: "original bundled diagnostic".into(),
                 license: "MIT OR Apache-2.0".into(),
             },
@@ -2688,7 +2688,7 @@ mod tests {
         let entry = &metadata["render"]["texture_resources"][id.to_string()];
         assert_eq!(entry["data"], "");
         assert_eq!(entry["texture_blob"], blob);
-        assert_eq!(entry["provenance"]["author"], "Original SolidCraft test");
+        assert_eq!(entry["provenance"]["author"], "Original Torno test");
         assert!(Document::from_json(&metadata.to_string()).is_err());
         let mut missing = original.clone();
         missing.remove(&blob);
@@ -2721,7 +2721,7 @@ mod tests {
 
     #[test]
     fn embedded_hdr_container_refuses_oversized_part_before_reading_payload() {
-        use solidcraft_doc::render_resources::{HdrId, MAX_HDR_BYTES};
+        use torno_doc::render_resources::{HdrId, MAX_HDR_BYTES};
         let source = vec![0u8; MAX_HDR_BYTES + 1];
         let id = HdrId::of(&source).to_string();
         let blob = format!("blobs/{id}.hdr");
@@ -2772,10 +2772,10 @@ mod tests {
         let bodies: Vec<_> = (0..512)
             .map(|i| {
                 let corner = Vec3::new((i % 32) as f64 * 12.0, (i / 32) as f64 * 12.0, 0.0);
-                solidcraft_kernel::box_solid(corner, corner + Vec3::new(10.0, 10.0, 10.0)).unwrap()
+                torno_kernel::box_solid(corner, corner + Vec3::new(10.0, 10.0, 10.0)).unwrap()
             })
             .collect();
-        let step = solidcraft_kernel::step_export(&bodies.iter().collect::<Vec<_>>(), "SolidCraft storage benchmark").unwrap();
+        let step = torno_kernel::step_export(&bodies.iter().collect::<Vec<_>>(), "Torno storage benchmark").unwrap();
         let mut doc = Document::new("Generated STEP benchmark");
         doc.add_feature(FeatureKind::Import { file: "generated.step".into(), step: step.into(), components: Vec::new(), skip: Vec::new() }, None)
             .unwrap();

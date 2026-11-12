@@ -17,5 +17,5 @@
 - **Tests:** `issue_959_fix_uv_trim_curves_keeps_interior_parameters` (fix on: same knots,
   interior control points untouched) and `fix_uv_trim_curves_stretches_the_trim_by_default`
   (fix off: the interior knots slide), in `crates/solidcore/src/topology/face/p2.rs`.
-- **Callers** that relied on the previous default (e.g. SolidCraft, #570) must set the
+- **Callers** that relied on the previous default (e.g. Torno, #570) must set the
   field.

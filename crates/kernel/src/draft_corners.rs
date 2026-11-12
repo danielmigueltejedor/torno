@@ -11,7 +11,7 @@
 //! cross.
 use serde::{Deserialize, Serialize};
 use solidcore_record::{Region2, Seg2, Vec2};
-use solidcraft_geom::prelude::*;
+use torno_geom::prelude::*;
 
 use crate::Result;
 

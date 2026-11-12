@@ -4,8 +4,8 @@
 use serde::{Deserialize, Serialize};
 use solidcore_record::Vec3;
 use solidcore_record::brep::part;
-use solidcraft_geom::brep::placement::Rigid;
-use solidcraft_geom::prelude::*;
+use torno_geom::brep::placement::Rigid;
+use torno_geom::prelude::*;
 
 use crate::body::Body;
 use crate::history::{BodyHistory, History};
@@ -158,7 +158,7 @@ fn joined(bodies: &[Body]) -> Result<(Body, part::Part)> {
 /// planes, a circle becomes an ellipse); any other matrix or body goes through SMLib's transform.
 /// Either way the result's faces and edges are the body's, in its history.
 pub fn transform_matrix(body: &Body, m: [[f64; 4]; 4]) -> Result<Body> {
-    let _span = solidcraft_profile::span("kernel", "transform_matrix");
+    let _span = torno_profile::span("kernel", "transform_matrix");
     if m.iter().flatten().any(|x| !x.is_finite()) {
         return Err(KernelError::Invalid("non-finite transform".into()));
     }
@@ -168,8 +168,8 @@ pub fn transform_matrix(body: &Body, m: [[f64; 4]; 4]) -> Result<Body> {
     }
     let sources = body.transformed_sources(m)?;
     let exact = match Rigid::of_matrix(&m) {
-        Some(motion) => Some(solidcraft_geom::brep::placement::moved(body.record(), &motion)),
-        None => solidcraft_geom::brep::placement::mapped(body.record(), &m),
+        Some(motion) => Some(torno_geom::brep::placement::moved(body.record(), &motion)),
+        None => torno_geom::brep::placement::mapped(body.record(), &m),
     };
     let (placed, sources, paint) = match exact {
         Some(record) => {
@@ -213,7 +213,7 @@ fn moved_from(history: Option<&History>, f: usize) -> Option<usize> {
 
 /// `body` moved by a matrix that is not a rigid motion, in SMLib, its history from SMLib's tags.
 fn transformed(body: &Body, m: &[[f64; 4]; 4]) -> Result<Body> {
-    let failed = |what: &str, e: solidcraft_smlib::Error| KernelError::smlib(format!("SMLib transform: {what}"), e);
+    let failed = |what: &str, e: torno_smlib::Error| KernelError::smlib(format!("SMLib transform: {what}"), e);
     let (handle, order) = crate::native::smlib_body_ordered(body)?;
     let moved = handle.tagged(0).map_err(|e| failed("tag", e))?.transformed(m).map_err(|e| failed("operation", e))?;
     let (result, result_order) = crate::native::body_from_smlib_ordered(&moved)?;
@@ -256,7 +256,7 @@ pub fn transform(body: &Body, translate: Vec3, origin: Vec3, axis: Vec3, angle: 
 /// Split a body with a plane: the parts on the positive and the negative side of the plane
 /// (only the non-empty ones).
 pub fn split_by_plane(body: &Body, plane: &solidcore_record::Plane) -> Result<Vec<Body>> {
-    let _span = solidcraft_profile::span("kernel", "split_by_plane");
+    let _span = torno_profile::span("kernel", "split_by_plane");
     let mut out = Vec::new();
     for positive in [true, false] {
         out.extend(half_space(body, plane, positive)?.0);
@@ -269,7 +269,7 @@ pub fn split_by_plane(body: &Body, plane: &solidcore_record::Plane) -> Result<Ve
 /// carries, over the body and the box. The box's face in the plane, the part's cut face, is its
 /// start cap on the positive side and its end cap on the negative side.
 pub fn half_space(body: &Body, plane: &solidcore_record::Plane, positive: bool) -> Result<(Option<Body>, Body)> {
-    let _span = solidcraft_profile::span("kernel", "half_space");
+    let _span = torno_profile::span("kernel", "half_space");
     // The box's own construction roles describe no face of the design: the cut face has none.
     let tool = half_box(body, plane, positive)?.with_face_sources(None);
     Ok((boolean(body, &tool, BoolOp::Intersect)?, tool))

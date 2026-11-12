@@ -158,9 +158,9 @@ physical backend or image-quality review; publication records name actual runs.
 From the repository root, choose an output directory that does not yet exist:
 
 ```sh
-cargo run --locked --profile ci -p solidcraft-gpu \
-  --features solidcraft-render/raytrace-cpu --example glass_comparison -- \
-  /tmp/solidcraft-glass-evidence both 32 all 256
+cargo run --locked --profile ci -p torno-gpu \
+  --features torno-render/raytrace-cpu --example glass_comparison -- \
+  /tmp/torno-glass-evidence both 32 all 256
 ```
 
 Arguments after the directory select `cpu|gpu|both`, 1–64 samples per pixel,

@@ -49,6 +49,6 @@
   "ungraded": [],
   "what": "a box of six trimmed planes where the edge (0,0,0)-(0,20,0) stops 0.01 mm short of its end corner in both faces that use it: the small gap must be closed, giving a closed box instead of two dropped faces",
   "why_not": [
-    "body \"Body1\" is no kernel operation's output nor an operand: SolidCraft built it or changed the kernel's record"
+    "body \"Body1\" is no kernel operation's output nor an operand: Torno built it or changed the kernel's record"
   ]
 }

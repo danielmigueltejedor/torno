@@ -3,8 +3,8 @@ use super::{RenderSelection, Stage, inspector};
 use crate::{SolveApp, ui_kit};
 use egui::{Rect, pos2, vec2};
 use serde_json::{Value, json};
-use solidcraft_engine::doc::render_settings::{RenderSettings, RenderSetup};
-use solidcraft_theme::Tokens;
+use torno_engine::doc::render_settings::{RenderSettings, RenderSetup};
+use torno_theme::Tokens;
 
 #[derive(Clone, Debug, Default)]
 pub(crate) struct Frame {
@@ -164,9 +164,9 @@ pub(super) fn rename(app: &mut SolveApp, name: &str, new_name: &str) -> Result<(
 pub(super) fn duplicate(app: &mut SolveApp, name: &str) -> Result<(), String> {
     for number in 1..=32 {
         let mut prefix = name.to_string();
-        let mut destination = solidcraft_ui_text::format("render.frame_copy_name", &[("name", &prefix), ("number", &number.to_string())]);
-        while destination.len() > solidcraft_engine::doc::render_settings::MAX_SETUP_NAME_BYTES && prefix.pop().is_some() {
-            destination = solidcraft_ui_text::format("render.frame_copy_name", &[("name", &prefix), ("number", &number.to_string())]);
+        let mut destination = torno_ui_text::format("render.frame_copy_name", &[("name", &prefix), ("number", &number.to_string())]);
+        while destination.len() > torno_engine::doc::render_settings::MAX_SETUP_NAME_BYTES && prefix.pop().is_some() {
+            destination = torno_ui_text::format("render.frame_copy_name", &[("name", &prefix), ("number", &number.to_string())]);
         }
         if !app.session.doc.render.setups.contains_key(&destination) {
             app.run("render.shot.duplicate", json!({"name":name,"new_name":destination,"expected_revision":app.session.revision}))?;
@@ -271,7 +271,7 @@ pub(super) fn editor(app: &mut SolveApp, ui: &mut egui::Ui, shot: &str) {
 }
 
 /// Controls save immediately; navigation alone keeps Update/Revert.
-pub(super) fn set_camera(app: &mut SolveApp, shot: &str, camera: solidcraft_viewport::Camera) -> Result<(), String> {
+pub(super) fn set_camera(app: &mut SolveApp, shot: &str, camera: torno_viewport::Camera) -> Result<(), String> {
     if !camera.is_valid() {
         return Err(app.tr("render.shot_invalid_camera").into());
     }
@@ -355,12 +355,12 @@ fn camera(app: &mut SolveApp, ui: &mut egui::Ui, shot: &str) {
 
 pub(super) fn look_at_selection(app: &mut SolveApp, shot: &str) -> Result<(), String> {
     let bounds = crate::viewport::selection_bounds(app).ok_or_else(|| app.tr("render.shot_selection_reason").to_string())?;
-    set_camera(app, shot, solidcraft_viewport::Camera { target: bounds.center(), ..app.cam })
+    set_camera(app, shot, torno_viewport::Camera { target: bounds.center(), ..app.cam })
 }
 
 /// Change only saved lens intent. Camera updates keep their explicit Update shot action.
-pub(super) fn set_lens(app: &mut SolveApp, shot: &str, lens: Option<solidcraft_engine::render::job::ThinLens>) -> Result<(), String> {
-    use solidcraft_engine::doc::render_settings::RenderJob;
+pub(super) fn set_lens(app: &mut SolveApp, shot: &str, lens: Option<torno_engine::render::job::ThinLens>) -> Result<(), String> {
+    use torno_engine::doc::render_settings::RenderJob;
     let saved = app.session.doc.render.setups.get(shot).ok_or_else(|| app.tr("render.ribbon_no_saved_camera").to_string())?;
     let active = app.render_workspace.view.name == shot;
     let establishing_job = active && saved.job.is_none();
@@ -415,7 +415,7 @@ pub(super) fn set_lens(app: &mut SolveApp, shot: &str, lens: Option<solidcraft_e
 }
 
 fn lens(app: &mut SolveApp, ui: &mut egui::Ui, shot: &str, saved: &RenderSetup) {
-    use solidcraft_engine::doc::render_settings::RenderJob;
+    use torno_engine::doc::render_settings::RenderJob;
     // A fresh native CPU default is transient until the first numerical edit.
     // Read its visible method here; opening Frame must not write that job to Studio.
     let current = if app.render_workspace.view.name == shot {
@@ -469,8 +469,8 @@ fn lens(app: &mut SolveApp, ui: &mut egui::Ui, shot: &str, saved: &RenderSetup) 
 }
 
 fn exposure(app: &mut SolveApp, ui: &mut egui::Ui, shot: &str, saved: &RenderSetup) {
-    let limit = if matches!(saved.job, Some(solidcraft_engine::doc::render_settings::RenderJob::CpuRaytrace { .. })) { 16.0 } else { 32.0 };
-    let enabled = !matches!(saved.job, None | Some(solidcraft_engine::doc::render_settings::RenderJob::Raster { .. }));
+    let limit = if matches!(saved.job, Some(torno_engine::doc::render_settings::RenderJob::CpuRaytrace { .. })) { 16.0 } else { 32.0 };
+    let enabled = !matches!(saved.job, None | Some(torno_engine::doc::render_settings::RenderJob::Raster { .. }));
     if !enabled {
         ui_kit::text(ui, app.tr("render.shot_exposure_reason"), ui_kit::Text::Note("render.shot_exposure_reason"));
     }
@@ -564,7 +564,7 @@ pub(crate) fn overlay(app: &mut SolveApp, ui: &mut egui::Ui, viewport: Rect) {
     let lens = if app.cam.fov > 0.0 {
         // Full-frame equivalent using the vertical 24 mm sensor dimension.
         let mm = 12.0 / (app.cam.fov / 2.0).tan();
-        solidcraft_ui_text::format("render.frame_lens", &[("fov", &format!("{:.0}", app.cam.fov.to_degrees())), ("mm", &format!("{mm:.0}"))])
+        torno_ui_text::format("render.frame_lens", &[("fov", &format!("{:.0}", app.cam.fov.to_degrees())), ("mm", &format!("{mm:.0}"))])
     } else {
         app.tr("render.stage_orthographic").to_string()
     };

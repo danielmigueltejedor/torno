@@ -495,7 +495,7 @@ fn call_on<T: dump::Answer>(
     start_clean(&mut k);
     k.cancel = stop.clone();
     // A profiler span per call: where the kernel's time goes.
-    let _span = solidcraft_profile::span("solidcore", call);
+    let _span = torno_profile::span("solidcore", call);
     let in_flight = dump::in_flight(call);
     struct Depth;
     impl Drop for Depth {

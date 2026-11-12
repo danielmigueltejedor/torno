@@ -2,10 +2,10 @@
 use super::{Result, TraceError};
 use crate::anisotropic_surface::{AnisotropicSurface, VisualFrame};
 use solidcore_record::Vec3;
-use solidcraft_geom::prelude::*;
-use solidcraft_viewport::surface::{OpaqueSurface, unit_direction};
 #[cfg(test)]
 use std::f64::consts::{PI, TAU};
+use torno_geom::prelude::*;
+use torno_viewport::surface::{OpaqueSurface, unit_direction};
 #[derive(Clone, Copy, Debug)]
 pub struct ReflectionSample {
     pub direction: Vec3,
@@ -132,7 +132,7 @@ mod vndf_tests;
 #[cfg(test)]
 mod tests {
     use super::{OpaqueSurface, PI, Vec3, hash_variates as variates, mirror, rough_specular};
-    use solidcraft_geom::prelude::*;
+    use torno_geom::prelude::*;
     fn white() -> OpaqueSurface {
         OpaqueSurface::new(Vec3::new(1.0, 1.0, 1.0), 1.0, 1.0, 1.5).unwrap()
     }

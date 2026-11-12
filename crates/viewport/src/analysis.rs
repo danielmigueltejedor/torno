@@ -1,7 +1,7 @@
 //! Surface analysis as a view draws it: the shading mode and the colours it uses.
 
 use solidcore_record::Vec3;
-use solidcraft_color::AnalysisColors;
+use torno_color::AnalysisColors;
 
 /// A way of shading the model's faces to judge their shape.
 #[derive(Clone, Copy, Debug, PartialEq)]

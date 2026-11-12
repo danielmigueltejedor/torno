@@ -5,7 +5,7 @@
 //! the first one, in single precision.
 
 use solidcore_record::Vec3;
-use solidcraft_doc::point_cloud::{MAX_COORD, MAX_POINTS};
+use torno_doc::point_cloud::{MAX_COORD, MAX_POINTS};
 
 use crate::{IoError, Result};
 
@@ -35,7 +35,7 @@ pub struct CloudFile {
     /// Points in the file.
     pub source_points: u64,
     /// Segments, triangles and the file's other properties (PLY).
-    pub complex: solidcraft_doc::point_cloud::Complex,
+    pub complex: torno_doc::point_cloud::Complex,
     pub warnings: Vec<String>,
 }
 
@@ -115,7 +115,7 @@ pub fn read_point_cloud(bytes: &[u8], file: &str, scale: f64, max_points: usize)
     }
     let mut out = keep.out;
     if out.points.is_empty() {
-        return Err(IoError::Invalid("the file has no points SolidCraft can read".into()));
+        return Err(IoError::Invalid("the file has no points Torno can read".into()));
     }
     if keep.bad > 0 {
         out.warnings.push(format!("{} point(s) could not be read and were left out", keep.bad));
@@ -201,7 +201,7 @@ fn read_xyz(bytes: &[u8], keep: &mut Keep) -> Result<u64> {
 
 #[cfg(test)]
 mod tests {
-    use solidcraft_doc::point_cloud::On;
+    use torno_doc::point_cloud::On;
 
     use super::*;
 

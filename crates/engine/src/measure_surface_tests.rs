@@ -21,12 +21,12 @@ fn close(v: &Value, want: f64, tol: f64) -> bool {
 }
 
 /// The first face whose analytic surface satisfies `want`, as a pick.
-fn face_of(s: &Session, want: impl Fn(solidcraft_kernel::FaceSurface) -> bool) -> Value {
+fn face_of(s: &Session, want: impl Fn(torno_kernel::FaceSurface) -> bool) -> Value {
     let st = s.model.state();
     let b = st.bodies.first().unwrap();
     let m = b.mesh();
     let n = m.tri_face.iter().map(|f| *f as usize + 1).max().unwrap();
-    let f = (0..n).find(|&f| solidcraft_kernel::face_surface(&b.body, f).is_some_and(&want)).expect("face");
+    let f = (0..n).find(|&f| torno_kernel::face_surface(&b.body, f).is_some_and(&want)).expect("face");
     let p = m.triangles.iter().zip(&m.tri_face).find(|(_, tf)| **tf as usize == f).and_then(|(t, _)| m.tri(t)).unwrap()[0];
     json!({"type": "face", "body": b.name, "index": f, "point": p})
 }
@@ -42,7 +42,7 @@ fn measure(s: &mut Session, items: Vec<Value>) -> Value {
 fn a_cylinders_side_face_is_as_big_as_its_exact_lateral_area() {
     let mut s = Session::default();
     run(&mut s, "solid.cylinder", json!({"radius": 5, "height": 20, "base": [40, 10, 0], "operation": "new"}));
-    let side = face_of(&s, |f| matches!(f, solidcraft_kernel::FaceSurface::Cylinder { radius, .. } if (radius - 5.0).abs() < 1e-6));
+    let side = face_of(&s, |f| matches!(f, torno_kernel::FaceSurface::Cylinder { radius, .. } if (radius - 5.0).abs() < 1e-6));
     let r = measure(&mut s, vec![side]);
     let item = &r["items"][0];
     assert!(close(&item["diameter"], 10.0, 1e-9), "the same reply gives the exact diameter: {r}");
@@ -56,7 +56,7 @@ fn a_holes_wall_is_as_big_as_its_exact_lateral_area() {
     let mut s = Session::default();
     run(&mut s, "solid.box", json!({"length": 60, "width": 40, "height": 10}));
     run(&mut s, "solid.cylinder", json!({"radius": 3, "height": 12, "base": [15, 20, -1], "operation": "cut"}));
-    let wall = face_of(&s, |f| matches!(f, solidcraft_kernel::FaceSurface::Cylinder { radius, .. } if (radius - 3.0).abs() < 1e-6));
+    let wall = face_of(&s, |f| matches!(f, torno_kernel::FaceSurface::Cylinder { radius, .. } if (radius - 3.0).abs() < 1e-6));
     let r = measure(&mut s, vec![wall]);
     let item = &r["items"][0];
     assert!(close(&item["diameter"], 6.0, 1e-9), "the same reply gives the exact diameter: {r}");
@@ -68,7 +68,7 @@ fn a_holes_wall_is_as_big_as_its_exact_lateral_area() {
 fn a_sphere_is_as_big_as_its_exact_surface() {
     let mut s = Session::default();
     run(&mut s, "solid.sphere", json!({"radius": 10, "base": [0, 0, 0], "operation": "new"}));
-    let ball = face_of(&s, |f| matches!(f, solidcraft_kernel::FaceSurface::Sphere { radius, .. } if (radius - 10.0).abs() < 1e-6));
+    let ball = face_of(&s, |f| matches!(f, torno_kernel::FaceSurface::Sphere { radius, .. } if (radius - 10.0).abs() < 1e-6));
     let r = measure(&mut s, vec![ball]);
     let item = &r["items"][0];
     assert!(close(&item["diameter"], 20.0, 1e-9), "the same reply gives the exact diameter: {r}");
@@ -93,10 +93,7 @@ fn a_flat_face_keeps_its_area() {
 
 /// The flat face at height `z` whose plane is across Z, as a pick.
 fn flat_face_at(s: &Session, z: f64) -> Value {
-    face_of(
-        s,
-        |f| matches!(f, solidcraft_kernel::FaceSurface::Plane { normal, point } if normal.vec().z.abs() > 1.0 - 1e-9 && (point.z - z).abs() < 1e-6),
-    )
+    face_of(s, |f| matches!(f, torno_kernel::FaceSurface::Plane { normal, point } if normal.vec().z.abs() > 1.0 - 1e-9 && (point.z - z).abs() < 1e-6))
 }
 
 /// A flat face with round holes is the plate less its exact holes: the display mesh's
@@ -197,7 +194,7 @@ fn a_cylinders_bounding_box_is_its_exact_one() {
 fn the_reports_cylinder_measures_exactly() {
     let mut s = Session::default();
     run(&mut s, "solid.cylinder", json!({"radius": 5, "height": 20, "base": [40, 10, 0], "operation": "new"}));
-    let side = face_of(&s, |f| matches!(f, solidcraft_kernel::FaceSurface::Cylinder { radius, .. } if (radius - 5.0).abs() < 1e-6));
+    let side = face_of(&s, |f| matches!(f, torno_kernel::FaceSurface::Cylinder { radius, .. } if (radius - 5.0).abs() < 1e-6));
     let r = measure(&mut s, vec![side]);
     let area = r["items"][0]["area_mm2"].as_f64().unwrap();
     let want = TAU * 5.0 * 20.0;
@@ -212,7 +209,7 @@ fn a_bore_through_the_wall_is_not_measured_as_the_uncut_band() {
     let mut s = Session::default();
     run(&mut s, "solid.cylinder", json!({"radius": 5, "height": 20, "base": [0, 0, 0], "operation": "new"}));
     run(&mut s, "solid.cylinder", json!({"radius": 1, "height": 14, "base": [-7, 0, 10], "axis": [1, 0, 0], "operation": "cut"}));
-    let side = face_of(&s, |f| matches!(f, solidcraft_kernel::FaceSurface::Cylinder { radius, .. } if (radius - 5.0).abs() < 1e-6));
+    let side = face_of(&s, |f| matches!(f, torno_kernel::FaceSurface::Cylinder { radius, .. } if (radius - 5.0).abs() < 1e-6));
     let r = measure(&mut s, vec![side]);
     let area = r["items"][0]["area_mm2"].as_f64().unwrap();
     assert!(area < TAU * 5.0 * 20.0 - 1.0, "the bored wall's area {area} is less than the uncut {}: {r}", TAU * 5.0 * 20.0);
@@ -270,7 +267,7 @@ fn the_outer_loop_is_the_one_around_the_holes_not_the_longest() {
 fn a_curved_faces_perimeter_counts_its_rims_and_not_its_seam() {
     let mut s = Session::default();
     run(&mut s, "solid.cylinder", json!({"radius": 5, "height": 20, "base": [40, 10, 0], "operation": "new"}));
-    let side = face_of(&s, |f| matches!(f, solidcraft_kernel::FaceSurface::Cylinder { .. }));
+    let side = face_of(&s, |f| matches!(f, torno_kernel::FaceSurface::Cylinder { .. }));
     let r = measure(&mut s, vec![side]);
     let item = &r["items"][0];
     assert!(close(&item["perimeter_mm"], 2.0 * TAU * 5.0, 1e-9), "two rims and no seam: {r}");
@@ -281,7 +278,7 @@ fn a_curved_faces_perimeter_counts_its_rims_and_not_its_seam() {
 
     let mut s = Session::default();
     run(&mut s, "solid.sphere", json!({"radius": 5, "operation": "new"}));
-    let ball = face_of(&s, |f| matches!(f, solidcraft_kernel::FaceSurface::Sphere { .. }));
+    let ball = face_of(&s, |f| matches!(f, torno_kernel::FaceSurface::Sphere { .. }));
     let r = measure(&mut s, vec![ball]);
     assert!(r["items"][0].get("perimeter_mm").is_none(), "{r}");
 }

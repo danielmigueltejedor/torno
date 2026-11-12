@@ -16,7 +16,7 @@
 use std::collections::BTreeMap;
 
 use serde_json::{Value, json};
-use solidcraft_engine::{CommandSpec, command_specs};
+use torno_engine::{CommandSpec, command_specs};
 
 use crate::ui_kit::Item;
 use crate::{SolveApp, ui_kit};
@@ -115,7 +115,7 @@ impl ToolbarCustom {
                 let k = key(tab, panel);
                 let migrated: Vec<_> = ids
                     .iter()
-                    .filter(|id| solidcraft_engine::find_command(id).and_then(crate::workspace::legacy_render_destination) == Some((tab, panel)))
+                    .filter(|id| torno_engine::find_command(id).and_then(crate::workspace::legacy_render_destination) == Some((tab, panel)))
                     .cloned()
                     .collect();
                 let list = migrated_panels.entry(k).or_default();
@@ -129,7 +129,7 @@ impl ToolbarCustom {
             if let Some(&(tab, panel)) = targets.first() {
                 let list = migrated_panels.entry(key(tab, panel)).or_default();
                 for id in ids {
-                    let destination = solidcraft_engine::find_command(&id).and_then(crate::workspace::legacy_render_destination);
+                    let destination = torno_engine::find_command(&id).and_then(crate::workspace::legacy_render_destination);
                     if !targets.iter().any(|target| Some(*target) == destination) && !list.contains(&id) {
                         list.push(id);
                     }
@@ -205,7 +205,7 @@ fn key(tab: &str, panel: &str) -> String {
 /// The buttons a panel shows: the user's list, or the first `promoted` commands of the panel.
 pub fn buttons(app: &SolveApp, tab: &str, panel: &str, cmds: &[&'static CommandSpec], promoted: usize) -> Vec<&'static CommandSpec> {
     match app.toolbar_custom.panels.get(&key(tab, panel)) {
-        Some(ids) => ids.iter().filter_map(|id| solidcraft_engine::find_command(id)).collect(),
+        Some(ids) => ids.iter().filter_map(|id| torno_engine::find_command(id)).collect(),
         None => cmds.iter().take(promoted).copied().collect(),
     }
 }
@@ -266,7 +266,7 @@ fn fixed(tab: &str, panel: &str, id: &str) -> bool {
 
 /// Pin a command to the toolbar of a tab (as a button of its panel, at the end).
 pub fn pin(app: &mut SolveApp, tab: &str, id: &str) -> Result<(), String> {
-    if solidcraft_engine::find_command(id).is_none() {
+    if torno_engine::find_command(id).is_none() {
         return Err(format!("no command `{id}`"));
     }
     if pinned_on(app, tab, id).is_some() || fixed(tab, "", id) {
@@ -325,13 +325,13 @@ pub fn toggle(app: &mut SolveApp, tab: &str, id: &str) {
 
 /// Add a command to the end of the quick-access bar (#10223); a command already there stays put.
 pub fn quick_add(app: &mut SolveApp, id: &str) -> Result<(), String> {
-    let spec = solidcraft_engine::find_command(id).ok_or_else(|| format!("no command `{id}`"))?;
+    let spec = torno_engine::find_command(id).ok_or_else(|| format!("no command `{id}`"))?;
     let list = &mut app.toolbar_custom.quick_access;
     if list.iter().any(|q| q == spec.id) {
         return Ok(());
     }
     if list.len() >= MAX_QUICK_ACCESS {
-        return Err(solidcraft_ui_text::format("ui.quick_access_full", &[("count", &MAX_QUICK_ACCESS.to_string())]));
+        return Err(torno_ui_text::format("ui.quick_access_full", &[("count", &MAX_QUICK_ACCESS.to_string())]));
     }
     list.push(spec.id.to_string());
     Ok(())
@@ -449,7 +449,7 @@ pub const MAX_IMPORT_BYTES: usize = 1 << 20;
 pub fn import(app: &mut SolveApp, v: &Value) -> Result<(), String> {
     // "solvecraft-shortcuts/1": files exported before the rename (compatibility shim).
     if !matches!(v.get("format").and_then(Value::as_str), Some("solidcraft-shortcuts/1" | "solvecraft-shortcuts/1")) {
-        return Err("not a SolidCraft shortcuts file".into());
+        return Err("not a Torno shortcuts file".into());
     }
     let navigation_bar = v
         .get("navigation_bar")
@@ -487,49 +487,44 @@ pub fn window(app: &mut SolveApp, ctx: &egui::Context) {
     let tab = app.ui.tab.clone();
     let mut changes: Vec<(&'static str, bool)> = Vec::new();
     let mut reset_tab = false;
-    let t = solidcraft_theme::Tokens::get();
+    let t = torno_theme::Tokens::get();
     // This long card grows as sections open. A top-left pivot keeps its controls at their
     // published positions instead of shifting them after egui measures the taller content.
     let origin =
         egui::pos2((ctx.content_rect().center().x - t.form_card_width).max(ctx.content_rect().left()), ctx.content_rect().top() + t.space_24 * 2.0);
-    let (closed, action) =
-        ui_kit::Window::new(egui::Id::unique("sc_toolbar_customize"), "settings", solidcraft_ui_text::tr_label("Customize Toolbar"))
-            .placed(egui::Align2::LEFT_TOP, origin)
-            .cards(2.0)
-            .actions("", "Close", None)
-            .show(ctx, true, |ui| {
-                ui_kit::text(
-                    ui,
-                    &solidcraft_ui_text::format("toolbar.customize_note", &[("tab", app.tr_label(&tab))]),
-                    ui_kit::Text::Note("customize"),
-                );
-                egui::ScrollArea::vertical()
-                    .max_height(
-                        (ctx.content_rect().height() - solidcraft_theme::Tokens::get().control_height * 8.0)
-                            .min(solidcraft_theme::Tokens::get().control_height * 20.0),
-                    )
-                    .show(ui, |ui| {
-                        for (panel, cmds, n) in panel_lists(&tab) {
-                            if cmds.is_empty() {
-                                continue;
-                            }
-                            ui_kit::section(ui, panel, app.tr_label(panel), true, |ui| {
-                                let shown = buttons(app, &tab, panel, &cmds, n);
-                                for c in &cmds {
-                                    let mut on = shown.iter().any(|b| b.id == c.id) || pinned_on(app, &tab, c.id).is_some();
-                                    let r = ui_kit::checkbox_icon(ui, app.tr_label(c.label), row_icon(app, c), &mut on);
-                                    crate::scenario::publish_handle(&format!("customize:{}", c.id), r.rect.center());
-                                    if r.changed() {
-                                        changes.push((c.id, on));
-                                    }
-                                }
-                            });
+    let (closed, action) = ui_kit::Window::new(egui::Id::unique("sc_toolbar_customize"), "settings", torno_ui_text::tr_label("Customize Toolbar"))
+        .placed(egui::Align2::LEFT_TOP, origin)
+        .cards(2.0)
+        .actions("", "Close", None)
+        .show(ctx, true, |ui| {
+            ui_kit::text(ui, &torno_ui_text::format("toolbar.customize_note", &[("tab", app.tr_label(&tab))]), ui_kit::Text::Note("customize"));
+            egui::ScrollArea::vertical()
+                .max_height(
+                    (ctx.content_rect().height() - torno_theme::Tokens::get().control_height * 8.0)
+                        .min(torno_theme::Tokens::get().control_height * 20.0),
+                )
+                .show(ui, |ui| {
+                    for (panel, cmds, n) in panel_lists(&tab) {
+                        if cmds.is_empty() {
+                            continue;
                         }
-                    });
-                let reset = ui_kit::button(ui, solidcraft_ui_text::tr_label("Reset Toolbar"), ui_kit::Button::Normal);
-                crate::scenario::publish_target("customize:reset", reset.rect);
-                reset_tab |= reset.clicked();
-            });
+                        ui_kit::section(ui, panel, app.tr_label(panel), true, |ui| {
+                            let shown = buttons(app, &tab, panel, &cmds, n);
+                            for c in &cmds {
+                                let mut on = shown.iter().any(|b| b.id == c.id) || pinned_on(app, &tab, c.id).is_some();
+                                let r = ui_kit::checkbox_icon(ui, app.tr_label(c.label), row_icon(app, c), &mut on);
+                                crate::scenario::publish_handle(&format!("customize:{}", c.id), r.rect.center());
+                                if r.changed() {
+                                    changes.push((c.id, on));
+                                }
+                            }
+                        });
+                    }
+                });
+            let reset = ui_kit::button(ui, torno_ui_text::tr_label("Reset Toolbar"), ui_kit::Button::Normal);
+            crate::scenario::publish_target("customize:reset", reset.rect);
+            reset_tab |= reset.clicked();
+        });
     for (id, on) in changes {
         if on {
             if let Err(e) = pin(app, &tab, id) {
@@ -560,7 +555,7 @@ mod row_icon_tests {
             h.app.run("solid.box", json!({"corner": corner, "length": 10, "width": 10, "height": 10})).unwrap();
         }
         h.app.run("timeline.roll_to", json!({"position": 0})).unwrap();
-        let command = solidcraft_engine::find_command("timeline.play").unwrap();
+        let command = torno_engine::find_command("timeline.play").unwrap();
         assert_eq!(row_icon(&h.app, command), "timeline_play");
         h.app.start(command.id);
         assert!(h.app.timeline_playback.is_some(), "History plays");

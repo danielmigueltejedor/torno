@@ -64,6 +64,6 @@
   "ungraded": [],
   "what": "one fold line spanning both of two collinear tabs folds both",
   "why_not": [
-    "body \"Body1\" is no kernel operation's output nor an operand: SolidCraft built it or changed the kernel's record"
+    "body \"Body1\" is no kernel operation's output nor an operand: Torno built it or changed the kernel's record"
   ]
 }

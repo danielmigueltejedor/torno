@@ -5,11 +5,11 @@ use crate::schema::render_library::{PhysicalPlan, PhysicalPrepareParams, Planned
 use crate::{Result, Session, params::bad};
 use serde::Deserialize;
 use serde_json::{Value, json};
-use solidcraft_doc::{
+use std::{collections::BTreeSet, sync::OnceLock};
+use torno_doc::{
     physical_material::{PropertyData, ValidatedCard},
     render_resources::HdrId,
 };
-use std::{collections::BTreeSet, sync::OnceLock};
 const PROFILES: &str = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../assets/render/physical/profiles.json"));
 const BINDINGS: &str = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../assets/render/physical/bindings.json"));
 const CARDS: &str = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../assets/render/physical/exports/native-cards.json"));

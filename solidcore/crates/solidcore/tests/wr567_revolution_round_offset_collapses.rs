@@ -1,5 +1,5 @@
-//! WR-567 (the fork's tangency-labs/smlib@8b2090f, smlib#64; SolidCraft
-//! `shell_of_a_disc_rounded_smaller_than_the_wall`, solidcraft#319): a disc r 15, 5 thick,
+//! WR-567 (the fork's tangency-labs/smlib@8b2090f, smlib#64; Torno
+//! `shell_of_a_disc_rounded_smaller_than_the_wall`, torno#319): a disc r 15, 5 thick,
 //! one rim rounded r 1.5 and shelled 1.6 or 2 inward, open at one end. The round is a
 //! fillet's surface of revolution of an arc; moved in past its radius it has no offset,
 //! as a torus's, and the floor's and side's offsets meet across it in a circle. Upstream's

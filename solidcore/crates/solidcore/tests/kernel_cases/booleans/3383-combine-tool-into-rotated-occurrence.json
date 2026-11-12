@@ -67,6 +67,6 @@
   "ungraded": [],
   "what": "a root body joined into a body inside a component whose occurrence is turned a quarter turn: the tool must stay where it is in the world",
   "why_not": [
-    "body \"Plate\" is no kernel operation's output nor an operand: SolidCraft built it or changed the kernel's record"
+    "body \"Plate\" is no kernel operation's output nor an operand: Torno built it or changed the kernel's record"
   ]
 }

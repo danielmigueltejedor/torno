@@ -2,7 +2,7 @@ Updates: WR-616
 
 #### WR-616 (update, 2026-11-02). The setback corner's fill reaches the executive, certified convex and grown to fit (`fillet_blend_corner`)
 
-The SolidCraft fork's tangency-labs/smlib#104 (merged into `replay/1.0.1` at `b5bb747`; SMLib
+The Torno fork's tangency-labs/smlib#104 (merged into `replay/1.0.1` at `b5bb747`; SMLib
 commits `61547af`, `d1de555`, `1506e2f`, `ac8b4f8`, `590a7f3`, `08d4b02`, the SMLib part of
 `250cb3f`, and `f1d81f4`) routes a setback corner through `SmBlendSetback::FillHole`, the fill
 ported in the WR-616 addendum of 2026-11-02 (`setback-split-fill`). That addendum left the flag

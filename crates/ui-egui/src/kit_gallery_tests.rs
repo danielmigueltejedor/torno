@@ -1,4 +1,4 @@
-//! SolidCraft's specimens of the kit: the elements drawn from SolidCraft's data (its menus
+//! Torno's specimens of the kit: the elements drawn from Torno's data (its menus
 //! from `context_menu`, the history strip and browser of a sample design, the continuity rows
 //! of its surface dialogs) and the boards that need a running app. The kit's own gallery,
 //! drawn from plain data, is `ui_kit::gallery`; these are checked with its `check_elements`.
@@ -7,8 +7,8 @@ use crate::ui_kit::element;
 use crate::ui_kit::gallery::{ELEMENTS, Element, Sample, check_elements, example};
 use crate::ui_kit::*;
 use egui::{Ui, vec2};
-use solidcraft_engine::kernel::Continuity;
-use solidcraft_theme::Tokens;
+use torno_engine::kernel::Continuity;
+use torno_theme::Tokens;
 
 const APP_ELEMENTS: &[Element] = &[
     element!("history_icons", |ui, _| history_example(ui, false)),
@@ -35,7 +35,7 @@ const APP_ELEMENTS: &[Element] = &[
     }),
     element!("preference_specimens", |ui, _| {
         crate::prefs::figures::scale_specimen(ui, 1.1);
-        crate::prefs::figures::status_palette_sample(ui, solidcraft_theme::ColorVision::Deutan);
+        crate::prefs::figures::status_palette_sample(ui, torno_theme::ColorVision::Deutan);
         crate::prefs::figures::colour_vision_sample(ui, &Tokens::get());
         crate::prefs::figures::autosave_timeline(ui, 5.0);
         crate::prefs::figures::pointer_preview(ui, true, "Normal", true);
@@ -63,10 +63,10 @@ fn app_elements_have_geometry_and_stay_in_their_allocation_in_both_themes() {
 
 #[test]
 fn visual_style_dropdown_specimen_selects_real_options_and_paints_their_icons() {
-    let previous = solidcraft_theme::is_dark();
+    let previous = torno_theme::is_dark();
     let element = APP_ELEMENTS.iter().find(|element| element.name == "visual_style_dropdown").unwrap();
     for dark in [false, true] {
-        solidcraft_theme::set_dark(dark);
+        torno_theme::set_dark(dark);
         let ctx = crate::fonts::test_context();
         let sample = std::cell::RefCell::new(Sample { value: String::new(), second: String::new(), selected: 0, checked: false });
         let mut draw = |ui: &mut Ui| {
@@ -76,30 +76,29 @@ fn visual_style_dropdown_specimen_selects_real_options_and_paints_their_icons() 
             crate::ui_kit::test_support::frame(&ctx, vec![], &mut draw);
         }
         for (index, (_, label)) in crate::navigation_slots::VISUAL_STYLES.into_iter().enumerate() {
-            let trigger = solidcraft_ui_registry::handle_at("dialog:Visual style").unwrap();
+            let trigger = torno_ui_registry::handle_at("dialog:Visual style").unwrap();
             crate::ui_kit::test_support::frame(&ctx, crate::ui_kit::test_support::pointer(trigger, true), &mut draw);
             crate::ui_kit::test_support::frame(&ctx, crate::ui_kit::test_support::pointer(trigger, false), &mut draw);
             crate::ui_kit::test_support::frame(&ctx, vec![], &mut draw);
             for (option, (_, name)) in crate::navigation_slots::VISUAL_STYLES.into_iter().enumerate() {
-                let rect = solidcraft_ui_registry::rect_of(&format!("dialog:Visual style:{name}")).unwrap();
+                let rect = torno_ui_registry::rect_of(&format!("dialog:Visual style:{name}")).unwrap();
                 let icon = crate::navigation_slots::visual_style_icon(option as u8);
-                let painted = solidcraft_ui_registry::rect_of(&format!("dialog:dropdown_icon:{icon}")).unwrap();
-                let owner =
-                    if option == sample.borrow().selected { solidcraft_ui_registry::rect_of("dialog:widget:Visual style").unwrap() } else { rect };
+                let painted = torno_ui_registry::rect_of(&format!("dialog:dropdown_icon:{icon}")).unwrap();
+                let owner = if option == sample.borrow().selected { torno_ui_registry::rect_of("dialog:widget:Visual style").unwrap() } else { rect };
                 assert!(owner.contains_rect(painted), "{name}: its real icon is in its option or selected trigger");
             }
-            let option = solidcraft_ui_registry::handle_at(&format!("dialog:Visual style:{label}")).unwrap();
+            let option = torno_ui_registry::handle_at(&format!("dialog:Visual style:{label}")).unwrap();
             crate::ui_kit::test_support::frame(&ctx, crate::ui_kit::test_support::pointer(option, true), &mut draw);
             crate::ui_kit::test_support::frame(&ctx, crate::ui_kit::test_support::pointer(option, false), &mut draw);
             crate::ui_kit::test_support::frame(&ctx, vec![], &mut draw);
             assert_eq!(sample.borrow().selected, index, "the specimen edits the real selection index");
             let icon = crate::navigation_slots::visual_style_icon(index as u8);
-            let trigger = solidcraft_ui_registry::rect_of("dialog:widget:Visual style").unwrap();
-            assert!(trigger.contains_rect(solidcraft_ui_registry::rect_of(&format!("dialog:dropdown_icon:{icon}")).unwrap()));
-            assert!(solidcraft_ui_registry::handle_at("dialog:Visual style:Wireframe").is_none(), "the native popup closes after selection");
+            let trigger = torno_ui_registry::rect_of("dialog:widget:Visual style").unwrap();
+            assert!(trigger.contains_rect(torno_ui_registry::rect_of(&format!("dialog:dropdown_icon:{icon}")).unwrap()));
+            assert!(torno_ui_registry::handle_at("dialog:Visual style:Wireframe").is_none(), "the native popup closes after selection");
         }
     }
-    solidcraft_theme::set_dark(previous);
+    torno_theme::set_dark(previous);
 }
 
 #[cfg(test)]
@@ -124,12 +123,12 @@ fn history_example(ui: &mut Ui, names: bool) {
 fn history_board_in_both_themes_and_widths() {
     use crate::ui_kit::{test_raster as raster, test_textures_update as textures_update};
     use std::collections::HashMap;
-    let previous = solidcraft_theme::is_dark();
+    let previous = torno_theme::is_dark();
     for dark in [false, true] {
         for names in [false, true] {
             for collapsed in [false, true] {
                 for state in [HistoryHandleState::Rest, HistoryHandleState::Hover, HistoryHandleState::Drag] {
-                    solidcraft_theme::set_dark(dark);
+                    torno_theme::set_dark(dark);
                     let ctx = crate::fonts::test_context();
                     ctx.set_visuals(if dark { egui::Visuals::dark() } else { egui::Visuals::light() });
                     ctx.global_style_mut(|style| style.animation_time = 0.0);
@@ -176,7 +175,7 @@ fn history_board_in_both_themes_and_widths() {
                         assert_eq!(app.shell.history.unwrap().width(), 112.0);
                     }
                     assert!(app.shell.history.unwrap().right() < app.shell.browser.unwrap().left());
-                    if let Ok(dir) = std::env::var("SOLIDCRAFT_HISTORY_EVIDENCE") {
+                    if let Ok(dir) = std::env::var("TORNO_HISTORY_EVIDENCE") {
                         std::fs::create_dir_all(&dir).unwrap();
                         image
                             .unwrap()
@@ -193,7 +192,7 @@ fn history_board_in_both_themes_and_widths() {
             }
         }
     }
-    solidcraft_theme::set_dark(previous);
+    torno_theme::set_dark(previous);
 }
 
 /// Render actual egui geometry without a desktop window. Opt-in PNGs are reviewer evidence.
@@ -201,9 +200,9 @@ fn history_board_in_both_themes_and_widths() {
 fn menu_board_in_both_themes() {
     use crate::ui_kit::{test_raster as raster, test_textures_update as textures_update};
     use std::collections::HashMap;
-    let previous = solidcraft_theme::is_dark();
+    let previous = torno_theme::is_dark();
     for dark in [false, true] {
-        solidcraft_theme::set_dark(dark);
+        torno_theme::set_dark(dark);
         let ctx = crate::fonts::test_context();
         ctx.set_visuals(if dark { egui::Visuals::dark() } else { egui::Visuals::light() });
         let mut textures = HashMap::new();
@@ -231,12 +230,12 @@ fn menu_board_in_both_themes() {
         }
         let image = image.unwrap();
         assert!(image.pixels().any(|p| p.0[3] != 0));
-        if let Ok(dir) = std::env::var("SOLIDCRAFT_MENU_EVIDENCE") {
+        if let Ok(dir) = std::env::var("TORNO_MENU_EVIDENCE") {
             std::fs::create_dir_all(&dir).unwrap();
             image.save(std::path::Path::new(&dir).join(if dark { "menus-dark.png" } else { "menus-light.png" })).unwrap();
         }
     }
-    solidcraft_theme::set_dark(previous);
+    torno_theme::set_dark(previous);
 }
 
 /// CPU raster of the actual popup in all five board states. No display or GPU required.
@@ -244,12 +243,12 @@ fn menu_board_in_both_themes() {
 fn command_search_board_in_both_themes() {
     use crate::ui_kit::{test_raster as raster, test_textures_update as textures_update};
     use std::collections::HashMap;
-    let previous = solidcraft_theme::is_dark();
+    let previous = torno_theme::is_dark();
     for dark in [false, true] {
-        solidcraft_theme::set_dark(dark);
+        torno_theme::set_dark(dark);
         let t = Tokens::get();
-        assert!(solidcraft_theme::contrast_ratio(t.form_success, t.form_success_fill) >= 4.5);
-        assert!(solidcraft_theme::contrast_ratio(t.selected_ink, t.accent_soft) >= 4.5);
+        assert!(torno_theme::contrast_ratio(t.form_success, t.form_success_fill) >= 4.5);
+        assert!(torno_theme::contrast_ratio(t.selected_ink, t.accent_soft) >= 4.5);
         for (state, query) in [
             ("empty", ""),
             ("matches", "fillet"),
@@ -270,7 +269,7 @@ fn command_search_board_in_both_themes() {
             let mut textures = HashMap::new();
             let mut image = None;
             for _ in 0..3 {
-                solidcraft_ui_registry::clear_handles();
+                torno_ui_registry::clear_handles();
                 let mut output = ctx.run_ui(egui::RawInput { screen_rect: Some(bounds), focused: true, ..Default::default() }, |ui| {
                     ui.painter().rect_filled(bounds, 0.0, Tokens::get().panel);
                     crate::shortcut_box::show(&mut app, ui.ctx());
@@ -279,45 +278,45 @@ fn command_search_board_in_both_themes() {
                 output.textures_delta.clear();
                 image = Some(raster(&ctx, output.shapes, output.pixels_per_point, bounds, &textures));
             }
-            let popup = solidcraft_ui_registry::rect_of("ribbon:search_popup").unwrap();
-            let field = solidcraft_ui_registry::rect_of("shortcut:search").unwrap();
+            let popup = torno_ui_registry::rect_of("ribbon:search_popup").unwrap();
+            let field = torno_ui_registry::rect_of("shortcut:search").unwrap();
             assert_eq!(field.height(), 40.0);
             assert_eq!(field.width(), 520.0);
             assert_eq!(popup.width(), 520.0);
             assert_eq!(popup.top(), field.bottom() + Tokens::get().space_6);
             assert_eq!(popup.x_range(), field.x_range());
-            let footer = solidcraft_ui_registry::rect_of("ribbon:search_footer").unwrap();
+            let footer = torno_ui_registry::rect_of("ribbon:search_footer").unwrap();
             assert_eq!(footer, egui::Rect::from_min_max(egui::pos2(popup.left(), footer.top()), popup.right_bottom()));
             assert!(bounds.contains_rect(popup), "{state}: {popup:?}");
             match state {
                 "matches" => {
-                    assert!(solidcraft_ui_registry::handle_at("menu:solid.fillet").is_some());
-                    assert_eq!(solidcraft_ui_registry::rect_of("menu:solid.fillet").unwrap().height(), 38.0);
-                    assert!(solidcraft_ui_registry::handle_at("menu:search:design:0").is_some());
+                    assert!(torno_ui_registry::handle_at("menu:solid.fillet").is_some());
+                    assert_eq!(torno_ui_registry::rect_of("menu:solid.fillet").unwrap().height(), 38.0);
+                    assert!(torno_ui_registry::handle_at("menu:search:design:0").is_some());
                 }
-                "command" => assert!(solidcraft_ui_registry::rect_of("dialog:note:command_parameters").is_some()),
-                "invalid" => assert!(solidcraft_ui_registry::rect_of("dialog:report:command_parameters").is_some()),
-                "no-match" => assert!(solidcraft_ui_registry::rect_of("dialog:report:search_no_match").is_some()),
+                "command" => assert!(torno_ui_registry::rect_of("dialog:note:command_parameters").is_some()),
+                "invalid" => assert!(torno_ui_registry::rect_of("dialog:report:command_parameters").is_some()),
+                "no-match" => assert!(torno_ui_registry::rect_of("dialog:report:search_no_match").is_some()),
                 _ => {}
             }
             let image = image.unwrap();
             assert!(image.pixels().any(|p| p.0[3] != 0));
-            if let Ok(dir) = std::env::var("SOLIDCRAFT_SEARCH_EVIDENCE") {
+            if let Ok(dir) = std::env::var("TORNO_SEARCH_EVIDENCE") {
                 std::fs::create_dir_all(&dir).unwrap();
                 image.save(std::path::Path::new(&dir).join(format!("search-{state}-{}.png", if dark { "dark" } else { "light" }))).unwrap();
             }
         }
     }
-    solidcraft_theme::set_dark(previous);
+    torno_theme::set_dark(previous);
 }
 
 /// Exercise the actual surface painters, including deliberately shared artwork whose
 /// own accent differs from its tone, tab or feature kind.
 #[test]
 fn confirm_radial_and_history_rows_keep_multitone_artwork() {
-    let previous = solidcraft_theme::is_dark();
+    let previous = torno_theme::is_dark();
     for dark in [false, true] {
-        solidcraft_theme::set_dark(dark);
+        torno_theme::set_dark(dark);
         let mut cases = vec![
             ("warning", "extrude", "", "MODEL", Some("construction"), 20),
             ("danger", "extrude", "", "MODEL", Some("constraint"), 20),
@@ -426,7 +425,7 @@ fn confirm_radial_and_history_rows_keep_multitone_artwork() {
             assert!(colours.len() >= 2, "{surface}/{icon}/{kind}/{tab}, dark={dark}: opaque artwork is a silhouette");
             let resolved = crate::icon_svg::resolve(icon);
             assert!(!resolved.placeholder, "{icon} needs a master");
-            let look = crate::icon_svg::Look::themed(dark, ramp.and_then(crate::icon_svg::accent_index), solidcraft_theme::vision());
+            let look = crate::icon_svg::Look::themed(dark, ramp.and_then(crate::icon_svg::accent_index), torno_theme::vision());
             let doc = crate::icon_svg::doc_for(resolved.master, side as u32).unwrap();
             let expected = if matches!(surface, "danger" | "danger_menu") {
                 crate::icon_svg::render_tinted(doc, look, side as u32)
@@ -460,7 +459,7 @@ fn confirm_radial_and_history_rows_keep_multitone_artwork() {
                 let group = if matches!(surface, "warning" | "danger" | "info") { "confirm" } else { surface };
                 dominant_accents.entry(group).or_default().insert(dominant.1);
             }
-            if let Ok(dir) = std::env::var("SOLIDCRAFT_ICON_SURFACE_EVIDENCE") {
+            if let Ok(dir) = std::env::var("TORNO_ICON_SURFACE_EVIDENCE") {
                 let mut textures = std::collections::HashMap::new();
                 crate::ui_kit::test_textures_update(&mut textures, &output.textures_delta);
                 let capture = crate::ui_kit::test_raster(&ctx, output.shapes.clone(), output.pixels_per_point, bounds, &textures);
@@ -475,7 +474,7 @@ fn confirm_radial_and_history_rows_keep_multitone_artwork() {
             assert_eq!(dominant_accents[group].len(), count, "{group}, dark={dark}: dominant accent pixels must differ across mappings");
         }
     }
-    solidcraft_theme::set_dark(previous);
+    torno_theme::set_dark(previous);
 }
 
 /// Run the application UI, including the ribbon, and optionally save each transition.
@@ -483,9 +482,9 @@ fn confirm_radial_and_history_rows_keep_multitone_artwork() {
 fn command_search_ribbon_transition_clips_content_in_both_themes() {
     use crate::ui_kit::{test_raster as raster, test_textures_update as textures_update};
     use std::collections::HashMap;
-    let previous = solidcraft_theme::is_dark();
+    let previous = torno_theme::is_dark();
     for dark in [false, true] {
-        solidcraft_theme::set_dark(dark);
+        torno_theme::set_dark(dark);
         let ctx = crate::fonts::test_context();
         ctx.set_visuals(if dark { egui::Visuals::dark() } else { egui::Visuals::light() });
         let mut app = crate::test_support::sample_app();
@@ -502,7 +501,7 @@ fn command_search_ribbon_transition_clips_content_in_both_themes() {
                 app.ui.palette_open = false;
                 app.sbox.text.clear();
             }
-            solidcraft_ui_registry::clear_handles();
+            torno_ui_registry::clear_handles();
             let mut output = ctx.run_ui(
                 egui::RawInput { screen_rect: Some(bounds), time: Some(f64::from(frame) / 60.0), focused: true, ..Default::default() },
                 |ui| {
@@ -512,12 +511,12 @@ fn command_search_ribbon_transition_clips_content_in_both_themes() {
             );
             textures_update(&mut textures, &output.textures_delta);
             output.textures_delta.clear();
-            let field = solidcraft_ui_registry::rect_of("ribbon:search").unwrap();
+            let field = torno_ui_registry::rect_of("ribbon:search").unwrap();
             if frame == 2 {
                 closed = field;
             }
             if (3..14).contains(&frame) {
-                let sheet = solidcraft_ui_registry::rect_of("ribbon:search_popup").unwrap();
+                let sheet = torno_ui_registry::rect_of("ribbon:search_popup").unwrap();
                 assert!(sheet.top() > field.bottom() && sheet.top() <= field.bottom() + Tokens::get().space_6);
                 // Actual result text is painted with the unfolding sheet's clip,
                 // rather than relying on a smaller background hiding overflow.
@@ -551,31 +550,31 @@ fn command_search_ribbon_transition_clips_content_in_both_themes() {
             } else if frame == 25 {
                 assert_eq!(field, closed);
             }
-            if let (Some(state), Ok(dir)) = (state, std::env::var("SOLIDCRAFT_SEARCH_EVIDENCE")) {
+            if let (Some(state), Ok(dir)) = (state, std::env::var("TORNO_SEARCH_EVIDENCE")) {
                 std::fs::create_dir_all(&dir).unwrap();
                 let image = raster(&ctx, output.shapes, output.pixels_per_point, bounds, &textures);
                 image.save(std::path::Path::new(&dir).join(format!("ribbon-{state}-{}.png", if dark { "dark" } else { "light" }))).unwrap();
             }
         }
     }
-    solidcraft_theme::set_dark(previous);
+    torno_theme::set_dark(previous);
 }
 
 /// Opt-in CPU capture of the actual File view, with public temporary fixtures only.
 #[test]
-#[ignore = "set SOLIDCRAFT_FILE_EVIDENCE to an output directory and run explicitly"]
+#[ignore = "set TORNO_FILE_EVIDENCE to an output directory and run explicitly"]
 fn file_view_application_evidence_in_both_themes_and_widths() {
     use crate::ui_kit::{test_raster as raster, test_textures_update as textures_update};
     use std::collections::HashMap;
-    let output_dir = std::path::PathBuf::from(std::env::var("SOLIDCRAFT_FILE_EVIDENCE").expect("set SOLIDCRAFT_FILE_EVIDENCE"));
+    let output_dir = std::path::PathBuf::from(std::env::var("TORNO_FILE_EVIDENCE").expect("set TORNO_FILE_EVIDENCE"));
     std::fs::create_dir_all(&output_dir).unwrap();
-    let fixture_dir = std::env::temp_dir().join(format!("solidcraft-file-evidence-{}", std::process::id()));
+    let fixture_dir = std::env::temp_dir().join(format!("torno-file-evidence-{}", std::process::id()));
     std::fs::create_dir_all(&fixture_dir).unwrap();
     let path = fixture_dir.join("sample-plate.sc");
     let fixture = path.to_string_lossy().to_string();
     let mut sample = crate::test_support::sample_app();
     sample.session.execute("file.save_as", &serde_json::json!({"path":fixture})).unwrap();
-    let previous = solidcraft_theme::is_dark();
+    let previous = torno_theme::is_dark();
     for dark in [false, true] {
         for (name, size) in [("desktop", vec2(1440.0, 1000.0)), ("narrow", vec2(420.0, 1000.0))] {
             let ctx = crate::fonts::test_context();
@@ -588,15 +587,15 @@ fn file_view_application_evidence_in_both_themes_and_widths() {
             crate::home::install(&mut app.home, &ctx, &fixture, Some(preview));
             app.preferences.theme = if dark { "dark" } else { "light" }.into();
             app.ui.dark = dark;
-            app.recoverable.push(solidcraft_engine::recovery::Entry {
+            app.recoverable.push(torno_engine::recovery::Entry {
                 id: "public-evidence".into(),
                 path: Some("enclosure-lid.sc".into()),
                 name: "Enclosure lid".into(),
                 saved_at: web_time::SystemTime::now().duration_since(web_time::UNIX_EPOCH).unwrap().as_secs().saturating_sub(120),
                 features: 14,
             });
-            solidcraft_theme::set_dark(dark);
-            solidcraft_theme::apply(&ctx);
+            torno_theme::set_dark(dark);
+            torno_theme::apply(&ctx);
             let bounds = egui::Rect::from_min_size(egui::Pos2::ZERO, size);
             let mut textures = HashMap::new();
             for frame in 0..6 {
@@ -610,7 +609,7 @@ fn file_view_application_evidence_in_both_themes_and_widths() {
                 textures_update(&mut textures, &output.textures_delta);
                 if frame == 5 {
                     assert!(app.home.open);
-                    let page = solidcraft_ui_registry::rect_of("home:page").expect("actual File view allocation");
+                    let page = torno_ui_registry::rect_of("home:page").expect("actual File view allocation");
                     assert!(bounds.contains_rect(page));
                     raster(&ctx, output.shapes.clone(), output.pixels_per_point, bounds, &textures)
                         .save(output_dir.join(format!("file-{name}-{}.png", if dark { "dark" } else { "light" })))
@@ -620,7 +619,7 @@ fn file_view_application_evidence_in_both_themes_and_widths() {
             }
         }
     }
-    solidcraft_theme::set_dark(previous);
+    torno_theme::set_dark(previous);
     std::fs::remove_file(path).unwrap();
     std::fs::remove_dir(fixture_dir).unwrap();
 }

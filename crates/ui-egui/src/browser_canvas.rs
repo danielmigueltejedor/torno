@@ -7,14 +7,14 @@
 use egui::{Pos2, Stroke, vec2};
 use serde_json::{Value, json};
 use solidcore_record::Vec2;
-use solidcraft_engine::doc::canvas::Canvas;
-use solidcraft_engine::geom::prelude::*;
+use torno_engine::doc::canvas::Canvas;
+use torno_engine::geom::prelude::*;
 
 use crate::SolveApp;
 use crate::browser::panel_pos;
 use crate::ui_kit;
 use crate::viewport::Proj;
-use solidcraft_theme::Tokens;
+use torno_theme::Tokens;
 
 pub(crate) fn panel(app: &mut SolveApp, ctx: &egui::Context) {
     let Some(mut m) = app.tree.canvas_panel.clone() else { return };
@@ -31,15 +31,15 @@ pub(crate) fn panel(app: &mut SolveApp, ctx: &egui::Context) {
     } else {
         "browser.edit_canvas_title"
     };
-    let title = solidcraft_ui_text::format(title_id, &[("name", &c.name)]);
+    let title = torno_ui_text::format(title_id, &[("name", &c.name)]);
     let at = panel_pos(app);
     let (picks, straighten, name) = (m.picks_points(), m.straighten, c.id);
     let (ok, cancel) = if straighten {
-        (solidcraft_ui_text::tr("ui.straighten"), solidcraft_ui_text::tr("ui.cancel"))
+        (torno_ui_text::tr("ui.straighten"), torno_ui_text::tr("ui.cancel"))
     } else if picks {
-        (solidcraft_ui_text::tr_label("Calibrate"), solidcraft_ui_text::tr("ui.cancel"))
+        (torno_ui_text::tr_label("Calibrate"), torno_ui_text::tr("ui.cancel"))
     } else {
-        ("", solidcraft_ui_text::tr("ui.close"))
+        ("", torno_ui_text::tr("ui.close"))
     };
     let (closed, action) = ui_kit::Window::new(egui::Id::unique("sc_canvas_panel"), "canvas", &title)
         .placed(egui::Align2::LEFT_TOP, at)
@@ -47,9 +47,9 @@ pub(crate) fn panel(app: &mut SolveApp, ctx: &egui::Context) {
         .actions(ok, cancel, None)
         .show(ctx, true, |ui| {
             if picks {
-                ui_kit::text(ui, solidcraft_ui_text::tr(hint(&m)), ui_kit::Text::Note("calibrate_hint"));
+                ui_kit::text(ui, torno_ui_text::tr(hint(&m)), ui_kit::Text::Note("calibrate_hint"));
                 for (label, p) in [("Point A", &mut m.a), ("Point B", &mut m.b)] {
-                    ui_kit::row(ui, solidcraft_ui_text::tr_label(label), |ui| {
+                    ui_kit::row(ui, torno_ui_text::tr_label(label), |ui| {
                         let [x, y] = p;
                         ui.horizontal(|ui| {
                             ui_kit::length_field(ui, x, &units, decimals);
@@ -59,37 +59,35 @@ pub(crate) fn panel(app: &mut SolveApp, ctx: &egui::Context) {
                 }
                 if straighten {
                     let options = [
-                        solidcraft_ui_text::tr("browser.straighten_horizontal"),
-                        solidcraft_ui_text::tr("browser.straighten_vertical"),
-                        solidcraft_ui_text::tr("ui.angle"),
+                        torno_ui_text::tr("browser.straighten_horizontal"),
+                        torno_ui_text::tr("browser.straighten_vertical"),
+                        torno_ui_text::tr("ui.angle"),
                     ];
                     let targets = ["straighten:horizontal", "straighten:vertical", "straighten:angle"];
-                    ui_kit::row(ui, solidcraft_ui_text::tr("browser.straighten_angle"), |ui| {
+                    ui_kit::row(ui, torno_ui_text::tr("browser.straighten_angle"), |ui| {
                         ui_kit::segmented(ui, &mut m.direction, &options, ui_kit::Segments { targets: &targets, ..Default::default() })
                     });
                     if m.direction == 2 {
-                        ui_kit::row(ui, solidcraft_ui_text::tr("ui.angle"), |ui| ui_kit::angle_field(ui, &mut m.angle));
+                        ui_kit::row(ui, torno_ui_text::tr("ui.angle"), |ui| ui_kit::angle_field(ui, &mut m.angle));
                         if !m.angle.is_finite() {
                             m.angle = 0.0;
                         }
                         m.angle = m.angle.clamp(-360.0, 360.0);
                     }
                 } else {
-                    ui_kit::row(ui, solidcraft_ui_text::tr_label("Distance"), |ui| ui_kit::length_field(ui, &mut m.distance, &units, decimals));
+                    ui_kit::row(ui, torno_ui_text::tr_label("Distance"), |ui| ui_kit::length_field(ui, &mut m.distance, &units, decimals));
                     m.distance = m.distance.clamp(0.001, 1e6);
                 }
             } else {
                 let (mut x, mut y, mut w, mut ang, mut op, mut flip) = (c.center.x, c.center.y, c.width, c.angle.to_degrees(), c.opacity, c.flip);
                 let mut changed = false;
+                changed |= ui_kit::row(ui, torno_ui_text::tr_label("Center X"), |ui| ui_kit::length_field(ui, &mut x, &units, decimals)).changed();
+                changed |= ui_kit::row(ui, torno_ui_text::tr_label("Center Y"), |ui| ui_kit::length_field(ui, &mut y, &units, decimals)).changed();
+                changed |= ui_kit::row(ui, torno_ui_text::tr_label("Width"), |ui| ui_kit::length_field(ui, &mut w, &units, decimals)).changed();
+                changed |= ui_kit::row(ui, torno_ui_text::tr_label("Angle"), |ui| ui_kit::angle_field(ui, &mut ang)).changed();
                 changed |=
-                    ui_kit::row(ui, solidcraft_ui_text::tr_label("Center X"), |ui| ui_kit::length_field(ui, &mut x, &units, decimals)).changed();
-                changed |=
-                    ui_kit::row(ui, solidcraft_ui_text::tr_label("Center Y"), |ui| ui_kit::length_field(ui, &mut y, &units, decimals)).changed();
-                changed |= ui_kit::row(ui, solidcraft_ui_text::tr_label("Width"), |ui| ui_kit::length_field(ui, &mut w, &units, decimals)).changed();
-                changed |= ui_kit::row(ui, solidcraft_ui_text::tr_label("Angle"), |ui| ui_kit::angle_field(ui, &mut ang)).changed();
-                changed |= ui_kit::row(ui, solidcraft_ui_text::tr_label("Opacity"), |ui| ui_kit::slider(ui, &mut op, 0.0..=1.0, Default::default()))
-                    .changed();
-                if ui_kit::checkbox_row(ui, "flip", solidcraft_ui_text::tr_label("Flip"), flip) {
+                    ui_kit::row(ui, torno_ui_text::tr_label("Opacity"), |ui| ui_kit::slider(ui, &mut op, 0.0..=1.0, Default::default())).changed();
+                if ui_kit::checkbox_row(ui, "flip", torno_ui_text::tr_label("Flip"), flip) {
                     flip = !flip;
                     changed = true;
                 }
@@ -167,7 +165,7 @@ pub(crate) fn click(app: &mut SolveApp, proj: &Proj, screen: Pos2) -> bool {
         panel.next = 0;
         panel.picked_both = true;
     }
-    app.set_status(solidcraft_ui_text::tr(hint(&panel)), false);
+    app.set_status(torno_ui_text::tr(hint(&panel)), false);
     app.tree.canvas_panel = Some(panel);
     true
 }
@@ -233,14 +231,14 @@ fn on_image(c: &Canvas, p: Vec2) -> bool {
 #[cfg(test)]
 mod tests {
     use serde_json::json;
-    use solidcraft_engine::geom::prelude::*;
+    use torno_engine::geom::prelude::*;
 
     fn canvas(h: &mut crate::scenario::Harness) -> u64 {
         let mut png = b"\x89PNG\r\n\x1a\n\0\0\0\rIHDR".to_vec();
         png.extend(400u32.to_be_bytes());
         png.extend(200u32.to_be_bytes());
         png.extend([8, 6, 0, 0, 0, 0, 0, 0, 0]);
-        let data = solidcraft_engine::doc::canvas::base64_encode(&png);
+        let data = torno_engine::doc::canvas::base64_encode(&png);
         h.app.run("canvas.insert", json!({"data": data, "plane": "XY", "width": 80})).unwrap()["canvas"].as_u64().unwrap()
     }
 
@@ -309,11 +307,11 @@ mod tests {
         let status = |h: &crate::scenario::Harness| h.app.status.as_ref().map(|s| s.0.clone()).unwrap_or_default();
         assert!(super::click(&mut h.app, &proj, screen(c.center.x - 15.0, c.center.y - 5.0)));
         assert_eq!(super::hint(h.app.tree.canvas_panel.as_ref().unwrap()), "browser.straighten_click_b");
-        assert_eq!(status(&h), crate::i18n::tr_diagnostic(solidcraft_ui_text::tr("browser.straighten_click_b")));
+        assert_eq!(status(&h), crate::i18n::tr_diagnostic(torno_ui_text::tr("browser.straighten_click_b")));
         assert!(super::click(&mut h.app, &proj, screen(c.center.x + 15.0, c.center.y + 5.0)));
         // With both points picked, the card and the status line ask for the direction, not Point A.
         assert_eq!(super::hint(h.app.tree.canvas_panel.as_ref().unwrap()), "browser.straighten_choose");
-        assert_eq!(status(&h), crate::i18n::tr_diagnostic(solidcraft_ui_text::tr("browser.straighten_choose")));
+        assert_eq!(status(&h), crate::i18n::tr_diagnostic(torno_ui_text::tr("browser.straighten_choose")));
         let picked = h.app.tree.canvas_panel.clone().unwrap();
         let rise = (picked.b[1] - picked.a[1]).atan2(picked.b[0] - picked.a[0]).to_degrees();
         assert!((rise - 18.43).abs() < 1.0, "{picked:?}");

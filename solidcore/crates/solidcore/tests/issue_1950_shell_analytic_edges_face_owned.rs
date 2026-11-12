@@ -5,11 +5,11 @@
 //! faces' own surfaces, whose caches resolve through their faces. Before #1963 (tdamsma)
 //! the port intersected them without the B-rep's face services and stopped on `Unported`
 //! (a trimmed cache of a face-owned surface, `TrimSrfCache::build_tree_with_face`, with
-//! SolidCraft's fixes; the face handle of a surface's cache with the defaults). #1963
-//! tests shell/566 and shell/1525; this is the third case of #1950. SolidCraft's plate: the profile
+//! Torno's fixes; the face handle of a surface's cache with the defaults). #1963
+//! tests shell/566 and shell/1525; this is the third case of #1950. Torno's plate: the profile
 //! (0, 0)-(42.5, 0)-(42.5, 20)-(0, 20) closed by a half circle r 10 on the x < 0 side,
 //! extruded 27.5, less a blind hole r 5 along x through the arc side, shelled 2 inward
-//! open at x = 42.5. SolidCraft's rig gives V 10400.2131 without the flag; with it the
+//! open at x = 42.5. Torno's rig gives V 10400.2131 without the flag; with it the
 //! fork's C++ fails its plate with 1001 (#1950), which this reconstruction (the
 //! `issue_1795` operand) does not reproduce: the port shells it, within 1e-7 of its
 //! volume without the flag.
@@ -36,7 +36,7 @@ use solidcore::sweep::api_brep as sweeps;
 use solidcore::topology::proto_topology::p1::api_transform::{api_rotate, TransformObject};
 use solidcore::{Brep, Kernel};
 
-/// SolidCraft's volume of the shelled plate (without the flag).
+/// Torno's volume of the shelled plate (without the flag).
 const RIG_VOLUME: f64 = 10400.2131;
 
 /// The shelled plate's closed form: the plate (profile area 850 + 50 pi, height 27.5) less
@@ -74,8 +74,8 @@ fn drilled(k: &mut Kernel) -> Brep {
     b
 }
 
-/// SolidCraft's `core::fixes()` (as `issue_1476_swept_bar_shell.rs` lists them).
-fn solidcraft_fixes() -> UpstreamFixes {
+/// Torno's `core::fixes()` (as `issue_1476_swept_bar_shell.rs` lists them).
+fn torno_fixes() -> UpstreamFixes {
     let mut f = UpstreamFixes::default();
     f.fillet_retry_radius_as_first = true;
     f.fillet_rail_rim_on_face = true;
@@ -188,7 +188,7 @@ fn check(v: f64, want: f64, without_flag: f64) {
     );
 }
 
-/// With SolidCraft's fixes (the reported configuration; the trimmed cache stub before).
+/// With Torno's fixes (the reported configuration; the trimmed cache stub before).
 /// Pinned since #2890 (precise properties integrate from the trims' base): against the
 /// closed form, without the flag +4.26e-4 (it was 10400.212787697543, +4.14e-4), with it
 /// +4.26e-4, within the volume's accuracy. With the flag it was 10400.212354107192
@@ -197,8 +197,8 @@ fn check(v: f64, want: f64, without_flag: f64) {
 /// moves the volume by 1.5e-12 relative. The shell still runs the flag through the
 /// face-owned surfaces.
 #[test]
-fn shelled_plate_with_solidcraft_fixes() {
-    let mut fixes = solidcraft_fixes();
+fn shelled_plate_with_torno_fixes() {
+    let mut fixes = torno_fixes();
     let without_flag = shelled_volume(&fixes);
     assert!((without_flag - 10400.212799740975).abs() <= 1e-9 * without_flag);
     fixes.shell_edges_on_analytics_exact = true;

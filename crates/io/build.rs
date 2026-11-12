@@ -1,10 +1,10 @@
-//! What the model cache is keyed by. `SOLIDCRAFT_EVALUATION_SOURCE`: the digest of the committed
+//! What the model cache is keyed by. `TORNO_EVALUATION_SOURCE`: the digest of the committed
 //! source a design's model is computed from: the `doc` crate and every workspace crate it is
 //! built from, the vendored kernel, the patched dependencies, the locked versions of all others,
 //! the workspace's build settings and the cache's own reader. A cache is only the result of evaluating its design when
 //! that source computed it, and an update that changed none of it (only the interface, the
 //! commands or the other file formats, or the version number) computes the same model.
-//! `SOLIDCRAFT_SOURCE_COMMIT`: the commit, recorded with the cache. Both are "unknown" without git
+//! `TORNO_SOURCE_COMMIT`: the commit, recorded with the cache. Both are "unknown" without git
 //! (a source tarball), which never trusts a cache.
 
 use sha2::{Digest, Sha256};
@@ -82,10 +82,10 @@ fn main() {
     let crate_dir = PathBuf::from(std::env::var_os("CARGO_MANIFEST_DIR").unwrap_or_default());
     let root = crate_dir.join("../..");
     let commit = git(&crate_dir, &["rev-parse", "HEAD"]).map(|s| s.trim().to_string()).unwrap_or_else(|| "unknown".into());
-    println!("cargo:rustc-env=SOLIDCRAFT_SOURCE_COMMIT={commit}");
+    println!("cargo:rustc-env=TORNO_SOURCE_COMMIT={commit}");
     let source = evaluation_source(&root).unwrap_or_else(|| "unknown".into());
-    println!("cargo:rustc-env=SOLIDCRAFT_EVALUATION_SOURCE={source}");
-    println!("cargo:rustc-env=SOLIDCRAFT_EVALUATION_CRATES={}", EVALUATION_CRATES.join(","));
+    println!("cargo:rustc-env=TORNO_EVALUATION_SOURCE={source}");
+    println!("cargo:rustc-env=TORNO_EVALUATION_CRATES={}", EVALUATION_CRATES.join(","));
     // A new commit in this checkout (or worktree) restamps the build.
     if let Some(dir) = git(&crate_dir, &["rev-parse", "--git-dir"]) {
         println!("cargo:rerun-if-changed={}/logs/HEAD", dir.trim());

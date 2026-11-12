@@ -10,8 +10,8 @@ struct File(String);
 
 impl File {
     fn new(name: &str) -> Self {
-        let name = format!("solidcraft-library-schema-{}-{name}.json", std::process::id());
-        File(solidcraft_io::vfs::temp_dir().join(name).to_string_lossy().into_owned())
+        let name = format!("torno-library-schema-{}-{name}.json", std::process::id());
+        File(torno_io::vfs::temp_dir().join(name).to_string_lossy().into_owned())
     }
 }
 

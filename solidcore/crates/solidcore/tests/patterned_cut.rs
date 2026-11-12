@@ -1,5 +1,5 @@
 //! A tool copied (`SmApiBrepCopy`), moved (`SmApiTranslate`) and cut again, as a
-//! patterned cut does (SolidCraft #1717): the copy's surfaces carry their faces'
+//! patterned cut does (Torno #1717): the copy's surfaces carry their faces'
 //! tolerances, and the second cut's curve classification makes the moved face's
 //! trimmed surface cache on the lent B-rep instead of deferring.
 use solidcore::boolean::api_brep::boolean_difference;

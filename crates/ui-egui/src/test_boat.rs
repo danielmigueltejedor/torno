@@ -9,15 +9,15 @@
 //! camera takes (`navigation::device_camera`), so calibration, reassigned axes, invert, speed and
 //! the zoom direction all show. Pan and zoom are held so the boat never leaves its box.
 
-use solidcraft_engine::geom::prelude::*;
 use std::sync::OnceLock;
+use torno_engine::geom::prelude::*;
 
 use egui::{Pos2, Rect, pos2};
 use solidcore_record::Vec3;
-use solidcraft_viewport::Camera;
+use torno_viewport::Camera;
 
 use crate::space_mouse::DeviceMotion;
-use solidcraft_theme::Tokens;
+use torno_theme::Tokens;
 
 const DATA: &[u8] = include_bytes!("../../../assets/models/test_boat.bin");
 

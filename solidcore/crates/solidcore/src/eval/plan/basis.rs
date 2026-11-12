@@ -1,5 +1,5 @@
 //! B-spline basis functions (Piegl & Tiller, *The NURBS Book*, eq. 2.5 and 2.9, with the 0/0 = 0
-//! convention), shared by the plan evaluator and SolidCraft's splines.
+//! convention), shared by the plan evaluator and Torno's splines.
 
 use super::MAX_SPLINE_DEGREE;
 

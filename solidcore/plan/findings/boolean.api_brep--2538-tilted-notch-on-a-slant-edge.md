@@ -10,8 +10,8 @@
   face, so the slanted face and that face meet along it at a right angle and the cut is
   a quarter-round notch. The design's tool (`v5`) has both cap centres exactly on the
   box's z = 16.5 and z = -55 face planes, and its seam along world +y.
-- **What the issue reports.** Through SolidCraft (`solidcraft-cli mcp --headless`,
-  `SOLIDCRAFT_KERNEL=solidcore`, pinned at 8ddce9016) the design's cut fails with
+- **What the issue reports.** Through Torno (`torno-cli mcp --headless`,
+  `TORNO_KERNEL=solidcore`, pinned at 8ddce9016) the design's cut fails with
   `boolean::merge::p2::make_faceuse: upstream status 1001`; the tool 2 mm longer
   (`v13`) is refused with `SmFace::Test #36` ("Face Surface Seam has suspicious Edge
   near seam"); 0.5 mm shorter (`v14`) adds `Bad Gap` and two `SmEllipse` approximation

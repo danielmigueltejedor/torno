@@ -4,10 +4,10 @@
 //! angle, flip, limits, values, expressions and the motion links it takes part in. Reads only.
 
 use serde_json::Value;
-use solidcraft_doc::joints::{self, Joint, JointOrigin, Snap, XRef};
-use solidcraft_doc::naming::legacy_name;
-use solidcraft_doc::persistent_name::{Base, EdgeName, FaceName, Role};
-use solidcraft_doc::{Document, MAX_PLACEMENT_DEPTH, ModelState};
+use torno_doc::joints::{self, Joint, JointOrigin, Snap, XRef};
+use torno_doc::naming::legacy_name;
+use torno_doc::persistent_name::{Base, EdgeName, FaceName, Role};
+use torno_doc::{Document, MAX_PLACEMENT_DEPTH, ModelState};
 
 use super::{component_of, joint_id, link_info, named_value_list, occurrence_name, reply};
 use crate::schema::joints::{

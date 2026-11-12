@@ -54,7 +54,7 @@
 //!   sum is only compared against the knot count, an overflowing sum counts as a
 //!   mismatch (`NL_INP_ERR`, as upstream's wrapped sum), and sums whose degree check
 //!   comes later are formed after that check (the order is not observable).
-//! - [`interp_high_derivs_params`] ports the SolidCraft fork's split of
+//! - [`interp_high_derivs_params`] ports the Torno fork's split of
 //!   `N_FitCrvHighDerivs` (fork commit `0cc8cd4`, replayed patch for patch as `68f6913`
 //!   in tangency-labs/smlib#76): the interpolation at given
 //!   parameters, which [`interp_high_derivs`] calls with the parameters of `par`.
@@ -929,7 +929,7 @@ pub fn interp_high_derivs(
 
 /// [`interp_high_derivs`] at the given parameters `u` of the points (one per point,
 /// strictly increasing; not checked here), the end derivatives taken with respect to
-/// them (SolidCraft fork `N_FitCrvHighDerivsParams`).
+/// them (Torno fork `N_FitCrvHighDerivsParams`).
 ///
 /// # Errors
 ///

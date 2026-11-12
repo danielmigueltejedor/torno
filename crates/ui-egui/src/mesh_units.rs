@@ -11,7 +11,7 @@
 //! calls the commands with their own `units`, or none for millimetres, and never meets a dialog.
 
 use serde_json::json;
-use solidcraft_engine::doc::point_cloud::UNITS;
+use torno_engine::doc::point_cloud::UNITS;
 
 use crate::ui_kit::BackingTooltipExt as _;
 use crate::{SolveApp, file_load, ui_kit};
@@ -52,7 +52,7 @@ pub fn ask(app: &mut SolveApp, path: &str, insert: bool) -> bool {
 /// and not as the point cloud every other way of inserting a PLY makes. Returns whether it was
 /// held for the answer; another file goes on as the extension says.
 pub fn ask_ply_as_mesh(app: &mut SolveApp, path: &str) -> bool {
-    if !solidcraft_engine::io::is_ply_path(path) {
+    if !torno_engine::io::is_ply_path(path) {
         return false;
     }
     app.mesh_units = Some(Ask { path: path.into(), insert: true, choice: default_choice(), mesh: true, origin: false });
@@ -76,11 +76,11 @@ pub fn show(app: &mut SolveApp, ctx: &egui::Context) {
     // The symbols themselves (mm, cm, m, in, ft), as everywhere else units are chosen.
     let names: Vec<&str> = UNITS.iter().map(|(name, _)| *name).collect();
     let (closed, action) =
-        ui_kit::Window::new(egui::Id::unique("sc_mesh_units"), "import", solidcraft_ui_text::tr("ui.point_cloud_units")).show(ctx, true, |ui| {
+        ui_kit::Window::new(egui::Id::unique("sc_mesh_units"), "import", torno_ui_text::tr("ui.point_cloud_units")).show(ctx, true, |ui| {
             ui_kit::text(ui, &file, ui_kit::Text::Report("file", false));
-            ui_kit::choice_row(ui, solidcraft_ui_text::tr("ui.units"), "mesh_units", &mut ask.choice, &names);
-            let origin = ui_kit::checkbox(ui, solidcraft_ui_text::tr("ui.mesh_import_origin"), &mut ask.origin)
-                .backing_on_hover_text(solidcraft_ui_text::tr("ui.mesh_import_origin_tip"));
+            ui_kit::choice_row(ui, torno_ui_text::tr("ui.units"), "mesh_units", &mut ask.choice, &names);
+            let origin = ui_kit::checkbox(ui, torno_ui_text::tr("ui.mesh_import_origin"), &mut ask.origin)
+                .backing_on_hover_text(torno_ui_text::tr("ui.mesh_import_origin_tip"));
             // Named like the dialog's buttons: outside a labelled row the checkbox's own handle
             // is a bare `dialog:`, which scripts can't tell apart.
             crate::scenario::publish_handle("mesh_units:origin", origin.rect.center());
@@ -130,7 +130,7 @@ mod tests {
 
     #[test]
     fn a_ply_asks_only_when_it_is_inserted_as_a_mesh() {
-        let mut app = SolveApp::new(solidcraft_engine::Session::default(), Default::default());
+        let mut app = SolveApp::new(torno_engine::Session::default(), Default::default());
         // Open and Insert keep sending a PLY to the point cloud: no dialog.
         assert!(!ask(&mut app, "scan.ply", true) && !ask(&mut app, "scan.PLY", false));
         assert!(app.mesh_units.is_none());
@@ -150,7 +150,7 @@ mod tests {
 
     #[test]
     fn an_stl_waits_for_its_unit_and_the_control_channel_does_not() {
-        let mut app = SolveApp::new(solidcraft_engine::Session::default(), Default::default());
+        let mut app = SolveApp::new(torno_engine::Session::default(), Default::default());
         file_load::begin(&mut app, "part.stl", true);
         let ask = app.mesh_units.clone().expect("asked");
         assert_eq!((ask.path.as_str(), ask.insert, unit_at(ask.choice)), ("part.stl", true, "mm"));
@@ -159,7 +159,7 @@ mod tests {
 
     #[test]
     fn move_to_origin_is_off_until_ticked_and_then_sent() {
-        let mut app = SolveApp::new(solidcraft_engine::Session::default(), Default::default());
+        let mut app = SolveApp::new(torno_engine::Session::default(), Default::default());
         assert!(ask(&mut app, "part.stl", true));
         let mut held = app.mesh_units.clone().expect("asked");
         assert!(!held.origin, "off by default");

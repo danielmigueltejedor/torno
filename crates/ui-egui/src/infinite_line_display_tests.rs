@@ -2,7 +2,7 @@
 //! and the Sketch Palette's Infinite mode draws one.
 
 use serde_json::json;
-use solidcraft_engine::geom::prelude::*;
+use torno_engine::geom::prelude::*;
 
 use crate::scenario::Harness;
 use crate::viewport::{Hit, pick, projection};

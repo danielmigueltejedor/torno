@@ -3,7 +3,7 @@
 //! corner (a clear error that leaves the sketch as it was).
 
 use serde_json::{Value, json};
-use solidcraft_geom::prelude::*;
+use torno_geom::prelude::*;
 
 use crate::Session;
 
@@ -24,7 +24,7 @@ fn curves(r: &Value) -> Vec<String> {
     r["curves"].as_array().map(|a| a.iter().filter_map(|x| x.as_str().map(str::to_string)).collect()).unwrap_or_default()
 }
 
-fn sk(s: &Session) -> solidcraft_sketch::Sketch {
+fn sk(s: &Session) -> torno_sketch::Sketch {
     s.model.state().sketch(s.active_sketch.unwrap()).unwrap().sketch.clone()
 }
 
@@ -265,7 +265,7 @@ fn fully_defined_rectangles_keep_their_size_when_all_corners_are_filleted() {
             let expected = 50.0 * if square { 50.0 } else { height } - 4.0 * (9.0 - std::f64::consts::PI * 9.0 / 4.0);
             assert!((area(&s) - expected).abs() < 1e-5, "center={center}, square={square}: {} != {expected}", area(&s));
             let id = s.active_sketch.unwrap();
-            let saved = solidcraft_doc::Document::from_json(&s.doc.to_json()).unwrap();
+            let saved = torno_doc::Document::from_json(&s.doc.to_json()).unwrap();
             assert_eq!(saved.sketch(id).unwrap(), s.doc.sketch(id).unwrap());
             run(&mut s, "edit.undo", json!({}));
             run(&mut s, "edit.redo", json!({}));
@@ -338,7 +338,7 @@ fn a_fillet_keeps_the_dimensions_of_its_corner_on_a_virtual_sharp() {
     assert!((hi.x - lo.x - 90.0).abs() < 1e-6 && (hi.y - lo.y - 120.0).abs() < 1e-6, "{lo:?} {hi:?}");
     // It is kept in the design file, and undo and redo take it away and bring it back.
     let id = s.active_sketch.unwrap();
-    let doc = solidcraft_doc::Document::from_json(&s.doc.to_json()).unwrap();
+    let doc = torno_doc::Document::from_json(&s.doc.to_json()).unwrap();
     assert_eq!(doc.sketch(id).unwrap(), s.doc.sketch(id).unwrap());
     run(&mut s, "edit.undo", json!({}));
     run(&mut s, "edit.undo", json!({}));
@@ -379,7 +379,7 @@ fn a_fillet_of_a_nearly_straight_or_folded_corner_with_dimensions_does_not_panic
 #[test]
 fn a_fillet_or_chamfer_brings_two_separate_lines_to_where_they_meet() {
     use solidcore_record::Vec2;
-    use solidcraft_sketch::CurveKind;
+    use torno_sketch::CurveKind;
     let lines = |s: &mut Session, a: [[f64; 2]; 2], b: [[f64; 2]; 2]| {
         let la = curves(&run(s, "sketch.line", json!({"points": a, "connect": false})))[0].clone();
         let lb = curves(&run(s, "sketch.line", json!({"points": b, "connect": false})))[0].clone();

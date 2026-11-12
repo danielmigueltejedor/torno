@@ -8,7 +8,7 @@
 //! [`crate::curve::ellipse::Ellipse::arc`], at bound 0 by its label until the rebase
 //! onto d0b44726f proves it (`implicit::curve_on_quadrics`).
 //!
-//! Not upstream: SolidCraft's `piecewise` sweep (with `turned`, `Rigid`, `Segment` and
+//! Not upstream: Torno's `piecewise` sweep (with `turned`, `Rigid`, `Segment` and
 //! `carried`). The path's segments come from [`crate::curve::path::path_as_segments`].
 //! Deviations: none (no upstream counterpart). No recursion.
 

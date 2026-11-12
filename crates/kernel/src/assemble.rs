@@ -15,8 +15,8 @@ use solidcore_record::Vec3;
 use solidcore_record::brep::{
     Brep, Curve, Curve2, Edge, Face, Frame, Loop, Natural, OrientedEdge, OrientedFace, Region, Shell, Surface, VERSION, Vertex,
 };
-use solidcraft_geom::brep::form;
-use solidcraft_geom::prelude::*;
+use torno_geom::brep::form;
+use torno_geom::prelude::*;
 
 use crate::body::Body;
 use crate::history::{EdgeOrigin, FaceProv};

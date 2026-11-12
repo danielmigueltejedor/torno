@@ -56,7 +56,7 @@ pub fn accent_index(name: &str) -> Option<usize> {
 }
 
 /// [`IconSet::primary`] in the installed set.
-pub fn primary(name: &str, dark: bool, vision: solidcraft_theme::ColorVision) -> Color32 {
+pub fn primary(name: &str, dark: bool, vision: torno_theme::ColorVision) -> Color32 {
     installed().primary(name, dark, vision)
 }
 
@@ -103,7 +103,7 @@ pub fn paint_on(p: &Painter, r: Rect, name: &str, dark: Option<bool>, opacity: f
 
 /// Monochrome flat controls on the application bar use its text token exactly.
 pub fn paint_app_bar(p: &Painter, r: Rect, name: &str, opacity: f32) {
-    paint_with_ink(p, r, name, Some(true), opacity, Some(solidcraft_theme::Tokens::get().app_bar_text), Mirror::None);
+    paint_with_ink(p, r, name, Some(true), opacity, Some(torno_theme::Tokens::get().app_bar_text), Mirror::None);
 }
 
 /// Paint a single-colour icon in `ink`.
@@ -131,7 +131,7 @@ enum Mirror {
 fn paint_with_ink(p: &Painter, r: Rect, name: &str, dark: Option<bool>, opacity: f32, ink: Option<Color32>, mirror: Mirror) {
     let ctx = p.ctx();
     let resolved = resolve(name);
-    let look = Look::themed(dark.unwrap_or_else(|| ctx.global_style().visuals.dark_mode), resolved.accent, solidcraft_theme::vision());
+    let look = Look::themed(dark.unwrap_or_else(|| ctx.global_style().visuals.dark_mode), resolved.accent, torno_theme::vision());
     paint_resolved(p, r, resolved, look, opacity, ink.map_or(Finish::Artwork, Finish::Ink), mirror);
 }
 
@@ -144,7 +144,7 @@ pub fn paint_accented(p: &Painter, r: Rect, name: &str, accent: Option<&str>, op
         Some(name) => accent_index(name).or(resolved.accent),
         None => None,
     };
-    let look = Look::themed(p.ctx().global_style().visuals.dark_mode, accent, solidcraft_theme::vision());
+    let look = Look::themed(p.ctx().global_style().visuals.dark_mode, accent, torno_theme::vision());
     paint_resolved(p, r, resolved, look, opacity, Finish::Artwork, Mirror::None);
 }
 
@@ -154,7 +154,7 @@ pub fn paint_accented(p: &Painter, r: Rect, name: &str, accent: Option<&str>, op
 pub fn paint_danger(p: &Painter, r: Rect, name: &str, opacity: f32) {
     let set = installed();
     let resolved = set.resolve(name);
-    let look = Look::themed(p.ctx().global_style().visuals.dark_mode, set.accent_index(set.data().danger_accent), solidcraft_theme::vision());
+    let look = Look::themed(p.ctx().global_style().visuals.dark_mode, set.accent_index(set.data().danger_accent), torno_theme::vision());
     paint_resolved(p, r, resolved, look, opacity, Finish::Danger, Mirror::None);
 }
 
@@ -165,7 +165,7 @@ fn paint_resolved(p: &Painter, r: Rect, resolved: Resolved, look: Look, opacity:
     let px = (side * ppp).round().clamp(8.0, 512.0) as u32;
     let cache = ctx.data_mut(|d| d.get_temp_mut_or_insert_with(egui::Id::unique("sc_icon_cache"), Cache::default).clone());
     let Ok(mut entries) = cache.0.lock() else { return };
-    let palette = theme_palette(solidcraft_theme::is_dark());
+    let palette = theme_palette(torno_theme::is_dark());
     if entries.palette != palette {
         entries.textures.clear();
         entries.palette = palette;

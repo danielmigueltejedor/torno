@@ -2,7 +2,7 @@ use super::*;
 use crate::Session;
 
 fn fresh_dir(name: &str) -> PathBuf {
-    let d = std::env::temp_dir().join(format!("solidcraft-crash-test-{name}-{}", std::process::id()));
+    let d = std::env::temp_dir().join(format!("torno-crash-test-{name}-{}", std::process::id()));
     let _ = fs::remove_dir_all(&d);
     d
 }
@@ -12,10 +12,10 @@ fn build() -> Build {
 }
 
 /// The child half of the process tests: does nothing unless a parent asks, then installs the
-/// hook and crashes the way `SOLIDCRAFT_CRASH_CHILD` says.
+/// hook and crashes the way `TORNO_CRASH_CHILD` says.
 #[test]
 fn child() {
-    let (Some(dir), Some(mode)) = (solidcraft_geom::env::var_os("CRASH_CHILD_DIR"), solidcraft_geom::env::var("CRASH_CHILD")) else {
+    let (Some(dir), Some(mode)) = (torno_geom::env::var_os("CRASH_CHILD_DIR"), torno_geom::env::var("CRASH_CHILD")) else {
         return;
     };
     let dir = PathBuf::from(dir);
@@ -42,7 +42,7 @@ fn child() {
         if mode == "signal" {
             let (info, _) = native_paths().unwrap();
             let mut frames = vec![json!("libAGXMetalG13X.dylib+0x1A2B3C"), json!(42), json!("x".repeat(5000))];
-            frames.extend((0..100).map(|i| json!(format!("solidcraft+0x{i:X} frame{i}"))));
+            frames.extend((0..100).map(|i| json!(format!("torno+0x{i:X} frame{i}"))));
             let v = json!({"signal": "SIGSEGV", "number": 11, "code": "SIGSEGV", "name": "segmentation fault",
                 "detail": "read of 0x0000000000000010 (SEGV_MAPERR)", "address": "0x0000000201A2B3C0",
                 "module": "/System/Library/Extensions/AGXMetalG13X.bundle/Contents/MacOS/libAGXMetalG13X.dylib",
@@ -196,8 +196,8 @@ fn child() {
         }
         // Between commands: a worker panic is reported at once, as a panic on any other thread is.
         "worker_idle" => {
-            let r = solidcraft_kernel::crash_test_worker_panic("rayon worker outside a command");
-            assert!(matches!(&r, Err(solidcraft_kernel::KernelError::Internal(_))), "{r:?}");
+            let r = torno_kernel::crash_test_worker_panic("rayon worker outside a command");
+            assert!(matches!(&r, Err(torno_kernel::KernelError::Internal(_))), "{r:?}");
         }
         // The kernel's own parallel path: an item panics inside `guard` on a pool worker while a
         // command is open (`map_with_local_pools` runs it on its one-thread pool). Nothing is
@@ -207,11 +207,11 @@ fn child() {
             let params = json!({"case": "guarded_worker"});
             command_begin(&s, "test.guarded_worker", &params);
             let scope = Scope::enter();
-            let r = solidcraft_kernel::map_with_local_pools(&[0], 1, |_| -> solidcraft_kernel::Result<()> {
+            let r = torno_kernel::map_with_local_pools(&[0], 1, |_| -> torno_kernel::Result<()> {
                 std::panic::panic_any(String::from("a guarded panic on a pool worker"))
             });
             drop(scope);
-            assert!(matches!(r.as_slice(), [Err(solidcraft_kernel::KernelError::Internal(_))]), "{r:?}");
+            assert!(matches!(r.as_slice(), [Err(torno_kernel::KernelError::Internal(_))]), "{r:?}");
             assert!(list(&STATE.get().unwrap().dir).is_empty(), "the worker's panic waits for the command to end");
             command_done(true, false, &before, &s.doc, "test.guarded_worker", &params, Err("the item failed".into()));
         }
@@ -273,9 +273,9 @@ fn child() {
 fn run_child(dir: &Path, mode: &str) -> (String, bool) {
     let out = std::process::Command::new(std::env::current_exe().unwrap())
         .args(["--exact", "crash::tests::child", "--test-threads=1", "--nocapture"])
-        .env("SOLIDCRAFT_CRASH_CHILD_DIR", dir)
-        .env("SOLIDCRAFT_CRASH_CHILD", mode)
-        .env("SOLIDCRAFT_CRASH_TEST", "1")
+        .env("TORNO_CRASH_CHILD_DIR", dir)
+        .env("TORNO_CRASH_CHILD", mode)
+        .env("TORNO_CRASH_TEST", "1")
         .env("RUST_BACKTRACE", "0")
         .output()
         .unwrap();
@@ -336,7 +336,7 @@ fn a_command_panic_is_reported_once_with_the_design_and_the_command() {
     assert_eq!(v["recent_commands"][0]["command"], "solid.box");
     // The design from before the command, and the command: together they reproduce the crash.
     assert!(v["design_path"].as_str().unwrap().ends_with("design.sc"), "{v}");
-    let design = solidcraft_io::read_design(&fs::read(v["design_path"].as_str().unwrap()).unwrap()).unwrap();
+    let design = torno_io::read_design(&fs::read(v["design_path"].as_str().unwrap()).unwrap()).unwrap();
     assert_eq!(design.features.len(), 1);
     let replay: Value = serde_json::from_slice(&fs::read(v["replay_path"].as_str().unwrap()).unwrap()).unwrap();
     assert_eq!(replay["commands"], json!([{"command": "diagnostics.crash_test", "params": {"mode": "panic"}}]));
@@ -367,10 +367,10 @@ fn a_worker_panic_during_a_command_is_recovered_with_the_command() {
     assert_eq!(s.kind, "kernel_panic_recovered");
     assert_eq!(s.command.as_deref(), Some("diagnostics.crash_test"));
     assert!(s.replayable);
-    assert_eq!(v["thread"], "solidcraft-kernel-0");
+    assert_eq!(v["thread"], "torno-kernel-0");
     assert!(v["message"].as_str().unwrap().contains("on a worker"), "{v}");
     assert_eq!(v["base"], "the design as it was when the command started");
-    let design = solidcraft_io::read_design(&fs::read(v["design_path"].as_str().unwrap()).unwrap()).unwrap();
+    let design = torno_io::read_design(&fs::read(v["design_path"].as_str().unwrap()).unwrap()).unwrap();
     assert_eq!(design.features.len(), 1);
     let replay: Value = serde_json::from_slice(&fs::read(v["replay_path"].as_str().unwrap()).unwrap()).unwrap();
     assert_eq!(replay["commands"], json!([{"command": "diagnostics.crash_test", "params": {"mode": "worker"}}]));
@@ -388,7 +388,7 @@ fn a_worker_panic_outside_the_kernel_guard_is_a_command_panic() {
     assert_eq!(s.kind, "command_panic");
     assert_eq!(s.command.as_deref(), Some("diagnostics.crash_test"));
     assert!(s.replayable);
-    assert_eq!(v["thread"], "solidcraft-kernel-0");
+    assert_eq!(v["thread"], "torno-kernel-0");
     assert!(v["message"].as_str().unwrap().contains("a worker panic in a command"), "{v}");
     assert_eq!(v["base"], "the design as it was when the command started");
     let _ = fs::remove_dir_all(&d);
@@ -404,7 +404,7 @@ fn a_worker_panic_outside_a_command_is_reported_at_once() {
     let (s, v) = only_report(&d);
     assert_eq!(s.kind, "panic");
     assert_eq!(s.command, None, "no command was running");
-    assert_eq!(v["thread"], "solidcraft-kernel-0");
+    assert_eq!(v["thread"], "torno-kernel-0");
     assert_eq!(v["message"], "rayon worker outside a command");
     assert_eq!(v["base"], "new");
     assert_eq!(v["recent_commands"][0]["command"], "solid.box");
@@ -425,7 +425,7 @@ fn a_guarded_panic_on_a_pool_worker_is_reported_when_the_command_ends() {
     assert_ne!(v["thread"], "crash::tests::child", "it ran on the pool's worker");
     assert_eq!(v["message"], "a guarded panic on a pool worker");
     assert_eq!(v["base"], "the design as it was when the command started");
-    let design = solidcraft_io::read_design(&fs::read(v["design_path"].as_str().unwrap()).unwrap()).unwrap();
+    let design = torno_io::read_design(&fs::read(v["design_path"].as_str().unwrap()).unwrap()).unwrap();
     assert_eq!(design.features.len(), 1);
     let replay: Value = serde_json::from_slice(&fs::read(v["replay_path"].as_str().unwrap()).unwrap()).unwrap();
     assert_eq!(replay["commands"], json!([{"command": "test.guarded_worker", "params": {"case": "guarded_worker"}}]));
@@ -647,7 +647,7 @@ fn a_crash_signal_is_reported_with_its_thread_and_its_walk_up_the_stack() {
     assert_eq!(bt[3], "libAGXMetalG13X.dylib+0x1A2B3C");
     // Frames that aren't text are dropped, long ones cut, and only so many kept.
     assert_eq!(bt[4], format!("{}… (5000 bytes)", "x".repeat(300)));
-    assert_eq!(bt[5], "solidcraft+0x0 frame0");
+    assert_eq!(bt[5], "torno+0x0 frame0");
     assert_eq!(bt.len(), 3 + MAX_FRAMES, "{bt:?}");
     assert!(v.get("minidump_path").is_none(), "{v}");
     let _ = fs::remove_dir_all(&d);
@@ -735,7 +735,7 @@ fn fake_report(dir: &Path, secs: u64, sig: u64, kind: &str) -> String {
 fn a_report_from_an_earlier_release_still_finds_its_design() {
     let d = fresh_dir("legacy-design");
     let id = fake_report(&d, 1_700_000_000, 7, "command_panic");
-    fs::write(d.join(&id).join("design.solidcraft"), solidcraft_io::write_design(&solidcraft_doc::Document::default())).unwrap();
+    fs::write(d.join(&id).join("design.solidcraft"), torno_io::write_design(&torno_doc::Document::default())).unwrap();
     let v = read(&d, &id).unwrap();
     assert!(v["design_path"].as_str().unwrap().ends_with("design.solidcraft"), "{v}");
     let _ = fs::remove_dir_all(&d);
@@ -833,9 +833,9 @@ fn dates_are_formatted_in_utc() {
 fn backtraces_lose_the_panic_machinery_and_the_home_folder() {
     let home = std::env::var("HOME").or_else(|_| std::env::var("USERPROFILE")).unwrap_or_else(|_| "/home/u".into());
     let bt = format!(
-        "   0: std::backtrace::Backtrace::force_capture\n             at /rustc/abc123/library/std/src/backtrace.rs:312:13\n   1: hook\n   1: {{closure#3}}\n   1: <alloc::boxed::Box<F,A> as core::ops::function::Fn<Args>>::call\n   2: std::panicking::rust_panic_with_hook\n   3: core::panicking::panic_fmt\n   4: solidcraft_kernel::fillet::blend\n             at {home}/src/kernel/fillet.rs:10:5\n   5: do_call<F>\n             at /rustc/abc/library/std/src/panicking.rs:1:1\n   5: std::sys::backtrace::__rust_begin_short_backtrace\n   6: main"
+        "   0: std::backtrace::Backtrace::force_capture\n             at /rustc/abc123/library/std/src/backtrace.rs:312:13\n   1: hook\n   1: {{closure#3}}\n   1: <alloc::boxed::Box<F,A> as core::ops::function::Fn<Args>>::call\n   2: std::panicking::rust_panic_with_hook\n   3: core::panicking::panic_fmt\n   4: torno_kernel::fillet::blend\n             at {home}/src/kernel/fillet.rs:10:5\n   5: do_call<F>\n             at /rustc/abc/library/std/src/panicking.rs:1:1\n   5: std::sys::backtrace::__rust_begin_short_backtrace\n   6: main"
     );
-    assert_eq!(frames(&bt), ["solidcraft_kernel::fillet::blend (~/src/kernel/fillet.rs:10:5)"]);
+    assert_eq!(frames(&bt), ["torno_kernel::fillet::blend (~/src/kernel/fillet.rs:10:5)"]);
 }
 
 #[test]

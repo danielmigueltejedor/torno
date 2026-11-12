@@ -184,7 +184,7 @@
     "boolean"
   ],
   "ungraded": [
-    "results: SolidCraft computes it"
+    "results: Torno computes it"
   ],
   "what": "config.column adds the height H; a row with H = 20 makes the block 20 high",
   "why_not": []

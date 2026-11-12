@@ -2,7 +2,7 @@
 //! come closer than a clearance and where, and each body's nearest neighbours. Pairs are pruned
 //! by bounding boxes grown by the clearance, then by the bodies' meshes (which lie within their
 //! chord tolerance of the faces); distances are measured on the exact faces and edges
-//! ([`solidcraft_kernel::body_distance`]) and overlaps by intersecting the bodies. The pairs
+//! ([`torno_kernel::body_distance`]) and overlaps by intersecting the bodies. The pairs
 //! that are left run in parallel. A pair whose bodies have not changed or moved since a call
 //! with the same settings measured it is not measured again ([`PairCache`]).
 
@@ -10,10 +10,10 @@ use std::collections::{BTreeMap, HashMap};
 use std::sync::Arc;
 
 use serde_json::Value;
-use solidcraft_geom::mesh_distance::box_gap;
-use solidcraft_geom::prelude::*;
-use solidcraft_geom::{Aabb3, Mesh};
-use solidcraft_kernel::{BodyDistance, DistanceShape};
+use torno_geom::mesh_distance::box_gap;
+use torno_geom::prelude::*;
+use torno_geom::{Aabb3, Mesh};
+use torno_kernel::{BodyDistance, DistanceShape};
 
 use super::CommandSpec;
 use crate::params::{bad, num, str_, string_list};
@@ -57,7 +57,7 @@ enum SkipWithin {
 const MAX_CACHED: usize = 2 * MAX_PAIRS;
 
 /// Pairs measured before, by the two bodies' geometry where they stood
-/// ([`solidcraft_doc::ModelBody::geometry_key`]) and the settings that shape the result
+/// ([`torno_doc::ModelBody::geometry_key`]) and the settings that shape the result
 /// (clearance, smallest overlap, tolerance).
 #[derive(Default)]
 pub(crate) struct PairCache(HashMap<(u64, u64, [u64; 3]), PairResult>);
@@ -97,7 +97,7 @@ fn clearance(s: &mut Session, p: &Value) -> Result<Value> {
     };
 
     let st = s.world_state()?;
-    let (mesh_bodies, solid): (Vec<&solidcraft_doc::ModelBody>, Vec<&solidcraft_doc::ModelBody>) = st.bodies.iter().partition(|b| b.body.is_mesh());
+    let (mesh_bodies, solid): (Vec<&torno_doc::ModelBody>, Vec<&torno_doc::ModelBody>) = st.bodies.iter().partition(|b| b.body.is_mesh());
     // Mesh bodies are not measured. A mesh body named in `bodies` or `against` is left out of the
     // pairs and listed as unchecked, rather than refused as "no solid body".
     let named = |key: &str| -> Result<Vec<usize>> {
@@ -168,7 +168,7 @@ fn clearance(s: &mut Session, p: &Value) -> Result<Value> {
     // Meshes (made once, in parallel) and the distance shapes over them.
     let idx: Vec<usize> = (0..n).filter(|&i| flag(&used, i)).collect();
     let meshes: Vec<Option<Arc<Mesh>>> = {
-        let made = solidcraft_kernel::map_with_local_pools(&idx, usize::MAX, |&i| Ok(solid.get(i).map(|b| b.mesh())));
+        let made = torno_kernel::map_with_local_pools(&idx, usize::MAX, |&i| Ok(solid.get(i).map(|b| b.mesh())));
         let mut out = vec![None; n];
         for (&i, m) in idx.iter().zip(made) {
             if let (Some(slot), Ok(m)) = (out.get_mut(i), m) {
@@ -223,16 +223,16 @@ fn clearance(s: &mut Session, p: &Value) -> Result<Value> {
     // Pairs measured before come from the cache; the rest are measured and kept.
     let settings = [gap.to_bits(), min_volume.to_bits(), tolerance.to_bits()];
     let cache_key = |i: usize, j: usize| Some((solid.get(i)?.geometry_key()?, solid.get(j)?.geometry_key()?, settings));
-    let mut results: Vec<Option<solidcraft_kernel::Result<PairResult>>> = {
+    let mut results: Vec<Option<torno_kernel::Result<PairResult>>> = {
         let cache = s.clearance_cache.lock().ok();
         close.iter().map(|&(i, j)| cache.as_ref().and_then(|c| c.0.get(&cache_key(i, j)?)).cloned().map(Ok)).collect()
     };
     let todo: Vec<usize> = (0..close.len()).filter(|&k| results.get(k).is_some_and(Option::is_none)).collect();
     let reused = close.len() - todo.len();
     // A body in many pairs is cut down to each pair's region from the same mesh of it.
-    let kept: Vec<std::sync::OnceLock<Option<solidcraft_kernel::Body>>> = (0..n).map(|_| std::sync::OnceLock::new()).collect();
+    let kept: Vec<std::sync::OnceLock<Option<torno_kernel::Body>>> = (0..n).map(|_| std::sync::OnceLock::new()).collect();
     let kept_body = |i: usize| kept.get(i)?.get_or_init(|| solid.get(i).map(|b| b.body.keeping_meshes())).as_ref();
-    let measured = solidcraft_kernel::map_with_local_pools(&todo, usize::MAX, |&k| {
+    let measured = torno_kernel::map_with_local_pools(&todo, usize::MAX, |&k| {
         let Some(&(i, j)) = close.get(k) else { return Ok(PairResult::default()) };
         let (Some(a), Some(b)) = (shape(i), shape(j)) else { return Ok(PairResult::default()) };
         let (Some(ba), Some(bb)) = (solid.get(i), solid.get(j)) else { return Ok(PairResult::default()) };
@@ -320,9 +320,9 @@ fn clearance(s: &mut Session, p: &Value) -> Result<Value> {
     let mut nearest_out = BTreeMap::new();
     if nearest > 0 {
         let lists = nearest_lists(&subjects, n, nearest, &boxes, &allowed, &mut known, |pairs| {
-            solidcraft_kernel::map_with_local_pools(pairs, usize::MAX, |&(i, j)| {
+            torno_kernel::map_with_local_pools(pairs, usize::MAX, |&(i, j)| {
                 let (Some(a), Some(b)) = (shape(i), shape(j)) else { return Ok(None) };
-                Ok(solidcraft_kernel::body_distance(a, b, f64::INFINITY)?.map(|d| if d.distance < tolerance { 0.0 } else { d.distance }))
+                Ok(torno_kernel::body_distance(a, b, f64::INFINITY)?.map(|d| if d.distance < tolerance { 0.0 } else { d.distance }))
             })
         });
         for (i, list) in lists {
@@ -350,9 +350,9 @@ fn clearance(s: &mut Session, p: &Value) -> Result<Value> {
 /// One pair: its overlap when the meshes meet or one holds the other, otherwise its distance
 /// when it may be closer than `gap`.
 fn measure_pair(
-    (ba, ka): (&solidcraft_doc::ModelBody, &solidcraft_kernel::Body),
+    (ba, ka): (&torno_doc::ModelBody, &torno_kernel::Body),
     a: &DistanceShape,
-    (bb, kb): (&solidcraft_doc::ModelBody, &solidcraft_kernel::Body),
+    (bb, kb): (&torno_doc::ModelBody, &torno_kernel::Body),
     b: &DistanceShape,
     gap: f64,
     min_volume: f64,
@@ -361,7 +361,7 @@ fn measure_pair(
     let mut out = PairResult::default();
     let slack = 2.0 * (a.chord() + b.chord());
     let mesh = a.mesh_closest(b, gap + slack);
-    let holds = |outer: &solidcraft_doc::ModelBody, inner: &solidcraft_doc::ModelBody| {
+    let holds = |outer: &torno_doc::ModelBody, inner: &torno_doc::ModelBody| {
         let (o, i) = (outer.mesh(), inner.mesh());
         let (ob, ib) = (o.bounds(), i.bounds());
         let nested = ob.min.x <= ib.min.x
@@ -375,7 +375,7 @@ fn measure_pair(
     let touching = mesh.is_some_and(|m| m.distance <= slack);
     if touching || holds(ba, bb) || holds(bb, ba) {
         // A pair whose shared part can't be worked out is reported, not passed as clear.
-        match solidcraft_kernel::boolean(ka, kb, solidcraft_kernel::BoolOp::Intersect) {
+        match torno_kernel::boolean(ka, kb, torno_kernel::BoolOp::Intersect) {
             Err(e) => {
                 out.unchecked = Some(e.to_string());
                 return out;
@@ -402,7 +402,7 @@ fn measure_pair(
     if mesh.is_none() {
         return out;
     }
-    match solidcraft_kernel::body_distance(a, b, gap) {
+    match torno_kernel::body_distance(a, b, gap) {
         Ok(Some(mut d)) => {
             if d.distance < tolerance {
                 d.distance = 0.0;
@@ -428,11 +428,11 @@ fn shared_region(a: &DistanceShape, b: &DistanceShape) -> Aabb3 {
     Aabb3 { min: min - g, max: max + g }
 }
 
-/// [`solidcraft_kernel::measure`] of `body` moved by `-at` and back: far from the origin, the
+/// [`torno_kernel::measure`] of `body` moved by `-at` and back: far from the origin, the
 /// centre of a thin part loses its precision (its moments are large numbers that nearly cancel).
-fn measure_near_origin(body: &solidcraft_kernel::Body, at: solidcore_record::Vec3) -> solidcraft_kernel::Result<solidcraft_kernel::BodyMeasure> {
-    let moved = solidcraft_kernel::transform(body, -at, solidcore_record::Vec3::ZERO, solidcore_record::Vec3::Z, 0.0)?;
-    let mut m = solidcraft_kernel::measure(&moved)?;
+fn measure_near_origin(body: &torno_kernel::Body, at: solidcore_record::Vec3) -> torno_kernel::Result<torno_kernel::BodyMeasure> {
+    let moved = torno_kernel::transform(body, -at, solidcore_record::Vec3::ZERO, solidcore_record::Vec3::Z, 0.0)?;
+    let mut m = torno_kernel::measure(&moved)?;
     m.centroid += at;
     m.bbox = Aabb3 { min: m.bbox.min + at, max: m.bbox.max + at };
     Ok(m)
@@ -448,7 +448,7 @@ fn nearest_lists(
     boxes: &[Aabb3],
     allowed: &dyn Fn(usize, usize) -> bool,
     known: &mut HashMap<(usize, usize), f64>,
-    measure: impl Fn(&[(usize, usize)]) -> Vec<solidcraft_kernel::Result<Option<f64>>>,
+    measure: impl Fn(&[(usize, usize)]) -> Vec<torno_kernel::Result<Option<f64>>>,
 ) -> BTreeMap<usize, Vec<(usize, f64)>> {
     let key = |i: usize, j: usize| (i.min(j), i.max(j));
     let gap_of = |i: usize, j: usize| match (boxes.get(i), boxes.get(j)) {

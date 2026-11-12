@@ -73,6 +73,6 @@
   "ungraded": [],
   "what": "a 60 x 40 x 1 plate with a 20 x 10 x 0.1 engraving in its top face converted to sheet metal (refused as not a plate of even thickness; the engraving becomes a pocket of the sheet)",
   "why_not": [
-    "body \"Plate\" is no kernel operation's output nor an operand: SolidCraft built it or changed the kernel's record"
+    "body \"Plate\" is no kernel operation's output nor an operand: Torno built it or changed the kernel's record"
   ]
 }

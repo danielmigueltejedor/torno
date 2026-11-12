@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Replay recipes against prebuilt SolidCraft CLIs, then export numeric evidence.
+"""Replay recipes against prebuilt Torno CLIs, then export numeric evidence.
 
 Run on Linux with GNU time and nice. Build separately, stop competing workloads,
 and supply neutral public IDs in the config; paths resolve beside that config.
@@ -202,7 +202,7 @@ def figures(path):
         out["bounds"] = []
         for body in bodies:
             bounds = body["bbox"]
-            # SolidCraft eval emits min/max XYZ arrays.
+            # Torno eval emits min/max XYZ arrays.
             require(isinstance(bounds["min"], list) and isinstance(bounds["max"], list))
             require(len(bounds["min"]) == len(bounds["max"]) == 3)
             out["bounds"].append(bounds["min"] + bounds["max"])
@@ -377,7 +377,7 @@ def run(config, output):
     output.mkdir(parents=True, exist_ok=False)
     private = output / "private"
     private.mkdir(mode=0o700)
-    environment = {k: v for k, v in os.environ.items() if not k.startswith(("SOLIDCRAFT_", "SOLVECRAFT_"))}
+    environment = {k: v for k, v in os.environ.items() if not k.startswith(("TORNO_", "SOLVECRAFT_"))}
     environment["RAYON_NUM_THREADS"] = str(manifest["threads"])
     variants = [v["id"] for v in manifest["variants"]]
     environments = {}

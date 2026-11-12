@@ -70,7 +70,7 @@ pub(super) fn workers() -> usize {
 }
 
 pub(super) fn prepare(ex: &Exchange, job: &Job) -> Prepared {
-    let _span = solidcraft_profile::span("import", "step.body");
+    let _span = torno_profile::span("import", "step.body");
     let (part, read) = match &job.source {
         Source::Oriented(part) => (part.clone(), None),
         Source::Item { item, units } => {
@@ -78,10 +78,10 @@ pub(super) fn prepare(ex: &Exchange, job: &Job) -> Prepared {
             (Arc::new(part), Some(read))
         }
     };
-    let body = solidcraft_profile::scope("import", "step.place", || placed(&part.body, &job.placement))
+    let body = torno_profile::scope("import", "step.place", || placed(&part.body, &job.placement))
         .map_err(|e| Failure { read: false, msg: e.to_string() })?;
     // Counted on the part (a placement meshes the same faces).
-    let missing = if job.check_mesh { solidcraft_profile::scope("import", "step.mesh_check", || part.body.unmeshed_faces()) } else { 0 };
+    let missing = if job.check_mesh { torno_profile::scope("import", "step.mesh_check", || part.body.unmeshed_faces()) } else { 0 };
     Ok(Made { body, missing, part, read })
 }
 
@@ -98,8 +98,8 @@ fn placed(body: &Body, m: &M4) -> crate::Result<Body> {
 /// and brought back as a body: the part SMLib made of the file. A solid the reader or SMLib
 /// refuses fails with the reason ([`surface_part`] then imports what it can of it).
 pub(super) fn smlib_part(ex: &Exchange, item: u64, units: Units) -> std::result::Result<(Part, Vec<Note>), Failure> {
-    let solid = solidcraft_profile::scope("import", "step.read_solid", || {
-        solidcore_step::topology::read_solid_with(ex, item, units, &solidcraft_smlib::pcurves::SmlibTrims)
+    let solid = torno_profile::scope("import", "step.read_solid", || {
+        solidcore_step::topology::read_solid_with(ex, item, units, &torno_smlib::pcurves::SmlibTrims)
     })
     .map_err(|msg| Failure { read: true, msg })?;
     let part = solid_part(&solid)?;
@@ -254,8 +254,8 @@ const MAX_LEFT_OUT_ROUNDS: usize = 8;
 /// Where SMLib cannot stitch them either, or there is no face to import, the solid stays refused
 /// with the reason it was: a B-rep SMLib refuses is never kept as a mesh of its faces.
 fn surface_part(ex: &Exchange, item: u64, units: Units, refused: Failure) -> std::result::Result<(Part, Vec<Note>), Failure> {
-    let _span = solidcraft_profile::span("import", "step.refused_surfaces");
-    let trims = &solidcraft_smlib::pcurves::SmlibTrims;
+    let _span = torno_profile::span("import", "step.refused_surfaces");
+    let trims = &torno_smlib::pcurves::SmlibTrims;
     let Ok(faces) = solidcore_step::topology::read_faces_with(ex, item, units, trims) else { return Err(refused) };
     let of_solid: std::collections::HashSet<u64> = faces.iter().map(|f| f.face).collect();
     // The faces left out, each with the refusal that names it, in the order they were found.
@@ -276,7 +276,7 @@ fn surface_part(ex: &Exchange, item: u64, units: Units, refused: Failure) -> std
         rounds += 1;
         let skip: std::collections::HashSet<u64> = left_out.iter().map(|(f, _)| *f).collect();
         let read =
-            solidcraft_profile::scope("import", "step.read_without", || solidcore_step::topology::read_solid_without(ex, item, units, trims, &skip));
+            torno_profile::scope("import", "step.read_without", || solidcore_step::topology::read_solid_without(ex, item, units, trims, &skip));
         match read
             .map_err(|msg| Failure { read: true, msg })
             .and_then(|solid| Ok((solid_part(&solid)?, solid.notes.into_iter().map(Note::Repaired).collect::<Vec<_>>())))

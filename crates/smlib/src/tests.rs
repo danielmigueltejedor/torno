@@ -26,7 +26,7 @@ fn bad_arguments_are_errors() {
 #[test]
 fn solidcore_reads_back_the_files_it_writes() {
     use std::f64::consts::PI;
-    let dir = std::env::temp_dir().join(format!("solidcraft-smlib-core-file-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("torno-smlib-core-file-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
     let cylinder = core::make_cylinder([1.0, 2.0, 3.0], 2.0, 5.0).map(Brep::made_core).unwrap();
     for ascii in [false, true] {
@@ -51,7 +51,7 @@ fn solidcore_reads_back_the_files_it_writes() {
 #[test]
 #[ignore = "solidcore: an ASCII file of junk reads as an empty B-rep instead of an error"]
 fn solidcore_refuses_an_ascii_file_of_junk() {
-    let dir = std::env::temp_dir().join(format!("solidcraft-smlib-core-junk-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("torno-smlib-core-junk-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
     let junk = dir.join("junk.smb");
     std::fs::write(&junk, b"not a B-rep file").unwrap();
@@ -197,7 +197,7 @@ fn every_entry_point_answers() {
     fn says<T>(_name: &str, r: Result<T>) -> Option<T> {
         r.ok()
     }
-    let dir = std::env::temp_dir().join(format!("solidcraft-smlib-guard-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("torno-smlib-guard-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
     {
         let _dumps = DUMP_DIR_TESTS.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
@@ -298,7 +298,7 @@ fn every_entry_point_answers() {
 #[test]
 fn only_a_failing_call_serialises_its_inputs() {
     let _dumps = DUMP_DIR_TESTS.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-    let dir = std::env::temp_dir().join(format!("solidcraft-smlib-core-dump-lazy-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("torno-smlib-core-dump-lazy-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
     core::dump::set_dir(Some(dir.clone()));
     let serialised = || core::dump::SERIALISED.with(std::cell::Cell::get);
@@ -322,7 +322,7 @@ fn only_a_failing_call_serialises_its_inputs() {
 #[test]
 fn a_failing_solidcore_call_leaves_a_dump_and_names_itself() {
     let _dumps = DUMP_DIR_TESTS.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-    let dir = std::env::temp_dir().join(format!("solidcraft-smlib-core-dump-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("torno-smlib-core-dump-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
     core::dump::set_dir(Some(dir.clone()));
     let a = core::make_box([0.0; 3], [10.0; 3]).unwrap();

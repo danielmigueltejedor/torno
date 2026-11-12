@@ -65,6 +65,6 @@
   "ungraded": [],
   "what": "a 100 x 60 x 2 plate converted from its top face moved down by one thickness (z -2..0 instead of 0..2)",
   "why_not": [
-    "body \"Plate\" is no kernel operation's output nor an operand: SolidCraft built it or changed the kernel's record"
+    "body \"Plate\" is no kernel operation's output nor an operand: Torno built it or changed the kernel's record"
   ]
 }

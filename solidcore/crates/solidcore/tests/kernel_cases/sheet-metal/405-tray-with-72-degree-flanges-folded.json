@@ -106,6 +106,6 @@
   "ungraded": [],
   "what": "a 120 x 90 tray with four 38.6 mm flanges at 72 degrees closed with the rule's gap: the corners used to stay open as a V",
   "why_not": [
-    "body \"Body1\" is no kernel operation's output nor an operand: SolidCraft built it or changed the kernel's record"
+    "body \"Body1\" is no kernel operation's output nor an operand: Torno built it or changed the kernel's record"
   ]
 }

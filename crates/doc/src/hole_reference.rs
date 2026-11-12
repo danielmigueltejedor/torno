@@ -4,8 +4,8 @@
 //! their stored points, so the hole follows them when the part changes.
 
 use solidcore_record::Vec3;
-use solidcraft_geom::Mesh;
-use solidcraft_geom::prelude::*;
+use torno_geom::Mesh;
+use torno_geom::prelude::*;
 
 use crate::{DocError, ModelBody, ModelState, Result};
 

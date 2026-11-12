@@ -2,8 +2,8 @@
 //! component is its own product with a package body and its own pins (nothing shared).
 //!
 //! ```sh
-//! SOLIDCRAFT_STEP_PCB_COMPONENTS=600 SOLIDCRAFT_STEP_PCB_PINS=15 \
-//!     cargo run --release -p solidcraft-kernel --example step_board_fixture -- board.step
+//! TORNO_STEP_PCB_COMPONENTS=600 TORNO_STEP_PCB_PINS=15 \
+//!     cargo run --release -p torno-kernel --example step_board_fixture -- board.step
 //! ```
 //!
 //! 600 components of 15 pins give 52 MB. The defaults are 500 and 16; the path defaults to
@@ -18,11 +18,11 @@ fn main() {
 
 mod run {
     use solidcore_record::Vec3;
-    use solidcraft_kernel::{Body, ExportBody, ExportProduct, StepHeader, box_solid, cylinder, fillet, step_export_products};
+    use torno_kernel::{Body, ExportBody, ExportProduct, StepHeader, box_solid, cylinder, fillet, step_export_products};
 
-    /// A count from `SOLIDCRAFT_<name>`, or `default` when it is unset.
+    /// A count from `TORNO_<name>`, or `default` when it is unset.
     fn count(name: &str, default: usize) -> Result<usize, String> {
-        solidcraft_geom::env::var(name).map_or(Ok(default), |s| s.parse().map_err(|e| format!("SOLIDCRAFT_{name}: {e}")))
+        torno_geom::env::var(name).map_or(Ok(default), |s| s.parse().map_err(|e| format!("TORNO_{name}: {e}")))
     }
 
     /// A package: a box with its vertical edges and then its top edges rounded (left sharp where

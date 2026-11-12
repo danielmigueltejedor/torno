@@ -959,7 +959,7 @@ impl CompositeCurve {
     ) -> Result<TrimmedOffsets> {
         let mut p = *params;
 
-        // SolidCraft change (tangency-labs/smlib 54148db): corners that keep the curves'
+        // Torno change (tangency-labs/smlib 54148db): corners that keep the curves'
         // curvature are made by CreateTaperExtrude only so far; here they would get no
         // corner curves at all.
         if p.corner == OffsetCornerType::CurveExtension {

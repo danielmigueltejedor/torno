@@ -1,7 +1,7 @@
 //! Saved-job adapters. HDR payloads are captured by the engine; paths and body identities stay local.
-use solidcraft_engine::doc::render_resources::{CpuHdrEnvironment, GpuHdrEnvironment};
-use solidcraft_engine::doc::render_settings::{CpuJob, GpuJob, RenderJob, RenderSetup, SkyEnvironment};
-use solidcraft_engine::render::job::{AreaLights, RaytraceEnvironmentOptions, RaytraceOptions, StudioLighting};
+use torno_engine::doc::render_resources::{CpuHdrEnvironment, GpuHdrEnvironment};
+use torno_engine::doc::render_settings::{CpuJob, GpuJob, RenderJob, RenderSetup, SkyEnvironment};
+use torno_engine::render::job::{AreaLights, RaytraceEnvironmentOptions, RaytraceOptions, StudioLighting};
 
 use super::{ImageMethod, cpu, hdr, materials, studio};
 use crate::SolveApp;
@@ -52,11 +52,11 @@ pub(super) fn snapshot(app: &SolveApp) -> Result<RenderSetup, String> {
 
 /// Validate a prospective lens edit without changing the live draft first. In particular,
 /// removing an authored lens remains possible after navigating to orthographic.
-pub(super) fn snapshot_with_lens(app: &SolveApp, lens: Option<solidcraft_engine::render::job::ThinLens>) -> Result<RenderSetup, String> {
+pub(super) fn snapshot_with_lens(app: &SolveApp, lens: Option<torno_engine::render::job::ThinLens>) -> Result<RenderSetup, String> {
     snapshot_with_lens_override(app, Some(lens))
 }
 
-fn snapshot_with_lens_override(app: &SolveApp, lens: Option<Option<solidcraft_engine::render::job::ThinLens>>) -> Result<RenderSetup, String> {
+fn snapshot_with_lens_override(app: &SolveApp, lens: Option<Option<torno_engine::render::job::ThinLens>>) -> Result<RenderSetup, String> {
     cpu::validate_progressive_image(app)?;
     if has_unportable_bindings(app) {
         return Err(app.tr("render.setup_runtime_unsupported").to_string());
@@ -464,7 +464,7 @@ fn load_values(view: &mut super::ViewState, setup: RenderSetup) {
 
 /// Compare the complete authoring source, excluding only saved Render settings.
 /// Stable body labels alone do not prove that geometry or its material is unchanged.
-pub(super) fn same_model_source(app: &SolveApp, document: &std::sync::Weak<solidcraft_engine::doc::Document>) -> bool {
+pub(super) fn same_model_source(app: &SolveApp, document: &std::sync::Weak<torno_engine::doc::Document>) -> bool {
     if app.session.model.is_stale() {
         return false;
     }
@@ -475,7 +475,7 @@ pub(super) fn same_model_source(app: &SolveApp, document: &std::sync::Weak<solid
     // Match ergonomics bind references, including vectors and point-cloud data.
     macro_rules! compare_authoring_fields {
         ($($field:ident),* $(,)?) => {{
-            let solidcraft_engine::doc::Document { render: _, $($field),* } = source.as_ref();
+            let torno_engine::doc::Document { render: _, $($field),* } = source.as_ref();
             true $(&& $field == &app.session.doc.$field)*
         }};
     }
@@ -521,10 +521,10 @@ pub(super) fn same_model_source(app: &SolveApp, document: &std::sync::Weak<solid
 
 /// A single refresh's source comparisons. Targets are still checked per binding.
 #[derive(Default)]
-pub(super) struct SourceCache(Vec<(std::sync::Weak<solidcraft_engine::doc::Document>, bool)>);
+pub(super) struct SourceCache(Vec<(std::sync::Weak<torno_engine::doc::Document>, bool)>);
 
 impl SourceCache {
-    pub(super) fn same_model_source(&mut self, app: &SolveApp, document: &std::sync::Weak<solidcraft_engine::doc::Document>) -> bool {
+    pub(super) fn same_model_source(&mut self, app: &SolveApp, document: &std::sync::Weak<torno_engine::doc::Document>) -> bool {
         if let Some((_, same)) = self.0.iter().find(|(source, _)| std::sync::Weak::ptr_eq(source, document)) {
             return *same && !app.session.model.is_stale() && document.upgrade().is_some();
         }

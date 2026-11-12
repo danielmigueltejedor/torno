@@ -3,7 +3,7 @@
 //!
 //! Writing: one mesh object per body (shared vertices, outward winding), named after the body,
 //! one build item each, colours as base materials. Objects with face tags also carry, per
-//! triangle, the B-rep face it lies on (`ft:face`, SolidCraft's face-tag namespace; spec:
+//! triangle, the B-rep face it lies on (`ft:face`, Torno's face-tag namespace; spec:
 //! docs/formats/3mf-face-tags.md) and are written at full `f64`
 //! precision so the receiver gets the tessellation exactly. Reading: every build item becomes one mesh
 //! (components flattened with their transforms), converted to millimetres. Components and build
@@ -15,10 +15,10 @@
 //! `Metadata/model_settings.config`), and those names are used. Packages are untrusted: sizes,
 //! entry counts, model parts, mesh sizes and component nesting are capped.
 
-use solidcraft_geom::prelude::*;
 use std::collections::{BTreeMap, HashMap};
 use std::fmt::Write as _;
 use std::io::{Cursor, Read, Write};
+use torno_geom::prelude::*;
 
 use quick_xml::Reader;
 use quick_xml::events::{BytesStart, Event};
@@ -38,9 +38,9 @@ const MAX_XML_DEPTH: usize = 256;
 
 const CORE_NS: &str = "http://schemas.microsoft.com/3dmanufacturing/core/2015/02";
 const MODEL_REL: &str = "http://schemas.microsoft.com/3dmanufacturing/2013/01/3dmodel";
-/// SolidCraft's face-tag namespace, version 1: `ft:face` on triangles, `ft:faces` on objects
+/// Torno's face-tag namespace, version 1: `ft:face` on triangles, `ft:faces` on objects
 /// (docs/formats/3mf-face-tags.md).
-pub const FACE_TAGS_NS: &str = "https://github.com/bherbruck/solidcraft/formats/3mf-face-tags/2026/10";
+pub const FACE_TAGS_NS: &str = "https://github.com/getnodalia/torno/formats/3mf-face-tags/2026/10";
 
 /// A named triangle mesh (millimetres, counter-clockwise seen from outside).
 #[derive(Clone, Debug, Default, PartialEq)]
@@ -346,7 +346,7 @@ pub fn model_xml_parts(objects: &[MeshObject], parts: &[(String, Vec<usize>)], m
     x.push_str("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
     let ft = if objects.iter().any(MeshObject::tagged) { format!(" xmlns:ft=\"{FACE_TAGS_NS}\"") } else { String::new() };
     let _ = writeln!(x, "<model unit=\"millimeter\" xml:lang=\"en-US\" xmlns=\"{CORE_NS}\"{ft}>");
-    x.push_str(" <metadata name=\"Application\">SolidCraft</metadata>\n");
+    x.push_str(" <metadata name=\"Application\">Torno</metadata>\n");
     for (name, text) in metadata {
         let _ = writeln!(x, " <metadata name=\"{}\">{}</metadata>", esc(name), esc(text));
     }
@@ -1909,16 +1909,16 @@ pub(crate) mod tests {
         let merged = triangles.len();
         assert!(assert_welds_as_all_pairs(&positions, &triangles, eps) > merged, "the cube's edges must be split");
 
-        let plate = solidcraft_kernel::box_solid(Vec3::ZERO, Vec3::new(60.0, 60.0, 8.0)).unwrap();
+        let plate = torno_kernel::box_solid(Vec3::ZERO, Vec3::new(60.0, 60.0, 8.0)).unwrap();
         let mut body = plate;
         for i in 0..3 {
             for j in 0..3 {
                 let at = Vec3::new(10.0 + 20.0 * i as f64, 10.0 + 20.0 * j as f64, -1.0);
-                let hole = solidcraft_kernel::cylinder(at, Vec3::new(0.0, 0.0, 1.0), 3.0 + i as f64, 10.0).unwrap();
-                body = solidcraft_kernel::boolean(&body, &hole, solidcraft_kernel::BoolOp::Cut).unwrap().unwrap();
+                let hole = torno_kernel::cylinder(at, Vec3::new(0.0, 0.0, 1.0), 3.0 + i as f64, 10.0).unwrap();
+                body = torno_kernel::boolean(&body, &hole, torno_kernel::BoolOp::Cut).unwrap().unwrap();
             }
         }
-        let m = body.mesh(&solidcraft_kernel::MeshTolerance::chord(body.size() * 1e-5)).unwrap();
+        let m = body.mesh(&torno_kernel::MeshTolerance::chord(body.size() * 1e-5)).unwrap();
         assert_welds_as_all_pairs(&m.positions, &m.triangles, (body.size() * 1e-6).max(1e-7));
     }
 

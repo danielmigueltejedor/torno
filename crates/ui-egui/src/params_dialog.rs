@@ -130,7 +130,7 @@ impl Row {
                 .into_iter()
                 .chain(self.text.as_ref())
                 .any(|field| field.to_ascii_lowercase().contains(filter))
-            || solidcraft_engine::doc::name_words_match(&self.name, filter)
+            || torno_engine::doc::name_words_match(&self.name, filter)
     }
 }
 
@@ -139,7 +139,7 @@ fn rows(app: &mut SolveApp) -> Vec<Row> {
     // Sketch dimension parameters: the sketch that owns each.
     let mut owner: std::collections::BTreeMap<String, String> = Default::default();
     for f in &app.session.doc.features {
-        if let solidcraft_engine::doc::FeatureKind::Sketch { sketch, .. } = &f.kind {
+        if let torno_engine::doc::FeatureKind::Sketch { sketch, .. } = &f.kind {
             for c in &sketch.constraints {
                 if let Some(p) = &c.param {
                     owner.insert(p.clone(), f.name.clone());
@@ -235,7 +235,7 @@ pub fn show(app: &mut SolveApp, ctx: &egui::Context) {
     let moved = crate::frame::dock_offset(ctx, "PARAMETERS");
     let drag_bounds = crate::shell::tool_drag_rect(app, viewport);
     let anchor = crate::frame::offset_anchor(docked, moved, drag_bounds, side);
-    let title = solidcraft_ui_text::tr_label("Parameters");
+    let title = torno_ui_text::tr_label("Parameters");
     let panel = ui_kit::Panel::new(
         title,
         egui::Id::unique("sc_params_dialog"),
@@ -251,7 +251,7 @@ pub fn show(app: &mut SolveApp, ctx: &egui::Context) {
     // automatic until the user drags it (review of #13422).
     let chosen_width: Option<f32> = ctx.data_mut(|m| m.get_persisted(width_id())).filter(|w: &f32| w.is_finite());
     let chosen_height: Option<f32> = ctx.data_mut(|m| m.get_persisted(height_id())).filter(|h: &f32| h.is_finite());
-    let width = chosen_width.map_or(solidcraft_theme::Tokens::get().form_card_width * 3.0, |w| w.max(crate::frame::DIALOG_MIN_W));
+    let width = chosen_width.map_or(torno_theme::Tokens::get().form_card_width * 3.0, |w| w.max(crate::frame::DIALOG_MIN_W));
     let panel = panel.body_height(chosen_height);
     let panel = if side == crate::frame::Side::Left {
         let available = crate::sketch_palette::room_left_of(app, ctx, viewport);
@@ -275,7 +275,7 @@ pub fn show(app: &mut SolveApp, ctx: &egui::Context) {
         outcome = panel.feature(
             ui,
             ui_kit::FeatureOptions {
-                icon: solidcraft_engine::find_command("parameters.change").map_or("", |c| c.icon),
+                icon: torno_engine::find_command("parameters.change").map_or("", |c| c.icon),
                 title,
                 drag_key: "PARAMETERS",
                 moved,
@@ -293,7 +293,7 @@ pub fn show(app: &mut SolveApp, ctx: &egui::Context) {
                 });
                 ui.horizontal_wrapped(|ui| {
                     if ui_kit::icon_label_button(ui, "Import…", "import_tray", true, false)
-                        .backing_on_hover_text(solidcraft_ui_text::tr_label("CSV or JSON: updates existing parameters, adds new ones"))
+                        .backing_on_hover_text(torno_ui_text::tr_label("CSV or JSON: updates existing parameters, adds new ones"))
                         .clicked()
                     {
                         app.pick_open_command("parameters.import", json!({}), IMPORT_TYPES);
@@ -314,8 +314,8 @@ pub fn show(app: &mut SolveApp, ctx: &egui::Context) {
                 let name_floor = visible
                     .iter()
                     .map(|r| ui_kit::ContentWidth::name(ui, &r.name))
-                    .fold(solidcraft_theme::Tokens::get().form_label_width, f32::max)
-                    .min(solidcraft_theme::Tokens::get().form_card_width);
+                    .fold(torno_theme::Tokens::get().form_label_width, f32::max)
+                    .min(torno_theme::Tokens::get().form_card_width);
                 let Sections { favorites, users, groups } = sections(&visible, d.sort);
                 if !favorites.is_empty() {
                     ui_kit::section_count(ui, "favorites", "Favorites", true, Some(favorites.len()), |ui| {
@@ -327,7 +327,7 @@ pub fn show(app: &mut SolveApp, ctx: &egui::Context) {
                 });
                 ui_kit::section(ui, "models", "Model Parameters", true, |ui| {
                     ui.scope(|ui| {
-                        ui.spacing_mut().indent = solidcraft_theme::Tokens::get().space_14;
+                        ui.spacing_mut().indent = torno_theme::Tokens::get().space_14;
                         ui.indent("model_groups", |ui| {
                             let layout = GroupLayout {
                                 revision: app.session.revision,
@@ -337,7 +337,7 @@ pub fn show(app: &mut SolveApp, ctx: &egui::Context) {
                                 style: ui.style().clone(),
                                 font: app.applied_ui_font.clone(),
                                 system_fonts: app.applied_system_fonts,
-                                language: solidcraft_ui_text::language(),
+                                language: torno_ui_text::language(),
                             };
                             if d.group_layout.as_ref() != Some(&layout) {
                                 d.group_sizes.clear();
@@ -370,7 +370,7 @@ pub fn show(app: &mut SolveApp, ctx: &egui::Context) {
             }
         }),
         Resize::By(axes, delta) => {
-            let t = solidcraft_theme::Tokens::get();
+            let t = torno_theme::Tokens::get();
             if axes.width
                 && let Some(card) = shown.as_ref().map(|r| r.response.rect)
             {
@@ -453,7 +453,7 @@ enum Resize {
 /// right one and the body scrolls, `scrollbar` is the body viewport whose right edge carries the
 /// scrollbar: the side grip skips that span so scrollbar drags still scroll (#13422 review).
 fn resize_edges(ui: &mut egui::Ui, side: crate::frame::Side, scrollbar: Option<egui::Rect>) -> Resize {
-    let t = solidcraft_theme::Tokens::get();
+    let t = torno_theme::Tokens::get();
     let card = ui.min_rect();
     let grip = t.space_6;
     if !card.is_finite() || card.width() < grip * 4.0 || card.height() < t.form_header_height + grip * 2.0 {
@@ -609,10 +609,10 @@ fn table(app: &mut SolveApp, ui: &mut egui::Ui, d: &mut ParamsDialog, rows: &[&R
     // Widths the user dragged a header divider to (#5097); the rest keep their automatic widths.
     let manual: Vec<Option<f32>> = ui.ctx().data_mut(|m| m.get_persisted(columns_id())).unwrap_or_default();
     let columns = [
-        Column::new("", 0.0).min_content_width(solidcraft_theme::Tokens::get().space_24 * 3.0),
+        Column::new("", 0.0).min_content_width(torno_theme::Tokens::get().space_24 * 3.0),
         Column::new("Name", 2.0).flex().min_content_width(name_floor),
         Column::new("Unit", 0.65).min_content_width(
-            ui_kit::ContentWidth::dropdown(ui, &units).max(solidcraft_theme::Tokens::get().space_24 * 3.0 + solidcraft_theme::Tokens::get().space_6),
+            ui_kit::ContentWidth::dropdown(ui, &units).max(torno_theme::Tokens::get().space_24 * 3.0 + torno_theme::Tokens::get().space_6),
         ),
         Column::new("Expression", 1.5).flex(),
         Column::new("Value", 1.1).flex(),
@@ -622,7 +622,7 @@ fn table(app: &mut SolveApp, ui: &mut egui::Ui, d: &mut ParamsDialog, rows: &[&R
     let columns: Vec<_> = columns.into_iter().enumerate().map(|(i, c)| c.manual_width(manual.get(i).copied().flatten())).collect();
     // An expression being edited may open over the cells to its right, up to the table's edge.
     let right = ui.max_rect().right().min(ui.clip_rect().right());
-    ui_kit::table_custom(ui, salt, &columns, solidcraft_ui_text::tr("manage.empty"), |ui, table| {
+    ui_kit::table_custom(ui, salt, &columns, torno_ui_text::tr("manage.empty"), |ui, table| {
         // The Name heading sorts every section at once, each inside itself (#8563).
         table.headers_resizable(ui, columns_id(), |ui, index| {
             if index != 1 {
@@ -682,7 +682,7 @@ fn table(app: &mut SolveApp, ui: &mut egui::Ui, d: &mut ParamsDialog, rows: &[&R
                         }
                     }
                     _ => {
-                        let rename = solidcraft_ui_text::tr_label("Double-click to rename");
+                        let rename = torno_ui_text::tr_label("Double-click to rename");
                         // Keep long identifiers readable (#8533) without stacking the cell's own tooltip.
                         let response = ui_kit::name_cell_with_hint(ui, &r.name, false, rename);
                         crate::scenario::publish_handle(&format!("param:name:{}", r.name), response.rect.center());
@@ -788,7 +788,7 @@ fn table(app: &mut SolveApp, ui: &mut egui::Ui, d: &mut ParamsDialog, rows: &[&R
 }
 
 fn unit_label(u: &str) -> &str {
-    if u.is_empty() { solidcraft_ui_text::tr_label("none") } else { u }
+    if u.is_empty() { torno_ui_text::tr_label("none") } else { u }
 }
 
 /// Only a fresh Enter in this field submits; held keys and unrelated focus do not.
@@ -813,15 +813,15 @@ fn held(d: &ParamsDialog, rows: &[Row]) -> serde_json::Map<String, Value> {
 
 /// The hint at the top of the dialog: when edits apply, as the check box under it says.
 fn hint(live: bool) -> &'static str {
-    solidcraft_ui_text::tr(if live { "manage.parameters_hint" } else { "parameters.held_hint" })
+    torno_ui_text::tr(if live { "manage.parameters_hint" } else { "parameters.held_hint" })
 }
 
 /// The footer's note of the edits waiting for Apply, if any.
 fn held_status(count: usize) -> Option<String> {
     match count {
         0 => None,
-        1 => Some(solidcraft_ui_text::tr("parameters.held_one").to_string()),
-        n => Some(solidcraft_ui_text::format("parameters.held", &[("count", &n.to_string())])),
+        1 => Some(torno_ui_text::tr("parameters.held_one").to_string()),
+        n => Some(torno_ui_text::format("parameters.held", &[("count", &n.to_string())])),
     }
 }
 
@@ -848,8 +848,8 @@ fn apply_held(app: &mut SolveApp, d: &mut ParamsDialog, rows: &[Row]) -> bool {
 /// "Apply each change as you leave its field", remembered across sessions (#9279). Turning it
 /// back on applies what was waiting.
 fn apply_live_checkbox(app: &mut SolveApp, ui: &mut egui::Ui, d: &mut ParamsDialog, rows: &[Row]) {
-    let response = ui_kit::checkbox(ui, solidcraft_ui_text::tr("parameters.apply_live"), &mut app.preferences.parameters_apply_live)
-        .backing_on_hover_text(solidcraft_ui_text::tr("parameters.apply_live_tip"));
+    let response = ui_kit::checkbox(ui, torno_ui_text::tr("parameters.apply_live"), &mut app.preferences.parameters_apply_live)
+        .backing_on_hover_text(torno_ui_text::tr("parameters.apply_live_tip"));
     crate::scenario::publish_handle("params:apply_live", response.rect.center());
     if response.changed() && app.preferences.parameters_apply_live {
         apply_held(app, d, rows);
@@ -868,7 +868,7 @@ fn apply_live_checkbox(app: &mut SolveApp, ui: &mut egui::Ui, d: &mut ParamsDial
 #[derive(Debug)]
 struct NewRefused {
     draft: (String, usize, String, String),
-    doc: Arc<solidcraft_engine::doc::Document>,
+    doc: Arc<torno_engine::doc::Document>,
     error: String,
 }
 
@@ -1122,7 +1122,7 @@ pub(crate) fn suggestions_for(ctx: &egui::Context, word: &str, explicit: bool) -
     // group comes after the others, so it never pushes an earlier match out of the eight.
     let parameter = |s: &&Suggestion| !exact && s.kind == "parameter" && !starts(s);
     let within = |s: &&Suggestion| parameter(s) && s.text.to_ascii_lowercase().contains(&w);
-    let words = |s: &&Suggestion| parameter(s) && !within(s) && solidcraft_engine::doc::name_words_match(&s.text, word);
+    let words = |s: &&Suggestion| parameter(s) && !within(s) && torno_engine::doc::name_words_match(&s.text, word);
     all.iter()
         .filter(|s| starts(s) && offered(s))
         .chain(all.iter().filter(|s| within(s) && offered(s)))
@@ -1160,17 +1160,17 @@ pub fn complete(ui: &mut egui::Ui, resp: &egui::Response, text: &mut String) -> 
     crate::expression_complete::complete(ui, resp, text) || crate::value_step::step(ui, resp, text)
 }
 
-/// SolidCraft's expression language for the kit's value fields: literals and units as
+/// Torno's expression language for the kit's value fields: literals and units as
 /// `doc::expr` reads them, completion and stepping by [`complete`].
 pub(crate) struct DocExpressions;
 
 impl ui_kit::Expressions for DocExpressions {
     fn is_literal(&self, text: &str) -> bool {
-        solidcraft_engine::doc::expr::is_literal(text)
+        torno_engine::doc::expr::is_literal(text)
     }
 
     fn is_unit(&self, unit: &str) -> bool {
-        solidcraft_engine::doc::expr::unit_info(unit).is_some()
+        torno_engine::doc::expr::unit_info(unit).is_some()
     }
 
     fn complete(&self, ui: &mut egui::Ui, response: &egui::Response, text: &mut String) -> bool {
@@ -1190,7 +1190,7 @@ impl ui_kit::Expressions for DocExpressions {
     }
 }
 
-/// Give the kit's value fields in `ctx` SolidCraft's expressions, unless they have them already.
+/// Give the kit's value fields in `ctx` Torno's expressions, unless they have them already.
 /// The app calls this at the start of each frame entry point, so every context it draws into has them.
 pub(crate) fn install_expressions(ctx: &egui::Context) {
     if ui_kit::expressions(ctx).is_none() {
@@ -1241,7 +1241,7 @@ mod tests {
                 for shape in &h.shapes {
                     text_in(&shape.shape, tooltips[0], &mut texts);
                 }
-                let hint = solidcraft_ui_text::tr_label("Double-click to rename");
+                let hint = torno_ui_text::tr_label("Double-click to rename");
                 let expected = if name == "rip_length" { hint.to_owned() } else { format!("{name}\n{hint}") };
                 assert_eq!(texts, [expected], "only a clipped name needs repeating");
                 h.step(&json!({"click":{"handle":format!("param:name:{name}")},"double":true})).unwrap();
@@ -1260,7 +1260,7 @@ mod tests {
     }
 
     fn escape_state(h: &crate::scenario::Harness) -> Value {
-        let history = |steps: &[solidcraft_engine::Snapshot]| {
+        let history = |steps: &[torno_engine::Snapshot]| {
             steps
                 .iter()
                 .map(|s| json!({"label":s.label,"document":s.doc.to_json(),"sketch":s.active_sketch,"moves":s.pending_moves}))
@@ -1312,7 +1312,7 @@ mod tests {
         let mut h = escape_dialog();
         h.app.run("parameters.change", json!({"name":"width","expression":"12 mm"})).unwrap();
         h.app.run("edit.undo", json!({})).unwrap();
-        h.app.session.selection = vec![solidcraft_engine::Sel::Plane { name: "XY".into() }];
+        h.app.session.selection = vec![torno_engine::Sel::Plane { name: "XY".into() }];
         h.step(&json!({"click":{"handle":"params:title"}})).unwrap();
         assert!(!h.app.session.undo.is_empty() && !h.app.session.redo.is_empty());
         let before = escape_state(&h);
@@ -1527,7 +1527,7 @@ mod tests {
         crate::i18n::install();
         assert!(crate::prefs::Prefs::default().parameters_apply_live, "live updates stay the default");
         // The hint above the check box says when edits apply, whichever way it is set.
-        assert_eq!(hint(true), solidcraft_ui_text::tr("manage.parameters_hint"));
+        assert_eq!(hint(true), torno_ui_text::tr("manage.parameters_hint"));
         assert_ne!(hint(false), hint(true));
         assert!(hint(false).contains("Apply") && !hint(false).contains("leaving"), "{}", hint(false));
         let mut h = held_dialog();
@@ -1551,7 +1551,7 @@ mod tests {
         assert_eq!(word_before("1 + ", 4), (4, String::new()));
         assert_eq!(word_before("ü", 9), (0, "ü".to_string()));
         let ctx = crate::fonts::test_context();
-        let mut app = SolveApp::new(solidcraft_engine::Session::default(), Default::default());
+        let mut app = SolveApp::new(torno_engine::Session::default(), Default::default());
         let _ = app.run("parameters.add", json!({"name": "width", "expression": "40 mm"}));
         let _ = app.run("parameters.add", json!({"name": "radius", "expression": "10 mm"}));
         let _ = app.run("parameters.add", json!({"name": "rounding", "expression": "3 mm"}));
@@ -1587,7 +1587,7 @@ mod tests {
     #[test]
     fn a_parameter_is_offered_for_any_part_of_its_name() {
         let ctx = egui::Context::default();
-        let mut app = SolveApp::new(solidcraft_engine::Session::default(), Default::default());
+        let mut app = SolveApp::new(torno_engine::Session::default(), Default::default());
         for (name, e) in [("cab_side_thickness", "18 mm"), ("sides", "4"), ("inner_diameter", "6 mm")] {
             let _ = app.run("parameters.add", json!({"name": name, "expression": e}));
         }
@@ -1835,7 +1835,7 @@ mod tests {
         h.frames(2);
         assert_eq!(banner(&h).as_deref(), Some("there is already a parameter `width`"));
         let (doc, revision) = (h.app.session.doc.clone(), h.app.session.revision);
-        h.app.run("select.set", json!({"items": [solidcraft_engine::Sel::Body { name: "Body1".into() }]})).unwrap();
+        h.app.run("select.set", json!({"items": [torno_engine::Sel::Body { name: "Body1".into() }]})).unwrap();
         h.frames(2);
         assert_eq!(h.app.session.selection.len(), 1, "the body is selected");
         assert_ne!(revision, h.app.session.revision, "a selection moves the revision");
@@ -2071,7 +2071,7 @@ mod tests {
         start.elapsed().as_secs_f64() * 1000.0 / n as f64
     }
 
-    /// Frame times with the window closed and open (`cargo test -p solidcraft-ui-egui params_frame_time -- --nocapture`).
+    /// Frame times with the window closed and open (`cargo test -p torno-ui-egui params_frame_time -- --nocapture`).
     #[test]
     fn params_frame_time() {
         let mut h = big_design();
@@ -2086,7 +2086,7 @@ mod tests {
 
     /// #2733: many feature groups, rather than only many user parameters.
     fn many_feature_groups() -> crate::scenario::Harness {
-        use solidcraft_engine::doc::{Document, FeatureKind, PlaneRef};
+        use torno_engine::doc::{Document, FeatureKind, PlaneRef};
         let mut doc = Document::default();
         for i in 0..51 {
             doc.add_user_param(&format!("p{i}"), "10 mm", None, None).unwrap();
@@ -2102,7 +2102,7 @@ mod tests {
         }
         let mut h = crate::scenario::Harness::new();
         h.app.home.open = false;
-        h.app.session = solidcraft_engine::Session::new(doc);
+        h.app.session = torno_engine::Session::new(doc);
         h.app.set_origin_shown(false);
         h
     }

@@ -1,7 +1,7 @@
 //! GPU studio editors. Numeric intent is portable; HDR resources cross the engine capture boundary.
 use serde_json::{Value, json};
-use solidcraft_engine::render::job::{AreaLight, AreaLights, DirectionalLights, PunctualLights, StudioLighting, Sun, ThinLens, ToneMap};
-use solidcraft_engine::render::lighting::environment::SkyGradient;
+use torno_engine::render::job::{AreaLight, AreaLights, DirectionalLights, PunctualLights, StudioLighting, Sun, ThinLens, ToneMap};
+use torno_engine::render::lighting::environment::SkyGradient;
 
 use super::hdr;
 use crate::{SolveApp, ui_kit};
@@ -16,17 +16,17 @@ pub(super) enum Environment {
 
 #[derive(Clone, Debug)]
 pub(super) struct View {
-    pub caustics: Option<solidcraft_engine::render::job::CausticOptions>,
-    pub aging: solidcraft_engine::doc::render_aging::SavedAgingStack,
+    pub caustics: Option<torno_engine::render::job::CausticOptions>,
+    pub aging: torno_engine::doc::render_aging::SavedAgingStack,
     pub nested_media: bool,
     pub texture_filtering: bool,
     pub metal_energy_compensation: bool,
-    pub volume: Option<solidcraft_engine::render::job::volume::HomogeneousVolume>,
-    pub adaptive: Option<solidcraft_engine::render::job::adaptive::AdaptiveSampling>,
+    pub volume: Option<torno_engine::render::job::volume::HomogeneousVolume>,
+    pub adaptive: Option<torno_engine::render::job::adaptive::AdaptiveSampling>,
     pub transmission_samples: u32,
-    pub finishing: solidcraft_engine::render::job::finishing::Finishing,
+    pub finishing: torno_engine::render::job::finishing::Finishing,
     pub backdrop_enabled: bool,
-    pub backdrop: solidcraft_engine::render::job::finishing::Backdrop,
+    pub backdrop: torno_engine::render::job::finishing::Backdrop,
     pub linear_exr: bool,
     pub export_exr: bool,
     pub export_denoise_mask: bool,
@@ -34,7 +34,7 @@ pub(super) struct View {
     pub denoise: bool,
     /// Kept from a loaded setup so saving it again keeps it; the workspace has no control for it yet.
     pub clamp_indirect: Option<f64>,
-    pub denoise_settings: solidcraft_engine::render::job::DenoiseSettings,
+    pub denoise_settings: torno_engine::render::job::DenoiseSettings,
     pub denoise_diagnostics: bool,
     pub supersampling: u32,
     pub lens_enabled: bool,
@@ -98,8 +98,8 @@ impl Default for View {
 
 /// CPU and GPU editors share presentation intent; CPU transport options remain independent.
 /// Preserve an explicitly saved identity object instead of erasing it on an unedited reload.
-pub(super) fn cpu_output(view: &super::ViewState) -> Option<Box<solidcraft_engine::render::job::OutputOptions>> {
-    let settings = solidcraft_engine::render::job::OutputOptions {
+pub(super) fn cpu_output(view: &super::ViewState) -> Option<Box<torno_engine::render::job::OutputOptions>> {
+    let settings = torno_engine::render::job::OutputOptions {
         tone_map: view.studio.tone_map,
         finishing: view.studio.finishing,
         backdrop: view.studio.backdrop_enabled.then_some(view.studio.backdrop),
@@ -189,14 +189,13 @@ pub(super) fn tone_controls(app: &mut SolveApp, ui: &mut egui::Ui) {
     ui_kit::text(ui, app.tr("render.studio_tone_map"), ui_kit::Text::Inline);
     let selected = app.render_workspace.view.studio.tone_map;
     let label = match selected {
-        ToneMap::Reinhard => solidcraft_ui_text::tr("render.tone_reinhard"),
-        ToneMap::AcesFitted => solidcraft_ui_text::tr("render.tone_aces_fitted"),
+        ToneMap::Reinhard => torno_ui_text::tr("render.tone_reinhard"),
+        ToneMap::AcesFitted => torno_ui_text::tr("render.tone_aces_fitted"),
     };
     let response = ui_kit::dropdown_menu(ui, "render_tone_map", label, |ui| {
-        for (map, label) in [
-            (ToneMap::Reinhard, solidcraft_ui_text::tr("render.tone_reinhard")),
-            (ToneMap::AcesFitted, solidcraft_ui_text::tr("render.tone_aces_fitted")),
-        ] {
+        for (map, label) in
+            [(ToneMap::Reinhard, torno_ui_text::tr("render.tone_reinhard")), (ToneMap::AcesFitted, torno_ui_text::tr("render.tone_aces_fitted"))]
+        {
             if ui_kit::list_picker(ui, label, label, map == selected).clicked() {
                 app.render_workspace.view.studio.tone_map = map;
                 ui.close();
@@ -312,7 +311,7 @@ pub(super) fn bloom_controls(app: &mut SolveApp, ui: &mut egui::Ui) {
     crate::scenario::publish_target("render:bloom-enable", toggle.rect);
     if toggle.changed() {
         app.render_workspace.view.studio.finishing.bloom =
-            enabled.then_some(solidcraft_engine::render::job::bloom::Bloom { strength: 0.15, ..Default::default() });
+            enabled.then_some(torno_engine::render::job::bloom::Bloom { strength: 0.15, ..Default::default() });
     }
     if enabled {
         for key in ["render.bloom_strength", "render.bloom_threshold", "render.bloom_radius"] {
@@ -398,7 +397,7 @@ fn retain_controls(app: &mut SolveApp, ui: &mut egui::Ui) {
 
 #[cfg(test)]
 pub(super) fn backdrop_controls(app: &mut SolveApp, ui: &mut egui::Ui) {
-    use solidcraft_engine::render::job::finishing::BackdropMode;
+    use torno_engine::render::job::finishing::BackdropMode;
     let label = app.tr("render.backdrop_enable").to_string();
     let r = ui_kit::checkbox(ui, &label, &mut app.render_workspace.view.studio.backdrop_enabled);
     crate::scenario::publish_target("render:backdrop-enabled", r.rect);

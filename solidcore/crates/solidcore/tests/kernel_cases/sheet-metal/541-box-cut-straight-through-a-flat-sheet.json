@@ -60,6 +60,6 @@
   "ungraded": [],
   "what": "a solid.box cut straight through a 100 x 60 x 2.5 sheet was refused, though the same rectangle as an extrude cut works",
   "why_not": [
-    "body \"Body1\" is no kernel operation's output nor an operand: SolidCraft built it or changed the kernel's record"
+    "body \"Body1\" is no kernel operation's output nor an operand: Torno built it or changed the kernel's record"
   ]
 }

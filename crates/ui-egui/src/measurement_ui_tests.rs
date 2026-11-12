@@ -2,8 +2,8 @@
 use crate::dialogs::Kind;
 use crate::scenario::Harness;
 use serde_json::{Value, json};
-use solidcraft_engine::Sel;
-use solidcraft_engine::geom::prelude::*;
+use torno_engine::Sel;
+use torno_engine::geom::prelude::*;
 
 fn result(h: &Harness) -> &Value {
     match &h.app.dialog.as_ref().unwrap().kind {
@@ -66,7 +66,7 @@ fn measure_starts_with_selected_vertices_edges_and_faces() {
             }
             if kind == "vertex"
                 && count == 2
-                && let Ok(dir) = std::env::var("SOLIDCRAFT_MEASURE_EVIDENCE")
+                && let Ok(dir) = std::env::var("TORNO_MEASURE_EVIDENCE")
             {
                 h.ctx = egui::Context::default();
                 crate::fonts::setup_bundled_fonts(&h.ctx);
@@ -154,7 +154,7 @@ fn point_coordinates_are_not_truncated_in_the_measure_panel() {
                 last = Some(output);
             }
             let output = last.unwrap();
-            if let Ok(dir) = std::env::var("SOLIDCRAFT_MEASURE_EVIDENCE") {
+            if let Ok(dir) = std::env::var("TORNO_MEASURE_EVIDENCE") {
                 let bounds = egui::Rect::from_min_size(egui::Pos2::ZERO, egui::vec2(1600.0, 1000.0));
                 let image = crate::ui_kit::test_raster(&h.ctx, output.shapes.clone(), output.pixels_per_point, bounds, &textures);
                 std::fs::create_dir_all(&dir).unwrap();

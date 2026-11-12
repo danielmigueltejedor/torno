@@ -2,7 +2,7 @@
 //! mitred at a face's concave corner (`fillet_mitre_concave_face_corners`, WR-642) whose walls
 //! lean differently, so that their rails meet the corner edge at two places, fill the gap past
 //! the corner edge with a patch on the side wall's continuation. The fork's case: a sloped
-//! basin's rim rounded r 0.5 (SolidCraft's `1080-fillet-sloped-basin-1-mm-rim-r0-5-4-edges`).
+//! basin's rim rounded r 0.5 (Torno's `1080-fillet-sloped-basin-1-mm-rim-r0-5-4-edges`).
 
 #![allow(
     clippy::unwrap_used,
@@ -77,7 +77,7 @@ fn polyline(pts: &[Point3]) -> Vec<Curve> {
 /// A basin lofted (degree 1) from `top` (x0, x1, y0, y1) at z = 30 to `bottom` at z = 10,
 /// cut from a 100 x 60 x 30 slab; the loft runs on linearly to z = 40. With `wide_top`
 /// the slab is a 100 x 70 x 30 box less its front 10, so the top's plane runs on 10 past
-/// its front edge (a SolidCraft sketch's plane is larger than its face, as in the WR-635
+/// its front edge (a Torno sketch's plane is larger than its face, as in the WR-635
 /// tests).
 #[derive(Clone, Copy)]
 struct Basin {
@@ -132,13 +132,13 @@ const FORK_BASIN: Basin = Basin {
     wide_top: false,
 };
 
-/// SolidCraft's `1080-fillet-sloped-basin-4-mm-rim-*` basin: the fork's with a 4 mm rim.
+/// Torno's `1080-fillet-sloped-basin-4-mm-rim-*` basin: the fork's with a 4 mm rim.
 const RIM4_BASIN: Basin = Basin {
     top: [20.0, 80.0, 4.0, 50.0],
     ..FORK_BASIN
 };
 
-/// SolidCraft's `1080-fillet-equal-slope-basin-1-mm-rim-*` basin: every wall at 1 in 2.
+/// Torno's `1080-fillet-equal-slope-basin-1-mm-rim-*` basin: every wall at 1 in 2.
 const EQUAL_SLOPE_BASIN: Basin = Basin {
     bottom: [30.0, 70.0, 11.0, 40.0],
     ..FORK_BASIN
@@ -160,7 +160,7 @@ fn blend(
         .collect();
     let mut session = FilletSession::new(&mut k, &mut b).unwrap();
     if chamfer {
-        // SolidCraft's chamfer: constant distance (the chord across the blend)
+        // Torno's chamfer: constant distance (the chord across the blend)
         session
             .prepare_per_edge_constant_distance(
                 &mut k,
@@ -220,7 +220,7 @@ fn sloped_basin_rim_rounds_fill_the_mitre_gap() {
 
 #[test]
 fn sloped_basin_rim_chamfers_fill_the_mitre_gap() {
-    // SolidCraft's 1080-fillet-sloped-basin-4-mm-rim-2-2-edges (5835): 145957.3269
+    // Torno's 1080-fillet-sloped-basin-4-mm-rim-2-2-edges (5835): 145957.3269
     let rim = RIM4_BASIN.rim();
     let (_, v) = blend(true, RIM4_BASIN, &rim[..2], 2.0, true).unwrap();
     assert!((v - 145_957.326_9).abs() < 1e-3, "4 mm rim: {v}");

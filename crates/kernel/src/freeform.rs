@@ -7,7 +7,7 @@
 
 use solidcore_record::brep::{Curve, Curve2, Surface};
 use solidcore_record::{Plane, Seg2, Vec2, Vec3};
-use solidcraft_geom::prelude::*;
+use torno_geom::prelude::*;
 
 use crate::{KernelError, Result};
 

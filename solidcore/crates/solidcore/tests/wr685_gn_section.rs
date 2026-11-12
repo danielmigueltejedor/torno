@@ -1,4 +1,4 @@
-//! WR-685 (#2250; the SolidCraft fork's tangency-labs/smlib@11ea2d9 = d01d7b0's 0bd3f4d, smlib#78): a
+//! WR-685 (#2250; the Torno fork's tangency-labs/smlib@11ea2d9 = d01d7b0's 0bd3f4d, smlib#78): a
 //! blend-curve round is built by the G^n section generator (on every kernel since its flag,
 //! `fillet_gn_section_generator`, was retired: WR-685 addendum 2026-11-06), `S(t) = f T1(1 - p1) + (1 - f) T2(p2)` between the rails.
 //!

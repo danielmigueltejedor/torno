@@ -1,6 +1,6 @@
 //! The G1 fill of a setback corner beside curved faces (cylinders, cones, spheres), as a
 //! graph over the corner's axis, certified no more concave than what each patch is G1 to
-//! (solidcore#2343, built in solidcore from the SolidCraft fork's work in progress on
+//! (solidcore#2343, built in solidcore from the Torno fork's work in progress on
 //! smlib#85 part C, tangency-labs/smlib 37c9e1d: `sm_SbGraphG1Curved`, `sm_SbGeometricRows`,
 //! `sm_SbLineSpine`, `sm_SbRoundRowK`, `sm_SbTDetWith`, `sm_SbNormalField`,
 //! `sm_SbNoMoreConcave`; no fork commit).

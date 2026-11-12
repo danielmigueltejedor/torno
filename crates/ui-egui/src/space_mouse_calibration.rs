@@ -1,15 +1,15 @@
 //! The 3D mouse calibration window, opened from Preferences › Navigation. It asks what kind of
 //! device it is (Return to Center, or a trackball), then asks the user to leave it still and
 //! to move it along each axis both ways, moving on by itself after each
-//! (`solidcraft_space_mouse::Wizard`), and saves what it found for the device it started with.
+//! (`torno_space_mouse::Wizard`), and saves what it found for the device it started with.
 //! The window closes with Preferences, and when another device (or none) is read instead.
 
 use crate::ui_kit::BackingTooltipExt as _;
-use solidcraft_space_mouse::{Calibration, Kind, Problem, Stage, Wizard};
+use torno_space_mouse::{Calibration, Kind, Problem, Stage, Wizard};
 
 use crate::SolveApp;
 
-/// What each of `solidcraft_space_mouse::STEPS` asks for, in order.
+/// What each of `torno_space_mouse::STEPS` asks for, in order.
 const STEP_PROMPTS: [&str; 12] = [
     "ui.3d_mouse_step_slide_right",
     "ui.3d_mouse_step_slide_left",
@@ -49,7 +49,7 @@ pub(crate) fn dead_zone_slider(ui: &mut egui::Ui, share: &mut f32) -> egui::Resp
     crate::ui_kit::slider(
         ui,
         share,
-        0.0..=solidcraft_space_mouse::MAX_DEAD_ZONE_SHARE,
+        0.0..=torno_space_mouse::MAX_DEAD_ZONE_SHARE,
         crate::ui_kit::Slider { step: Some(0.01), format: |v| format!("{:.0} %", v * 100.0), ..Default::default() },
     )
 }
@@ -89,7 +89,7 @@ pub(crate) fn dead_zone_pads(ui: &mut egui::Ui, calibration: &Calibration, raw: 
                 let (rect, response) = ui.allocate_exact_size(egui::vec2(SIZE, SIZE), egui::Sense::hover());
                 let painter = ui.painter_at(rect);
                 let (centre, radius) = (rect.center(), SIZE / 2.0 - 2.0);
-                let faint = solidcraft_theme::Tokens::get().text_dim;
+                let faint = torno_theme::Tokens::get().text_dim;
                 // Which side of an axis's dead zone lies along a way on screen.
                 let side = |axis: usize, way: f32, screen: f32| shares[axis][usize::from(way * screen > 0.0)];
                 let zone: Vec<egui::Pos2> = (0..64)
@@ -129,7 +129,7 @@ pub(crate) fn dead_zone_pads(ui: &mut egui::Ui, calibration: &Calibration, raw: 
 fn reading_grid(ui: &mut egui::Ui, raw: [i16; 6]) {
     const NAMES: [&str; 6] = ["X", "Y", "Z", "Rx", "Ry", "Rz"];
     const CELL: f32 = 48.0;
-    let t = solidcraft_theme::Tokens::get();
+    let t = torno_theme::Tokens::get();
     let (name_font, number_font) = (egui::FontId::proportional(t.font_small), egui::FontId::monospace(t.font_small));
     let painter = ui.painter().clone();
     let line = |font: &egui::FontId| painter.layout_no_wrap("0".into(), font.clone(), t.text_dim).size().y;
@@ -226,7 +226,7 @@ pub fn show(app: &mut SolveApp, ctx: &egui::Context) {
                         crate::ui_kit::text(ui, &counter, crate::ui_kit::Text::Note("space_mouse_counter"));
                         // Each step shows the motion it asks for; once calibrated, the device's picture follows it.
                         let step = match stage {
-                            Stage::Step(index) => solidcraft_space_mouse::STEPS.get(index).copied(),
+                            Stage::Step(index) => torno_space_mouse::STEPS.get(index).copied(),
                             _ => None,
                         };
                         match (step, result) {

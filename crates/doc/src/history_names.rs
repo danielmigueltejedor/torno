@@ -25,7 +25,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::sync::{Arc, OnceLock};
 
 use solidcore_record::Vec3;
-use solidcraft_kernel::history::{FaceOrigin, FaceProv, History};
+use torno_kernel::history::{FaceOrigin, FaceProv, History};
 
 use crate::ModelBody;
 use crate::lineage::{Lineage, Operand};

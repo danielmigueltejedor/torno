@@ -1,7 +1,7 @@
 //! The curve where a surface meets a plane between two points known on both, traced on the
 //! plane's equation.
 //!
-//! Upstream: the SolidCraft fork's `source/SMLib/src/SmFilletGeom.cpp`
+//! Upstream: the Torno fork's `source/SMLib/src/SmFilletGeom.cpp`
 //! (tangency-labs/smlib@5bdcddf, with @14a6daa's quarter points and start direction; WR-682).
 //!
 //! | Rust                  | Upstream               |

@@ -1,6 +1,6 @@
 use serde::Serialize;
 use solidcore_record::Vec3;
-use solidcraft_geom::{Aabb3, MeshGeom};
+use torno_geom::{Aabb3, MeshGeom};
 
 use crate::Result;
 use crate::body::Body;
@@ -45,17 +45,17 @@ pub struct MassMeasure {
 }
 
 /// The relative accuracy SMLib integrates at: the finest the C API takes
-/// ([`solidcraft_smlib::MEASURE_ACCURACY`], 1e-8). `smlib_brep_mass_properties` calls the
+/// ([`torno_smlib::MEASURE_ACCURACY`], 1e-8). `smlib_brep_mass_properties` calls the
 /// kernel's integration directly because SmApiBrepComputeMassProperties clamps to [1e-4, 1e-1],
 /// which leaves curved faces off by 1e-5 to 1e-3; asking 1e-4 here threw that away.
-const ACCURACY: f64 = solidcraft_smlib::MEASURE_ACCURACY;
+const ACCURACY: f64 = torno_smlib::MEASURE_ACCURACY;
 
 /// Measure a body. A B-rep body's volume, area and centre are SMLib's, integrated on its exact
 /// surfaces over its material regions (a sheet's: its faces' area and their centre, volume 0),
 /// and its box is SMLib's exact box; a body SMLib cannot measure is an error. A mesh body is
 /// measured from its triangles, exactly.
 pub fn measure(b: &Body) -> Result<BodyMeasure> {
-    let _span = solidcraft_profile::span("kernel", "measure");
+    let _span = torno_profile::span("kernel", "measure");
     if let Some((pos, tris)) = b.triangle_mesh() {
         // Exact for a mesh body; topology counts are facets, sides and vertices.
         let m = b.mesh(&crate::MeshTolerance::chord(1.0))?;
@@ -97,7 +97,7 @@ pub fn measure(b: &Body) -> Result<BodyMeasure> {
 /// [`measure`]'s volume, area, centre and box alone (for callers that need no topology counts,
 /// such as an interference check).
 pub fn measure_mass(b: &Body) -> Result<MassMeasure> {
-    let _span = solidcraft_profile::span("kernel", "measure_mass");
+    let _span = torno_profile::span("kernel", "measure_mass");
     if b.triangle_mesh().is_some() {
         let m = measure(b)?;
         return Ok(MassMeasure { volume: m.volume, area: m.area, centroid: m.centroid, bbox: m.bbox, measured_by: m.measured_by, notes: m.notes });
@@ -113,7 +113,7 @@ pub fn measure_mass(b: &Body) -> Result<MassMeasure> {
 mod tests {
     use super::*;
     use crate::{BoolOp, boolean, cylinder, torus};
-    use solidcraft_geom::prelude::*;
+    use torno_geom::prelude::*;
 
     /// The mass properties alone are [`measure`]'s, to the bit; and on a curved intersection
     /// they are the textbook ones.

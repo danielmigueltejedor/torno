@@ -149,7 +149,7 @@
     "blend_dropping"
   ],
   "ungraded": [
-    "continuity: SolidCraft computes it"
+    "continuity: Torno computes it"
   ],
   "what": "a plane continued by a circular round: tangent, with the curvature jumping from 0 to 1/r, G1 and not G2",
   "why_not": []

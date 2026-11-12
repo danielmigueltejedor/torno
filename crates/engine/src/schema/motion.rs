@@ -7,7 +7,7 @@ use serde::de::Error as _;
 use serde::{Deserialize, Deserializer, Serialize};
 use serde_json::{Value, json};
 
-use solidcraft_geom::Vec3Geom as _;
+use torno_geom::Vec3Geom as _;
 
 use super::check::{located, whole};
 
@@ -431,8 +431,8 @@ pub struct ContactSetInfo {
     pub suppressed: bool,
 }
 
-impl From<&solidcraft_doc::motion::ContactSet> for ContactSetInfo {
-    fn from(set: &solidcraft_doc::motion::ContactSet) -> Self {
+impl From<&torno_doc::motion::ContactSet> for ContactSetInfo {
+    fn from(set: &torno_doc::motion::ContactSet) -> Self {
         ContactSetInfo { id: set.id, name: set.name.clone(), occurrences: set.occurrences.clone(), suppressed: set.suppressed }
     }
 }
@@ -927,8 +927,8 @@ pub struct ExplodedViewInfo {
     pub moves: Vec<(u64, [f64; 3])>,
 }
 
-impl From<&solidcraft_doc::motion::ExplodedView> for ExplodedViewInfo {
-    fn from(view: &solidcraft_doc::motion::ExplodedView) -> Self {
+impl From<&torno_doc::motion::ExplodedView> for ExplodedViewInfo {
+    fn from(view: &torno_doc::motion::ExplodedView) -> Self {
         let moves = view.moves.iter().map(|(o, t)| (*o, [t.x, t.y, t.z])).collect();
         ExplodedViewInfo { id: view.id, name: view.name.clone(), moves }
     }

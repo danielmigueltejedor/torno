@@ -12,7 +12,7 @@ import physical as p
 def modern_registry():
     rows = [{'id': name, 'params': ''} for name in ('file.new', 'material.create', 'material.inspect', 'library.export', 'library.inspect')]
     rows[1]['params'] = 'physical_card: schema 1'
-    rows[3]['params'] = 'format solidcraft-library/2'
+    rows[3]['params'] = 'format torno-library/2'
     return rows
 
 

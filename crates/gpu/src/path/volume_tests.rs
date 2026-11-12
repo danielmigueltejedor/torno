@@ -1,6 +1,6 @@
 use super::*;
-use solidcraft_geom::MeshGeom;
-use solidcraft_render::job::{StudioLighting, volume::HomogeneousVolume};
+use torno_geom::MeshGeom;
+use torno_render::job::{StudioLighting, volume::HomogeneousVolume};
 
 fn empty() -> ProductScene {
     ProductScene { meshes: Vec::new(), bounds: Aabb3::EMPTY }
@@ -32,7 +32,7 @@ fn settings(volume: HomogeneousVolume) -> JobOptions {
 }
 fn camera() -> ImageRequest {
     let mut r = request(8);
-    r.camera = solidcraft_viewport::Camera { distance: 4.0, pitch: std::f64::consts::FRAC_PI_2, yaw: 0.0, fov: 0.001, ..Default::default() };
+    r.camera = torno_viewport::Camera { distance: 4.0, pitch: std::f64::consts::FRAC_PI_2, yaw: 0.0, fov: 0.001, ..Default::default() };
     r
 }
 
@@ -149,7 +149,7 @@ fn phase_reference(@builtin(global_invocation_id) gid: vec3<u32>) {
 
 #[test]
 fn gpu_hard_directional_single_scatter_matches_independent_beer_slab_integral() {
-    use solidcraft_render::job::{DirectionalLightOptions, DirectionalLights};
+    use torno_render::job::{DirectionalLightOptions, DirectionalLights};
     let Some(executor) = executor() else { return };
     let medium = slab();
     let source = DirectionalLightOptions { direction: [0.0, 0.0, 1.0], color: [1.0, 0.5, 0.25], intensity: 2.0 };
@@ -189,7 +189,7 @@ struct OpticalLineCase {
     length: f64,
 }
 fn optical_line_fixture(case: OpticalLineCase) -> (ProductScene, ImageRequest, JobOptions) {
-    use solidcraft_render::job::{AreaLight, AreaLights, DirectionalLightOptions, DirectionalLights};
+    use torno_render::job::{AreaLight, AreaLights, DirectionalLightOptions, DirectionalLights};
     let mut image = request(4);
     image.camera.target = Vec3::new(0.0, 0.0, case.target_z);
     image.camera.distance = case.distance;
@@ -206,7 +206,7 @@ fn optical_line_fixture(case: OpticalLineCase) -> (ProductScene, ImageRequest, J
                     .unwrap();
         }
         OpticalLineEndpoint::Surface(z) => {
-            let mesh = solidcraft_geom::Mesh {
+            let mesh = torno_geom::Mesh {
                 positions: vec![
                     Vec3::new(-1000.0, -1000.0, z),
                     Vec3::new(1000.0, -1000.0, z),
@@ -219,7 +219,7 @@ fn optical_line_fixture(case: OpticalLineCase) -> (ProductScene, ImageRequest, J
                 ..Default::default()
             };
             source.bounds = mesh.bounds();
-            source.meshes.push(solidcraft_render::ProductMesh {
+            source.meshes.push(torno_render::ProductMesh {
                 name: "Existing forward-only surface".into(),
                 mesh: Arc::new(mesh),
                 color: [128, 64, 32],
@@ -607,7 +607,7 @@ fn gpu_orthographic_volume_every_preview_raw_and_cancel_are_quantum_safe() {
 
 #[test]
 fn gpu_orthographic_volume_cancel_releases_work_before_exact_retained_metadata() {
-    use solidcraft_render::job::{JobId, Phase};
+    use torno_render::job::{JobId, Phase};
     let Some(executor) = executor() else { return };
     let host = ImageHost::with_executor(Arc::new(executor)).unwrap();
     let case = OpticalLineCase {
@@ -738,7 +738,7 @@ fn volume_orthographic_segment(o: vec3<f32>, d: vec3<f32>, limit: f32) -> vec2<f
             2 => image.camera.fov = 0.4,
             3 => {
                 image.camera.fov = 0.4;
-                options.lens = Some(solidcraft_render::job::ThinLens { aperture_radius_mm: 2.0, focus_distance_mm: 100.0 });
+                options.lens = Some(torno_render::job::ThinLens { aperture_radius_mm: 2.0, focus_distance_mm: 100.0 });
             }
             4 => {
                 let volume = options.volume.as_mut().unwrap();
@@ -758,7 +758,7 @@ fn volume_orthographic_segment(o: vec3<f32>, d: vec3<f32>, limit: f32) -> vec2<f
             }
             7 => {
                 image.camera.fov = 0.4;
-                options.lens = Some(solidcraft_render::job::ThinLens { aperture_radius_mm: 2.0, focus_distance_mm: 100.0 });
+                options.lens = Some(torno_render::job::ThinLens { aperture_radius_mm: 2.0, focus_distance_mm: 100.0 });
                 let volume = options.volume.as_mut().unwrap();
                 volume.min_mm[2] = 0.0;
                 volume.max_mm[2] = 200.0;

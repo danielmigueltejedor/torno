@@ -1,8 +1,8 @@
 use crate::Session;
 use serde_json::{Value, json};
 #[cfg(all(feature = "raytrace-cpu", not(target_arch = "wasm32")))]
-use solidcraft_render::job::RaytraceOptions;
-use solidcraft_render::job::{CpuHost, DirectionalLightOptions, PunctualLightOptions, RectangleLightOptions};
+use torno_render::job::RaytraceOptions;
+use torno_render::job::{CpuHost, DirectionalLightOptions, PunctualLightOptions, RectangleLightOptions};
 
 fn params() -> Value {
     let area = RectangleLightOptions {
@@ -43,9 +43,7 @@ fn normalized_twenty_source_preflight_has_one_metadata_authority_and_no_reservat
         reply["retained_request_bytes"],
         json!(
             options.retained_bytes().unwrap()
-                + serde_json::from_value::<solidcraft_render::job::ImageRequest>(reply["request"].clone())
-                    .unwrap()
-                    .retained_resource_metadata_bytes()
+                + serde_json::from_value::<torno_render::job::ImageRequest>(reply["request"].clone()).unwrap().retained_resource_metadata_bytes()
         )
     );
     assert_eq!(host.admitted_bytes(), 0);
@@ -138,7 +136,7 @@ fn cpu_sun_add_remove_returns_actual_canonical_addresses_and_preserves_other_sou
     let mut filtered = s.doc.render.setups["CPU rig"].clone();
     let visibility: crate::schema::render_lights::Visibility = serde_json::from_value(json!({"muted":["directional:0"]})).unwrap();
     crate::render_lights::filter(&mut filtered, &visibility).unwrap();
-    let Some(solidcraft_doc::render_settings::RenderJob::CpuRaytrace { options, .. }) = filtered.job else { panic!("CPU expected") };
+    let Some(torno_doc::render_settings::RenderJob::CpuRaytrace { options, .. }) = filtered.job else { panic!("CPU expected") };
     assert_eq!(options.sun.unwrap().radiance, [0.0; 3]);
     assert_eq!(options.lights.as_ref().unwrap()[0].intensity, 2.0);
     s.execute("render.lights.remove", &json!({"name":"CPU rig","id":"directional:0"})).unwrap();

@@ -3,8 +3,8 @@
 use std::collections::HashMap;
 
 use serde_json::{Value, json};
-use solidcraft_engine::Session;
-use solidcraft_io::{Format, export, read_3mf, read_stl};
+use torno_engine::Session;
+use torno_io::{Format, export, read_3mf, read_stl};
 
 fn run(s: &mut Session, script: Value) {
     for c in script.as_array().into_iter().flatten() {

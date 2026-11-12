@@ -5,8 +5,8 @@
 
 use solidcore_record::brep::{Brep, Curve, Frame, Surface};
 use solidcore_record::{Loop2, Plane, Region2, Seg2, Vec3};
-use solidcraft_geom::Ring;
-use solidcraft_geom::prelude::*;
+use torno_geom::Ring;
+use torno_geom::prelude::*;
 
 use crate::assemble::{AFace, AUse, Assembly};
 use crate::body::Body;

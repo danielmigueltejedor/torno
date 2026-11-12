@@ -36,7 +36,7 @@ pub fn run(app: &mut SolveApp, dashed: bool, tolerance: f64) -> Result<(), Strin
     if crate::viewport::section_plane(app).is_some() {
         return Err(app.tr_label("Turn off section analysis before exporting the view.").into());
     }
-    if !solidcraft_engine::cmd::view_dxf_exportable(&app.session) {
+    if !torno_engine::cmd::view_dxf_exportable(&app.session) {
         return Err(app.tr_label("No visible bodies or sketches to export.").into());
     }
     if !tolerance.is_finite() || !(0.0001..=1.0).contains(&tolerance) {
@@ -65,13 +65,13 @@ pub(crate) fn progress_text(work: Option<(&str, usize, usize)>) -> String {
         "dxf_write" => "dxf.progress.write",
         _ => "dxf.progress.meshes",
     };
-    format!("{}: {done}/{total}", solidcraft_ui_text::tr_label(label))
+    format!("{}: {done}/{total}", torno_ui_text::tr_label(label))
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use solidcraft_viewport::StandardView;
+    use torno_viewport::StandardView;
 
     #[test]
     fn view_dxf_file_menu_exports_with_the_current_camera_and_remembers_hidden_choice() {

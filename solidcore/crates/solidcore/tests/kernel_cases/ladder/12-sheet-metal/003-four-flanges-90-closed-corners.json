@@ -65,6 +65,6 @@
   "ungraded": [],
   "what": "20 mm 90 deg flanges on all four edges, made together: the corners close with the rule's gap, notch relief",
   "why_not": [
-    "body \"Body1\" is no kernel operation's output nor an operand: SolidCraft built it or changed the kernel's record"
+    "body \"Body1\" is no kernel operation's output nor an operand: Torno built it or changed the kernel's record"
   ]
 }

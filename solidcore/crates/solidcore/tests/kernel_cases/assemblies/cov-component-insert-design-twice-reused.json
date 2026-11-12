@@ -60,7 +60,7 @@
   "ungraded": [],
   "what": "the hand-written design inserted twice, the second reusing the first's link",
   "why_not": [
-    "body \"Plate\" is no kernel operation's output nor an operand: SolidCraft built it or changed the kernel's record",
-    "body \"Plate (plate:2)\" is no kernel operation's output nor an operand: SolidCraft built it or changed the kernel's record"
+    "body \"Plate\" is no kernel operation's output nor an operand: Torno built it or changed the kernel's record",
+    "body \"Plate (plate:2)\" is no kernel operation's output nor an operand: Torno built it or changed the kernel's record"
   ]
 }

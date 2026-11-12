@@ -1,4 +1,4 @@
-//! The SolidCraft fork's capi cases `sharp_wedge_g2_equal_area` (`ops_kernel.cpp`,
+//! The Torno fork's capi cases `sharp_wedge_g2_equal_area` (`ops_kernel.cpp`,
 //! tangency-labs/smlib@b9d6a72) and `twisted_wedge_g2_equal_area` (04e49b9, regraded by
 //! f2fb13e and 79db628; as at v1.1.0-alpha), smlib#79, tangency-labs/solidcore#2273: the
 //! order-2 section's equal area thumbweight, resolved at every station from its own wedge
@@ -73,8 +73,8 @@ use solidcore::topology::face::p2 as face;
 use solidcore::topology::{EdgeId, FaceId};
 use solidcore::{Brep, Kernel};
 
-/// The kernel SolidCraft runs: every fix on but `geometric_g2_continuity`.
-fn solidcraft_kernel() -> Kernel {
+/// The kernel Torno runs: every fix on but `geometric_g2_continuity`.
+fn torno_kernel() -> Kernel {
     let mut k = Kernel::new(&KernelOptions::default());
     let mut f = UpstreamFixes::default();
     for &name in UpstreamFixes::NAMES {
@@ -147,14 +147,11 @@ fn sharp_wedge(k: &mut Kernel) -> (f64, bool) {
 
 /// The fork's `sharp_wedge_g2_equal_area`: the round takes off 10 times the circle's
 /// area at a 60 degree wedge, 9 (sqrt 3 - pi/3) per mm, to 1e-6, and checks clean; on the
-/// G^n section's own flags and with SolidCraft's fixes.
+/// G^n section's own flags and with Torno's fixes.
 #[test]
 fn the_sharp_wedge_takes_off_the_circle_s_area() {
     let want = 10.0 * 9.0 * (3f64.sqrt() - PI / 3.0);
-    for (name, mut k) in [
-        ("gn", Kernel::default()),
-        ("solidcraft", solidcraft_kernel()),
-    ] {
+    for (name, mut k) in [("gn", Kernel::default()), ("torno", torno_kernel())] {
         let (removed, sound) = sharp_wedge(&mut k);
         println!("{name}: sharp wedge: removed {removed:.9}, want {want:.9}");
         assert!(
@@ -580,7 +577,7 @@ fn graded_twisted_wedge(name: &str, k: &mut Kernel) -> Graded {
     g
 }
 
-/// The fork's `twisted_wedge_g2_equal_area` at v1.1.0-alpha, with SolidCraft's fixes: the
+/// The fork's `twisted_wedge_g2_equal_area` at v1.1.0-alpha, with Torno's fixes: the
 /// blend is one definition, its net within the certified bound, in 274 spans; at each plane
 /// station its section lies in its plane to 1e-9 and takes off the circle's area to 1e-6;
 /// its seams with the front and the top are G2 at every station and nowhere past G3; and the
@@ -588,7 +585,7 @@ fn graded_twisted_wedge(name: &str, k: &mut Kernel) -> Graded {
 #[test]
 #[ignore = "slow: about 3.5 min in the difftest profile, a 274-span certificate"]
 fn the_twisted_wedge_takes_off_the_circle_s_area_at_every_plane_station() {
-    let g = graded_twisted_wedge("solidcraft", &mut solidcraft_kernel());
+    let g = graded_twisted_wedge("torno", &mut torno_kernel());
     assert!(g.sound, "{g:?}");
     assert_eq!(g.faces.len(), 1, "{g:?}");
     let (definition, gap, bound, spans) = g.faces[0];

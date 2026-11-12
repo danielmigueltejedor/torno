@@ -77,11 +77,11 @@
     "extrude"
   ],
   "ungraded": [
-    "results: SolidCraft computes it"
+    "results: Torno computes it"
   ],
   "what": "an automatic exploded view of scale 2",
   "why_not": [
-    "body \"BaseBox\" is no kernel operation's output nor an operand: SolidCraft built it or changed the kernel's record",
-    "body \"ArmBox\" is no kernel operation's output nor an operand: SolidCraft built it or changed the kernel's record"
+    "body \"BaseBox\" is no kernel operation's output nor an operand: Torno built it or changed the kernel's record",
+    "body \"ArmBox\" is no kernel operation's output nor an operand: Torno built it or changed the kernel's record"
   ]
 }

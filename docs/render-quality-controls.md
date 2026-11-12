@@ -138,7 +138,7 @@ the physical allowance left in this epoch. Preferences → Graphics → **Use
 previous render memory checks** (`render_legacy_memory_admission`, default false) restores
 software-pool admission when selected. The machine preference applies to future
 CPU and GPU checks and reservations; it does not change held leases or saved
-image quality. The CLI equivalent is `solidcraft-cli render
+image quality. The CLI equivalent is `torno-cli render
 --legacy-memory-admission`. Embedders can select
 `ImageHost::set_native_memory_policy(NativeMemoryPolicy::SoftwarePoolOnly)`;
 the default is `AvailableRam`.

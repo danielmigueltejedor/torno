@@ -1,7 +1,7 @@
 //! tangency-labs/solidcore#1818 under `Kernel::fixes.offset_extended_edges_mated` (WR-344):
 //! a ruled loft from a 40 x 40 square at z = 0 to a circle r 15 at z = 60 (four curves a
 //! section, `create_skin_primitive`), shelled 1 inward open at its top with extended convex
-//! edges, merged results and the offset solid made (as SolidCraft's `smlib_shell` calls
+//! edges, merged results and the offset solid made (as Torno's `smlib_shell` calls
 //! `SmApiShellBrepFull`).
 //!
 //! Pinned upstream refuses the shell: the merge fails with `SM_ERR` (1001) in
@@ -199,12 +199,12 @@ fn mated_offsets_alone_shell_the_square_to_circle_loft() {
     );
 }
 
-/// SolidCraft's fixes (`issue_1476_swept_bar_shell.rs`, which include the flag and WR-454's
+/// Torno's fixes (`issue_1476_swept_bar_shell.rs`, which include the flag and WR-454's
 /// `shell_empty_cavity_fails`): the same sound body, with loop-gap closure unconditional.
 #[test]
-fn solidcraft_fixes_shell_the_square_to_circle_loft() {
-    let (mut k, result) = shell(&solidcraft_fixes(), true);
-    assert_sound(&mut k, result.result.unwrap(), "SolidCraft fixes");
+fn torno_fixes_shell_the_square_to_circle_loft() {
+    let (mut k, result) = shell(&torno_fixes(), true);
+    assert_sound(&mut k, result.result.unwrap(), "Torno fixes");
 }
 
 /// The control: the circle-to-circle loft (a cone frustum, here a cylinder r 15) shells
@@ -299,8 +299,8 @@ fn write_issue_1818_operand() {
     );
 }
 
-/// SolidCraft's `core::fixes()` as `issue_1476_swept_bar_shell.rs` lists them.
-fn solidcraft_fixes() -> UpstreamFixes {
+/// Torno's `core::fixes()` as `issue_1476_swept_bar_shell.rs` lists them.
+fn torno_fixes() -> UpstreamFixes {
     let mut f = UpstreamFixes::default();
     f.fillet_retry_radius_as_first = true;
     f.fillet_rail_rim_on_face = true;

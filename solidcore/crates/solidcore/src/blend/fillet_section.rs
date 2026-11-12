@@ -2,7 +2,7 @@
 //! (contact of order n with the faces along the rolling ball's contact lines, the rails)
 //! and thumbweight w between the rails.
 //!
-//! Not in the pinned upstream: the SolidCraft fork's `source/SMLib/src/SmFilletSection.cpp`
+//! Not in the pinned upstream: the Torno fork's `source/SMLib/src/SmFilletSection.cpp`
 //! (`SmGnSectionFSG`, tangency-labs/smlib@11ea2d9 = 0bd3f4d in the history of d01d7b0, which replaces the fork's
 //! `SmBlendCurveCrossSectionFSG`). Here the old blend-curve section stays the default; the
 //! G^n section is being ported in slices for an opt-in `UpstreamFixes` flag (#2250).

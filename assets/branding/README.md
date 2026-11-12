@@ -1,7 +1,7 @@
-# SolidCraft brand kit
+# Torno brand kit
 
 Logo files for stickers, shirts, the web and social posts. Everything in `logo/` is drawn
-from the app icon (`assets/icons/app/macos/source/SolidCraft.icon/Assets/03-solid-blue-cutout.svg`),
+from the app icon (`assets/icons/app/macos/source/Torno.icon/Assets/03-solid-blue-cutout.svg`),
 which is also the last frame of the loading animation (`assets/styles/web/loading-logo.svg`).
 The SVGs are plain paths: no scripts, fonts, animation or external links, so any printer can use them.
 
@@ -9,12 +9,12 @@ The SVGs are plain paths: no scripts, fonts, animation or external links, so any
 
 | File | Use it for |
 |---|---|
-| `logo/solidcraft-mark.svg` | The mark in full colour. First choice for stickers, print and the web. |
-| `logo/solidcraft-mark-mono-black.svg` | One-colour print on light material: screen-printed shirts, stamps, engraving, vinyl. |
-| `logo/solidcraft-mark-mono-white.svg` | One-colour print on dark material, such as a white print on a dark shirt. |
-| `logo/solidcraft-mark-512.png`, `-1024.png`, `-2048.png` | Transparent square PNGs for places that don't take SVG: avatars, social posts, slides, print shops that ask for a bitmap (send the 2048). |
-| `logo/solidcraft-wordmark.svg` | The name on its own, outlined to paths. |
-| `logo/solidcraft-lockup-horizontal.svg` | Mark and name side by side: headers, banners, shirt fronts, wide stickers. |
+| `logo/torno-mark.svg` | The mark in full colour. First choice for stickers, print and the web. |
+| `logo/torno-mark-mono-black.svg` | One-colour print on light material: screen-printed shirts, stamps, engraving, vinyl. |
+| `logo/torno-mark-mono-white.svg` | One-colour print on dark material, such as a white print on a dark shirt. |
+| `logo/torno-mark-512.png`, `-1024.png`, `-2048.png` | Transparent square PNGs for places that don't take SVG: avatars, social posts, slides, print shops that ask for a bitmap (send the 2048). |
+| `logo/torno-wordmark.svg` | The name on its own, outlined to paths. |
+| `logo/torno-lockup-horizontal.svg` | Mark and name side by side: headers, banners, shirt fronts, wide stickers. |
 | `web/source/og.png` | The existing link preview card for the docs site. |
 
 The gaps between the faces are part of the logo. In the colour and one-colour files they are
@@ -63,17 +63,17 @@ If a printer can't do gradients, use the one-colour files, or fill every face wi
 
 ## Name and logo
 
-The SolidCraft code and these files are licensed MIT OR Apache-2.0 (see the [README](../../README.md#licence)),
-so you may copy and change them. The name SolidCraft and this logo identify the SolidCraft
+The Torno code and these files are licensed MIT OR Apache-2.0 (see the [README](../../README.md#licence)),
+so you may copy and change them. The name Torno and this logo identify the Torno
 project. Use them to refer to the project, for example in an article, a talk, or a sticker for a
 meetup. If you publish a fork or a modified build, give it its own name and logo so people
-don't mistake it for SolidCraft.
+don't mistake it for Torno.
 
 The wordmark is set in IBM Plex Sans Bold (SIL Open Font License 1.1, the interface font in
 `crates/look/fonts/ibm-plex-sans/`) and outlined, so you don't need the font to print it.
 
 ## Licence
 
-The SolidCraft name, logo and brand kit are under the SolidCraft Brand and Interface Licence
-([LICENSE-BRAND](../../LICENSE-BRAND)). Using them for anything other than SolidCraft needs the
+The Torno name, logo and brand kit are under the Torno Brand and Interface Licence
+([LICENSE-BRAND](../../LICENSE-BRAND)). Using them for anything other than Torno needs the
 maintainers' written permission first.

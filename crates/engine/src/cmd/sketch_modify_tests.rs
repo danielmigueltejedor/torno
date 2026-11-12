@@ -1,7 +1,7 @@
 use serde_json::{Value, json};
 use solidcore_record::Vec2;
-use solidcraft_geom::prelude::*;
-use solidcraft_sketch::{ConstraintKind, CurveKind, LinkSource};
+use torno_geom::prelude::*;
+use torno_sketch::{ConstraintKind, CurveKind, LinkSource};
 
 use crate::Session;
 
@@ -19,7 +19,7 @@ fn ids(v: &Value) -> Vec<String> {
     v.as_array().map(|a| a.iter().filter_map(|x| x.as_str().map(str::to_string)).collect()).unwrap_or_default()
 }
 
-fn sketch(s: &Session) -> solidcraft_sketch::Sketch {
+fn sketch(s: &Session) -> torno_sketch::Sketch {
     let id = s.active_sketch.unwrap();
     s.model.state().sketch(id).unwrap().sketch.clone()
 }
@@ -41,7 +41,7 @@ fn close(a: f64, b: f64) -> bool {
     (a - b).abs() < 1e-6
 }
 
-fn assert_closed_offset(sk: &solidcraft_sketch::Sketch, curves: &[String]) {
+fn assert_closed_offset(sk: &torno_sketch::Sketch, curves: &[String]) {
     assert!(!curves.is_empty(), "an offset boundary must contain curves");
     let ends: Vec<_> = curves.iter().map(|id| sk.curves[sk.curve_index(id).unwrap()].kind.ends().unwrap()).collect();
     let mut adjacency = std::collections::BTreeMap::<usize, Vec<usize>>::new();
@@ -68,7 +68,7 @@ fn assert_closed_offset(sk: &solidcraft_sketch::Sketch, curves: &[String]) {
 #[test]
 #[should_panic(expected = "all offset curves must belong to one connected loop")]
 fn closed_offset_assertion_rejects_disconnected_loops() {
-    let mut sk = solidcraft_sketch::Sketch::new();
+    let mut sk = torno_sketch::Sketch::new();
     let mut curves = Vec::new();
     for x in [0.0, 20.0] {
         let a = sk.add_point(Vec2::new(x, 0.0), None).unwrap();
@@ -84,7 +84,7 @@ fn closed_offset_assertion_rejects_disconnected_loops() {
 
 #[test]
 fn offset_chain_resolves_transitive_coincidence_and_stops_at_branches() {
-    let mut sk = solidcraft_sketch::Sketch::new();
+    let mut sk = torno_sketch::Sketch::new();
     for xy in [[0., 0.], [10., 0.], [10., 0.], [20., 0.], [10., 0.], [10., 10.], [10., 0.]] {
         sk.add_point(Vec2::new(xy[0], xy[1]), None).unwrap();
     }
@@ -127,7 +127,7 @@ fn explicit_freeform_break_preserves_exact_geometry_and_undo() {
             }
         }
         let encoded = serde_json::to_value(&after).unwrap();
-        let restored: solidcraft_sketch::Sketch = serde_json::from_value(encoded).unwrap();
+        let restored: torno_sketch::Sketch = serde_json::from_value(encoded).unwrap();
         assert_eq!(restored.curves.len(), after.curves.len());
         run(&mut s, "edit.undo", json!({}));
         assert!(sketch(&s).curve_index(&id).is_some());
@@ -261,7 +261,7 @@ fn analytic_trim_and_break_use_freeform_cutters() {
     let sk = sketch(&s);
     for id in ids(&out["curves"]) {
         let shape = sk.shape(sk.curve_index(&id).unwrap()).unwrap();
-        assert!(matches!(shape, solidcraft_sketch::Shape::Line { a, b } if (a.y - 5.0).abs() < 1e-6 && (b.y - 5.0).abs() < 1e-6));
+        assert!(matches!(shape, torno_sketch::Shape::Line { a, b } if (a.y - 5.0).abs() < 1e-6 && (b.y - 5.0).abs() < 1e-6));
     }
 
     let mut s = new_sketch();
@@ -449,10 +449,7 @@ fn trim_extend_break() {
     run(&mut s, "sketch.trim", json!({"curve": h, "at": [15, 0]}));
     let sk = sketch(&s);
     let sh = sk.shape(sk.curve_index(&h).unwrap()).unwrap();
-    assert!(
-        matches!(sh, solidcraft_sketch::Shape::Line { a, b } if a.dist(Vec2::new(0.0, 0.0)) < 1e-9 && b.dist(Vec2::new(10.0, 0.0)) < 1e-9),
-        "{sh:?}"
-    );
+    assert!(matches!(sh, torno_sketch::Shape::Line { a, b } if a.dist(Vec2::new(0.0, 0.0)) < 1e-9 && b.dist(Vec2::new(10.0, 0.0)) < 1e-9), "{sh:?}");
     // Trim the lower half of the vertical line: the original id survives on the upper piece.
     run(&mut s, "sketch.trim", json!({"curve": v, "at": [10, -3]}));
     let sk = sketch(&s);
@@ -621,7 +618,7 @@ fn trimming_the_start_half_of_a_center_rectangle_diagonal_keeps_its_parallel_dis
     let line = ids(&run(&mut s, "sketch.line", json!({"points": [[-6, -12.5], [12, -3.5]], "connect": false, "infer": false}))["curves"])[0].clone();
     run(&mut s, "sketch.constraint.parallel", json!({"a": diagonal, "b": line}));
     run(&mut s, "sketch.dimension", json!({"entities": [diagonal, line]}));
-    let value = |sk: &solidcraft_sketch::Sketch| {
+    let value = |sk: &torno_sketch::Sketch| {
         sk.constraints.iter().find_map(|c| match c.kind {
             ConstraintKind::PointLineDistance { p, value, .. } => Some((sk.point(p).unwrap(), value)),
             _ => None,
@@ -799,7 +796,7 @@ fn exact_extend_ellipse_preserves_support_target_and_history() {
         assert!(end.dist(Vec2::new(expected_x, y)) < 1e-7, "exact ellipse contact {end:?}");
         assert_eq!(sk.exact_segs(0).unwrap(), target);
         let persisted = s.doc.to_json();
-        let reopened = solidcraft_doc::format::read(&persisted).unwrap();
+        let reopened = torno_doc::format::read(&persisted).unwrap();
         assert_eq!(reopened.to_json(), persisted);
         run(&mut s, "edit.undo", json!({}));
         assert_eq!(s.doc.to_json(), before);
@@ -822,11 +819,11 @@ fn exact_extend_arc_closes_round_a_cutter_inside_its_own_sweep() {
     let sk = sketch(&s);
     let ci = sk.curve_index(&arc).expect("the arc");
     // Nothing stops the extension, so the arc keeps its quarter...
-    assert!(matches!(sk.shape(ci), Some(solidcraft_sketch::Shape::Round { sweep, .. }) if (sweep - std::f64::consts::FRAC_PI_2).abs() < 1e-9));
+    assert!(matches!(sk.shape(ci), Some(torno_sketch::Shape::Round { sweep, .. }) if (sweep - std::f64::consts::FRAC_PI_2).abs() < 1e-9));
     // ...and a new arc runs from its far end back round to close the circle.
     assert_eq!(sk.curves.len(), before.curves.len() + 1);
     let sh = sk.shape(sk.curves.len() - 1).expect("the closing arc");
-    assert!(matches!(sh, solidcraft_sketch::Shape::Round { sweep, .. } if (sweep - 3.0 * std::f64::consts::FRAC_PI_2).abs() < 1e-9), "{sh:?}");
+    assert!(matches!(sh, torno_sketch::Shape::Round { sweep, .. } if (sweep - 3.0 * std::f64::consts::FRAC_PI_2).abs() < 1e-9), "{sh:?}");
     assert!(sh.dist(Vec2::new(10.0, 0.0)) < 1e-6 && sh.dist(Vec2::new(0.0, 10.0)) < 1e-6, "{sh:?}");
 }
 
@@ -867,8 +864,8 @@ fn arc_extend_grows_a_free_end_in_place_to_the_first_geometry() {
     cut(&mut s, 200.0);
     cut(&mut s, 260.0);
     let before = sketch(&s);
-    let round = |sk: &solidcraft_sketch::Sketch, ci: usize| match sk.shape(ci) {
-        Some(solidcraft_sketch::Shape::Round { start, sweep, .. }) => (start.to_degrees(), sweep.to_degrees()),
+    let round = |sk: &torno_sketch::Sketch, ci: usize| match sk.shape(ci) {
+        Some(torno_sketch::Shape::Round { start, sweep, .. }) => (start.to_degrees(), sweep.to_degrees()),
         other => panic!("{other:?}"),
     };
     // A free end grows in place: the arc itself reaches the 200° stop, so the sketch gains no
@@ -912,7 +909,7 @@ fn arc_extend_joins_an_end_that_already_carries_geometry_with_a_new_arc() {
     let sk = sketch(&s);
     let ci = sk.curve_index(&arc).unwrap();
     // The end the line starts at stays where it is, so the arc keeps its geometry...
-    assert!(matches!(sk.shape(ci).unwrap(), solidcraft_sketch::Shape::Round { sweep, .. } if (sweep - std::f64::consts::FRAC_PI_2).abs() < 1e-9));
+    assert!(matches!(sk.shape(ci).unwrap(), torno_sketch::Shape::Round { sweep, .. } if (sweep - std::f64::consts::FRAC_PI_2).abs() < 1e-9));
     // ...and the extension is a new arc from that end to the circle's crossing.
     let grown = (0..sk.curves.len())
         .find(|i| sk.curves[*i].id != arc && sk.curves[*i].id != line && matches!(sk.curves[*i].kind, CurveKind::Arc { .. }))
@@ -933,11 +930,11 @@ fn arc_extend_closes_the_gap_onto_the_arcs_own_far_end() {
     run(&mut s, "sketch.extend", json!({"curve": arc, "at": [10, 0]}));
     let sk = sketch(&s);
     let ci = sk.curve_index(&arc).unwrap();
-    assert!(matches!(sk.shape(ci).unwrap(), solidcraft_sketch::Shape::Round { sweep, .. } if (sweep - std::f64::consts::FRAC_PI_2).abs() < 1e-9));
+    assert!(matches!(sk.shape(ci).unwrap(), torno_sketch::Shape::Round { sweep, .. } if (sweep - std::f64::consts::FRAC_PI_2).abs() < 1e-9));
     let closed = (0..sk.curves.len()).find(|i| *i != ci && matches!(sk.curves[*i].kind, CurveKind::Arc { .. })).expect("a new arc");
     let sh = sk.shape(closed).unwrap();
     assert!(sh.dist(Vec2::new(0.0, 10.0)) < 1e-6 && sh.dist(Vec2::new(10.0, 0.0)) < 1e-6, "{sh:?}");
-    assert!(matches!(sh, solidcraft_sketch::Shape::Round { sweep, .. } if (sweep - 3.0 * std::f64::consts::FRAC_PI_2).abs() < 1e-9), "{sh:?}");
+    assert!(matches!(sh, torno_sketch::Shape::Round { sweep, .. } if (sweep - 3.0 * std::f64::consts::FRAC_PI_2).abs() < 1e-9), "{sh:?}");
     // The new arc joins the arc's far end instead of laying a second point over it.
     assert_eq!(sk.points.len(), before.points.len());
 }
@@ -960,7 +957,7 @@ fn arc_extend_stops_on_another_circle_or_arc() {
     assert!(sh.dist(Vec2::new(6.0, -8.0)) < 1e-6 && sh.dist(Vec2::new(0.0, 10.0)) < 1e-6, "{sh:?}");
     // The arc keeps its quarter and grows by the 216.9° it travelled to the crossing.
     let grown = std::f64::consts::FRAC_PI_2 + 216.869_897_f64.to_radians();
-    assert!(matches!(sh, solidcraft_sketch::Shape::Round { sweep, .. } if (sweep - grown).abs() < 1e-6), "{sh:?}");
+    assert!(matches!(sh, torno_sketch::Shape::Round { sweep, .. } if (sweep - grown).abs() < 1e-6), "{sh:?}");
 
     // The same stop when another arc ends exactly on the crossing: the growing end is free, so the
     // arc itself grows onto that point instead of laying a second point over it.
@@ -1585,7 +1582,7 @@ fn transform_turns_and_scales_a_dimensioned_rectangle() {
         }
         for (dimension, expected) in [(&width, 100.0), (&height, 50.0)] {
             let name = dimension["param"].as_str().unwrap();
-            assert!(close(s.doc.eval(name, solidcraft_doc::expr::Kind::Length).unwrap(), expected));
+            assert!(close(s.doc.eval(name, torno_doc::expr::Kind::Length).unwrap(), expected));
         }
         assert!(close(profiles(&s)[0], 5000.0));
         run(&mut s, "edit.undo", json!({}));
@@ -1610,7 +1607,7 @@ fn transform_scales_dimension_formulas_once_and_keeps_unselected_dimensions() {
     let radius = run(&mut s, "sketch.dimension", json!({"entities": [circle["curves"][0]], "type": "radius", "value": "5 mm"}));
     let outside = s.doc.param(radius["param"].as_str().unwrap()).unwrap().clone();
     run(&mut s, "sketch.transform", json!({"entities": curves, "factor": 2, "angle": 90, "center": [35, 22.5]}));
-    let length = solidcraft_doc::expr::Kind::Length;
+    let length = torno_doc::expr::Kind::Length;
     assert!(close(s.doc.eval("width", length).unwrap(), 50.0), "the user parameter stays unchanged");
     assert!(close(s.doc.eval(width_param, length).unwrap(), 100.0));
     assert!(close(s.doc.eval(height["param"].as_str().unwrap(), length).unwrap(), 50.0));
@@ -1671,7 +1668,7 @@ fn three_point_arc_keeps_referenced_through_points_when_dimensions_change() {
 
             let sid = s.active_sketch.unwrap();
             // Saving and reopening preserves the ordinary point-on-curve constraint too.
-            let reopened = Session::new(solidcraft_doc::Document::from_json(&s.doc.to_json()).unwrap());
+            let reopened = Session::new(torno_doc::Document::from_json(&s.doc.to_json()).unwrap());
             for session in [&s, &reopened] {
                 let state = session.model.state();
                 let ss = state.sketch(sid).unwrap();
@@ -1745,7 +1742,7 @@ fn midpoint_line_keeps_curve_and_midpoint_snaps() {
         assert_eq!(s.doc.to_json(), before);
         run(&mut s, "edit.redo", json!({}));
         check(&s);
-        let mut reopened = Session::new(solidcraft_doc::Document::from_json(&after).unwrap());
+        let mut reopened = Session::new(torno_doc::Document::from_json(&after).unwrap());
         reopened.active_sketch = s.active_sketch;
         check(&reopened);
     }
@@ -1825,7 +1822,7 @@ fn two_tangent_circle_from_a_click_on_a_curve_leaves_the_curves_as_drawn() {
             .iter()
             .find(|c| {
                 let i = sk.curve_index(c).unwrap();
-                matches!(sk.shape(i), Some(solidcraft_sketch::Shape::Line { a, b }) if on(a) && on(b))
+                matches!(sk.shape(i), Some(torno_sketch::Shape::Line { a, b }) if on(a) && on(b))
             })
             .unwrap()
             .clone()
@@ -1874,7 +1871,7 @@ fn centre_circle_through_a_point_keeps_it_on_the_circle() {
     run(&mut s, "sketch.dimension", json!({"entities": [l], "value": 60}));
     let sk = sketch(&s);
     let line = sk.shape(li).unwrap();
-    let solidcraft_sketch::Shape::Line { a, b } = line else { panic!("{line:?}") };
+    let torno_sketch::Shape::Line { a, b } = line else { panic!("{line:?}") };
     assert!(close(a.dist(b), 60.0));
     assert!(close(sk.radius(ci).unwrap(), 30.0), "the circle followed the line's end: {:?}", sk.radius(ci));
     // Through a plain position: nothing to keep it on.
@@ -1896,8 +1893,7 @@ fn three_point_circle_keeps_snapped_points() {
     assert_eq!(ids(&r["constraints"]).len(), 3, "{r}");
     let sk = sketch(&s);
     let ci = sk.curve_index(&c).unwrap();
-    let on_circle =
-        |sk: &solidcraft_sketch::Sketch, p: usize, c: usize| sk.constraints.iter().any(|k| k.kind == ConstraintKind::PointOnCurve { p, c });
+    let on_circle = |sk: &torno_sketch::Sketch, p: usize, c: usize| sk.constraints.iter().any(|k| k.kind == ConstraintKind::PointOnCurve { p, c });
     let (start, tip) = (sk.resolve_point(&format!("{l}.start")).unwrap(), sk.resolve_point(&format!("{v}.end")).unwrap());
     // The midpoint snap holds its point at the line's midpoint, and the circle keeps it too.
     let mid = sk
@@ -2053,7 +2049,7 @@ fn a_point_removed_from_a_spline_goes_with_its_dimension_and_undoes() {
     let names: Vec<String> = sk.curves[si].kind.point_ids().iter().map(|i| sk.points[*i].id.clone()).collect();
     run(&mut s, "sketch.dimension", json!({"entities": [names[1], names[2]], "value": 12.8}));
     let before = sketch(&s);
-    let at = |sk: &solidcraft_sketch::Sketch, id: &str| sk.point(sk.point_index(id).unwrap()).unwrap();
+    let at = |sk: &torno_sketch::Sketch, id: &str| sk.point(sk.point_index(id).unwrap()).unwrap();
 
     let r = run(&mut s, "sketch.spline.remove_point", json!({"curve": sid, "point": names[1]}));
     assert_eq!((r["curve"].as_str(), r["point"].as_str(), r["deleted"].as_bool()), (Some(sid.as_str()), Some(names[1].as_str()), Some(true)), "{r}");
@@ -2274,9 +2270,9 @@ fn text_takes_a_font_and_edit_text_keeps_or_changes_it() {
     near(&s, 4.0 * 13.5557);
     run(&mut s, "sketch.edit_text", json!({"link": link, "font": font}));
     // The font is kept in the design: after saving and reopening, the text is still in it.
-    let reopened = Session::new(solidcraft_doc::Document::from_json(&s.doc.to_json()).unwrap());
+    let reopened = Session::new(torno_doc::Document::from_json(&s.doc.to_json()).unwrap());
     let source = reopened.doc.sketch(s.active_sketch.unwrap()).unwrap().link(&link).unwrap().source.clone();
-    assert!(matches!(&source, solidcraft_sketch::LinkSource::Text { font: Some(f), .. } if f == font), "{source:?}");
+    assert!(matches!(&source, torno_sketch::LinkSource::Text { font: Some(f), .. } if f == font), "{source:?}");
     // A new text takes the font too. Unknown fonts and values that are not names are errors.
     let mut s = new_sketch();
     run(&mut s, "sketch.text", json!({"text": "I", "at": [0, 0], "height": 10, "font": font}));
@@ -2819,7 +2815,7 @@ fn irregular_closed_spline_offset_certificate_edits_undoes_and_reopens() {
                 max_error = max_error.max((normal_distance - distance).abs());
             }
         }
-        assert!(max_error < solidcraft_sketch::OFFSET_TOLERANCE, "normal-distance error {max_error}");
+        assert!(max_error < torno_sketch::OFFSET_TOLERANCE, "normal-distance error {max_error}");
         eprintln!("#971 offset {distance} mm: maximum sampled normal-distance error {max_error} mm");
         assert_eq!(sk.freeform_offsets.len(), 1);
         assert_eq!(sk.freeform_offsets[0].divisions, 32);
@@ -2836,7 +2832,7 @@ fn irregular_closed_spline_offset_certificate_edits_undoes_and_reopens() {
     verify(&s, 3.0);
     run(&mut s, "edit.undo", json!({}));
     verify(&s, 2.0);
-    let mut reopened = Session::new(solidcraft_doc::Document::from_json(&s.doc.to_json()).unwrap());
+    let mut reopened = Session::new(torno_doc::Document::from_json(&s.doc.to_json()).unwrap());
     verify(&reopened, 2.0);
     run(&mut reopened, "parameters.change", json!({"name":parameter,"expression":"3 mm"}));
     verify(&reopened, 3.0);
@@ -2871,7 +2867,7 @@ fn certified_offset_follows_dimension_drag_reopen_break_and_undo() {
     run(&mut s, "sketch.drag", json!({"entity":ellipse,"from":[0,0],"to":[4,3]}));
     verify(&s);
     let mut reopened = Session {
-        doc: std::sync::Arc::new(solidcraft_doc::format::read(&s.doc.to_json()).unwrap()),
+        doc: std::sync::Arc::new(torno_doc::format::read(&s.doc.to_json()).unwrap()),
         active_sketch: s.active_sketch,
         ..Session::default()
     };
@@ -2903,7 +2899,7 @@ fn certified_offset_delete_output_undo_reopen_and_refuse_dependent_source() {
     assert!(sk.curve_index(&id).is_none());
     assert!(sk.curve_index("e1").is_some());
     let deleted = s.doc.to_json();
-    let reopened = solidcraft_doc::format::read(&deleted).unwrap();
+    let reopened = torno_doc::format::read(&deleted).unwrap();
     assert_eq!(reopened.to_json(), deleted);
     run(&mut s, "edit.undo", json!({}));
     assert_eq!(s.doc.to_json(), attached);
@@ -2933,7 +2929,7 @@ fn periodic_closed_offset_chain_break_drag_reopen_and_material_volume() {
     let check = |session: &Session| {
         let sk = sketch(session);
         assert_eq!(sk.freeform_offsets.iter().map(|r| r.certificate).collect::<Vec<_>>(), [2, 2]);
-        assert_eq!(solidcraft_sketch::find_profiles(&sk).len(), 3);
+        assert_eq!(torno_sketch::find_profiles(&sk).len(), 3);
         for id in [&a, &b] {
             assert!(matches!(sk.curves[sk.curve_index(id).unwrap()].kind, CurveKind::Spline { periodic: true, .. }));
         }
@@ -2946,7 +2942,7 @@ fn periodic_closed_offset_chain_break_drag_reopen_and_material_volume() {
     run(&mut s, "parameters.change", json!({"name":"d1","expression":12}));
     check(&s);
     let mut reopened =
-        Session { doc: solidcraft_doc::format::read(&s.doc.to_json()).unwrap().into(), active_sketch: s.active_sketch, ..Default::default() };
+        Session { doc: torno_doc::format::read(&s.doc.to_json()).unwrap().into(), active_sketch: s.active_sketch, ..Default::default() };
     reopened.refresh();
     check(&reopened);
     let attached = reopened.doc.to_json();
@@ -2963,12 +2959,12 @@ fn periodic_closed_offset_chain_break_drag_reopen_and_material_volume() {
     let indices = moved.curves[moved.curve_index(&b).unwrap()].kind.point_ids();
     assert_eq!(moved.point(indices[0]), moved.point(*indices.last().unwrap()));
     assert!(moved.point(indices[0]).unwrap().dist(from) > 0.1);
-    assert_eq!(solidcraft_doc::format::read(&reopened.doc.to_json()).unwrap().to_json(), reopened.doc.to_json());
+    assert_eq!(torno_doc::format::read(&reopened.doc.to_json()).unwrap().to_json(), reopened.doc.to_json());
     run(&mut reopened, "edit.undo", json!({}));
     run(&mut reopened, "edit.undo", json!({}));
     assert_eq!(reopened.doc.to_json(), attached);
     // An independent ring area multiplied by height probes actual profile material.
-    let regions = solidcraft_sketch::find_profiles(&sketch(&s));
+    let regions = torno_sketch::find_profiles(&sketch(&s));
     let selected = regions.iter().enumerate().min_by(|(_, x), (_, y)| x.area.total_cmp(&y.area)).unwrap();
     let n = 4096;
     let h = std::f64::consts::TAU / n as f64;
@@ -2994,7 +2990,7 @@ fn periodic_closed_offset_chain_break_drag_reopen_and_material_volume() {
     run(&mut s, "sketch.finish", json!({}));
     run(&mut s, "solid.extrude", json!({"sketch":sketch_id,"profiles":[selected.0],"distance":3,"operation":"new"}));
     let state = s.world_state().unwrap();
-    let volume = solidcraft_kernel::measure(&state.bodies.last().unwrap().body).unwrap().volume;
+    let volume = torno_kernel::measure(&state.bodies.last().unwrap().body).unwrap().volume;
     assert!((volume - expected).abs() < 0.05, "{volume} vs {expected}");
 }
 
@@ -3007,7 +3003,7 @@ fn periodic_fit_creator_keeps_legacy_and_refuses_hostile_intent_atomically() {
     let i = sk.curve_index(&id).unwrap();
     assert!(matches!(sk.curves[i].kind, CurveKind::Spline { periodic: true, .. }));
     sk.validate_periodic_splines().unwrap();
-    assert_eq!(solidcraft_sketch::find_profiles(&sk).len(), 1);
+    assert_eq!(torno_sketch::find_profiles(&sk).len(), 1);
     let before = s.doc.to_json();
     let history = s.undo.len();
     for (cmd, p) in [
@@ -3049,7 +3045,7 @@ fn analytic_offset_partial_delete_releases_survivors_preserves_source_and_undo()
     }
     assert!(sk.curve_index("l1").is_some());
     let saved = s.doc.to_json();
-    assert_eq!(solidcraft_doc::format::read(&saved).unwrap().to_json(), saved);
+    assert_eq!(torno_doc::format::read(&saved).unwrap().to_json(), saved);
     run(&mut s, "edit.undo", json!({}));
     assert_eq!(s.doc.to_json(), before);
 }
@@ -3062,7 +3058,7 @@ fn periodic_offset_extrusion_survives_post_extrude_span_changes_and_cold_reopen(
     let a = run(&mut s, "sketch.offset", json!({"curves":["e1"],"distance":-1,"chain":false}))["curves"][0].as_str().unwrap().to_string();
     run(&mut s, "sketch.offset", json!({"curves":[a],"distance":-0.5,"chain":false}));
     let sk_id = s.active_sketch.unwrap();
-    let initial = solidcraft_sketch::find_profiles(&sketch(&s));
+    let initial = torno_sketch::find_profiles(&sketch(&s));
     let (index, ring) = initial.iter().enumerate().min_by(|(_, a), (_, b)| a.area.total_cmp(&b.area)).unwrap();
     let initial_count = ring.outer_curves.len();
     let boundary = ring.whole_curve_boundaries().unwrap();
@@ -3115,7 +3111,7 @@ fn periodic_offset_extrusion_survives_post_extrude_span_changes_and_cold_reopen(
         for (distance, material) in [(1.25, true), (0.5, false), (1.75, false)] {
             let point = ellipse + normal * distance;
             assert_eq!(
-                body.classify_point(solidcore_record::Vec3::new(point.x, point.y, 1.5)).unwrap() == solidcraft_kernel::PointClass::Inside,
+                body.classify_point(solidcore_record::Vec3::new(point.x, point.y, 1.5)).unwrap() == torno_kernel::PointClass::Inside,
                 material
             );
         }
@@ -3124,17 +3120,17 @@ fn periodic_offset_extrusion_survives_post_extrude_span_changes_and_cold_reopen(
             let point = centre + u * (major + distance);
             assert_eq!(ring.region.contains(point), material);
             assert_eq!(
-                body.classify_point(solidcore_record::Vec3::new(point.x, point.y, 1.5)).unwrap() == solidcraft_kernel::PointClass::Inside,
+                body.classify_point(solidcore_record::Vec3::new(point.x, point.y, 1.5)).unwrap() == torno_kernel::PointClass::Inside,
                 material
             );
         }
-        let volume = solidcraft_kernel::measure(body).unwrap().volume;
+        let volume = torno_kernel::measure(body).unwrap().volume;
         assert!((volume - expected).abs() < 0.05, "{major}: {volume} vs independent {expected}");
-        let mut cold = Session { doc: solidcraft_doc::format::read(&s.doc.to_json()).unwrap().into(), ..Default::default() };
+        let mut cold = Session { doc: torno_doc::format::read(&s.doc.to_json()).unwrap().into(), ..Default::default() };
         cold.refresh();
         let cold_state = cold.world_state().unwrap();
         assert_eq!(cold_state.bodies.len(), 1);
-        let cold_volume = solidcraft_kernel::measure(&cold_state.bodies[0].body).unwrap().volume;
+        let cold_volume = torno_kernel::measure(&cold_state.bodies[0].body).unwrap().volume;
         assert!((cold_volume - volume).abs() < 1e-8);
         let edited = s.doc.to_json();
         run(&mut s, "edit.undo", json!({}));
@@ -3146,7 +3142,7 @@ fn periodic_offset_extrusion_survives_post_extrude_span_changes_and_cold_reopen(
 }
 
 /// The bounding box of a set of sketch curves, from their polylines.
-fn bounds(sk: &solidcraft_sketch::Sketch, curves: &[String]) -> (Vec2, Vec2) {
+fn bounds(sk: &torno_sketch::Sketch, curves: &[String]) -> (Vec2, Vec2) {
     let mut lo = Vec2::new(f64::INFINITY, f64::INFINITY);
     let mut hi = Vec2::new(f64::NEG_INFINITY, f64::NEG_INFINITY);
     for id in curves {
@@ -3159,7 +3155,7 @@ fn bounds(sk: &solidcraft_sketch::Sketch, curves: &[String]) -> (Vec2, Vec2) {
     (lo, hi)
 }
 
-fn box_is(sk: &solidcraft_sketch::Sketch, curves: &[String], lo: [f64; 2], hi: [f64; 2]) -> bool {
+fn box_is(sk: &torno_sketch::Sketch, curves: &[String], lo: [f64; 2], hi: [f64; 2]) -> bool {
     let (a, b) = bounds(sk, curves);
     a.dist(Vec2::new(lo[0], lo[1])) < 1e-6 && b.dist(Vec2::new(hi[0], hi[1])) < 1e-6
 }
@@ -3225,7 +3221,7 @@ fn offset_two_sides_of_one_curve_follows_the_sign_of_the_distance() {
 }
 
 /// Each instance of an outward offset of a 40 by 30 rectangle, as a box one more step out.
-fn offset_rings(sk: &solidcraft_sketch::Sketch, o: &Value, out: &[f64]) {
+fn offset_rings(sk: &torno_sketch::Sketch, o: &Value, out: &[f64]) {
     for (index, out) in out.iter().copied().enumerate() {
         let curves = side_curves(o, index);
         assert_eq!(curves.len(), 4, "{o}");
@@ -3590,7 +3586,7 @@ fn offset_driver_edits_reopens_and_undoes_without_moving_sources() {
         let sk = &state.sketch(1).unwrap().sketch;
         assert!((sk.offset_distance(&outputs[0]).unwrap().abs() - distance).abs() < 1e-8);
         let constraint = sk.constraints.iter().find(|c| c.param.as_deref() == Some(&param)).unwrap();
-        assert!(solidcraft_sketch::dim_frame(sk, &constraint.kind).is_some());
+        assert!(torno_sketch::dim_frame(sk, &constraint.kind).is_some());
         for (a, b) in sk.points.iter().zip(&original) {
             assert!(a.pos.dist(b.pos) < 1e-7);
         }
@@ -3610,7 +3606,7 @@ fn offset_driver_edits_reopens_and_undoes_without_moving_sources() {
     check(&s, 2.0);
     run(&mut s, "edit.redo", json!({}));
     check(&s, 4.0);
-    let mut reopened = Session::new(solidcraft_doc::Document::from_json(&s.doc.to_json()).unwrap());
+    let mut reopened = Session::new(torno_doc::Document::from_json(&s.doc.to_json()).unwrap());
     check(&reopened, 4.0);
     run(&mut reopened, "parameters.change", json!({"name":param,"expression":"3 mm"}));
     check(&reopened, 3.0);
@@ -3631,7 +3627,7 @@ fn an_offset_leaves_its_source_lines_free_to_turn() {
     let o = run(&mut s, "sketch.offset", json!({"curves": ["l1"], "distance": 2, "side": [5, 5]}));
     assert_eq!(o["sketch"]["dof"], 8, "the offset follows its source and takes no freedom away: {o}");
     let outputs = ids(&o["curves"]);
-    let line = |sk: &solidcraft_sketch::Sketch, id: &str| match sk.curves[sk.curve_index(id).unwrap()].kind {
+    let line = |sk: &torno_sketch::Sketch, id: &str| match sk.curves[sk.curve_index(id).unwrap()].kind {
         CurveKind::Line { a, b } => (sk.points[a].pos, sk.points[b].pos),
         ref other => panic!("{id} is {other:?}"),
     };
@@ -3773,7 +3769,7 @@ fn a_tangent_cap_follows_its_offset_when_the_source_length_changes() {
         check(&s, height);
         previous = height;
     }
-    let reopened = Session::new(solidcraft_doc::Document::from_json(&s.doc.to_json()).unwrap());
+    let reopened = Session::new(torno_doc::Document::from_json(&s.doc.to_json()).unwrap());
     check(&reopened, 70.0);
 }
 
@@ -3922,7 +3918,7 @@ fn offset_driver_uses_design_units_and_dimension_delete_freezes_current_distance
     run(&mut s, "sketch.delete", json!({"entities":[annotation]}));
     assert!((sketch(&s).offsets[0].distance - 5.08).abs() < 1e-8);
     assert!(s.doc.param(param).is_none());
-    let reopened = Session::new(solidcraft_doc::Document::from_json(&s.doc.to_json()).unwrap());
+    let reopened = Session::new(torno_doc::Document::from_json(&s.doc.to_json()).unwrap());
     assert!((reopened.world_state().unwrap().sketch(1).unwrap().sketch.offsets[0].distance - 5.08).abs() < 1e-8);
 }
 
@@ -3937,7 +3933,7 @@ fn offset_driver_arc_first_retires_breaks_undoes_and_reopens() {
     run(&mut s, "parameters.change", json!({"name":param,"expression":"3 mm"}));
     let sk = sketch(&s);
     let driver = sk.constraints.iter().find(|c| c.param.as_deref() == Some(param)).unwrap();
-    let solidcraft_sketch::ConstraintKind::OffsetDistance { output, .. } = &driver.kind else {
+    let torno_sketch::ConstraintKind::OffsetDistance { output, .. } = &driver.kind else {
         panic!("missing offset driver");
     };
     let record = sk.offsets.iter().find(|o| o.owns_output(output)).unwrap();
@@ -3949,7 +3945,7 @@ fn offset_driver_arc_first_retires_breaks_undoes_and_reopens() {
     assert!(s.doc.param(param).is_none());
     assert!(sketch(&s).offsets.is_empty());
     assert_eq!(sketch(&s).segs(sketch(&s).curve_index(&survivor).unwrap()), before);
-    let reopened = Session::new(solidcraft_doc::Document::from_json(&s.doc.to_json()).unwrap());
+    let reopened = Session::new(torno_doc::Document::from_json(&s.doc.to_json()).unwrap());
     assert!(reopened.world_state().unwrap().sketch(1).unwrap().sketch.offsets.is_empty());
     run(&mut s, "edit.undo", json!({}));
     assert!(s.doc.param(param).is_some());
@@ -3995,7 +3991,7 @@ fn offset_driver_two_sides_edit_independently_and_reopen() {
     assert!(box_is(&sketch(&s), &inside, [4.0, 4.0], [36.0, 26.0]));
     assert!(box_is(&sketch(&s), &outside, [-1.0, -1.0], [41.0, 31.0]));
     run(&mut s, "parameters.change", json!({"name":secondary,"expression":"3 mm"}));
-    let mut reopened = Session::new(solidcraft_doc::Document::from_json(&s.doc.to_json()).unwrap());
+    let mut reopened = Session::new(torno_doc::Document::from_json(&s.doc.to_json()).unwrap());
     run(&mut reopened, "sketch.edit", json!({"sketch":1}));
     assert!(box_is(&sketch(&reopened), &inside, [4.0, 4.0], [36.0, 26.0]));
     assert!(box_is(&sketch(&reopened), &outside, [-3.0, -3.0], [43.0, 33.0]));
@@ -4035,8 +4031,8 @@ fn offset_driver_format18_offsets_keep_fixed_distances_on_upgrade() {
     doc.params.retain(|p| p.name != param);
     let mut json: Value = serde_json::from_str(&doc.to_json()).unwrap();
     json["format"] = json!("solidcraft/18");
-    let mut reopened = Session::new(solidcraft_doc::Document::from_json(&json.to_string()).unwrap());
-    assert_eq!(reopened.doc.format, solidcraft_doc::format::format_string(solidcraft_doc::format::FORMAT), "upgraded on opening");
+    let mut reopened = Session::new(torno_doc::Document::from_json(&json.to_string()).unwrap());
+    assert_eq!(reopened.doc.format, torno_doc::format::format_string(torno_doc::format::FORMAT), "upgraded on opening");
     run(&mut reopened, "sketch.edit", json!({"sketch":1}));
     let sk = sketch(&reopened);
     assert!((sk.offsets[0].distance - 2.0).abs() < 1e-8);
@@ -4084,11 +4080,11 @@ fn ends_tied_through_a_trimmed_away_end_stay_tied() {
     }
     run(&mut s, "sketch.constraint.coincident", json!({"a": "l1.end", "b": "l3.start"}));
     run(&mut s, "sketch.constraint.coincident", json!({"a": "l2.start", "b": "l3.start"}));
-    assert!(solidcraft_sketch::loose_ends(&sketch(&s)).untied.is_empty());
+    assert!(torno_sketch::loose_ends(&sketch(&s)).untied.is_empty());
     let r = run(&mut s, "sketch.trim", json!({"curve": "l3", "at": [15, 2.5]}));
     assert_eq!(r["result"]["deleted"], "l3");
     let sk = sketch(&s);
-    let ends = solidcraft_sketch::loose_ends(&sk);
+    let ends = torno_sketch::loose_ends(&sk);
     assert!(ends.untied.is_empty(), "l1 and l2 still meet at (10, 0): {ends:?}");
     // Tied, not merely touching: dragging one end takes the other along.
     run(&mut s, "sketch.drag", json!({"entity": "l1.end", "from": [10, 0], "to": [12, 1]}));
@@ -4106,10 +4102,10 @@ fn an_end_held_on_a_trimmed_away_line_at_its_end_stays_tied() {
     run(&mut s, "sketch.line", json!({"points": [[0, 0], [10, 0], [10, 10]], "infer": false}));
     run(&mut s, "sketch.line", json!({"points": [[20, 5], [10, 0]], "infer": false, "connect": false}));
     run(&mut s, "sketch.constraint.coincident", json!({"a": "l3.end", "b": "l2"}));
-    assert!(solidcraft_sketch::loose_ends(&sketch(&s)).untied.is_empty());
+    assert!(torno_sketch::loose_ends(&sketch(&s)).untied.is_empty());
     let r = run(&mut s, "sketch.trim", json!({"curve": "l2", "at": [10, 5]}));
     assert_eq!(r["result"]["deleted"], "l2");
-    let ends = solidcraft_sketch::loose_ends(&sketch(&s));
+    let ends = torno_sketch::loose_ends(&sketch(&s));
     assert!(ends.untied.is_empty(), "l1 and l3 still meet at (10, 0): {ends:?}");
     run(&mut s, "sketch.drag", json!({"entity": "l1.end", "from": [10, 0], "to": [12, 1]}));
     let sk = sketch(&s);
@@ -4142,7 +4138,7 @@ fn trim_keeps_the_rest_of_a_dimensioned_line_where_it_was() {
     assert!(corner(&s).dist(Vec2::new(40.0, 23.0)) < 1e-6, "the step moved to {:?}", corner(&s));
     let sk = sketch(&s);
     let ends = sk.shape(sk.curve_index(&right).unwrap()).unwrap();
-    assert!(matches!(ends, solidcraft_sketch::Shape::Line { a, b } if close(a.dist(b), 23.0)), "{ends:?}");
+    assert!(matches!(ends, torno_sketch::Shape::Line { a, b } if close(a.dist(b), 23.0)), "{ends:?}");
     assert!(matches!(forty(&s)[..], [ConstraintKind::Distance { .. }]), "{:?}", forty(&s));
 
     // Trim the top side right of the step: the corner the 40 measured to goes, and the 40 with it.
@@ -4284,7 +4280,7 @@ fn trim_extend_and_break_refuse_an_offsets_ends_until_its_association_is_broken(
     let sk = sketch(&s);
     let sh = sk.shape(sk.curve_index("l5").unwrap()).unwrap();
     assert!(
-        matches!(sh, solidcraft_sketch::Shape::Line { a, b } if a.dist(Vec2::new(-2.0, -2.0)) < 1e-9 && b.dist(Vec2::new(20.0, -2.0)) < 1e-9),
+        matches!(sh, torno_sketch::Shape::Line { a, b } if a.dist(Vec2::new(-2.0, -2.0)) < 1e-9 && b.dist(Vec2::new(20.0, -2.0)) < 1e-9),
         "{sh:?}"
     );
 }
@@ -4393,12 +4389,12 @@ fn trimmed_touching_circles_stay_joined_where_they_touch() {
             run(&mut s, "sketch.trim", json!({"curve": curve, "at": at}));
         }
         let sk = sketch(&s);
-        let ends = solidcraft_sketch::loose_ends(&sk);
+        let ends = torno_sketch::loose_ends(&sk);
         assert!(ends.is_empty(), "{name}: loose ends {ends:?}");
         assert_eq!(profiles(&s).len(), 1, "{name}");
         // Dragging one circle's centre keeps the outline closed.
         run(&mut s, "sketch.drag", json!({"entity": "c4.center", "from": [0, 50], "to": [-3, 52]}));
-        assert!(solidcraft_sketch::loose_ends(&sketch(&s)).is_empty(), "{name}: the touch point held after a drag");
+        assert!(torno_sketch::loose_ends(&sketch(&s)).is_empty(), "{name}: the touch point held after a drag");
     }
 }
 
@@ -4487,7 +4483,7 @@ fn freeform_offsets_trim_folds_and_round_chain_corners_into_an_extrudable_wall()
                 for k in 0..=8 {
                     let p = seg.point_at(k as f64 / 8.0);
                     let d = source.iter().flat_map(|s| (0..=2000).map(move |j| s.point_at(j as f64 / 2000.0).dist(p))).fold(f64::INFINITY, f64::min);
-                    assert!((d - 1.26).abs() < solidcraft_sketch::OFFSET_TOLERANCE, "distance {d} at {p:?}");
+                    assert!((d - 1.26).abs() < torno_sketch::OFFSET_TOLERANCE, "distance {d} at {p:?}");
                 }
             }
         }
@@ -4517,7 +4513,7 @@ fn freeform_chain_offsets_take_the_straight_pieces_of_the_chain_along() {
                 for k in 0..=8 {
                     let p = seg.point_at(k as f64 / 8.0);
                     let d = source.iter().flat_map(|s| (0..=2000).map(move |j| s.point_at(j as f64 / 2000.0).dist(p))).fold(f64::INFINITY, f64::min);
-                    assert!((d - distance).abs() < solidcraft_sketch::OFFSET_TOLERANCE, "distance {d} at {p:?}");
+                    assert!((d - distance).abs() < torno_sketch::OFFSET_TOLERANCE, "distance {d} at {p:?}");
                 }
             }
         }
@@ -4586,7 +4582,7 @@ fn sketch_inspect_names_each_curve_of_a_free_form_loop_once() {
         let curves = ids(&p["curves"]);
         once(&curves, "a profile");
         // In the order the loop walks them, as the solved profile has them.
-        assert_eq!(curves, solidcraft_sketch::distinct_curves(&solved.outer_curves));
+        assert_eq!(curves, torno_sketch::distinct_curves(&solved.outer_curves));
         let holes: Vec<Vec<String>> = p["holes"].as_array().unwrap().iter().map(ids).collect();
         holes.iter().for_each(|h| once(h, "a hole"));
         let set = |v: &[String]| v.iter().cloned().collect::<std::collections::BTreeSet<_>>();
@@ -4663,11 +4659,11 @@ fn a_fillet_stays_a_quarter_arc_when_its_corner_is_pinned_or_dragged_to_the_othe
 // ---------------------------------------------------------------------------------------------
 // `sketch.extend` with two curves (#4750): each grows to where the two meet, and they are joined.
 
-fn coincident_count(sk: &solidcraft_sketch::Sketch) -> usize {
+fn coincident_count(sk: &torno_sketch::Sketch) -> usize {
     sk.constraints.iter().filter(|c| matches!(c.kind, ConstraintKind::Coincident { .. })).count()
 }
 
-fn point_at(sk: &solidcraft_sketch::Sketch, id: &str) -> Vec2 {
+fn point_at(sk: &torno_sketch::Sketch, id: &str) -> Vec2 {
     sk.point(sk.resolve_point(id).expect("a point")).expect("its position")
 }
 
@@ -5007,7 +5003,7 @@ fn mirror_uses_the_projection_of_an_origin_axis_outside_the_sketch_plane() {
     let line = sk.link_curves(&link.id)[0];
     assert!(sk.curves[line].construction && sk.is_linked_curve(line));
     match sk.shape(line) {
-        Some(solidcraft_sketch::Shape::Line { a, b }) => {
+        Some(torno_sketch::Shape::Line { a, b }) => {
             assert!(a.x.abs() < 1e-6 && b.x.abs() < 1e-6, "the projected X axis is the sketch y: {a:?} {b:?}");
         }
         other => panic!("the projected X axis is not a line: {other:?}"),
@@ -5130,14 +5126,14 @@ fn lobe_corners(r1: f64, r2: f64, d: f64) -> (Vec2, Vec2, Vec2, Vec2) {
     (Vec2::new(-a, h), Vec2::new(-a, -h), Vec2::new(a, h), Vec2::new(a, -h))
 }
 
-fn arc_ends(sk: &solidcraft_sketch::Sketch, id: &str) -> (usize, usize, Vec2, Vec2, Vec2) {
+fn arc_ends(sk: &torno_sketch::Sketch, id: &str) -> (usize, usize, Vec2, Vec2, Vec2) {
     match sk.curves[sk.curve_index(id).unwrap()].kind {
         CurveKind::Arc { c, a, b } => (a, b, sk.point(c).unwrap(), sk.point(a).unwrap(), sk.point(b).unwrap()),
         ref other => panic!("{id} is {other:?}"),
     }
 }
 
-fn line_ends(sk: &solidcraft_sketch::Sketch, id: &str) -> (usize, Vec2, usize, Vec2) {
+fn line_ends(sk: &torno_sketch::Sketch, id: &str) -> (usize, Vec2, usize, Vec2) {
     match sk.curves[sk.curve_index(id).unwrap()].kind {
         CurveKind::Line { a, b } => (a, sk.point(a).unwrap(), b, sk.point(b).unwrap()),
         ref other => panic!("{id} is {other:?}"),
@@ -5323,7 +5319,7 @@ fn move_copy_drawn_arc_keeps_exact_geometry_and_original() {
     let arc = wire.arc.unwrap();
     assert!(arc.center.dist(Vec3::new(1.6, 0.0, 3.0)) < 1e-9);
     assert!(close(arc.radius, 10.0));
-    assert!(close(solidcraft_sketch::arc_sweep(&arc), std::f64::consts::PI));
+    assert!(close(torno_sketch::arc_sweep(&arc), std::f64::consts::PI));
     for (p, q) in wire.fit.iter().zip(&original.fit) {
         assert!(p.dist(*q + Vec3::new(1.6, 0.0, 0.0)) < 1e-9);
     }
@@ -5332,7 +5328,7 @@ fn move_copy_drawn_arc_keeps_exact_geometry_and_original() {
     assert_eq!(s.doc.to_json(), before);
     run(&mut s, "edit.redo", json!({}));
     assert_eq!(s.doc.to_json(), after);
-    let reopened = solidcraft_doc::format::read(&after).unwrap();
+    let reopened = torno_doc::format::read(&after).unwrap();
     assert_eq!(reopened.sketch(id).unwrap().wires, s.doc.sketch(id).unwrap().wires);
 }
 
@@ -5426,17 +5422,17 @@ fn trim_source_and_two_offsets_independently_in_any_order() {
         run(&mut s, "sketch.line", json!({"points": [[-20,20],[60,20]], "connect": false, "infer": false}));
         for picked in order {
             let before = sketch(&s);
-            let geometry = |sk: &solidcraft_sketch::Sketch, id: &str| sk.shape(sk.curve_index(id).unwrap()).unwrap();
-            let solidcraft_sketch::Shape::Line { a, b } = geometry(&before, &curves[picked]) else { panic!("line") };
+            let geometry = |sk: &torno_sketch::Sketch, id: &str| sk.shape(sk.curve_index(id).unwrap()).unwrap();
+            let torno_sketch::Shape::Line { a, b } = geometry(&before, &curves[picked]) else { panic!("line") };
             let r = run(&mut s, "sketch.trim", json!({"curve": curves[picked], "at": [a.x + 1.0, a.y + 1.0]}));
             assert_eq!(r["sketch"]["solved"], true, "{order:?}: {r}");
             let after = sketch(&s);
-            let solidcraft_sketch::Shape::Line { a: start, b: end } = geometry(&after, &curves[picked]) else { panic!("line") };
+            let torno_sketch::Shape::Line { a: start, b: end } = geometry(&after, &curves[picked]) else { panic!("line") };
             assert!((start.y - 20.0).abs() < 1e-6 && (start.x - (20.0 + a.x - a.y)).abs() < 1e-6, "{order:?}: {start:?}");
             assert!(end.dist(b) < 1e-6, "the far end stays put: {order:?}: {end:?} {b:?}");
             for (i, id) in curves.iter().enumerate().filter(|(i, _)| *i != picked) {
-                let solidcraft_sketch::Shape::Line { a: old_a, b: old_b } = geometry(&before, id) else { panic!("line") };
-                let solidcraft_sketch::Shape::Line { a: new_a, b: new_b } = geometry(&after, id) else { panic!("line") };
+                let torno_sketch::Shape::Line { a: old_a, b: old_b } = geometry(&before, id) else { panic!("line") };
+                let torno_sketch::Shape::Line { a: new_a, b: new_b } = geometry(&after, id) else { panic!("line") };
                 assert!(new_a.dist(old_a) < 1e-6 && new_b.dist(old_b) < 1e-6, "unpicked {i} changed in {order:?}: {old_a:?} -> {new_a:?}");
             }
             run(&mut s, "edit.undo", json!({}));
@@ -5464,11 +5460,11 @@ fn trimming_one_offset_line_keeps_its_source_sibling_and_other_offsets() {
     let unrelated = ids(&run(&mut s, "sketch.offset", json!({"curves": ["other"], "distance": 3, "chain": false}))["curves"])[0].clone();
     let before = sketch(&s);
     let document = s.doc.to_json();
-    let solidcraft_sketch::Shape::Line { a, .. } = before.shape(before.curve_index(&outputs[0]).unwrap()).unwrap() else { panic!("line") };
+    let torno_sketch::Shape::Line { a, .. } = before.shape(before.curve_index(&outputs[0]).unwrap()).unwrap() else { panic!("line") };
     let r = run(&mut s, "sketch.trim", json!({"curve": outputs[0], "at": [a.x+1.0, a.y+1.0]}));
     assert_eq!(r["sketch"]["solved"], true, "{r}");
     let after = sketch(&s);
-    let solidcraft_sketch::Shape::Line { a: start, .. } = after.shape(after.curve_index(&outputs[0]).unwrap()).unwrap() else { panic!("line") };
+    let torno_sketch::Shape::Line { a: start, .. } = after.shape(after.curve_index(&outputs[0]).unwrap()).unwrap() else { panic!("line") };
     assert!((start.y - 20.0).abs() < 1e-6, "{start:?}");
     for id in ["source", &outputs[1], "other", &unrelated] {
         assert_eq!(after.polyline(after.curve_index(id).unwrap()), before.polyline(before.curve_index(id).unwrap()), "{id} must stay put");
@@ -5525,7 +5521,7 @@ fn trim_offset_after_deleting_its_dimension_keeps_the_stored_distance() {
                     before_sketch.polyline(before_sketch.curve_index("source").unwrap())
                 );
                 if crossing {
-                    let solidcraft_sketch::Shape::Line { a, b } = after_sketch.shape(after_sketch.curve_index(&output).unwrap()).unwrap() else {
+                    let torno_sketch::Shape::Line { a, b } = after_sketch.shape(after_sketch.curve_index(&output).unwrap()).unwrap() else {
                         panic!("line")
                     };
                     assert!((a.x.min(b.x) - 10.0).abs() < 1e-6 && (a.x.max(b.x) - 20.0).abs() < 1e-6, "{a:?} {b:?}");
@@ -5540,10 +5536,10 @@ fn trim_offset_after_deleting_its_dimension_keeps_the_stored_distance() {
                 assert_eq!(s.doc.to_json(), after);
                 if crossing {
                     run(&mut s, "sketch.move_point", json!({"point": format!("{output}.end"), "to": [25,stored_distance+2.0]}));
-                    let reopened = Session::new(solidcraft_doc::Document::from_json(&s.doc.to_json()).unwrap());
+                    let reopened = Session::new(torno_doc::Document::from_json(&s.doc.to_json()).unwrap());
                     let state = reopened.world_state().unwrap();
                     let sk = &state.sketch(1).unwrap().sketch;
-                    let solidcraft_sketch::Shape::Line { a, b } = sk.shape(sk.curve_index(&output).unwrap()).unwrap() else { panic!("line") };
+                    let torno_sketch::Shape::Line { a, b } = sk.shape(sk.curve_index(&output).unwrap()).unwrap() else { panic!("line") };
                     assert!((a.y - stored_distance).abs() < 1e-6 && (b.y - stored_distance).abs() < 1e-6);
                 }
             }
@@ -5571,7 +5567,7 @@ fn trim_path_cuts_source_and_two_offsets_at_their_own_crossings() {
     let sk = sketch(&s);
     assert!(sk.offsets.is_empty());
     for id in curves {
-        let solidcraft_sketch::Shape::Line { a, .. } = sk.shape(sk.curve_index(&id).unwrap()).unwrap() else { panic!("line") };
+        let torno_sketch::Shape::Line { a, .. } = sk.shape(sk.curve_index(&id).unwrap()).unwrap() else { panic!("line") };
         assert!((a.y - 20.0).abs() < 1e-6, "{id}: {a:?}");
     }
     run(&mut s, "edit.undo", json!({}));
@@ -5609,10 +5605,10 @@ fn trim_keeps_offset_distances_driving_after_trims_drag_and_reopen() {
     let verify = |s: &Session, distance: f64, parameter: &str| {
         let state = s.world_state().unwrap();
         let sk = &state.sketch(1).unwrap().sketch;
-        let solidcraft_sketch::Shape::Line { a, b } = sk.shape(sk.curve_index("source").unwrap()).unwrap() else { panic!("source line") };
+        let torno_sketch::Shape::Line { a, b } = sk.shape(sk.curve_index("source").unwrap()).unwrap() else { panic!("source line") };
         let dir = (b - a).normalized().unwrap();
         for (id, sign) in [("l1", 1.0), ("l2", -1.0)] {
-            let solidcraft_sketch::Shape::Line { a: p, b: q } = sk.shape(sk.curve_index(id).unwrap()).unwrap() else { panic!("offset line") };
+            let torno_sketch::Shape::Line { a: p, b: q } = sk.shape(sk.curve_index(id).unwrap()).unwrap() else { panic!("offset line") };
             assert!(dir.cross((q - p).normalized().unwrap()).abs() < 1e-6, "{id} is parallel");
             for point in [p, q] {
                 assert!((dir.cross(point - a) - sign * distance).abs() < 1e-6, "{id}: {point:?}, distance {distance}");
@@ -5638,7 +5634,7 @@ fn trim_keeps_offset_distances_driving_after_trims_drag_and_reopen() {
             run(&mut s, "sketch.line", json!({"points":[[-20,20],[60,20]],"connect":false,"infer":false}))["curves"][0].as_str().unwrap().to_string();
         for id in order {
             let sk = sketch(&s);
-            let solidcraft_sketch::Shape::Line { a, .. } = sk.shape(sk.curve_index(id).unwrap()).unwrap() else { panic!("line") };
+            let torno_sketch::Shape::Line { a, .. } = sk.shape(sk.curve_index(id).unwrap()).unwrap() else { panic!("line") };
             run(&mut s, "sketch.trim", json!({"curve":id,"at":[a.x+1.0,a.y+1.0]}));
             verify(&s, 2.0, &parameter);
         }
@@ -5647,7 +5643,7 @@ fn trim_keeps_offset_distances_driving_after_trims_drag_and_reopen() {
             run(&mut s, "sketch.line", json!({"points":[[-20,25],[60,25]],"connect":false,"infer":false}))["curves"][0].as_str().unwrap().to_string();
         for id in order {
             let sk = sketch(&s);
-            let solidcraft_sketch::Shape::Line { a, .. } = sk.shape(sk.curve_index(id).unwrap()).unwrap() else { panic!("line") };
+            let torno_sketch::Shape::Line { a, .. } = sk.shape(sk.curve_index(id).unwrap()).unwrap() else { panic!("line") };
             run(&mut s, "sketch.trim", json!({"curve":id,"at":[a.x+1.0,a.y+1.0]}));
             verify(&s, 2.0, &parameter);
         }
@@ -5656,7 +5652,7 @@ fn trim_keeps_offset_distances_driving_after_trims_drag_and_reopen() {
         verify(&s, 2.0, &parameter);
         run(&mut s, "parameters.change", json!({"name":parameter,"expression":"3 mm"}));
         verify(&s, 3.0, &parameter);
-        let mut reopened = Session::new(solidcraft_doc::Document::from_json(&s.doc.to_json()).unwrap());
+        let mut reopened = Session::new(torno_doc::Document::from_json(&s.doc.to_json()).unwrap());
         verify(&reopened, 3.0, &parameter);
         run(&mut reopened, "parameters.change", json!({"name":parameter,"expression":"4 mm"}));
         verify(&reopened, 4.0, &parameter);

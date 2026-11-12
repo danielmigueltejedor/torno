@@ -2,7 +2,7 @@
  "cases": [
   {
    "name": "attributed_issue_1462_boxes_union",
-   "note": "#1462: box (0,0,0)+10^3 and box (5,5,5)+10^3 (SolidCraft's overlapping_boxes_union). Union; every operand face and edge has its own SM_AB_COPY long attribute.",
+   "note": "#1462: box (0,0,0)+10^3 and box (5,5,5)+10^3 (Torno's overlapping_boxes_union). Union; every operand face and edge has its own SM_AB_COPY long attribute.",
    "inputs": {
     "api": "attributed",
     "a": {
@@ -37,7 +37,7 @@
   },
   {
    "name": "attributed_issue_1462_boxes_difference",
-   "note": "#1462: box (0,0,0)+10^3 and box (5,5,5)+10^3 (SolidCraft's overlapping_boxes_union). Difference; every operand face and edge has its own SM_AB_COPY long attribute.",
+   "note": "#1462: box (0,0,0)+10^3 and box (5,5,5)+10^3 (Torno's overlapping_boxes_union). Difference; every operand face and edge has its own SM_AB_COPY long attribute.",
    "inputs": {
     "api": "attributed",
     "a": {
@@ -72,7 +72,7 @@
   },
   {
    "name": "attributed_issue_1462_boxes_intersection",
-   "note": "#1462: box (0,0,0)+10^3 and box (5,5,5)+10^3 (SolidCraft's overlapping_boxes_union). Intersection; every operand face and edge has its own SM_AB_COPY long attribute.",
+   "note": "#1462: box (0,0,0)+10^3 and box (5,5,5)+10^3 (Torno's overlapping_boxes_union). Intersection; every operand face and edge has its own SM_AB_COPY long attribute.",
    "inputs": {
     "api": "attributed",
     "a": {
@@ -854,7 +854,7 @@
   },
   {
    "name": "attributed_issue_1462_boxes_union_reference",
-   "note": "#1462: box (0,0,0)+10^3 and box (5,5,5)+10^3 (SolidCraft's overlapping_boxes_union). Union with reference tags.",
+   "note": "#1462: box (0,0,0)+10^3 and box (5,5,5)+10^3 (Torno's overlapping_boxes_union). Union with reference tags.",
    "inputs": {
     "api": "attributed",
     "a": {
@@ -889,7 +889,7 @@
   },
   {
    "name": "attributed_issue_1462_boxes_difference_reference",
-   "note": "#1462: box (0,0,0)+10^3 and box (5,5,5)+10^3 (SolidCraft's overlapping_boxes_union). Difference with reference tags.",
+   "note": "#1462: box (0,0,0)+10^3 and box (5,5,5)+10^3 (Torno's overlapping_boxes_union). Difference with reference tags.",
    "inputs": {
     "api": "attributed",
     "a": {
@@ -924,7 +924,7 @@
   },
   {
    "name": "attributed_issue_1462_boxes_union_standalone_copy",
-   "note": "#1462: box (0,0,0)+10^3 and box (5,5,5)+10^3 (SolidCraft's overlapping_boxes_union). Union with standalone_copy tags.",
+   "note": "#1462: box (0,0,0)+10^3 and box (5,5,5)+10^3 (Torno's overlapping_boxes_union). Union with standalone_copy tags.",
    "inputs": {
     "api": "attributed",
     "a": {
@@ -959,7 +959,7 @@
   },
   {
    "name": "attributed_issue_1462_boxes_difference_standalone_copy",
-   "note": "#1462: box (0,0,0)+10^3 and box (5,5,5)+10^3 (SolidCraft's overlapping_boxes_union). Difference with standalone_copy tags.",
+   "note": "#1462: box (0,0,0)+10^3 and box (5,5,5)+10^3 (Torno's overlapping_boxes_union). Difference with standalone_copy tags.",
    "inputs": {
     "api": "attributed",
     "a": {
@@ -994,7 +994,7 @@
   },
   {
    "name": "attributed_issue_1462_boxes_union_standalone_reference",
-   "note": "#1462: box (0,0,0)+10^3 and box (5,5,5)+10^3 (SolidCraft's overlapping_boxes_union). Union with standalone_reference tags.",
+   "note": "#1462: box (0,0,0)+10^3 and box (5,5,5)+10^3 (Torno's overlapping_boxes_union). Union with standalone_reference tags.",
    "inputs": {
     "api": "attributed",
     "a": {
@@ -1029,7 +1029,7 @@
   },
   {
    "name": "attributed_issue_1462_boxes_difference_standalone_reference",
-   "note": "#1462: box (0,0,0)+10^3 and box (5,5,5)+10^3 (SolidCraft's overlapping_boxes_union). Difference with standalone_reference tags.",
+   "note": "#1462: box (0,0,0)+10^3 and box (5,5,5)+10^3 (Torno's overlapping_boxes_union). Difference with standalone_reference tags.",
    "inputs": {
     "api": "attributed",
     "a": {
@@ -1064,7 +1064,7 @@
   },
   {
    "name": "attributed_issue_1462_boxes_union_temp",
-   "note": "#1462: box (0,0,0)+10^3 and box (5,5,5)+10^3 (SolidCraft's overlapping_boxes_union). Union with temp tags.",
+   "note": "#1462: box (0,0,0)+10^3 and box (5,5,5)+10^3 (Torno's overlapping_boxes_union). Union with temp tags.",
    "inputs": {
     "api": "attributed",
     "a": {
@@ -1099,7 +1099,7 @@
   },
   {
    "name": "attributed_issue_1462_boxes_difference_temp",
-   "note": "#1462: box (0,0,0)+10^3 and box (5,5,5)+10^3 (SolidCraft's overlapping_boxes_union). Difference with temp tags.",
+   "note": "#1462: box (0,0,0)+10^3 and box (5,5,5)+10^3 (Torno's overlapping_boxes_union). Difference with temp tags.",
    "inputs": {
     "api": "attributed",
     "a": {

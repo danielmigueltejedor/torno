@@ -12,12 +12,12 @@ use schemars::{JsonSchema, Schema, SchemaGenerator, json_schema};
 use serde::de::Error as _;
 use serde::{Deserialize, Deserializer, Serialize};
 use serde_json::{Map, Value};
-use solidcraft_doc::render_settings::RenderSettings;
+use torno_doc::render_settings::RenderSettings;
 
 use super::check::whole;
 use super::render_camera::{setup_name, setup_name_schema};
 
-/// The fields of a render setup (`solidcraft_doc::render_settings::RenderSetup`), as the render
+/// The fields of a render setup (`torno_doc::render_settings::RenderSetup`), as the render
 /// settings commands give and take them. `cmd/render.rs`'s `patched_settings` takes a patch of at
 /// most this many fields, so the published schemas and the handlers share one list and one bound;
 /// a test checks the list against `RenderSetup`'s own fields.

@@ -6,7 +6,7 @@
 //! The nodal quartic of two offsets touching at one point is swept the same way, as
 //! rational quartic segments.
 //!
-//! Not in the pinned upstream: the SolidCraft fork's `source/SMLib/src/SmFilletExact.cpp`
+//! Not in the pinned upstream: the Torno fork's `source/SMLib/src/SmFilletExact.cpp`
 //! and `source/SMLib/inc/SmFilletSolver.h` (tangency-labs/smlib@0061c41, with the conic-pair
 //! dispatch of tangency-labs/smlib@1b5f1e7 and the nodal quartic and conic span direction
 //! of tangency-labs/smlib@dda3b5d), behind

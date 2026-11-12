@@ -273,7 +273,7 @@ impl Pool {
         let pool = rayon::ThreadPoolBuilder::new()
             .num_threads(count)
             .stack_size(WORKER_STACK_BYTES)
-            .thread_name(|index| format!("solidcraft-ray-{index}"))
+            .thread_name(|index| format!("torno-ray-{index}"))
             .build()
             .map_err(|error| JobError::new(ErrorCode::AllocationFailed, format!("could not start CPU ray workers: {error}")))?;
         task.cancel.check()?;

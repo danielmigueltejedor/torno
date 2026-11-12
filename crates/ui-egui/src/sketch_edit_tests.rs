@@ -2,7 +2,7 @@
 
 use crate::SolveApp;
 use crate::test_support::sample_app;
-use solidcraft_engine::doc::FeatureKind;
+use torno_engine::doc::FeatureKind;
 
 fn first_sketch(app: &SolveApp) -> u64 {
     app.session.doc.features.iter().find(|f| matches!(f.kind, FeatureKind::Sketch { .. })).map(|f| f.id).unwrap()
@@ -225,7 +225,7 @@ fn ribbon_edit_sketch_offers_a_choice_without_a_unique_selection() {
 #[test]
 fn ribbon_edit_sketch_uses_the_owner_of_selected_sketch_geometry() {
     use serde_json::json;
-    use solidcraft_engine::Sel;
+    use torno_engine::Sel;
     let (mut h, ids) = two_finished_sketches();
     h.app.session.selection =
         vec![Sel::ExternalSketchCurve { sketch: ids[1], id: "l1".into() }, Sel::ExternalSketchPoint { sketch: ids[1], id: "p1".into() }];
@@ -254,7 +254,7 @@ fn ribbon_edit_sketch_handles_an_empty_design_without_running_a_command() {
 mod exit_keeps_view {
     use crate::scenario::Harness;
     use serde_json::json;
-    use solidcraft_viewport::Camera;
+    use torno_viewport::Camera;
 
     /// Start a sketch on XY from the iso view, then orbit and pan into a 3D view of the user's own.
     fn sketching_in_3d() -> (Harness, Camera) {
@@ -438,7 +438,7 @@ mod exit_view_preference {
     use crate::prefs::SketchExitView;
     use crate::scenario::Harness;
     use serde_json::json;
-    use solidcraft_viewport::Camera;
+    use torno_viewport::Camera;
 
     /// A sketch on XY started from the iso view with `choice` set, and that iso view.
     fn sketching(choice: SketchExitView) -> (Harness, Camera) {
@@ -568,7 +568,7 @@ mod exit_view_preference {
 mod extrude_view_preference {
     use crate::scenario::Harness;
     use serde_json::json;
-    use solidcraft_viewport::{Camera, StandardView};
+    use torno_viewport::{Camera, StandardView};
 
     /// A finished sketch on XY, seen from the top, with the two preferences set; and that view.
     fn from_the_top(isometric: bool, back: bool) -> (Harness, Camera) {

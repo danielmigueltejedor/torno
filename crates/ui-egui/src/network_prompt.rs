@@ -9,7 +9,7 @@
 //! get the engine's error, and `component.links` reports such a link's `found` as unknown.
 
 use serde_json::Value;
-use solidcraft_engine::io::vfs::{Remote, design_path_refusal};
+use torno_engine::io::vfs::{Remote, design_path_refusal};
 
 use crate::SolveApp;
 use crate::ui_kit;
@@ -138,21 +138,16 @@ pub fn answer(app: &mut SolveApp, answer: Answer) {
 /// The question, when one is waiting.
 pub fn show(app: &mut SolveApp, ctx: &egui::Context) {
     let Some(prompt) = app.network_prompt.as_ref() else { return };
-    let _language = solidcraft_ui_text::scope(&app.preferences.language);
+    let _language = torno_ui_text::scope(&app.preferences.language);
     let hosts = prompt.hosts.iter().map(|h| format!("\\\\{h}")).collect::<Vec<_>>().join(", ");
-    let detail = solidcraft_ui_text::format("network.prompt_detail", &[("host", &hosts)]);
-    let (closed, action) =
-        ui_kit::Confirm::new(egui::Id::unique("sc_network_prompt"), "status_warning", solidcraft_ui_text::tr("network.prompt_title"))
-            .tone(ui_kit::Tone::Warning)
-            .actions(
-                solidcraft_ui_text::tr("network.allow_once"),
-                solidcraft_ui_text::tr("ui.cancel"),
-                Some(solidcraft_ui_text::tr("network.always_allow")),
-            )
-            .selected(ui_kit::Action::Cancel)
-            .show(ctx, true, |ui| {
-                ui_kit::text(ui, &detail, ui_kit::Text::Report("network_prompt", false));
-            });
+    let detail = torno_ui_text::format("network.prompt_detail", &[("host", &hosts)]);
+    let (closed, action) = ui_kit::Confirm::new(egui::Id::unique("sc_network_prompt"), "status_warning", torno_ui_text::tr("network.prompt_title"))
+        .tone(ui_kit::Tone::Warning)
+        .actions(torno_ui_text::tr("network.allow_once"), torno_ui_text::tr("ui.cancel"), Some(torno_ui_text::tr("network.always_allow")))
+        .selected(ui_kit::Action::Cancel)
+        .show(ctx, true, |ui| {
+            ui_kit::text(ui, &detail, ui_kit::Text::Report("network_prompt", false));
+        });
     let mut chosen = match action {
         ui_kit::Action::Ok => Some(Answer::Once),
         ui_kit::Action::Apply => Some(Answer::Always),

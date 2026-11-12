@@ -1,6 +1,6 @@
 use super::*;
 use crate::test_support::pointer;
-use solidcraft_ui_registry as registry;
+use torno_ui_registry as registry;
 
 fn frame<R>(ctx: &egui::Context, events: Vec<egui::Event>, mut add: impl FnMut(&mut Ui) -> R) {
     crate::test_support::frame(ctx, events, |ui| {
@@ -307,9 +307,9 @@ fn pixel(primitives: &[egui::ClippedPrimitive], at: egui::Pos2) -> [f32; 4] {
 
 #[test]
 fn rendered_square_hue_and_current_strip_leave_rounded_corner_pixels_clear() {
-    let previous = solidcraft_theme::is_dark();
+    let previous = torno_theme::is_dark();
     for dark in [false, true] {
-        solidcraft_theme::set_dark(dark);
+        torno_theme::set_dark(dark);
         for ppp in [1.0, 2.0] {
             let ctx = crate::test_support::context();
             ctx.set_pixels_per_point(ppp);
@@ -336,7 +336,7 @@ fn rendered_square_hue_and_current_strip_leave_rounded_corner_pixels_clear() {
             }
         }
     }
-    solidcraft_theme::set_dark(previous);
+    torno_theme::set_dark(previous);
 }
 
 /// A taller frame than the shared one: the popover's recent row sits below 400 points.

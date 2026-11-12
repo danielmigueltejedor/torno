@@ -32,6 +32,6 @@
   "ungraded": [],
   "what": "an axis square to a cylinder's side through a point on the cylinder's axis",
   "why_not": [
-    "the failure is SolidCraft's, not a kernel operation's: step 2 (construct.axis.normal_to_face): the point is on the face's axis"
+    "the failure is Torno's, not a kernel operation's: step 2 (construct.axis.normal_to_face): the point is on the face's axis"
   ]
 }

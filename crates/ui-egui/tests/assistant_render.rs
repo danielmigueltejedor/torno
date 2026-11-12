@@ -6,7 +6,7 @@ use std::collections::HashMap;
 
 use egui::{ColorImage, TextureId};
 use serde_json::json;
-use solidcraft_ui_egui::{
+use torno_ui_egui::{
     agent_chat::{
         Item,
         backend::{PermissionOption, ToolStatus},
@@ -16,7 +16,7 @@ use solidcraft_ui_egui::{
 
 #[test]
 fn assistant_transcript_tools_and_approvals_fit_in_both_themes() {
-    let previous = solidcraft_theme::is_dark();
+    let previous = torno_theme::is_dark();
     for dark in [false, true] {
         for width in [280.0, 440.0, 760.0] {
             let mut h = Harness::new();
@@ -66,8 +66,8 @@ fn assistant_transcript_tools_and_approvals_fit_in_both_themes() {
             ];
             h.ctx = egui::Context::default();
             h.ctx.enable_accesskit();
-            solidcraft_ui_egui::fonts::setup_fonts(&h.ctx);
-            solidcraft_theme::apply(&h.ctx);
+            torno_ui_egui::fonts::setup_fonts(&h.ctx);
+            torno_theme::apply(&h.ctx);
             let mut textures: HashMap<TextureId, ColorImage> = HashMap::new();
             for _ in 0..8 {
                 raster::paint(&mut h, &mut textures, vec![]);
@@ -99,7 +99,7 @@ fn assistant_transcript_tools_and_approvals_fit_in_both_themes() {
             assert_eq!(h.app.agent_chat.waiting(), 1, "rendering and expanding tools never answer an approval");
             let approval = scenario::rect_of("assistant:approval").expect("approval card");
             assert!(approval.height() < 160.0, "approval stays compact at {width}: {approval:?}");
-            if let Ok(dir) = std::env::var("SOLIDCRAFT_ASSISTANT_EVIDENCE") {
+            if let Ok(dir) = std::env::var("TORNO_ASSISTANT_EVIDENCE") {
                 std::fs::create_dir_all(&dir).unwrap();
                 image::imageops::crop_imm(&screenshot, panel.left() as u32, panel.top() as u32, panel.width() as u32, panel.height() as u32)
                     .to_image()
@@ -108,5 +108,5 @@ fn assistant_transcript_tools_and_approvals_fit_in_both_themes() {
             }
         }
     }
-    solidcraft_theme::set_dark(previous);
+    torno_theme::set_dark(previous);
 }

@@ -1,7 +1,7 @@
 use crate::Session;
 use serde_json::{Value, json};
 use solidcore_record::Vec2;
-use solidcraft_geom::prelude::*;
+use torno_geom::prelude::*;
 
 fn run(s: &mut Session, cmd: &str, params: Value) -> Value {
     s.execute(cmd, &params).unwrap()
@@ -241,19 +241,19 @@ fn perforated_sheet_correction_rejects_invalid_metadata_without_partial_changes(
     let mut s = Session::default();
     perforated_panel(&mut s);
     let state = s.model.state();
-    let measured = solidcraft_kernel::measure(&state.bodies[0].body).unwrap();
+    let measured = torno_kernel::measure(&state.bodies[0].body).unwrap();
     for pitch in [0.0, -1.0, f64::NAN, f64::INFINITY] {
         let mut sheet = state.sheets[0].clone();
         sheet.perforations[0].pitch = pitch;
         let mut actual = measured.clone();
-        assert!(sheet.correct_perforation_properties(&mut actual, &solidcraft_doc::IDENTITY).is_err());
+        assert!(sheet.correct_perforation_properties(&mut actual, &torno_doc::IDENTITY).is_err());
         assert_eq!(actual.volume, measured.volume);
         assert_eq!(actual.area, measured.area);
         assert_eq!(actual.centroid, measured.centroid);
     }
-    let mut scaled = solidcraft_doc::IDENTITY;
+    let mut scaled = torno_doc::IDENTITY;
     scaled[0][0] = 2.0;
-    let mut sheared = solidcraft_doc::IDENTITY;
+    let mut sheared = torno_doc::IDENTITY;
     sheared[0][1] = 0.5;
     for placement in [scaled, sheared] {
         let mut actual = measured.clone();
@@ -331,7 +331,7 @@ fn perforated_sheet_inertia_removes_analytic_hole_cylinders_and_turns_with_the_s
     );
     let turned = run(&mut s, "component.properties", json!({}));
     let rotation = [[0.0, -1.0, 0.0], [1.0, 0.0, 0.0], [0.0, 0.0, 1.0]];
-    let rotated = solidcraft_geom::inertia::transformed(&expected, &rotation);
+    let rotated = torno_geom::inertia::transformed(&expected, &rotation);
     tensor_close(&turned["total"]["inertia_g_mm2"], rotated, 1e-9);
     verify_assembly(&mut s, rotated, [100.0 - center[1], 40.0 + center[0], 10.0 + center[2]]);
 }
@@ -464,7 +464,7 @@ fn compact_exponentially_instanced_assembly_refuses_partial_totals() {
     for _ in 0..17 {
         let parent = s.active_component;
         let component = s.doc_mut().add_component(None, parent).unwrap();
-        last_occurrence = s.doc_mut().add_occurrence(component, parent, solidcraft_doc::IDENTITY).unwrap();
+        last_occurrence = s.doc_mut().add_occurrence(component, parent, torno_doc::IDENTITY).unwrap();
         s.active_component = component;
     }
     for command in ["component.properties", "occurrence.properties"] {
@@ -501,7 +501,7 @@ fn user_defined_material_sets_the_body_mass() {
 
 /// A design file path in a fresh temporary folder (removed by the caller).
 fn temp_design(tag: &str) -> (std::path::PathBuf, String) {
-    let dir = std::env::temp_dir().join(format!("solidcraft-user-material-{tag}-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("torno-user-material-{tag}-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&dir);
     std::fs::create_dir_all(&dir).unwrap();
     let path = dir.join("design.solidcraft").to_string_lossy().to_string();
@@ -523,7 +523,7 @@ fn user_defined_material_is_edited_renamed_and_deleted() {
     assert_eq!(created["appearance"]["color"], "#1c1c1c", "{created}");
     let list = run(&mut s, "material.list", json!({}));
     let materials = list["materials"].as_array().unwrap();
-    assert_eq!(materials.len(), solidcraft_doc::MATERIALS.len() + 1);
+    assert_eq!(materials.len(), torno_doc::MATERIALS.len() + 1);
     let rubber = materials.last().unwrap();
     assert_eq!((rubber["name"].as_str(), rubber["user"].as_bool()), (Some("Rubber"), Some(true)));
 
@@ -597,7 +597,7 @@ fn user_defined_material_survives_save_and_reopen() {
     run(&mut s, "material.create", json!({"name": "Leather", "density_g_cm3": 0.86, "appearance": "Rubber - Black"}));
     run(&mut s, "material.assign", json!({"bodies": ["Tab"], "material": "Leather"}));
     run(&mut s, "file.save", json!({"path": path}));
-    assert!(s.doc.to_json().contains(&format!("\"{}\"", solidcraft_doc::format::format_string(solidcraft_doc::format::FORMAT))));
+    assert!(s.doc.to_json().contains(&format!("\"{}\"", torno_doc::format::format_string(torno_doc::format::FORMAT))));
 
     run(&mut s, "file.new", json!({}));
     run(&mut s, "doc.open", json!({"path": path}));
@@ -634,13 +634,13 @@ fn designs_without_user_materials_open_unchanged() {
     legacy["materials"] = json!({"Plate": "Broken"});
     std::fs::write(&path, serde_json::to_vec(&legacy).unwrap()).unwrap();
     run(&mut s, "doc.open", json!({"path": path}));
-    close(&mass(&mut s), solidcraft_doc::DEFAULT_DENSITY);
+    close(&mass(&mut s), torno_doc::DEFAULT_DENSITY);
     // #4783: it reads as the material it weighs; the file's assignment is kept as it is.
     let props = run(&mut s, "component.properties", json!({"component": "root"}));
     assert_eq!(props["bodies"][0]["material"], "Default", "{props}");
     let measured = run(&mut s, "inspect.measure", json!({}));
     assert_eq!(measured["bodies"][0]["material"], "Default", "{measured}");
-    close(&measured["bodies"][0]["density_g_cm3"], solidcraft_doc::DEFAULT_DENSITY);
+    close(&measured["bodies"][0]["density_g_cm3"], torno_doc::DEFAULT_DENSITY);
     assert_eq!(s.doc.materials.get("Plate").map(String::as_str), Some("Broken"));
     assert_eq!(s.doc.material_look("Broken").map(|l| l.opacity), Some(1.0));
     // Assigning the default material, in any case, clears the damaged assignment.
@@ -710,15 +710,15 @@ fn a_placed_body_measures_as_its_placed_copy() {
     run(&mut s, "solid.box", json!({"length": 10, "width": 20, "height": 5}));
     let state = s.model.state();
     let placements = [
-        solidcraft_doc::IDENTITY,
-        solidcraft_doc::rigid(Vec3::new(5.0, -3.0, 7.0), Vec3::ZERO, Vec3::Z, std::f64::consts::FRAC_PI_2),
-        solidcraft_doc::rigid(Vec3::new(100.0, 0.0, 0.0), Vec3::new(1.0, 2.0, 3.0), Vec3::new(1.0, 1.0, 1.0), 0.5),
+        torno_doc::IDENTITY,
+        torno_doc::rigid(Vec3::new(5.0, -3.0, 7.0), Vec3::ZERO, Vec3::Z, std::f64::consts::FRAC_PI_2),
+        torno_doc::rigid(Vec3::new(100.0, 0.0, 0.0), Vec3::new(1.0, 2.0, 3.0), Vec3::new(1.0, 1.0, 1.0), 0.5),
     ];
     for body in &state.bodies {
         for m in placements {
             let fast = super::measure_placed(body, m).unwrap();
-            let placed = solidcraft_kernel::transform_matrix(&body.body, m).unwrap();
-            let slow = solidcraft_kernel::measure(&placed).unwrap();
+            let placed = torno_kernel::transform_matrix(&body.body, m).unwrap();
+            let slow = torno_kernel::measure(&placed).unwrap();
             let near = |a: f64, b: f64, tol: f64| assert!((a - b).abs() <= tol * b.abs().max(1.0), "{} {a} != {b}", body.name);
             near(fast.volume, slow.volume, 1e-4);
             near(fast.area, slow.area, 1e-4);
@@ -741,11 +741,11 @@ fn a_watcher_sees_the_bodies_measured_and_can_stop_them() {
     for i in 1..4 {
         run(&mut s, "occurrence.copy", json!({"component": component, "translate": [20 * i, 0, 0]}));
     }
-    let progress = Arc::new(solidcraft_doc::progress::Progress::default());
-    let r = solidcraft_doc::progress::watch(progress.clone(), || s.execute("component.properties", &json!({"component": "root"})));
+    let progress = Arc::new(torno_doc::progress::Progress::default());
+    let r = torno_doc::progress::watch(progress.clone(), || s.execute("component.properties", &json!({"component": "root"})));
     assert_eq!(r.unwrap()["body_count"], 4);
     assert_eq!(progress.work(), Some(("measuring", 4, 4)));
     progress.cancel();
-    let stopped = solidcraft_doc::progress::watch(progress, || s.execute("component.properties", &json!({"component": "root"})));
+    let stopped = torno_doc::progress::watch(progress, || s.execute("component.properties", &json!({"component": "root"})));
     assert!(stopped.unwrap_err().to_string().contains("cancelled"));
 }

@@ -3,7 +3,7 @@ use super::*;
 use crate::dialogs_surface::continuity_row_explained;
 use crate::ui_kit;
 use crate::ui_kit::{choice_row, expr_row, hint_row};
-use solidcraft_engine::kernel::Continuity;
+use torno_engine::kernel::Continuity;
 
 pub(super) fn command(kind: &Kind) -> Option<&'static str> {
     match kind {
@@ -123,13 +123,13 @@ const FILLET_CORNERS: [(Continuity, &str); 2] =
 /// The default setback of a smooth-patch corner, as a multiple of the radius (the kernel's), as
 /// the messages show it.
 fn setback_factor() -> String {
-    solidcraft_engine::doc::kernel::DEFAULT_SETBACK_FACTOR.to_string()
+    torno_engine::doc::kernel::DEFAULT_SETBACK_FACTOR.to_string()
 }
 
 /// The Corners row's hover text: a line for each choice.
 fn fillet_corner_tip() -> String {
     let factor = setback_factor();
-    FILLET_CORNERS.map(|(_, tip)| solidcraft_ui_text::format(tip, &[("factor", &factor)])).join("\n")
+    FILLET_CORNERS.map(|(_, tip)| torno_ui_text::format(tip, &[("factor", &factor)])).join("\n")
 }
 
 /// What `solid.fillet` does with a radius too large for the faces beside an edge (`fit`): stop
@@ -201,7 +201,7 @@ fn settle_fillet_options(extra: &mut serde_json::Map<String, Value>, changed: &s
 /// corner where three or more rounded edges meet, or the fillet already has a smooth patch.
 fn fillet_corner_rows(
     ui: &mut egui::Ui,
-    s: &solidcraft_engine::Session,
+    s: &torno_engine::Session,
     extra: &mut serde_json::Map<String, Value>,
     inputs: &[selection::SelInput],
     radius: &str,
@@ -226,22 +226,22 @@ fn fillet_corner_rows(
     }
     if extra.get("corner").and_then(Value::as_str) == Some("g2") {
         let factor = setback_factor();
-        let length = |text: &str| crate::length_input::eval(&s.doc, text, solidcraft_engine::doc::expr::Kind::Length).ok().filter(|v| v.is_finite());
+        let length = |text: &str| crate::length_input::eval(&s.doc, text, torno_engine::doc::expr::Kind::Length).ok().filter(|v| v.is_finite());
         let r = length(radius).filter(|r| *r > 0.0);
         // Not typed, the field shows the command's default as a length, following the radius.
-        let default = r.map(|r| crate::length_input::shown(&s.doc, solidcraft_engine::doc::kernel::DEFAULT_SETBACK_FACTOR * r));
+        let default = r.map(|r| crate::length_input::shown(&s.doc, torno_engine::doc::kernel::DEFAULT_SETBACK_FACTOR * r));
         let shown = setback.clone().or(default).unwrap_or_default();
         // A setback at or below the least the kernel takes there is flagged before OK.
         let least = r.and_then(|r| crate::dialogs::fillet_least_setback(ui.ctx(), s, items, &corners, r));
         let warning = least
             .filter(|least| length(&shown).is_some_and(|v| v <= least * (1.0 + 1e-9)))
-            .map(|least| solidcraft_ui_text::format("ui.fillet_setback_least", &[("least", &crate::length_input::shown(&s.doc, least))]));
+            .map(|least| torno_ui_text::format("ui.fillet_setback_least", &[("least", &crate::length_input::shown(&s.doc, least))]));
         let mut text = shown.clone();
         let row = ui.scope(|ui| {
-            let hint = solidcraft_ui_text::format("ui.fillet_setback_hint", &[("factor", &factor)]);
+            let hint = torno_ui_text::format("ui.fillet_setback_hint", &[("factor", &factor)]);
             ui_kit::checked_row(ui, "ui.fillet_setback", &mut text, &hint, warning.as_deref())
         });
-        row.response.backing_on_hover_text(solidcraft_ui_text::format("ui.fillet_setback_tip", &[("factor", &factor)]));
+        row.response.backing_on_hover_text(torno_ui_text::format("ui.fillet_setback_tip", &[("factor", &factor)]));
         let (accepted, field) = row.inner;
         enter |= accepted;
         if text != shown {
@@ -295,7 +295,7 @@ const MAX_PATTERN_INSTANCES: i64 = 1000;
 
 /// A solid pattern's quantity row, with step arrows from 1 to `MAX_PATTERN_INSTANCES`. The
 /// count goes to the command as typed, so it is evaluated as the document evaluates it.
-fn quantity_row(ui: &mut egui::Ui, doc: &solidcraft_engine::doc::Document, label: &str, value: &mut String) -> bool {
+fn quantity_row(ui: &mut egui::Ui, doc: &torno_engine::doc::Document, label: &str, value: &mut String) -> bool {
     count_row_to(ui, doc, label, value, MAX_PATTERN_INSTANCES)
 }
 
@@ -305,8 +305,8 @@ const MAX_COIL_REVOLUTIONS: i64 = 200;
 /// A count row with step arrows by whole numbers from 1 to `max`, evaluated as the document
 /// evaluates it. A fraction still types in (a coil's revolutions); an arrow steps it to the next
 /// whole number.
-fn count_row_to(ui: &mut egui::Ui, doc: &solidcraft_engine::doc::Document, label: &str, value: &mut String, max: i64) -> bool {
-    let eval = |text: &str| doc.eval(text.trim(), solidcraft_engine::doc::expr::Kind::Unitless).ok();
+fn count_row_to(ui: &mut egui::Ui, doc: &torno_engine::doc::Document, label: &str, value: &mut String, max: i64) -> bool {
+    let eval = |text: &str| doc.eval(text.trim(), torno_engine::doc::expr::Kind::Unitless).ok();
     ui_kit::count_row(ui, label, value, &ui_kit::Count { min: 1, max, eval: &eval })
 }
 
@@ -386,7 +386,7 @@ pub(super) fn rows(app: &mut SolveApp, ctx: &egui::Context, d: &mut Dialog, ui: 
         ui_kit::text(ui, &prompt, ui_kit::Text::Hint("tool")).backing_on_hover_text(&prompt);
         if matches!(&d.kind, Kind::SketchModify(k) if k.previews()) {
             let label = d.active_input().map(|input| tr(input.label)).unwrap_or_else(|| tr("Objects"));
-            let step = solidcraft_ui_text::format(
+            let step = torno_ui_text::format(
                 "dialog.selection_step",
                 &[("step", &(d.active + 1).to_string()), ("total", &d.inputs.len().to_string()), ("input", label)],
             );
@@ -504,7 +504,7 @@ pub(super) fn rows(app: &mut SolveApp, ctx: &egui::Context, d: &mut Dialog, ui: 
                         (d, _) => d,
                     };
                     // Selecting Symmetric applies the current total-distance semantics.
-                    d.extra.insert("convention".into(), json!(solidcraft_engine::doc::ExtrudeConvention::TotalDistance));
+                    d.extra.insert("convention".into(), json!(torno_engine::doc::ExtrudeConvention::TotalDistance));
                     // An explicit direction ends the automatic choices (#1257).
                     smart.manual_dir = true;
                     *auto_op = false;
@@ -895,7 +895,7 @@ fn section_span(app: &SolveApp, d: &Dialog) -> Option<(f64, f64)> {
 /// is dragged, and a distance typed outside the model widens the slider to reach it.
 fn section_slider(app: &SolveApp, ui: &mut egui::Ui, offset: &mut String, (lo, hi): (f64, f64)) {
     let doc = &app.session.doc;
-    let mut shown = crate::length_input::eval(doc, offset, solidcraft_engine::doc::expr::Kind::Length).ok().filter(|x| x.is_finite()).unwrap_or(0.0);
+    let mut shown = crate::length_input::eval(doc, offset, torno_engine::doc::expr::Kind::Length).ok().filter(|x| x.is_finite()).unwrap_or(0.0);
     let range = lo.min(shown)..=hi.max(shown);
     form_row(ui, "", |ui| {
         let slider = ui_kit::Slider { show_value: false, ..Default::default() };
@@ -1018,7 +1018,7 @@ fn additional_rows(app: &mut SolveApp, d: &mut Dialog, ui: &mut egui::Ui) -> boo
                 ui_kit::segmented(ui, &mut i, &["Emboss", "Deboss"], Default::default());
                 *deboss = i == 1;
             });
-            ui.add(egui::Label::new(solidcraft_ui_text::tr("ui.emboss_wrap_note")).wrap());
+            ui.add(egui::Label::new(torno_ui_text::tr("ui.emboss_wrap_note")).wrap());
         }
         Kind::Align { flip, components, axes: [ax, ay, az], angle } => {
             // Where on the picked face or edge to snap: as picked (a face turns to meet
@@ -1233,7 +1233,7 @@ fn measure_rows(app: &SolveApp, ui: &mut egui::Ui, r: Option<&Value>, show: &mut
     for (i, it) in r["items"].as_array().into_iter().flatten().enumerate() {
         let lines = crate::quick_measure::item_lines(app, it);
         for (k, line) in lines.into_iter().enumerate() {
-            let label = if k == 0 { solidcraft_ui_text::format("measure.item", &[("number", &(i + 1).to_string())]) } else { String::new() };
+            let label = if k == 0 { torno_ui_text::format("measure.item", &[("number", &(i + 1).to_string())]) } else { String::new() };
             // Coordinates need all three values; a fixed-height form cell elides the end.
             let text = if label.is_empty() { line } else { format!("{label}  {line}") };
             ui_kit::text(ui, &text, ui_kit::Text::Report(&format!("measure_item_{i}_{k}"), false));
@@ -1253,15 +1253,15 @@ fn measure_rows(app: &SolveApp, ui: &mut egui::Ui, r: Option<&Value>, show: &mut
             }
         } else {
             let text = crate::prefs::show_mm(app, d, 1);
-            form_row(ui, solidcraft_ui_text::tr_label("Distance"), |ui| {
-                let size = solidcraft_theme::Tokens::get().form_close_size;
+            form_row(ui, torno_ui_text::tr_label("Distance"), |ui| {
+                let size = torno_theme::Tokens::get().form_close_size;
                 // The value keeps the room left of the button, so the button stays inside the row.
                 ui.scope(|ui| {
                     ui.set_max_width((ui.available_width() - size).max(0.0));
                     ui_kit::text(ui, &text, ui_kit::Text::Cell);
                 });
                 let (rect, _) = ui.allocate_exact_size(egui::vec2(size, size), egui::Sense::hover());
-                let copy = ui_kit::icon_button_at(ui, rect, "copy", solidcraft_ui_text::tr_label("Copy"));
+                let copy = ui_kit::icon_button_at(ui, rect, "copy", torno_ui_text::tr_label("Copy"));
                 crate::scenario::publish_handle("measure:copy:distance", copy.rect.center());
                 if copy.clicked() {
                     ui.ctx().copy_text(text.clone());
@@ -1276,7 +1276,7 @@ fn measure_rows(app: &SolveApp, ui: &mut egui::Ui, r: Option<&Value>, show: &mut
     if let Some(a) = r["angle_deg"].as_f64()
         && r["items"].as_array().is_some_and(|v| v.len() == 2)
     {
-        value(ui, solidcraft_ui_text::tr_label("Angle"), &format!("{a:.3}°"));
+        value(ui, torno_ui_text::tr_label("Angle"), &format!("{a:.3}°"));
     }
 }
 
@@ -1529,7 +1529,7 @@ mod tests {
             e.contains("take a constant radius")
                 || e.contains("is built for")
                 || e.contains("are built for")
-                || e.contains(solidcraft_engine::doc::SWEPT_TAKES)
+                || e.contains(torno_engine::doc::SWEPT_TAKES)
         };
         // Each distinct command is run once.
         let ran = std::cell::RefCell::new(std::collections::BTreeSet::new());
@@ -1544,7 +1544,7 @@ mod tests {
             if !ran.borrow_mut().insert(p.to_string()) {
                 return;
             }
-            let mut copy = solidcraft_engine::Session::new((*h.app.session.doc).clone());
+            let mut copy = torno_engine::Session::new((*h.app.session.doc).clone());
             if let Err(e) = copy.execute("solid.fillet", &p) {
                 assert!(!refused_for_options(&e.to_string()), "{what}: {p} refused for its options: {e}");
             }
@@ -1646,7 +1646,7 @@ mod tests {
         };
         let shown = |h: &Harness| {
             let tree = h.output.accesskit_update.as_ref().unwrap();
-            let label = solidcraft_ui_text::tr_label("ui.fillet_setback");
+            let label = torno_ui_text::tr_label("ui.fillet_setback");
             tree.nodes.iter().find(|(_, n)| n.label() == Some(label)).and_then(|(_, n)| n.value()).unwrap_or_default().to_string()
         };
         let typed = |h: &Harness| match &h.app.dialog.as_ref().unwrap().kind {
@@ -1672,7 +1672,7 @@ mod tests {
         assert_eq!(shown(&h), "1.5 mm", "typed, it stays as typed");
         radius(&mut h, "2 mm");
         assert!(flagged(), "1.5 mm is not past the least, the 2 mm radius");
-        let mut copy = solidcraft_engine::Session::new((*h.app.session.doc).clone());
+        let mut copy = torno_engine::Session::new((*h.app.session.doc).clone());
         let refused = copy.execute("solid.fillet", &parameters(&h)).unwrap_err().to_string();
         assert!(refused.contains("setback must be more than the radius (2 mm)"), "the kernel refuses what the field flags: {refused}");
         assert_eq!(
@@ -1695,7 +1695,7 @@ mod tests {
         assert!(!flagged(), "past the least");
         let p = parameters(&h);
         assert_eq!(p["setbacks"], json!([{"vertex": [10.0, 0.0, 5.0], "distance": "3 mm"}]));
-        let mut copy = solidcraft_engine::Session::new((*h.app.session.doc).clone());
+        let mut copy = torno_engine::Session::new((*h.app.session.doc).clone());
         copy.execute("solid.fillet", &p).unwrap();
         let st = crate::open_meshing::session_world(&copy);
         assert!(st.bodies.iter().all(|b| b.body.validity().is_empty()), "a 3 mm setback on 2 mm rounds builds");
@@ -1708,10 +1708,10 @@ mod tests {
         crate::i18n::install();
         let coded = |text: &str| ["G0", "G1", "G2", "G3"].iter().any(|code| text.contains(code));
         for label in FILLET_TYPES.map(|(label, _)| label).into_iter().chain(FILLET_CORNERS.map(|(g, _)| g.label_id())) {
-            assert!(!coded(solidcraft_ui_text::tr_label(label)), "{label}: {}", solidcraft_ui_text::tr_label(label));
+            assert!(!coded(torno_ui_text::tr_label(label)), "{label}: {}", torno_ui_text::tr_label(label));
         }
         for (g, tip) in FILLET_CORNERS {
-            assert!(solidcraft_ui_text::tr(tip).contains(g.code()), "the hover text keeps the code for those who know it: {tip}");
+            assert!(torno_ui_text::tr(tip).contains(g.code()), "the hover text keeps the code for those who know it: {tip}");
         }
         let tip = fillet_corner_tip();
         assert!(tip.contains("rolling") && tip.contains("1.5") && tip.contains("Setback"), "what each corner builds: {tip}");
@@ -1737,7 +1737,7 @@ mod tests {
         crate::i18n::install();
         let refused = format!(
             "invalid parameters for `solid.fillet`: the setback is too short for its corner: {}5.9620 mm (the corner's patch is convex only from there)",
-            solidcraft_engine::kernel::SETBACK_AT_LEAST
+            torno_engine::kernel::SETBACK_AT_LEAST
         );
         match crate::dialogs::fillet_plain_error(&refused, true) {
             Some(crate::dialogs::FilletRefusal::Plain(plain)) => assert!(plain.contains("5.9620 mm"), "{plain}"),
@@ -1746,7 +1746,7 @@ mod tests {
         // A blend too large for its faces keeps its own words.
         assert_eq!(
             crate::dialogs::fillet_plain_error("the fillet is larger than the faces beside its edges allow", true),
-            Some(crate::dialogs::FilletRefusal::Plain(solidcraft_ui_text::tr("ui.fillet_error_too_large").to_string()))
+            Some(crate::dialogs::FilletRefusal::Plain(torno_ui_text::tr("ui.fillet_error_too_large").to_string()))
         );
     }
 

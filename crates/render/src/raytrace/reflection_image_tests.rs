@@ -1,8 +1,8 @@
 use super::*;
 use crate::ProductMesh;
 use crate::job::{ReflectionBody, ReflectionMode, ReflectionOptions};
-use solidcraft_geom::Mesh;
 use std::sync::Arc;
+use torno_geom::Mesh;
 
 fn visible_second_body_fixture(spatial: u8, samples: u8) -> ImageTask {
     let mut source = scene();
@@ -36,7 +36,7 @@ fn visible_second_body_fixture(spatial: u8, samples: u8) -> ImageTask {
         target.tri_face.extend([0, 0]);
     }
     source.meshes[1].mesh = Arc::new(target);
-    source.bounds = source.meshes.iter().fold(solidcraft_geom::Aabb3::EMPTY, |bounds, body| bounds.union(&body.mesh.bounds()));
+    source.bounds = source.meshes.iter().fold(torno_geom::Aabb3::EMPTY, |bounds, body| bounds.union(&body.mesh.bounds()));
     let mut req = request(Some(reflection_options(ReflectionMode::RoughSpecular)));
     req.width = 1;
     req.height = 1;
@@ -176,12 +176,12 @@ fn scene() -> ProductScene {
         None,
     );
     let meshes = vec![mirror, object];
-    let bounds = meshes.iter().fold(solidcraft_geom::Aabb3::EMPTY, |b, m| b.union(&m.mesh.bounds()));
+    let bounds = meshes.iter().fold(torno_geom::Aabb3::EMPTY, |b, m| b.union(&m.mesh.bounds()));
     ProductScene { meshes, bounds }
 }
 fn request(reflections: Option<ReflectionOptions>) -> ImageRequest {
-    let mut camera = solidcraft_viewport::Camera { distance: 50.0, ..Default::default() };
-    camera.set_view(solidcraft_viewport::StandardView::Front);
+    let mut camera = torno_viewport::Camera { distance: 50.0, ..Default::default() };
+    camera.set_view(torno_viewport::StandardView::Front);
     ImageRequest {
         studio_weights: None,
         environment: None,

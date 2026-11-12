@@ -1,4 +1,4 @@
-//! T-spline sheets: a T-spline surface (`solidcraft_geom::tspline`) as a surface body of NURBS
+//! T-spline sheets: a T-spline surface (`torno_geom::tspline`) as a surface body of NURBS
 //! faces. A T-mesh without T-junctions becomes one clamped tensor face; otherwise each Bézier
 //! element is a face, and the faces share their edges and vertices — a side that meets two
 //! neighbours is split at the T-point between them — so the sheet is one sewn open shell.
@@ -9,8 +9,8 @@
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 
 use solidcore_record::brep as b;
-use solidcraft_geom::bspline::{BezierPatch, HPoint, NurbsSurface, SplineError, bezier_segment};
-use solidcraft_geom::tspline::TSpline;
+use torno_geom::bspline::{BezierPatch, HPoint, NurbsSurface, SplineError, bezier_segment};
+use torno_geom::tspline::TSpline;
 
 use crate::body::Body;
 use crate::surfaces::{Parts, spline_curve, spline_surface, surface_body, uv_line};
@@ -142,7 +142,7 @@ fn patch_faces(patches: &[BezierPatch]) -> Result<Parts> {
             true,
         ));
     }
-    let mut bounds = solidcraft_geom::Aabb3::EMPTY;
+    let mut bounds = torno_geom::Aabb3::EMPTY;
     for c in &corners {
         bounds.add(solidcore_record::Vec3::new(c[0], c[1], c[2]));
     }
@@ -157,9 +157,9 @@ fn patch_faces(patches: &[BezierPatch]) -> Result<Parts> {
 #[cfg(test)]
 mod tests {
     use solidcore_record::Vec3;
-    use solidcraft_geom::bspline::NurbsSurface;
-    use solidcraft_geom::prelude::*;
-    use solidcraft_geom::tspline::{Cut, TSpline};
+    use torno_geom::bspline::NurbsSurface;
+    use torno_geom::prelude::*;
+    use torno_geom::tspline::{Cut, TSpline};
 
     use super::tspline_sheet;
     use crate::fuzz::Rng;

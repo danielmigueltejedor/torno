@@ -8,11 +8,11 @@
 //! name the same one. Operations that know more (which profile segment a side face sweeps,
 //! which edge a blend replaces) fill in generated faces' origins themselves.
 
-use solidcraft_geom::prelude::*;
 use std::collections::BTreeSet;
+use torno_geom::prelude::*;
 
 use solidcore_record::{Plane, Region2, Seg2, Vec2, Vec3};
-use solidcraft_geom::{Aabb3, Mesh};
+use torno_geom::{Aabb3, Mesh};
 
 use crate::Result;
 use crate::body::Body;
@@ -379,7 +379,7 @@ pub fn compose(prov: &mut History, operand: usize, tool: &[FaceOrigin]) {
 #[cfg(test)]
 mod tests {
     use solidcore_record::Vec3;
-    use solidcraft_geom::prelude::*;
+    use torno_geom::prelude::*;
 
     use super::{Change, FaceOrigin, trace};
     use crate::{BoolOp, boolean, box_solid, cylinder};

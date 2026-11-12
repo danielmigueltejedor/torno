@@ -18,7 +18,7 @@ fn details_descriptions_are_pure_and_live_edits_preserve_custom_companions() {
     let original = h.app.session.analysis.unwrap();
     h.app.run(&effect.command, params).unwrap();
     match (original, h.app.session.analysis.unwrap()) {
-        (solidcraft_engine::SurfaceAnalysis::Draft { pull: a, .. }, solidcraft_engine::SurfaceAnalysis::Draft { pull: b, angle }) => {
+        (torno_engine::SurfaceAnalysis::Draft { pull: a, .. }, torno_engine::SurfaceAnalysis::Draft { pull: b, angle }) => {
             assert_eq!(a, b);
             assert_eq!(angle, 8.25);
         }
@@ -185,16 +185,16 @@ fn details_native_value_edits_run_real_commands_without_design_history() {
         h.step(&json!({"click":{"handle":format!("viewport_status:{owner}:setting")}})).unwrap();
         h.frames(3);
         let rect = crate::scenario::rect_of(&format!("details:field:{field}")).unwrap();
-        let at = if field == "stripes" { rect.right_center() - vec2(solidcraft_theme::Tokens::get().space_24, 0.0) } else { rect.center() };
+        let at = if field == "stripes" { rect.right_center() - vec2(torno_theme::Tokens::get().space_24, 0.0) } else { rect.center() };
         h.call("ui.click", json!({"x":at.x,"y":at.y,"double":true}));
         h.step(&json!({"key":"A","ctrl":true})).unwrap();
         h.step(&json!({"text":text})).unwrap();
         h.step(&json!({"key":"Enter"})).unwrap();
         h.frames(3);
         let value = match h.app.session.status_items()[0].setting {
-            solidcraft_engine::status_items::StatusSetting::Draft { angle_deg, .. } => angle_deg,
-            solidcraft_engine::status_items::StatusSetting::Zebra { stripes } => stripes,
-            solidcraft_engine::status_items::StatusSetting::Section { origin_mm, .. } => origin_mm[2],
+            torno_engine::status_items::StatusSetting::Draft { angle_deg, .. } => angle_deg,
+            torno_engine::status_items::StatusSetting::Zebra { stripes } => stripes,
+            torno_engine::status_items::StatusSetting::Section { origin_mm, .. } => origin_mm[2],
             _ => panic!("real edited setting expected"),
         };
         assert!((value - expected).abs() < 1e-9, "native {field}: {value} instead of {expected}");
@@ -320,7 +320,7 @@ fn details_outside_close_returns_live_owner_focus_and_replacement_reconciles() {
     h.app.run("inspect.zebra", json!({"stripes":14.5})).unwrap();
     h.frames(3);
     assert!(h.app.viewport_status.open_key.is_none());
-    assert!(matches!(h.app.session.analysis,Some(solidcraft_engine::SurfaceAnalysis::Zebra{stripes}) if stripes==14.5));
+    assert!(matches!(h.app.session.analysis,Some(torno_engine::SurfaceAnalysis::Zebra{stripes}) if stripes==14.5));
     assert!(crate::scenario::rect_of("viewport_status:card").is_none());
 }
 
@@ -355,7 +355,7 @@ fn details_document_identity_releases_equal_slot_owners_and_native_buffers() {
     assert_eq!(h.app.session.uid, uid);
     assert!(h.app.viewport_status.open_key.is_none());
     assert!(!egui::Popup::is_any_open(&h.ctx));
-    assert!(matches!(h.app.session.analysis,Some(solidcraft_engine::SurfaceAnalysis::Draft{angle,..}) if angle==3.0));
+    assert!(matches!(h.app.session.analysis,Some(torno_engine::SurfaceAnalysis::Draft{angle,..}) if angle==3.0));
 }
 
 #[test]
@@ -370,12 +370,12 @@ fn details_grouped_continuity_key_contains_the_actual_sharp_and_gap_tokens() {
             let effect = h.app.session.status_items().remove(0);
             let details = crate::viewport_details::description(&h.app, &effect);
             let key = &details.key[2];
-            let tokens = solidcraft_theme::Tokens::get();
+            let tokens = torno_theme::Tokens::get();
             assert_eq!(key.value, "12");
             assert_eq!(key.colour, tokens.continuity[2], "actual cube creases use the Sharp scene token");
             assert_eq!(key.pattern_colour, Some(tokens.continuity[3]), "the grouped key also carries the actual Gap scene token");
             assert!(key.pattern);
-            assert!(h.app.session.continuity_details().iter().all(|row| row.verdict == solidcraft_engine::status_details::ContinuityVerdict::Sharp));
+            assert!(h.app.session.continuity_details().iter().all(|row| row.verdict == torno_engine::status_details::ContinuityVerdict::Sharp));
         }
     }
 }
@@ -462,13 +462,13 @@ fn viewport_status_specimens_clear_and_open_keys_without_engine_changes() {
 #[test]
 fn viewport_status_kinds_keep_shape_outline_and_typography_across_themes() {
     use crate::ui_kit::{StatusItem, StatusKind, StatusPresentation, viewport_status_item};
-    let previous = (solidcraft_theme::is_dark(), solidcraft_theme::vision());
+    let previous = (torno_theme::is_dark(), torno_theme::vision());
     assert_ne!(StatusKind::Mode.icon(), StatusKind::Result.icon());
     assert_ne!(StatusKind::Result.icon(), StatusKind::Attention.icon());
     for dark in [false, true] {
-        for vision in solidcraft_theme::ColorVision::ALL {
-            solidcraft_theme::set_dark(dark);
-            solidcraft_theme::set_vision(vision);
+        for vision in torno_theme::ColorVision::ALL {
+            torno_theme::set_dark(dark);
+            torno_theme::set_vision(vision);
             let t = Tokens::get();
             for (kind, outline) in [(StatusKind::Mode, t.accent), (StatusKind::Result, t.border), (StatusKind::Attention, t.warning)] {
                 let ctx = crate::fonts::test_context();
@@ -498,18 +498,18 @@ fn viewport_status_kinds_keep_shape_outline_and_typography_across_themes() {
             }
         }
     }
-    solidcraft_theme::set_dark(previous.0);
-    solidcraft_theme::set_vision(previous.1);
+    torno_theme::set_dark(previous.0);
+    torno_theme::set_vision(previous.1);
 }
 
 #[test]
 fn viewport_status_every_part_is_centred_within_its_pill_in_every_theme() {
     use crate::ui_kit::{StatusItem, StatusKind, StatusPresentation, viewport_status_item};
-    let previous = (solidcraft_theme::is_dark(), solidcraft_theme::vision());
+    let previous = (torno_theme::is_dark(), torno_theme::vision());
     for dark in [false, true] {
-        for vision in solidcraft_theme::ColorVision::ALL {
-            solidcraft_theme::set_dark(dark);
-            solidcraft_theme::set_vision(vision);
+        for vision in torno_theme::ColorVision::ALL {
+            torno_theme::set_dark(dark);
+            torno_theme::set_vision(vision);
             for kind in [StatusKind::Mode, StatusKind::Result, StatusKind::Attention] {
                 for (name, setting, has_key, editable) in [
                     ("Zebra", "12 stripes", false, false),
@@ -555,8 +555,8 @@ fn viewport_status_every_part_is_centred_within_its_pill_in_every_theme() {
             }
         }
     }
-    solidcraft_theme::set_dark(previous.0);
-    solidcraft_theme::set_vision(previous.1);
+    torno_theme::set_dark(previous.0);
+    torno_theme::set_vision(previous.1);
 }
 
 // These tests inspect shapes without submitting their texture uploads to a renderer.
@@ -590,11 +590,11 @@ fn viewport_status_close_hover_has_a_theme_fill_and_native_space_action_in_every
         found
     }
 
-    let previous = (solidcraft_theme::is_dark(), solidcraft_theme::vision());
+    let previous = (torno_theme::is_dark(), torno_theme::vision());
     for dark in [false, true] {
-        for vision in solidcraft_theme::ColorVision::ALL {
-            solidcraft_theme::set_dark(dark);
-            solidcraft_theme::set_vision(vision);
+        for vision in torno_theme::ColorVision::ALL {
+            torno_theme::set_dark(dark);
+            torno_theme::set_vision(vision);
             let t = Tokens::get();
             let ctx = crate::fonts::test_context();
             let item = StatusItem {
@@ -621,8 +621,8 @@ fn viewport_status_close_hover_has_a_theme_fill_and_native_space_action_in_every
             assert_eq!(keyboard, Some(StatusAction::Clear(item.id.clone())), "hover decoration must preserve native Space activation");
         }
     }
-    solidcraft_theme::set_dark(previous.0);
-    solidcraft_theme::set_vision(previous.1);
+    torno_theme::set_dark(previous.0);
+    torno_theme::set_vision(previous.1);
 }
 
 fn draw(ctx: &egui::Context, paint: impl FnMut(&mut egui::Ui)) -> egui::FullOutput {
@@ -683,14 +683,14 @@ fn compass_keeps_signed_targets_hover_and_clicks_at_both_scales() {
 #[test]
 fn compass_negative_ends_are_hollow_and_positive_ends_are_chunkier() {
     for dark in [false, true] {
-        let t = Tokens::themed(dark, solidcraft_theme::ColorVision::Off);
+        let t = Tokens::themed(dark, torno_theme::ColorVision::Off);
         for (name, direction, positive) in [("x", Vec3::X, true), ("-x", -Vec3::X, false)] {
             let ctx = crate::fonts::test_context();
             let c = pos2(100.0, 100.0);
             let original = c + vec2(38.0, 0.0);
             let painted = c + (original - c) * 0.84;
             let output = draw(&ctx, |ui| {
-                solidcraft_look::compass::axis_tip_scaled(ui.painter(), c, name, direction.into(), painted, 0.5, false, t, 1.0);
+                torno_look::compass::axis_tip_scaled(ui.painter(), c, name, direction.into(), painted, 0.5, false, t, 1.0);
             });
             let circles: Vec<_> = output.shapes.iter().filter_map(|s| if let Shape::Circle(c) = &s.shape { Some(c) } else { None }).collect();
             let end = circles.iter().find(|circle| circle.center == painted).unwrap();
@@ -897,7 +897,7 @@ fn sketch_previews_selection_band_and_number_focus_follow_sketch_accent() {
             let output = draw(&h.ctx, |ui| {
                 let r = ui.add(egui::TextEdit::singleline(&mut String::from("20")));
                 r.request_focus();
-                solidcraft_theme::TabAccent::number_focus(ui, &r);
+                torno_theme::TabAccent::number_focus(ui, &r);
             });
             assert!(output.shapes.iter().any(|s| matches!(&s.shape, Shape::Rect(r) if r.stroke.color == t.sketch_accent)));
         }
@@ -927,14 +927,14 @@ fn three_dimensional_sketch_rubber_band_uses_sketch_accent() {
 #[test]
 fn a_hovered_compass_end_turns_white_and_its_letter_takes_the_axis_colour() {
     for dark in [false, true] {
-        let t = Tokens::themed(dark, solidcraft_theme::ColorVision::Off);
+        let t = Tokens::themed(dark, torno_theme::ColorVision::Off);
         for (name, direction, positive) in [("x", Vec3::X, true), ("-x", -Vec3::X, false)] {
             let ctx = crate::fonts::test_context();
             let c = pos2(100.0, 100.0);
             let original = c + vec2(38.0, 0.0);
             let painted = c + (original - c) * 0.84;
             let output = draw(&ctx, |ui| {
-                solidcraft_look::compass::axis_tip_scaled(ui.painter(), c, name, direction.into(), painted, 0.5, true, t, 1.0);
+                torno_look::compass::axis_tip_scaled(ui.painter(), c, name, direction.into(), painted, 0.5, true, t, 1.0);
             });
             let circles: Vec<_> = output.shapes.iter().filter_map(|s| if let Shape::Circle(c) = &s.shape { Some(c) } else { None }).collect();
             assert!(circles.iter().any(|circle| circle.center == painted && circle.fill == t.on_accent), "{name}: the hovered end is filled white");
@@ -1371,7 +1371,7 @@ fn view_analysis_buttons_are_one_toggle_group() {
 /// through `view.apply`, without touching the design or its history.
 #[test]
 fn view_angles_readout_shows_only_when_on_and_applies_typed_angles() {
-    use solidcraft_viewport::ViewAngles;
+    use torno_viewport::ViewAngles;
     for style in ["axes", "cube"] {
         let mut h = Harness::new();
         h.call("ui.prefs", json!({"navigator_style": style}));
@@ -1438,7 +1438,7 @@ fn view_angles_readout_shows_only_when_on_and_applies_typed_angles() {
 /// while only the pitch is adjusted.
 #[test]
 fn view_angles_card_zero_buttons_and_axis_locks() {
-    use solidcraft_viewport::ViewAngles;
+    use torno_viewport::ViewAngles;
     let mut h = Harness::new();
     h.app.preferences.look_at_anim = false;
     h.call("engine.execute", json!({"command": "view.angle_readout", "params": {"enabled": true}}));
@@ -1780,7 +1780,7 @@ fn live_analysis_status_uses_session_settings_and_declared_clear_without_history
         let item = crate::viewport_status::presentation(&h.app, &effect).unwrap();
         assert_eq!(item.setting, expected);
         assert_eq!(item.has_key, key);
-        assert_eq!(item.name, crate::toolbar::persistent_button_name(&h.app, solidcraft_engine::find_command(command).unwrap()));
+        assert_eq!(item.name, crate::toolbar::persistent_button_name(&h.app, torno_engine::find_command(command).unwrap()));
         h.frames(4);
         assert!(crate::scenario::rect_of(&format!("viewport_status:{}:item", item.id)).is_some());
         if key {
@@ -1919,7 +1919,7 @@ fn section_status_formats_actual_geometry_in_design_units_without_flip_sign_chan
             let item = crate::viewport_status::presentation(&h.app, &effect).unwrap();
             assert_eq!(item.setting, expected);
             assert!(item.editable && !item.has_key);
-            assert_eq!(item.name, crate::toolbar::persistent_button_name(&h.app, solidcraft_engine::find_command("inspect.section").unwrap()));
+            assert_eq!(item.name, crate::toolbar::persistent_button_name(&h.app, torno_engine::find_command("inspect.section").unwrap()));
         }
     }
 }
@@ -2565,7 +2565,7 @@ fn summary_native_menu_escape_is_close_only_then_newest_replacement_clears_and_u
     h.app.run("inspect.draft", json!({})).unwrap();
     h.frames(3);
     assert_eq!(h.app.session.status_items().first().unwrap().id, oldest);
-    let latest = h.app.session.newest_status_item(&[solidcraft_engine::status_items::StatusId::SurfaceAnalysis]).unwrap();
+    let latest = h.app.session.newest_status_item(&[torno_engine::status_items::StatusId::SurfaceAnalysis]).unwrap();
     let item = crate::viewport_status::presentation(&h.app, &latest).unwrap();
     assert!(crate::scenario::rect_of(&format!("viewport_status:{}:summary", item.id)).is_some());
     h.step(&json!({"click":{"handle":"viewport_status:summary"}})).unwrap();
@@ -2593,7 +2593,7 @@ fn summary_native_menu_escape_is_close_only_then_newest_replacement_clears_and_u
 
 #[test]
 fn summary_menu_yields_to_preferences_and_command_dialog_without_resuming_or_stealing_focus() {
-    use solidcraft_engine::status_items::StatusId;
+    use torno_engine::status_items::StatusId;
     fn contains_text(shape: &Shape, text: &str) -> bool {
         match shape {
             Shape::Text(shape) => shape.galley.text() == text,
@@ -2622,7 +2622,7 @@ fn summary_menu_yields_to_preferences_and_command_dialog_without_resuming_or_ste
         h.frames(frames);
         assert!(!egui::Popup::is_any_open(&h.ctx), "{owner} dismisses the lower Summary popup");
         assert!(crate::scenario::rect_of("menu:viewport_status_clear_all").is_none());
-        let heading = solidcraft_ui_text::tr("ui.viewport_status_summary_heading").to_uppercase();
+        let heading = torno_ui_text::tr("ui.viewport_status_summary_heading").to_uppercase();
         assert!(!h.shapes.iter().any(|shape| contains_text(&shape.shape, &heading)), "no Summary list paints over {owner}");
         if owner != "command" {
             h.step(&json!({"click":{"handle":"prefs:search"}})).unwrap();
@@ -2662,7 +2662,7 @@ fn summary_menu_keeps_tool_owned_row_clear_available() {
     h.step(&json!({"click":{"handle":"viewport_status:summary"}})).unwrap();
     h.frames(frames);
     assert!(egui::Popup::is_any_open(&h.ctx), "a Tool is not a higher modal owner");
-    let section = h.app.session.status_items().into_iter().find(|item| item.id == solidcraft_engine::status_items::StatusId::Section).unwrap();
+    let section = h.app.session.status_items().into_iter().find(|item| item.id == torno_engine::status_items::StatusId::Section).unwrap();
     let section = crate::viewport_status::presentation(&h.app, &section).unwrap();
     h.step(&json!({"click":{"handle":format!("viewport_status:{}:close", section.id)}})).unwrap();
     assert!(h.app.session.section.is_none());

@@ -1,8 +1,8 @@
 //! Modelled threads: the ISO metric profile cut along a helix, inside and outside,
 //! including fine pitches on large shafts and the sample flange.
 
-use solidcraft_geom::prelude::*;
 use std::f64::consts::PI;
+use torno_geom::prelude::*;
 
 use serde_json::{Value, json};
 use solidcore_record::Vec3;
@@ -20,12 +20,12 @@ fn run(s: &mut Session, id: &str, p: Value) -> Value {
 /// measurement of its thousands of faces.
 fn volume(s: &mut Session, b: &str) -> f64 {
     let st = s.model.state();
-    st.body(b).map(|mb| mb.body.mesh(&solidcraft_kernel::MeshTolerance::chord(1e-3)).unwrap().measure().volume).unwrap_or(0.0)
+    st.body(b).map(|mb| mb.body.mesh(&torno_kernel::MeshTolerance::chord(1e-3)).unwrap().measure().volume).unwrap_or(0.0)
 }
 
 const SIZES: [(f64, f64); 9] = [(3.0, 0.5), (4.0, 0.7), (5.0, 0.8), (6.0, 1.0), (8.0, 1.25), (10.0, 1.5), (12.0, 1.75), (16.0, 2.0), (20.0, 2.5)];
 
-fn assert_tapped_depth(state: &solidcraft_doc::ModelState, entry: Vec3, inward: Vec3, offset: f64, depth: f64) {
+fn assert_tapped_depth(state: &torno_doc::ModelState, entry: Vec3, inward: Vec3, offset: f64, depth: f64) {
     assert_eq!(state.threads.len(), 1);
     let thread = &state.threads[0];
     assert!(thread.internal);
@@ -48,14 +48,14 @@ fn tapped_thread_depth_keeps_reference_edge_placement_after_reopen() {
     let inward = Vec3::new(0.0, 0.0, -1.0);
     let entry = Vec3::new(10.0, 12.0, 12.0);
     assert_tapped_depth(&s.model.state(), entry, inward, 0.0, 3.0);
-    let reopened = Session::new(solidcraft_doc::Document::from_json(&s.doc.to_json()).unwrap());
+    let reopened = Session::new(torno_doc::Document::from_json(&s.doc.to_json()).unwrap());
     assert_tapped_depth(&reopened.model.state(), entry, inward, 0.0, 3.0);
-    let solidcraft_doc::FeatureKind::Hole { references, thread_depth, .. } = &reopened.doc.features.last().unwrap().kind else {
+    let torno_doc::FeatureKind::Hole { references, thread_depth, .. } = &reopened.doc.features.last().unwrap().kind else {
         panic!("expected a referenced tapped hole");
     };
     assert_eq!(references.len(), 2);
     assert_eq!(thread_depth.as_ref().unwrap().to_string(), "3");
-    assert_eq!(reopened.model.state().bodies[0].body.classify_point(Vec3::new(10.0, 12.0, 10.0)).unwrap(), solidcraft_kernel::PointClass::Outside);
+    assert_eq!(reopened.model.state().bodies[0].body.classify_point(Vec3::new(10.0, 12.0, 10.0)).unwrap(), torno_kernel::PointClass::Outside);
 }
 
 #[test]
@@ -78,7 +78,7 @@ fn tapped_thread_depth_is_independent_through_preview_redefine_undo_and_reload()
         // Version 29 never saved this field: its default remains the full wall.
         let mut legacy: Value = serde_json::from_str(&before).unwrap();
         legacy["format"] = json!("solidcraft/29");
-        let reopened = Session::new(solidcraft_doc::Document::from_json(&legacy.to_string()).unwrap());
+        let reopened = Session::new(torno_doc::Document::from_json(&legacy.to_string()).unwrap());
         assert_tapped_depth(&reopened.model.state(), entry, inward, 0.0, full);
 
         params["thread_depth"] = json!(4);
@@ -90,7 +90,7 @@ fn tapped_thread_depth_is_independent_through_preview_redefine_undo_and_reload()
         assert_tapped_depth(&s.model.state(), entry, inward, 0.0, 4.0);
         assert!((volume(&mut s, "Plate") - physical_volume).abs() < 1e-6, "thread depth must not change the drill geometry");
         let saved = s.doc.to_json();
-        let reopened = Session::new(solidcraft_doc::Document::from_json(&saved).unwrap());
+        let reopened = Session::new(torno_doc::Document::from_json(&saved).unwrap());
         assert_tapped_depth(&reopened.model.state(), entry, inward, 0.0, 4.0);
         run(&mut s, "edit.undo", json!({}));
         assert_eq!(s.doc.to_json(), before);
@@ -177,8 +177,8 @@ fn faceted_flange_thread_preserves_thin_crest_boundaries() {
     let groove = kernel::sweep_helix_mesh(&plane, &section, base, *cylinder.axis, pitch, (end - start) / pitch, 48).unwrap();
     let cut = kernel::faceted_boolean(body, &groove, kernel::BoolOp::Cut, pitch * 0.005).unwrap().unwrap();
     assert!(cut.validity().is_empty(), "{:?}", cut.validity());
-    let before = body.mesh(&solidcraft_kernel::MeshTolerance::chord(0.001)).unwrap().measure().volume;
-    let after = cut.mesh(&solidcraft_kernel::MeshTolerance::chord(0.001)).unwrap().measure().volume;
+    let before = body.mesh(&torno_kernel::MeshTolerance::chord(0.001)).unwrap().measure().volume;
+    let after = cut.mesh(&torno_kernel::MeshTolerance::chord(0.001)).unwrap().measure().volume;
     assert!(before - after > 700.0 && before - after < 1800.0, "removed {}", before - after);
 }
 
@@ -484,7 +484,7 @@ fn fillet_beside_a_modelled_thread_finishes() {
 /// The SMLib volume of a body (exact surfaces), for closed-form checks.
 fn exact_volume(s: &Session, b: &str) -> f64 {
     let st = s.model.state();
-    st.body(b).map(|mb| solidcraft_kernel::measure(&mb.body).unwrap().volume).unwrap_or(0.0)
+    st.body(b).map(|mb| torno_kernel::measure(&mb.body).unwrap().volume).unwrap_or(0.0)
 }
 
 /// One turn of the ISO 68-1 external groove inside a shaft of radius `rs` (its section clipped at
@@ -537,9 +537,9 @@ fn volume_between(s: &Session, b: &str, (z0, z1): (f64, f64), quadrant: Option<(
         cuts.push((on(Vec3::ZERO, Vec3::new(0.0, 1.0, 0.0)), y));
     }
     for (plane, positive) in cuts {
-        part = solidcraft_kernel::half_space(&part, &plane, positive).unwrap().0.unwrap();
+        part = torno_kernel::half_space(&part, &plane, positive).unwrap().0.unwrap();
     }
-    solidcraft_kernel::measure(&part).unwrap().volume
+    torno_kernel::measure(&part).unwrap().volume
 }
 
 /// #11610: a boss standing on a flat plate. The groove reaches the plate at every angle of the
@@ -725,9 +725,9 @@ fn a_mid_face_pick_between_two_free_ends_needs_from() {
     let body = &st.body("Part").unwrap().body;
     let ring = |z: f64| (0..36).map(|i| (i as f64 * 10.0).to_radians()).map(move |a| Vec3::new(4.9 * a.cos(), 4.9 * a.sin(), z));
     let rings = |z0: f64, z1: f64| (0..=40).map(move |i| z0 + (z1 - z0) * i as f64 / 40.0).flat_map(ring);
-    assert!(rings(0.5, 14.0).all(|q| body.classify_point(q).unwrap() == solidcraft_kernel::PointClass::Inside), "the bottom half is cut");
+    assert!(rings(0.5, 14.0).all(|q| body.classify_point(q).unwrap() == torno_kernel::PointClass::Inside), "the bottom half is cut");
     assert!(
-        rings(16.0, 29.5).filter(|q| body.classify_point(*q).unwrap() == solidcraft_kernel::PointClass::Outside).count() > 100,
+        rings(16.0, 29.5).filter(|q| body.classify_point(*q).unwrap() == torno_kernel::PointClass::Outside).count() > 100,
         "the top half is not threaded"
     );
 }
@@ -859,8 +859,8 @@ fn a_left_handed_thread_turns_the_other_way() {
                 let a0 = *i as f64 * 10f64.to_radians();
                 let z0 = 4.5;
                 let probe = |a: f64| Vec3::new(r * (a0 + a).cos(), r * (a0 + a).sin(), z0 + sign * p * a / std::f64::consts::TAU);
-                body.classify_point(probe(0.0)).unwrap() == solidcraft_kernel::PointClass::Outside
-                    && (1..12).all(|k| body.classify_point(probe(k as f64 * 0.5)).unwrap() == solidcraft_kernel::PointClass::Outside)
+                body.classify_point(probe(0.0)).unwrap() == torno_kernel::PointClass::Outside
+                    && (1..12).all(|k| body.classify_point(probe(k as f64 * 0.5)).unwrap() == torno_kernel::PointClass::Outside)
             })
             .count()
     };
@@ -894,8 +894,8 @@ fn a_format_39_left_hand_thread_and_tapped_hole_open_left_handed() {
     run(&mut s, "solid.hole", json!({"position": [20, 30, 12], "thread": "M6", "depth": 8, "hand": "left"}));
     run(&mut s, "solid.cylinder", json!({"radius": 5, "height": 9, "base": [80, 0, 0], "body_name": "Shaft", "operation": "new"}));
     run(&mut s, "solid.thread", json!({"face": [85, 0, 4.5], "designation": "M10", "hand": "left"}));
-    let hands = |s: &Session| -> Vec<solidcraft_doc::thread_forms::ThreadHand> { s.model.state().threads.iter().map(|t| t.hand).collect() };
-    let left = solidcraft_doc::thread_forms::ThreadHand::Left;
+    let hands = |s: &Session| -> Vec<torno_doc::thread_forms::ThreadHand> { s.model.state().threads.iter().map(|t| t.hand).collect() };
+    let left = torno_doc::thread_forms::ThreadHand::Left;
     assert_eq!(hands(&s), [left, left]);
     // What format 39 wrote: the direction as `handedness`, no pending changes.
     let mut v: Value = serde_json::from_str(&s.doc.to_json()).unwrap();
@@ -906,7 +906,7 @@ fn a_format_39_left_hand_thread_and_tapped_hole_open_left_handed() {
             f["handedness"] = h;
         }
     }
-    let reopened = Session::new(solidcraft_doc::Document::from_json(&v.to_string()).unwrap());
+    let reopened = Session::new(torno_doc::Document::from_json(&v.to_string()).unwrap());
     assert_eq!(hands(&reopened), [left, left]);
     let mut s = Session::default();
     run(&mut s, "solid.box", json!({"length": 60, "width": 60, "height": 12}));
@@ -1165,7 +1165,7 @@ fn a_saved_segmented_thread_flank_pick_does_not_select_a_different_face() {
         if tip != "none" {
             thread["tip"] = json!(tip);
         }
-        let mut saved: Value = serde_json::from_str(&solidcraft_doc::Document::default().to_json()).unwrap();
+        let mut saved: Value = serde_json::from_str(&torno_doc::Document::default().to_json()).unwrap();
         saved["features"] = json!([
             {
                 "axis": [0, 0, 1], "base": [0, 0, 0], "body_names": ["Shaft"], "height": "12",
@@ -1175,12 +1175,12 @@ fn a_saved_segmented_thread_flank_pick_does_not_select_a_different_face() {
         ]);
         saved["next_id"] = json!(3);
         saved["params"] = json!([]);
-        let mut reopened = Session::new(solidcraft_doc::Document::from_json(&saved.to_string()).unwrap());
+        let mut reopened = Session::new(torno_doc::Document::from_json(&saved.to_string()).unwrap());
         let check_picks = |session: &Session| {
             let rebuilt = session.model.state();
             let shaft = rebuilt.body("Shaft").unwrap();
             for (name, pick) in &picks {
-                let (face, point) = solidcraft_doc::naming::face_on_body(shaft, name, *pick).unwrap();
+                let (face, point) = torno_doc::naming::face_on_body(shaft, name, *pick).unwrap();
                 assert!(point.dist(*pick) < 0.01, "{tip}: {name} must stay on its original flank: {point:?}");
                 assert!(
                     matches!(shaft.body.record().faces[face].surface, Surface::Spline { .. } | Surface::RationalSpline { .. }),
@@ -1197,10 +1197,10 @@ fn a_saved_segmented_thread_flank_pick_does_not_select_a_different_face() {
                 "params": {"face": [5, 0, 6], "designation": "M10x1.5", "modeled": true, "tip": tip}
             }),
         );
-        assert!(matches!(reopened.doc.feature(2).unwrap().kind, solidcraft_doc::FeatureKind::Thread { continuous_flanks: false, .. }));
+        assert!(matches!(reopened.doc.feature(2).unwrap().kind, torno_doc::FeatureKind::Thread { continuous_flanks: false, .. }));
         check_picks(&reopened);
-        let saved_again = solidcraft_doc::Document::from_json(&reopened.doc.to_json()).unwrap();
-        assert!(matches!(saved_again.feature(2).unwrap().kind, solidcraft_doc::FeatureKind::Thread { continuous_flanks: false, .. }));
+        let saved_again = torno_doc::Document::from_json(&reopened.doc.to_json()).unwrap();
+        assert!(matches!(saved_again.feature(2).unwrap().kind, torno_doc::FeatureKind::Thread { continuous_flanks: false, .. }));
     }
 }
 
@@ -1217,7 +1217,7 @@ fn a_modelled_thread_keeps_each_flank_as_one_face() {
         let st = s.model.state();
         let shaft = st.body("Shaft").unwrap();
         let body = &shaft.body;
-        let mesh = body.mesh(&solidcraft_kernel::MeshTolerance::chord(0.01)).unwrap();
+        let mesh = body.mesh(&torno_kernel::MeshTolerance::chord(0.01)).unwrap();
         let record = body.record();
         let flanks: Vec<usize> = record
             .faces
@@ -1227,21 +1227,21 @@ fn a_modelled_thread_keeps_each_flank_as_one_face() {
             .map(|(i, _)| i)
             .collect();
         assert_eq!(flanks.len(), 2, "one selectable face per flank, independent of the turn count");
-        let names = solidcraft_doc::naming::face_names(shaft);
+        let names = torno_doc::naming::face_names(shaft);
         let picks: Vec<_> = flanks
             .iter()
             .map(|&flank| {
                 assert!(mesh.tri_face.iter().any(|f| *f as usize == flank), "flank {flank} must tessellate");
-                (names[flank].clone(), solidcraft_doc::naming::face_spot(shaft, flank).unwrap().point)
+                (names[flank].clone(), torno_doc::naming::face_spot(shaft, flank).unwrap().point)
             })
             .collect();
         // The named picks downstream face commands store must still find the same kind of face
         // after the history is serialized and rebuilt, including the reordered chamfer cuts.
-        let reopened = Session::new(solidcraft_doc::Document::from_json(&s.doc.to_json()).unwrap());
+        let reopened = Session::new(torno_doc::Document::from_json(&s.doc.to_json()).unwrap());
         let rebuilt = reopened.model.state();
         let shaft = rebuilt.body("Shaft").unwrap();
         for (name, point) in picks {
-            let (face, found) = solidcraft_doc::naming::face_on_body(shaft, &name, point).unwrap();
+            let (face, found) = torno_doc::naming::face_on_body(shaft, &name, point).unwrap();
             assert!(found.dist(point) < 1e-6, "the saved flank pick must remain on its named face: {name}");
             assert!(matches!(shaft.body.record().faces[face].surface, Surface::Spline { .. } | Surface::RationalSpline { .. }));
         }
@@ -1420,7 +1420,7 @@ fn a_modelled_tapped_hole_stops_clear_of_its_bottom_or_fades_out_before_it() {
     assert!(v1 < v2 && v2 < v0, "drilled {v0}, square {v1}, fade {v2}");
     // The groove never reaches the drill point: the bottom's cone is the drilled one.
     assert!(square.model.state().threads.is_empty(), "a modelled thread is cut, not listed");
-    let reopened = Session::new(solidcraft_doc::Document::from_json(&fade.doc.to_json()).unwrap());
+    let reopened = Session::new(torno_doc::Document::from_json(&fade.doc.to_json()).unwrap());
     assert!((exact_volume(&reopened, "Plate") - v2).abs() < 1e-6);
 
     let mut s = Session::default();
@@ -1461,7 +1461,7 @@ fn a_tapped_hole_given_no_diameter_drills_the_tap_makers_drill() {
     let mut drilled = |p: Value| {
         let id = run(&mut s, "solid.hole", p)["feature"].as_u64().unwrap();
         match &s.doc.feature(id).unwrap().kind {
-            solidcraft_doc::FeatureKind::Hole { diameter, .. } => diameter.to_string(),
+            torno_doc::FeatureKind::Hole { diameter, .. } => diameter.to_string(),
             k => panic!("{k:?}"),
         }
     };
@@ -1549,7 +1549,7 @@ fn a_saved_automatic_thread_keeps_its_old_size() {
     let mut v: Value = serde_json::from_str(&s.doc.to_json()).unwrap();
     v["format"] = json!("solidcraft/49");
     v.as_object_mut().unwrap().remove("format_pending");
-    let reopened = Session::new(solidcraft_doc::Document::from_json(&v.to_string()).unwrap());
+    let reopened = Session::new(torno_doc::Document::from_json(&v.to_string()).unwrap());
     assert_eq!(designations(&reopened), ["M14"]);
     let saved: Value = serde_json::from_str(&reopened.doc.to_json()).unwrap();
     let thread = saved["features"].as_array().unwrap().iter().find(|f| f["type"] == json!("thread")).unwrap();
@@ -1564,7 +1564,7 @@ fn editing_a_saved_automatic_thread_keeps_its_old_size() {
     let mut v: Value = serde_json::from_str(&s.doc.to_json()).unwrap();
     v["format"] = json!("solidcraft/49");
     v.as_object_mut().unwrap().remove("format_pending");
-    let mut s = Session::new(solidcraft_doc::Document::from_json(&v.to_string()).unwrap());
+    let mut s = Session::new(torno_doc::Document::from_json(&v.to_string()).unwrap());
     let designations = |s: &Session| -> Vec<String> { s.model.state().threads.iter().map(|t| t.designation.clone()).collect() };
     assert_eq!(designations(&s), ["M14"]);
     run(&mut s, "timeline.redefine", json!({"feature": made["feature"], "command": "solid.thread", "params": {"face": [6, 0, 10], "hand": "left"}}));

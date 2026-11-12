@@ -2,7 +2,7 @@
 //! as a library caller makes it (no B-rep cache, no `face_entity`), on a `create_box`
 //! B-rep as made (not renumbered or renamed), its geometry named by the B-rep's own
 //! owner identities (`Brep::owner_identity`). At the centre of each of the box's faces
-//! the face's closest point is the centre itself, at distance 0 (the SolidCraft fork's
+//! the face's closest point is the centre itself, at distance 0 (the Torno fork's
 //! C API picks faces by their centres): plan/findings
 //! `query.api_queries--face-closest-point-solve-answers-a-vertex.md`.
 #![allow(

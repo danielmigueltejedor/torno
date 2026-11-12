@@ -980,13 +980,13 @@ fn context_and_history_menus_only_use_kit_surfaces_without_allowances() {
     assert!(ALLOWED.is_empty());
 }
 
-/// SolidCraft's dialogs, Preferences and menus draw the kit's checkbox exactly as the kit does.
+/// Torno's dialogs, Preferences and menus draw the kit's checkbox exactly as the kit does.
 mod checkbox_in_use {
     use crate::ui_kit::{self, checkbox, test_checkbox_shapes as checkbox_shapes, test_raster as raster, test_textures_update as textures_update};
     use egui::{Rect, Shape, Ui, vec2};
     use serde_json::json;
-    use solidcraft_theme::Tokens;
     use std::collections::HashMap;
+    use torno_theme::Tokens;
 
     fn surface(
         ui: &mut Ui,
@@ -1016,10 +1016,10 @@ mod checkbox_in_use {
 
     #[test]
     fn actual_config_appearance_preferences_and_menu_boxes_and_ticks_match_at_1x_2x() {
-        let previous = solidcraft_theme::is_dark();
-        let evidence = std::env::var_os("SOLIDCRAFT_CHECKBOX_EVIDENCE").map(std::path::PathBuf::from);
+        let previous = torno_theme::is_dark();
+        let evidence = std::env::var_os("TORNO_CHECKBOX_EVIDENCE").map(std::path::PathBuf::from);
         for dark in [false, true] {
-            solidcraft_theme::set_dark(dark);
+            torno_theme::set_dark(dark);
             for ppp in [1.0, 2.0] {
                 let reference_ctx = crate::fonts::test_context();
                 reference_ctx.set_pixels_per_point(ppp);
@@ -1120,15 +1120,15 @@ mod checkbox_in_use {
                 }
             }
         }
-        solidcraft_theme::set_dark(previous);
+        torno_theme::set_dark(previous);
     }
 }
 
-/// The kit's disclosures draw SolidCraft's chevron artwork (the host's icon set) at token size.
+/// The kit's disclosures draw Torno's chevron artwork (the host's icon set) at token size.
 mod disclosure_artwork {
     use crate::{icon_svg, scenario, ui_kit::*};
     use egui::{ColorImage, Pos2, Rect, vec2};
-    use solidcraft_theme::Tokens;
+    use torno_theme::Tokens;
 
     fn assert_glyph(
         ctx: &egui::Context,
@@ -1147,7 +1147,7 @@ mod disclosure_artwork {
         let master = icon_svg::resolve(id).master;
         let image = icon_svg::render(
             icon_svg::doc_for(master, px).unwrap(),
-            icon_svg::Look { dark: true, accent: None, vision: solidcraft_theme::vision(), palette: None },
+            icon_svg::Look { dark: true, accent: None, vision: torno_theme::vision(), palette: None },
             px,
         )
         .unwrap();
@@ -1175,9 +1175,9 @@ mod disclosure_artwork {
 
     #[test]
     fn section_card_and_floating_window_folds_render_down_when_open_right_when_closed() {
-        let previous = solidcraft_theme::is_dark();
+        let previous = torno_theme::is_dark();
         for dark in [false, true] {
-            solidcraft_theme::set_dark(dark);
+            torno_theme::set_dark(dark);
             for open in [false, true] {
                 for surface in ["section", "card", "window"] {
                     let ctx = crate::fonts::test_context();
@@ -1228,7 +1228,7 @@ mod disclosure_artwork {
                 }
             }
         }
-        solidcraft_theme::set_dark(previous);
+        torno_theme::set_dark(previous);
     }
 
     #[test]
@@ -1244,7 +1244,7 @@ mod disclosure_artwork {
             let size = icon.width().round() as u32;
             let expected = icon_svg::render(
                 icon_svg::doc_for(icon_svg::resolve("chevron").master, size).unwrap(),
-                icon_svg::Look { dark: true, accent: None, vision: solidcraft_theme::vision(), palette: None },
+                icon_svg::Look { dark: true, accent: None, vision: torno_theme::vision(), palette: None },
                 size,
             )
             .unwrap();
@@ -1375,11 +1375,11 @@ fn host_names_in(source: &str, names: &std::collections::BTreeSet<String>) -> Ve
     guard.found
 }
 
-/// SolidCraft's tab names and every command id in the engine's registry: what a shared crate
+/// Torno's tab names and every command id in the engine's registry: what a shared crate
 /// (the theme) and the kit and its components must take from the host as data.
 fn host_names() -> std::collections::BTreeSet<String> {
     let mut names: std::collections::BTreeSet<String> = crate::workspace::TAB_ACCENTS.names().map(str::to_owned).collect();
-    names.extend(solidcraft_engine::command_specs().into_iter().map(|spec| spec.id.to_owned()));
+    names.extend(torno_engine::command_specs().into_iter().map(|spec| spec.id.to_owned()));
     names
 }
 
@@ -1447,7 +1447,7 @@ fn host_name_guard_finds_tab_names_and_command_ids_but_skips_tests() {
 /// navigation bar customiser's. Every other id in the host's catalogs names the host's screens.
 const KIT_MESSAGE_PREFIXES: &[&str] = &["color.", "navbar.custom.", "search.", "ui."];
 
-/// The message ids (`area.thing`) of SolidCraft's English catalog outside the kit's vocabulary:
+/// The message ids (`area.thing`) of Torno's English catalog outside the kit's vocabulary:
 /// labels the kit must take from the host as data.
 fn host_message_ids() -> std::collections::BTreeSet<String> {
     all_message_ids().into_iter().filter(|key| !KIT_MESSAGE_PREFIXES.iter().any(|prefix| key.starts_with(prefix))).collect()
@@ -1489,8 +1489,8 @@ fn message_id_guard_finds_host_ids_but_skips_kit_vocabulary_and_tests() {
     let names = host_message_ids();
     assert!(names.contains("prefs.blur_off") && !names.contains("ui.undo") && !names.contains("Invert"));
     let source = r#"
-        fn host() -> &'static str { solidcraft_ui_text::tr("prefs.blur_off") }
-        fn kit() -> &'static str { solidcraft_ui_text::tr("ui.undo") }
+        fn host() -> &'static str { torno_ui_text::tr("prefs.blur_off") }
+        fn kit() -> &'static str { torno_ui_text::tr("ui.undo") }
         fn handle() -> String { format!("prefs:blur_cost:{}", "ai.prefs.pointer_preview_hidden") }
         #[cfg(test)]
         mod tests { fn sample() -> &'static str { "sketch_text.bold" } }
@@ -1498,7 +1498,7 @@ fn message_id_guard_finds_host_ids_but_skips_kit_vocabulary_and_tests() {
     assert_eq!(host_names_in(source, &names), ["prefs.blur_off", "ai.prefs.pointer_preview_hidden"]);
 }
 
-/// English-label keys of SolidCraft's English catalog (`Bends`, `Collapse`): older tables read
+/// English-label keys of Torno's English catalog (`Bends`, `Collapse`): older tables read
 /// them through the label adapter. Everything else in the catalog is a message id.
 fn english_label_keys() -> std::collections::BTreeSet<String> {
     let english = crate::i18n::LOCALES.first().expect("the English catalog");
@@ -1506,7 +1506,7 @@ fn english_label_keys() -> std::collections::BTreeSet<String> {
     english.messages().keys().filter(|key| !ids.contains(*key)).map(|key| key.to_string()).collect()
 }
 
-/// Every dotted message id (`area.thing`) of SolidCraft's English catalog, the kit's included.
+/// Every dotted message id (`area.thing`) of Torno's English catalog, the kit's included.
 fn all_message_ids() -> std::collections::BTreeSet<String> {
     let english = crate::i18n::LOCALES.first().expect("the English catalog");
     english

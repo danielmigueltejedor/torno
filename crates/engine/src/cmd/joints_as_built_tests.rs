@@ -3,7 +3,7 @@
 
 use serde_json::json;
 use solidcore_record::Vec3;
-use solidcraft_geom::prelude::*;
+use torno_geom::prelude::*;
 
 use super::tests::{occ, place, run};
 use crate::Session;
@@ -41,8 +41,8 @@ fn an_as_built_joint_at_a_hole_follows_the_hole() {
     }
     // The plate side keeps the hole (found by its face's name); the latch side holds its frame.
     let j = s.doc.assembly.joints.first().cloned();
-    assert!(matches!(j.as_ref().map(|j| &j.a.snap), Some(solidcraft_doc::joints::Snap::CircleCenter { face: Some(_), .. })), "{j:?}");
-    assert!(matches!(j.as_ref().map(|j| &j.b.snap), Some(solidcraft_doc::joints::Snap::Frame { .. })), "{j:?}");
+    assert!(matches!(j.as_ref().map(|j| &j.a.snap), Some(torno_doc::joints::Snap::CircleCenter { face: Some(_), .. })), "{j:?}");
+    assert!(matches!(j.as_ref().map(|j| &j.b.snap), Some(torno_doc::joints::Snap::Frame { .. })), "{j:?}");
 }
 
 #[test]
@@ -51,10 +51,7 @@ fn an_as_built_joint_at_no_origin_or_one_elsewhere_holds_its_frame() {
     run(&mut s, "joint.as_built", json!({"type": "rigid", "a": "Plate", "b": "Latch", "name": "Here"}));
     let j = s.doc.assembly.joints.first().cloned();
     assert!(
-        matches!(
-            j.as_ref().map(|j| (&j.a.snap, &j.b.snap)),
-            Some((solidcraft_doc::joints::Snap::Frame { .. }, solidcraft_doc::joints::Snap::Frame { .. }))
-        ),
+        matches!(j.as_ref().map(|j| (&j.a.snap, &j.b.snap)), Some((torno_doc::joints::Snap::Frame { .. }, torno_doc::joints::Snap::Frame { .. }))),
         "{j:?}"
     );
     run(&mut s, "parameters.change", json!({"name": "X", "expression": "120 mm"}));

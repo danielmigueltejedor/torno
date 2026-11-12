@@ -152,7 +152,7 @@
     "blend_dropping"
   ],
   "ungraded": [
-    "continuity: SolidCraft computes it"
+    "continuity: Torno computes it"
   ],
   "what": "a box's top back edge rounded curvature-continuous size 3: the order-2 section meets each face with its curvature (0) and its third derivative (0), and not its fourth",
   "why_not": []

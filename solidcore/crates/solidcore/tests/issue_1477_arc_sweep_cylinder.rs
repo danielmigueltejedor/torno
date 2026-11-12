@@ -2,7 +2,7 @@
 //! an `SmCylinder` only of a whole circle swept along its axis. A circular arc short of a
 //! whole turn becomes an `SmSurfOfExtrusion`, which exports as a NURBS, so a sheet-metal
 //! convert finds no cylinder at a modelled bend. The opt-in
-//! `Kernel::fixes.linear_sweep_arc_is_cylinder` (SolidCraft change, tangency-labs/smlib
+//! `Kernel::fixes.linear_sweep_arc_is_cylinder` (Torno change, tangency-labs/smlib
 //! 12918e9) makes that arc's wall a cylinder: its frame turned to the arc's start (for a
 //! sweep against the arc's normal, to its end and then flipped), bounded 0..sweep angle by
 //! 0..distance. A sweep that is not square to the arc's plane stays a surface of

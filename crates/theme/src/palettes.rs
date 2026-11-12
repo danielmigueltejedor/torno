@@ -1,9 +1,9 @@
 //! Original light and dark palette values.
 use crate::{IconColors, Tokens};
 use egui::Color32;
-use solidcraft_color::AnalysisColors;
+use torno_color::AnalysisColors;
 
-/// The primary (`active-3`) strokes, light then dark, that the tokens share with SolidCraft's icon artwork
+/// The primary (`active-3`) strokes, light then dark, that the tokens share with Torno's icon artwork
 /// (`crates/look/icons/design/palette.toml`, including its colour vision variants). The look crate's icon tests hold them equal.
 pub mod icon_strokes {
     pub const SKETCH_PRIMARY: [[u8; 3]; 2] = [[5, 127, 69], [18, 141, 69]];

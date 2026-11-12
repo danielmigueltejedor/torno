@@ -2,11 +2,11 @@
 //! of the operands (in tests only: the history itself is recorded, never sampled), and the exact
 //! origins asserted where the outcome is known.
 
-use solidcraft_geom::prelude::*;
 use std::collections::BTreeSet;
+use torno_geom::prelude::*;
 
 use solidcore_record::Vec3;
-use solidcraft_geom::Mesh;
+use torno_geom::Mesh;
 
 use crate::body::Body;
 use crate::history::BodyHistory;

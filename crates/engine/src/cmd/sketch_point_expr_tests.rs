@@ -3,7 +3,7 @@
 
 use serde_json::{Value, json};
 use solidcore_record::Vec2;
-use solidcraft_geom::prelude::*;
+use torno_geom::prelude::*;
 
 use crate::Session;
 
@@ -33,7 +33,7 @@ fn solved(s: &Session, id: &str) -> Vec2 {
 }
 
 fn reopened(s: &Session) -> Session {
-    Session::new(solidcraft_doc::Document::from_json(&s.doc.to_json()).unwrap())
+    Session::new(torno_doc::Document::from_json(&s.doc.to_json()).unwrap())
 }
 
 #[test]
@@ -127,7 +127,7 @@ fn a_point_its_parameters_put_out_of_range_is_an_error_not_a_crash() {
     let file = s.doc.to_json();
     let hostile = file.replace("\"x\": \"W\"", "\"x\": \"W * 1e300 * 1e300\"").replace("\"x\":\"W\"", "\"x\":\"W * 1e300 * 1e300\"");
     assert_ne!(hostile, file, "the point's expression is in the file");
-    let r = Session::new(solidcraft_doc::Document::from_json(&hostile).unwrap());
+    let r = Session::new(torno_doc::Document::from_json(&hostile).unwrap());
     assert!(r.model.results.iter().any(|r| r.error.is_some()), "the sketch reports the bad point");
 }
 
@@ -164,9 +164,7 @@ fn a_tangent_from_a_placed_point_keeps_the_side_it_was_drawn_on() {
     let side = |s: &Session| {
         let st = s.model.state();
         let sk = &st.sketch(f).unwrap().sketch;
-        let Some(solidcraft_sketch::CurveKind::Line { a, b }) = sk.curves.iter().find(|c| c.id == "flank").map(|c| &c.kind) else {
-            panic!("no flank")
-        };
+        let Some(torno_sketch::CurveKind::Line { a, b }) = sk.curves.iter().find(|c| c.id == "flank").map(|c| &c.kind) else { panic!("no flank") };
         let (e, t) = (sk.points[*a].pos, sk.points[*b].pos);
         (e.cross(t).signum(), (t.len() - r).abs() < 1e-6)
     };
@@ -240,7 +238,7 @@ fn a_circle_size_typed_as_an_expression_is_a_dimension_that_follows_its_paramete
         let sk = &st.sketch(f).unwrap().sketch;
         let c = sk.curves.iter().find(|c| c.id == id).unwrap();
         match c.kind {
-            solidcraft_sketch::CurveKind::Circle { r, .. } => r,
+            torno_sketch::CurveKind::Circle { r, .. } => r,
             _ => f64::NAN,
         }
     };
@@ -274,7 +272,7 @@ fn circle_radius(s: &Session, id: &str) -> f64 {
     let st = s.model.state();
     let sk = &st.sketch(f).unwrap().sketch;
     match sk.curves.iter().find(|c| c.id == id).map(|c| &c.kind) {
-        Some(solidcraft_sketch::CurveKind::Circle { r, .. }) => *r,
+        Some(torno_sketch::CurveKind::Circle { r, .. }) => *r,
         _ => f64::NAN,
     }
 }
@@ -373,7 +371,7 @@ fn a_size_expression_reads_in_the_design_unit_and_one_naming_no_parameter_is_a_n
 fn circle_radius_live(s: &Session, id: &str) -> f64 {
     let f = s.doc.find_feature("S").unwrap().id;
     match s.doc.sketch(f).ok().and_then(|sk| sk.curves.iter().find(|c| c.id == id).map(|c| c.kind.clone())) {
-        Some(solidcraft_sketch::CurveKind::Circle { r, .. }) => r,
+        Some(torno_sketch::CurveKind::Circle { r, .. }) => r,
         _ => f64::NAN,
     }
 }

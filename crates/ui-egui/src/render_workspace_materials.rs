@@ -5,7 +5,7 @@ use std::sync::{Arc, Weak};
 
 use serde::Deserialize;
 use serde_json::{Value, json};
-use solidcraft_engine::{
+use torno_engine::{
     doc::{
         Document,
         appearance_pack::{self, GlassBoundary, Recipe},
@@ -18,15 +18,15 @@ use solidcraft_engine::{
 
 use crate::{SolveApp, ui_kit};
 #[cfg(test)]
-use solidcraft_theme::Tokens;
-use solidcraft_viewport::{clear_coat::ClearCoat, surface::OpaqueSurface};
+use torno_theme::Tokens;
+use torno_viewport::{clear_coat::ClearCoat, surface::OpaqueSurface};
 
 const MAX_BINDINGS: usize = 128;
 
 #[derive(Clone, Debug, Deserialize, PartialEq, Eq)]
 pub(super) struct Target {
     #[serde(default)]
-    pub stable_target: Option<solidcraft_engine::doc::render_surface::RenderBodyTarget>,
+    pub stable_target: Option<torno_engine::doc::render_surface::RenderBodyTarget>,
     pub ordinal: usize,
     pub name: String,
 }
@@ -50,14 +50,14 @@ impl Boundary {
 
 #[derive(Clone, Debug)]
 pub(super) struct Glass {
-    pub model: Option<solidcraft_engine::render::glass_model::GlassModel>,
+    pub model: Option<torno_engine::render::glass_model::GlassModel>,
     pub recipe: Option<&'static str>,
     pub ior: f64,
     pub absorption: [f64; 3],
     pub boundary: Boundary,
     pub thickness: f64,
     pub shadows: bool,
-    pub subsurface: Option<solidcraft_engine::render::transmission::subsurface::Subsurface>,
+    pub subsurface: Option<torno_engine::render::transmission::subsurface::Subsurface>,
 }
 impl Default for Glass {
     fn default() -> Self {
@@ -75,8 +75,8 @@ impl Default for Glass {
 }
 impl Glass {
     pub(super) fn recipe(id: &str) -> Result<Self, String> {
-        let preset = appearance_pack::find(id).ok_or_else(|| solidcraft_ui_text::tr("render.error_glass_recipe").to_string())?;
-        let Recipe::Glass(recipe) = preset.recipe else { return Err(solidcraft_ui_text::tr("render.error_physical_glass").into()) };
+        let preset = appearance_pack::find(id).ok_or_else(|| torno_ui_text::tr("render.error_glass_recipe").to_string())?;
+        let Recipe::Glass(recipe) = preset.recipe else { return Err(torno_ui_text::tr("render.error_physical_glass").into()) };
         recipe.validate().map_err(|e| e.to_string())?;
         let (boundary, thickness) = match recipe.boundary {
             GlassBoundary::Thin { thickness_mm } => (Boundary::Thin, thickness_mm),
@@ -146,8 +146,8 @@ pub(super) struct Binding {
     pub maps_enabled: bool,
     pub maps: Maps,
     replace_saved_optics: bool,
-    saved_source: Option<solidcraft_engine::doc::render_optics::OpticalMaterial>,
-    saved_coat_source: Option<solidcraft_engine::doc::render_coat::CoatMaterial>,
+    saved_source: Option<torno_engine::doc::render_optics::OpticalMaterial>,
+    saved_coat_source: Option<torno_engine::doc::render_coat::CoatMaterial>,
     coat_edited: bool,
 }
 impl Binding {
@@ -169,7 +169,7 @@ impl Binding {
             coat_edited: false,
         }
     }
-    pub(super) fn from_saved(target: Target, app: &SolveApp, optics: solidcraft_engine::doc::render_optics::OpticalMaterial) -> Self {
+    pub(super) fn from_saved(target: Target, app: &SolveApp, optics: torno_engine::doc::render_optics::OpticalMaterial) -> Self {
         let mut binding = Self::new(target, app);
         binding.saved_source = Some(optics);
         binding.glass_enabled = true;
@@ -179,17 +179,17 @@ impl Binding {
             ior: optics.ior,
             absorption: optics.absorption_per_mm,
             boundary: match optics.boundary {
-                solidcraft_engine::doc::render_optics::OpticalBoundary::ThinSheet => Boundary::Thin,
-                solidcraft_engine::doc::render_optics::OpticalBoundary::ClosedBox => Boundary::Box,
-                solidcraft_engine::doc::render_optics::OpticalBoundary::ClosedMesh => Boundary::Closed,
+                torno_engine::doc::render_optics::OpticalBoundary::ThinSheet => Boundary::Thin,
+                torno_engine::doc::render_optics::OpticalBoundary::ClosedBox => Boundary::Box,
+                torno_engine::doc::render_optics::OpticalBoundary::ClosedMesh => Boundary::Closed,
             },
-            thickness: if optics.boundary == solidcraft_engine::doc::render_optics::OpticalBoundary::ThinSheet { optics.thickness_mm } else { 1.0 },
+            thickness: if optics.boundary == torno_engine::doc::render_optics::OpticalBoundary::ThinSheet { optics.thickness_mm } else { 1.0 },
             shadows: optics.shadow_transmission,
             subsurface: optics.subsurface,
         };
         binding
     }
-    fn hydrate_coat(&mut self, coat: solidcraft_engine::doc::render_coat::CoatMaterial) {
+    fn hydrate_coat(&mut self, coat: torno_engine::doc::render_coat::CoatMaterial) {
         self.saved_coat_source = Some(coat);
         self.coat_edited = false;
         self.coat_enabled = true;
@@ -206,18 +206,18 @@ impl Binding {
     fn has_local_map_intent(&self) -> bool {
         self.maps_enabled || self.maps != Maps::default()
     }
-    fn coat_material(&self) -> solidcraft_engine::doc::render_coat::CoatMaterial {
-        solidcraft_engine::doc::render_coat::CoatMaterial { weight: self.coat.weight, roughness: self.coat.roughness, ior: self.coat.ior }
+    fn coat_material(&self) -> torno_engine::doc::render_coat::CoatMaterial {
+        torno_engine::doc::render_coat::CoatMaterial { weight: self.coat.weight, roughness: self.coat.roughness, ior: self.coat.ior }
     }
-    fn optics(&self) -> solidcraft_engine::doc::render_optics::OpticalMaterial {
-        solidcraft_engine::doc::render_optics::OpticalMaterial {
+    fn optics(&self) -> torno_engine::doc::render_optics::OpticalMaterial {
+        torno_engine::doc::render_optics::OpticalMaterial {
             model: self.glass.model,
             ior: self.glass.ior,
             absorption_per_mm: self.glass.absorption,
             boundary: match self.glass.boundary {
-                Boundary::Thin => solidcraft_engine::doc::render_optics::OpticalBoundary::ThinSheet,
-                Boundary::Box => solidcraft_engine::doc::render_optics::OpticalBoundary::ClosedBox,
-                Boundary::Closed => solidcraft_engine::doc::render_optics::OpticalBoundary::ClosedMesh,
+                Boundary::Thin => torno_engine::doc::render_optics::OpticalBoundary::ThinSheet,
+                Boundary::Box => torno_engine::doc::render_optics::OpticalBoundary::ClosedBox,
+                Boundary::Closed => torno_engine::doc::render_optics::OpticalBoundary::ClosedMesh,
             },
             thickness_mm: if self.glass.boundary == Boundary::Thin { self.glass.thickness } else { 0.0 },
             shadow_transmission: self.glass.shadows,
@@ -282,25 +282,25 @@ pub(super) struct View {
 struct PendingRemoval {
     coat: bool,
     name: String,
-    target: solidcraft_engine::doc::render_surface::RenderBodyTarget,
+    target: torno_engine::doc::render_surface::RenderBodyTarget,
     revision: u64,
     document: Weak<Document>,
 }
 
 pub(super) fn read_targets(app: &mut SolveApp) -> Result<Vec<Target>, String> {
     let reply = app.run("render.scene", json!({}))?;
-    let values = reply.get("bodies").and_then(Value::as_array).ok_or_else(|| solidcraft_ui_text::tr("render.error_scene_bodies").to_string())?;
-    if values.len() > solidcraft_engine::render::job::MAX_GPU_PATH_BODIES {
-        return Err(solidcraft_ui_text::tr("render.error_scene_body_limit").into());
+    let values = reply.get("bodies").and_then(Value::as_array).ok_or_else(|| torno_ui_text::tr("render.error_scene_bodies").to_string())?;
+    if values.len() > torno_engine::render::job::MAX_GPU_PATH_BODIES {
+        return Err(torno_ui_text::tr("render.error_scene_body_limit").into());
     }
     let targets: Vec<Target> = serde_json::from_value(Value::Array(values.clone())).map_err(|e| e.to_string())?;
     if targets.iter().any(|t| {
-        t.ordinal >= solidcraft_engine::render::job::MAX_GPU_PATH_BODIES
+        t.ordinal >= torno_engine::render::job::MAX_GPU_PATH_BODIES
             || t.name.is_empty()
             || t.name.len() > 1024
             || t.name.chars().any(char::is_control)
     }) {
-        return Err(solidcraft_ui_text::tr("render.error_scene_identity").into());
+        return Err(torno_ui_text::tr("render.error_scene_identity").into());
     }
     Ok(targets)
 }
@@ -363,12 +363,12 @@ pub(super) fn refresh_render_revision(app: &mut SolveApp) {
 
 /// Overlay stable Glass drafts into a captured request only. Explicit binding
 /// remains the sole save action; ordinal inputs never replace these rows.
-pub(super) fn overlay_saved(app: &SolveApp, setup: &mut solidcraft_engine::doc::render_settings::RenderSetup) -> Result<(), String> {
+pub(super) fn overlay_saved(app: &SolveApp, setup: &mut torno_engine::doc::render_settings::RenderSetup) -> Result<(), String> {
     overlay_coats(app, setup)?;
     overlay_optics(app, setup)
 }
 
-fn overlay_optics(app: &SolveApp, setup: &mut solidcraft_engine::doc::render_settings::RenderSetup) -> Result<(), String> {
+fn overlay_optics(app: &SolveApp, setup: &mut torno_engine::doc::render_settings::RenderSetup) -> Result<(), String> {
     let view = &app.render_workspace.view.materials;
     for binding in
         view.bindings.iter().filter(|binding| binding.stable_optics() && binding.active() && (view.enabled || binding.saved_source.is_some()))
@@ -397,7 +397,7 @@ fn overlay_optics(app: &SolveApp, setup: &mut solidcraft_engine::doc::render_set
             setup
                 .optics
                 .set(
-                    solidcraft_engine::doc::render_optics::SavedOptics { target: target.clone(), optics: binding.optics() },
+                    torno_engine::doc::render_optics::SavedOptics { target: target.clone(), optics: binding.optics() },
                     binding.saved_source.is_some(),
                 )
                 .map_err(|error| error.to_string())?;
@@ -408,7 +408,7 @@ fn overlay_optics(app: &SolveApp, setup: &mut solidcraft_engine::doc::render_set
 
 /// Stable coat edits use the same captured settings for CPU and GPU. This is a
 /// pure overlay; generic Save still requires the explicit coat binding action.
-pub(super) fn overlay_coats(app: &SolveApp, setup: &mut solidcraft_engine::doc::render_settings::RenderSetup) -> Result<(), String> {
+pub(super) fn overlay_coats(app: &SolveApp, setup: &mut torno_engine::doc::render_settings::RenderSetup) -> Result<(), String> {
     if !app.render_workspace.view.materials.enabled {
         return Ok(());
     }
@@ -438,7 +438,7 @@ pub(super) fn overlay_coats(app: &SolveApp, setup: &mut solidcraft_engine::doc::
         } else {
             setup
                 .coats
-                .set(solidcraft_engine::doc::render_coat::SavedCoat { target: target.clone(), coat: binding.coat_material() }, true)
+                .set(torno_engine::doc::render_coat::SavedCoat { target: target.clone(), coat: binding.coat_material() }, true)
                 .map_err(|error| error.to_string())?;
         }
     }
@@ -450,7 +450,7 @@ pub(super) fn path_compatibility(app: &SolveApp) -> Result<(), String> {
     // This is the same pure stable-target overlay used by image/live capture.
     // A user's explicit unsaved removal of an unsupported flag must already be
     // reflected by the availability of the transport it makes compatible.
-    let mut prospective = solidcraft_engine::doc::render_settings::RenderSetup {
+    let mut prospective = torno_engine::doc::render_settings::RenderSetup {
         optics: app.render_workspace.view.draft.optics.clone(),
         coats: app.render_workspace.view.draft.coats.clone(),
         ..Default::default()
@@ -505,7 +505,7 @@ pub(super) fn params(app: &SolveApp, params: &mut Value) -> Result<(), String> {
             return Err(app.tr("render.material_saved_edit_pending").into());
         }
         let target = &binding.target;
-        if target.ordinal >= solidcraft_engine::render::job::MAX_GPU_PATH_BODIES
+        if target.ordinal >= torno_engine::render::job::MAX_GPU_PATH_BODIES
             || target.name.is_empty()
             || target.name.len() > 1024
             || target.name.chars().any(char::is_control)
@@ -590,16 +590,14 @@ pub(super) fn params(app: &SolveApp, params: &mut Value) -> Result<(), String> {
             textures.push(wire);
         }
     }
-    if glass.len() > solidcraft_engine::render::job::MAX_GPU_DIELECTRICS
-        || textures.len() > solidcraft_engine::render::job::textures::MAX_TEXTURE_BINDINGS
-    {
+    if glass.len() > torno_engine::render::job::MAX_GPU_DIELECTRICS || textures.len() > torno_engine::render::job::textures::MAX_TEXTURE_BINDINGS {
         return Err(app.tr("render.material_limits").to_string());
     }
     if cpu {
         // Preserve all CPU lights, output, lens and sampling. This is the same
         // numerical override type produced by stable saved-optics lowering.
         params["raytrace"]["dielectrics"] = json!(glass);
-        let options: solidcraft_engine::render::job::RaytraceOptions =
+        let options: torno_engine::render::job::RaytraceOptions =
             serde_json::from_value(params["raytrace"].clone()).map_err(|error| error.to_string())?;
         options.validate().map_err(|error| error.to_string())?;
     } else {
@@ -809,7 +807,7 @@ fn glass_controls(app: &mut SolveApp, ui: &mut egui::Ui, binding: &mut Binding) 
             crate::scenario::publish_target("render:glass:subsurface-enable", toggle.rect);
             if toggle.changed() {
                 glass.subsurface =
-                    scatter.then_some(solidcraft_engine::render::transmission::subsurface::Subsurface { scattering_per_mm: 0.1, anisotropy: 0.0 });
+                    scatter.then_some(torno_engine::render::transmission::subsurface::Subsurface { scattering_per_mm: 0.1, anisotropy: 0.0 });
                 changed = true;
             }
             if let Some(subsurface) = &mut glass.subsurface {
@@ -847,7 +845,7 @@ fn glass_controls(app: &mut SolveApp, ui: &mut egui::Ui, binding: &mut Binding) 
 }
 
 fn advanced_glass_controls(app: &SolveApp, ui: &mut egui::Ui, glass: &mut Glass) -> bool {
-    use solidcraft_engine::render::glass_model::{Dispersion, GlassModel, ThinFilm};
+    use torno_engine::render::glass_model::{Dispersion, GlassModel, ThinFilm};
     let before = glass.model;
     let mut enabled = before.is_some();
     let toggle = ui_kit::checkbox(ui, app.tr("render.glass_model_enable"), &mut enabled);
@@ -989,13 +987,8 @@ pub(super) fn install_library_surface(
     }
     let existing = app.render_workspace.view.materials.bindings.iter().position(|b| b.target == target);
     if let Some(index) = existing {
-        let binding = app
-            .render_workspace
-            .view
-            .materials
-            .bindings
-            .get(index)
-            .ok_or_else(|| solidcraft_ui_text::tr("render.error_material_binding").to_string())?;
+        let binding =
+            app.render_workspace.view.materials.bindings.get(index).ok_or_else(|| torno_ui_text::tr("render.error_material_binding").to_string())?;
         if !binding.current(app) {
             return Err(app.tr("render.material_revalidate_needed").into());
         }
@@ -1011,7 +1004,7 @@ pub(super) fn install_library_surface(
     )?;
     let texture = &reply["texture"];
     let frame: PlanarFrame = serde_json::from_value(texture["frame"].clone()).map_err(|e| e.to_string())?;
-    let path = |key: &str| texture[key].as_str().map(str::to_string).ok_or_else(|| solidcraft_ui_text::tr("render.error_surface_reply").to_string());
+    let path = |key: &str| texture[key].as_str().map(str::to_string).ok_or_else(|| torno_ui_text::tr("render.error_surface_reply").to_string());
     let maps = Maps {
         color: path("base_color_srgb")?,
         normal: path("normal_opengl")?,
@@ -1029,7 +1022,7 @@ pub(super) fn install_library_surface(
             .bindings
             .get(index)
             .cloned()
-            .ok_or_else(|| solidcraft_ui_text::tr("render.error_material_binding").to_string())?
+            .ok_or_else(|| torno_ui_text::tr("render.error_material_binding").to_string())?
     } else {
         Binding::new(target, app)
     };
@@ -1044,10 +1037,10 @@ pub(super) fn install_library_surface(
     binding.enabled = true;
     let view = &mut app.render_workspace.view.materials;
     if let Some(index) = existing {
-        *view.bindings.get_mut(index).ok_or_else(|| solidcraft_ui_text::tr("render.error_material_binding").to_string())? = binding;
+        *view.bindings.get_mut(index).ok_or_else(|| torno_ui_text::tr("render.error_material_binding").to_string())? = binding;
         view.selected = Some(index);
     } else {
-        view.bindings.try_reserve(1).map_err(|_| solidcraft_ui_text::tr("render.error_binding_allocation").to_string())?;
+        view.bindings.try_reserve(1).map_err(|_| torno_ui_text::tr("render.error_binding_allocation").to_string())?;
         view.bindings.push(binding);
         view.selected = Some(view.bindings.len() - 1);
     }
@@ -1169,7 +1162,7 @@ fn saved_coat_controls(app: &mut SolveApp, ui: &mut egui::Ui, binding: &mut Bind
         && !binding.glass_enabled
         && binding.current(app)
         && binding.target.stable_target.is_some()
-        && (target.is_some() || app.render_workspace.view.draft.coats.len() < solidcraft_engine::doc::render_coat::MAX_COAT_BINDINGS)
+        && (target.is_some() || app.render_workspace.view.draft.coats.len() < torno_engine::doc::render_coat::MAX_COAT_BINDINGS)
         && matches!(app.render_workspace.view.method, super::ImageMethod::CpuRaytrace | super::ImageMethod::GpuRaytrace);
     let mut discard = false;
     ui.horizontal(|ui| {
@@ -1470,7 +1463,7 @@ fn reflection_section(app: &mut SolveApp, ui: &mut egui::Ui, body: Option<&str>)
     };
     let title = app.tr("render.appearance_editor.reflections").to_owned();
     ui_kit::method_section(ui, "render:appearance:reflections", &title, "CPU", reason.as_deref(), |ui| {
-        use solidcraft_engine::render::job::ReflectionMode;
+        use torno_engine::render::job::ReflectionMode;
         let name = body.unwrap_or_default();
         let mut mode = app
             .render_workspace

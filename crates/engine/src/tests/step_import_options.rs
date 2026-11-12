@@ -3,7 +3,7 @@
 
 use serde_json::{Value, json};
 use solidcore_record::Vec3;
-use solidcraft_kernel::{ExportBody, ExportProduct, StepHeader, box_solid, step_export_products};
+use torno_kernel::{ExportBody, ExportProduct, StepHeader, box_solid, step_export_products};
 
 use super::run;
 use crate::*;
@@ -13,7 +13,7 @@ use crate::*;
 /// named after the last feature that made them (`Cut-Extrude3`), and the posts are two
 /// occurrences of one part. As written the frame spans x 0..40, y 0..34, z 0..20.
 fn frame_file(tag: &str) -> String {
-    let dir = std::env::temp_dir().join(format!("solidcraft-step-options-{tag}-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("torno-step-options-{tag}-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
     let plate = box_solid(Vec3::ZERO, Vec3::new(40.0, 4.0, 20.0)).unwrap();
     let post = box_solid(Vec3::ZERO, Vec3::new(4.0, 30.0, 4.0)).unwrap();
@@ -277,16 +277,16 @@ fn automatic_part_names_and_assembly_survive_reopening() {
 
 #[test]
 fn step_replies_include_originating_system() -> std::result::Result<(), Box<dyn std::error::Error>> {
-    let dir = std::env::temp_dir().join(format!("solidcraft-step-system-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("torno-step-system-{}", std::process::id()));
     std::fs::create_dir_all(&dir)?;
     let path = dir.join("box.step");
     let mut source = Session::default();
     source.execute("solid.box", &json!({"length": 10, "width": 40, "height": 5}))?;
     source.execute("file.export", &json!({"path": path.to_string_lossy()}))?;
     let text = std::fs::read_to_string(&path)?;
-    assert!(text.contains("'SolidCraft','SolidCraft'"));
-    for system in ["SolidCraft", "Example CAD"] {
-        std::fs::write(&path, text.replace("'SolidCraft','SolidCraft'", &format!("'SolidCraft','{system}'")))?;
+    assert!(text.contains("'Torno','Torno'"));
+    for system in ["Torno", "Example CAD"] {
+        std::fs::write(&path, text.replace("'Torno','Torno'", &format!("'Torno','{system}'")))?;
         for command in ["file.insert_step", "doc.open"] {
             let reply = Session::default().execute(command, &json!({"path": path.to_string_lossy()}))?;
             assert_eq!(reply.get("system").and_then(Value::as_str), Some(system), "{command}: {reply}");
@@ -296,21 +296,21 @@ fn step_replies_include_originating_system() -> std::result::Result<(), Box<dyn 
     Ok(())
 }
 
-/// A header naming SolidWorks says the file has Y up; SolidCraft's own says Z; anything else
+/// A header naming SolidWorks says the file has Y up; Torno's own says Z; anything else
 /// says nothing (synthetic headers only).
 #[test]
 fn step_replies_name_a_y_up_exporter() -> std::result::Result<(), Box<dyn std::error::Error>> {
-    let dir = std::env::temp_dir().join(format!("solidcraft-step-exporter-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("torno-step-exporter-{}", std::process::id()));
     std::fs::create_dir_all(&dir)?;
     let path = dir.join("box.step");
     let mut source = Session::default();
     source.execute("solid.box", &json!({"length": 10, "width": 40, "height": 5}))?;
     source.execute("file.export", &json!({"path": path.to_string_lossy()}))?;
     let text = std::fs::read_to_string(&path)?;
-    let header = "'SolidCraft','SolidCraft'";
+    let header = "'Torno','Torno'";
     assert!(text.contains(header));
     for (preprocessor, system, want) in [
-        ("SolidCraft", "SolidCraft", Some(("z", "SolidCraft"))),
+        ("Torno", "Torno", Some(("z", "Torno"))),
         ("SolidWorks 2021", "SolidWorks 2021", Some(("y", "SolidWorks"))),
         ("Example CAD", "SOLIDWORKS 2019", Some(("y", "SolidWorks"))),
         ("Example CAD", "Example CAD", None),

@@ -2,7 +2,7 @@
 //! linear sweep, or drafted, by the taper extrusion, whose height's sign picks the side
 //! of the profile's plane the direction points to.
 //!
-//! Not upstream: SolidCraft's extrude entry (the direction made unit, the drafted
+//! Not upstream: Torno's extrude entry (the direction made unit, the drafted
 //! profile checked to be one closed loop square to it). Deviations: none (no upstream
 //! counterpart). No recursion.
 

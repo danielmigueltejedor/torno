@@ -164,7 +164,7 @@
     "fillet_variable"
   ],
   "ungraded": [
-    "continuity: SolidCraft computes it"
+    "continuity: Torno computes it"
   ],
   "what": "a variable round from r1 to r5 along a box's top back edge: the balls' envelope, a circular cone, not their great circles",
   "why_not": []

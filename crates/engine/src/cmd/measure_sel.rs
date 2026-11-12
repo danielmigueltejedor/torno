@@ -6,8 +6,8 @@
 
 use serde_json::{Value, json};
 use solidcore_record::Vec3;
-use solidcraft_geom::prelude::*;
-use solidcraft_geom::{Mesh, UnitVec3};
+use torno_geom::prelude::*;
+use torno_geom::{Mesh, UnitVec3};
 
 use super::measure_shape::{Shape, Slot, add_round, centre};
 use crate::params::bad;
@@ -109,7 +109,7 @@ fn fit_circle(pts: &[Vec3], tol: f64) -> Option<(Vec3, UnitVec3, f64)> {
 /// The round shape of mesh edge `index` of body `b`: from the kernel's exact curve when it
 /// is the same edge (its ends on the polyline), else fitted to the polyline's points; and
 /// whether it is the exact one.
-fn edge_round(b: &solidcraft_doc::ModelBody, m: &Mesh, index: usize, whole: bool) -> Option<(Shape, bool)> {
+fn edge_round(b: &torno_doc::ModelBody, m: &Mesh, index: usize, whole: bool) -> Option<(Shape, bool)> {
     edge_round_within(b, m, index, whole, edge_tolerance(m))
 }
 
@@ -120,9 +120,9 @@ fn edge_tolerance(m: &Mesh) -> f64 {
 
 /// [`edge_round`] with the mesh's tolerance already worked out: finding it reads every vertex of
 /// the mesh, which a caller going through many edges should do once.
-fn edge_round_within(b: &solidcraft_doc::ModelBody, m: &Mesh, index: usize, whole: bool, tol: f64) -> Option<(Shape, bool)> {
+fn edge_round_within(b: &torno_doc::ModelBody, m: &Mesh, index: usize, whole: bool, tol: f64) -> Option<(Shape, bool)> {
     let pts = m.edges.get(index)?;
-    let exact = solidcraft_kernel::edge_circle(&b.body, index).filter(|c| {
+    let exact = torno_kernel::edge_circle(&b.body, index).filter(|c| {
         let ends = [pts.first(), pts.last()].into_iter().flatten().all(|p| p.dist(c.start).min(p.dist(c.end)) <= tol * 10.0);
         let on = pts.iter().all(|p| (p.dist(c.center) - c.radius).abs() <= tol * 10.0);
         ends && on
@@ -168,10 +168,10 @@ fn arc_points(center: Vec3, axis: UnitVec3, start: Vec3, angle: f64) -> Vec<Vec3
 /// sketch, else the last sketch with that id.
 pub(super) fn sketch_of<'a>(
     s: &Session,
-    st: &'a solidcraft_doc::ModelState,
+    st: &'a torno_doc::ModelState,
     sketch: Option<u64>,
-    has: impl Fn(&solidcraft_sketch::Sketch) -> bool,
-) -> Option<&'a solidcraft_doc::SolvedSketch> {
+    has: impl Fn(&torno_sketch::Sketch) -> bool,
+) -> Option<&'a torno_doc::SolvedSketch> {
     if let Some(id) = sketch {
         return st.sketch(id);
     }
@@ -181,8 +181,8 @@ pub(super) fn sketch_of<'a>(
     st.sketches.iter().rev().map(|ss| &**ss).find(|ss| has(&ss.sketch))
 }
 
-fn sketch_curve(ss: &solidcraft_doc::SolvedSketch, id: &str) -> Option<Item> {
-    use solidcraft_sketch::CurveKind;
+fn sketch_curve(ss: &torno_doc::SolvedSketch, id: &str) -> Option<Item> {
+    use torno_sketch::CurveKind;
     let sk = &ss.sketch;
     let Some(index) = sk.curve_index(id) else { return sketch_wire(sk, id) };
     let c = sk.curves.get(index)?;
@@ -230,7 +230,7 @@ fn sketch_curve(ss: &solidcraft_doc::SolvedSketch, id: &str) -> Option<Item> {
 /// A curve drawn in a 3D sketch, or a linked 3D curve (a wire, #14051), whose points are in world
 /// coordinates: a line measures as a line, an exact arc as its circle, and any other curve along
 /// its points. A single point is not a curve.
-fn sketch_wire(sk: &solidcraft_sketch::Sketch, id: &str) -> Option<Item> {
+fn sketch_wire(sk: &torno_sketch::Sketch, id: &str) -> Option<Item> {
     let w = sk.wires.get(sk.wire_index(id)?)?;
     let mut json = json!({"type": "sketch_curve", "id": id});
     if let Some(arc) = w.arc {
@@ -261,7 +261,7 @@ fn sketch_wire(sk: &solidcraft_sketch::Sketch, id: &str) -> Option<Item> {
 
 /// A profile (closed region of a sketch): its area, and when it is a circle or a slot, its
 /// sizes.
-fn profile(ss: &solidcraft_doc::SolvedSketch, index: usize) -> Option<Item> {
+fn profile(ss: &torno_doc::SolvedSketch, index: usize) -> Option<Item> {
     use solidcore_record::{Seg2, Vec2};
     let pr = ss.profiles.get(index)?;
     let outline: Vec<Vec3> = pr.region.outer.polyline(1e-3).iter().map(|p| ss.plane.to_world(*p)).collect();
@@ -312,7 +312,7 @@ fn profile(ss: &solidcraft_doc::SolvedSketch, index: usize) -> Option<Item> {
 }
 
 /// A slot this cylindrical face is one end of, from the body's other faces.
-fn face_slot(b: &solidcraft_doc::ModelBody, m: &Mesh, shape: &Shape, pts: &[Vec3]) -> Option<Slot> {
+fn face_slot(b: &torno_doc::ModelBody, m: &Mesh, shape: &Shape, pts: &[Vec3]) -> Option<Slot> {
     let faces = m.tri_face.iter().map(|f| *f as usize + 1).max().unwrap_or(0);
     if faces > 4000 {
         return None;
@@ -323,13 +323,13 @@ fn face_slot(b: &solidcraft_doc::ModelBody, m: &Mesh, shape: &Shape, pts: &[Vec3
             v.extend(tri);
         }
     }
-    let surfaces: Vec<(solidcraft_kernel::FaceSurface, Vec<Vec3>)> =
-        verts.into_iter().enumerate().filter_map(|(i, v)| Some((solidcraft_kernel::face_surface(&b.body, i)?, v))).collect();
+    let surfaces: Vec<(torno_kernel::FaceSurface, Vec<Vec3>)> =
+        verts.into_iter().enumerate().filter_map(|(i, v)| Some((torno_kernel::face_surface(&b.body, i)?, v))).collect();
     super::measure_shape::slot_from_faces(shape, pts, &surfaces)
 }
 
 /// `sel` in the placed model `st`.
-fn describe(s: &Session, st: &solidcraft_doc::ModelState, sel: &Sel) -> Option<Item> {
+fn describe(s: &Session, st: &torno_doc::ModelState, sel: &Sel) -> Option<Item> {
     let plain = |geo, dir, json| Some(Item { geo, dir, json, shape: Shape::Other, slot: None });
     match sel {
         Sel::Plane { name } => {
@@ -416,12 +416,12 @@ fn describe(s: &Session, st: &solidcraft_doc::ModelState, sel: &Sel) -> Option<I
                 }
             }
             let verts: Vec<Vec3> = tris.iter().flat_map(|t| t.iter().copied()).collect();
-            let surface = solidcraft_kernel::face_surface(&b.body, *index);
+            let surface = torno_kernel::face_surface(&b.body, *index);
             let shape = match surface {
-                Some(solidcraft_kernel::FaceSurface::Cylinder { origin, axis, radius }) => {
+                Some(torno_kernel::FaceSurface::Cylinder { origin, axis, radius }) => {
                     super::measure_shape::cylinder(origin, axis, radius, &verts).unwrap_or(Shape::Other)
                 }
-                Some(solidcraft_kernel::FaceSurface::Plane { normal, point }) if planar.is_some() => Shape::Plane { point, normal },
+                Some(torno_kernel::FaceSurface::Plane { normal, point }) if planar.is_some() => Shape::Plane { point, normal },
                 None => match (planar, verts.first()) {
                     (Some(normal), Some(point)) => Shape::Plane { point: *point, normal },
                     _ => Shape::Other,
@@ -493,7 +493,7 @@ pub(crate) fn shape_of(s: &Session, sel: &Sel) -> Option<(Shape, Vec<Vec3>, Vec<
 /// `inspect.measure` gives it (length, area, volume, radius…), its direction where it has one
 /// (a planar face's normal, a straight edge's direction) and, for an edge, whether it is a line,
 /// a circle, an arc or another curve.
-pub(super) fn resolve(s: &Session, st: &solidcraft_doc::ModelState, sel: &Sel) -> Option<(Value, Option<Vec3>)> {
+pub(super) fn resolve(s: &Session, st: &torno_doc::ModelState, sel: &Sel) -> Option<(Value, Option<Vec3>)> {
     let item = describe(s, st, sel)?;
     let mut json = item.json;
     if matches!(sel, Sel::Edge { .. }) {
@@ -689,7 +689,7 @@ struct Pick {
 
 /// Resolves a face or edge pick to the [`Sel`] it means, merging the two kernel halves of one
 /// visible item (a split cylinder's patches, a circle's two arcs) into one measurement target.
-fn resolve_pick(st: &solidcraft_doc::ModelState, face: bool, value: &Value) -> std::result::Result<Sel, String> {
+fn resolve_pick(st: &torno_doc::ModelState, face: bool, value: &Value) -> std::result::Result<Sel, String> {
     let Pick { body, point, index } = serde_json::from_value(value.clone()).map_err(|e| e.to_string())?;
     let b = st.body(&body).ok_or_else(|| format!("no body named '{body}'"))?;
     let m = b.mesh();
@@ -702,13 +702,13 @@ fn resolve_pick(st: &solidcraft_doc::ModelState, face: bool, value: &Value) -> s
     if face {
         let index = match index {
             Some(i) => i,
-            None => solidcraft_doc::appearance::face_index_at(b, point).ok_or_else(|| format!("no face of '{body}' at the picked point"))?,
+            None => torno_doc::appearance::face_index_at(b, point).ok_or_else(|| format!("no face of '{body}' at the picked point"))?,
         };
         let index = m.surface_patch(index).first().copied().unwrap_or(index);
         return Ok(Sel::Face { body, index, point });
     }
     let resolved = edge_index(&m, index, point)
-        .filter(|&i| index.is_some() || m.edges.get(i).is_some_and(|e| polyline_dist(e, point) <= solidcraft_doc::appearance::pick_tolerance(b)))
+        .filter(|&i| index.is_some() || m.edges.get(i).is_some_and(|e| polyline_dist(e, point) <= torno_doc::appearance::pick_tolerance(b)))
         .or(index)
         .ok_or_else(|| format!("no edge of '{body}' at the picked point"))?;
     let index = m.circular_rim(resolved).first().copied().unwrap_or(resolved);

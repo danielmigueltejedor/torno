@@ -4,7 +4,7 @@
 //! `tests/external-corpus.toml` lists each source archive (URL, SHA-256, licence) and every
 //! file inside it (path, SHA-256, expected results). The run downloads each archive once into
 //! the gitignored `corpus/external/`, verifies every hash, imports each file headless with
-//! `solidcraft-cli` (`file.insert_step` then `inspect.measure`), and checks the body count,
+//! `torno-cli` (`file.insert_step` then `inspect.measure`), and checks the body count,
 //! total volume and area within tolerances and the time and memory budgets. Import results
 //! should improve over time, so expectations are re-recorded with a reason:
 //! `--bless "why"` rewrites the expected values in the manifest. A file whose hash no longer
@@ -85,7 +85,7 @@ pub fn run(root: &Path, rest: &[&str]) -> Result<(), String> {
         Some(path) => vec![path.to_string()],
         None => {
             let cargo = std::env::var("CARGO").unwrap_or_else(|_| "cargo".into());
-            vec![cargo, "run".into(), "-q".into(), "--profile".into(), "ci".into(), "-p".into(), "solidcraft-cli".into(), "--".into()]
+            vec![cargo, "run".into(), "-q".into(), "--profile".into(), "ci".into(), "-p".into(), "torno-cli".into(), "--".into()]
         }
     };
 

@@ -1,4 +1,4 @@
-//! SolidCraft's native, versioned binary body file: a body's record, its metadata and the
+//! Torno's native, versioned binary body file: a body's record, its metadata and the
 //! values it measured about itself, as bounded tagged binary values. Exact: a decoded record is
 //! the encoded one, number for number. Checks are structural only (the record's
 //! [`Brep::validate`], the metadata's counts and ranges); the kernel checks the geometry and

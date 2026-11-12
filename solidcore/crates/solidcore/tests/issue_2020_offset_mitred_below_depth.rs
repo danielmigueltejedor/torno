@@ -8,7 +8,7 @@
 //! `w(z) = sqrt(9 - (z - z_axis)^2)` (3 below the axis), its corners mitred, so
 //! V = integral of (34 + 2w)(24 + 2w) dz over 0..10 + d.
 //!
-//! With SolidCraft's flags (183 `UpstreamFixes`, among them the fork's cliff-overflow
+//! With Torno's flags (183 `UpstreamFixes`, among them the fork's cliff-overflow
 //! and side-edge run-on fixes), every depth builds. Below the floor the rails meet the
 //! side edges' lines past the moved side edges' lower ends; each rail's search runs the
 //! side edge on along its line as far as the rail's base surface's domain is extended
@@ -19,7 +19,7 @@
 //! widened interval, and the put-back was refused as the fork's since 779cb9b. -9 now
 //! builds the fork's 2fc375f body (6 faces), with the closed form's volume to 8e-12: the
 //! shrink keeps the rounds' exact trims (WR-700), where the fork's 1006.320632128887
-//! through SolidCraft's capi is 4.8e-9 over it. With the flags off, the put-back fails at -7.5 (a corner edge) and at -9
+//! through Torno's capi is 4.8e-9 over it. With the flags off, the put-back fails at -7.5 (a corner edge) and at -9
 //! (a rollover). Each such failure is now a typed refusal,
 //! `OffsetFacesRefusal::NotPutBack`, where it had none.
 #![allow(
@@ -143,10 +143,10 @@ fn analytic_volume_matches_the_issue() {
 }
 
 #[test]
-fn solidcraft_flags_build_the_depths_below_the_rounds() {
+fn torno_flags_build_the_depths_below_the_rounds() {
     for (d, faces) in [(-6.9, 10), (-7.0, 6), (-7.5, 6), (-8.0, 6), (-9.5, 6)] {
         let k = &mut Kernel::default();
-        solidcraft_flags(k);
+        torno_flags(k);
         let (mut b, ex, r) = moved(k, d);
         assert!(
             r.is_ok(),
@@ -171,9 +171,9 @@ fn solidcraft_flags_build_the_depths_below_the_rounds() {
 /// (#2769), each rail's search reaches that point, not only the one whose solver's trace
 /// reach was set: it builds, as the fork's 2fc375f did.
 #[test]
-fn solidcraft_flags_build_minus_nine_as_the_fork() {
+fn torno_flags_build_minus_nine_as_the_fork() {
     let k = &mut Kernel::default();
-    solidcraft_flags(k);
+    torno_flags(k);
     let (mut b, ex, r) = moved(k, -9.0);
     assert!(r.is_ok(), "{r:?}: {:?} {}", ex.refusal(), ex.reason());
     assert_eq!(ex.refusal(), OffsetFacesRefusal::None);
@@ -208,8 +208,8 @@ fn flags_off_build_the_depths_above_the_floor() {
     }
 }
 
-/// SolidCraft's `UpstreamFixes` preset (183 flags).
-fn solidcraft_flags(k: &mut Kernel) {
+/// Torno's `UpstreamFixes` preset (183 flags).
+fn torno_flags(k: &mut Kernel) {
     k.fixes.analytic_copy_keeps_parameterization = true;
     k.fixes.approximate_surface_bezier_starter = true;
     k.fixes.boolean2d_plane_covers_far_faces = true;

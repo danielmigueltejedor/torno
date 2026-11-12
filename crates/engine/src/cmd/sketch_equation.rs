@@ -4,8 +4,8 @@
 //! a tolerance of them; it keeps its formulas, so it follows the parameters and can be edited.
 
 use serde_json::{Value, json};
-use solidcraft_doc::sketch_equation::{self, DEFAULT_TOLERANCE, EquationFit};
-use solidcraft_sketch::{EquationCurve, Sketch, VariableUnit};
+use torno_doc::sketch_equation::{self, DEFAULT_TOLERANCE, EquationFit};
+use torno_sketch::{EquationCurve, Sketch, VariableUnit};
 
 use super::sketch::{edit, mark_construction};
 use super::{CommandSpec, in_sketch};
@@ -127,7 +127,7 @@ fn equation(p: &Value, cmd: &str, old: Option<&EquationCurve>) -> Result<Equatio
 }
 
 /// The points of an equation, over the design's parameters as features are evaluated with them.
-fn fit(doc: &solidcraft_doc::Document, eq: &EquationCurve, cmd: &str) -> Result<EquationFit> {
+fn fit(doc: &torno_doc::Document, eq: &EquationCurve, cmd: &str) -> Result<EquationFit> {
     sketch_equation::fit(&doc.evaluation_values(), eq).map_err(|e| bad(cmd, e.to_string()))
 }
 

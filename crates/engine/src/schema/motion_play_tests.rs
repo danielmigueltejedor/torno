@@ -132,7 +132,7 @@ fn play_and_export_reply_with_their_schemas() {
         samples["samples"].as_array().map(|x| x.iter().map(|r| r["step"].clone()).collect::<Vec<_>>()),
         Some(vec![json!(0.0), json!(5.0), json!(10.0)])
     );
-    let dir = solidcraft_io::vfs::temp_dir().join(format!("solidcraft-motion-export-{}", std::process::id()));
+    let dir = torno_io::vfs::temp_dir().join(format!("torno-motion-export-{}", std::process::id()));
     let _ = std::fs::create_dir_all(&dir);
     let path = dir.join("swing.json").to_string_lossy().into_owned();
     let r = run("motion.export", json!({"study": "Swing", "samples": 3, "path": path}), exported);

@@ -7,8 +7,8 @@
 //! one opening are one undo step.
 
 use serde_json::{Value, json};
-use solidcraft_engine::doc::point_cloud::{COORDINATES, ColorBy, Filter, Keep, MAX_FILTERS, Names, PLAIN, PointCloud, UNITS, byte, label_color};
-use solidcraft_engine::view::POINT_CLOUDS_FOLDER;
+use torno_engine::doc::point_cloud::{COORDINATES, ColorBy, Filter, Keep, MAX_FILTERS, Names, PLAIN, PointCloud, UNITS, byte, label_color};
+use torno_engine::view::POINT_CLOUDS_FOLDER;
 
 use super::{Actions, Row, draw_row, is_open, panel_pos, rows_start_open, toggle, toggle_folder};
 use crate::SolveApp;
@@ -24,7 +24,7 @@ use point_cloud_tracks::{Ask, Paint, Tracks};
 use range_track::{Part, Track, range_track};
 
 /// Filters the GPU applies; the others are kept but not drawn.
-pub const DRAWN_FILTERS: usize = solidcraft_viewport_gpu::view::FILTERS;
+pub const DRAWN_FILTERS: usize = torno_viewport_gpu::view::FILTERS;
 
 /// The Edit Point Cloud card: the cloud, the undo depth when it opened, what it worked out once
 /// for the cloud's data (the automatic height range, the number of dots), its tracks' bars, and
@@ -268,7 +268,7 @@ pub(crate) fn panel(app: &mut SolveApp, ctx: &egui::Context) {
     };
     let mut edit: Option<Value> = None;
     let mut reload = false;
-    let title = solidcraft_ui_text::format("browser.edit_point_cloud_title", &[("name", &c.name)]);
+    let title = torno_ui_text::format("browser.edit_point_cloud_title", &[("name", &c.name)]);
     let auto = if c.color_by == ColorBy::Height { m.auto_range(&c) } else { None };
     let dots = m.dots(&c);
     let now = ctx.input(|i| i.time);
@@ -300,16 +300,16 @@ pub(crate) fn panel(app: &mut SolveApp, ctx: &egui::Context) {
     let (closed, action) = ui_kit::Window::new(egui::Id::unique("sc_point_cloud_panel"), "point", &title)
         .placed(egui::Align2::LEFT_TOP, at)
         .fields()
-        .actions("", solidcraft_ui_text::tr("ui.close"), None)
+        .actions("", torno_ui_text::tr("ui.close"), None)
         .show(ctx, true, |ui| {
-            ui_kit::row(ui, solidcraft_ui_text::tr_label("Points"), |ui| ui.label(c.len().to_string()));
+            ui_kit::row(ui, torno_ui_text::tr_label("Points"), |ui| ui.label(c.len().to_string()));
             // The dots' size, where some points are dots: those no segment or triangle ends on.
             if dots > 0 {
                 if dots < c.len() {
-                    ui_kit::row(ui, solidcraft_ui_text::tr_label("Dots"), |ui| ui.label(dots.to_string()));
+                    ui_kit::row(ui, torno_ui_text::tr_label("Dots"), |ui| ui.label(dots.to_string()));
                 }
                 let mut size = c.point_size;
-                if ui_kit::row(ui, solidcraft_ui_text::tr("ui.point_cloud_size"), |ui| ui_kit::slider(ui, &mut size, 0.5..=16.0, Default::default()))
+                if ui_kit::row(ui, torno_ui_text::tr("ui.point_cloud_size"), |ui| ui_kit::slider(ui, &mut size, 0.5..=16.0, Default::default()))
                     .changed()
                 {
                     edit = Some(json!({ "cloud": c.id, "point_size": size }));
@@ -319,7 +319,7 @@ pub(crate) fn panel(app: &mut SolveApp, ctx: &egui::Context) {
             let was = units.iter().position(|u| *u == c.units).unwrap_or(0);
             let mut unit = was;
             // A dropdown's response doesn't report the pick: compare the index.
-            ui_kit::row(ui, solidcraft_ui_text::tr("ui.point_cloud_units"), |ui| ui_kit::dropdown(ui, "point_cloud_units", &mut unit, &units));
+            ui_kit::row(ui, torno_ui_text::tr("ui.point_cloud_units"), |ui| ui_kit::dropdown(ui, "point_cloud_units", &mut unit, &units));
             if unit != was
                 && let Some(u) = units.get(unit)
             {
@@ -335,7 +335,7 @@ pub(crate) fn panel(app: &mut SolveApp, ctx: &egui::Context) {
                 by => COLOR_BY.iter().position(|(b, _)| *b == by).unwrap_or(0),
             };
             let mut by = was;
-            ui_kit::row(ui, solidcraft_ui_text::tr("ui.point_cloud_color_by"), |ui| ui_kit::dropdown(ui, "point_cloud_color_by", &mut by, &labels));
+            ui_kit::row(ui, torno_ui_text::tr("ui.point_cloud_color_by"), |ui| ui_kit::dropdown(ui, "point_cloud_color_by", &mut by, &labels));
             if by != was {
                 let name = COLOR_BY.get(by).map(|(b, _)| b.name()).or_else(|| properties.get(by - COLOR_BY.len()).copied());
                 if let Some(name) = name {
@@ -346,12 +346,12 @@ pub(crate) fn panel(app: &mut SolveApp, ctx: &egui::Context) {
             let legend_shown = colored.and_then(|n| label(&c, n));
             match c.color_by {
                 ColorBy::File if c.colors.is_empty() => {
-                    ui_kit::row(ui, "", |ui| ui.weak(solidcraft_ui_text::tr("ui.point_cloud_no_file_colors")));
+                    ui_kit::row(ui, "", |ui| ui.weak(torno_ui_text::tr("ui.point_cloud_no_file_colors")));
                 }
                 ColorBy::File => {}
                 ColorBy::Single => {
                     let mut rgb = c.color.unwrap_or(PLAIN).map(byte);
-                    if ui_kit::row(ui, solidcraft_ui_text::tr_label("Colour"), |ui| ui_kit::color_field(ui, &mut rgb)).changed() {
+                    if ui_kit::row(ui, torno_ui_text::tr_label("Colour"), |ui| ui_kit::color_field(ui, &mut rgb)).changed() {
                         edit = Some(json!({ "cloud": c.id, "color": rgb.map(|v| f64::from(v) / 255.0) }));
                     }
                 }
@@ -367,7 +367,7 @@ pub(crate) fn panel(app: &mut SolveApp, ctx: &egui::Context) {
                     {
                         // A ramp over what is shown, unless its range is set.
                         let automatic = c.height_range.is_none();
-                        if ui_kit::checkbox_row(ui, "point_cloud_auto_range", solidcraft_ui_text::tr("ui.point_cloud_auto_range"), automatic) {
+                        if ui_kit::checkbox_row(ui, "point_cloud_auto_range", torno_ui_text::tr("ui.point_cloud_auto_range"), automatic) {
                             edit = Some(json!({ "cloud": c.id, "color_range": if automatic { json!(crate::point_clouds::color_range(ui.ctx(), &live)) } else { Value::Null } }));
                         }
                         // The ramp's range is a range on a track of the property, over what the
@@ -423,9 +423,9 @@ pub(crate) fn panel(app: &mut SolveApp, ctx: &egui::Context) {
                         && ui_kit::button(
                             ui,
                             if playing {
-                                format!("⏸ {}", solidcraft_ui_text::tr_label("Pause"))
+                                format!("⏸ {}", torno_ui_text::tr_label("Pause"))
                             } else {
-                                format!("▶ {}", solidcraft_ui_text::tr_label("Play"))
+                                format!("▶ {}", torno_ui_text::tr_label("Play"))
                             },
                             ui_kit::Button::Small,
                         )
@@ -443,7 +443,7 @@ pub(crate) fn panel(app: &mut SolveApp, ctx: &egui::Context) {
                 match (&f.keep, span) {
                     (Keep::Values { .. }, _) => match label(&c, &f.property) {
                         Some(names) if legend_shown.is_some_and(|l| l.property == names.property) => {
-                            ui.weak(solidcraft_ui_text::tr_label("Shown and hidden in the legend above"));
+                            ui.weak(torno_ui_text::tr_label("Shown and hidden in the legend above"));
                         }
                         Some(names) => {
                             if let Some(v) = legend(ui, &c, names) {
@@ -521,10 +521,10 @@ pub(crate) fn panel(app: &mut SolveApp, ctx: &egui::Context) {
             }
             let all: Vec<&str> = c.property_names().collect();
             if c.filters.len() < MAX_FILTERS {
-                let mut add_labels = vec![solidcraft_ui_text::tr_label("Add filter…")];
+                let mut add_labels = vec![torno_ui_text::tr_label("Add filter…")];
                 add_labels.extend(all.iter().copied());
                 let mut pick = 0;
-                ui_kit::row(ui, solidcraft_ui_text::tr_label("Filter by"), |ui| ui_kit::dropdown(ui, "point_cloud_add_filter", &mut pick, &add_labels));
+                ui_kit::row(ui, torno_ui_text::tr_label("Filter by"), |ui| ui_kit::dropdown(ui, "point_cloud_add_filter", &mut pick, &add_labels));
                 if let Some(name) = all.get(pick.wrapping_sub(1)) {
                     // A label keeps all its values at first, anything else its whole span.
                     let keep = match (label(&c, name), c.span(name)) {
@@ -541,7 +541,7 @@ pub(crate) fn panel(app: &mut SolveApp, ctx: &egui::Context) {
             if changed {
                 edit = Some(json!({ "cloud": c.id, "filters": filters_json(&filters) }));
             }
-            if !c.source.is_empty() && ui_kit::button(ui, solidcraft_ui_text::tr("ui.point_cloud_reload"), ui_kit::Button::Normal).clicked() {
+            if !c.source.is_empty() && ui_kit::button(ui, torno_ui_text::tr("ui.point_cloud_reload"), ui_kit::Button::Normal).clicked() {
                 reload = true;
             }
         });
@@ -577,7 +577,7 @@ mod tests {
     fn a_cloud_has_a_menu_and_a_card_that_closes() {
         let mut h = crate::scenario::Harness::new();
         h.app.home.open = false;
-        let dir = std::env::temp_dir().join(format!("solidcraft-browser-cloud-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("torno-browser-cloud-{}", std::process::id()));
         std::fs::create_dir_all(&dir).unwrap();
         let path = dir.join("scan.xyz");
         std::fs::write(
@@ -600,7 +600,7 @@ mod tests {
         }
         h.app.run("pointcloud.edit", json!({"cloud": id, "color_by": "height"})).unwrap();
         h.frames(2);
-        assert!(h.widget(solidcraft_ui_text::tr("ui.point_cloud_auto_range")).is_some());
+        assert!(h.widget(torno_ui_text::tr("ui.point_cloud_auto_range")).is_some());
         h.step(&json!({"widget": "Close"})).unwrap();
         h.frames(2);
         assert!(h.app.tree.cloud_panel.is_none());
@@ -632,7 +632,7 @@ mod tests {
     fn a_filter_gone_from_under_a_play_ends_the_play() {
         let mut h = crate::scenario::Harness::new();
         h.app.home.open = false;
-        let dir = std::env::temp_dir().join(format!("solidcraft-browser-play-gone-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("torno-browser-play-gone-{}", std::process::id()));
         std::fs::create_dir_all(&dir).unwrap();
         let path = layered_segments(&dir);
         let id = h.app.run("pointcloud.insert", json!({"path": path.to_string_lossy()})).unwrap()["cloud"].as_u64().unwrap();
@@ -656,7 +656,7 @@ mod tests {
     fn a_filter_track_draws_snaps_steps_frames_and_plays() {
         let mut h = crate::scenario::Harness::new();
         h.app.home.open = false;
-        let dir = std::env::temp_dir().join(format!("solidcraft-browser-track-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("torno-browser-track-{}", std::process::id()));
         std::fs::create_dir_all(&dir).unwrap();
         let path = layered_segments(&dir);
         let id = h.app.run("pointcloud.insert", json!({"path": path.to_string_lossy()})).unwrap()["cloud"].as_u64().unwrap();

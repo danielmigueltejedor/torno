@@ -140,7 +140,7 @@
     "blend_dropping"
   ],
   "ungraded": [
-    "continuity: SolidCraft computes it"
+    "continuity: Torno computes it"
   ],
   "what": "a curvature-continuous (G2) fillet of size 6 on one edge of a 20 mm cube",
   "why_not": []

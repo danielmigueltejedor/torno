@@ -148,6 +148,6 @@
   "ungraded": [],
   "what": "an edge flange on the side edge of an existing wall, meeting a flange on the base across the existing bend with a round corner relief (not supported yet: a flange on the side of another flange)",
   "why_not": [
-    "body \"Body1\" is no kernel operation's output nor an operand: SolidCraft built it or changed the kernel's record"
+    "body \"Body1\" is no kernel operation's output nor an operand: Torno built it or changed the kernel's record"
   ]
 }

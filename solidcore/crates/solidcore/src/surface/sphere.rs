@@ -75,7 +75,7 @@
 //!   sphere); that is [`SphereStepInversion::on_surface`] `false`, not an error, so the
 //!   outputs stay available to the callers that ignore the status.
 //!   With [`UpstreamFixes::analytic_inversion_answers_apart`](crate::kernel::UpstreamFixes::analytic_inversion_answers_apart)
-//!   (WR-662, the SolidCraft fork's tangency-labs/smlib dfc7cb6) the intersections pass
+//!   (WR-662, the Torno fork's tangency-labs/smlib dfc7cb6) the intersections pass
 //!   on an inversion that did not answer ([`SphereStepInversion::answered`]), and
 //!   `Surface::step_inversion` returns a point off the sphere as
 //!   `SM_ERR_NOT_WITHIN_TOLERANCE`.
@@ -107,7 +107,7 @@
 //!   still a touch for a B-rep at that tolerance: `FaceIntersect` makes it one
 //!   (`topology::face::p3`). No input-driven recursion.
 //! - **Opt-in fix** ([`UpstreamFixes::found_torus_sphere_keep_tested_nurb`](crate::kernel::UpstreamFixes::found_torus_sphere_keep_tested_nurb),
-//!   WR-493, the SolidCraft fork's tangency-labs/smlib@7ea6a96): `IsNurbSurfaceSphere`
+//!   WR-493, the Torno fork's tangency-labs/smlib@7ea6a96): `IsNurbSurfaceSphere`
 //!   tests the half meridian within `180 + 360 * SM_EFF_ZERO` degrees and the sphere it
 //!   finds keeps the tested NURB (`SetFromGwNurb`). Off by default (upstream).
 //! - **Far spheres** (#3131, by default): `IsNurbSurfaceSphere` and
@@ -212,7 +212,7 @@ pub struct SphereStepInversion {
     /// surface (`SM_ERR` for a point farther, or at the sphere's centre, where the
     /// outputs are `(0, 0)` and exterior).
     pub on_surface: bool,
-    /// The inversion answered (`SmSurface::STEPInversionAnswered` of the SolidCraft
+    /// The inversion answered (`SmSurface::STEPInversionAnswered` of the Torno
     /// fork's status, tangency-labs/smlib dfc7cb6): `false` only for the centre of a
     /// sphere no larger than the tolerance, which is on it but has no parameters
     /// (`SM_ERR`); a point off the sphere is an answer

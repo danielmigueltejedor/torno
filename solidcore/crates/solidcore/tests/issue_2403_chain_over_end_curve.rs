@@ -1,11 +1,11 @@
 //! #2403 (carried over from tangency-labs/smlib#94; the generic blend, hub #2243): a tangent
 //! chain run over an earlier round's end curve, where that round has the chain's radius.
 //!
-//! The part is SolidCraft #851's knife-edge plate (capi `knife_edge_arc_part`): a 41 1/6 x 21
+//! The part is Torno #851's knife-edge plate (capi `knife_edge_arc_part`): a 41 1/6 x 21
 //! plate and the corner a circle of radius 21 about (62 1/6, -21) leaves, 10 high. At its front
 //! corner (41 1/6, -21, 10) three edges meet: the top front edge, the top edge of the concave
-//! R21 arc wall and the front upright at the arc. SolidCraft's rig rounds them R2 one fillet at a
-//! time, each with its tangent chain (SolidCraft's `tangent_chain` default):
+//! R21 arc wall and the front upright at the arc. Torno's rig rounds them R2 one fillet at a
+//! time, each with its tangent chain (Torno's `tangent_chain` default):
 //! - `851-fillet-arc-then-top-front`: the arc's top edge, then the top front edge with the arc
 //!   round's end curve on the front face and the upright under it;
 //! - `851-fillet-top-front-then-upright`: the top front edge, then the upright with the first
@@ -18,7 +18,7 @@
 //! three faces front, top and wall touch: `C = (62 1/6 - sqrt(23^2 - 2^2), -19, 8)`. Both
 //! orders end on the shape the three edges rounded together give (the fork's capi
 //! `ball_knife_edge_arc_corner`): the corner face that ball's triangle between its contacts
-//! with the three faces, G1 to the three rounds, and the same volume. SolidCraft's
+//! with the three faces, G1 to the three rounds, and the same volume. Torno's
 //! expected.json gives that volume as 9524.342896 to its grid's 5e-3 (the capi's check).
 //!
 //! Before the fix both orders failed with status 1001: the round along the end curve was
@@ -59,9 +59,9 @@ const TIP: f64 = 62.0 + 1.0 / 6.0;
 const WALL: f64 = 21.0;
 const RAD: f64 = 2.0;
 
-/// SolidCraft's expected.json volume of the three edges rounded R2 together, to its grid's
+/// Torno's expected.json volume of the three edges rounded R2 together, to its grid's
 /// 5e-3 (the fork's capi `scenario_three_edges_at_the_knife_edge_arc_corner`).
-const SOLIDCRAFT_VOLUME: f64 = 9524.342896;
+const TORNO_VOLUME: f64 = 9524.342896;
 
 /// Every fix but `geometric_g2_continuity`.
 fn kernel() -> Kernel {
@@ -274,7 +274,7 @@ fn assert_arc_corner_ball(name: &str, k: &mut Kernel, b: &mut Brep) -> f64 {
     let (surf, edges, g1) = corner_face(k, b, c, &contacts);
     let faces = get_faces(b).unwrap().len();
     eprintln!(
-        "{name}: volume {v:.9} (SolidCraft {SOLIDCRAFT_VOLUME}); {faces} faces; corner face off \
+        "{name}: volume {v:.9} (Torno {TORNO_VOLUME}); {faces} faces; corner face off \
          its ball {surf:.3e}, edges {edges:.3e}, G1 {g1:.3e}; check {lines:?}"
     );
     assert!(lines.is_empty(), "{name}: {lines:?}");
@@ -286,7 +286,7 @@ fn assert_arc_corner_ball(name: &str, k: &mut Kernel, b: &mut Brep) -> f64 {
     assert_eq!(faces, 10, "{name}");
     assert!(surf <= 1e-12 && edges <= 1e-12, "{name}: {surf} {edges}");
     assert!(g1 <= 1e-9, "{name}: {g1}");
-    assert!((v - SOLIDCRAFT_VOLUME).abs() < 5e-3, "{name}: {v}");
+    assert!((v - TORNO_VOLUME).abs() < 5e-3, "{name}: {v}");
     v
 }
 

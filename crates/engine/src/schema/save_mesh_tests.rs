@@ -8,7 +8,7 @@ use crate::schema::tests::{assert_keys, assert_strict_keeps_todays_errors, confo
 use crate::schema::{ParamCheck, input_schema_for, output_schema_for};
 
 fn temp_dir(tag: &str) -> std::path::PathBuf {
-    let dir = std::env::temp_dir().join(format!("solidcraft-13308-{tag}-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("torno-13308-{tag}-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&dir);
     std::fs::create_dir_all(&dir).unwrap();
     dir

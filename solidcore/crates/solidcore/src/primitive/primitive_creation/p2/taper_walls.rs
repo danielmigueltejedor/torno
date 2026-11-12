@@ -1,7 +1,7 @@
 //! The side walls of a draft extrusion that keep their curvature at the profile's
-//! corners, or continue as their tangent planes there (SolidCraft change).
+//! corners, or continue as their tangent planes there (Torno change).
 //!
-//! Upstream: none at the pin. Ported from the SolidCraft fork of SMLib
+//! Upstream: none at the pin. Ported from the Torno fork of SMLib
 //! (tangency-labs/smlib 54148db "draft corners that keep the curves' curvature" and
 //! e8f23e0 "the tangent draft corner continues lines' and arcs' walls as their
 //! tangent planes"), `source/SMLib/src/SmPrimitiveCreation.cpp`.
@@ -83,7 +83,7 @@ use crate::topology::BrepId;
 
 const OP: &str = "primitive::primitive_creation::p2::taper_walls";
 
-/// Why a draft corner could not be closed (`SmTaperCornerRefusal`, SolidCraft change).
+/// Why a draft corner could not be closed (`SmTaperCornerRefusal`, Torno change).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum TaperCornerRefusal {
     /// `SM_TCR_APART`: the continued curves do not meet.

@@ -8,7 +8,7 @@ use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
 use super::backend::{self, PromptPart};
-use solidcraft_ui_text::format as trf;
+use torno_ui_text::format as trf;
 
 /// A refusal in the app's language: the file's name, then why.
 fn refused(key: &str, name: &str, args: &[(&str, &str)]) -> String {
@@ -79,7 +79,7 @@ pub fn kind(path: &Path) -> Kind {
         "pdf" => Kind::Pdf,
         _ => {
             let p = path.to_string_lossy();
-            if solidcraft_engine::io::is_step_path(&p) || solidcraft_engine::io::is_mesh_path(&p) { Kind::Cad } else { Kind::Other }
+            if torno_engine::io::is_step_path(&p) || torno_engine::io::is_mesh_path(&p) { Kind::Cad } else { Kind::Other }
         }
     }
 }
@@ -503,7 +503,7 @@ mod tests {
     use super::*;
 
     fn dir(tag: &str) -> std::path::PathBuf {
-        let d = std::env::temp_dir().join(format!("solidcraft-attach-{tag}-{}", std::process::id()));
+        let d = std::env::temp_dir().join(format!("torno-attach-{tag}-{}", std::process::id()));
         let _ = std::fs::remove_dir_all(&d);
         std::fs::create_dir_all(&d).unwrap();
         d
@@ -621,11 +621,11 @@ mod tests {
         let binary = d.join("bin.json");
         std::fs::write(&binary, [0xff, 0xfe, 0x00, 0x80]).unwrap();
         {
-            let _ja = solidcraft_ui_text::scope("ja");
+            let _ja = torno_ui_text::scope("ja");
             assert!(read(&binary).unwrap_err().contains("UTF-8 のテキストではありません"));
         }
         {
-            let _zh = solidcraft_ui_text::scope("zh");
+            let _zh = torno_ui_text::scope("zh");
             assert!(read(&binary).unwrap_err().contains("不是 UTF-8 文本"));
         }
         assert!(read(&binary).unwrap_err().contains("not UTF-8 text"), "English again outside the scope");

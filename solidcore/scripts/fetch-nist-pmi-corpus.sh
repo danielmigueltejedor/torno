@@ -8,7 +8,7 @@
 # in place as untrusted data. Nothing from it is ever executed.
 #
 # The archive and every file in it are pinned by SHA-256 in scripts/nist-pmi-corpus.sha256 (the
-# archive is the one SolidCraft's tests/external-corpus.toml pins as "nist-pmi"). A download or
+# archive is the one Torno's tests/external-corpus.toml pins as "nist-pmi"). A download or
 # a file whose hash differs fails the script. Idempotent: an archive or file already present
 # with its pinned hash is kept; one present with another hash is an error (remove it and
 # re-run). The script removes nothing: a failed download stays as `<archive>.part` and is

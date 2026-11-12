@@ -1,4 +1,4 @@
-//! SolidCraft's `smooth_edges_and_unfinished_tangent_chains_are_refused_saying_why`: the box
+//! Torno's `smooth_edges_and_unfinished_tangent_chains_are_refused_saying_why`: the box
 //! 60 x 40 x 20, its top back edge rounded 5, its top right edge rounded 3 alone, then the
 //! upright (60, 40) rounded r alone. The upright runs on tangentially into the r 5 round's end
 //! arc, and a blend run on there leaves the part, so it has no cap (#2656). Above

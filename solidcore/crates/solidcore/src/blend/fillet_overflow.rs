@@ -1,7 +1,7 @@
 //! A convex blend past the faces it rolls on, trimmed at its creases in place (not
 //! upstream): the geometry steps of the fork's `TrimAtCreases`.
 //!
-//! Not upstream: the SolidCraft fork's `source/SMLib/src/SmFilletOverflow.cpp`
+//! Not upstream: the Torno fork's `source/SMLib/src/SmFilletOverflow.cpp`
 //! (tangency-labs/smlib#79 step 6: 99e57b8, 668fe9f, bacd0bb, 2d4b154, bc8c44d, de5df14 and
 //! 8832ead, at 5e8c9c1 on `replay/1.0.1`), behind `fixes.fillet_overflow_trim_at_creases`
 //! (WR-695). A blend whose rails leave their faces across cliffs keeps its surface, built

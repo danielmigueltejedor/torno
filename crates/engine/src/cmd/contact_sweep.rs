@@ -3,15 +3,15 @@
 //! into each other at a sample ([`ContactGeometry::overlaps`]) and closes in on where they first
 //! touch through placements known to be clear ([`ContactGeometry::gap`]); gaps and interference
 //! depths are measured on the bodies' contact meshes.
-use solidcraft_geom::prelude::*;
 use std::cell::Cell;
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::sync::Arc;
+use torno_geom::prelude::*;
 
 use solidcore_record::Vec3;
-use solidcraft_doc::joints;
-use solidcraft_doc::{Document, IDENTITY, Mat, apply_point, mat_mul};
-use solidcraft_geom::{Aabb3, Bvh, Mesh};
+use torno_doc::joints;
+use torno_doc::{Document, IDENTITY, Mat, apply_point, mat_mul};
+use torno_geom::{Aabb3, Bvh, Mesh};
 
 use crate::params::bad;
 use crate::{Result, Session};
@@ -57,7 +57,7 @@ struct CachedBody {
     path: Vec<u64>,
     offset: Mat,
     /// The body itself, for the exact checks, and its exact box in its own frame.
-    body: solidcraft_kernel::Body,
+    body: torno_kernel::Body,
     exact_box: Aabb3,
     mesh: Arc<Mesh>,
     size: f64,
@@ -78,15 +78,15 @@ pub(crate) struct ContactMesh {
     thickness: f64,
 }
 
-/// Contact meshes by the body's geometry ([`solidcraft_doc::ModelBody::geometry_key`]), shared
+/// Contact meshes by the body's geometry ([`torno_doc::ModelBody::geometry_key`]), shared
 /// by a session and its scratch copies: driving a joint again meshes no body that did not change.
 #[derive(Default)]
 pub(crate) struct ContactMeshes(HashMap<u64, ContactMesh>);
 
 /// Tessellate `body` for contact checks and measure how thin it is.
-fn contact_mesh(body: &solidcraft_doc::ModelBody) -> Result<ContactMesh> {
+fn contact_mesh(body: &torno_doc::ModelBody) -> Result<ContactMesh> {
     let tolerance = (body.body.size() * 1e-3).max(1e-3);
-    let mesh = body.body.mesh(&solidcraft_kernel::MeshTolerance::chord(tolerance))?;
+    let mesh = body.body.mesh(&torno_kernel::MeshTolerance::chord(tolerance))?;
     if mesh.triangles.len() > MAX_TRIANGLES || mesh.positions.len().saturating_add(mesh.triangles.len().saturating_mul(4)) > 200_000 {
         return Err(limit("body exceeds contact sweep tessellation budget"));
     }
@@ -394,7 +394,7 @@ impl ContactGeometry {
     pub(super) fn overlaps(&self, s: &Session, intersections: &mut usize, all: bool) -> Result<Vec<Overlap>> {
         let frames = self.frames(s)?;
         let boxes: Vec<Aabb3> = self.bodies.iter().zip(&frames).map(|(b, f)| placed_box(&b.exact_box, f)).collect();
-        let mut placed: Vec<Option<solidcraft_kernel::Body>> = vec![None; self.bodies.len()];
+        let mut placed: Vec<Option<torno_kernel::Body>> = vec![None; self.bodies.len()];
         let mut out = Vec::new();
         for (a, b, oa, ob) in &self.pairs {
             let (Some(xa), Some(xb)) = (boxes.get(*a), boxes.get(*b)) else {
@@ -411,10 +411,10 @@ impl ContactGeometry {
                 bad("contact.sweep", format!("whether {} and {} pass into each other could not be decided ({e})", oa.1, ob.1))
             };
             let (pa, pb) = (self.placed_body(*a, &frames, &mut placed)?, self.placed_body(*b, &frames, &mut placed)?);
-            let Some(shared) = solidcraft_kernel::boolean(&pa, &pb, solidcraft_kernel::BoolOp::Intersect).map_err(|e| undecided(&e))? else {
+            let Some(shared) = torno_kernel::boolean(&pa, &pb, torno_kernel::BoolOp::Intersect).map_err(|e| undecided(&e))? else {
                 continue;
             };
-            if solidcraft_kernel::measure_mass(&shared).map_err(|e| undecided(&e))?.volume > 0.0 {
+            if torno_kernel::measure_mass(&shared).map_err(|e| undecided(&e))?.volume > 0.0 {
                 out.push(Overlap { a: oa.1.clone(), b: ob.1.clone(), bodies: (*a, *b) });
                 if !all {
                     break;
@@ -425,13 +425,13 @@ impl ContactGeometry {
     }
 
     /// The least gap between the bodies of `pairs` in `s`, where they are clear of each other: their
-    /// exact distance ([`solidcraft_kernel::body_distance`]), less the meshes' chord tolerances
+    /// exact distance ([`torno_kernel::body_distance`]), less the meshes' chord tolerances
     /// where it could only be measured on the meshes, so the gap is never more than the bodies'.
     /// Between bodies that pass into each other it means nothing (a distance does not tell them
     /// from touching ones): it is asked only of placements known to be clear.
     pub(super) fn gap(&self, s: &Session, pairs: &[Overlap]) -> Result<f64> {
         let frames = self.frames(s)?;
-        let mut placed: Vec<Option<solidcraft_kernel::Body>> = vec![None; self.bodies.len()];
+        let mut placed: Vec<Option<torno_kernel::Body>> = vec![None; self.bodies.len()];
         let mut least = f64::INFINITY;
         for pair in pairs {
             let (a, b) = pair.bodies;
@@ -445,8 +445,8 @@ impl ContactGeometry {
                 ..Mesh::default()
             };
             let (ma, mb) = (mesh(ca, fa), mesh(cb, fb));
-            let (sa, sb) = (solidcraft_kernel::DistanceShape::new(&pa, &ma, ca.chord), solidcraft_kernel::DistanceShape::new(&pb, &mb, cb.chord));
-            let Some(d) = solidcraft_kernel::body_distance(&sa, &sb, f64::INFINITY)? else {
+            let (sa, sb) = (torno_kernel::DistanceShape::new(&pa, &ma, ca.chord), torno_kernel::DistanceShape::new(&pb, &mb, cb.chord));
+            let Some(d) = torno_kernel::body_distance(&sa, &sb, f64::INFINITY)? else {
                 return Err(limit("invalid contact geometry pair"));
             };
             let gap = if d.exact { d.distance } else { d.distance - ca.chord - cb.chord };
@@ -487,14 +487,14 @@ impl ContactGeometry {
     }
 
     /// Body `i` placed by `frames`, made once per check.
-    fn placed_body(&self, i: usize, frames: &[Mat], placed: &mut [Option<solidcraft_kernel::Body>]) -> Result<solidcraft_kernel::Body> {
+    fn placed_body(&self, i: usize, frames: &[Mat], placed: &mut [Option<torno_kernel::Body>]) -> Result<torno_kernel::Body> {
         if let Some(Some(done)) = placed.get(i) {
             return Ok(done.clone());
         }
         let (Some(body), Some(frame)) = (self.bodies.get(i), frames.get(i)) else {
             return Err(limit("invalid contact geometry pair"));
         };
-        let moved = solidcraft_kernel::transform_matrix(&body.body, *frame)?;
+        let moved = torno_kernel::transform_matrix(&body.body, *frame)?;
         if let Some(slot) = placed.get_mut(i) {
             *slot = Some(moved.clone());
         }

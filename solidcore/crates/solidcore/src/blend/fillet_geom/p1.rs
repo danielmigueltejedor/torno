@@ -298,11 +298,11 @@ pub enum FilletErrorType {
     /// `SM_FILERR_BAD_MERGE`.
     BadMerge = 7,
     /// Not an upstream code (the pin's enum ends at `SM_FILERR_BAD_MERGE`). The "blend does not
-    /// fit its faces" refusal of the SolidCraft opt-ins (the `fixes.fillet_refuse_*` flags that
+    /// fit its faces" refusal of the Torno opt-ins (the `fixes.fillet_refuse_*` flags that
     /// refuse a blend larger than its faces). Only those opt-ins record it; with them off the port
     /// reports pin codes only.
     NoRoom = 8,
-    /// `SM_FILERR_CORNER_UNSUPPORTED` (SolidCraft change, tangency-labs/smlib@a73cf5e): a
+    /// `SM_FILERR_CORNER_UNSUPPORTED` (Torno change, tangency-labs/smlib@a73cf5e): a
     /// filleted vertex no `SmFilletCorner` type handles. This port keeps its existing codes
     /// 0..=8 (pinned 0..=7 plus `NoRoom` = 8) and gives the new code 9; the fork's enum has
     /// `SM_FILERR_NOT_EXACT` = 9 and its
@@ -311,14 +311,14 @@ pub enum FilletErrorType {
     /// no mapping here. Only `fixes.fillet_vertex_error_diagnostics` records it (#1469); with
     /// it off the port reports pin codes only.
     CornerUnsupported = 9,
-    /// `SM_FILERR_NOT_EXACT` (SolidCraft change, tangency-labs/smlib@8ba4667, WR-631): a cliff
+    /// `SM_FILERR_NOT_EXACT` (Torno change, tangency-labs/smlib@8ba4667, WR-631): a cliff
     /// overflow whose removal region cannot be closed exactly (a boundary edge on no single
     /// face's surface, a side edge that is not a line). The fork numbers it 9 (and
     /// `SM_FILERR_CORNER_UNSUPPORTED` 10); this port, whose code 9 is already
     /// [`FilletErrorType::CornerUnsupported`], gives it 10. Only `fixes.fillet_cliff_overflow`
     /// records it.
     NotExact = 10,
-    /// `SM_FILERR_OVERFLOW_FIRST` (SolidCraft change, tangency-labs/smlib@241f7ba, WR-634):
+    /// `SM_FILERR_OVERFLOW_FIRST` (Torno change, tangency-labs/smlib@241f7ba, WR-634):
     /// `CreateFilletBrep` stopped after classifying the rails, building nothing
     /// (`SetClassifyOnly`, or `SetOverflowFirst` when blends of several edges overflow
     /// across cliffs); `GetOverflowEdges` holds the edges whose blends overflow. The fork

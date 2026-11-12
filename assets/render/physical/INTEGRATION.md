@@ -109,7 +109,7 @@ vacuum, gravity or thermal behavior on the Moon.
 
 ## Future library v2 export
 
-The integrated runtime's `solidcraft_io::catalog` owns library serialization.
+The integrated runtime's `torno_io::catalog` owns library serialization.
 It computes entry revisions from its compact serde representation of provenance
 and definition. Do not calculate an assumed equivalent Python hash or hand-write
 a catalog revision: cross-language float spelling and omitted fields can differ.

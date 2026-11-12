@@ -98,7 +98,7 @@
       "tangency-labs/solidcraft#4238"
     ],
     "volume_mm3": 13445.1326,
-    "what": "after a STEP round trip, a ring (r 4..6) sketched on a bored boss's top face and cut 15 mm down through the boss and the plate to widen the bore: 'boolean Cut: no result' on the imported body (the same cut worked on the part built in SolidCraft)"
+    "what": "after a STEP round trip, a ring (r 4..6) sketched on a bored boss's top face and cut 15 mm down through the boss and the plate to widen the bore: 'boolean Cut: no result' on the imported body (the same cut worked on the part built in Torno)"
   },
   "expressible": true,
   "operation_expressible": true,
@@ -162,6 +162,6 @@
     "boolean"
   ],
   "ungraded": [],
-  "what": "after a STEP round trip, a ring (r 4..6) sketched on a bored boss's top face and cut 15 mm down through the boss and the plate to widen the bore: 'boolean Cut: no result' on the imported body (the same cut worked on the part built in SolidCraft)",
+  "what": "after a STEP round trip, a ring (r 4..6) sketched on a bored boss's top face and cut 15 mm down through the boss and the plate to widen the bore: 'boolean Cut: no result' on the imported body (the same cut worked on the part built in Torno)",
   "why_not": []
 }

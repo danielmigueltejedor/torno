@@ -152,7 +152,7 @@
     "blend_dropping"
   ],
   "ungraded": [
-    "continuity: SolidCraft computes it"
+    "continuity: Torno computes it"
   ],
   "what": "a box's top back edge chamfered 3: the chord between the faces' contact lines, a crease with each face",
   "why_not": []

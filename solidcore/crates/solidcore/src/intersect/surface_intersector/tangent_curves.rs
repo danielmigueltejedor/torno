@@ -2,7 +2,7 @@
 //! curves along which the two surfaces touch, and the crossing branches through the
 //! contact points where crossing curves meet (opt-in, WR-75).
 //!
-//! Upstream: the SolidCraft fork's `source/SMLib/src/SmTangentCurveTracer.cpp`
+//! Upstream: the Torno fork's `source/SMLib/src/SmTangentCurveTracer.cpp`
 //! (tangency-labs/smlib ef4ab25, e9fde8f, d8c61db, 1693c9d; not in the pinned SMLib).
 //! The solver core (`TcTracer` and its helpers) is
 //! [`crate::intersect::surface_intersector::tangent_tracer`].

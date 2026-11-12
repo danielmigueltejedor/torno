@@ -5,7 +5,7 @@
 use std::collections::BTreeMap;
 
 use serde_json::Value;
-use solidcraft_doc::{FeatureKind, PlaneRef};
+use torno_doc::{FeatureKind, PlaneRef};
 
 use super::CommandSpec;
 use crate::params::{bad, name_or_id_values, vec3};
@@ -63,7 +63,7 @@ fn copy(s: &mut Session, p: &Value) -> Result<Value> {
     let keys = copy_keys(p)?;
     let ids = keys.iter().map(|key| super::edit::feature_id(s, Some(key), cmd)).collect::<Result<Vec<_>>>()?;
     // Keep timeline order so sketches come before the features that use them.
-    let copied: Vec<solidcraft_doc::Feature> = s.doc.features.iter().filter(|f| ids.contains(&f.id)).cloned().collect();
+    let copied: Vec<torno_doc::Feature> = s.doc.features.iter().filter(|f| ids.contains(&f.id)).cloned().collect();
     let names: Vec<String> = copied.iter().map(|f| f.name.clone()).collect();
     s.clipboard = copied;
     s.foreign_copy = Some(std::sync::Arc::new(crate::ForeignCopy::of_features(s)));
@@ -132,25 +132,25 @@ fn paste(s: &mut Session, p: &Value) -> Result<Value> {
         None if comp == s.active_component => s.active_occurrence_path.clone().unwrap_or_else(|| s.doc.first_path(comp)),
         None => super::component::placing::placement_of(s, &s.design_document(), comp, None, "component_path", cmd)?.0,
     };
-    solidcraft_doc::EmbossFace::component_frame(&s.design_document(), comp, &author_path)?;
+    torno_doc::EmbossFace::component_frame(&s.design_document(), comp, &author_path)?;
     // A copy from another component goes where its original is in the world: its geometry moves
     // from its component's frame (its first placement, where its bodies have their own names)
     // into the target's. The design's placements: an exploded view shown is left out, or the copy
     // would keep its offset once the view is closed.
     let placed = s.design_document();
     let target_frame = placed.path_transform(comp, &author_path).ok_or_else(|| bad(cmd, "that path is not a placement of the target"))?;
-    let to_target = solidcraft_doc::mat_inverse(&target_frame).ok_or_else(|| bad(cmd, "the target's frame is not invertible"))?;
-    let frame_change: BTreeMap<u64, solidcraft_doc::Mat> = feats
+    let to_target = torno_doc::mat_inverse(&target_frame).ok_or_else(|| bad(cmd, "the target's frame is not invertible"))?;
+    let frame_change: BTreeMap<u64, torno_doc::Mat> = feats
         .iter()
         .map(|f| f.component)
         .filter(|from| *from != comp)
         .map(|from| {
-            let source = placed.path_transform(from, &placed.first_path(from)).unwrap_or(solidcraft_doc::IDENTITY);
-            (from, solidcraft_doc::mat_mul(&to_target, &source))
+            let source = placed.path_transform(from, &placed.first_path(from)).unwrap_or(torno_doc::IDENTITY);
+            (from, torno_doc::mat_mul(&to_target, &source))
         })
         .collect();
     drop(placed);
-    let mut shift = solidcraft_doc::IDENTITY;
+    let mut shift = torno_doc::IDENTITY;
     if let Some(t) = translate {
         shift[3][0] = t.x;
         shift[3][1] = t.y;
@@ -161,7 +161,7 @@ fn paste(s: &mut Session, p: &Value) -> Result<Value> {
     for f in feats {
         let mut kind = f.kind.clone();
         kind.remap_refs(&sketches, &names);
-        let m = solidcraft_doc::mat_mul(&shift, frame_change.get(&f.component).unwrap_or(&solidcraft_doc::IDENTITY));
+        let m = torno_doc::mat_mul(&shift, frame_change.get(&f.component).unwrap_or(&torno_doc::IDENTITY));
         let moved = m.iter().enumerate().any(|(i, row)| row.iter().enumerate().any(|(j, v)| (v - if i == j { 1.0 } else { 0.0 }).abs() > 1e-12));
         // A body made by an earlier copy is the one this copy acts on (#613).
         kind.remap_bodies(&bodies);
@@ -180,7 +180,7 @@ fn paste(s: &mut Session, p: &Value) -> Result<Value> {
                 notices.push(format!("pasted sketch retains external exact face attachment to {}", anchor.target.body));
             }
             if internal {
-                let source = solidcraft_doc::mat_mul(&shift, frame_change.get(&anchor.component).unwrap_or(&solidcraft_doc::IDENTITY));
+                let source = torno_doc::mat_mul(&shift, frame_change.get(&anchor.component).unwrap_or(&torno_doc::IDENTITY));
                 anchor.reframe_placement(&m, &source)?;
             }
             anchor.remap_target(&sketches, &bodies)?;
@@ -193,7 +193,7 @@ fn paste(s: &mut Session, p: &Value) -> Result<Value> {
             if let FeatureKind::Sketch { sketch, .. } = &mut kind {
                 for link in &mut sketch.links {
                     if link.auto_face {
-                        if let solidcraft_sketch::LinkSource::Face { body, .. } = &mut link.source
+                        if let torno_sketch::LinkSource::Face { body, .. } = &mut link.source
                             && let Some(mapped) = bodies.get(body)
                         {
                             *body = mapped.clone();
@@ -218,7 +218,7 @@ fn paste(s: &mut Session, p: &Value) -> Result<Value> {
         let copied_names: Vec<_> = shown
             .iter()
             .map(|shown| {
-                let name = solidcraft_doc::copy_name(shown, |n| used.contains(n));
+                let name = torno_doc::copy_name(shown, |n| used.contains(n));
                 used.insert(name.clone());
                 bodies.insert(shown.clone(), name.clone());
                 name
@@ -243,12 +243,12 @@ fn paste(s: &mut Session, p: &Value) -> Result<Value> {
         // A cylinder Emboss finds its face only by the persistent name recorded when it was made
         // (#1035): the copy keeps that name, pointed at the pasted features and bodies.
         let face_names: Vec<String> = if matches!(kind, FeatureKind::Emboss { face: Some(_), .. }) {
-            f.face_names.iter().map(|n| solidcraft_doc::remap_topology(n, &sketches, &bodies)).collect()
+            f.face_names.iter().map(|n| torno_doc::remap_topology(n, &sketches, &bodies)).collect()
         } else {
             Vec::new()
         };
         // A copy keeps its original's name, numbered: `Sketch1` → `Sketch1 (2)`.
-        let name = solidcraft_doc::copy_name(&f.name, |n| doc.features.iter().any(|x| x.name == n));
+        let name = torno_doc::copy_name(&f.name, |n| doc.features.iter().any(|x| x.name == n));
         let id = doc.add_feature(kind, Some(&name))?;
         if let Some(nf) = doc.feature_mut(id) {
             nf.component = comp;
@@ -272,7 +272,7 @@ fn paste(s: &mut Session, p: &Value) -> Result<Value> {
 #[cfg(test)]
 mod tests {
     use serde_json::{Value, json};
-    use solidcraft_geom::prelude::*;
+    use torno_geom::prelude::*;
 
     use crate::Session;
 
@@ -360,7 +360,7 @@ mod tests {
         run(&mut target, "parameters.change", json!({"name": "base_2", "expression": "10 mm"}));
         assert!((sketch_area(&target, id) - 800.).abs() < 1e-6);
         assert!((sketch_area(&target, second) - 200.).abs() < 1e-6, "each paste owns its parameters");
-        assert!(solidcraft_doc::Document::from_json(&target.doc.to_json()).is_ok());
+        assert!(torno_doc::Document::from_json(&target.doc.to_json()).is_ok());
     }
 
     #[test]
@@ -369,7 +369,7 @@ mod tests {
 
         let mut source = dimensioned_sketch();
         let arc = [Vec3::new(1., 0., 0.), Vec3::new(0., 0., 1.), Vec3::new(-1., 0., 0.)];
-        for space in [solidcraft_sketch::WireSpace::World, solidcraft_sketch::WireSpace::Component] {
+        for space in [torno_sketch::WireSpace::World, torno_sketch::WireSpace::Component] {
             source.doc_mut().sketch_mut(1).unwrap().add_drawn_arc_in(&arc, space).unwrap();
         }
         source.refresh();
@@ -411,7 +411,7 @@ mod tests {
             .as_u64()
             .unwrap();
         let frame = target.placed_document().path_transform(component, &[occurrence]).unwrap();
-        let delta = solidcraft_doc::apply_vector(&frame, Vec3::new(2., 3., 4.));
+        let delta = torno_doc::apply_vector(&frame, Vec3::new(2., 3., 4.));
         for (original, pasted) in source
             .world_state()
             .unwrap()
@@ -460,8 +460,8 @@ mod tests {
         let mut source = dimensioned_sketch();
         let mut target = dimensioned_sketch();
         // The same numeric ID in the target must never become the sketch's missing plane.
-        if let solidcraft_doc::FeatureKind::Sketch { plane, .. } = &mut source.doc_mut().feature_mut(1).unwrap().kind {
-            *plane = solidcraft_doc::PlaneRef::Construction { feature: 1.into() };
+        if let torno_doc::FeatureKind::Sketch { plane, .. } = &mut source.doc_mut().feature_mut(1).unwrap().kind {
+            *plane = torno_doc::PlaneRef::Construction { feature: 1.into() };
         }
         run(&mut source, "timeline.copy", json!({"features": ["S"]}));
         target.foreign_copy = source.foreign_copy.clone();
@@ -498,7 +498,7 @@ mod tests {
         let first = result["pasted"][0]["id"].as_u64().unwrap();
         let second = result["pasted"][1]["id"].as_u64().unwrap();
         let copied = target.doc.sketch(second).unwrap();
-        assert!(matches!(copied.links[0].source, solidcraft_sketch::LinkSource::SketchCurve { sketch, .. } if sketch == first));
+        assert!(matches!(copied.links[0].source, torno_sketch::LinkSource::SketchCurve { sketch, .. } if sketch == first));
         assert!(target.model.result(second).unwrap().error.is_none());
     }
 
@@ -524,8 +524,8 @@ mod tests {
         assert!(target.doc.param("d1").is_none());
         let state = target.model.state();
         let text = &state.sketch(id).unwrap().sketch.links[0].source;
-        assert!(matches!(text, solidcraft_sketch::LinkSource::Text { text, .. } if text == "ABC-X"));
-        assert!(solidcraft_doc::Document::from_json(&target.doc.to_json()).is_ok());
+        assert!(matches!(text, torno_sketch::LinkSource::Text { text, .. } if text == "ABC-X"));
+        assert!(torno_doc::Document::from_json(&target.doc.to_json()).is_ok());
     }
 
     #[test]
@@ -671,13 +671,13 @@ mod tests {
         let first = s.doc.find_feature("First").unwrap().id;
         let second = s.doc.find_feature("Second").unwrap().id;
         assert_eq!(folder.features, vec![first, pasted, second]);
-        assert!(solidcraft_doc::Document::from_json(&s.doc.to_json()).is_ok(), "pasting inside a folder must leave a reopenable design");
+        assert!(torno_doc::Document::from_json(&s.doc.to_json()).is_ok(), "pasting inside a folder must leave a reopenable design");
     }
 
     /// A STEP file of three boxes at x = 0, 30 and 60. With `shared` the three solids carry one
     /// label (`X`), as the parts of many assembly files do; otherwise each has its own.
     fn three_box_step(tag: &str, shared: bool) -> std::path::PathBuf {
-        let dir = std::env::temp_dir().join(format!("solidcraft-paste-{tag}-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("torno-paste-{tag}-{}", std::process::id()));
         std::fs::create_dir_all(&dir).unwrap();
         let mut s = Session::default();
         for (i, label) in ["Aa", "Bb", "Cc"].iter().enumerate() {
@@ -699,7 +699,7 @@ mod tests {
 
     /// An OBJ file of three 10 mm cubes at x = 0, 30 and 60, every object called `X`.
     fn three_cube_obj(tag: &str) -> std::path::PathBuf {
-        let dir = std::env::temp_dir().join(format!("solidcraft-paste-{tag}-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("torno-paste-{tag}-{}", std::process::id()));
         std::fs::create_dir_all(&dir).unwrap();
         let corners = [[0, 0, 0], [1, 0, 0], [1, 1, 0], [0, 1, 0], [0, 0, 1], [1, 0, 1], [1, 1, 1], [0, 1, 1]];
         let faces =
@@ -955,7 +955,7 @@ mod tests {
         let def = run(&mut s, "timeline.inspect", json!({"feature": spring}));
         assert_eq!(def["definition"]["targets"], json!(["Plate (2)"]), "{def}");
         let st = s.world_state().unwrap();
-        let v = |name: &str| solidcraft_kernel::measure(&st.body(name).unwrap().body).unwrap().volume;
+        let v = |name: &str| torno_kernel::measure(&st.body(name).unwrap().body).unwrap().volume;
         // A spring on the wrong plate is hundreds of mm³ off. The two plates are measured apart
         // (one moved 50 mm), which the boolean and the measure each round in their own way:
         // a few 1e-6 mm³ on 5000.
@@ -971,7 +971,7 @@ mod tests {
         run(&mut s, "solid.box", json!({"length": 10, "width": 10, "height": 10, "name": "Base", "body_name": "Block"}));
         let a = run(&mut s, "component.create", json!({"name": "A", "activate": false}))["component"].as_u64().unwrap_or_default();
         run(&mut s, "component.move_bodies", json!({"bodies": ["Block"], "component": "A"}));
-        let transfer = s.doc.features.iter().find(|f| matches!(f.kind, solidcraft_doc::FeatureKind::BodyTransfer { .. })).map(|f| f.name.clone());
+        let transfer = s.doc.features.iter().find(|f| matches!(f.kind, torno_doc::FeatureKind::BodyTransfer { .. })).map(|f| f.name.clone());
         let transfer = transfer.unwrap_or_default();
         run(&mut s, "timeline.copy", json!({"features": ["Base", transfer]}));
         let r = run(&mut s, "timeline.paste", json!({"translate": [20, 0, 0]}));
@@ -980,7 +980,7 @@ mod tests {
         let state = s.model.state();
         assert_eq!(state.body("Block").map(|b| s.doc.model_body_component(b)), Some(a));
         assert_eq!(state.body("Block (2)").map(|b| s.doc.model_body_component(b)), Some(0), "the copy is in the root, where it was pasted");
-        if let Err(e) = solidcraft_doc::Document::from_json(&s.doc.to_json()) {
+        if let Err(e) = torno_doc::Document::from_json(&s.doc.to_json()) {
             panic!("the design loads back: {e}");
         }
         run(&mut s, "timeline.copy", json!({"features": [transfer]}));

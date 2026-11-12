@@ -1,7 +1,7 @@
 # A tour of the window
 
-<img class="dark-ui" src="../media/ui-tour/window.png" alt="The SolidCraft window with the sample plate open, its parts numbered 1 to 8">
-<img class="light-ui" src="../media/ui-tour/window.light.png" alt="The SolidCraft window with the sample plate open, its parts numbered 1 to 8">
+<img class="dark-ui" src="../media/ui-tour/window.png" alt="The Torno window with the sample plate open, its parts numbered 1 to 8">
+<img class="light-ui" src="../media/ui-tour/window.light.png" alt="The Torno window with the sample plate open, its parts numbered 1 to 8">
 
 **1** Title bar · **2** Toolbar · **3** Browser · **4** Viewport · **5** Axis view ·
 **6** Navigation bar · **7** Timeline · **8** Command search
@@ -20,7 +20,7 @@ view.
   this off, for a double-click that maximizes the window instead). On the right: Report a bug,
   Help (?), Preferences (which hold the theme) and the window's buttons. On Linux, to have your
   desktop's own title bar and window buttons instead, set
-  `SOLIDCRAFT_TITLEBAR=system` or put `"titlebar": "system"` in `graphics.json` in the settings
+  `TORNO_TITLEBAR=system` or put `"titlebar": "system"` in `graphics.json` in the settings
   folder (see [Troubleshooting](troubleshooting.md#reset-the-settings)) and restart; `app` (the
   default) puts the application bar back.
 - **Toolbar.** The workspace switcher (DESIGN) sits on the left. The tabs (MODEL, SURFACE,
@@ -121,7 +121,7 @@ view.
   setting; switching presets restores that setting. Release the modifier to stop navigating.
   Shift+click and Shift+left-drag still select. Combined Shift+Alt or Ctrl/Cmd modifiers do not
   start pointer-only navigation.
-  The axis view shows the world's X/Y/Z directions in SolidCraft's colors. Click a signed
+  The axis view shows the world's X/Y/Z directions in Torno's colors. Click a signed
   axis tip to look along that axis; click the aligned tip again to look from the opposite side.
   Drag the axis view to orbit around the view centre, with Shift for snapping. Top and bottom
   keep the nearest quarter-turn heading. The house, the navigation bar's Home button and a middle-button double-click in the view go
@@ -264,8 +264,8 @@ too narrow for a section's buttons, its menu lists them again.
 Interface › **Theme** lists Dark, Light and System (follows the operating system, and changes
 with it; on Linux it reads the desktop's dark or light style through the desktop portal, as
 GNOME and KDE set it), the built-in
-themes and any themes you have imported. A choice applies at once. Under the themes, **Viewport** draws the 3D view in the Light or Dark theme's colours whatever the window uses, for example the model on a light view in a dark window (**Follow theme**, the default, keeps the theme's own). **Logo** draws the SolidCraft logo at the top left in shades of the theme's accent instead of the theme's logo colours. The built-in themes are Gruvbox
-(dark and light, each in hard, normal and soft contrast), SolidCraft 95, Platinum 9, Cupertino,
+themes and any themes you have imported. A choice applies at once. Under the themes, **Viewport** draws the 3D view in the Light or Dark theme's colours whatever the window uses, for example the model on a light view in a dark window (**Follow theme**, the default, keeps the theme's own). **Logo** draws the Torno logo at the top left in shades of the theme's accent instead of the theme's logo colours. The built-in themes are Gruvbox
+(dark and light, each in hard, normal and soft contrast), Torno 95, Platinum 9, Cupertino,
 Green Phosphor, Amber Phosphor, Blueprint, One Dark, Tokyo Night, Solarized Light, Nord, High
 Contrast, Graphite, Nosferatu, Catppuccin Mocha, Okibi and Akari (dark and light, from the
 [Okibi design system](https://kaievns.github.io/okibi-akiri-design-system-spec/)), Clay and
@@ -314,7 +314,7 @@ respectively. The first four style small accents through large surfaces; `contro
 styles form controls, and `sketch_mode_radius` styles sketch creation buttons. Themes own
 these settings, with matching shapes across light and dark variants. Dock joins remain
 square, circular controls remain circular, and control sizes and spacing stay the same.
-Platinum 9, 1-bit, 1-bit Dark, and the phosphor themes use square corners, SolidCraft 95 uses subtle 3-point
+Platinum 9, 1-bit, 1-bit Dark, and the phosphor themes use square corners, Torno 95 uses subtle 3-point
 corners, Blueprint uses the standard radii, Cupertino uses softer corners, and Clay and Clay Dark use rounded corners. Other built-in
 themes retain the defaults.
 
@@ -540,14 +540,14 @@ The custom option keeps its authored label and order, after the standard control
 #### Follow a theme file
 
 In the desktop app, **Follow a theme file** (under the themes) takes a theme file that another
-tool writes and keeps it as the theme: whenever the file changes, SolidCraft reloads it within
+tool writes and keeps it as the theme: whenever the file changes, Torno reloads it within
 about a second, and again when its window comes back to the front, without a restart. This suits
 tools that generate a colour scheme from your wallpaper or keep one scheme across your desktop
 and applications (pywal and matugen are two examples); have them write a `solidcraft-theme/1`
 file from a template. **Choose…** picks the file, **Stop following** (or choosing any theme)
 turns it off; it is off until you choose a file. Only a file that reads completely is applied:
 while it is being written, or if it is broken, missing or larger than 256 KiB, the last good
-theme stays on and the setting says why. `solidcraft --theme-file my-theme.json` follows a file
+theme stays on and the setting says why. `torno --theme-file my-theme.json` follows a file
 for one run without changing your preferences. The browser app has no file to follow; import the
 theme there instead.
 
@@ -628,7 +628,7 @@ inside panel chrome, with a `gap` from 0 to 12 points. Missing settings keep exi
 Blueprint uses a single white outer outline, dotted section lines and dark minor dividers. Secondary rules optionally accept `pattern: "dotted"`; the default is `solid`. Focus, selection and
 error outlines retain their semantic colours. See the UI-kit border hierarchy for the schema.
 
-SolidCraft 95 also defines optional `borders.bevel`: a per-band `width` and the
+Torno 95 also defines optional `borders.bevel`: a per-band `width` and the
 `highlight`, `light`, `shadow` and `dark_shadow` colours. The shared UI uses these
 for raised panels/buttons, recessed fields and reversed pressed-button lighting.
 Themes that omit this setting keep their existing flat borders.

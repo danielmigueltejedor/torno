@@ -4,8 +4,8 @@
 use crate::Session;
 use serde_json::{Value, json};
 use solidcore_record::Vec3;
-use solidcraft_doc::{Document, FeatureKind};
-use solidcraft_geom::prelude::*;
+use torno_doc::{Document, FeatureKind};
+use torno_geom::prelude::*;
 
 fn run(s: &mut Session, command: &str, params: Value) -> Value {
     s.execute(command, &params).unwrap_or_else(|error| panic!("{command}: {error}"))
@@ -26,11 +26,11 @@ fn check_wall(s: &Session, count: usize) {
     let state = s.model.state();
     assert_eq!(state.bodies.len(), count);
     let wall = state.body("Wall").unwrap();
-    let measure = solidcraft_kernel::measure(&wall.body).unwrap();
+    let measure = torno_kernel::measure(&wall.body).unwrap();
     assert!((measure.volume - 30_000.0).abs() < 1e-6, "{measure:?}");
     assert!(measure.bbox.max.dist(Vec3::new(50.0, 30.0, 20.0)) < 1e-9);
-    assert_eq!(wall.body.classify_point(Vec3::new(49.0, 15.0, 10.0)).unwrap(), solidcraft_kernel::PointClass::Inside);
-    let cap = solidcraft_kernel::measure(&state.body("Cap").unwrap().body).unwrap();
+    assert_eq!(wall.body.classify_point(Vec3::new(49.0, 15.0, 10.0)).unwrap(), torno_kernel::PointClass::Inside);
+    let cap = torno_kernel::measure(&state.body("Cap").unwrap().body).unwrap();
     assert!((cap.volume - 6000.0).abs() < 1e-6);
     assert!(cap.bbox.max.dist(Vec3::new(40.0, 30.0, 25.0)) < 1e-9);
 }
@@ -69,7 +69,7 @@ fn face_join_respects_explicit_targets_and_participants() {
             run(&mut s, "solid.extrude", params);
             let state = s.model.state();
             assert_eq!(state.bodies.len(), 1, "{key}");
-            assert!((solidcraft_kernel::measure(&state.body("Wall").unwrap().body).unwrap().volume - 36_000.0).abs() < 1e-6);
+            assert!((torno_kernel::measure(&state.body("Wall").unwrap().body).unwrap().volume - 36_000.0).abs() < 1e-6);
         }
     }
 }
@@ -86,7 +86,7 @@ fn face_join_maps_the_picked_instance_body_and_point_together() {
     let body = world
         .bodies
         .iter()
-        .find(|body| body.body.classify_point(Vec3::new(139.0, 15.0, 10.0)).unwrap() == solidcraft_kernel::PointClass::Inside)
+        .find(|body| body.body.classify_point(Vec3::new(139.0, 15.0, 10.0)).unwrap() == torno_kernel::PointClass::Inside)
         .unwrap()
         .name
         .clone();
@@ -97,7 +97,7 @@ fn face_join_maps_the_picked_instance_body_and_point_together() {
     let world = s.world_state().unwrap();
     assert_eq!(world.bodies.len(), 2);
     for point in [Vec3::new(49.0, 15.0, 10.0), Vec3::new(149.0, 15.0, 10.0)] {
-        assert!(world.bodies.iter().any(|body| body.body.classify_point(point).unwrap() == solidcraft_kernel::PointClass::Inside), "{point:?}");
+        assert!(world.bodies.iter().any(|body| body.body.classify_point(point).unwrap() == torno_kernel::PointClass::Inside), "{point:?}");
     }
 }
 
@@ -107,8 +107,8 @@ fn face_join_of_a_step_import_keeps_all_32_neighbours_unchanged() {
     for i in 0..31 {
         run(&mut source, "solid.box", json!({"corner":[100+20*i,100,0],"length":5,"width":5,"height":5,"body_name":format!("Distant{i}")}));
     }
-    let step = solidcraft_io::export(&source.model.state(), &[], solidcraft_io::Format::Step, "Original assembly").unwrap();
-    let imported = solidcraft_io::step_import_feature(&step, "original-assembly.step").unwrap();
+    let step = torno_io::export(&source.model.state(), &[], torno_io::Format::Step, "Original assembly").unwrap();
+    let imported = torno_io::step_import_feature(&step, "original-assembly.step").unwrap();
     let mut doc = Document::new("Imported assembly");
     let feature = doc.add_feature(imported.kind, None).unwrap();
     doc.feature_mut(feature).unwrap().body_names = imported.body_names;
@@ -124,8 +124,8 @@ fn face_join_of_a_step_import_keeps_all_32_neighbours_unchanged() {
         let after = s.model.state();
         assert!(body.body.same(&after.body(&body.name).unwrap().body), "{}", body.name);
         let cold = reopened.model.state();
-        let original = solidcraft_kernel::measure(&body.body).unwrap();
-        let restored = solidcraft_kernel::measure(&cold.body(&body.name).unwrap().body).unwrap();
+        let original = torno_kernel::measure(&body.body).unwrap();
+        let restored = torno_kernel::measure(&cold.body(&body.name).unwrap().body).unwrap();
         assert!((original.volume - restored.volume).abs() < 1e-9, "{}", body.name);
         assert!(original.bbox.min.dist(restored.bbox.min) < 1e-9 && original.bbox.max.dist(restored.bbox.max) < 1e-9);
     }
@@ -167,7 +167,7 @@ fn a_face_pick_on_an_assembly_leaf_is_resolved_where_the_leaf_is_shown() {
     );
     assert_eq!(result["changed_bodies"], json!(["Body1"]));
     let state = s.model.state();
-    let volume = solidcraft_kernel::measure(&state.body("Body1").unwrap().body).unwrap().volume;
+    let volume = torno_kernel::measure(&state.body("Body1").unwrap().body).unwrap().volume;
     assert!((volume - 15_600.0).abs() < 1e-6, "{volume}");
 }
 
@@ -198,7 +198,7 @@ fn join_of_a_profile_sketched_on_a_face_leaves_a_neighbour_it_lies_on() {
         let result = run(&mut s, "solid.extrude", params);
         assert!(s.model.results.iter().all(|r| r.error.is_none()), "{:?}", s.model.results);
         let state = s.model.state();
-        let volume = |name: &str| solidcraft_kernel::measure(&state.body(name).unwrap().body).unwrap().volume;
+        let volume = |name: &str| torno_kernel::measure(&state.body(name).unwrap().body).unwrap().volume;
         if targets.is_some() {
             assert_eq!(state.bodies.len(), 1);
             assert!((volume("Bracket") - (24_000.0 + 6000.0 + 300.0)).abs() < 1e-6, "{}", volume("Bracket"));
@@ -232,7 +232,7 @@ fn join_extrude_to_another_body_joins_that_body() {
     run(&mut s, "solid.extrude", json!({"sketch":sketch,"to":[20,20,40],"operation":"join","targets":["Base"]}));
     assert!(s.model.results.iter().all(|r| r.error.is_none()), "{:?}", s.model.results);
     let state = s.model.state();
-    let volume = |name: &str| solidcraft_kernel::measure(&state.body(name).unwrap().body).unwrap().volume;
+    let volume = |name: &str| torno_kernel::measure(&state.body(name).unwrap().body).unwrap().volume;
     assert_eq!(state.bodies.len(), 1, "the tool, the base and the target are one body");
     assert!((volume("Base") - 60_000.0).abs() < 1e-6, "the target took the tool: {}", volume("Base"));
     assert_eq!(state.body("Base").unwrap().body.lumps().map_or(1, |l| l.len()), 1, "one piece");
@@ -265,11 +265,11 @@ fn join_extrude_to_another_body_saved_before_it_joined_keeps_that_body() {
     features.push(feature);
     saved["format"] = json!("solidcraft/39");
     saved.as_object_mut().unwrap().remove("format_pending");
-    let mut old = Session::new(solidcraft_doc::format::read(&saved.to_string()).unwrap());
+    let mut old = Session::new(torno_doc::format::read(&saved.to_string()).unwrap());
     let check = |s: &Session| {
         assert!(s.model.results.iter().all(|r| r.error.is_none()), "{:?}", s.model.results);
         let state = s.model.state();
-        let volume = |name: &str| solidcraft_kernel::measure(&state.body(name).unwrap().body).unwrap().volume;
+        let volume = |name: &str| torno_kernel::measure(&state.body(name).unwrap().body).unwrap().volume;
         assert_eq!(state.bodies.len(), 2, "the body the extrude runs to stays its own body");
         assert!((volume("Base") - 28_000.0).abs() < 1e-6, "the base took the tool: {}", volume("Base"));
         assert!((volume("Target") - 32_000.0).abs() < 1e-6, "the target is untouched: {}", volume("Target"));
@@ -282,5 +282,5 @@ fn join_extrude_to_another_body_saved_before_it_joined_keeps_that_body() {
     );
     check(&old);
     // The design saves the choice and opens with it again.
-    check(&Session::new(solidcraft_doc::format::read(&old.doc.to_json()).unwrap()));
+    check(&Session::new(torno_doc::format::read(&old.doc.to_json()).unwrap()));
 }

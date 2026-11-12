@@ -5,7 +5,7 @@
 //! station memo, so a row of points at one s (a grid's row, quadrature, an isocurve)
 //! solves once.
 //!
-//! Not in the pinned upstream: the SolidCraft fork's `source/SMLib/src/SmFilletSection.cpp`
+//! Not in the pinned upstream: the Torno fork's `source/SMLib/src/SmFilletSection.cpp`
 //! (`SmProceduralBlend::EvaluateDefinition` and its helpers, tangency-labs/smlib@014f66f,
 //! c6d9b9a and 0136260, smlib#79 step 7, merged at 5e8c9c1).
 //!

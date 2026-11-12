@@ -2,7 +2,7 @@
 //! surface's STEP (u, v) parameters that the face's bounding edges span on it, each
 //! edge's extremes found exactly, unwound along the surface's periodic directions.
 //!
-//! Upstream: none (solidcore's STEP reader, #2578). The idea is SolidCraft's reader
+//! Upstream: none (solidcore's STEP reader, #2578). The idea is Torno's reader
 //! (`crates/step/src/topology/swept.rs` `span`, `range`, `trimmed_range`,
 //! `widest_gap`, `common_angle`, `crates/step/src/topology.rs` `Builder::extent` and
 //! `face_extent`, and `crates/geom/src/brep/form.rs` `extent`, at a5b71ca2; MIT OR
@@ -16,7 +16,7 @@
 //! without a closed form are certified roots solved by
 //! [`LocalSolve1d::solve_by_bisection`].
 //!
-//! | Rust                 | SolidCraft                                                  |
+//! | Rust                 | Torno                                                  |
 //! |----------------------|-------------------------------------------------------------|
 //! | [`face_window`]      | `form::extent`, `Builder::extent`, `face_extent`; `swept::span`, `range`, `trimmed_range`, `widest_gap`, `common_angle` (a swept surface's profile range is its window's v) |
 //! | [`BoundaryEdge`]     | `form::extent`'s `(&Curve, [f64; 2], bool)` loop entries    |

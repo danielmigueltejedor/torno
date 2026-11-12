@@ -65,6 +65,6 @@
   "ungraded": [],
   "what": "20 mm flanges at 72 deg on all four edges, made together and closed at the corners, leaning out: the panel ends run on along a slant",
   "why_not": [
-    "body \"Body1\" is no kernel operation's output nor an operand: SolidCraft built it or changed the kernel's record"
+    "body \"Body1\" is no kernel operation's output nor an operand: Torno built it or changed the kernel's record"
   ]
 }

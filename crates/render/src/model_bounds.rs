@@ -2,9 +2,9 @@
 //! occlusion take the renderer's own [`Bounds`] (the viewport knows no geometry crate), which a
 //! model's [`Aabb3`] becomes here, at the boundary between them.
 
-use solidcraft_geom::Aabb3;
+use torno_geom::Aabb3;
 
-use solidcraft_viewport::vec::Bounds;
+use torno_viewport::vec::Bounds;
 
 /// The renderer's box with the corners of `b`; an empty box stays empty.
 pub fn view_bounds(b: &Aabb3) -> Bounds {
@@ -14,7 +14,7 @@ pub fn view_bounds(b: &Aabb3) -> Bounds {
 #[cfg(test)]
 mod tests {
     use solidcore_record::Vec3;
-    use solidcraft_geom::Aabb3;
+    use torno_geom::Aabb3;
 
     #[test]
     fn a_model_box_keeps_its_corners_and_an_empty_one_stays_empty() {

@@ -3,7 +3,7 @@
 //! on (the spine) from their kinds and placement, and the dispatch of a classified round to
 //! its exact builder.
 //!
-//! Not in the pinned upstream: the SolidCraft fork's `source/SMLib/src/SmFilletExact.cpp`
+//! Not in the pinned upstream: the Torno fork's `source/SMLib/src/SmFilletExact.cpp`
 //! and `source/SMLib/inc/SmFilletExact.h` (tangency-labs/smlib@b5f2867, in its final form at
 //! tangency-labs/smlib@7ac037e), behind
 //! [`UpstreamFixes::fillet_exact_round_classes`](crate::kernel::UpstreamFixes::fillet_exact_round_classes)

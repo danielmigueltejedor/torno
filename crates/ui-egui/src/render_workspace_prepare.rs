@@ -3,7 +3,7 @@
 use crate::SolveApp;
 use egui::Context;
 use serde_json::{Value, json};
-use solidcraft_engine::render_preparation::Kind;
+use torno_engine::render_preparation::Kind;
 
 pub(crate) fn enabled(app: &SolveApp) -> bool {
     !cfg!(target_arch = "wasm32") && app.apply_off_thread.is_some()
@@ -13,12 +13,12 @@ pub(crate) fn enabled(app: &SolveApp) -> bool {
 mod native {
     use super::*;
     use crate::control::ControlRequest;
-    use solidcraft_engine::render::job::CancelToken;
-    use solidcraft_engine::render_preparation::{Prepared, finish_retained, prepare};
-    use solidcraft_engine::schema::ParamCheck;
     use std::collections::BTreeMap;
     use std::sync::mpsc::{Receiver, SyncSender, TryRecvError, TrySendError};
     use std::sync::{Arc, Weak};
+    use torno_engine::render::job::CancelToken;
+    use torno_engine::render_preparation::{Prepared, finish_retained, prepare};
+    use torno_engine::schema::ParamCheck;
 
     #[derive(Default)]
     pub(crate) struct State {
@@ -51,22 +51,22 @@ mod native {
 
     struct Guard {
         uid: u64,
-        document: Weak<solidcraft_engine::doc::Document>,
-        model: Weak<solidcraft_engine::doc::ModelState>,
+        document: Weak<torno_engine::doc::Document>,
+        model: Weak<torno_engine::doc::ModelState>,
         revision: u64,
-        camera: (solidcraft_viewport::UpAxis, [u64; 8]),
-        moves: BTreeMap<u64, solidcraft_engine::doc::Mat>,
-        exploded: BTreeMap<u64, solidcraft_engine::doc::Mat>,
+        camera: (torno_viewport::UpAxis, [u64; 8]),
+        moves: BTreeMap<u64, torno_engine::doc::Mat>,
+        exploded: BTreeMap<u64, torno_engine::doc::Mat>,
         visibility: Value,
         shot: String,
         visual: Value,
-        lights: solidcraft_engine::schema::render_lights::Visibility,
+        lights: torno_engine::schema::render_lights::Visibility,
     }
-    fn camera(app: &SolveApp) -> (solidcraft_viewport::UpAxis, [u64; 8]) {
+    fn camera(app: &SolveApp) -> (torno_viewport::UpAxis, [u64; 8]) {
         let c = app.cam;
         (c.up, [c.target.x, c.target.y, c.target.z, c.yaw, c.pitch, c.roll, c.distance, c.fov].map(f64::to_bits))
     }
-    fn same_moves(a: &BTreeMap<u64, solidcraft_engine::doc::Mat>, b: &BTreeMap<u64, solidcraft_engine::doc::Mat>) -> bool {
+    fn same_moves(a: &BTreeMap<u64, torno_engine::doc::Mat>, b: &BTreeMap<u64, torno_engine::doc::Mat>) -> bool {
         a.len() == b.len()
             && a.iter()
                 .zip(b)
@@ -116,7 +116,7 @@ mod native {
         unfiltered: Value,
         guard: Guard,
         origin: Option<Origin>,
-        scope: Option<solidcraft_engine::io::vfs::PathScope>,
+        scope: Option<torno_engine::io::vfs::PathScope>,
         cancel: CancelToken,
         cancelled: Option<String>,
         worker: Option<Worker>,
@@ -136,11 +136,11 @@ mod native {
         disconnect_input: bool,
     }
     struct PreparationInput {
-        snapshot: solidcraft_engine::Session,
+        snapshot: torno_engine::Session,
         kind: Kind,
         params: Value,
         cancel: CancelToken,
-        scope: Option<solidcraft_engine::io::vfs::PathScope>,
+        scope: Option<torno_engine::io::vfs::PathScope>,
     }
     struct Worker {
         ready: Receiver<Result<Prepared, String>>,
@@ -167,7 +167,7 @@ mod native {
                     // Never free a returned heavy capture on the interactive UI,
                     // report released credit, or start an unbounded fallback.
                     self.prepared = Some(prepared);
-                    Err(solidcraft_ui_text::tr("render.preparation_retirement_failed").into())
+                    Err(torno_ui_text::tr("render.preparation_retirement_failed").into())
                 }
             }
         }
@@ -192,7 +192,7 @@ mod native {
         kind: Kind,
         request: Value,
         origin: Origin,
-        scope: Option<solidcraft_engine::io::vfs::PathScope>,
+        scope: Option<torno_engine::io::vfs::PathScope>,
         level: ParamCheck,
     ) -> Result<(), String> {
         if app.render_preparation.pending.is_some() || super::super::live::final_pending(app) || batches::unavailable(&app.render_preparation.batches)
@@ -207,11 +207,11 @@ mod native {
         }
         app.session.set_validation(app.preferences.validation);
         let params = super::super::light::filter_request(app, request.clone())?;
-        let issues: Vec<String> = solidcraft_engine::schema::issues(command(kind), &params).into_iter().map(|issue| issue.message).collect();
+        let issues: Vec<String> = torno_engine::schema::issues(command(kind), &params).into_iter().map(|issue| issue.message).collect();
         if level == ParamCheck::Strict
             && let Some(first) = issues.first()
         {
-            return Err(solidcraft_engine::params::bad(command(kind), first).to_string());
+            return Err(torno_engine::params::bad(command(kind), first).to_string());
         }
         let pending = Pending {
             kind,
@@ -254,10 +254,10 @@ mod native {
     }
 
     pub(crate) fn begin_ui(app: &mut SolveApp, kind: Kind, request: Value) -> Result<(), String> {
-        begin(app, kind, request, Origin::Ui, solidcraft_engine::io::vfs::current_scope(), app.session.param_check)
+        begin(app, kind, request, Origin::Ui, torno_engine::io::vfs::current_scope(), app.session.param_check)
     }
     pub(crate) fn begin_batch_ui(app: &mut SolveApp, request: Value) -> Result<(), String> {
-        batches::begin(app, request, Origin::Ui, solidcraft_engine::io::vfs::current_scope(), app.session.param_check)
+        batches::begin(app, request, Origin::Ui, torno_engine::io::vfs::current_scope(), app.session.param_check)
     }
     pub(crate) fn busy(app: &SolveApp) -> bool {
         app.render_preparation.pending.is_some() || batches::busy(&app.render_preparation.batches, app.session.uid)
@@ -273,7 +273,7 @@ mod native {
         if pending.committed || pending.applied {
             return false;
         }
-        cancel_pending(pending, solidcraft_ui_text::tr("render.preparation_cancelled").into());
+        cancel_pending(pending, torno_ui_text::tr("render.preparation_cancelled").into());
         true
     }
     pub(crate) fn document_closing(app: &mut SolveApp, uid: u64) {
@@ -282,7 +282,7 @@ mod native {
             && pending.guard.uid == uid
             && !pending.committed
         {
-            cancel_pending(pending, solidcraft_ui_text::tr("render.preparation_cancelled").into());
+            cancel_pending(pending, torno_ui_text::tr("render.preparation_cancelled").into());
         }
         batches::cancel_owner(app, &mut state.batches, uid);
         app.render_preparation = state;
@@ -305,7 +305,7 @@ mod native {
         let disconnect_input = pending.disconnect_input;
         #[cfg(test)]
         let (input_closed_tx, input_closed_rx) = std::sync::mpsc::sync_channel(1);
-        solidcraft_engine::kernel::kernel_thread("render-preparation")
+        torno_engine::kernel::kernel_thread("render-preparation")
             .spawn(move || {
                 #[cfg(test)]
                 if disconnect_input {
@@ -314,7 +314,7 @@ mod native {
                     return;
                 }
                 let Ok(PreparationInput { snapshot, kind, params, cancel, scope }) = input_rx.recv() else { return };
-                solidcraft_engine::io::vfs::scoped(scope, || {
+                torno_engine::io::vfs::scoped(scope, || {
                     let result = prepare(snapshot, kind, params, cancel).map_err(|error| error.to_string());
                     #[cfg(test)]
                     if let Some(ready) = proof_ready {
@@ -385,7 +385,7 @@ mod native {
     }
     fn answer(pending: &mut Pending) {
         let Some(origin) = pending.origin.take() else { return };
-        let result = pending.completion.take().unwrap_or_else(|| Err(solidcraft_ui_text::tr("render.preparation_retirement_failed").into()));
+        let result = pending.completion.take().unwrap_or_else(|| Err(torno_ui_text::tr("render.preparation_retirement_failed").into()));
         if let Origin::Control { request, echo } = origin {
             let mut reply = match result {
                 Ok(value) => json!({"ok":true,"result":value}),
@@ -408,7 +408,7 @@ mod native {
         let Some(prepared) = pending.worker.as_mut().and_then(|worker| worker.prepared.as_mut()) else { return };
         let mut committed = false;
         let mut result = crate::agent_chat::with_tool_request(app, chat_turn.as_ref(), |app| {
-            solidcraft_engine::io::vfs::scoped(scope, || {
+            torno_engine::io::vfs::scoped(scope, || {
                 app.finish_render_preparation(command(kind), &pending.params, |session| {
                     let own = session.param_check;
                     session.param_check = level;
@@ -487,7 +487,7 @@ mod native {
             if let Some(Origin::Control { request, .. }) = &pending.origin
                 && crate::control::chat_turn_cancelled(request.chat_turn.as_deref())
             {
-                cancel_pending(pending, solidcraft_ui_text::tr("render.preparation_cancelled").into());
+                cancel_pending(pending, torno_ui_text::tr("render.preparation_cancelled").into());
             }
         }
         if pending.worker.is_none() {
@@ -619,8 +619,8 @@ mod native {
     // One coordinator shares the native preparation lane with individual Check/Start.
     mod batches {
         use super::*;
-        use solidcraft_engine::render_preparation::batch as api;
         use std::sync::mpsc;
+        use torno_engine::render_preparation::batch as api;
 
         #[derive(Default)]
         pub(super) struct State {
@@ -630,20 +630,20 @@ mod native {
         }
         struct Source {
             uid: u64,
-            document: Weak<solidcraft_engine::doc::Document>,
-            model: Weak<solidcraft_engine::doc::ModelState>,
+            document: Weak<torno_engine::doc::Document>,
+            model: Weak<torno_engine::doc::ModelState>,
             revision: u64,
-            moves: BTreeMap<u64, solidcraft_engine::doc::Mat>,
-            exploded: BTreeMap<u64, solidcraft_engine::doc::Mat>,
+            moves: BTreeMap<u64, torno_engine::doc::Mat>,
+            exploded: BTreeMap<u64, torno_engine::doc::Mat>,
             context: Value,
         }
         impl Source {
-            fn context(s: &solidcraft_engine::Session) -> Value {
+            fn context(s: &torno_engine::Session) -> Value {
                 json!({"visibility":s.visibility,"sketch":s.active_sketch,"feature_sketch":s.feature_edit_sketch,
                     "component":s.active_component,"occurrence":s.active_occurrence_path,
                     "camera":s.camera.map(|c|(c.up,[c.target.x,c.target.y,c.target.z,c.yaw,c.pitch,c.roll,c.distance,c.fov].map(f64::to_bits)))})
             }
-            fn new(s: &solidcraft_engine::Session) -> Self {
+            fn new(s: &torno_engine::Session) -> Self {
                 Self {
                     uid: s.uid,
                     document: Arc::downgrade(&s.doc),
@@ -654,7 +654,7 @@ mod native {
                     context: Self::context(s),
                 }
             }
-            fn current(&self, s: &solidcraft_engine::Session) -> bool {
+            fn current(&self, s: &torno_engine::Session) -> bool {
                 self.uid == s.uid
                     && self.document.ptr_eq(&Arc::downgrade(&s.doc))
                     && self.model.ptr_eq(&Arc::downgrade(&s.model.state()))
@@ -667,7 +667,7 @@ mod native {
         }
         struct First {
             params: Option<Value>,
-            scope: Option<solidcraft_engine::io::vfs::PathScope>,
+            scope: Option<torno_engine::io::vfs::PathScope>,
             source: Source,
             origin: Option<Origin>,
             level: ParamCheck,
@@ -747,7 +747,7 @@ mod native {
                     }
                     Err(TrySendError::Full(p) | TrySendError::Disconnected(p)) => {
                         self.prepared = Some(p);
-                        Err(solidcraft_ui_text::tr("render.preparation_retirement_failed").into())
+                        Err(torno_ui_text::tr("render.preparation_retirement_failed").into())
                     }
                 }
             }
@@ -756,7 +756,7 @@ mod native {
                     Ok(()) => Ok(()),
                     Err(TrySendError::Full(input) | TrySendError::Disconnected(input)) => {
                         self._unavailable_input = Some(input);
-                        Err(solidcraft_ui_text::tr("render.preparation_retirement_failed").into())
+                        Err(torno_ui_text::tr("render.preparation_retirement_failed").into())
                     }
                 }
             }
@@ -776,7 +776,7 @@ mod native {
             let disconnect = slot.disconnect_retirement;
             #[cfg(not(test))]
             let _ = (app, slot);
-            solidcraft_engine::kernel::kernel_thread("render-batch-preparation")
+            torno_engine::kernel::kernel_thread("render-batch-preparation")
                 .spawn(move || {
                     let release = match input_rx.recv() {
                         Ok(Input { claim: Some(claim), retire: None }) => api::with_scope(claim, |claim| {
@@ -860,7 +860,7 @@ mod native {
             app: &mut SolveApp,
             params: Value,
             origin: Origin,
-            scope: Option<solidcraft_engine::io::vfs::PathScope>,
+            scope: Option<torno_engine::io::vfs::PathScope>,
             level: ParamCheck,
         ) -> Result<(), String> {
             if super::super::super::live::final_pending(app) {
@@ -876,11 +876,11 @@ mod native {
                 return Err(app.tr("render.ribbon_finish_dialog").into());
             }
             app.session.set_validation(app.preferences.validation);
-            let warnings: Vec<_> = solidcraft_engine::schema::issues("render.batch", &params).into_iter().map(|i| i.message).collect();
+            let warnings: Vec<_> = torno_engine::schema::issues("render.batch", &params).into_iter().map(|i| i.message).collect();
             if level == ParamCheck::Strict
                 && let Some(first) = warnings.first()
             {
-                return Err(solidcraft_engine::params::bad("render.batch", first).to_string());
+                return Err(torno_engine::params::bad("render.batch", first).to_string());
             }
             let index = app
                 .render_preparation
@@ -934,7 +934,7 @@ mod native {
                     && slot.uid == uid
                 {
                     found = true;
-                    slot.cancelled.get_or_insert_with(|| solidcraft_ui_text::tr("render.preparation_cancelled").into());
+                    slot.cancelled.get_or_insert_with(|| torno_ui_text::tr("render.preparation_cancelled").into());
                     if let Some(active) = &mut state.active
                         && active.slot == i
                         && !active.committed
@@ -954,7 +954,7 @@ mod native {
                 Origin::Control { request, .. } => request.chat_turn.clone(),
                 Origin::Ui => None,
             });
-            let mut finish = |s: &mut solidcraft_engine::Session| {
+            let mut finish = |s: &mut torno_engine::Session| {
                 let own = s.param_check;
                 if let Some(level) = level {
                     s.param_check = level;
@@ -973,7 +973,7 @@ mod native {
                     }
                     out
                 })
-                .unwrap_or_else(|| Err(solidcraft_ui_text::tr("render.live.final_changed").into()))
+                .unwrap_or_else(|| Err(torno_ui_text::tr("render.live.final_changed").into()))
             }
         }
         pub(super) fn poll(app: &mut SolveApp, ctx: &Context, state: &mut State) {
@@ -987,14 +987,14 @@ mod native {
             if !active.applied && !active.cleanup_only {
                 let current = crate::documents::render_owner(app, slot.uid);
                 if current.is_none() || slot.first.as_ref().is_some_and(|f| current.is_none_or(|s| !f.source.current(s))) {
-                    slot.cancelled.get_or_insert_with(|| solidcraft_ui_text::tr("render.live.final_changed").into());
+                    slot.cancelled.get_or_insert_with(|| torno_ui_text::tr("render.live.final_changed").into());
                     active.cancel.cancel();
                 }
                 if slot.first.as_ref().and_then(|f| f.origin.as_ref()).is_some_and(|o| match o {
                     Origin::Control { request, .. } => crate::control::chat_turn_cancelled(request.chat_turn.as_deref()),
                     Origin::Ui => false,
                 }) {
-                    slot.cancelled.get_or_insert_with(|| solidcraft_ui_text::tr("render.preparation_cancelled").into());
+                    slot.cancelled.get_or_insert_with(|| torno_ui_text::tr("render.preparation_cancelled").into());
                     active.cancel.cancel();
                 }
             }
@@ -1077,13 +1077,13 @@ mod native {
                 }
                 let owner = crate::documents::render_owner(app, slot.uid);
                 if owner.is_none() || slot.first.as_ref().is_some_and(|f| owner.is_none_or(|s| !f.source.current(s))) {
-                    slot.cancelled.get_or_insert_with(|| solidcraft_ui_text::tr("render.live.final_changed").into());
+                    slot.cancelled.get_or_insert_with(|| torno_ui_text::tr("render.live.final_changed").into());
                 }
                 if slot.first.as_ref().and_then(|f| f.origin.as_ref()).is_some_and(|o| match o {
                     Origin::Control { request, .. } => crate::control::chat_turn_cancelled(request.chat_turn.as_deref()),
                     Origin::Ui => false,
                 }) {
-                    slot.cancelled.get_or_insert_with(|| solidcraft_ui_text::tr("render.preparation_cancelled").into());
+                    slot.cancelled.get_or_insert_with(|| torno_ui_text::tr("render.preparation_cancelled").into());
                 }
                 if slot.cancelled.is_some() && slot.plan.is_none() {
                     if let Some(first) = &mut slot.first {
@@ -1101,12 +1101,12 @@ mod native {
                 {
                     let q = session.render_queue_state();
                     if q.waiting == 0 {
-                        slot.cancelled = Some(solidcraft_ui_text::tr("render.preparation_cancelled").into());
+                        slot.cancelled = Some(torno_ui_text::tr("render.preparation_cancelled").into());
                     } else if q.running != 0 {
                         continue;
                     }
                     if !plan.owner_matches(session) {
-                        slot.cancelled = Some(solidcraft_ui_text::tr("render.live.final_changed").into());
+                        slot.cancelled = Some(torno_ui_text::tr("render.live.final_changed").into());
                     }
                 }
                 // Start the empty receiver before taking any heavy claim/plan.
@@ -1156,7 +1156,7 @@ mod native {
                             None
                         }
                         None => {
-                            slot.cancelled = Some(solidcraft_ui_text::tr("render.live.final_changed").into());
+                            slot.cancelled = Some(torno_ui_text::tr("render.live.final_changed").into());
                             None
                         }
                     }
@@ -1257,18 +1257,17 @@ mod native {
             }
         };
         let result = (|| -> Result<Option<Value>, String> {
-            let scope = crate::control::request_scope(app, &req.params)?.or_else(solidcraft_engine::io::vfs::current_scope);
+            let scope = crate::control::request_scope(app, &req.params)?.or_else(torno_engine::io::vfs::current_scope);
             let level = echo.unwrap_or(app.session.param_check);
-            let warnings: Vec<_> = solidcraft_engine::schema::issues("render.cancel", &params).into_iter().map(|i| i.message).collect();
+            let warnings: Vec<_> = torno_engine::schema::issues("render.cancel", &params).into_iter().map(|i| i.message).collect();
             if level == ParamCheck::Strict
                 && let Some(first) = warnings.first()
             {
-                return Err(solidcraft_engine::params::bad("render.cancel", first).to_string());
+                return Err(torno_engine::params::bad("render.cancel", first).to_string());
             }
             let own = app.session.param_check;
             app.session.param_check = level;
-            let checked =
-                solidcraft_engine::io::vfs::scoped(scope, || solidcraft_engine::render_preparation::batch::check_cancel(&app.session, &params));
+            let checked = torno_engine::io::vfs::scoped(scope, || torno_engine::render_preparation::batch::check_cancel(&app.session, &params));
             app.session.param_check = own;
             if checked.map_err(|e| e.to_string())?.is_some() {
                 return Ok(None);
@@ -1306,7 +1305,7 @@ mod native {
                     step.get("command")
                         .or_else(|| step.get("id"))
                         .and_then(Value::as_str)
-                        .and_then(solidcraft_engine::find_command)
+                        .and_then(torno_engine::find_command)
                         .is_some_and(|spec| matches!(spec.id, "render.start" | "render.preflight" | "render.batch"))
                 })
             }) {
@@ -1338,7 +1337,7 @@ mod native {
             .get("command")
             .or_else(|| req.params.get("id"))
             .and_then(Value::as_str)
-            .and_then(solidcraft_engine::find_command)
+            .and_then(torno_engine::find_command)
             .map(|spec| spec.id);
         let kind = match id {
             Some("render.preflight") => Kind::Check,
@@ -1359,7 +1358,7 @@ mod native {
             }
         };
         let scope = match crate::control::request_scope(app, &req.params) {
-            Ok(scope) => scope.or_else(solidcraft_engine::io::vfs::current_scope),
+            Ok(scope) => scope.or_else(torno_engine::io::vfs::current_scope),
             Err(error) => {
                 let _ = req.reply.send(json!({"ok":false,"error":error}));
                 return None;

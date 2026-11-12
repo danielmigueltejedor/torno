@@ -1,5 +1,5 @@
 //! Reordering chrome shared by the ribbon and editable navigation bar.
-use solidcraft_theme::Tokens;
+use torno_theme::Tokens;
 
 #[derive(Clone, Copy, Debug)]
 pub struct ReorderPayload<T> {

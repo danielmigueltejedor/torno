@@ -4,9 +4,9 @@
 |---|---|
 | Status | Draft, open for comment |
 | Started | 2026-10-14 (when #1221 opened) |
-| Apps | SolidCraft |
+| Apps | Torno |
 | Discussion | [#1221](https://github.com/tangency-labs/solidcraft/issues/1221) |
-| Related | [#4980](https://github.com/tangency-labs/solidcraft/pull/4980) (draft WIT proposal, `solidcraft:plugin@0.1.0`), [#4933](https://github.com/tangency-labs/solidcraft/pull/4933) (plugin commands in Utilities) |
+| Related | [#4980](https://github.com/tangency-labs/solidcraft/pull/4980) (draft WIT proposal, `torno:plugin@0.1.0`), [#4933](https://github.com/tangency-labs/solidcraft/pull/4933) (plugin commands in Utilities) |
 
 This RFC replaces `docs/plugins.md` and folds in what the 37 comments on #1221 settled. Only the Preferences page exists today. No plugin runs.
 
@@ -26,7 +26,7 @@ This RFC replaces `docs/plugins.md` and folds in what the 37 comments on #1221 s
 
 ## 2. The WIT contract
 
-World `solidcraft:plugin@1.0.0`. The interface stays thin: a few typed functions plus the JSON command set, so the WIT stays small while the commands keep growing.
+World `torno:plugin@1.0.0`. The interface stays thin: a few typed functions plus the JSON command set, so the WIT stays small while the commands keep growing.
 
 | Host import | Notes |
 |---|---|
@@ -84,7 +84,7 @@ Rhai was proposed instead. The comments favour one runtime, WebAssembly, for iso
 
 **Parametric features** (from `docs/plugins.md`). A host-owned `FeatureKind::Plugin` row stores `plugin_id`, `api_version`, the plugin's JSON `params`, and a `PluginDisplay` (label, icon id from the app's registry, tooltip, type name), all recorded in the file. The timeline draws any such row through one code path. On rebuild the host calls `evaluate(params, ctx)`, which uses the same `run` import, and merges the result like a native feature. An optional `parameter_schema()` lets the host draw sliders and dimension rows.
 
-**SolidCraft never refuses to open a file.** Every parametric plugin declares a recorded fallback, so a design opens without the plugin:
+**Torno never refuses to open a file.** Every parametric plugin declares a recorded fallback, so a design opens without the plugin:
 
 | Fallback | Behaviour without the plugin |
 |---|---|
@@ -102,7 +102,7 @@ Design metadata under `plugin.<id>` survives a missing, disabled or newer plugin
 - **Now:** a folder per plugin, `{data}/plugins/<id>/plugin.json`.
 - **Next:** Install Plugin from a file or GitHub release. An Add-on Manager lists tools, versions and permissions, with enable, disable and remove.
 - **Later:** a curated index. Anyone can sideload. To be listed, a plugin must be open source and signed. The comments favour GitHub Releases as the artifact source and keeping packages independent of one host.
-- **Tools:** `solidcraft-cli plugin check <dir>` validates the manifest and schemas; `plugin test <dir>` runs every entry on the real host; `--plugin-dev <dir>` loads an unapproved folder, marked as dev, and reloads on change. The `plugin.json` schema is generated from the host's types.
+- **Tools:** `torno-cli plugin check <dir>` validates the manifest and schemas; `plugin test <dir>` runs every entry on the real host; `--plugin-dev <dir>` loads an unapproved folder, marked as dev, and reloads on change. The `plugin.json` schema is generated from the host's types.
 
 ## 6. Web build
 

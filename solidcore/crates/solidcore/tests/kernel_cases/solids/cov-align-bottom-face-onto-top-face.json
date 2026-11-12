@@ -143,6 +143,6 @@
   "ungraded": [],
   "what": "a cube's bottom face aligned onto a plate's top face (normals already opposite: a pure move)",
   "why_not": [
-    "body \"Block\" is no kernel operation's output nor an operand: SolidCraft built it or changed the kernel's record"
+    "body \"Block\" is no kernel operation's output nor an operand: Torno built it or changed the kernel's record"
   ]
 }

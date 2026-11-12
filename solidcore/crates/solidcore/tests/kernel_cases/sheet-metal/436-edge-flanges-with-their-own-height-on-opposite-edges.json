@@ -66,6 +66,6 @@
   "ungraded": [],
   "what": "one edge flange feature whose two edges carry their own heights (30 and 25 mm) over the feature's 20 mm default",
   "why_not": [
-    "body \"Body1\" is no kernel operation's output nor an operand: SolidCraft built it or changed the kernel's record"
+    "body \"Body1\" is no kernel operation's output nor an operand: Torno built it or changed the kernel's record"
   ]
 }

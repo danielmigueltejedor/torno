@@ -8,8 +8,8 @@
 
 use egui::Pos2;
 use solidcore_record::Vec3;
-use solidcraft_engine::Sel;
-use solidcraft_engine::geom::prelude::*;
+use torno_engine::Sel;
+use torno_engine::geom::prelude::*;
 
 use crate::SolveApp;
 use crate::dialogs::{Kind, planar_face};
@@ -184,7 +184,7 @@ pub fn step_note(app: &SolveApp) -> Option<String> {
 /// It sits below the pointer, clear of the distance box at the arrow tip.
 pub fn show(app: &SolveApp, painter: &egui::Painter) {
     let Some(g) = app.viewport.drag_extrude.gesture.as_ref().filter(|g| g.started) else { return };
-    let t = solidcraft_theme::Tokens::get();
+    let t = torno_theme::Tokens::get();
     let now = nearest_step(g.step);
     let galley = |i: usize, current: bool| {
         let size = if current { t.font_body * 1.25 } else { t.font_body };

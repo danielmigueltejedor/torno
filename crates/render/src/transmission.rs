@@ -1,11 +1,11 @@
 //! Bounded optical data and original f64 dielectric transport oracles. Units are mm.
 use solidcore_record::Vec3;
-use solidcraft_geom::prelude::*;
+use torno_geom::prelude::*;
 #[path = "subsurface.rs"]
 pub mod subsurface;
 use subsurface::Subsurface;
 
-use solidcraft_viewport::surface::{SurfaceError, unit_direction};
+use torno_viewport::surface::{SurfaceError, unit_direction};
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Transmission {

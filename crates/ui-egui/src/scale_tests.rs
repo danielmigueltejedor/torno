@@ -2,7 +2,7 @@
 //! design with many bodies must not make every frame or every click slower per body squared.
 
 use serde_json::json;
-use solidcraft_engine::geom::MeshGeom;
+use torno_engine::geom::MeshGeom;
 
 use crate::scenario::Harness;
 
@@ -96,7 +96,7 @@ fn appearance_and_selection_rebuild_cost() {
         let colour = ms(|| drop(crate::viewport::build_scene(&h.app)));
         h.app.run("appearance.assign", json!({"bodies":[body.clone()],"color":"#336699","opacity":0.5})).unwrap();
         let opacity_class = ms(|| drop(crate::viewport::build_scene(&h.app)));
-        let theme_name = if solidcraft_theme::is_dark() { "light" } else { "dark" };
+        let theme_name = if torno_theme::is_dark() { "light" } else { "dark" };
         let _ = h.call("ui.prefs", json!({"theme": theme_name}));
         let theme = ms(|| drop(crate::viewport::build_scene(&h.app)));
         let geometry = match h.app.run("solid.move", json!({"bodies":[body.clone()], "translate":[1.0, 0.0, 0.0]})) {
@@ -134,7 +134,7 @@ fn large_body_scene_rebuild_cost() {
         let colour = ms(|| drop(crate::viewport::build_scene(&h.app)));
         h.app.run("appearance.assign", json!({"bodies":[body.clone()],"color":"#336699","opacity":0.5})).unwrap();
         let opacity_class = ms(|| drop(crate::viewport::build_scene(&h.app)));
-        let theme_name = if solidcraft_theme::is_dark() { "light" } else { "dark" };
+        let theme_name = if torno_theme::is_dark() { "light" } else { "dark" };
         let _ = h.call("ui.prefs", json!({"theme": theme_name}));
         let theme = ms(|| drop(crate::viewport::build_scene(&h.app)));
         println!(
@@ -199,7 +199,7 @@ fn assembly_scene_rebuild_cost() {
         let opacity_class = ms(|| drop(crate::viewport::build_scene(&h.app)));
         h.app.run("appearance.assign", json!({"components": ["Wheel"], "color": "#cc6633"})).unwrap();
         let component_colour = ms(|| drop(crate::viewport::build_scene(&h.app)));
-        let theme_name = if solidcraft_theme::is_dark() { "light" } else { "dark" };
+        let theme_name = if torno_theme::is_dark() { "light" } else { "dark" };
         let _ = h.call("ui.prefs", json!({"theme": theme_name}));
         let theme = ms(|| drop(crate::viewport::build_scene(&h.app)));
         h.app.run("browser.visibility", json!({"visible": false, "items": [part.clone()]})).unwrap();
@@ -263,7 +263,7 @@ pub(crate) fn view_frame(
     let rect = egui::Rect::from_min_size(egui::Pos2::ZERO, egui::vec2(size as f32, size as f32));
     let proj = crate::viewport::projection(app, rect);
     let e = proj.cam.eye().to_f32();
-    let t = solidcraft_theme::Tokens::get();
+    let t = torno_theme::Tokens::get();
     let none = || std::sync::Arc::new(std::sync::Mutex::new(None));
     crate::gpu::Frame {
         product: false,
@@ -292,7 +292,7 @@ pub(crate) fn view_frame(
         outline: false,
         eye: [e[0], e[1], e[2], if proj.cam.fov > 0.0 { 1.0 } else { 0.0 }],
         ao_radius: 0.0,
-        ao_samples: solidcraft_viewport_gpu::view::AO_SAMPLES,
+        ao_samples: torno_viewport_gpu::view::AO_SAMPLES,
         sky: [0.0; 4],
         ssaa: 1.0,
         hover_tint: [f32::from(t.hover_face_lift) / 255.0; 3],
@@ -377,16 +377,16 @@ fn assembly_tree_hover_frame_cost() {
     }
 }
 
-/// A design from a file (`SOLIDCRAFT_SCALE_DESIGN`), every browser folder open: the time of an
+/// A design from a file (`TORNO_SCALE_DESIGN`), every browser folder open: the time of an
 /// idle frame and of the cheap commands, as [`frame_and_cheap_command_cost_by_body_count`].
 #[test]
 #[ignore = "manual measurement on a design file"]
 fn frame_cost_of_a_design_file() {
-    let Some(path) = std::env::var_os("SOLIDCRAFT_SCALE_DESIGN") else { return };
+    let Some(path) = std::env::var_os("TORNO_SCALE_DESIGN") else { return };
     let bytes = std::fs::read(&path).unwrap();
-    let doc = solidcraft_engine::io::read_design(&bytes).unwrap();
+    let doc = torno_engine::io::read_design(&bytes).unwrap();
     let mut h = Harness::new();
-    h.app.session = solidcraft_engine::Session::new(doc);
+    h.app.session = torno_engine::Session::new(doc);
     h.app.session.world_state().unwrap().warm_meshes(|| true);
     h.frames(3);
     let idle = ms(|| h.frames(5)) / 5.0;
@@ -407,23 +407,23 @@ fn frame_cost_of_a_design_file() {
         "DESIGN bodies={bodies} idle_frame_ms={idle:.2} expanded_frame_ms={expanded:.2} scene_ms={scene:.2} scene_again_ms={scene_again:.2} rename_ms={rename:.2} scene_renamed_ms={scene_renamed:.2}"
     );
     let t = std::time::Instant::now();
-    while t.elapsed().as_secs() < std::env::var("SOLIDCRAFT_SCALE_LOOP").ok().and_then(|v| v.parse().ok()).unwrap_or(0) {
+    while t.elapsed().as_secs() < std::env::var("TORNO_SCALE_LOOP").ok().and_then(|v| v.parse().ok()).unwrap_or(0) {
         h.frame();
     }
 }
 
-/// A design from a file (`SOLIDCRAFT_SCALE_DESIGN`) open in two tabs, both with an unsaved change
+/// A design from a file (`TORNO_SCALE_DESIGN`) open in two tabs, both with an unsaved change
 /// the comparison with the saved design finds only at its end (a favourite, as a changed
 /// appearance is): the time of an idle frame, and of one unsaved-changes check
 /// (`Session::is_dirty`, which the tab strip and the autosave ask every frame).
 #[test]
 #[ignore = "manual measurement on a design file"]
 fn idle_frame_cost_of_two_unsaved_tabs() {
-    let Some(path) = std::env::var_os("SOLIDCRAFT_SCALE_DESIGN") else { return };
+    let Some(path) = std::env::var_os("TORNO_SCALE_DESIGN") else { return };
     let path = path.to_string_lossy().to_string();
     let open = || {
-        let (doc, saved) = solidcraft_engine::io::read_design_file(&path, None::<fn(solidcraft_engine::io::DesignPreview)>).unwrap();
-        let mut s = solidcraft_engine::Session::opened(doc, saved.as_ref());
+        let (doc, saved) = torno_engine::io::read_design_file(&path, None::<fn(torno_engine::io::DesignPreview)>).unwrap();
+        let mut s = torno_engine::Session::opened(doc, saved.as_ref());
         s.doc_mut().favorites.insert("idle-measurement".into());
         s.revision += 1;
         s
@@ -473,7 +473,7 @@ fn whole_body_highlight_cost_from_the_models_own_triangles() {
     println!("HIGHLIGHT bodies={bodies} triangles={triangles} cpu_copy_ms={copied:.2} model_triangles_ms={planned:.2}");
 }
 
-/// A STEP file (`SOLIDCRAFT_SCALE_STEP`), opened as the app opens one (a new design and
+/// A STEP file (`TORNO_SCALE_STEP`), opened as the app opens one (a new design and
 /// `file.insert_step`): the time of each phase of opening it, of an idle frame with its tree, of
 /// the model scene and of appearance edits on it, and of hovering its bodies on an offscreen GPU
 /// (skipped without an adapter). Run with `--ignored --nocapture`.
@@ -481,7 +481,7 @@ fn whole_body_highlight_cost_from_the_models_own_triangles() {
 #[test]
 #[ignore = "manual measurement on a STEP file"]
 fn step_file_cost() {
-    let Some(path) = std::env::var_os("SOLIDCRAFT_SCALE_STEP") else { return };
+    let Some(path) = std::env::var_os("TORNO_SCALE_STEP") else { return };
     let mut h = Harness::new();
     let mut line = String::from("STEP");
     let phase = |line: &mut String, name: &str, ms: f64| {
@@ -522,7 +522,7 @@ fn step_file_cost() {
     phase(&mut line, "opacity_command", opacity_command);
     let opacity = ms(|| drop(crate::viewport::build_scene(&h.app)));
     phase(&mut line, "opacity_scene", opacity);
-    let theme_name = if solidcraft_theme::is_dark() { "light" } else { "dark" };
+    let theme_name = if torno_theme::is_dark() { "light" } else { "dark" };
     let _ = h.call("ui.prefs", json!({"theme": theme_name}));
     let theme = ms(|| drop(crate::viewport::build_scene(&h.app)));
     phase(&mut line, "theme_scene", theme);
@@ -614,7 +614,7 @@ fn zoomed_view_frame_cost() {
     );
 }
 
-/// Every body of a design selected (`SOLIDCRAFT_SCALE_DESIGN`, or a generated grid of 1,440
+/// Every body of a design selected (`TORNO_SCALE_DESIGN`, or a generated grid of 1,440
 /// boxes), the pointer moving from face to face: the time of each hover
 /// change's highlight build, headless and as the app builds it on a GPU (bodies drawn from their
 /// plans, and from the model's own blocks). Run with `--ignored --nocapture`.
@@ -622,7 +622,7 @@ fn zoomed_view_frame_cost() {
 #[ignore = "manual highlight measurement"]
 fn many_selected_bodies_hover_cost() {
     use solidcore_record::Vec3;
-    let mut h = match std::env::var_os("SOLIDCRAFT_SCALE_DESIGN") {
+    let mut h = match std::env::var_os("TORNO_SCALE_DESIGN") {
         Some(path) => {
             let mut h = Harness::new();
             h.app.run("doc.open", json!({"path": path.to_string_lossy()})).unwrap();
@@ -650,14 +650,14 @@ fn many_selected_bodies_hover_cost() {
         drop(crate::viewport::build_scene(&h.app));
         for (selected, biggest) in [(false, false), (true, false), (false, true), (true, true)] {
             h.app.session.selection =
-                if selected { bodies.iter().map(|(name, _)| solidcraft_engine::Sel::Body { name: name.clone() }).collect() } else { Vec::new() };
+                if selected { bodies.iter().map(|(name, _)| torno_engine::Sel::Body { name: name.clone() }).collect() } else { Vec::new() };
             let hover = |h: &mut Harness, i: usize| {
                 let (name, faces) = if biggest { &bodies[big] } else { &bodies[(i * 37) % bodies.len()] };
                 h.app.viewport.hover = Some(crate::viewport::Hit::Face { body: name.clone(), index: (i * 7) % (*faces).max(1), point: Vec3::ZERO });
             };
             hover(&mut h, 0);
             drop(crate::viewport::build_highlight(&h.app));
-            let loops = std::env::var("SOLIDCRAFT_SCALE_LOOP").ok().and_then(|v| v.parse().ok()).unwrap_or(31);
+            let loops = std::env::var("TORNO_SCALE_LOOP").ok().and_then(|v| v.parse().ok()).unwrap_or(31);
             let changes: Vec<f64> = (1..=loops)
                 .map(|i| {
                     hover(&mut h, i);
@@ -754,20 +754,20 @@ fn sketch_scene_cost_while_the_camera_moves() {
 /// window thread's frame (the model scene built, as the app builds it once a renderer is there),
 /// its named steps, and the renderer's prepare, draw recording and GPU work on an offscreen device
 /// (skipped without an adapter, as with `WGPU_BACKEND=metal` on Linux, to time the window thread
-/// alone). The design is `SOLIDCRAFT_SCALE_STEP` (inserted as the app opens a STEP file),
-/// `SOLIDCRAFT_SCALE_DESIGN` (opened), or the generated assembly of 300 parts and 500 placements.
-/// `SOLIDCRAFT_SCALE_LOOP` frames (default 60). `painted` fingerprints the window's picture once
+/// alone). The design is `TORNO_SCALE_STEP` (inserted as the app opens a STEP file),
+/// `TORNO_SCALE_DESIGN` (opened), or the generated assembly of 300 parts and 500 placements.
+/// `TORNO_SCALE_LOOP` frames (default 60). `painted` fingerprints the window's picture once
 /// the view rests, to compare two builds. Run with `--ignored --nocapture`.
 #[cfg(not(target_arch = "wasm32"))]
 #[test]
 #[ignore = "manual measurement on a design file"]
 fn orbit_frame_cost() {
     const SIZE: u32 = 1024;
-    let mut h = if let Some(path) = std::env::var_os("SOLIDCRAFT_SCALE_STEP") {
+    let mut h = if let Some(path) = std::env::var_os("TORNO_SCALE_STEP") {
         let mut h = Harness::new();
         h.app.run("file.insert_step", json!({"path": path.to_string_lossy()})).unwrap();
         h
-    } else if let Some(path) = std::env::var_os("SOLIDCRAFT_SCALE_DESIGN") {
+    } else if let Some(path) = std::env::var_os("TORNO_SCALE_DESIGN") {
         let mut h = Harness::new();
         h.app.run("doc.open", json!({"path": path.to_string_lossy()})).unwrap();
         h
@@ -801,7 +801,7 @@ fn orbit_frame_cost() {
     h.frame_with(vec![egui::Event::PointerMoved(at)]);
     h.frame_with(vec![egui::Event::PointerButton { pos: at, button: egui::PointerButton::Secondary, pressed: true, modifiers: none }]);
     let yaw = h.app.cam.yaw;
-    let n = std::env::var("SOLIDCRAFT_SCALE_LOOP").ok().and_then(|v| v.parse().ok()).unwrap_or(60usize);
+    let n = std::env::var("TORNO_SCALE_LOOP").ok().and_then(|v| v.parse().ok()).unwrap_or(60usize);
     let mut ui = Vec::new();
     let mut parts = Vec::new();
     let mut tess = Vec::new();
@@ -870,7 +870,7 @@ fn product_preview_rebuild_cost() {
     let mut h = assembly(100, 100);
     let part = crate::open_meshing::session_world(&h.app.session).bodies.iter().find(|b| b.component == 0).map(|b| b.name.clone()).unwrap();
     let mut cache = crate::render_workspace::ProductCache::default();
-    let extract = |h: &Harness| solidcraft_engine::product_scene::extract(&h.app.session).unwrap();
+    let extract = |h: &Harness| torno_engine::product_scene::extract(&h.app.session).unwrap();
     let time = |h: &Harness, cache: &mut crate::render_workspace::ProductCache| {
         let scene = extract(h);
         ms(|| drop(crate::render_workspace::gpu_scene_cached(&scene, u64::MAX, cache).unwrap()))

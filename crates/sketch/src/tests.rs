@@ -1,5 +1,5 @@
-use solidcraft_geom::prelude::*;
 use std::f64::consts::{FRAC_PI_2, PI};
+use torno_geom::prelude::*;
 
 use solidcore_record::{Plane, Seg2, Vec2, Vec3};
 

@@ -1,10 +1,10 @@
 //! Shared quality controls. Edits retain the selected output size and saved shot intent.
 use crate::ui_kit::BackingTooltipExt as _;
 use crate::{SolveApp, ui_kit};
-use solidcraft_engine::render::job::{DenoiseGuideClass, MAX_CPU_THREADS};
+use torno_engine::render::job::{DenoiseGuideClass, MAX_CPU_THREADS};
 
 /// New selections are bounded without rewriting larger legacy jobs on paint or load.
-pub(super) const MAX_UI_SAMPLES: u32 = solidcraft_engine::render::job::MAX_UI_SAMPLES;
+pub(super) const MAX_UI_SAMPLES: u32 = torno_engine::render::job::MAX_UI_SAMPLES;
 
 pub(super) fn sample_presets(ui: &mut egui::Ui, samples: &mut u32, range: std::ops::RangeInclusive<u32>, prefix: &str) -> bool {
     let mut changed = false;
@@ -29,10 +29,8 @@ pub(super) fn sample_presets(ui: &mut egui::Ui, samples: &mut u32, range: std::o
 
 pub(super) fn legacy_samples_note(_app: &SolveApp, ui: &mut egui::Ui, samples: u32) {
     if samples > MAX_UI_SAMPLES {
-        let message = solidcraft_ui_text::format(
-            "render.quality_legacy_samples",
-            &[("samples", &samples.to_string()), ("maximum", &MAX_UI_SAMPLES.to_string())],
-        );
+        let message =
+            torno_ui_text::format("render.quality_legacy_samples", &[("samples", &samples.to_string()), ("maximum", &MAX_UI_SAMPLES.to_string())]);
         ui_kit::text(ui, &message, ui_kit::Text::Note("render.quality_legacy_samples"));
     }
 }
@@ -64,7 +62,7 @@ pub(super) fn supersampling_controls(app: &mut SolveApp, ui: &mut egui::Ui) {
     ui_kit::text(ui, app.tr(key), ui_kit::Text::Note(key));
     if available && app.render_workspace.view.studio.supersampling == 2 {
         let draft = &app.render_workspace.view.draft;
-        let message = solidcraft_ui_text::format(
+        let message = torno_ui_text::format(
             "render.supersampling_dimensions",
             &[
                 ("width", &u64::from(draft.width).saturating_mul(2).to_string()),
@@ -261,19 +259,17 @@ pub(super) fn diagnostics(app: &mut SolveApp, ui: &mut egui::Ui) {
         ui_kit::text(ui, app.tr("render.denoise_mask_unavailable"), ui_kit::Text::Note("render.denoise_mask_unavailable"));
         return;
     };
-    let grid = solidcraft_ui_text::format(
-        "render.denoise_diagnostics_grid",
-        &[("width", &report.width.to_string()), ("height", &report.height.to_string())],
-    );
+    let grid =
+        torno_ui_text::format("render.denoise_diagnostics_grid", &[("width", &report.width.to_string()), ("height", &report.height.to_string())]);
     ui_kit::text(ui, &grid, ui_kit::Text::Note("render.denoise_diagnostics_grid"));
     let eligible: u64 = DenoiseGuideClass::ALL.iter().filter(|class| class.eligible()).map(|&class| report.pixels(class)).sum();
     let total: u64 = report.counts.iter().sum();
-    let summary = solidcraft_ui_text::format(
+    let summary = torno_ui_text::format(
         "render.denoise_diagnostics_counts",
         &[("eligible", &eligible.to_string()), ("skipped", &total.saturating_sub(eligible).to_string())],
     );
     ui_kit::text(ui, &summary, ui_kit::Text::Inline);
-    let t = solidcraft_theme::Tokens::get();
+    let t = torno_theme::Tokens::get();
     for &class in DenoiseGuideClass::ALL {
         let count = report.pixels(class);
         if count == 0 {

@@ -67,6 +67,6 @@
   "ungraded": [],
   "what": "a 3.2 mm round hole cut through a 100 x 60 x 2.5 sheet, which the flat pattern must report as a circle",
   "why_not": [
-    "body \"Body1\" is no kernel operation's output nor an operand: SolidCraft built it or changed the kernel's record"
+    "body \"Body1\" is no kernel operation's output nor an operand: Torno built it or changed the kernel's record"
   ]
 }

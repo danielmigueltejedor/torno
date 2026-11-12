@@ -14,14 +14,14 @@ use std::sync::Arc;
 
 use egui::{Pos2, Stroke};
 use solidcore_record::{Plane, Vec2, Vec3};
-use solidcraft_engine::Sel;
-use solidcraft_engine::doc::ModelState;
-use solidcraft_engine::geom::{Mesh, prelude::*};
+use torno_engine::Sel;
+use torno_engine::doc::ModelState;
+use torno_engine::geom::{Mesh, prelude::*};
 
 use crate::SolveApp;
 use crate::dialogs::{Dialog, Kind};
 use crate::viewport::Proj;
-use solidcraft_theme::Tokens;
+use torno_theme::Tokens;
 
 /// How near (screen points) the arrow's tip must come to a face's plane to stop there.
 pub const SNAP_PX: f32 = 8.0;

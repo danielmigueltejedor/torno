@@ -6,10 +6,10 @@
 
 use egui::RichText;
 use serde_json::{Map, Value, json};
-use solidcraft_engine::doc::metadata::{self, BOM_KEYS};
+use torno_engine::doc::metadata::{self, BOM_KEYS};
 
 use crate::SolveApp;
-use solidcraft_theme::Tokens;
+use torno_theme::Tokens;
 
 /// The window's state; the rows come from the engine.
 #[derive(Default)]
@@ -115,7 +115,7 @@ fn cell<R>(ui: &mut egui::Ui, width: f32, add: impl FnOnce(&mut egui::Ui) -> R) 
 
 /// The label of one of [`BOM_KEYS`].
 fn field_label(key: &str) -> &str {
-    metadata::key(key).map_or(key, |k| solidcraft_ui_text::tr(k.label))
+    metadata::key(key).map_or(key, |k| torno_ui_text::tr(k.label))
 }
 
 /// Apply the picked row's fields to each of its definitions (one undo step each).
@@ -146,9 +146,8 @@ pub fn show(app: &mut SolveApp, ctx: &egui::Context) {
     let bom = d.rows(app);
     let rows: Vec<Value> = bom["rows"].as_array().cloned().unwrap_or_default();
     let (mut export, mut apply_row) = (None, None);
-    let closed = crate::ui_kit::Window::new(egui::Id::unique("sc_bom"), "bom", solidcraft_ui_text::tr_label("Bill of Materials"))
-        .cards(3.0)
-        .show_body(ctx, |ui| {
+    let closed =
+        crate::ui_kit::Window::new(egui::Id::unique("sc_bom"), "bom", torno_ui_text::tr_label("Bill of Materials")).cards(3.0).show_body(ctx, |ui| {
             ui.horizontal_wrapped(|ui| {
                 let was = (d.top, d.by_definition, d.group_children);
                 let mut levels = usize::from(d.top);
@@ -167,7 +166,7 @@ pub fn show(app: &mut SolveApp, ctx: &egui::Context) {
                 });
                 d.by_definition = grouping == 1;
                 ui.separator();
-                crate::ui_kit::checkbox(ui, solidcraft_ui_text::tr("bom.group_children"), &mut d.group_children);
+                crate::ui_kit::checkbox(ui, torno_ui_text::tr("bom.group_children"), &mut d.group_children);
                 if was != (d.top, d.by_definition, d.group_children) {
                     d.picked = None;
                 }
@@ -409,7 +408,7 @@ mod tests {
         h.frames(2);
         let (Some(desc), Some(rev)) = (h.widget("Description"), h.widget("Rev")) else { panic!("the grid's headers are drawn") };
         // Before, every column but the last was as narrow as a button and the grid used a third of the window.
-        let card = f64::from(solidcraft_theme::Tokens::get().form_card_width);
+        let card = f64::from(torno_theme::Tokens::get().form_card_width);
         assert!(rev[0] - desc[0] > card, "Description spreads out: it starts at {}, Rev at {}", desc[0], rev[0]);
     }
 

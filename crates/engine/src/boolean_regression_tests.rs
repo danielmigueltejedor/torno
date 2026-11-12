@@ -2,7 +2,7 @@
 //! `examples/regressions/` (each script's description says what went wrong).
 
 use serde_json::{Value, json};
-use solidcraft_geom::prelude::*;
+use torno_geom::prelude::*;
 
 use crate::Session;
 
@@ -22,7 +22,7 @@ fn check_partial_face_contact_pattern() {
     let (mut volume, mut area, mut shells) = (0.0, 0.0, 0);
     for b in &s.model.state().bodies {
         assert!(b.body.validity().is_empty(), "{:?}", b.body.validity());
-        let m = b.body.mesh(&solidcraft_kernel::MeshTolerance::chord(1e-5)).unwrap().measure();
+        let m = b.body.mesh(&torno_kernel::MeshTolerance::chord(1e-5)).unwrap().measure();
         volume += m.volume;
         area += m.area;
         shells += b.body.shell_count();
@@ -60,7 +60,7 @@ fn intersection_never_keeps_material_outside_the_trimming_cylinder() {
         .body("Base")
         .unwrap()
         .body
-        .mesh(&solidcraft_kernel::MeshTolerance::chord(1e-3))
+        .mesh(&torno_kernel::MeshTolerance::chord(1e-3))
         .unwrap()
         .positions
         .iter()
@@ -80,7 +80,7 @@ fn replay(script: &str) -> Session {
 }
 
 fn volume(s: &Session, body: &str) -> f64 {
-    s.model.state().body(body).map(|b| solidcraft_kernel::measure(&b.body).unwrap().volume).unwrap_or(0.0)
+    s.model.state().body(body).map(|b| torno_kernel::measure(&b.body).unwrap().volume).unwrap_or(0.0)
 }
 
 /// #5562: a quarter disc in a box's side face, at its corner, revolved 360° about the box's
@@ -197,15 +197,15 @@ fn step_export_of_a_flanged_enclosure_finishes_and_reads_back() {
 
 /// The body's STEP text, which reads back without warnings as one closed solid of the same
 /// volume and area, and the number of faces the file holds.
-fn read_back(s: &Session, body: &solidcraft_kernel::Body) -> (String, usize) {
+fn read_back(s: &Session, body: &torno_kernel::Body) -> (String, usize) {
     assert!(s.model.results.iter().all(|r| r.error.is_none()), "{:?}", s.model.results);
-    let text = solidcraft_kernel::step_export(&[body], "SolidCraft").unwrap();
-    let imp = solidcraft_kernel::step_import(&text).unwrap();
+    let text = torno_kernel::step_export(&[body], "Torno").unwrap();
+    let imp = torno_kernel::step_import(&text).unwrap();
     assert!(imp.warnings.is_empty(), "{:?}", imp.warnings);
     assert_eq!(imp.bodies.len(), 1);
     let back = &imp.bodies[0];
     assert!(back.closed);
-    let (a, b) = (solidcraft_kernel::measure(body).unwrap(), solidcraft_kernel::measure(&back.body).unwrap());
+    let (a, b) = (torno_kernel::measure(body).unwrap(), torno_kernel::measure(&back.body).unwrap());
     assert!((a.volume - b.volume).abs() < 1e-3 * a.volume, "volume {} read back as {}", a.volume, b.volume);
     assert!((a.area - b.area).abs() < 1e-3 * a.area, "area {} read back as {}", a.area, b.area);
     println!("#1985 volume {:.3} / {:.3} mm³; area {:.3} / {:.3} mm²", a.volume, b.volume, a.area, b.area);
@@ -220,7 +220,7 @@ fn shallow_cuts_rebuild_after_inserting_an_earlier_pocket() {
     let rounded_plate = 40.0 * 30.0 * 10.0 - (4.0 - std::f64::consts::PI) * 40.0;
     // Half of each circle overlaps the existing 0.75 mm pocket.
     let expected = rounded_plate - 30.0 * 10.0 * 0.75 - 2.0 * std::f64::consts::PI * 25.0 * (1.5 - 0.75 / 2.0);
-    let reopened = Session::new(solidcraft_doc::Document::from_json(&s.doc.to_json()).unwrap());
+    let reopened = Session::new(torno_doc::Document::from_json(&s.doc.to_json()).unwrap());
     for session in [s, reopened] {
         assert!(session.model.results.iter().all(|r| r.error.is_none()));
         assert_eq!(session.model.state().bodies.len(), 1);
@@ -228,7 +228,7 @@ fn shallow_cuts_rebuild_after_inserting_an_earlier_pocket() {
         assert!(body.validity().is_empty(), "{:?}", body.validity());
         let actual = volume(&session, "Plate");
         assert!((actual - expected).abs() < 0.02, "{actual} vs {expected}");
-        let mesh = body.mesh(&solidcraft_kernel::MeshTolerance::chord(0.001)).unwrap();
+        let mesh = body.mesh(&torno_kernel::MeshTolerance::chord(0.001)).unwrap();
         assert!(!mesh.contains(solidcore_record::Vec3::new(12.0, 14.0, 9.0)));
         assert!(mesh.contains(solidcore_record::Vec3::new(12.0, 14.0, 8.0)));
         assert!(!mesh.contains(solidcore_record::Vec3::new(20.0, 20.0, 9.5)));
@@ -248,7 +248,7 @@ fn eighteen_tabs_join_the_ribs_of_a_chamfered_base() {
         let body = &state.body("Base").unwrap().body;
         assert_eq!(body.shell_count(), 1);
         assert!(body.validity().is_empty(), "{:?}", body.validity());
-        let mesh = body.mesh(&solidcraft_kernel::MeshTolerance::chord(1e-4)).unwrap();
+        let mesh = body.mesh(&torno_kernel::MeshTolerance::chord(1e-4)).unwrap();
         // R40 x 4 disc less its 1 x 1 chamfer, six 32 x 2 ribs
         // standing 4 above it, and eighteen 1 x 2 tabs another 8 higher.
         let expected = std::f64::consts::PI * (6400.0 - 40.0 + 1.0 / 3.0) + 1536.0 + 288.0;
@@ -269,7 +269,7 @@ fn eighteen_tabs_join_the_ribs_of_a_chamfered_base() {
         assert!((mesh.bounds().max.z - 16.0).abs() < 1e-8);
     };
     check(&s);
-    let reopened = Session::new(solidcraft_doc::Document::from_json(&s.doc.to_json()).unwrap());
+    let reopened = Session::new(torno_doc::Document::from_json(&s.doc.to_json()).unwrap());
     check(&reopened);
 }
 
@@ -381,7 +381,7 @@ fn blind_hole_into_a_long_d_profile_bar_stops_short_of_the_round_front() {
     let hole = std::f64::consts::PI * 10.0;
     let removed = bar - volume(&s, "Slat");
     assert!((removed - hole).abs() < 0.05 * hole, "removed {removed} vs {hole}");
-    let faces = s.model.state().body("Slat").map(|b| solidcraft_kernel::measure(&b.body).unwrap().merged.faces);
+    let faces = s.model.state().body("Slat").map(|b| torno_kernel::measure(&b.body).unwrap().merged.faces);
     assert_eq!(faces, Some(8));
 }
 
@@ -409,7 +409,7 @@ fn ribs_flush_with_a_window_change_nothing_away_from_them() {
     let (lid, ribs) = steps.split_at(steps.len() - 4);
     let mut s = Session::default();
     s.run_script(&Value::Array(lid.to_vec())).unwrap();
-    let measure = |s: &Session| s.model.state().body("Lid").map(|b| solidcraft_kernel::measure(&b.body).unwrap()).unwrap();
+    let measure = |s: &Session| s.model.state().body("Lid").map(|b| torno_kernel::measure(&b.body).unwrap()).unwrap();
     let (v0, a0) = (measure(&s).volume, measure(&s).area);
     // The plate with its rounded corners, the skirt, less the window, the slot and the notch
     // through the skirt: (76.8 × 89.3 - (4 - π) × 9) × 2.4 + (71.5 × 84 - 68.5 × 81) × 3
@@ -437,7 +437,7 @@ fn ribs_flush_with_a_window_change_nothing_away_from_them() {
         let area = 9.6 + 52.2 + 70.2 + 29.34 - 8.1 - 18.0 - 1.5;
         assert!((m.area - (a0 + n * area)).abs() < da, "rib {}: area {} (no slit adds any)", i + 1, m.area - a0);
     }
-    let bounds = s.model.state().body("Lid").unwrap().body.mesh(&solidcraft_kernel::MeshTolerance::chord(0.01)).unwrap().bounds();
+    let bounds = s.model.state().body("Lid").unwrap().body.mesh(&torno_kernel::MeshTolerance::chord(0.01)).unwrap().bounds();
     assert!((bounds.max.z - 14.1).abs() < 1e-9, "{}", bounds.max.z);
 }
 
@@ -496,7 +496,7 @@ fn press_pull_on_the_enclosure_lid_is_prompt() {
     let mut s = Session::default();
     let script: Value = serde_json::from_str(include_str!("../../../examples/acceptance/sensor_enclosure.json")).unwrap();
     s.run_script(&script).unwrap();
-    let total = |s: &Session| -> f64 { s.model.state().bodies.iter().map(|b| solidcraft_kernel::measure(&b.body).unwrap().volume).sum() };
+    let total = |s: &Session| -> f64 { s.model.state().bodies.iter().map(|b| torno_kernel::measure(&b.body).unwrap().volume).sum() };
     let before = total(&s);
     let start = cpu_and_peak_memory();
     s.execute("solid.press_pull", &json!({"face": [-12.0, 27.4, 23.0], "distance": 5.0})).unwrap();
@@ -522,7 +522,7 @@ fn lip_swept_flush_round_a_corner_joins() {
     assert_eq!(b.body.shell_count(), 1);
     let block = (50.0 * 40.0 - (4.0 - std::f64::consts::PI) * 4.5 * 4.5) * 10.0;
     let lip = 41.0 + 31.0 + 41.0 + 2.0 * std::f64::consts::PI * (4.5 * 4.5 - 3.5 * 3.5) / 4.0;
-    let volume = b.body.mesh(&solidcraft_kernel::MeshTolerance::chord(1e-5)).unwrap().measure().volume;
+    let volume = b.body.mesh(&torno_kernel::MeshTolerance::chord(1e-5)).unwrap().measure().volume;
     assert!((volume - block - lip).abs() < 0.02, "{volume} expected {}", block + lip);
 }
 
@@ -540,7 +540,7 @@ fn cut_of_a_whole_face_beside_round_corners_after_a_chamfer() {
     let block = (40.0 * 40.0 - (4.0 - pi) * 8.0 * 8.0) * 15.0;
     // The chamfer's 2 × 2 triangle swept along the loop (Pappus: its centroid is 2/3 mm in).
     let chamfer = 2.0 * (4.0 * 24.0 + 2.0 * pi * (8.0 - 2.0 / 3.0));
-    let mesh = b.body.mesh(&solidcraft_kernel::MeshTolerance::chord(1e-4)).unwrap();
+    let mesh = b.body.mesh(&torno_kernel::MeshTolerance::chord(1e-4)).unwrap();
     let volume = mesh.measure().volume;
     assert!((volume - (block - chamfer)).abs() < 0.05, "{volume} expected {}", block - chamfer);
     let top = mesh.bounds().max.z;
@@ -554,7 +554,7 @@ fn cut_of_a_whole_face_beside_round_corners_after_a_chamfer() {
 /// the body fell back to the reference mesher, which drew a sheet across the down tube.
 #[test]
 fn joined_loft_frames_plan_their_display_at_every_quality() {
-    use solidcraft_doc::display_quality::{DisplayQuality, MAX_REFINE};
+    use torno_doc::display_quality::{DisplayQuality, MAX_REFINE};
     for (script, name) in [
         (include_str!("../../../examples/regressions/loft_join_bracket_hull_triangle.json"), "DT2"),
         (include_str!("../../../examples/regressions/front_triangle_hull_triangle.json"), "FrontTriangle"),
@@ -564,8 +564,7 @@ fn joined_loft_frames_plan_their_display_at_every_quality() {
         let body = &state.body(name).unwrap().body;
         for q in DisplayQuality::ALL {
             for k in 0..=MAX_REFINE {
-                let plan =
-                    body.mesh_plan(&solidcraft_kernel::MeshTolerance { chord: q.refined_chord(body.size(), k), angle: Some(q.refined_angle(k)) });
+                let plan = body.mesh_plan(&torno_kernel::MeshTolerance { chord: q.refined_chord(body.size(), k), angle: Some(q.refined_angle(k)) });
                 assert!(plan.is_ok(), "{name} at {} + {k}: {:?}", q.id(), plan.err());
             }
         }
@@ -586,7 +585,7 @@ fn oblique_cuts_through_a_chamfered_ring_are_exact() {
     // The ring after the move and after each cut, and what each cut took away (the ring before it
     // less the ring after it: a small body that measures to its own accuracy, where the difference
     // of the whole ring's volumes is lost in the integration's 1e-6 of 1149 mm³).
-    let mut rings: Vec<solidcraft_kernel::Body> = Vec::new();
+    let mut rings: Vec<torno_kernel::Body> = Vec::new();
     for step in steps {
         let reply = s.execute(step["command"].as_str().unwrap(), &step["params"]).unwrap();
         if step["command"] == "solid.extrude" {
@@ -597,10 +596,10 @@ fn oblique_cuts_through_a_chamfered_ring_are_exact() {
         }
     }
     let taken = |k: usize| -> f64 {
-        let piece = solidcraft_kernel::boolean(&rings[k], &rings[k + 1], solidcraft_kernel::BoolOp::Cut).unwrap().unwrap();
-        solidcraft_kernel::measure(&piece).unwrap().volume
+        let piece = torno_kernel::boolean(&rings[k], &rings[k + 1], torno_kernel::BoolOp::Cut).unwrap().unwrap();
+        torno_kernel::measure(&piece).unwrap().volume
     };
-    let volumes: Vec<f64> = rings.iter().map(|b| b.mesh(&solidcraft_kernel::MeshTolerance::chord(1e-5)).unwrap().measure().volume).collect();
+    let volumes: Vec<f64> = rings.iter().map(|b| b.mesh(&torno_kernel::MeshTolerance::chord(1e-5)).unwrap().measure().volume).collect();
     // Pappus: the profile's moment about the axis turned through 240°.
     let profile = [(16.6, 0.0), (17.5, 0.0), (18.5, 1.0), (18.5, 7.0), (17.5, 8.0), (16.6, 8.0), (16.4, 7.8), (16.4, 0.2)];
     let moment: f64 = (0..profile.len())
@@ -625,8 +624,8 @@ fn oblique_cuts_through_a_chamfered_ring_are_exact() {
     // and nothing adds any (triangles fanning across a chamfer from the notch's hole or from the
     // cuts' trims, folded over each other, added a few mm² each).
     let (coarse, fine) = (
-        body.mesh(&solidcraft_kernel::MeshTolerance::chord(0.05)).unwrap().measure().area,
-        body.mesh(&solidcraft_kernel::MeshTolerance::chord(1e-5)).unwrap().measure().area,
+        body.mesh(&torno_kernel::MeshTolerance::chord(0.05)).unwrap().measure().area,
+        body.mesh(&torno_kernel::MeshTolerance::chord(1e-5)).unwrap().measure().area,
     );
     assert!(coarse < fine && coarse > fine - 2.0, "area meshed at 0.05: {coarse} vs {fine}");
     println!(
@@ -651,8 +650,8 @@ fn notch_into_a_ring_chamfer_is_cut_exactly() {
     }
     // What the cut took: the ring before it less the ring after it, measured as a body of its own
     // (the difference of the two rings' volumes is lost in the integration's 1e-6 of 1149 mm³).
-    let piece = solidcraft_kernel::boolean(&before, &s.model.state().body("R").unwrap().body, solidcraft_kernel::BoolOp::Cut).unwrap().unwrap();
-    let (got, want) = (solidcraft_kernel::measure(&piece).unwrap().volume, ring_notch());
+    let piece = torno_kernel::boolean(&before, &s.model.state().body("R").unwrap().body, torno_kernel::BoolOp::Cut).unwrap().unwrap();
+    let (got, want) = (torno_kernel::measure(&piece).unwrap().volume, ring_notch());
     assert!((got - want).abs() < 1e-5 * want, "{got} vs {want}");
 }
 
@@ -730,7 +729,7 @@ fn box_intersect_splits_the_end_off_a_raked_wedge_after_its_end_rounds() {
         let mut s = raked_wedge(lean);
         let whole = volume(&s, "Wedge");
         for (i, x0) in [55.0, 55.02].into_iter().enumerate() {
-            let mut piece = |op: &str| -> (f64, solidcraft_geom::Aabb3) {
+            let mut piece = |op: &str| -> (f64, torno_geom::Aabb3) {
                 let copy = s.execute("solid.move", &json!({"bodies": ["Wedge"], "translate": [0, 0, 0], "copy": true})).unwrap();
                 let copy = copy["created_bodies"][0].as_str().unwrap().to_string();
                 let cap = format!("Cap{i}{op}");
@@ -743,7 +742,7 @@ fn box_intersect_splits_the_end_off_a_raked_wedge_after_its_end_rounds() {
                 let state = s.model.state();
                 let body = &state.body(&target).unwrap().body;
                 assert!(body.validity().is_empty(), "lean {lean}, x >= {x0}, {op}: {:?}", body.validity());
-                (solidcraft_kernel::measure(body).unwrap().volume, body.mesh(&solidcraft_kernel::MeshTolerance::chord(1e-3)).unwrap().bounds())
+                (torno_kernel::measure(body).unwrap().volume, body.mesh(&torno_kernel::MeshTolerance::chord(1e-3)).unwrap().bounds())
             };
             let (slice, at) = piece("intersect");
             let (rest, _) = piece("cut");
@@ -797,7 +796,7 @@ fn closed_sweep_redefines_to_a_half_turn_torus_cut() {
     assert_eq!(s.model.state().bodies.len(), 1);
     let body = &s.model.state().bodies[0].body;
     assert!(body.validity().is_empty(), "{:?}", body.validity());
-    let mesh = body.mesh(&solidcraft_kernel::MeshTolerance::chord(0.02)).unwrap();
+    let mesh = body.mesh(&torno_kernel::MeshTolerance::chord(0.02)).unwrap();
     let expected = (std::f64::consts::PI * 64.0 - 64.0) * std::f64::consts::TAU * 30.0;
     assert!((mesh.measure().volume - expected).abs() < expected * 0.015);
     for (point, material) in [(solidcore_record::Vec3::new(30.0, 0.0, 0.0), false), (solidcore_record::Vec3::new(30.0, 0.0, 7.0), true)] {
@@ -930,7 +929,7 @@ fn faces_in_different_planes_extrude_each_from_the_picked_body() {
     s.execute("solid.box", &json!({"length":40,"width":25,"height":3,"body_name":"Block"})).unwrap();
     let before = s.undo.len();
     s.execute("solid.extrude", &json!({"faces":[[20,12,3],[20,0,1.5]],"face_body":"Block","distance":10,"operation":"join"})).unwrap();
-    let volume = solidcraft_kernel::measure(&s.model.state().body("Block").unwrap().body).unwrap().volume;
+    let volume = torno_kernel::measure(&s.model.state().body("Block").unwrap().body).unwrap().volume;
     // 3000 + 10000 (above the top) + 1200 (out of the y = 0 side, 3 mm high).
     assert!((volume - 14_200.0).abs() < 1e-5, "{volume}");
     assert_eq!(s.undo.len(), before + 1);
@@ -963,7 +962,7 @@ fn imported_rotated_face_extrusions_preserve_other_operations_and_bodies() {
     source.execute("solid.extrude", &json!({"distance":4,"operation":"join"})).unwrap();
     // An original public-safe STEP example, with rotated full-face seams and a
     // curved target. No vendor/user design is part of this regression.
-    let path = std::env::temp_dir().join(format!("solidcraft-face-extrusion-{}.step", std::process::id()));
+    let path = std::env::temp_dir().join(format!("torno-face-extrusion-{}.step", std::process::id()));
     source.execute("file.export", &json!({"path":path.to_string_lossy()})).unwrap();
     let mut imported = Session::default();
     imported.execute("doc.open", &json!({"path":path.to_string_lossy()})).unwrap();
@@ -993,8 +992,8 @@ fn imported_rotated_face_extrusions_preserve_other_operations_and_bodies() {
             // Fixed fine chord tolerance: cap subdivision can change the default
             // adaptive mesh's cylinder faceting without changing its analytic surface.
             let (a, b) = (
-                body.body.mesh(&solidcraft_kernel::MeshTolerance::chord(1e-5)).unwrap().measure().volume,
-                reference.body.mesh(&solidcraft_kernel::MeshTolerance::chord(1e-5)).unwrap().measure().volume,
+                body.body.mesh(&torno_kernel::MeshTolerance::chord(1e-5)).unwrap().measure().volume,
+                reference.body.mesh(&torno_kernel::MeshTolerance::chord(1e-5)).unwrap().measure().volume,
             );
             assert!((a - b).abs() < b.max(1.) * 1e-6, "{operation}: {} {a} vs {b}", body.name);
             assert!(body.body.validity().is_empty(), "{operation}: {}", body.name);
@@ -1011,8 +1010,8 @@ fn imported_rotated_face_extrusions_preserve_other_operations_and_bodies() {
             assert_eq!(unchanged.face_count(), other.face_count());
             assert_eq!(unchanged.color(), other.color());
             assert_eq!(
-                unchanged.mesh(&solidcraft_kernel::MeshTolerance::chord(0.01)).unwrap().positions,
-                other.mesh(&solidcraft_kernel::MeshTolerance::chord(0.01)).unwrap().positions,
+                unchanged.mesh(&torno_kernel::MeshTolerance::chord(0.01)).unwrap().positions,
+                other.mesh(&torno_kernel::MeshTolerance::chord(0.01)).unwrap().positions,
                 "unaffected imported body"
             );
         }
@@ -1118,7 +1117,7 @@ fn combine_of_a_piece_a_cut_used_to_split_off_takes_the_body_it_is_part_of() {
 
     let mut s = posts_cut();
     s.execute("solid.combine", &json!({"target": "Case", "tools": ["Posts", "Posts (1)"], "operation": "join"})).unwrap();
-    let reopened = Session::new(solidcraft_doc::Document::from_json(&s.doc.to_json()).unwrap());
+    let reopened = Session::new(torno_doc::Document::from_json(&s.doc.to_json()).unwrap());
     let join = reopened.model.results.last().unwrap();
     assert_eq!((join.error.as_deref(), join.warning.as_deref()), (None, piece));
     assert_eq!(reopened.model.state().bodies.iter().map(|b| b.name.as_str()).collect::<Vec<_>>(), ["Case"]);
@@ -1186,8 +1185,7 @@ fn prism_edge_in_a_round_cornered_slab_end_face_joins() {
 fn cut_up_to_the_plate_top_face_opens_the_hole() {
     let mut script: Value = serde_json::from_str(include_str!("../../../examples/regressions/cut_up_to_face_leaves_skin.json")).unwrap();
     let s = replay_value(&script);
-    let failed =
-        |r: &solidcraft_doc::FeatureResult| r.error.as_deref().and_then(solidcraft_doc::reselect_parts).map(|(feature, _)| feature.to_string());
+    let failed = |r: &torno_doc::FeatureResult| r.error.as_deref().and_then(torno_doc::reselect_parts).map(|(feature, _)| feature.to_string());
     assert!(s.model.results.iter().all(|r| r.error.is_none() || failed(r).as_deref() == Some("Extrude13")), "{:?}", s.model.results);
     assert!(s.model.results.iter().any(|r| failed(r).as_deref() == Some("Extrude13")));
     let state = s.model.state();
@@ -1204,8 +1202,7 @@ fn cut_up_to_the_plate_top_face_opens_the_hole() {
     // The same design without the cut.
     script["commands"].as_array_mut().unwrap().pop();
     let before = replay_value(&script);
-    let fine =
-        |s: &Session| s.model.state().body("Body7").unwrap().body.mesh(&solidcraft_kernel::MeshTolerance::chord(1e-5)).unwrap().measure().volume;
+    let fine = |s: &Session| s.model.state().body("Body7").unwrap().body.mesh(&torno_kernel::MeshTolerance::chord(1e-5)).unwrap().measure().volume;
     let (removed, want) = (fine(&before) - fine(&s), std::f64::consts::PI * 3.04 * 3.04 * 1.2);
     assert!((removed - want).abs() < 0.01, "removed {removed} mm³, want {want}");
 }
@@ -1246,7 +1243,7 @@ fn cut_beside_a_sealed_void_keeps_the_body() {
         assert_eq!(body.shell_count(), if operation == "cut" { 2 } else { 1 });
         assert!(body.validity().is_empty(), "{:?}", body.validity());
         // The revolved side's mesh stays 0.3 mm³ under its cylinder at any finer tolerance.
-        body.mesh(&solidcraft_kernel::MeshTolerance::chord(1e-5)).unwrap().measure().volume
+        body.mesh(&torno_kernel::MeshTolerance::chord(1e-5)).unwrap().measure().volume
     };
     // A box over the bottom edge: the segment beyond x = 15, 5 high.
     let edge_box = [("solid.box", json!({"length": 15, "width": 60, "height": 10, "corner": [15, -30, -5], "operation": "new", "body_name": "K"}))];
@@ -1289,7 +1286,7 @@ fn joined_loft_frames_reference_mesh_covers_each_face_once() {
         let s = replay(script);
         let state = s.model.state();
         let body = &state.body(name).unwrap().body;
-        let per_face = |m: &solidcraft_geom::Mesh| {
+        let per_face = |m: &torno_geom::Mesh| {
             let mut a = vec![0.0; body.face_count()];
             for (t, f) in m.triangles.iter().zip(&m.tri_face) {
                 let [p0, p1, p2] = t.map(|i| m.positions[i as usize]);
@@ -1298,8 +1295,8 @@ fn joined_loft_frames_reference_mesh_covers_each_face_once() {
             a
         };
         let size = body.size();
-        let mesh = per_face(&body.mesh(&solidcraft_kernel::MeshTolerance { chord: size * 3e-4, angle: Some(12f64.to_radians()) }).unwrap());
-        let fine = per_face(&body.mesh(&solidcraft_kernel::MeshTolerance { chord: size * 3e-5, angle: Some(3f64.to_radians()) }).unwrap());
+        let mesh = per_face(&body.mesh(&torno_kernel::MeshTolerance { chord: size * 3e-4, angle: Some(12f64.to_radians()) }).unwrap());
+        let fine = per_face(&body.mesh(&torno_kernel::MeshTolerance { chord: size * 3e-5, angle: Some(3f64.to_radians()) }).unwrap());
         for (fi, (m, f)) in mesh.iter().zip(&fine).enumerate() {
             assert!((m - f).abs() <= 0.01 * f.max(1.0), "{name} face {fi}: mesh {m:.0} mm², finer mesh {f:.0} mm²");
         }
@@ -1426,13 +1423,13 @@ fn empty_intersection_in_a_saved_design_fails_and_keeps_the_target() -> crate::R
     let result = s.execute("solid.extrude", &json!({"distance":10,"operation":"intersect","targets":["Tall","Base"]}))?;
     let id = result["feature"].as_u64().ok_or_else(|| crate::EngineError::Other("missing feature id".into()))?;
     assert!((volume(&s, "Base") - 500.0).abs() < 1e-6);
-    let mut doc = solidcraft_doc::Document::from_json(&s.doc.to_json())?;
+    let mut doc = torno_doc::Document::from_json(&s.doc.to_json())?;
     if let Some(f) = doc.feature_mut(id)
-        && let solidcraft_doc::FeatureKind::Extrude { extent, .. } = &mut f.kind
+        && let torno_doc::FeatureKind::Extrude { extent, .. } = &mut f.kind
     {
         extent.start_offset = Some("20 mm".into());
     }
-    let reopened = Session::new(solidcraft_doc::Document::from_json(&doc.to_json())?);
+    let reopened = Session::new(torno_doc::Document::from_json(&doc.to_json())?);
     assert!(reopened.model.result(id).and_then(|r| r.error.as_ref()).is_some_and(|e| e.contains("the intersection is empty")));
     assert_eq!(reopened.model.state().bodies.len(), 2);
     assert!((volume(&reopened, "Tall") - 4000.0).abs() < 1e-6);
@@ -1495,7 +1492,7 @@ fn spherical_shell_cuts_and_joins_a_block_crossing_its_hollow() {
         run("solid.revolve", json!({"sketch": "Ring", "profiles": [{"point": [0, 30]}], "axis": "l1", "operation": operation, "targets": ["Block"]}));
         // A cut through both spheres leaves two pieces, one each side of the shell.
         let state = s.model.state();
-        let got: f64 = state.bodies.iter().map(|b| solidcraft_kernel::measure(&b.body).unwrap().volume).sum();
+        let got: f64 = state.bodies.iter().map(|b| torno_kernel::measure(&b.body).unwrap().volume).sum();
         println!("#451 {operation} of the block from x = {x0} to {}: {got:.6} mm³ in {} bodies, expected {want:.6}", x0 + length, state.bodies.len());
         assert!((got - want).abs() < 1e-4 * want, "{operation} from x = {x0} to {}: {got} vs {want}", x0 + length);
         assert!(state.bodies.iter().all(|b| b.body.validity().is_empty()));

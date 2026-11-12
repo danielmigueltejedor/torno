@@ -16,7 +16,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
 
 use crate::icons::Palette;
-use solidcraft_theme::{IconColors, Tokens};
+use torno_theme::{IconColors, Tokens};
 
 /// The `format` tag of a theme file.
 pub const FORMAT: &str = "solidcraft-theme/1";
@@ -311,8 +311,8 @@ impl ThemeFile {
 }
 
 /// Strictly bounded strokes shared by file imports and direct preference updates.
-pub fn parse_borders(values: &BTreeMap<String, Value>) -> Result<solidcraft_theme::Borders, String> {
-    use solidcraft_theme::{Bevel, Borders, InsetBorder};
+pub fn parse_borders(values: &BTreeMap<String, Value>) -> Result<torno_theme::Borders, String> {
+    use torno_theme::{Bevel, Borders, InsetBorder};
     if values.len() > 7 {
         return Err("`borders` has more than seven roles".into());
     }
@@ -632,7 +632,7 @@ fn read_value(v: &Value, unknown: UnknownTabs) -> Result<ThemeFile, String> {
 fn parse_tabs(v: Option<&Value>, unknown: UnknownTabs) -> Result<BTreeMap<String, BTreeMap<String, Value>>, String> {
     let Some(v) = v else { return Ok(BTreeMap::new()) };
     let tabs = v.as_object().ok_or("`tabs` must be an object")?;
-    let known = solidcraft_theme::installed_tabs();
+    let known = torno_theme::installed_tabs();
     if unknown == UnknownTabs::Refuse && tabs.len() > known.names().len() {
         return Err("`tabs` has too many entries".into());
     }
@@ -1229,7 +1229,7 @@ pub fn resolve_base(theme: &ThemeFile) -> Tokens {
 /// text, not its base's fixed blue rail and grey cards (#4868). Each ink is whichever candidate
 /// reads best on the fills it sits on.
 fn file_view_from_theme(t: &mut Tokens, dark: bool, set: impl Fn(&str) -> bool) {
-    use solidcraft_theme::contrast_ratio;
+    use torno_theme::contrast_ratio;
     let fallback = t.text;
     let best = |inks: &[Color32], fills: &[Color32]| {
         let worst = |ink: Color32| fills.iter().map(|f| contrast_ratio(ink, *f)).fold(f64::INFINITY, f64::min);
@@ -1884,7 +1884,7 @@ mod tests {
 
     #[test]
     fn theme_options_opacity_contrast_protects_text_at_40_over_viewport_extremes() {
-        use solidcraft_theme::{composite, contrast_ratio};
+        use torno_theme::{composite, contrast_ratio};
         for base in ["light", "dark"] {
             let file = from_value(&json!({"format":FORMAT,"name":"Contrast","base":base,
                 "options":[{"id":"opacity","type":"range","default":40}]}))
@@ -1996,7 +1996,7 @@ mod tests {
 
     #[test]
     fn border_roles_roundtrip_on_either_base_and_preserve_legacy_defaults() {
-        use solidcraft_theme::{BorderRole, Borders};
+        use torno_theme::{BorderRole, Borders};
         let settings = json!({
             "primary":{"width":4,"color":"#ffffff"}, "secondary":{"width":1.5,"color":"#aabbcc","pattern":"dotted"},
             "container":{"width":1,"color":"#a8c8ed"},
@@ -2358,7 +2358,7 @@ mod tests {
 
     #[test]
     fn a_followed_file_reloads_when_rewritten_and_keeps_the_last_good_theme() {
-        let dir = std::env::temp_dir().join(format!("solidcraft-theme-follow-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("torno-theme-follow-{}", std::process::id()));
         std::fs::create_dir_all(&dir).unwrap();
         let file = dir.join("live.json");
         let path = file.to_string_lossy().to_string();

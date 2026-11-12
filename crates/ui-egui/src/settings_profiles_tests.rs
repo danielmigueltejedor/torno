@@ -83,7 +83,7 @@ fn a_profile_holds_input_and_interface_settings_but_not_the_machine() {
 
 #[test]
 fn profile_panel_layout_is_checked_separately_from_ordinary_preferences() {
-    use solidcraft_engine::panels::{Layout, LayoutEnvelope, PanelRegistry, WorkspaceId, encode};
+    use torno_engine::panels::{Layout, LayoutEnvelope, PanelRegistry, WorkspaceId, encode};
 
     let h = Harness::new();
     let mut doc = capture(&h.app, "Layout");
@@ -188,7 +188,7 @@ fn profiles_and_the_active_one_are_kept_between_runs() {
     let mut h = Harness::new();
     h.app.preferences.ui_scale = 1.25;
     run(&mut h, "settings.profile.save", json!({"name": "Laptop"}));
-    let mut other = crate::SolveApp::new(solidcraft_engine::Session::default(), crate::Services::default());
+    let mut other = crate::SolveApp::new(torno_engine::Session::default(), crate::Services::default());
     other.load_prefs(&h.app.prefs());
     assert_eq!(other.settings_profiles.names(), ["Laptop"]);
     assert_eq!(other.settings_profiles.active.as_deref(), Some("Laptop"));
@@ -266,7 +266,7 @@ fn theme_options_profiles_restore_replace_and_preserve_stale_values() {
     assert_eq!(out["skipped"], json!([]));
     assert_eq!(serde_json::to_value(&h.app.preferences.theme_options).unwrap(), options);
     h.frames(2);
-    assert_eq!(solidcraft_theme::Tokens::get().panel, egui::Color32::from_rgb(0xab, 0xcd, 0xef));
+    assert_eq!(torno_theme::Tokens::get().panel, egui::Color32::from_rgb(0xab, 0xcd, 0xef));
     run(&mut h, "settings.profile.apply", json!({"name":"Empty"}));
     assert!(h.app.preferences.theme_options.is_empty());
     run(&mut h, "settings.profile.apply", json!({"name":"Options"}));
@@ -275,7 +275,7 @@ fn theme_options_profiles_restore_replace_and_preserve_stale_values() {
 
 #[test]
 fn export_and_import_go_through_one_file_and_import_never_switches() {
-    let dir = std::env::temp_dir().join(format!("solidcraft-profile-test-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("torno-profile-test-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
     let path = dir.join("laptop.json");
     let path = path.to_str().unwrap();
@@ -483,7 +483,7 @@ fn general_profile_rows_save_replace_apply_and_show_real_state_in_both_themes() 
                 .unwrap();
             let count = crate::scenario::rect_of("dialog:section:Profiles:count").unwrap();
             assert!((count.left() - title.right() - 12.0).abs() < 1.1, "{theme}: count follows the painted title");
-            let t = solidcraft_theme::Tokens::get();
+            let t = torno_theme::Tokens::get();
             let rule = h
                 .shapes
                 .iter()
@@ -601,7 +601,7 @@ fn general_profile_rows_save_replace_apply_and_show_real_state_in_both_themes() 
         let active = crate::scenario::rect_of("prefs:profile:Desk:active").unwrap();
         assert!(desk.contains_rect(active));
         assert!((active.height() - 18.0).abs() < 0.5);
-        let t = solidcraft_theme::Tokens::get();
+        let t = torno_theme::Tokens::get();
         assert!(h.shapes.iter().any(|shape| matches!(&shape.shape, egui::Shape::Rect(rect) if rect.rect == desk && rect.fill == t.selected_bg && rect.stroke.color == t.form_primary)));
         assert!(h.shapes.iter().any(|shape| matches!(&shape.shape, egui::Shape::Text(text) if desk.contains(text.pos) && text.galley.job.text == "Desk" && text.galley.job.sections.iter().all(|section| section.format.color == t.selected_ink && section.format.font_id == crate::ui_kit::type_face::semibold(t.font_label)))));
         let body = crate::scenario::rect_of("prefs:page_body").unwrap();
@@ -672,7 +672,7 @@ fn general_inactive_profile_rows_export_rename_import_and_delete_without_applyin
     );
     h.step(&json!({"click":{"handle":"prefs:profile:Laptop:export"}})).unwrap();
     h.frames(6);
-    let path = h.dir.join("Laptop.solidcraft-profile.json");
+    let path = h.dir.join("Laptop.torno-profile.json");
     let exported: Value = serde_json::from_str(&std::fs::read_to_string(&path).unwrap()).unwrap();
     assert_eq!(exported["name"], "Laptop");
     assert_eq!(exported["preferences"]["zoom_reverse"], true);
@@ -702,7 +702,7 @@ fn general_inactive_profile_rows_export_rename_import_and_delete_without_applyin
         "the row rename editor does not fill the independent name entry"
     );
 
-    h.step(&json!({"choose_file":"Laptop.solidcraft-profile.json"})).unwrap();
+    h.step(&json!({"choose_file":"Laptop.torno-profile.json"})).unwrap();
     h.step(&json!({"click":{"handle":"prefs:profile:import"}})).unwrap();
     for _ in 0..600 {
         if h.app.settings_profiles.names() == ["Travel", "Desk", "Laptop"] {
@@ -951,7 +951,7 @@ fn moved_profile_settings_survive_saved_roundtrip_and_apply() {
     assert_eq!(sanitize(&doc).unwrap(), doc);
     h.app.settings_profiles.load(&serde_json::from_str::<Value>(&serde_json::to_string(&saved).unwrap()).unwrap());
     assert_eq!(h.app.settings_profiles.list[0], doc);
-    let path = h.dir.join("moved.solidcraft-profile.json");
+    let path = h.dir.join("moved.torno-profile.json");
     let exported = run(&mut h, "settings.profile.export", json!({"name":"Moved", "path":path}));
     assert_eq!(exported["profile"], doc);
     let written: Value = serde_json::from_str(&std::fs::read_to_string(&path).unwrap()).unwrap();

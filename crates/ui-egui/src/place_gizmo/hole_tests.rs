@@ -3,8 +3,8 @@
 
 use serde_json::json;
 use solidcore_record::Vec3;
-use solidcraft_engine::Sel;
-use solidcraft_engine::geom::prelude::*;
+use torno_engine::Sel;
+use torno_engine::geom::prelude::*;
 
 use crate::scenario::{Harness, handle_at};
 
@@ -258,7 +258,7 @@ fn distances(h: &Harness) -> [String; 2] {
 
 /// Reference distance `k` as a length (mm); a measured one carries floating-point noise in its text.
 fn distance(h: &Harness, k: usize) -> f64 {
-    h.app.session.doc.eval(&distances(h)[k], solidcraft_engine::doc::expr::Kind::Length).unwrap_or(f64::NAN)
+    h.app.session.doc.eval(&distances(h)[k], torno_engine::doc::expr::Kind::Length).unwrap_or(f64::NAN)
 }
 
 /// A hole at (10, 10) on the first block's top, held by the block's left edge (x = 0) at 10 mm.
@@ -382,8 +382,8 @@ fn a_pick_the_held_line_cannot_reach_says_why_and_leaves_the_hole() {
     // A refusal of the pick, not a failure: no red report, no Create Issue.
     h.frames(2);
     assert!(handle_at("dialog:create_issue").is_none(), "no Create Issue for the held line");
-    let _japanese = solidcraft_ui_text::scope("ja");
-    assert!(!solidcraft_ui_text::tr_label(crate::hole_place::HELD_OFF_ITS_LINE).is_ascii(), "the message reads in the user's language");
+    let _japanese = torno_ui_text::scope("ja");
+    assert!(!torno_ui_text::tr_label(crate::hole_place::HELD_OFF_ITS_LINE).is_ascii(), "the message reads in the user's language");
     drop(_japanese);
     // A typed distance changes what the dialog makes: the message gives way.
     h.step(&json!({"click": {"handle": "dialog:Distance 1"}})).unwrap();

@@ -10,14 +10,14 @@
 //! the history marker) keeps its icon too. The Sketch preference `sketch_state_icons` (on by
 //! default) turns it all off: then every sketch row looks as before.
 //!
-//! [`SolvedSketch::report`]: solidcraft_engine::doc::SolvedSketch
+//! [`SolvedSketch::report`]: torno_engine::doc::SolvedSketch
 
 use std::collections::HashMap;
 
 use egui::Color32;
 
 use crate::SolveApp;
-use solidcraft_theme::Tokens;
+use torno_theme::Tokens;
 
 /// A sketch's state as its last solve reports it.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -32,7 +32,7 @@ pub(crate) enum SketchState {
 }
 
 impl SketchState {
-    pub(crate) fn of(ss: &solidcraft_engine::doc::SolvedSketch) -> SketchState {
+    pub(crate) fn of(ss: &torno_engine::doc::SolvedSketch) -> SketchState {
         if !ss.report.ok() {
             SketchState::Conflict
         } else if ss.sketch.curves.is_empty() && ss.sketch.wires.is_empty() {
@@ -59,13 +59,13 @@ impl SketchState {
     /// The state in words, for the row's tooltip.
     pub(crate) fn text(self) -> String {
         match self {
-            SketchState::Empty => solidcraft_ui_text::tr("ui.no_geometry_yet").to_string(),
-            SketchState::Under(dof) => solidcraft_ui_text::format(
+            SketchState::Empty => torno_ui_text::tr("ui.no_geometry_yet").to_string(),
+            SketchState::Under(dof) => torno_ui_text::format(
                 if dof == 1 { "history.sketch_under_constrained_one" } else { "history.sketch_under_constrained" },
                 &[("count", &dof.to_string())],
             ),
-            SketchState::Full => solidcraft_ui_text::tr("ui.fully_constrained").to_string(),
-            SketchState::Conflict => solidcraft_ui_text::tr("ui.constraints_conflict").to_string(),
+            SketchState::Full => torno_ui_text::tr("ui.fully_constrained").to_string(),
+            SketchState::Conflict => torno_ui_text::tr("ui.constraints_conflict").to_string(),
         }
     }
 }

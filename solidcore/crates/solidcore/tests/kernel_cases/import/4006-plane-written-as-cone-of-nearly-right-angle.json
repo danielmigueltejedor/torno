@@ -49,6 +49,6 @@
   "ungraded": [],
   "what": "an annular plate r 4..10, 3 thick, whose top face is a CONICAL_SURFACE of semi-angle pi/2 - 7e-12 (a plane to within rounding, as the exporter wrote it): the face must be read, not refused as a 'bad cone', and the body stays closed",
   "why_not": [
-    "body \"plate\" is no kernel operation's output nor an operand: SolidCraft built it or changed the kernel's record"
+    "body \"plate\" is no kernel operation's output nor an operand: Torno built it or changed the kernel's record"
   ]
 }

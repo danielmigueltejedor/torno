@@ -143,7 +143,7 @@ fn d_prism(k: &mut Kernel, cx: f64, cy: f64, rr: f64, a: f64, z0: f64, height: f
     create_linear_sweep(k, &[Some(&l), Some(&c)], Vec3::Z, height, true).unwrap()
 }
 
-/// SolidCraft issue 851's part (the fork's `knife_edge_arc_part`): a 41 1/6 x 21 plate and
+/// Torno issue 851's part (the fork's `knife_edge_arc_part`): a 41 1/6 x 21 plate and
 /// the corner a circle of radius 21 about (62 1/6, -21) leaves, 10 high.
 fn knife_edge_arc_part(k: &mut Kernel) -> Brep {
     let tip = 62.0 + 1.0 / 6.0;

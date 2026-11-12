@@ -3,7 +3,7 @@
 # when a file its tests/kernel-cases/<area>/PATHS lists changes, or one of its cases; every area
 # runs when the shared core in tests/kernel-cases/PATHS-ALL changes, including the vendored
 # SolidCore source in solidcore; the ladder runs whenever any
-# area does. One job then builds solidcraft-cli once (release), checks that every
+# area does. One job then builds torno-cli once (release), checks that every
 # registry command has a case or an exemption (tests/kernel-cases/EXEMPT), and hands the CLI to a
 # matrix of shards as an artifact, one per selected area plus the ladder, in parallel, so the
 # wall time is the build plus the slowest shard. See tests/kernel-cases/README.md.
@@ -37,7 +37,7 @@ on:
       # The vendored kernel: a change here runs every area (tests/kernel-cases/PATHS-ALL).
       - "solidcore/**"
       # The rig itself: the grading, the runner, the selection and this workflow.
-      - "apps/solidcraft-cli/src/kernel_cases.rs"
+      - "apps/torno-cli/src/kernel_cases.rs"
       - "xtask/src/kernel_cases.rs"
       - "xtask/src/kernel_ladder.rs"
       - "scripts/ci/kernel_rig_plan.py"
@@ -57,7 +57,7 @@ on:
       # The vendored kernel: a change here runs every area (tests/kernel-cases/PATHS-ALL).
       - "solidcore/**"
       # The rig itself: the grading, the runner, the selection and this workflow.
-      - "apps/solidcraft-cli/src/kernel_cases.rs"
+      - "apps/torno-cli/src/kernel_cases.rs"
       - "xtask/src/kernel_cases.rs"
       - "xtask/src/kernel_ladder.rs"
       - "scripts/ci/kernel_rig_plan.py"
@@ -155,18 +155,18 @@ jobs:
         run: echo "RUSTC_WRAPPER=" >> "$GITHUB_ENV"
       - name: Build the CLI (release) and the rig's runner
         run: |
-          cargo build --release --locked -p solidcraft-cli
+          cargo build --release --locked -p torno-cli
           cargo build --locked -p xtask
       # A tar keeps the executable bits, which an artifact drops. xtask finds the repository from
       # the path it was built in (CARGO_MANIFEST_DIR), which is the same checkout path in every
       # job of this workflow.
       # Every registry command is used by a case or listed in tests/kernel-cases/EXEMPT.
       - name: Every command has a case
-        run: target/debug/xtask kernel-cases --coverage --cli target/release/solidcraft-cli
+        run: target/debug/xtask kernel-cases --coverage --cli target/release/torno-cli
       # A coverage-only run (the registry or the cases changed, no area selected) runs no shard.
       - name: Pack the binaries
         if: needs.plan.outputs.shards != '[]'
-        run: tar -cf "$RUNNER_TEMP/kernel-rig-bin.tar" -C target release/solidcraft-cli debug/xtask
+        run: tar -cf "$RUNNER_TEMP/kernel-rig-bin.tar" -C target release/torno-cli debug/xtask
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: needs.plan.outputs.shards != '[]'
         with:
@@ -208,7 +208,7 @@ jobs:
           else
             set -- --area "$SHARD" --known-failing "tests/kernel-cases/$SHARD/KNOWN_FAILING"
           fi
-          target/debug/xtask kernel-cases "$@" --cli target/release/solidcraft-cli --out "$RUNNER_TEMP/kernel-rig"
+          target/debug/xtask kernel-cases "$@" --cli target/release/torno-cli --out "$RUNNER_TEMP/kernel-rig"
       - name: Keep the results
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2

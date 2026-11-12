@@ -37,23 +37,23 @@ IGNORED_PREFIXES = ("docs/", "packaging/", ".github/", "scripts/claim/", "script
 IGNORED_FILES = ("vendor/README.md",)
 # Root files that a crate embeds (include_str!), so they are not ignorable documentation.
 EMBEDDED = {
-    "ATTRIBUTION.md": "solidcraft-ui-egui",
-    "LICENSE-MIT": "solidcraft-engine",
-    "LICENSE-APACHE": "solidcraft-engine",
-    "NOTICE": "solidcraft-engine",
-    "THIRD-PARTY-LICENSES.txt": "solidcraft-engine",
+    "ATTRIBUTION.md": "torno-ui-egui",
+    "LICENSE-MIT": "torno-engine",
+    "LICENSE-APACHE": "torno-engine",
+    "NOTICE": "torno-engine",
+    "THIRD-PARTY-LICENSES.txt": "torno-engine",
 }
 # Folders that only some packages read: the UI embeds the catalogs and xtask checks them; the MCP
 # server's tests read the agent skills.
-EMBEDDED_PREFIXES = {"assets/locales/": ("solidcraft-ui-egui", "xtask"), "skills/": ("solidcraft-mcp",)}
+EMBEDDED_PREFIXES = {"assets/locales/": ("torno-ui-egui", "xtask"), "skills/": ("torno-mcp",)}
 # Test data and the package directories whose tests (or xtask) read it. Any other folder under
 # tests/ selects the full workspace.
 TEST_DATA = {
     "tests/hole_matrix/": ("crates/engine/",),
     "tests/projection/": ("crates/engine/",),
     "tests/taper/": ("crates/engine/",),
-    "tests/oracle/": ("apps/solidcraft-cli/", "xtask/"),
-    "tests/action_matrix/": ("apps/solidcraft-cli/", "crates/engine/", "xtask/"),
+    "tests/oracle/": ("apps/torno-cli/", "xtask/"),
+    "tests/action_matrix/": ("apps/torno-cli/", "crates/engine/", "xtask/"),
 }
 # Vendored crates.io patches (vendor/<crate>/) and the dependency names through which workspace
 # packages reach them: egui-wgpu directly or through eframe. A vendored tree no entry names, such

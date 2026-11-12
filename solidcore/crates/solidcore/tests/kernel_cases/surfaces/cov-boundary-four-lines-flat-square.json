@@ -56,6 +56,6 @@
   "ungraded": [],
   "what": "a boundary surface through the four sides of a 20 x 20 square: the flat square",
   "why_not": [
-    "body \"Patch\" is no kernel operation's output nor an operand: SolidCraft built it or changed the kernel's record"
+    "body \"Patch\" is no kernel operation's output nor an operand: Torno built it or changed the kernel's record"
   ]
 }

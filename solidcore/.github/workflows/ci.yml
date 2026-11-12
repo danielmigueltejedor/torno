@@ -115,7 +115,7 @@ jobs:
       # solids report below reuses, so it is built once.
       # cargo-nextest runs the tests of all binaries in parallel (one process per test),
       # so a binary whose tests are slow no longer holds up the rest. nextest skips
-      # doctests, so they run separately. The two SolidCraft whole-corpus tests are
+      # doctests, so they run separately. The two Torno whole-corpus tests are
       # #[ignore]d and run nightly (nightly.yml), as before.
       - uses: taiki-e/install-action@v2
         if: needs.changes.outputs.full == 'true'
@@ -182,7 +182,7 @@ jobs:
           if-no-files-found: error
           retention-days: 1
 
-  # The kernel rig (#2394): SolidCraft's operation-level cases in
+  # The kernel rig (#2394): Torno's operation-level cases in
   # crates/solidcore/tests/kernel_cases, replayed through solidcore-ops' public
   # operations and graded against the rig's values (crates/solidcore-ops/tests/
   # kernel_cases.rs). The test is #[ignore]d out of the workspace run; here it runs whole,

@@ -11,7 +11,7 @@
 //! "not supported yet".
 //!
 //! The history is SMLib's tags, renumbered into the body's orders; a blend face, which SMLib
-//! leaves untagged, comes from the edge it replaces ([`solidcraft_smlib::history::blends`]).
+//! leaves untagged, comes from the edge it replaces ([`torno_smlib::history::blends`]).
 
 use solidcore_record::Vec3;
 
@@ -114,11 +114,11 @@ enum Kind {
 }
 
 mod imp {
-    use solidcraft_geom::prelude::*;
     use std::collections::BTreeSet;
+    use torno_geom::prelude::*;
 
     use solidcore_record::Vec3;
-    use solidcraft_smlib::{Blend, Brep, ChamferSecond, CheckLevel, Error as SmError, Turn};
+    use torno_smlib::{Blend, Brep, ChamferSecond, CheckLevel, Error as SmError, Turn};
 
     use super::Kind;
     use crate::blend_variable::RadiusSpline;
@@ -193,7 +193,7 @@ mod imp {
         const SAMPLES: usize = 512;
         let record = body.record();
         let e = record.edges.get(i)?;
-        let eval = solidcraft_geom::brep::eval::CurveEval::new(e.nurbs.as_ref().unwrap_or(&e.curve)).ok()?;
+        let eval = torno_geom::brep::eval::CurveEval::new(e.nurbs.as_ref().unwrap_or(&e.curve)).ok()?;
         let [t0, t1] = e.interval;
         let at = |k: usize| eval.point(t0 + (t1 - t0) * k as f64 / SAMPLES as f64);
         let mut best = f64::INFINITY;
@@ -216,8 +216,8 @@ mod imp {
     }
 
     fn sizes_ok(what: &str, sizes: &[f64]) -> Result<()> {
-        if sizes.is_empty() || sizes.len() > solidcraft_smlib::MAX_POINTS {
-            return Err(KernelError::Invalid(format!("{what}: select 1…{} edges", solidcraft_smlib::MAX_POINTS)));
+        if sizes.is_empty() || sizes.len() > torno_smlib::MAX_POINTS {
+            return Err(KernelError::Invalid(format!("{what}: select 1…{} edges", torno_smlib::MAX_POINTS)));
         }
         if sizes.iter().any(|s| !(s.is_finite() && *s > 1e-6 && *s < 1e6)) {
             return Err(KernelError::Invalid(format!("{what}: the size must be positive and finite")));
@@ -317,8 +317,8 @@ mod imp {
         let what = "fillet with corner setbacks";
         body.require_brep(what)?;
         sizes_ok(what, sizes)?;
-        if setbacks.is_empty() || setbacks.len() > solidcraft_smlib::MAX_POINTS {
-            return Err(KernelError::Invalid(format!("{what}: give 1…{} corners", solidcraft_smlib::MAX_POINTS)));
+        if setbacks.is_empty() || setbacks.len() > torno_smlib::MAX_POINTS {
+            return Err(KernelError::Invalid(format!("{what}: give 1…{} corners", torno_smlib::MAX_POINTS)));
         }
         if setbacks.iter().any(|(p, d)| !p.is_finite() || !(d.is_finite() && *d > 1e-6 && *d < 1e6)) {
             return Err(KernelError::Invalid(format!("{what}: each corner is a finite point with a positive, finite setback")));
@@ -341,8 +341,8 @@ mod imp {
         let what = "fillet with open setback corners";
         body.require_brep(what)?;
         sizes_ok(what, sizes)?;
-        if setbacks.is_empty() || setbacks.len() > solidcraft_smlib::MAX_POINTS {
-            return Err(KernelError::Invalid(format!("{what}: give 1…{} corners", solidcraft_smlib::MAX_POINTS)));
+        if setbacks.is_empty() || setbacks.len() > torno_smlib::MAX_POINTS {
+            return Err(KernelError::Invalid(format!("{what}: give 1…{} corners", torno_smlib::MAX_POINTS)));
         }
         if setbacks.iter().any(|(p, d)| !p.is_finite() || !(d.is_finite() && *d > 1e-6 && *d < 1e6)) {
             return Err(KernelError::Invalid(format!("{what}: each corner is a finite point with a positive, finite setback")));
@@ -358,7 +358,7 @@ mod imp {
                 .map_err(|e| crate::blend::with_continuation(e, next))?;
         // SMLib's indices in the sheet's own orders.
         let place = |list: &[usize], i: usize| if list.is_empty() { Some(i) } else { list.get(i).copied() };
-        let renumber = |hole: &solidcraft_smlib::Hole| -> Result<Vec<(usize, bool)>> {
+        let renumber = |hole: &torno_smlib::Hole| -> Result<Vec<(usize, bool)>> {
             hole.edges
                 .iter()
                 .map(|h| {
@@ -424,7 +424,7 @@ mod imp {
     }
 
     /// `op` on `body` in SMLib, tagged as operand 0, checked, decoded, with its history.
-    fn run(body: &Body, what: &str, edges: &[usize], op: impl FnOnce(&Brep) -> solidcraft_smlib::Result<Brep>) -> Result<Body> {
+    fn run(body: &Body, what: &str, edges: &[usize], op: impl FnOnce(&Brep) -> torno_smlib::Result<Brep>) -> Result<Body> {
         run_with(body, what, edges, &[], |b| op(b).map(|r| (r, ()))).map(|(out, (), _)| out)
     }
 
@@ -437,8 +437,8 @@ mod imp {
         what: &str,
         edges: &[usize],
         corners: &[Vec3],
-        op: impl FnOnce(&Brep) -> solidcraft_smlib::Result<(Brep, T)>,
-    ) -> Result<(Body, T, Option<solidcraft_smlib::history::Order>)> {
+        op: impl FnOnce(&Brep) -> torno_smlib::Result<(Brep, T)>,
+    ) -> Result<(Body, T, Option<torno_smlib::history::Order>)> {
         guard(what, || {
             let (sb, order) = smlib_body_ordered(body)?;
             let tagged = sb.tagged(0).map_err(|e| failed(what, "tag", e))?;
@@ -473,7 +473,7 @@ mod imp {
                         beside = format!("{beside}: {}", why.words());
                     }
                     let fits = match kind {
-                        solidcraft_smlib::FitKind::Scale => {
+                        torno_smlib::FitKind::Scale => {
                             format!("the largest that fits is {} times the distances given", crate::blend::trimmed_mm(size))
                         }
                         kind => crate::blend::largest_fit_note(kind.word(), size),
@@ -504,7 +504,7 @@ mod imp {
                     Ok(mut h) => {
                         let operand = History::identity(body).edges;
                         let taken_up = taken_up(body, edges, &h);
-                        solidcraft_smlib::history::blends(&mut h, &operand, edges, &taken_up);
+                        torno_smlib::history::blends(&mut h, &operand, edges, &taken_up);
                         Some(with_corners(h))
                     }
                     Err(e) => {

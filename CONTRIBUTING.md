@@ -1,8 +1,8 @@
-# Contributing to SolidCraft
+# Contributing to Torno
 
 Agents: start from the router in [AGENTS.md](AGENTS.md), which points to a short skill in [`skills/`](skills/README.md) for each kind of work. This page stays the full human guide.
 
-SolidCraft is an open-source parametric 3D CAD app written in pure Rust.
+Torno is an open-source parametric 3D CAD app written in pure Rust.
 You sketch on a plane, constrain the sketch, turn profiles into solids, and
 change a parameter to watch the timeline rebuild. It runs as a desktop app (Windows, macOS, Linux), in
 the browser (wasm + WebGPU/WebGL2), headless from a CLI, and as an MCP server that AI agents can
@@ -22,7 +22,7 @@ Questions, ideas or want to say what you're working on? Join the [Discord](https
 Kernel and geometry work is welcome: booleans, fillets, chamfers, shell, offsets, sweeps and lofts,
 threads and holes, STEP/IGES import and export, tessellation. It goes in `solidcore/`, the vendored
 solidcore kernel, following [`solidcore/docs/layers.md`](solidcore/docs/layers.md) and
-`skills/solidcraft-layers/SKILL.md`. SolidCraft's own `crates/kernel`, `crates/smlib` and
+`skills/torno-layers/SKILL.md`. Torno's own `crates/kernel`, `crates/smlib` and
 `crates/geom` only shrink toward the seam (ops, tess, record); please don't grow them.
 
 A kernel pull request targets `main` like any other; a change that touches the kernel and the app is one
@@ -48,24 +48,24 @@ build you also need `rustup target add wasm32-unknown-unknown` and [`trunk`](htt
 ([documentation](https://trunk-rs.github.io/trunk/)).
 
 ```sh
-git clone https://github.com/tangency-labs/solidcraft && cd solidcraft
-cargo run --release -p solidcraft -- --sample      # desktop app with a sample part
+git clone https://github.com/tangency-labs/solidcraft && cd torno
+cargo run --release -p torno -- --sample      # desktop app with a sample part
 cargo xtask test                                   # unit, engine and UI-scenario tests
 cargo xtask ci                                     # everything a PR must pass (see below)
 ```
 
-SolidCraft is the product, repository, Cargo package and executable name.
-Build the desktop app with `cargo build --release -p solidcraft`, or the CLI with
-`cargo build --release -p solidcraft-cli`. Run the CLI with
-`cargo run --release -p solidcraft-cli -- commands` (or `target/release/solidcraft-cli commands`
+Torno is the product, repository, Cargo package and executable name.
+Build the desktop app with `cargo build --release -p torno`, or the CLI with
+`cargo build --release -p torno-cli`. Run the CLI with
+`cargo run --release -p torno-cli -- commands` (or `target/release/torno-cli commands`
 after building). The old name appears only in the compatibility shims listed in
 [docs/compatibility.md](docs/compatibility.md); don't add new uses of it.
 
-Web: `cd apps/solidcraft-web && trunk serve --release`, then open the printed URL (`?sample`
+Web: `cd apps/torno-web && trunk serve --release`, then open the printed URL (`?sample`
 opens the sample part, `?webgl` forces WebGL2). Saving and opening files in the browser needs
 HTTPS or localhost, because it uses the Origin Private File System.
 
-Windows from Linux: `cargo xwin build --release --target x86_64-pc-windows-msvc -p solidcraft`.
+Windows from Linux: `cargo xwin build --release --target x86_64-pc-windows-msvc -p torno`.
 
 ### NixOS: `nix develop`
 
@@ -75,7 +75,7 @@ loader wgpu renders through, and libdbus-1, which rfd's file dialogs reach xdg-d
 through (a dialog then never appears and the pick returns no path):
 
 ```
-ERROR solidcraft: winit EventLoopError: ... The wayland library could not be loaded
+ERROR torno: winit EventLoopError: ... The wayland library could not be loaded
 ERROR eframe::native::run: Exiting because of error: WGPU error: Failed to create surface for any enabled backend: {}
 ERROR rfd::backend::xdg_desktop_portal::portal::libdbus: Can't connect to a portal: libdbus-1.so not found
 ```
@@ -88,10 +88,10 @@ may need a matching [nixGL wrapper](https://github.com/nix-community/nixGL).
 The default development shell retains the Rust/C toolchain already on `PATH`;
 `nix develop .#rust` supplies the pinned toolchain and builds in `target/nix`.
 
-To launch, use `nix run .#solidcraft -- --sample`. To install the app's terminal
-commands, desktop entry and generated icons, use `nix profile install .#solidcraft`.
+To launch, use `nix run .#torno -- --sample`. To install the app's terminal
+commands, desktop entry and generated icons, use `nix profile install .#torno`.
 `nix build` alone creates a build result; it does not install a launcher in your
-desktop menu. The installed `solidcraft` command runs the wrapped app; `solidcraft-cli` is included as
+desktop menu. The installed `torno` command runs the wrapped app; `torno-cli` is included as
 well. See
 [Nix installation and troubleshooting](docs/nix.md) for remote-flake commands,
 desktop integration and how to distinguish an old executable on `PATH`.
@@ -117,25 +117,25 @@ The [architecture page](docs/architecture.md) has the layer table. The short ver
   commands.
 - `crates/ui-egui`: the desktop/web front end (egui + wgpu). It's swappable; nothing below it
   depends on egui.
-- `crates/mcp`, `apps/solidcraft`, `apps/solidcraft-cli`, `apps/solidcraft-web`.
+- `crates/mcp`, `apps/torno`, `apps/torno-cli`, `apps/torno-web`.
 
 `cargo xtask layers` fails the build if a lower layer depends on a higher one.
 
-Whether a change belongs in SolidCraft or in SolidCore is decided by
+Whether a change belongs in Torno or in SolidCore is decided by
 [`solidcore/docs/layers.md`](solidcore/docs/layers.md). Its tests: the **kernel** (`solidcore`)
 computes geometry any client could use; **ops** (`solidcore-ops`) is a recipe of kernel calls for a
-workflow, with no geometric quantity of its own; the **app** (SolidCraft) holds state and maps input
+workflow, with no geometric quantity of its own; the **app** (Torno) holds state and maps input
 to commands, with no geometry math.
 
 ## Rules that aren't negotiable
 
-1. **Independent.** SolidCraft is independent. Behaviour is designed from public
+1. **Independent.** Torno is independent. Behaviour is designed from public
    documentation, general CAD conventions and user feedback. Reference tests use analytic values
    and open-source tools. We don't drive, script, automate or extract data from commercial CAD
    products, and we never copy another product's code, icons, artwork, help text, tooltips,
    templates or materials. Command ids are our own (`solid.fillet`).
 2. **No GPL/LGPL/AGPL code, not even reading it.** That rules out OpenCASCADE, FreeCAD
-   (including planegcs), SolveSpace, CadQuery/OCP, LibreCAD and QCAD. SolidCraft is
+   (including planegcs), SolveSpace, CadQuery/OCP, LibreCAD and QCAD. Torno is
    MIT OR Apache-2.0, and its solver and blends are written from the maths. (Running an
    open-source application to get reference values for a test is fine; reading its source is
    not.) Permissive
@@ -149,12 +149,12 @@ to commands, with no geometry math.
    `cargo xtask assets` enforces this.
 4. **Never crash.** People trust a CAD app with their work.
    - Non-test code never uses `unwrap`, `expect`, `panic!` or indexing on input-derived data.
-     There's no `unsafe` outside `apps/solidcraft/src/open_documents.rs` (macOS file-open events),
-     `apps/solidcraft/src/native_crash.rs` (Windows native crash capture) and
+     There's no `unsafe` outside `apps/torno/src/open_documents.rs` (macOS file-open events),
+     `apps/torno/src/native_crash.rs` (Windows native crash capture) and
      `crates/threedx-client/src/macos.rs` (the 3Dconnexion driver's client API on macOS), and the
      compiler denies it.
    - An unsupported case returns an error ("not supported yet: …"); it never panics.
-   - Every call into the vendored kernel goes through `solidcraft_kernel::guard`.
+   - Every call into the vendored kernel goes through `torno_kernel::guard`.
    - Every crash fix comes with a regression test.
 5. **Everything is a command, with a test.** A new feature means a `CommandSpec` in
    `crates/engine/src/cmd/` with input and output schemas (see
@@ -170,7 +170,7 @@ to commands, with no geometry math.
    `hand_rolled_camera_input_is_rejected` test fails if a page does.
 
 Labels, parameter docs, messages and docs use the terms in the
-[glossary](https://docs.solidcraft.io/reference/glossary.html): one term for each idea. A change that adds a new
+[glossary](https://getnodalia.github.io/torno/reference/glossary.html): one term for each idea. A change that adds a new
 idea adds its term there.
 
 [AGENTS.md](AGENTS.md) has the long form of these rules. It's written for AI agents, but it's
@@ -196,12 +196,12 @@ in closed form or exact. Draft it as a rig case here, export it with
 that folder's README describes. The mirror workflow pushes the change to
 [tangency-labs/solidcore](https://github.com/tangency-labs/solidcore). `tests/kernel-cases/` takes
 no new cases: its `CASES` list only shrinks (`cargo xtask lists`). App-level cases (what a command
-does, the UI, product rules) stay in SolidCraft, as tests in their area's existing test file or UI
+does, the UI, product rules) stay in Torno, as tests in their area's existing test file or UI
 scenarios.
 
 The naming corpus checks persistent names: every name a corpus design stores still finds a face or
 an edge, and two builds name its faces and edges alike
-(`cargo test --profile ci -p solidcraft-cli --test naming_corpus`).
+(`cargo test --profile ci -p torno-cli --test naming_corpus`).
 [docs/mutation-testing.md](docs/mutation-testing.md) shows how to find kernel behaviour these
 black-box suites miss.
 
@@ -231,9 +231,9 @@ no LTO, and debug assertions off. It
 builds several times faster than `--release`. If a test fails only in a plain debug build, say so
 in the PR. `cargo xtask test` builds the tests with it and then runs every test binary at once
 (`cargo test` runs them one after another); arguments after `--` go to each binary, e.g.
-`cargo xtask test -- shell`. Set `SOLIDCRAFT_TEST_JOBS` to a positive integer to opt into a
+`cargo xtask test -- shell`. Set `TORNO_TEST_JOBS` to a positive integer to opt into a
 shared bound on top-level test/side commands for `cargo xtask test` and `cargo xtask ci`.
-For example, `SOLIDCRAFT_TEST_JOBS=2` allows two commands at once; the sequential wasm/doc
+For example, `TORNO_TEST_JOBS=2` allows two commands at once; the sequential wasm/doc
 worker consumes one of those slots. Every binary and side check still runs after failures.
 Without the variable the existing concurrency is unchanged. With it set, each test binary
 inherits `RUST_TEST_THREADS` and `ACTION_MATRIX_JOBS` of `max(1, cpus / jobs)` — the machine's
@@ -260,13 +260,13 @@ Pull requests skip a few heavy tests (one to twelve minutes each), which run in 
 Check that validation after merging. They are listed in
 `.config/nextest.toml` and the [testing page](docs/book/src/dev/testing.md):
 
-- `solidcraft-engine`: `tests::hostile_params_never_panic`, everything in `tests::robustness`,
+- `torno-engine`: `tests::hostile_params_never_panic`, everything in `tests::robustness`,
   `pattern_suppress_tests::enclosure_arc_extinction_keeps_a_real_sharp_inner_lip_after_resize_and_reopen`,
   `pattern_suppress_tests::enclosure_datums_follow_wall_height_and_board_depth_with_material_proofs`,
   `cmd::plastic::tests::enclosure_snap_fit_follows_resized_front_wall`, the `atomic_commands` contract tests
-- `solidcraft-kernel`: `tests::boolean_identity_on_tangent_primitives`, `tspline::tests::hostile_tsplines_never_panic`, and the `boolean_props` property tests
+- `torno-kernel`: `tests::boolean_identity_on_tangent_primitives`, `tspline::tests::hostile_tsplines_never_panic`, and the `boolean_props` property tests
   (these run only in the nightly "Property tests" job: their inputs are random, so main skips them too)
-- `solidcraft-ui-egui` scenarios: `acceptance_sensor_enclosure`
+- `torno-ui-egui` scenarios: `acceptance_sensor_enclosure`
 
 **The action matrix** tries every ordinary action on every face, edge, vertex and body of a
 corpus of designs against a checked-in ratchet ([docs/action-matrix.md](docs/action-matrix.md)).
@@ -274,16 +274,16 @@ A pull request that makes an action pass should record it with `cargo xtask acti
 one that makes a passing action fail fails the sample every CI run checks.
 
 **The reference tests** live in [`tests/oracle/`](tests/oracle/), each a `recipe.json`
-in our own format with an `expected.json` beside it. SolidCraft rebuilds the recipe and compares
+in our own format with an `expected.json` beside it. Torno rebuilds the recipe and compares
 body count, volume, area, centre of mass and bounding box (and, where there is a `reference.stl`,
 the surface itself). Expected values are either worked out in closed form
 (`tools/oracle-analytic/`) or computed by building the same recipe in FreeCAD, run as a separate
 program (`tools/freecad-oracle/`); each file says which. The generated
 [reference test report](docs/oracle.md) has the current case count and results. The reference-test
 CI job runs `cargo xtask oracle` during full validation, and on pull requests that reach
-`solidcraft-cli`. A case that
+`torno-cli`. A case that
 fails because of a known bug names its issue in `expected.json` (`"known_failure": "#123"`);
-never change an expected value to match SolidCraft's output.
+never change an expected value to match Torno's output.
 
 ## Changing the design file format
 
@@ -438,7 +438,7 @@ Re-run only a job that runner trouble cancelled, with "Re-run failed jobs". Whil
 active, follow an open PR through its status changes; at handoff, clearly identify anything
 still awaiting merge.
 
-Much of SolidCraft so far was written by AI coding agents (Claude) working in parallel, each
+Much of Torno so far was written by AI coding agents (Claude) working in parallel, each
 owning one area, with a human setting direction and reporting bugs. Their working notes are in
 [AGENTS.md](AGENTS.md). Human contributors are just as welcome. Use whatever tools you like, as
 long as the change meets the rules above.
@@ -518,6 +518,6 @@ about 250 KB and a clip under about 1 MB.
 ## Licence
 
 By contributing you agree that your contribution is licensed as MIT OR Apache-2.0, like the rest
-of SolidCraft. A contribution to the brand and interface (`crates/ui-kit`, `crates/look`,
+of Torno. A contribution to the brand and interface (`crates/ui-kit`, `crates/look`,
 `crates/theme`, `assets/branding`, `assets/icons/app`) is licensed under
-[LICENSE-BRAND](LICENSE-BRAND), which lets the maintainers also license it as MIT OR Apache-2.0. SolidCraft isn't affiliated with any CAD vendor; product names are trademarks of their owners (see NOTICE).
+[LICENSE-BRAND](LICENSE-BRAND), which lets the maintainers also license it as MIT OR Apache-2.0. Torno isn't affiliated with any CAD vendor; product names are trademarks of their owners (see NOTICE).

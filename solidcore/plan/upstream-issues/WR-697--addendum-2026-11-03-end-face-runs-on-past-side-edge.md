@@ -8,7 +8,7 @@ Updates: WR-697
   - An End on its end face G, whose rail on its face F runs past the far end P of its side edge (between F and G), is refused with `SM_FILERR_NO_ROOM`. The refusal names the radius whose rail reaches P.
   - That refusal also fires where G runs on tangentially past P into a face H, which F's next edge from P bounds. There the rail ends on H. G and H are one smooth surface, and cutting the round where it meets them (the global merge, WR-303) is exact.
   - Before smlib#124, the fork and this port built such an End through WR-303's dropped end rib and global merge.
-- **Trigger:** SolidCraft #11360's `a_round_ending_in_an_earlier_round_matches_both_together`. The part is the arc-wall plate: the plate x 0..41 1/6, y -21..0, plus the corner x 41 1/6..62 1/6 less the cylinder r 21 about (62 1/6, -21), 10 high.
+- **Trigger:** Torno #11360's `a_round_ending_in_an_earlier_round_matches_both_together`. The part is the arc-wall plate: the plate x 0..41 1/6, y -21..0, plus the corner x 41 1/6..62 1/6 less the cylinder r 21 about (62 1/6, -21), 10 high.
   - The arc's top edge (or the back top edge) is rounded r 2. Then, in a second call, the upright at the knife-edge tip (62 1/6, 0) is rounded r 2.
   - The second round's End is on the first round. Its side edge is the first round's boundary: on the back face for the arc case, on the arc wall for the back-edge case. Its far end P lies on the first round's top rail, where that round runs on tangentially into the top face.
   - Refused with 1.04762 and 1.05 named. Rounded together at r 2, both build.

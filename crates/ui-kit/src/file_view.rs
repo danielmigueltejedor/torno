@@ -5,7 +5,7 @@ use super::{
 };
 use crate::BackingTooltipExt as _;
 use egui::{Align2, FontId, InnerResponse, Rect, Response, Sense, Stroke, TextureId, Ui, Vec2, pos2, vec2};
-use solidcraft_theme::Tokens;
+use torno_theme::Tokens;
 
 pub struct RecoveryMessage<'a> {
     pub title: &'a str,

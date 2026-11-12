@@ -149,7 +149,7 @@
     "blend_dropping"
   ],
   "ungraded": [
-    "continuity: SolidCraft computes it"
+    "continuity: Torno computes it"
   ],
   "what": "an R0.5 round on a single straight bottom edge of a box whose end runs out against a cylindrical boss wall",
   "why_not": []

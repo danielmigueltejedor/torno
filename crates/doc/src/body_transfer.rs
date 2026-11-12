@@ -71,7 +71,7 @@ pub(crate) fn evaluate(doc: &Document, st: &mut ModelState, bodies: &[String], f
         if doc.model_body_component(old) != from {
             return Err(DocError::Invalid(format!("body `{name}` no longer belongs to transfer source component {from}")));
         }
-        let shape = if crate::is_identity(&transform) { old.body.clone() } else { solidcraft_kernel::transform_matrix(&old.body, transform)? };
+        let shape = if crate::is_identity(&transform) { old.body.clone() } else { torno_kernel::transform_matrix(&old.body, transform)? };
         let mut body = ModelBody::new(old.name.clone(), shape, old.feature);
         body.component = to;
         body.transferred = true;

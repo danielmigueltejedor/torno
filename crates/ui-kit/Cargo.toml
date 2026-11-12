@@ -1,5 +1,5 @@
 [package]
-name = "solidcraft-ui-kit"
+name = "torno-ui-kit"
 description = "The UI kit and its components: tokenised egui controls, panels, menus and the ribbon, app bar, history bar, navigation bar, view compass, window chrome and theme files, drawn from plain data"
 version.workspace = true
 edition.workspace = true
@@ -15,14 +15,14 @@ test-support = ["dep:image"]
 
 [dependencies]
 # The token contract every control draws with.
-solidcraft-theme = { workspace = true }
+torno-theme = { workspace = true }
 # The widget registry (handles, rects, counts) every control publishes into.
-solidcraft-ui-registry = { workspace = true }
-solidcraft-ui-text = { workspace = true }
-solidcraft-color = { workspace = true }
+torno-ui-registry = { workspace = true }
+torno-ui-text = { workspace = true }
+torno-color = { workspace = true }
 # The blurred backing behind translucent panels: drawn over the viewport's GPU picture.
-solidcraft-viewport-egui = { workspace = true }
-solidcraft-viewport-gpu = { workspace = true }
+torno-viewport-egui = { workspace = true }
+torno-viewport-gpu = { workspace = true }
 egui = { workspace = true }
 egui-wgpu = { workspace = true }
 serde = { workspace = true }

@@ -20,7 +20,7 @@ Updates: WR-697
   - **Containment** (`blend_setback::containment`): beside a curved face it is certified by the faces' implicit forms in Bernstein form. Along a column on the face the form is divided by `v^2`. A fill not certified on the material's side is refused.
   - **Definition** (`fillet_round_as_definition`, #2488): the fill's patches keep its definition with the faces as they are: a curved face's record keeps its quadric (`PlaneRecord::quadric`: kind, axis, radius, slope, side), a move turns its axis and scales its radius, and the patch re-certifies from it. A net re-made with weights that differ by rounding is bounded by `control_distance`'s weight term.
   - **Deviations from the fork's work in progress:** the curved faces are found apart from `corner_planes`. The fork's `SBSCALE` environment override is not taken. The fork's process-wide `CurvedCounts` are per-fill `FillStats` fields. A failing call within a growth trial is that call's error; the fork counts it as not certified.
-- **Triggers:** the fork's capi cases `setback curved_d_prism_corner`, `curved_d_pocket_corner`, `curved_knife_edge_corner` (SolidCraft #851's part) and `curved_sphere_corner`, rebuilt from solidcore calls.
+- **Triggers:** the fork's capi cases `setback curved_d_prism_corner`, `curved_d_pocket_corner`, `curved_knife_edge_corner` (Torno #851's part) and `curved_sphere_corner`, rebuilt from solidcore calls.
 - **Confirmed:** in solidcore, graded on the faces' closed forms, not on a net. Every case passes `check_brep` Level2 with the Setback's face count. Each of its 2 n patches is one Bezier span.
 
   | Case | Faces | Setbacks | Worst seam (rad) | Spring edges off the face | Least principal curvature (k) | Past the faces |

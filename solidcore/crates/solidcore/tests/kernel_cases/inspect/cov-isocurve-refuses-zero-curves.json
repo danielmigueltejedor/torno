@@ -32,6 +32,6 @@
   "ungraded": [],
   "what": "isocurves with a count of 0",
   "why_not": [
-    "the failure is SolidCraft's, not a kernel operation's: step 2 (inspect.isocurve): invalid parameters for `inspect.isocurve`: `count` must be a whole number of curves each way, 1…100"
+    "the failure is Torno's, not a kernel operation's: step 2 (inspect.isocurve): invalid parameters for `inspect.isocurve`: `count` must be a whole number of curves each way, 1…100"
   ]
 }

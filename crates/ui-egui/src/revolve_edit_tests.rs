@@ -2,9 +2,9 @@ use crate::dialogs::{Dialog, Kind, apply_commands};
 use crate::scenario::Harness;
 use serde_json::{Value, json};
 use solidcore_record::Vec3;
-use solidcraft_engine::Sel;
-use solidcraft_engine::doc::{AxisRef, FeatureKind};
-use solidcraft_engine::geom::prelude::*;
+use torno_engine::Sel;
+use torno_engine::doc::{AxisRef, FeatureKind};
+use torno_engine::geom::prelude::*;
 
 fn make(h: Harness, axis: Value) -> Harness {
     make_params(h, axis, json!({}))
@@ -36,12 +36,12 @@ fn unchanged_all_profiles_retains_future_geometry_but_reselection_is_explicit() 
         }
         h.step(&json!({"widget":"OK"})).unwrap();
         let FeatureKind::Revolve { profiles, .. } = &h.app.session.doc.find_feature("Turn").unwrap().kind else { panic!("revolve") };
-        assert_eq!(matches!(profiles, solidcraft_engine::doc::ProfileSel::All), !reselect);
+        assert_eq!(matches!(profiles, torno_engine::doc::ProfileSel::All), !reselect);
         h.app.run("sketch.edit", json!({"sketch":"Profile"})).unwrap();
         h.app.run("sketch.rectangle.two_point", json!({"p0":[20,0],"p1":[25,5]})).unwrap();
         h.app.run("sketch.finish", json!({})).unwrap();
         let state = h.app.session.world_state().unwrap();
-        let volume: f64 = state.bodies.iter().map(|b| solidcraft_engine::doc::kernel::measure(&b.body).unwrap().volume).sum();
+        let volume: f64 = state.bodies.iter().map(|b| torno_engine::doc::kernel::measure(&b.body).unwrap().volume).sum();
         let expected = if reselect { 490.873852 } else { 1374.446786 };
         assert!((volume - expected).abs() < 0.3, "{volume} != {expected}");
     }
@@ -57,20 +57,20 @@ fn to_object_noop_preserves_cut_targets_and_untargeted_body() {
     let state = h.app.session.world_state().unwrap();
     // A quarter annulus separates the stock into inner and outer solids. Both are
     // results of cutting A; checking only the first named solid loses material.
-    let cut_volume = |state: &solidcraft_engine::doc::ModelState| -> f64 {
-        state.bodies.iter().filter(|b| b.name != "B").map(|b| solidcraft_engine::doc::kernel::measure(&b.body).unwrap().volume).sum()
+    let cut_volume = |state: &torno_engine::doc::ModelState| -> f64 {
+        state.bodies.iter().filter(|b| b.name != "B").map(|b| torno_engine::doc::kernel::measure(&b.body).unwrap().volume).sum()
     };
     let before_a = cut_volume(&state);
     let removed = 0.5 * (15.0f64.powi(2) - 10.0f64.powi(2)) * 5.0 * std::f64::consts::FRAC_PI_2;
     assert!((before_a - (2000.0 - removed)).abs() < 0.2, "cut results {:?}: {before_a}", state.bodies.iter().map(|b| &b.name).collect::<Vec<_>>());
     let in_cut_stock =
-        |p| state.bodies.iter().filter(|b| b.name != "B").any(|b| b.body.classify_point(p).unwrap() == solidcraft_engine::kernel::PointClass::Inside);
+        |p| state.bodies.iter().filter(|b| b.name != "B").any(|b| b.body.classify_point(p).unwrap() == torno_engine::kernel::PointClass::Inside);
     assert!(in_cut_stock(solidcore_record::Vec3::new(2.0, 2.0, 2.0)));
     assert!(in_cut_stock(solidcore_record::Vec3::new(18.0, 2.0, 18.0)));
     assert!(!in_cut_stock(solidcore_record::Vec3::new(9.0, 2.0, 9.0)));
     assert_eq!(
         state.body("B").unwrap().body.classify_point(solidcore_record::Vec3::new(9.0, 2.0, 9.0)).unwrap(),
-        solidcraft_engine::kernel::PointClass::Inside
+        torno_engine::kernel::PointClass::Inside
     );
     let before_bounds: Vec<_> = state.bodies.iter().map(|b| (b.name.clone(), b.mesh().bounds())).collect();
     let undo = h.app.session.undo.len();
@@ -78,7 +78,7 @@ fn to_object_noop_preserves_cut_targets_and_untargeted_body() {
     h.step(&json!({"widget":"OK"})).unwrap();
     assert!(h.app.dialog.is_none());
     let state = h.app.session.world_state().unwrap();
-    assert!((solidcraft_engine::doc::kernel::measure(&state.body("B").unwrap().body).unwrap().volume - 2000.0).abs() < 1e-7);
+    assert!((torno_engine::doc::kernel::measure(&state.body("B").unwrap().body).unwrap().volume - 2000.0).abs() < 1e-7);
     assert!((cut_volume(&state) - before_a).abs() < 1e-7);
     assert_eq!(state.bodies.iter().map(|b| (b.name.clone(), b.mesh().bounds())).collect::<Vec<_>>(), before_bounds);
     assert_eq!(h.app.session.undo.len(), undo + 1);
@@ -124,7 +124,7 @@ fn second_active_occurrence_noop_preserves_definition_axis_target_and_instances(
     h.app.run("component.activate", json!({"component":owner["component"],"occurrence":second,"path":[second]})).unwrap();
     let original = serde_json::to_value(&h.app.session.doc.find_feature("Turn").unwrap().kind).unwrap();
     let frame = h.app.session.active_component_frame();
-    let expected_origin = solidcraft_engine::doc::apply_point(&frame, solidcore_record::Vec3::ZERO);
+    let expected_origin = torno_engine::doc::apply_point(&frame, solidcore_record::Vec3::ZERO);
     let before: Vec<_> = h.app.session.world_state().unwrap().bodies.iter().map(|b| (b.name.clone(), b.mesh().bounds())).collect();
     open(&mut h);
     let (origin, _) = crate::canvas::revolve_axis(&h.app, h.app.dialog.as_ref().unwrap()).unwrap();
@@ -165,7 +165,7 @@ fn actual_noop_editor_retains_all_revolve_axis_kinds_and_analytic_volume() {
         let bounds = body.mesh().bounds();
         let radii = if axis_value == json!("l4") { 25.0 } else { 225.0 - 100.0 };
         let expected = 0.5 * radii * 5.0 * std::f64::consts::FRAC_PI_2;
-        let volume = solidcraft_engine::doc::kernel::measure(&body.body).unwrap().volume;
+        let volume = torno_engine::doc::kernel::measure(&body.body).unwrap().volume;
         assert!((volume - expected).abs() < 0.03, "{axis_value}: {volume}");
         open(&mut h);
         let commands = crate::dialogs::apply_commands(&h.app, h.app.dialog.as_ref().unwrap()).unwrap();
@@ -254,7 +254,7 @@ fn sketch_axis_cancel_restores_original_document_and_history() {
 fn only_the_active_selection_field_looks_active() {
     let mut h = make(Harness::new(), json!("Y"));
     open(&mut h);
-    let t = solidcraft_theme::Tokens::get();
+    let t = torno_theme::Tokens::get();
     let border = |h: &Harness, label: &str| {
         let field = crate::scenario::rect_of(&format!("dialog:field:{label}")).unwrap();
         h.shapes
@@ -376,7 +376,7 @@ fn vertical_id(app: &crate::SolveApp, sketch: u64, x: f64) -> String {
         .curves
         .iter()
         .find_map(|c| {
-            let solidcraft_engine::sketch::CurveKind::Line { a, b } = c.kind else { return None };
+            let torno_engine::sketch::CurveKind::Line { a, b } = c.kind else { return None };
             let (pa, pb) = (ss.sketch.point(a)?, ss.sketch.point(b)?);
             ((pa.x - x).abs() < 1e-6 && (pb.x - x).abs() < 1e-6).then(|| c.id.clone())
         })
@@ -388,7 +388,7 @@ fn segment(app: &crate::SolveApp, sketch: u64, id: &str) -> (Vec3, Vec3) {
     let ss = st.sketch(sketch).unwrap();
     let i = ss.sketch.curve_index(id).unwrap_or_else(|| panic!("no curve {id}"));
     let c = &ss.sketch.curves[i];
-    let solidcraft_engine::sketch::CurveKind::Line { a, b } = c.kind else { panic!("{id} is not a line") };
+    let torno_engine::sketch::CurveKind::Line { a, b } = c.kind else { panic!("{id} is not a line") };
     (ss.plane.to_world(ss.sketch.point(a).unwrap()), ss.plane.to_world(ss.sketch.point(b).unwrap()))
 }
 
@@ -399,17 +399,17 @@ fn lift_xy(axis_x: f64, point_x: f64) -> Vec3 {
     Vec3::new(axis_x + dx * t.cos(), 5.0, dx.abs() * t.sin())
 }
 
-fn assert_pivots_on(preview: &solidcraft_engine::Preview, on_axis: Vec3, on_other: Vec3, what: &str) {
+fn assert_pivots_on(preview: &torno_engine::Preview, on_axis: Vec3, on_other: Vec3, what: &str) {
     let before: std::collections::BTreeSet<_> = preview.before.bodies.iter().map(|b| b.name.as_str()).collect();
     let body = preview
         .after
         .bodies
         .iter()
         .filter(|b| !before.contains(b.name.as_str()))
-        .find(|b| b.body.classify_point(on_axis).is_ok_and(|c| c == solidcraft_engine::kernel::PointClass::Inside))
+        .find(|b| b.body.classify_point(on_axis).is_ok_and(|c| c == torno_engine::kernel::PointClass::Inside))
         .unwrap_or_else(|| panic!("{what}: no new body contains {on_axis:?}"));
     assert!(
-        body.body.classify_point(on_other).is_ok_and(|c| c != solidcraft_engine::kernel::PointClass::Inside),
+        body.body.classify_point(on_other).is_ok_and(|c| c != torno_engine::kernel::PointClass::Inside),
         "{what}: also contains the other edge's probe {on_other:?}"
     );
 }
@@ -498,7 +498,7 @@ fn linked_span(app: &crate::SolveApp, sketch: u64) -> (f64, f64, f64, f64) {
         if c.link.is_none() {
             continue;
         }
-        let solidcraft_engine::sketch::CurveKind::Line { a, b } = c.kind else { continue };
+        let torno_engine::sketch::CurveKind::Line { a, b } = c.kind else { continue };
         for p in [ss.sketch.point(a), ss.sketch.point(b)].into_iter().flatten() {
             xs.push(p.x);
             ys.push(p.y);
@@ -544,7 +544,7 @@ fn face_sketch_two_profiles_revolve_about_the_highlighted_edge() {
             if c.link.is_some() {
                 return None;
             }
-            let solidcraft_engine::sketch::CurveKind::Line { a, b } = c.kind else { return None };
+            let torno_engine::sketch::CurveKind::Line { a, b } = c.kind else { return None };
             let (pa, pb) = (ss.sketch.point(a)?, ss.sketch.point(b)?);
             ((pa.x - x).abs() < 1e-6 && (pb.x - x).abs() < 1e-6).then(|| c.id.clone())
         })
@@ -620,10 +620,10 @@ fn dialog_axis_from_another_sketch_keeps_its_sketch() {
     // The field arrives prefilled with this very profile (#684), so a blind pick would toggle it
     // off: start from empty so the pick lands.
     dialog.inputs[0].items.clear();
-    dialog.pick(&h.app.session, solidcraft_engine::Sel::Profile { sketch: profile, index: 0 });
+    dialog.pick(&h.app.session, torno_engine::Sel::Profile { sketch: profile, index: 0 });
     dialog.active = 1;
     dialog.inputs[1].items.clear();
-    dialog.pick(&h.app.session, solidcraft_engine::Sel::SketchCurve { id: "l1".into(), sketch: Some(axis_sketch) });
+    dialog.pick(&h.app.session, torno_engine::Sel::SketchCurve { id: "l1".into(), sketch: Some(axis_sketch) });
     h.app.dialog = Some(dialog);
     h.frames(4);
     h.step(&json!({"widget":"OK"})).unwrap();
@@ -638,7 +638,7 @@ fn dialog_axis_from_another_sketch_keeps_its_sketch() {
     assert!(matches!(axis, AxisRef::SketchLine { curve, sketch: Some(owner) } if curve == "l1" && *owner == axis_sketch), "kept qualified: {axis:?}");
     // π · (20² − 10²) · 10 about x = 0, not the crossing error the colliding id used to give.
     let state = h.app.session.world_state().unwrap();
-    let volume: f64 = state.bodies.iter().map(|b| solidcraft_engine::doc::kernel::measure(&b.body).unwrap().volume).sum();
+    let volume: f64 = state.bodies.iter().map(|b| torno_engine::doc::kernel::measure(&b.body).unwrap().volume).sum();
     let expected = std::f64::consts::PI * 300.0 * 10.0;
     assert!((volume - expected).abs() / expected < 1e-4, "{volume} != {expected}");
 }

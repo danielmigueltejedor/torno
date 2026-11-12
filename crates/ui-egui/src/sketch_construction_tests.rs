@@ -1,7 +1,7 @@
 use crate::scenario::Harness;
 use serde_json::json;
-use solidcraft_engine::geom::prelude::*;
-use solidcraft_engine::sketch::CurveKind;
+use torno_engine::geom::prelude::*;
+use torno_engine::sketch::CurveKind;
 
 fn sketch() -> Harness {
     let mut h = Harness::new();
@@ -131,8 +131,8 @@ fn typed_offset_places_the_line_and_its_dimension() {
     let (pa, pb) = (sk.point(a).unwrap(), sk.point(b).unwrap());
     assert!((pa.y - 8.).abs() < 1e-6 && (pb.y - 8.).abs() < 1e-6, "{pa:?} {pb:?}");
     assert!(pa.dist(solidcore_record::Vec2::new(5., 10.)) > 1.0, "the click is not the segment start: {pa:?}");
-    assert!(!sk.constraints.iter().any(|c| matches!(c.kind, solidcraft_engine::sketch::ConstraintKind::Length { .. })));
-    let distance = sk.constraints.iter().find(|c| matches!(c.kind, solidcraft_engine::sketch::ConstraintKind::PointLineDistance { .. })).unwrap();
+    assert!(!sk.constraints.iter().any(|c| matches!(c.kind, torno_engine::sketch::ConstraintKind::Length { .. })));
+    let distance = sk.constraints.iter().find(|c| matches!(c.kind, torno_engine::sketch::ConstraintKind::PointLineDistance { .. })).unwrap();
     assert!((distance.kind.value().unwrap() - 8.).abs() < 1e-6);
     assert_eq!(h.app.session.doc.param(distance.param.as_deref().unwrap()).unwrap().expr, "8");
     let count = sk.curves.len();
@@ -156,8 +156,8 @@ fn typed_offset_places_the_line_and_its_dimension() {
     let start = sk.point(a).unwrap();
     assert!((start.y + 6.).abs() < 1e-6);
     assert!(start.dist(solidcore_record::Vec2::new(2., -4.)) > 1.0, "the click is not pinned as the line start: {start:?}");
-    assert!(sk.constraints.iter().any(|c| matches!(c.kind, solidcraft_engine::sketch::ConstraintKind::DistanceY { .. })));
-    assert!(!sk.constraints.iter().any(|c| matches!(c.kind, solidcraft_engine::sketch::ConstraintKind::Length { .. })));
+    assert!(sk.constraints.iter().any(|c| matches!(c.kind, torno_engine::sketch::ConstraintKind::DistanceY { .. })));
+    assert!(!sk.constraints.iter().any(|c| matches!(c.kind, torno_engine::sketch::ConstraintKind::Length { .. })));
 }
 
 #[test]
@@ -178,7 +178,7 @@ fn an_empty_locked_offset_box_places_the_line_through_the_click() {
     let CurveKind::Line { a, .. } = curve.kind else { panic!("line") };
     let start = sk.point(a).unwrap();
     assert!((start.y + 4.).abs() < 1e-6, "an empty offset is through the click: {start:?}");
-    assert!(!sk.constraints.iter().any(|c| matches!(c.kind, solidcraft_engine::sketch::ConstraintKind::DistanceY { .. })));
+    assert!(!sk.constraints.iter().any(|c| matches!(c.kind, torno_engine::sketch::ConstraintKind::DistanceY { .. })));
 }
 
 /// The Offset box is opt-in. Once it has the keyboard, a digit sets the distance and one click
@@ -219,14 +219,14 @@ fn a_focused_offset_box_places_an_infinite_line() {
             sk.constraints.iter().any(|c| {
                 matches!(
                     c.kind,
-                    solidcraft_engine::sketch::ConstraintKind::PointLineDistance { .. }
-                        | solidcraft_engine::sketch::ConstraintKind::DistanceX { .. }
-                        | solidcraft_engine::sketch::ConstraintKind::DistanceY { .. }
+                    torno_engine::sketch::ConstraintKind::PointLineDistance { .. }
+                        | torno_engine::sketch::ConstraintKind::DistanceX { .. }
+                        | torno_engine::sketch::ConstraintKind::DistanceY { .. }
                 )
             }),
             "{id}"
         );
-        assert!(!sk.constraints.iter().any(|c| matches!(c.kind, solidcraft_engine::sketch::ConstraintKind::Length { .. })), "{id}");
+        assert!(!sk.constraints.iter().any(|c| matches!(c.kind, torno_engine::sketch::ConstraintKind::Length { .. })), "{id}");
         let tool = h.app.tool.as_ref().unwrap();
         assert!(tool.pts.is_empty(), "{id}: the click was not kept as a segment start");
         let count = sk.curves.len();
@@ -264,8 +264,8 @@ fn a_typed_length_and_offset_shift_a_segment() {
     assert!((pa.y + 6.0).abs() < 1e-6 && (pb.y + 6.0).abs() < 1e-6, "{pa:?} {pb:?}");
     assert!((pa.dist(pb) - 10.0).abs() < 1e-6, "{pa:?} {pb:?}");
     assert!(pa.dist(click) > 1.0, "the click is not the segment start: {pa:?}");
-    assert!(sk.constraints.iter().any(|c| matches!(c.kind, solidcraft_engine::sketch::ConstraintKind::DistanceY { .. })));
-    assert!(sk.constraints.iter().any(|c| matches!(c.kind, solidcraft_engine::sketch::ConstraintKind::Length { .. })));
+    assert!(sk.constraints.iter().any(|c| matches!(c.kind, torno_engine::sketch::ConstraintKind::DistanceY { .. })));
+    assert!(sk.constraints.iter().any(|c| matches!(c.kind, torno_engine::sketch::ConstraintKind::Length { .. })));
 }
 
 #[test]
@@ -383,7 +383,7 @@ fn a_typed_length_makes_two_clicks_draw_a_dimensioned_segment() {
         assert!((a.dist(b) - 8.0).abs() < 1e-6, "{id}: {a:?} {b:?}");
         let s = solidcore_record::Vec2::new(side[0], side[1]);
         assert!((b - a).dot(s - a) > 0.0, "{id}: runs towards the side clicked");
-        assert!(sk.constraints.iter().any(|c| matches!(c.kind, solidcraft_engine::sketch::ConstraintKind::Length { .. })), "{id}");
+        assert!(sk.constraints.iter().any(|c| matches!(c.kind, torno_engine::sketch::ConstraintKind::Length { .. })), "{id}");
         let tool = h.app.tool.as_ref().unwrap();
         assert!(tool.pts.is_empty() && tool.dims.iter().all(|b| !b.locked), "{id}: ready for the next line");
     }

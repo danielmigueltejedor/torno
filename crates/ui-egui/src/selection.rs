@@ -4,8 +4,8 @@
 
 use egui::{Pos2, Rect};
 use solidcore_record::Vec3;
-use solidcraft_engine::Sel;
-use solidcraft_engine::geom::prelude::*;
+use torno_engine::Sel;
+use torno_engine::geom::prelude::*;
 
 use crate::viewport::Hit;
 
@@ -47,12 +47,12 @@ pub(crate) fn coincident_operands(selection: &[Sel]) -> Option<serde_json::Value
 }
 
 /// The current middle of a finite straight sketch edge.
-pub(crate) fn line_midpoint(sk: &solidcraft_engine::sketch::Sketch, line: usize) -> Option<solidcore_record::Vec2> {
+pub(crate) fn line_midpoint(sk: &torno_engine::sketch::Sketch, line: usize) -> Option<solidcore_record::Vec2> {
     let curve = sk.curves.get(line)?;
     if curve.infinite {
         return None;
     }
-    let solidcraft_engine::sketch::CurveKind::Line { a, b } = &curve.kind else { return None };
+    let torno_engine::sketch::CurveKind::Line { a, b } = &curve.kind else { return None };
     Some((sk.point(*a)? + sk.point(*b)?) * 0.5)
 }
 
@@ -393,7 +393,7 @@ fn segments_cross(p: Pos2, q: Pos2, r: Pos2, s: Pos2) -> bool {
 mod tests {
     use super::*;
     use egui::pos2;
-    use solidcraft_viewport::{Camera, StandardView};
+    use torno_viewport::{Camera, StandardView};
 
     #[test]
     fn origin_widget_keeps_its_screen_size() {

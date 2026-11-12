@@ -1,12 +1,12 @@
 //! Reference triangles belong to a definition, even while its occurrences move. Keep one lazy
 //! source mesh and map it into each pose; retain the exact placed B-rep separately in ModelBody.
-use solidcraft_geom::prelude::*;
 use std::sync::{Arc, OnceLock};
+use torno_geom::prelude::*;
 
 use solidcore_record::Vec3;
-use solidcraft_geom::Mesh;
-use solidcraft_geom::tess::TessPlan;
-use solidcraft_kernel::{self as kernel, Body};
+use torno_geom::Mesh;
+use torno_geom::tess::TessPlan;
+use torno_kernel::{self as kernel, Body};
 
 use super::ModelBody;
 
@@ -176,7 +176,7 @@ pub(super) fn definition_plan(
     q: crate::display_quality::DisplayQuality,
     name: &str,
 ) -> Option<Arc<TessPlan>> {
-    cell.get_or_init(|| match body.mesh_plan(&solidcraft_kernel::MeshTolerance { chord: q.chord(body.size()), angle: Some(q.angle()) }) {
+    cell.get_or_init(|| match body.mesh_plan(&torno_kernel::MeshTolerance { chord: q.chord(body.size()), angle: Some(q.angle()) }) {
         Ok(plan) => Some(Arc::new(plan)),
         Err(e) => {
             log::debug!("{name}: no display plan ({e})");
@@ -188,7 +188,7 @@ pub(super) fn definition_plan(
 
 pub(super) fn reference_mesh(body: &Body, mesh: &OnceLock<Arc<Mesh>>, tolerance: f64) -> Arc<Mesh> {
     mesh.get_or_init(|| {
-        let mut mesh = body.mesh(&solidcraft_kernel::MeshTolerance { chord: tolerance, angle: Some(kernel::DISPLAY_ANGLE) }).unwrap_or_default();
+        let mut mesh = body.mesh(&torno_kernel::MeshTolerance { chord: tolerance, angle: Some(kernel::DISPLAY_ANGLE) }).unwrap_or_default();
         if let Some((positions, triangles)) = body.triangle_mesh() {
             mesh.edges = mesh_outlines(positions, triangles);
             mesh.display_only_edges = true;
@@ -294,7 +294,7 @@ fn proper_rigid(m: &crate::Mat) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use solidcraft_geom::tess::EvaluateMesh as _;
+    use torno_geom::tess::EvaluateMesh as _;
 
     #[test]
     fn mesh_outlines_keep_boundaries_and_creases_without_smooth_facet_lines() {

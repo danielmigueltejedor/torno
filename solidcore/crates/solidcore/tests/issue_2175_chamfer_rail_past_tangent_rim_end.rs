@@ -93,7 +93,7 @@ fn body(k: &mut Kernel) -> Brep {
 }
 
 /// distance * tan(a / 2), a the angle between the directions into the faces at the
-/// edge's midpoint (SolidCraft's chamfer setback to radius).
+/// edge's midpoint (Torno's chamfer setback to radius).
 fn chamfer_radius(k: &Kernel, b: &mut Brep, e: EdgeId, distance: f64) -> f64 {
     let u0 = edge::blend_edgeuse(k, b, e).unwrap().unwrap();
     let u1 = eu1::radial(b, u0).unwrap().unwrap();
@@ -110,7 +110,7 @@ fn chamfer_radius(k: &Kernel, b: &mut Brep, e: EdgeId, distance: f64) -> f64 {
     distance * ((1.0 - c) / (1.0 + c)).sqrt()
 }
 
-/// The chamfer 0.5 of the rim edge ending at the bottom face, as SolidCraft drives it.
+/// The chamfer 0.5 of the rim edge ending at the bottom face, as Torno drives it.
 /// `Err` holds the error info code; `Ok` the face count after stitching and whether the
 /// result is a manifold solid.
 fn chamfer(k: &mut Kernel) -> Result<(usize, bool), i32> {
@@ -143,8 +143,8 @@ fn chamfer(k: &mut Kernel) -> Result<(usize, bool), i32> {
     Ok((b.face_list().len(), is_manifold_solid(&b).unwrap()))
 }
 
-/// SolidCraft's fixes: every `UpstreamFixes` field on except `geometric_g2_continuity`.
-fn solidcraft_kernel() -> Kernel {
+/// Torno's fixes: every `UpstreamFixes` field on except `geometric_g2_continuity`.
+fn torno_kernel() -> Kernel {
     let mut k = Kernel::new(&KernelOptions::default());
     let mut f = UpstreamFixes::default();
     for &name in UpstreamFixes::NAMES {
@@ -172,7 +172,7 @@ fn solidcraft_kernel() -> Kernel {
 /// the bottom face's tangent edge (`CalcEndCapEdges`, 41a39ec).
 #[test]
 fn chamfer_past_the_bottom_is_refused_with_the_blend_corner() {
-    let mut k = solidcraft_kernel();
+    let mut k = torno_kernel();
     assert_eq!(chamfer(&mut k), Err(FilletErrorType::NoRoom as i32));
 }
 

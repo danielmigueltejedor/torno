@@ -35,7 +35,7 @@ use std::sync::Arc;
 
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
-use solidcraft_geom::drawing_sheet::{self, DrawingBorderProfile};
+use torno_geom::drawing_sheet::{self, DrawingBorderProfile};
 
 use crate::format::DRAWING;
 use crate::ids::{self, IdSource};
@@ -84,7 +84,7 @@ pub struct Drawing {
     pub language: String,
     /// In order, each behind its own `Arc`, so an undo step shares every sheet it didn't change.
     pub sheets: Vec<Arc<Sheet>>,
-    /// Set when a newer SolidCraft saved the file this came from.
+    /// Set when a newer Torno saved the file this came from.
     #[serde(skip)]
     pub newer_file: Option<Arc<NewerDrawing>>,
 }
@@ -127,10 +127,7 @@ pub struct NewerDrawing {
 impl NewerDrawing {
     /// What to tell the user.
     pub fn notice(&self) -> String {
-        format!(
-            "Saved by a newer SolidCraft (format {}, this version reads up to {}). If something's missing, update.",
-            self.format, self.reads_up_to
-        )
+        format!("Saved by a newer Torno (format {}, this version reads up to {}). If something's missing, update.", self.format, self.reads_up_to)
     }
 
     fn restore(&self, value: &mut Value) {
@@ -246,7 +243,7 @@ impl Drawing {
         if s.len() > MAX_DRAWING_BYTES {
             return Err(DocError::Invalid(format!("drawing too large (at most {} MiB)", MAX_DRAWING_BYTES >> 20)));
         }
-        let mut v: Value = serde_json::from_str(s).map_err(|e| DocError::Invalid(format!("not a SolidCraft drawing: {e}")))?;
+        let mut v: Value = serde_json::from_str(s).map_err(|e| DocError::Invalid(format!("not a Torno drawing: {e}")))?;
         let (version, applied) = DRAWING.take_version(&mut v)?;
         if let Some(newer) = DRAWING.newer(version, applied.as_deref()) {
             return Self::from_newer(v, version, applied, newer);
@@ -295,7 +292,7 @@ impl Drawing {
         }
         let d = read.map_err(|why| {
             DocError::Invalid(format!(
-                "this drawing was saved by a newer SolidCraft (format {}, this version reads up to {}) and this version can't read it: {why}. Update SolidCraft to open it",
+                "this drawing was saved by a newer Torno (format {}, this version reads up to {}) and this version can't read it: {why}. Update Torno to open it",
                 newer.format, newer.reads_up_to
             ))
         })?;

@@ -3,15 +3,15 @@
 //! the built-in profiles, `frame.profile.properties` works out a profile's section, and
 //! `frame.profile.insert` draws one into a sketch.
 
-use solidcraft_geom::prelude::*;
 use std::collections::BTreeMap;
+use torno_geom::prelude::*;
 
 use serde_json::Value;
 use solidcore_record::{Loop2, Seg2, Vec2};
-use solidcraft_doc::expr::Kind;
-use solidcraft_doc::frame::{self, Anchor, MemberProfile, Profile, ProfileSpec};
-use solidcraft_doc::{FeatureKind, SketchId};
-use solidcraft_sketch::Sketch;
+use torno_doc::expr::Kind;
+use torno_doc::frame::{self, Anchor, MemberProfile, Profile, ProfileSpec};
+use torno_doc::{FeatureKind, SketchId};
+use torno_sketch::Sketch;
 
 use super::features::{add_feature, check_expr, sketch_id};
 use super::sketch::edit;
@@ -59,7 +59,7 @@ pub static COMMANDS: &[CommandSpec] = &[
         .doc_only()
         .contract(&LIST_CONTRACT)
         .output(output_schema_for::<ProfileListResult>)
-        .params("Returns kinds: [{kind, label, required, optional, example}]: the built-in profiles, each SolidCraft's own parametric definition"),
+        .params("Returns kinds: [{kind, label, required, optional, example}]: the built-in profiles, each Torno's own parametric definition"),
     CommandSpec::new("frame.profile.properties", "Profile Properties", crate::checked!("frame.profile.properties", properties))
         .icon("measure")
         .noundo()
@@ -93,8 +93,7 @@ fn profile_spec(cmd: &str, p: &Value) -> Result<ProfileSpec> {
 fn resolve(s: &Session, cmd: &str, spec: &ProfileSpec) -> Result<Profile> {
     let doc = &s.doc;
     spec.resolve(|name, e| {
-        doc.eval(&doc.with_design_unit(e, Kind::Length), Kind::Length)
-            .map_err(|err| solidcraft_doc::DocError::Invalid(format!("profile `{name}`: {err}")))
+        doc.eval(&doc.with_design_unit(e, Kind::Length), Kind::Length).map_err(|err| torno_doc::DocError::Invalid(format!("profile `{name}`: {err}")))
     })
     .map_err(|e| bad(cmd, e.to_string()))
 }
@@ -270,7 +269,7 @@ fn member(s: &mut Session, p: &Value) -> Result<Value> {
         None | Some(Value::Null) => None,
         Some(_) => {
             let e = expr(p, "angle").ok_or_else(|| bad(cmd, "`angle` must be an angle expression"))?;
-            check_expr(s, &e, solidcraft_doc::expr::Kind::Angle, cmd, "angle")?;
+            check_expr(s, &e, torno_doc::expr::Kind::Angle, cmd, "angle")?;
             Some(e)
         }
     };

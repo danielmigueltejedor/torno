@@ -3,7 +3,7 @@
 //! several contact regions, contact beside a shared edge, and random rectangles.
 
 use solidcore_record::{Loop2, Plane, Region2, Vec2, Vec3};
-use solidcraft_geom::MeshGeom;
+use torno_geom::MeshGeom;
 
 use crate::*;
 

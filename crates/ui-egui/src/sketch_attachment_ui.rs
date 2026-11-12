@@ -4,14 +4,14 @@ use crate::ui_kit::BackingTooltipExt as _;
 use egui::RichText;
 use serde_json::{Value, json};
 use solidcore_record::{Plane, Vec3};
-use solidcraft_engine::Sel;
-use solidcraft_engine::doc::face_anchor::plane_face_anchor;
-use solidcraft_engine::doc::{EmbossFace, FaceAttachmentStatus, FeatureKind, PlaneRef, mat_inverse};
-use solidcraft_engine::geom::prelude::*;
+use torno_engine::Sel;
+use torno_engine::doc::face_anchor::plane_face_anchor;
+use torno_engine::doc::{EmbossFace, FaceAttachmentStatus, FeatureKind, PlaneRef, mat_inverse};
+use torno_engine::geom::prelude::*;
 
 use crate::SolveApp;
 use crate::ui_kit;
-use solidcraft_theme::Tokens;
+use torno_theme::Tokens;
 
 #[derive(Clone, Debug)]
 pub struct Draft {
@@ -104,22 +104,20 @@ pub fn face_plane(app: &SolveApp, selection: &Sel) -> Option<Value> {
 
 /// What a sketch's plane is, for the Redefine Sketch Plane panel: `XY`, a construction plane's
 /// name, or the plane it's offset from, turned from or flipped from (#5103).
-pub(crate) fn plane_description(doc: &solidcraft_engine::doc::Document, plane: &PlaneRef) -> String {
-    fn describe(doc: &solidcraft_engine::doc::Document, plane: &PlaneRef, depth: usize) -> String {
-        let base = |b: &PlaneRef| if depth < 8 { describe(doc, b, depth + 1) } else { solidcraft_ui_text::tr("sketch_panel.plane_fixed").to_owned() };
+pub(crate) fn plane_description(doc: &torno_engine::doc::Document, plane: &PlaneRef) -> String {
+    fn describe(doc: &torno_engine::doc::Document, plane: &PlaneRef, depth: usize) -> String {
+        let base = |b: &PlaneRef| if depth < 8 { describe(doc, b, depth + 1) } else { torno_ui_text::tr("sketch_panel.plane_fixed").to_owned() };
         match plane {
-            PlaneRef::Origin { name } => solidcraft_ui_text::format("sketch_panel.plane_origin", &[("plane", name)]),
+            PlaneRef::Origin { name } => torno_ui_text::format("sketch_panel.plane_origin", &[("plane", name)]),
             PlaneRef::Construction { feature } => {
-                doc.feature(feature.0).map(|f| f.name.clone()).unwrap_or_else(|| solidcraft_ui_text::tr("sketch_panel.plane_fixed").to_owned())
+                doc.feature(feature.0).map(|f| f.name.clone()).unwrap_or_else(|| torno_ui_text::tr("sketch_panel.plane_fixed").to_owned())
             }
             PlaneRef::Offset { base: b, distance } => {
-                solidcraft_ui_text::format("sketch_panel.plane_offset", &[("plane", &base(b)), ("distance", distance)])
+                torno_ui_text::format("sketch_panel.plane_offset", &[("plane", &base(b)), ("distance", distance)])
             }
-            PlaneRef::AtAngle { base: b, angle, .. } => {
-                solidcraft_ui_text::format("sketch_panel.plane_angle", &[("plane", &base(b)), ("angle", angle)])
-            }
-            PlaneRef::Flipped { base: b, .. } => solidcraft_ui_text::format("sketch_panel.plane_flipped", &[("plane", &base(b))]),
-            _ => solidcraft_ui_text::tr("sketch_panel.plane_fixed").to_owned(),
+            PlaneRef::AtAngle { base: b, angle, .. } => torno_ui_text::format("sketch_panel.plane_angle", &[("plane", &base(b)), ("angle", angle)]),
+            PlaneRef::Flipped { base: b, .. } => torno_ui_text::format("sketch_panel.plane_flipped", &[("plane", &base(b))]),
+            _ => torno_ui_text::tr("sketch_panel.plane_fixed").to_owned(),
         }
     }
     describe(doc, plane, 0)
@@ -154,7 +152,7 @@ pub fn panel(app: &mut SolveApp, ctx: &egui::Context) {
         return;
     }
     let mut draft = app.tree.redefine_draft.take().filter(|draft| draft.sketch == sketch).unwrap_or_else(|| Draft::new(app, sketch));
-    let _language = solidcraft_ui_text::scope(&app.preferences.language);
+    let _language = torno_ui_text::scope(&app.preferences.language);
     let status = attachment(app, sketch);
     let name = app.session.doc.feature(sketch).map(|feature| feature.name.as_str()).unwrap_or("Sketch");
     let selected = app.session.selection.iter().find(|selection| matches!(selection, Sel::Face { .. })).cloned();
@@ -177,9 +175,9 @@ pub fn panel(app: &mut SolveApp, ctx: &egui::Context) {
     let drag_bounds = crate::shell::tool_drag_rect(app, viewport);
     let anchor = crate::frame::offset_anchor(docked, moved, drag_bounds, side);
     let frame = ui_kit::Panel::feature_frame(ctx, app.ui.layout, side);
-    let spec = solidcraft_engine::find_command("sketch.redefine");
-    let command = spec.as_ref().map_or("", |s| solidcraft_ui_text::tr_label(s.label));
-    let title = solidcraft_ui_text::format("sketch_panel.redefine_title", &[("command", command), ("name", name)]);
+    let spec = torno_engine::find_command("sketch.redefine");
+    let command = spec.as_ref().map_or("", |s| torno_ui_text::tr_label(s.label));
+    let title = torno_ui_text::format("sketch_panel.redefine_title", &[("command", command), ("name", name)]);
     let panel = ui_kit::Panel::new(&title, egui::Id::unique("sc_redefine"), anchor, drag_bounds, side, frame);
     let mut painted = false;
     let response = panel.window(ctx).show(ctx, |ui| {
@@ -200,41 +198,36 @@ pub fn panel(app: &mut SolveApp, ctx: &egui::Context) {
                 ui.style_mut().wrap_mode = Some(egui::TextWrapMode::Wrap);
                 ui_kit::text(
                     ui,
-                    solidcraft_ui_text::tr_label(
-                        "Choose a new plane. Sketch geometry and dimensions stay unchanged in its two-dimensional coordinates.",
-                    ),
+                    torno_ui_text::tr_label("Choose a new plane. Sketch geometry and dimensions stay unchanged in its two-dimensional coordinates."),
                     ui_kit::Text::Hint("tool"),
                 );
                 let saved_plane = match &status {
                     FaceAttachmentStatus::Healthy { plane, target, path } => {
                         ui_kit::row(ui, "Attachment", |ui| {
-                            ui.label(solidcraft_ui_text::format(
-                                "sketch_panel.attached",
-                                &[("body", &target.body), ("path", &path_label(app, path))],
-                            ));
+                            ui.label(torno_ui_text::format("sketch_panel.attached", &[("body", &target.body), ("path", &path_label(app, path))]));
                         });
                         Some(*plane)
                     }
                     FaceAttachmentStatus::Lost { message, repair_plane } => {
-                        ui.label(RichText::new(solidcraft_ui_text::tr_label("Face attachment lost")).color(t.error));
+                        ui.label(RichText::new(torno_ui_text::tr_label("Face attachment lost")).color(t.error));
                         ui.label(message);
                         if repair_plane.is_some() {
-                            ui.label(solidcraft_ui_text::tr_label(
+                            ui.label(torno_ui_text::tr_label(
                                 "The dashed sketch is a saved plane guide. Select a new face to repair the attachment.",
                             ));
                         } else {
-                            ui.label(solidcraft_ui_text::tr_label(
+                            ui.label(torno_ui_text::tr_label(
                                 "The saved author occurrence is missing. Select a valid author placement before rebinding.",
                             ));
                         }
                         *repair_plane
                     }
                     FaceAttachmentStatus::Legacy { plane } => {
-                        ui.label(solidcraft_ui_text::tr_label("Legacy face attachment. Rebinding to a certified face creates an exact attachment."));
+                        ui.label(torno_ui_text::tr_label("Legacy face attachment. Rebinding to a certified face creates an exact attachment."));
                         *plane
                     }
                     FaceAttachmentStatus::Sheet { plane } => {
-                        ui.label(solidcraft_ui_text::tr("sketch_panel.sheet_attachment"));
+                        ui.label(torno_ui_text::tr("sketch_panel.sheet_attachment"));
                         *plane
                     }
                     FaceAttachmentStatus::Fixed { plane } => {
@@ -245,7 +238,7 @@ pub fn panel(app: &mut SolveApp, ctx: &egui::Context) {
                                 ui.label(now);
                             });
                         }
-                        ui.label(solidcraft_ui_text::tr_label("Sketch plane has no body-face attachment."));
+                        ui.label(torno_ui_text::tr_label("Sketch plane has no body-face attachment."));
                         *plane
                     }
                 };
@@ -255,7 +248,7 @@ pub fn panel(app: &mut SolveApp, ctx: &egui::Context) {
                     let available = author == Some(app.session.active_component);
                     if ui
                         .add_enabled_ui(available, |ui| {
-                            ui_kit::button(ui, solidcraft_ui_text::tr_label("Use active author placement"), ui_kit::Button::Normal)
+                            ui_kit::button(ui, torno_ui_text::tr_label("Use active author placement"), ui_kit::Button::Normal)
                         })
                         .inner
                         .clicked()
@@ -264,14 +257,14 @@ pub fn panel(app: &mut SolveApp, ctx: &egui::Context) {
                         draft.error = None;
                     }
                     if available && let Some(path) = &draft.author_path {
-                        ui.label(solidcraft_ui_text::format("sketch_panel.author", &[("path", &path_label(app, path))]));
+                        ui.label(torno_ui_text::format("sketch_panel.author", &[("path", &path_label(app, path))]));
                     }
                 }
                 ui_kit::row(ui, "Plane", |ui| {
-                    let text = if draft.candidate.is_some() { draft.label.as_str() } else { solidcraft_ui_text::tr("dialog.select") };
+                    let text = if draft.candidate.is_some() { draft.label.as_str() } else { torno_ui_text::tr("dialog.select") };
                     let response = ui_kit::selection_field(ui, text, ui_kit::Selection { active: true, filled: draft.candidate.is_some() });
                     if response
-                        .backing_on_hover_text(solidcraft_ui_text::tr_label(
+                        .backing_on_hover_text(torno_ui_text::tr_label(
                             "Choose a new plane. Sketch geometry and dimensions stay unchanged in its two-dimensional coordinates.",
                         ))
                         .clicked()
@@ -285,8 +278,7 @@ pub fn panel(app: &mut SolveApp, ctx: &egui::Context) {
                     // The command takes the plane's id; the button and the choice show its name.
                     for plane in crate::prefs::OriginPlaneNames::PLANES {
                         let label = app.preferences.origin_plane_names.label(plane);
-                        if ui_kit::button(ui, solidcraft_ui_text::format("sketch_panel.use_plane", &[("plane", label)]), ui_kit::Button::Normal)
-                            .clicked()
+                        if ui_kit::button(ui, torno_ui_text::format("sketch_panel.use_plane", &[("plane", label)]), ui_kit::Button::Normal).clicked()
                         {
                             draft.choose(json!(plane), label.into());
                         }
@@ -301,7 +293,7 @@ pub fn panel(app: &mut SolveApp, ctx: &egui::Context) {
                 }
                 if ui
                     .add_enabled_ui(selected.is_some(), |ui| {
-                        ui_kit::button(ui, solidcraft_ui_text::tr_label("Reattach selected face"), ui_kit::Button::Normal)
+                        ui_kit::button(ui, torno_ui_text::tr_label("Reattach selected face"), ui_kit::Button::Normal)
                     })
                     .inner
                     .clicked()
@@ -313,7 +305,7 @@ pub fn panel(app: &mut SolveApp, ctx: &egui::Context) {
                 }
                 if ui
                     .add_enabled_ui(saved_plane.is_some(), |ui| {
-                        ui_kit::button(ui, solidcraft_ui_text::tr_label("Use saved fixed plane"), ui_kit::Button::Normal)
+                        ui_kit::button(ui, torno_ui_text::tr_label("Use saved fixed plane"), ui_kit::Button::Normal)
                     })
                     .inner
                     .clicked()
@@ -324,7 +316,7 @@ pub fn panel(app: &mut SolveApp, ctx: &egui::Context) {
                 }
                 if ui
                     .add_enabled_ui(selected.is_some(), |ui| {
-                        ui_kit::button(ui, solidcraft_ui_text::tr_label("Use selected face as fixed plane"), ui_kit::Button::Normal)
+                        ui_kit::button(ui, torno_ui_text::tr_label("Use selected face as fixed plane"), ui_kit::Button::Normal)
                     })
                     .inner
                     .clicked()
@@ -337,7 +329,7 @@ pub fn panel(app: &mut SolveApp, ctx: &egui::Context) {
                 if draft.candidate.is_some() {
                     ui_kit::divider(ui, "attachment");
                     ui_kit::row(ui, "Preview", |ui| {
-                        ui.label(solidcraft_ui_text::tr_label(&draft.label));
+                        ui.label(torno_ui_text::tr_label(&draft.label));
                     });
                 }
                 if let Some(error) = draft.error.as_ref().or(app.preview.error.as_ref()) {
@@ -375,7 +367,7 @@ pub fn panel(app: &mut SolveApp, ctx: &egui::Context) {
 
 /// Only a lost reference's explicit saved author frame supplies a guide. It is
 /// absent from ModelState, selection, snapping and all downstream evaluation.
-pub fn lost_guide(app: &SolveApp) -> Option<(Plane, &solidcraft_engine::sketch::Sketch)> {
+pub fn lost_guide(app: &SolveApp) -> Option<(Plane, &torno_engine::sketch::Sketch)> {
     let sketch = app.tree.redefine?;
     let FaceAttachmentStatus::Lost { repair_plane: Some(plane), .. } = attachment(app, sketch) else { return None };
     let FeatureKind::Sketch { sketch, .. } = &app.session.doc.feature(sketch)?.kind else { return None };
@@ -392,7 +384,7 @@ pub fn guide_lines(app: &SolveApp) -> Vec<Vec<Vec3>> {
 
 pub fn display_guide_lines(app: &SolveApp, proj: &crate::viewport::Proj) -> Vec<Vec<Vec3>> {
     let Some((plane, sketch)) = lost_guide(app) else { return Vec::new() };
-    let mut budget = solidcraft_engine::render::SamplingBudget::new(65_536, 262_144);
+    let mut budget = torno_engine::render::SamplingBudget::new(65_536, 262_144);
     (0..sketch.curves.len())
         .flat_map(|index| crate::sketch_display::curve_with_budget(sketch, index, &plane, proj, app.viewport.pixels_per_point(), &mut budget).parts)
         .collect()

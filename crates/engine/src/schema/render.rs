@@ -36,13 +36,13 @@ pub struct CoatNumbers {
 }
 impl Default for CoatNumbers {
     fn default() -> Self {
-        let coat = solidcraft_doc::render_coat::CoatMaterial::default();
+        let coat = torno_doc::render_coat::CoatMaterial::default();
         Self { weight: coat.weight, roughness: coat.roughness, ior: coat.ior }
     }
 }
 impl CoatNumbers {
-    pub fn material(self) -> solidcraft_doc::render_coat::CoatMaterial {
-        solidcraft_doc::render_coat::CoatMaterial { weight: self.weight, roughness: self.roughness, ior: self.ior }
+    pub fn material(self) -> torno_doc::render_coat::CoatMaterial {
+        torno_doc::render_coat::CoatMaterial { weight: self.weight, roughness: self.roughness, ior: self.ior }
     }
 }
 #[derive(Deserialize, JsonSchema)]

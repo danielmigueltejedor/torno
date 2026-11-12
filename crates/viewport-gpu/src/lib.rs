@@ -1,5 +1,5 @@
 //! The shared viewport renderer's GPU work on wgpu (the camera, pictures and shading are
-//! `solidcraft-viewport`): its render pipelines ([`view`]), pictures drawn with them offscreen
+//! `torno-viewport`): its render pipelines ([`view`]), pictures drawn with them offscreen
 //! ([`capture`]), and display tessellation plans evaluated in a compute shader.
 //!
 //! Plan evaluation: the surface point and normal at every vertex's parameters, in a compute

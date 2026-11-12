@@ -1,7 +1,7 @@
 //! Splits traced crossing curves where they pass through a singular point of the
 //! intersection (opt-in, WR-77).
 //!
-//! Upstream: the SolidCraft fork's `source/SMLib/src/SmSurfaceIntersector.cpp`
+//! Upstream: the Torno fork's `source/SMLib/src/SmSurfaceIntersector.cpp`
 //! (tangency-labs/smlib@3c9d1d3, replayed on 1.0.1 as 1ff9264; unchanged at 7ac037e);
 //! not in the pinned SMLib.
 //!

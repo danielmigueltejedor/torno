@@ -1,11 +1,11 @@
 #![cfg(test)]
 
-use solidcraft_engine::panels::*;
+use torno_engine::panels::*;
 
 use super::*;
 
-fn surface_test_palette(dark: bool) -> solidcraft_theme::Tokens {
-    let mut tokens = if dark { solidcraft_theme::Tokens::dark() } else { solidcraft_theme::Tokens::light() };
+fn surface_test_palette(dark: bool) -> torno_theme::Tokens {
+    let mut tokens = if dark { torno_theme::Tokens::dark() } else { torno_theme::Tokens::light() };
     tokens.panel = if dark { egui::Color32::BLACK } else { egui::Color32::WHITE };
     let ink = if dark { egui::Color32::WHITE } else { egui::Color32::BLACK };
     tokens.text = ink;
@@ -19,7 +19,7 @@ fn surface_test_palette(dark: bool) -> solidcraft_theme::Tokens {
 #[test]
 fn panel_surface_policy_keeps_disabled_host_storage_small() {
     assert!(
-        std::mem::size_of::<HostSurfaceStyle>() < std::mem::size_of::<solidcraft_theme::Tokens>(),
+        std::mem::size_of::<HostSurfaceStyle>() < std::mem::size_of::<torno_theme::Tokens>(),
         "disabled host policy must not embed whole palettes in SolveApp"
     );
 }
@@ -28,7 +28,7 @@ fn panel_surface_policy_keeps_disabled_host_storage_small() {
 fn panel_surface_contrast_covers_actual_light_dark_and_bundled_high_contrast() {
     crate::test_support::host_data();
     use egui::Color32;
-    use solidcraft_color::srgb::{decode8, encode8};
+    use torno_color::srgb::{decode8, encode8};
     let high_contrast = crate::theme_files::resolve(crate::theme_files::find("high-contrast", &[]).unwrap());
     // Independent stored-premultiplied source-over for both real renderer target
     // formats. This does not call the production contrast/bounds predicate.
@@ -43,17 +43,15 @@ fn panel_surface_contrast_covers_actual_light_dark_and_bundled_high_contrast() {
         };
         Color32::from_rgb(channel(source.r(), ground.r()), channel(source.g(), ground.g()), channel(source.b(), ground.b()))
     };
-    let inks = |tokens: &solidcraft_theme::Tokens| [tokens.text, tokens.text_dim, tokens.form_ink, tokens.form_dim, tokens.dialog_label];
-    for (name, authored) in
-        [("light", solidcraft_theme::Tokens::light()), ("dark", solidcraft_theme::Tokens::dark()), ("high-contrast", high_contrast)]
-    {
+    let inks = |tokens: &torno_theme::Tokens| [tokens.text, tokens.text_dim, tokens.form_ink, tokens.form_dim, tokens.dialog_label];
+    for (name, authored) in [("light", torno_theme::Tokens::light()), ("dark", torno_theme::Tokens::dark()), ("high-contrast", high_contrast)] {
         let ctx = egui::Context::default();
-        let _scope = solidcraft_theme::scoped_panel_tokens(authored);
+        let _scope = torno_theme::scoped_panel_tokens(authored);
         assert!(inks(&authored).iter().all(|ink| ink.a() == 255), "these shipped canonical ink pairs are opaque: {name}");
         for floating in [false, true] {
             let raw = crate::ui_kit::panel_host_frame(&ctx, floating).fill.to_srgba_unmultiplied();
             let opaque = Color32::from_rgb(raw[0], raw[1], raw[2]);
-            let impossible = inks(&authored).iter().any(|ink| solidcraft_theme::contrast_ratio(*ink, opaque) < 4.5);
+            let impossible = inks(&authored).iter().any(|ink| torno_theme::contrast_ratio(*ink, opaque) < 4.5);
             for translucency_percent in [0.0_f32, 50.0, 100.0] {
                 let requested = 1.0 - translucency_percent / 100.0;
                 let style = HostSurfaceStyle::capture(&ctx, false, Some(requested), None);
@@ -77,7 +75,7 @@ fn panel_surface_contrast_covers_actual_light_dark_and_bundled_high_contrast() {
                         for ink in inks(palette) {
                             let physical_ink = blend(ink, background, linear);
                             assert!(
-                                solidcraft_theme::contrast_ratio(physical_ink, background) >= 4.5,
+                                torno_theme::contrast_ratio(physical_ink, background) >= 4.5,
                                 "{name}: primary/muted text at translucency {translucency_percent}, viewport {viewport}, linear={linear}"
                             );
                         }
@@ -93,7 +91,7 @@ fn captured_panel_surfaces_protect_all_inks_at_requested_translucencies() {
     let ctx = egui::Context::default();
     for dark in [false, true] {
         let tokens = surface_test_palette(dark);
-        let _scope = solidcraft_theme::scoped_panel_tokens(tokens);
+        let _scope = torno_theme::scoped_panel_tokens(tokens);
         for translucency_percent in [0.0_f32, 50.0, 100.0] {
             let opacity = 1.0 - translucency_percent / 100.0;
             let style = HostSurfaceStyle::capture(&ctx, false, Some(opacity), None);
@@ -105,11 +103,11 @@ fn captured_panel_surfaces_protect_all_inks_at_requested_translucencies() {
                 assert!(effective_background_alpha >= opacity);
                 assert_eq!(effective_background_alpha, f32::from(appearance.fill.a()) / 255.0);
                 assert_eq!(style.palette(appearance), &tokens);
-                assert!(solidcraft_theme::panel_surface_readable(appearance.fill, style.palette(appearance)));
+                assert!(torno_theme::panel_surface_readable(appearance.fill, style.palette(appearance)));
                 if appearance.fill.a() > (opacity * 255.0).ceil() as u8 {
                     let [r, g, b, alpha] = appearance.fill.to_srgba_unmultiplied();
                     let previous = egui::Color32::from_rgba_unmultiplied(r, g, b, alpha - 1);
-                    assert!(!solidcraft_theme::panel_surface_readable(previous, &tokens), "chosen byte is the first readable candidate");
+                    assert!(!torno_theme::panel_surface_readable(previous, &tokens), "chosen byte is the first readable candidate");
                 }
             }
             assert_eq!(style.appearance(PanelSurface::Opaque, false).fill.a(), 255);
@@ -124,19 +122,19 @@ fn panel_contrast_checks_interior_luminance_and_translucent_muted_inks() {
     // viewport background can match it exactly. Endpoint checks alone are false.
     let middle = egui::Color32::from_gray(117);
     tokens.form_dim = middle;
-    assert!(solidcraft_theme::contrast_ratio(middle, egui::Color32::BLACK) >= 4.5);
-    assert!(solidcraft_theme::contrast_ratio(middle, egui::Color32::WHITE) >= 4.5);
-    assert!(!solidcraft_theme::panel_surface_readable(egui::Color32::TRANSPARENT, &tokens));
+    assert!(torno_theme::contrast_ratio(middle, egui::Color32::BLACK) >= 4.5);
+    assert!(torno_theme::contrast_ratio(middle, egui::Color32::WHITE) >= 4.5);
+    assert!(!torno_theme::panel_surface_readable(egui::Color32::TRANSPARENT, &tokens));
     tokens.form_dim = egui::Color32::from_rgba_unmultiplied(0, 0, 0, 240);
-    assert!(solidcraft_theme::panel_surface_readable(egui::Color32::WHITE, &tokens), "RGBA ink is composited rather than rejected");
+    assert!(torno_theme::panel_surface_readable(egui::Color32::WHITE, &tokens), "RGBA ink is composited rather than rejected");
     tokens.form_dim = egui::Color32::TRANSPARENT;
-    assert!(!solidcraft_theme::panel_surface_readable(egui::Color32::WHITE, &tokens), "invisible muted ink cannot satisfy contrast");
+    assert!(!torno_theme::panel_surface_readable(egui::Color32::WHITE, &tokens), "invisible muted ink cannot satisfy contrast");
 }
 
 #[test]
 fn panel_contrast_encloses_actual_premultiplied_gpu_blends() {
     use egui::Color32;
-    use solidcraft_color::srgb::{decode8, encode8};
+    use torno_color::srgb::{decode8, encode8};
     // Independent physical source-over oracle: read stored premultiplied bytes,
     // never the production readability predicate or unpremultiplication helper.
     let physical = |source: Color32, background: Color32, linear: bool, dither: f64| {
@@ -156,10 +154,10 @@ fn panel_contrast_encloses_actual_premultiplied_gpu_blends() {
     let premultiplied = Color32::from_rgba_premultiplied(32, 32, 32, 128);
     let ground = Color32::from_gray(1);
     assert_eq!(physical(premultiplied, ground, false, 0.0), Color32::from_gray(32));
-    assert_eq!(solidcraft_theme::composite(premultiplied, ground), Color32::from_gray(33), "round-trip reconstruction is a different blend");
+    assert_eq!(torno_theme::composite(premultiplied, ground), Color32::from_gray(33), "round-trip reconstruction is a different blend");
     for background in [0, 1, 64, 117, 192, 254, 255] {
         let ground = Color32::from_gray(background);
-        let (low, high) = solidcraft_theme::panel_composite_bounds(premultiplied, ground);
+        let (low, high) = torno_theme::panel_composite_bounds(premultiplied, ground);
         for (linear, dither) in [(false, -0.475), (false, 0.0), (false, 0.475), (true, 0.0)] {
             let actual = physical(premultiplied, ground, linear, dither);
             assert!(low.r() <= actual.r() && actual.r() <= high.r(), "actual stored-byte blend lies inside conservative bounds");
@@ -169,7 +167,7 @@ fn panel_contrast_encloses_actual_premultiplied_gpu_blends() {
     for dark in [false, true] {
         let mut tokens = surface_test_palette(dark);
         tokens.form_dim = if dark { Color32::from_rgba_unmultiplied(255, 255, 255, 240) } else { Color32::from_rgba_unmultiplied(0, 0, 0, 240) };
-        let _scope = solidcraft_theme::scoped_panel_tokens(tokens);
+        let _scope = torno_theme::scoped_panel_tokens(tokens);
         let style = HostSurfaceStyle::capture(&ctx, false, Some(0.0), None);
         let appearance = style.appearance(PanelSurface::Translucent, false);
         assert!(matches!(appearance.contrast, ContrastOutcome::Readable { .. }));
@@ -179,7 +177,7 @@ fn panel_contrast_encloses_actual_premultiplied_gpu_blends() {
                 for ink in [tokens.text, tokens.text_dim, tokens.form_ink, tokens.form_dim, tokens.dialog_label] {
                     let text = physical(ink, background, linear, 0.0);
                     assert!(
-                        solidcraft_theme::contrast_ratio(text, background) >= 4.5,
+                        torno_theme::contrast_ratio(text, background) >= 4.5,
                         "independent framebuffer blend preserves both primary and muted text"
                     );
                 }
@@ -193,17 +191,17 @@ fn panel_surface_cache_tracks_dark_mode_even_with_identical_authored_tokens() {
     struct RestoreDark(bool);
     impl Drop for RestoreDark {
         fn drop(&mut self) {
-            solidcraft_theme::set_dark(self.0);
+            torno_theme::set_dark(self.0);
         }
     }
-    let _restore = RestoreDark(solidcraft_theme::is_dark());
+    let _restore = RestoreDark(torno_theme::is_dark());
     let ctx = egui::Context::default();
     let mut tokens = surface_test_palette(false);
     tokens.form_dim = tokens.panel;
-    let _scope = solidcraft_theme::scoped_panel_tokens(tokens);
-    solidcraft_theme::set_dark(false);
+    let _scope = torno_theme::scoped_panel_tokens(tokens);
+    torno_theme::set_dark(false);
     let light = HostSurfaceStyle::capture(&ctx, false, Some(0.5), None);
-    solidcraft_theme::set_dark(true);
+    torno_theme::set_dark(true);
     let dark = HostSurfaceStyle::capture(&ctx, false, Some(0.5), Some(&light));
     let light_appearance = light.appearance(PanelSurface::Translucent, false);
     let dark_appearance = dark.appearance(PanelSurface::Translucent, false);
@@ -217,7 +215,7 @@ fn invalid_panel_theme_reports_failure_and_uses_opaque_known_tokens() {
     let mut tokens = surface_test_palette(false);
     tokens.form_dim = tokens.panel;
     tokens.space_4 = 7.0;
-    let _scope = solidcraft_theme::scoped_panel_tokens(tokens);
+    let _scope = torno_theme::scoped_panel_tokens(tokens);
     for override_alpha in [Some(0.5), Some(f32::NAN), Some(f32::INFINITY), Some(-0.1), Some(1.1)] {
         let style = HostSurfaceStyle::capture(&ctx, false, override_alpha, None);
         let appearance = style.appearance(PanelSurface::Translucent, false);
@@ -228,7 +226,7 @@ fn invalid_panel_theme_reports_failure_and_uses_opaque_known_tokens() {
         };
         assert_eq!(appearance.contrast, ContrastOutcome::RetainReadableFallback { reason: expected });
         assert_eq!(appearance.fill.a(), 255);
-        assert!(solidcraft_theme::panel_surface_readable(appearance.fill, style.palette(appearance)));
+        assert!(torno_theme::panel_surface_readable(appearance.fill, style.palette(appearance)));
         assert_eq!(style.palette(appearance).space_4, tokens.space_4, "fallback does not change layout metrics");
         let cached = HostSurfaceStyle::capture(&ctx, false, override_alpha, Some(&style));
         assert_eq!(cached, style, "even an invalid raw NaN override has a stable bitwise cache key");
@@ -239,7 +237,7 @@ fn invalid_panel_theme_reports_failure_and_uses_opaque_known_tokens() {
 fn panel_surface_capture_matches_shared_frames_and_respects_accessibility() {
     let ctx = egui::Context::default();
     let tokens = surface_test_palette(false);
-    let _scope = solidcraft_theme::scoped_panel_tokens(tokens);
+    let _scope = torno_theme::scoped_panel_tokens(tokens);
     let style = HostSurfaceStyle::capture(&ctx, false, None, None);
     for floating in [false, true] {
         let requested = crate::ui_kit::panel_host_frame(&ctx, floating).fill;
@@ -251,36 +249,36 @@ fn panel_surface_capture_matches_shared_frames_and_respects_accessibility() {
     for floating in [false, true] {
         let appearance = forced.appearance(PanelSurface::Translucent, floating);
         assert_eq!(appearance.fill.a(), 255);
-        assert!(solidcraft_theme::panel_surface_readable(appearance.fill, forced.palette(appearance)));
+        assert!(torno_theme::panel_surface_readable(appearance.fill, forced.palette(appearance)));
     }
     let second_context = egui::Context::default();
     assert_eq!(HostSurfaceStyle::capture(&second_context, false, None, Some(&style)), style);
     let mut changed = tokens;
     changed.text_dim = egui::Color32::from_gray(20);
-    let _changed = solidcraft_theme::scoped_panel_tokens(changed);
+    let _changed = torno_theme::scoped_panel_tokens(changed);
     assert_ne!(HostSurfaceStyle::capture(&ctx, false, None, Some(&style)), style);
 }
 
 #[test]
 fn panel_paint_palette_scope_restores_nested_tokens_without_changing_base_theme() {
-    let before = solidcraft_theme::Tokens::get();
-    let base = solidcraft_theme::Tokens::base();
+    let before = torno_theme::Tokens::get();
+    let base = torno_theme::Tokens::base();
     let mut outer = before;
     outer.text = outer.file_primary_ink;
     {
-        let _outer = solidcraft_theme::scoped_panel_tokens(outer);
-        assert_eq!(solidcraft_theme::Tokens::get(), outer);
-        assert_eq!(solidcraft_theme::Tokens::get_in(solidcraft_theme::ColorVision::Off), outer);
-        assert_eq!(solidcraft_theme::Tokens::base(), base);
+        let _outer = torno_theme::scoped_panel_tokens(outer);
+        assert_eq!(torno_theme::Tokens::get(), outer);
+        assert_eq!(torno_theme::Tokens::get_in(torno_theme::ColorVision::Off), outer);
+        assert_eq!(torno_theme::Tokens::base(), base);
         {
             let inner = surface_test_palette(false);
-            let _inner = solidcraft_theme::scoped_panel_tokens(inner);
-            assert_eq!(solidcraft_theme::Tokens::get(), inner);
+            let _inner = torno_theme::scoped_panel_tokens(inner);
+            assert_eq!(torno_theme::Tokens::get(), inner);
         }
-        assert_eq!(solidcraft_theme::Tokens::get(), outer);
+        assert_eq!(torno_theme::Tokens::get(), outer);
     }
-    assert_eq!(solidcraft_theme::Tokens::get(), before);
-    assert_eq!(solidcraft_theme::Tokens::base(), base);
+    assert_eq!(torno_theme::Tokens::get(), before);
+    assert_eq!(torno_theme::Tokens::base(), base);
 }
 
 fn prepare_preference_fixture(app: &mut crate::SolveApp) {
@@ -292,7 +290,7 @@ fn prepare_preference_fixture(app: &mut crate::SolveApp) {
 }
 
 fn remembered_preference_fixture() -> crate::SolveApp {
-    let mut app = crate::SolveApp::new(solidcraft_engine::Session::default(), Default::default());
+    let mut app = crate::SolveApp::new(torno_engine::Session::default(), Default::default());
     super::specimen::control_specimen(&mut app, &serde_json::json!({"preset":"docks","remember":true})).unwrap();
     prepare_preference_fixture(&mut app);
     app
@@ -319,7 +317,7 @@ fn application_panel_preferences_round_trip_named_layouts_columns_and_expansion(
     assert!(serde_json::from_str::<serde_json::Value>(&saved).unwrap()[PREFERENCES_KEY]["catalogue"].is_string());
     assert!(std::sync::Arc::ptr_eq(&document, &app.session.doc));
     assert_eq!(revision, app.session.revision);
-    let mut restored = crate::SolveApp::new(solidcraft_engine::Session::default(), Default::default());
+    let mut restored = crate::SolveApp::new(torno_engine::Session::default(), Default::default());
     restored.load_prefs(&saved);
     assert!(restored.panel_runtime().is_none(), "saved layouts do not enable a host or alter Classic defaults");
     super::specimen::control_specimen(&mut restored, &serde_json::json!({"preset":"docks","remember":true})).unwrap();
@@ -347,7 +345,7 @@ fn application_panel_workspace_selection_is_explicit_and_remembered() {
     assert_eq!(app.session.document_id, "other-document");
     assert!(std::sync::Arc::ptr_eq(&document, &app.session.doc));
     let saved = app.prefs();
-    let mut restored = crate::SolveApp::new(solidcraft_engine::Session::default(), Default::default());
+    let mut restored = crate::SolveApp::new(torno_engine::Session::default(), Default::default());
     restored.load_prefs(&saved);
     super::specimen::control_specimen(&mut restored, &serde_json::json!({"preset":"docks","remember":true})).unwrap();
     prepare_preference_fixture(&mut restored);
@@ -357,7 +355,7 @@ fn application_panel_workspace_selection_is_explicit_and_remembered() {
 #[test]
 fn future_application_panel_record_is_retained_without_legacy_reimport() {
     let future = serde_json::json!({"version":99,"future":{"exact":[1,"two",null]}});
-    let mut app = crate::SolveApp::new(solidcraft_engine::Session::default(), Default::default());
+    let mut app = crate::SolveApp::new(torno_engine::Session::default(), Default::default());
     app.load_prefs(&serde_json::json!({"panel_layout":future,"preferences":{"browser_width":777.0}}).to_string());
     assert_eq!(preferences_value(&app), Some(future.clone()));
     super::specimen::control_specimen(&mut app, &serde_json::json!({"preset":"docks","remember":true})).unwrap();
@@ -367,7 +365,7 @@ fn future_application_panel_record_is_retained_without_legacy_reimport() {
     assert_eq!(value.get("rejected"), Some(&future));
     assert!(value.get("legacy").is_some_and(serde_json::Value::is_null), "a present unreadable record blocks old-field migration");
     let saved = app.prefs();
-    let mut restored = crate::SolveApp::new(solidcraft_engine::Session::default(), Default::default());
+    let mut restored = crate::SolveApp::new(torno_engine::Session::default(), Default::default());
     restored.load_prefs(&saved);
     super::specimen::control_specimen(&mut restored, &serde_json::json!({"preset":"docks","remember":true})).unwrap();
     prepare_preference_fixture(&mut restored);
@@ -376,7 +374,7 @@ fn future_application_panel_record_is_retained_without_legacy_reimport() {
 
 #[test]
 fn invalid_packed_catalogue_and_unknown_legacy_fields_remain_recoverable() {
-    let mut app = crate::SolveApp::new(solidcraft_engine::Session::default(), Default::default());
+    let mut app = crate::SolveApp::new(torno_engine::Session::default(), Default::default());
     app.load_prefs("{\"preferences\":{\"browser_width\":333}}");
     super::specimen::control_specimen(&mut app, &serde_json::json!({"preset":"docks","remember":true})).unwrap();
     let valid = preferences_value(&app).unwrap();
@@ -385,12 +383,12 @@ fn invalid_packed_catalogue_and_unknown_legacy_fields_remain_recoverable() {
     for malformed in ["!invalid!", "Zg", "Zh=="] {
         let mut raw = valid.clone();
         raw["catalogue"] = malformed.into();
-        let mut restored = crate::SolveApp::new(solidcraft_engine::Session::default(), Default::default());
+        let mut restored = crate::SolveApp::new(torno_engine::Session::default(), Default::default());
         restored.load_prefs(&serde_json::json!({"panel_layout":raw}).to_string());
         super::specimen::control_specimen(&mut restored, &serde_json::json!({"preset":"docks","remember":true})).unwrap();
         assert_eq!(preferences_value(&restored).unwrap()["rejected"], raw);
     }
-    let mut restored = crate::SolveApp::new(solidcraft_engine::Session::default(), Default::default());
+    let mut restored = crate::SolveApp::new(torno_engine::Session::default(), Default::default());
     restored.load_prefs(&serde_json::json!({"panel_layout":unknown_legacy}).to_string());
     super::specimen::control_specimen(&mut restored, &serde_json::json!({"preset":"docks","remember":true})).unwrap();
     assert_eq!(preferences_value(&restored).unwrap()["rejected"], unknown_legacy);
@@ -398,7 +396,7 @@ fn invalid_packed_catalogue_and_unknown_legacy_fields_remain_recoverable() {
 
 #[test]
 fn legacy_panel_placement_inputs_survive_unmapped_fixture_restart() {
-    let mut app = crate::SolveApp::new(solidcraft_engine::Session::default(), Default::default());
+    let mut app = crate::SolveApp::new(torno_engine::Session::default(), Default::default());
     app.load_prefs(&serde_json::json!({"preferences":{"browser_width":333.0,"agent_chat_popped":true}}).to_string());
     super::specimen::control_specimen(&mut app, &serde_json::json!({"preset":"docks","remember":true})).unwrap();
     prepare_preference_fixture(&mut app);
@@ -406,7 +404,7 @@ fn legacy_panel_placement_inputs_survive_unmapped_fixture_restart() {
     assert_eq!(first["legacy"]["browser_width"], 333.0);
     assert_eq!(first["legacy"]["imported"], serde_json::json!([]));
     let saved = app.prefs();
-    let mut restored = crate::SolveApp::new(solidcraft_engine::Session::default(), Default::default());
+    let mut restored = crate::SolveApp::new(torno_engine::Session::default(), Default::default());
     restored.load_prefs(&saved);
     super::specimen::control_specimen(&mut restored, &serde_json::json!({"preset":"docks","remember":true})).unwrap();
     prepare_preference_fixture(&mut restored);
@@ -424,7 +422,7 @@ fn legacy_panel_capture_uses_the_presented_collapse_and_history_location() {
     for (left, under, card_collapsed, column_collapsed, collapsed, stacked) in
         [(true, false, false, true, true, false), (true, true, true, false, false, true), (false, true, true, false, true, false)]
     {
-        let mut app = crate::SolveApp::new(solidcraft_engine::Session::default(), Default::default());
+        let mut app = crate::SolveApp::new(torno_engine::Session::default(), Default::default());
         app.load_prefs(
             &serde_json::json!({"preferences":{
                 "timeline_left":left,"timeline_under_browser":under,
@@ -626,7 +624,7 @@ fn preference_restore_retains_live_controller_draft_and_failed_admission_is_atom
     let mut fixture = PanelMountHarness::new(false).unwrap();
     open_editor(&mut fixture);
     let probe = fixture.probe.clone();
-    let mut app = crate::SolveApp::new(solidcraft_engine::Session::default(), Default::default());
+    let mut app = crate::SolveApp::new(torno_engine::Session::default(), Default::default());
     app.enable_panel_runtime(
         fixture.runtime,
         Box::new(AppFixtureServices {
@@ -657,7 +655,7 @@ fn preference_restore_retains_live_controller_draft_and_failed_admission_is_atom
     assert!(probe.state(&key).unwrap().transaction_live);
     assert_eq!(probe.state(&key).unwrap().cancels, 0);
 
-    let mut larger = crate::SolveApp::new(solidcraft_engine::Session::default(), Default::default());
+    let mut larger = crate::SolveApp::new(torno_engine::Session::default(), Default::default());
     super::specimen::control_specimen(&mut larger, &serde_json::json!({"preset":"overflow","remember":true})).unwrap();
     let before = preferences_value(&app);
     let layout = app.panel_runtime().unwrap().layout().inspect();
@@ -672,16 +670,16 @@ fn preference_restore_retains_live_controller_draft_and_failed_admission_is_atom
 
 #[test]
 fn unchanged_absent_record_cancel_preserves_deferred_legacy_and_explicit_null_recovery() {
-    let mut app = crate::SolveApp::new(solidcraft_engine::Session::default(), Default::default());
+    let mut app = crate::SolveApp::new(torno_engine::Session::default(), Default::default());
     app.load_prefs(&serde_json::json!({"preferences":{"browser_width":333.0}}).to_string());
     restore_preferences(&mut app, None).unwrap();
     super::specimen::control_specimen(&mut app, &serde_json::json!({"preset":"docks","remember":true})).unwrap();
     assert_eq!(preferences_value(&app).unwrap()["legacy"]["browser_width"], 333.0);
-    let mut broken = crate::SolveApp::new(solidcraft_engine::Session::default(), Default::default());
+    let mut broken = crate::SolveApp::new(torno_engine::Session::default(), Default::default());
     broken.load_prefs("{\"panel_layout\":null}");
     super::specimen::control_specimen(&mut broken, &serde_json::json!({"preset":"docks","remember":true})).unwrap();
     let saved = broken.prefs();
-    let mut restored = crate::SolveApp::new(solidcraft_engine::Session::default(), Default::default());
+    let mut restored = crate::SolveApp::new(torno_engine::Session::default(), Default::default());
     restored.load_prefs(&saved);
     super::specimen::control_specimen(&mut restored, &serde_json::json!({"preset":"docks","remember":true})).unwrap();
     prepare_preference_fixture(&mut restored);
@@ -2619,7 +2617,7 @@ impl RawPanelHost {
             // foreground container. Warmed frames establish real egui ownership.
             if let Some(bounds) = self.foreign_cover {
                 let container = crate::ui_kit::Container::new(ui.ctx(), crate::ui_kit::Surface::Window);
-                let frame = container.frame(ui.ctx(), solidcraft_theme::Tokens::get().dialog_body, crate::frame::Side::Left).inner_margin(0);
+                let frame = container.frame(ui.ctx(), torno_theme::Tokens::get().dialog_body, crate::frame::Side::Left).inner_margin(0);
                 container
                     .area(egui::Id::unique("unrelated_test_window"))
                     .order(self.foreign_order)
@@ -2677,7 +2675,7 @@ impl RawPanelHost {
             }
             let modal = self.late_modal.then(|| {
                 let container = crate::ui_kit::Container::new(ui.ctx(), crate::ui_kit::Surface::Window);
-                let frame = container.frame(ui.ctx(), solidcraft_theme::Tokens::get().dialog_body, crate::frame::Side::Left);
+                let frame = container.frame(ui.ctx(), torno_theme::Tokens::get().dialog_body, crate::frame::Side::Left);
                 container.modal(egui::Id::unique("unrelated_test_modal")).frame(frame).show(ui.ctx(), |ui| {
                     ui.set_min_size(egui::vec2(200.0, 80.0));
                     ui.label("Independent modal content");
@@ -3311,7 +3309,7 @@ fn raw_host_wider_perimeters_win_over_cards_tabs_and_clear_below_without_fallbac
                         assert!(output_paints_rect(
                             &output,
                             preview.bounds,
-                            Some(solidcraft_theme::Tokens::get().form_primary.gamma_multiply(0.12)),
+                            Some(torno_theme::Tokens::get().form_primary.gamma_multiply(0.12)),
                             None
                         ));
                         let shown = preview.projected.unwrap();
@@ -3412,12 +3410,7 @@ fn raw_host_perimeter_anchors_survive_source_detach_and_commit_the_exact_preview
                     );
                     assert!(preview.rejection.is_none(), "{preview:?}");
                     assert_eq!(preview.targets.len(), 1);
-                    assert!(output_paints_rect(
-                        &output,
-                        preview.bounds,
-                        Some(solidcraft_theme::Tokens::get().form_primary.gamma_multiply(0.12)),
-                        None
-                    ));
+                    assert!(output_paints_rect(&output, preview.bounds, Some(torno_theme::Tokens::get().form_primary.gamma_multiply(0.12)), None));
                     let shown = preview.projected.unwrap();
                     assert_eq!(raw.content.runtime.layout().inspect(), before);
                     assert_eq!(raw.content.native.commits, commits);
@@ -4475,7 +4468,7 @@ fn raw_below_short_card_previews_and_commits_halfway_through_clear_space_before_
 #[test]
 fn raw_drag_title_tracks_only_the_source_text_without_changing_host_state_or_footprints() {
     fn feedback(output: &egui::FullOutput, title: &str, source: egui::Rect, ink: egui::Color32, faded: bool, badge: bool) {
-        let t = solidcraft_theme::Tokens::get();
+        let t = torno_theme::Tokens::get();
         let (mut originals, mut badges, mut others) = (0, 0, 0);
         for clipped in &output.shapes {
             crate::test_support::each_shape(&clipped.shape, &mut |shape| {
@@ -4535,7 +4528,7 @@ fn raw_drag_title_tracks_only_the_source_text_without_changing_host_state_or_foo
             let source = egui_rect(raw.host.frame().unwrap().controls.iter().find(|control| control.target == target).unwrap().bounds);
             let controls = raw.host.frame().unwrap().controls.iter().map(|control| (control.id, control.bounds)).collect::<Vec<_>>();
             let title = raw.content.runtime.instance_presentation(&id("editor")).unwrap().title;
-            let ink = solidcraft_theme::Tokens::get().form_primary; // Editor declares attention.
+            let ink = torno_theme::Tokens::get().form_primary; // Editor declares attention.
             let start = raw.at(target);
             raw.pointer(start, true, false);
             let below = raw.frame(vec![egui::Event::PointerMoved(start + egui::vec2(5.99, 0.0))], false);
@@ -4763,9 +4756,9 @@ fn raw_host_inactive_tab_widget_drag_obeys_threshold_and_moves_only_its_retained
         assert!(preview.rejection.is_none());
         assert_eq!(preview.destination, Some(Destination::JoinTab { section: section("destination"), index: 2 }));
         let projected = preview.projected.clone().unwrap();
-        assert!(output_paints_rect(&output, preview.bounds, Some(solidcraft_theme::Tokens::get().form_primary.gamma_multiply(0.12)), None));
+        assert!(output_paints_rect(&output, preview.bounds, Some(torno_theme::Tokens::get().form_primary.gamma_multiply(0.12)), None));
         assert!(
-            output_paints_rect(&output, preview.tab_marker.unwrap(), Some(solidcraft_theme::Tokens::get().form_primary), None),
+            output_paints_rect(&output, preview.tab_marker.unwrap(), Some(torno_theme::Tokens::get().form_primary), None),
             "paint the actual inserted-tab edge, not a nominal body highlight"
         );
         assert_eq!(raw.content.runtime.layout().inspect(), before, "preview cannot activate the tab or change layout");
@@ -6023,7 +6016,7 @@ struct AppFixtureServices {
     refreshed: u64,
 }
 impl AppPanelServices for AppFixtureServices {
-    fn refresh_read_only(&mut self, _session: &solidcraft_engine::Session) -> PanelResult<()> {
+    fn refresh_read_only(&mut self, _session: &torno_engine::Session) -> PanelResult<()> {
         self.refreshed += 1;
         Ok(())
     }
@@ -6034,7 +6027,7 @@ impl AppPanelServices for AppFixtureServices {
 
 #[test]
 fn solve_app_integration_is_opt_in_and_cannot_dirty_or_mutate_document() {
-    let mut app = crate::SolveApp::new(solidcraft_engine::Session::default(), Default::default());
+    let mut app = crate::SolveApp::new(torno_engine::Session::default(), Default::default());
     assert!(app.panel_runtime().is_none());
     let doc = app.session.doc.clone();
     let model = app.session.model.state();
@@ -6435,7 +6428,7 @@ fn prepare_app_commands(app: &mut crate::SolveApp) {
 #[test]
 fn application_structural_commands_require_a_captured_host_environment() {
     let PanelMountHarness { runtime, .. } = PanelMountHarness::new(false).unwrap();
-    let mut app = crate::SolveApp::new(solidcraft_engine::Session::default(), Default::default());
+    let mut app = crate::SolveApp::new(torno_engine::Session::default(), Default::default());
     app.enable_panel_runtime(runtime, Box::new(FakeAppPanelServices { models: FakeModels { editable: true }, ..Default::default() })).unwrap();
     assert_eq!(app.run_panel_command("panel.open", &panel_command_editor()).unwrap_err().rule, Rule::Availability);
     app.enable_universal_panel_host(HostOptions::default()).unwrap();
@@ -6583,7 +6576,7 @@ fn panel_native_close_command_redocks_without_cancelling_or_replacing_editor() {
 fn solve_app_panel_commands_use_injected_services_without_document_camera_or_cache_changes() {
     let PanelMountHarness { runtime, probe, .. } = PanelMountHarness::new(false).unwrap();
     let trace = std::rc::Rc::new(std::cell::RefCell::new(ForwardingTrace::default()));
-    let mut app = crate::SolveApp::new(solidcraft_engine::Session::default(), Default::default());
+    let mut app = crate::SolveApp::new(torno_engine::Session::default(), Default::default());
     let revision = app.session.revision;
     let doc = app.session.doc.clone();
     let model = app.session.model.state();
@@ -6622,7 +6615,7 @@ fn solve_app_panel_commands_use_injected_services_without_document_camera_or_cac
     assert!(std::sync::Arc::ptr_eq(&model, &app.session.model.state()));
 }
 impl AppPanelServices for ForwardingAppServices {
-    fn refresh_read_only(&mut self, _session: &solidcraft_engine::Session) -> PanelResult<()> {
+    fn refresh_read_only(&mut self, _session: &torno_engine::Session) -> PanelResult<()> {
         let mut trace = self.trace.try_borrow_mut().map_err(|_| error(Rule::Lifecycle, "trace borrowed"))?;
         trace.refreshes += 1;
         trace.content_calls = self.commands.calls;
@@ -6641,7 +6634,7 @@ fn solve_app_forwards_dispatch_mount_content_switch_and_ticks_to_its_injected_pr
     let PanelMountHarness { runtime, probe, .. } = PanelMountHarness::new(false).unwrap();
     let catalogue = fixture_command_catalogue(runtime.layout().registry()).unwrap();
     let trace = std::rc::Rc::new(std::cell::RefCell::new(ForwardingTrace::default()));
-    let mut app = crate::SolveApp::new(solidcraft_engine::Session::default(), Default::default());
+    let mut app = crate::SolveApp::new(torno_engine::Session::default(), Default::default());
     let revision = app.session.revision;
     let doc = app.session.doc.clone();
     let model = app.session.model.state();
@@ -6725,7 +6718,7 @@ struct CurrentContextServices {
     refreshes: std::rc::Rc<std::cell::RefCell<Vec<(String, String)>>>,
 }
 impl AppPanelServices for CurrentContextServices {
-    fn refresh_read_only(&mut self, session: &solidcraft_engine::Session) -> PanelResult<()> {
+    fn refresh_read_only(&mut self, session: &torno_engine::Session) -> PanelResult<()> {
         let editable = session.doc.param("fixture_editable").is_some_and(|param| param.expr.trim() == "1");
         self.models.0.borrow_mut().insert(DocumentId::new(session.document_id.clone())?, editable);
         self.refreshes.borrow_mut().push((session.document_id.clone(), session.doc.name.clone()));
@@ -6737,7 +6730,7 @@ impl AppPanelServices for CurrentContextServices {
 }
 fn current_context_app() -> (crate::SolveApp, FixtureProbe) {
     let PanelMountHarness { runtime, probe, .. } = PanelMountHarness::new(false).unwrap();
-    let mut session = solidcraft_engine::Session::default();
+    let mut session = torno_engine::Session::default();
     session.execute("file.new", &serde_json::json!({"name":"Same name"})).unwrap();
     session.document_id = "context-a".into();
     session.execute("parameters.change", &serde_json::json!({"name":"fixture_editable","expression":1,"unit":""})).unwrap();
@@ -6770,7 +6763,7 @@ fn application_command_query_and_failure_refresh_same_named_document_before_any_
     app.run("panel.open", panel_command_editor()).unwrap();
     let a = ControllerKey { instance: id("editor"), owner: ContentOwner::Document(DocumentId::new("context-a").unwrap()) };
     probe.edit(&a, |state| state.draft = "document A draft".into()).unwrap();
-    let mut b = solidcraft_engine::Session::default();
+    let mut b = torno_engine::Session::default();
     b.execute("file.new", &serde_json::json!({"name":"Same name"})).unwrap();
     b.document_id = "context-b".into();
     app.session.replace_design(b);
@@ -6826,7 +6819,7 @@ fn unsupported_atomic_intent_mixtures_refuse_before_context_or_controller_public
     let before = app.panel_runtime().unwrap().layout().inspect();
     let controllers = app.panel_runtime().unwrap().controller_count();
     let retained = probe.state(&key).unwrap();
-    let mut next = solidcraft_engine::Session::default();
+    let mut next = torno_engine::Session::default();
     next.document_id = "context-b".into();
     app.session.replace_design(next);
     for commands in [
@@ -6907,7 +6900,7 @@ fn solve_app_gui_and_command_routes_share_native_owner_and_refuse_adapter_hot_sw
     let PanelMountHarness { runtime, probe, .. } = PanelMountHarness::new(true).unwrap();
     let catalogue = fixture_command_catalogue(runtime.layout().registry()).unwrap();
     let native = std::rc::Rc::new(std::cell::RefCell::new(FakeNativeAdapter::new(true)));
-    let mut app = crate::SolveApp::new(solidcraft_engine::Session::default(), Default::default());
+    let mut app = crate::SolveApp::new(torno_engine::Session::default(), Default::default());
     app.enable_panel_runtime(runtime, Box::new(FakeAppPanelServices { models: FakeModels { editable: true }, ..Default::default() })).unwrap();
     app.panel_runtime_mut().unwrap().set_command_adapters(Box::new(catalogue), Box::new(SharedCommandNative(native.clone()))).unwrap();
     prepare_app_commands(&mut app);
@@ -7026,7 +7019,7 @@ impl BoundaryServices {
     }
 }
 impl AppPanelServices for BoundaryServices {
-    fn refresh_read_only(&mut self, session: &solidcraft_engine::Session) -> PanelResult<()> {
+    fn refresh_read_only(&mut self, session: &torno_engine::Session) -> PanelResult<()> {
         let mut state = self.trace.borrow_mut();
         state.refreshes += 1;
         if state.fail_refresh {
@@ -7145,7 +7138,7 @@ fn same_frame_session_switch_after_logic_cancels_old_capture_menu_focus_and_rout
         let old_focus = h.ctx.memory(|memory| memory.focused());
         let saved = h.app.panel_runtime().unwrap().layout().layout().clone();
         let drop = egui::pos2(1500.0, 600.0);
-        let incoming_session = solidcraft_engine::Session::default();
+        let incoming_session = torno_engine::Session::default();
         let document = incoming_session.doc.clone();
         let model = incoming_session.model.state();
         let undo = incoming_session.undo.len();
@@ -7207,7 +7200,7 @@ fn same_frame_refresh_refusal_fails_closed_before_render_dispatch_or_content_act
         h.frame_with(vec![egui::Event::PointerMoved(at), button_event(at, true)]);
         let before = probe.state(&key).unwrap();
         let saved = h.app.panel_runtime().unwrap().layout().inspect();
-        let mut incoming = Some(solidcraft_engine::Session::default());
+        let mut incoming = Some(torno_engine::Session::default());
         boundary_frame(&mut h, vec![button_event(at + egui::vec2(500.0, 0.0), false)], |app| {
             crate::documents::open_tab(app, incoming.take().unwrap()).unwrap();
             app.home.open = false;
@@ -7244,7 +7237,7 @@ fn same_frame_programmatic_actions_and_mount_reconcile_a_switch_after_host_prepa
     let (mut h, probe, trace) = boundary_app();
     let old_key = app_editor_key(&h.app);
     let before = probe.state(&old_key).unwrap();
-    let mut incoming = Some(solidcraft_engine::Session::default());
+    let mut incoming = Some(torno_engine::Session::default());
     let time = h.ctx.input(|input| input.time) + 1.0 / 60.0;
     let mut output =
         h.ctx.run_ui(egui::RawInput { screen_rect: Some(egui_rect(capacity())), time: Some(time), focused: true, ..Default::default() }, |ui| {
@@ -7344,7 +7337,7 @@ fn app_native_owner_is_persistent_with_host_off_or_on_and_refusals_preserve_reso
     for shared_host in [false, true] {
         let PanelMountHarness { runtime, probe, .. } = PanelMountHarness::new(true).unwrap();
         let trace = BoundaryProbe::default();
-        let mut app = crate::SolveApp::new(solidcraft_engine::Session::default(), Default::default());
+        let mut app = crate::SolveApp::new(torno_engine::Session::default(), Default::default());
         app.enable_panel_runtime(runtime, Box::new(BoundaryServices::new(trace.clone()))).unwrap();
         prepare_app_commands(&mut app);
         app.dispatch_panel_layout(transaction(vec![fixture_open("fixture.editor", "editor", "editor-section", Zone::Left, 0).unwrap()])).unwrap();
@@ -7848,7 +7841,7 @@ fn raw_split_preview_paints_the_exact_landing_and_changed_neighbours_before_one_
             let preview = moving.preview.unwrap();
             assert!(preview.rejection.is_none());
             let projected = preview.projected.unwrap();
-            assert!(output_paints_rect(&output, preview.bounds, Some(solidcraft_theme::Tokens::get().form_primary.gamma_multiply(0.12)), None));
+            assert!(output_paints_rect(&output, preview.bounds, Some(torno_theme::Tokens::get().form_primary.gamma_multiply(0.12)), None));
             let changed = projected
                 .sections
                 .iter()
@@ -7858,7 +7851,7 @@ fn raw_split_preview_paints_the_exact_landing_and_changed_neighbours_before_one_
                 .collect::<Vec<_>>();
             assert!(!changed.is_empty());
             for card in changed {
-                assert!(output_paints_rect(&output, card.outer, None, Some(solidcraft_theme::Tokens::get().form_primary.gamma_multiply(0.7))));
+                assert!(output_paints_rect(&output, card.outer, None, Some(torno_theme::Tokens::get().form_primary.gamma_multiply(0.7))));
             }
             assert_eq!(raw.content.runtime.layout().inspect(), before);
             assert_eq!(raw.host.frame().unwrap().layout.usable, initial.usable, "landing paint never commits the candidate usable region");
@@ -8870,7 +8863,7 @@ fn tick_failed_document_refresh_preserves_old_owners_and_attempts_services_once(
             let layout = h.app.panel_runtime().unwrap().layout().layout().clone();
             let factory_keys = trace.borrow().factory_keys.clone();
             let controllers = h.app.panel_runtime().unwrap().controller_count();
-            let incoming = solidcraft_engine::Session::default();
+            let incoming = torno_engine::Session::default();
             crate::documents::open_tab(&mut h.app, incoming).unwrap();
             h.app.home.open = false;
             // Switching documents has its own revision invalidation. The
@@ -8979,7 +8972,7 @@ fn tick_failed_document_refresh_preserves_old_owners_and_attempts_services_once(
     let key = app_editor_key(&h.app);
     let environment = h.app.panel_runtime().unwrap().environment().clone();
     probe.edit(&key, |state| state.fail_update = true).unwrap();
-    crate::documents::open_tab(&mut h.app, solidcraft_engine::Session::default()).unwrap();
+    crate::documents::open_tab(&mut h.app, torno_engine::Session::default()).unwrap();
     trace.borrow_mut().fail_refresh = true;
     assert_eq!(h.app.tick_panel_runtime().unwrap_err(), error(Rule::Availability, "boundary refresh refused"));
     assert_eq!(h.app.panel_runtime().unwrap().environment(), &environment);
@@ -9444,7 +9437,7 @@ impl PanelController for ReviewController {
                     crate::ui_kit::bounded_cell_editor(ui, editor_id, &mut self.draft, "Review editable value", false, 4096)
                 };
                 if self.key.instance.0 == "wrapping-editor" {
-                    let tokens = solidcraft_theme::Tokens::get();
+                    let tokens = torno_theme::Tokens::get();
                     let width = (response.rect.width() - 2.0 * tokens.form_inset).max(1.0);
                     let galley =
                         ui.fonts_mut(|fonts| fonts.layout(self.draft.clone(), egui::FontId::monospace(tokens.font_label), tokens.form_ink, width));
@@ -10108,7 +10101,7 @@ fn command_storage_refusal_uses_the_same_host_admission_before_any_runtime_publi
 fn standalone_registered_action_needs_neither_host_environment_nor_layout_store() {
     let (mut h, trace) = review_cohort_host(|_| {});
     h.dispatch(vec![fixture_open("fixture.log", "log", "log", Zone::Left, 0).unwrap()]).unwrap();
-    let mut app = crate::SolveApp::new(solidcraft_engine::Session::default(), Default::default());
+    let mut app = crate::SolveApp::new(torno_engine::Session::default(), Default::default());
     app.enable_panel_runtime(h.runtime, Box::new(FakeAppPanelServices { models: FakeModels { editable: true }, ..Default::default() })).unwrap();
     let mut catalogue = commands::InMemoryCatalogue::default();
     catalogue.fail_stage = true;
@@ -10497,7 +10490,7 @@ struct SharedHeightServices {
     local: FakeLocalServices,
 }
 impl AppPanelServices for SharedHeightServices {
-    fn refresh_read_only(&mut self, _session: &solidcraft_engine::Session) -> PanelResult<()> {
+    fn refresh_read_only(&mut self, _session: &torno_engine::Session) -> PanelResult<()> {
         Ok(())
     }
     fn services(&mut self) -> ContentServices<'_> {
@@ -10569,7 +10562,7 @@ fn immutable_metric_drift_inside_catalogue_prepare_rejects_retained_and_staged_o
                     },
                 )
                 .unwrap();
-            let mut app = crate::SolveApp::new(solidcraft_engine::Session::default(), Default::default());
+            let mut app = crate::SolveApp::new(torno_engine::Session::default(), Default::default());
             app.enable_panel_runtime(
                 runtime,
                 Box::new(SharedHeightServices {
@@ -11473,7 +11466,7 @@ fn raw_bottom_tab_header_top_edge_resize_owns_label_grip_and_close_overlaps() {
             let key = editor_key(&content);
             content.probe.edit(&key, |state| state.draft = "resize retains this document draft".into()).unwrap();
             let PanelMountHarness { runtime, probe, catalogue, .. } = content;
-            let mut session = solidcraft_engine::Session::default();
+            let mut session = torno_engine::Session::default();
             session.document_id = "fixture.document".into();
             let mut app = crate::SolveApp::new(session, Default::default());
             app.enable_panel_runtime(runtime, Box::new(FakeAppPanelServices { models: FakeModels { editable: true }, ..Default::default() }))
@@ -12314,7 +12307,7 @@ fn app_atomic_workspace_replacements_accept_distinct_incoming_contexts_and_match
         let factories = trace.borrow().factories.len();
         let (reply, state, count, hosts, commits) = if admitted {
             let native = std::rc::Rc::new(std::cell::RefCell::new(FakeNativeAdapter::new(true)));
-            let mut session = solidcraft_engine::Session::default();
+            let mut session = torno_engine::Session::default();
             session.document_id = "fixture.document".into();
             let mut app = crate::SolveApp::new(session, Default::default());
             let doc = app.session.doc.clone();
@@ -12739,7 +12732,7 @@ fn shared_menu_keyboard_entry_end_and_escape_restore_actual_opener() {
         scroll_real_host_popup_to_end(&mut raw);
         assert_eq!(raw.ctx.memory(|memory| memory.focused()), Some(first.id));
         let scrolled = raw.focused_response.as_ref().unwrap().clone();
-        let inner = egui_rect(raw.host.frame().unwrap().menu_bounds.unwrap()).shrink(solidcraft_theme::Tokens::get().space_6);
+        let inner = egui_rect(raw.host.frame().unwrap().menu_bounds.unwrap()).shrink(torno_theme::Tokens::get().space_6);
         assert!(scrolled.rect.bottom() < inner.top(), "manual scrolling can leave the focused first item outside the visible menu");
         raw.frame(Vec::new(), false);
         assert_eq!(raw.focused_response.as_ref().unwrap().rect, scrolled.rect, "idle repaint must not pull manual scroll back to the focused row");
@@ -12755,7 +12748,7 @@ fn shared_menu_keyboard_entry_end_and_escape_restore_actual_opener() {
         let response = raw.focused_response.as_ref().unwrap();
         assert_eq!(response.id, focused);
         let menu = egui_rect(raw.host.frame().unwrap().menu_bounds.unwrap());
-        let inner = menu.shrink(solidcraft_theme::Tokens::get().space_6);
+        let inner = menu.shrink(torno_theme::Tokens::get().space_6);
         assert!(inner.contains_rect(response.rect), "the final enabled action scrolls fully into the tiny menu's visible inner rectangle");
         assert!(response.interact_rect.is_positive());
         assert_eq!(response.interact_rect, response.rect, "the focused row must be fully interactable too");
@@ -13175,7 +13168,7 @@ fn production_browser_and_history_mount_existing_content_once_and_preserve_combi
             assert_eq!(crate::scenario::handle_at(&format!("timeline:{name}")).is_some(), !combined);
         }
         if combined {
-            assert!(rows.iter().any(|row| row.0 == solidcraft_ui_text::tr("ui.history_title")), "combined History keeps its real Browser folder");
+            assert!(rows.iter().any(|row| row.0 == torno_ui_text::tr("ui.history_title")), "combined History keeps its real Browser folder");
         } else {
             let history = frame.layout.sections.iter().find(|card| card.instance == id("history")).unwrap();
             assert!(history.inline, "Bottom History uses the generic one-row composition");
@@ -13191,7 +13184,7 @@ fn production_browser_and_history_mount_existing_content_once_and_preserve_combi
 fn production_tab_collapse_and_move_keep_real_selection_document_camera_and_retained_owners() {
     let mut h = production_content_harness(false, false);
     let feature = h.app.session.doc.features[0].id;
-    h.app.run("select.set", serde_json::json!({"items":[solidcraft_engine::Sel::Feature { id: feature }]})).unwrap();
+    h.app.run("select.set", serde_json::json!({"items":[torno_engine::Sel::Feature { id: feature }]})).unwrap();
     h.frames(2);
     let session = h.app.session.uid;
     let document = h.app.session.doc.clone();
@@ -13459,7 +13452,7 @@ fn production_bottom_history_has_fixed_height_without_collapse_or_height_changes
     h.frames(6);
     let frame = h.app.universal_panel_frame().unwrap();
     let history = frame.layout.sections.iter().find(|card| card.instance == id("history")).unwrap();
-    let spec = h.app.panel_runtime().unwrap().layout().registry().get(&PanelKind::new("solidcraft.history").unwrap()).unwrap();
+    let spec = h.app.panel_runtime().unwrap().layout().registry().get(&PanelKind::new("torno.history").unwrap()).unwrap();
     assert_eq!(history.outer.size.height, spec.fixed_bottom_height.unwrap());
     assert!(history.collapse.is_none());
     let before = h.app.panel_runtime().unwrap().layout().inspect();
@@ -13529,7 +13522,7 @@ fn universal_chrome_controls_have_real_accessible_widgets_and_stable_ids_at_both
                     };
                     assert_eq!(node.role(), expected_role, "the actual widget role follows its typed target: {control:?}");
                     if matches!(&control.target, HostControlTarget::Pointer(HostPointerTarget::Menu { .. })) {
-                        assert_eq!(control.accessible_name, solidcraft_ui_text::tr("ui.panel_host.menu"));
+                        assert_eq!(control.accessible_name, torno_ui_text::tr("ui.panel_host.menu"));
                     }
                 }
             }
@@ -13654,7 +13647,7 @@ fn universal_sole_content_gap_is_navigable_while_declared_fill_uses_the_column()
     let outer = crate::panel_runtime::egui_rect(content.outer);
     let gap = egui::Rect::from_center_size(egui::pos2(outer.center().x, outer.bottom() + 20.0), egui::vec2(4.0, 4.0));
     assert!(frame.layout.usable.contains_rect(logical_rect(gap)));
-    assert!(!frame.layout.consumes_pointer(solidcraft_engine::panels::Point { x: gap.center().x, y: gap.center().y }));
+    assert!(!frame.layout.consumes_pointer(torno_engine::panels::Point { x: gap.center().x, y: gap.center().y }));
     assert!(frame.layout.resolved.rails.is_empty() && frame.layout.overflow.is_empty());
 }
 
@@ -13670,7 +13663,7 @@ fn universal_inline_specimen_uses_one_total_row_with_real_content_and_shared_con
     let section = frame.layout.sections.first().unwrap();
     assert!(section.inline && !section.collapsed);
     assert_eq!(section.header, section.outer);
-    assert!(section.outer.size.height <= solidcraft_theme::PANEL_INLINE_MAX_HEIGHT);
+    assert!(section.outer.size.height <= torno_theme::PANEL_INLINE_MAX_HEIGHT);
     assert!(section.body.is_none() && section.footer.is_none());
     assert!(!frame.controls.iter().any(|control| matches!(control.target, HostControlTarget::Pointer(HostPointerTarget::HeaderAction { .. }))));
     let runtime = h.app.panel_runtime().unwrap();
@@ -13678,8 +13671,8 @@ fn universal_inline_specimen_uses_one_total_row_with_real_content_and_shared_con
     assert!(runtime.layout().registry().get(&instance.kind).unwrap().header_actions.is_empty(), "the inline log declares no custom or debug actions");
     assert!(frame.controls.iter().any(|control| matches!(control.target, HostControlTarget::Pointer(HostPointerTarget::Menu { .. }))));
     assert!(frame.controls.iter().any(|control| matches!(control.target, HostControlTarget::Pointer(HostPointerTarget::Collapse { .. }))));
-    assert!(h.widget(solidcraft_ui_text::tr("ui.panel_fixture.inline")).is_some());
-    assert!(h.widget(solidcraft_ui_text::tr("ui.panel_fixture.caption")).is_none());
+    assert!(h.widget(torno_ui_text::tr("ui.panel_fixture.inline")).is_some());
+    assert!(h.widget(torno_ui_text::tr("ui.panel_fixture.caption")).is_none());
 }
 
 #[test]
@@ -13702,9 +13695,9 @@ fn universal_registered_header_command_invokes_only_the_declared_synthetic_bindi
     assert_eq!(after["runtime"]["probe"]["content_command_calls"], before["runtime"]["probe"]["content_command_calls"].as_u64().unwrap() + 1);
     assert_eq!(before["session"], after["session"]);
     let rejected = h.app.run_panel_command("panel.action", &serde_json::json!({"target":{"type":"instance","id":"specimen-1"},"action":"apply"}));
-    assert_eq!(rejected.unwrap_err().rule, solidcraft_engine::panels::Rule::Capability);
+    assert_eq!(rejected.unwrap_err().rule, torno_engine::panels::Rule::Capability);
     let undeclared = h.app.run_panel_command("panel.action", &serde_json::json!({"target":{"type":"instance","id":"specimen-0"},"action":"cancel"}));
-    assert_eq!(undeclared.unwrap_err().rule, solidcraft_engine::panels::Rule::Capability, "a content action is not automatically a header action");
+    assert_eq!(undeclared.unwrap_err().rule, torno_engine::panels::Rule::Capability, "a content action is not automatically a header action");
     let refused = inspect_host_specimen(&mut h.app).unwrap();
     assert_eq!(applies(&after), applies(&refused));
     assert_eq!(after["runtime"]["probe"]["content_command_calls"], refused["runtime"]["probe"]["content_command_calls"]);

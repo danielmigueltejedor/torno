@@ -7,7 +7,7 @@
 - **Fork:** tangency-labs/smlib, all 28 branches as fetched on 2026-10-31 at 18:30 UTC. The fork's `main` head was 83748ba9876902dd8e91ef72849dedc1a2f1dcb9 (2026-10-28).
 - **Commits:** every commit past the 1.0.1 base 3fd5b95 that touches `source/SMLib` or `source/SM_API`. That is 174 on the fork's `main` and 137 more on its other branches, after dropping branch commits whose subject matches one on `main`: 311 commits. Only SMLib and SM_API were read as port sources; `capi/` was read for test names and test inputs only.
 - **Solidcore:** checked against main 46b22403cd (2026-10-31) and the 53 PRs open then (titles, bodies and diffs). A fork sha counts as cited when a 7- to 40-hex token anywhere in crates, plan, docs, fixtures, scripts or harness is a prefix of it. The measurements below ran on main 68a6b5a00d.
-- **SolidCraft's preset:** `fixes()` in `crates/smlib/src/core.rs` at tangency-labs/solidcraft#8526's head, brett19/solidcraft 0b627d637325c67f07d943d812bf0e58d4647b70 (blob 68d628c3). It sets 188 flags on. Its `HELD_BACK` list (33 flags) and the flags newer than its solidcore pin stay off. Each probe ran this preset, the default kernel, and every flag on (labelled "not the preset").
+- **Torno's preset:** `fixes()` in `crates/smlib/src/core.rs` at tangency-labs/solidcraft#8526's head, brett19/torno 0b627d637325c67f07d943d812bf0e58d4647b70 (blob 68d628c3). It sets 188 flags on. Its `HELD_BACK` list (33 flags) and the flags newer than its solidcore pin stay off. Each probe ran this preset, the default kernel, and every flag on (labelled "not the preset").
 
 ## Counts
 
@@ -79,8 +79,8 @@ For each of the 53 entries, the commit's SMLib diff was compared with the Rust c
   - 9504880: its "on target" test uses geometry plus `MARK_MOVED`, where the fork uses a surface mark. This deviation is documented in `crates/solidcore/src/offset/offset_faces.rs`.
 - **1 superseded:** 2bc03c6, by a15b5a2, which WR-462 cites.
 - **1 covered:** 1ccd2af, whose changes are all in e418750, which WR-665 cites.
-- 2412a80's fix is in our default path. Its flag `temporary_radius_setup_errors` also fails the constructor, which the fork's does not. That is solidcore's own extension, and SolidCraft holds the flag back.
+- 2412a80's fix is in our default path. Its flag `temporary_radius_setup_errors` also fails the constructor, which the fork's does not. That is solidcore's own extension, and Torno holds the flag back.
 
 The probes of the partial entries are pending. No outcome is claimed for them here.
 
-tangency-labs/solidcraft#8526 comment 6548297899 asks Brett whether SolidCraft wants the fork's version of the four fixed-differently commits (7a6b4ad, f72c79b, 69d8857, 7a8f4d3).
+tangency-labs/solidcraft#8526 comment 6548297899 asks Brett whether Torno wants the fork's version of the four fixed-differently commits (7a6b4ad, f72c79b, 69d8857, 7a8f4d3).

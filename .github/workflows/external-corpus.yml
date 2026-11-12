@@ -30,13 +30,13 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: dtolnay/rust-toolchain@stable
       - name: Build the CLI
-        run: cargo build --profile ci -p solidcraft-cli
+        run: cargo build --profile ci -p torno-cli
       - name: Import and check every entry
         env:
           ONLY: ${{ inputs.only }}
         run: |
           if [ -z "$ONLY" ]; then
-            cargo run -q -p xtask -- external-corpus --cli target/ci/solidcraft-cli
+            cargo run -q -p xtask -- external-corpus --cli target/ci/torno-cli
           else
-            cargo run -q -p xtask -- external-corpus --cli target/ci/solidcraft-cli --only "$ONLY"
+            cargo run -q -p xtask -- external-corpus --cli target/ci/torno-cli --only "$ONLY"
           fi

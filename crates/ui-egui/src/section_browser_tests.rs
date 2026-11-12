@@ -3,7 +3,7 @@
 
 use egui::pos2;
 use serde_json::json;
-use solidcraft_engine::geom::prelude::*;
+use torno_engine::geom::prelude::*;
 
 use crate::context_menu::{self, Target};
 use crate::scenario::Harness;
@@ -88,7 +88,7 @@ fn edit_opens_the_section_dialog() {
     assert!(h.app.dialog.is_some(), "the Section Analysis dialog opens");
 }
 
-fn section_dialog(h: &Harness) -> (String, bool, Vec<solidcraft_engine::Sel>) {
+fn section_dialog(h: &Harness) -> (String, bool, Vec<torno_engine::Sel>) {
     let d = h.app.dialog.as_ref().expect("the Section Analysis dialog");
     let crate::dialogs::Kind::Section { offset, flip, .. } = &d.kind else { panic!("not the section dialog: {:?}", d.kind) };
     (offset.clone(), *flip, d.inputs.first().map(|i| i.items.clone()).unwrap_or_default())
@@ -108,7 +108,7 @@ fn edit_starts_from_the_section_as_it_was_left() {
     let mut h = harness();
     h.app.preferences.viewport_section_status = false;
     h.app.run("solid.box", json!({"length":40,"width":30,"height":20})).unwrap();
-    h.app.session.selection = vec![solidcraft_engine::Sel::Plane { name: "XY".into() }];
+    h.app.session.selection = vec![torno_engine::Sel::Plane { name: "XY".into() }];
     h.app.start("inspect.section");
     if let Some(crate::dialogs::Kind::Section { offset, .. }) = h.app.dialog.as_mut().map(|d| &mut d.kind) {
         *offset = "12 mm".into();
@@ -130,7 +130,7 @@ fn edit_starts_from_the_section_as_it_was_left() {
     menu(&mut h, "Edit Section Analysis");
     let (offset, flip, plane) = section_dialog(&h);
     assert_eq!((offset.as_str(), flip), ("12 mm", false));
-    assert_eq!(plane, vec![solidcraft_engine::Sel::Plane { name: "XY".into() }]);
+    assert_eq!(plane, vec![torno_engine::Sel::Plane { name: "XY".into() }]);
     crate::dialogs::cancel(&mut h.app);
     h.frames(2);
 
@@ -157,7 +157,7 @@ fn edit_starts_from_the_section_as_it_was_left() {
 fn the_hatch_option_carries_through_the_section() {
     let mut h = harness();
     h.app.run("solid.box", json!({"length":40,"width":30,"height":20})).unwrap();
-    h.app.session.selection = vec![solidcraft_engine::Sel::Plane { name: "XY".into() }];
+    h.app.session.selection = vec![torno_engine::Sel::Plane { name: "XY".into() }];
     h.app.start("inspect.section");
     assert!(crate::viewport::section_hatch(&h.app), "a new section is hatched");
     if let Some(crate::dialogs::Kind::Section { hatch, .. }) = h.app.dialog.as_mut().map(|d| &mut d.kind) {
@@ -271,7 +271,7 @@ fn section_ribbon_toggle_and_setting_edit_have_separate_intent_and_compatibility
 /// tip reaches the cut (#11423). A plane picked afterwards takes the arrow over.
 #[test]
 fn a_section_reopened_from_its_geometry_keeps_its_drag_arrow() {
-    use solidcraft_engine::doc::expr::Kind as ValueKind;
+    use torno_engine::doc::expr::Kind as ValueKind;
     for params in [
         json!({"plane":"XY","at":-25.4,"flip":true}),
         json!({"plane":{"origin":[7,-12,4],"normal":[-3,-4,0]},"offset":5}),
@@ -295,7 +295,7 @@ fn a_section_reopened_from_its_geometry_keeps_its_drag_arrow() {
         assert!(dir.cross(cut.1).len() < 1e-9, "{params}: the arrow runs along the cut's normal: {dir:?} vs {:?}", cut.1);
 
         let mut d = h.app.dialog.take().unwrap();
-        d.pick(&h.app.session, solidcraft_engine::Sel::Plane { name: "XZ".into() });
+        d.pick(&h.app.session, torno_engine::Sel::Plane { name: "XZ".into() });
         let (_, dir) = crate::canvas::anchor(&h.app, &d).unwrap_or_else(|| panic!("{params}: no arrow on the picked plane"));
         assert!(dir.is_some_and(|n| (n.y.abs() - 1.0).abs() < 1e-9), "{params}: the picked plane's arrow: {dir:?}");
     }
@@ -321,7 +321,7 @@ fn the_distance_slider_moves_the_cut_live() {
     h.app.start("inspect.section");
     h.frames(4);
     assert!(slider(&h).is_none(), "no plane, no slider");
-    h.app.dialog.as_mut().unwrap().inputs[0].items.push(solidcraft_engine::Sel::Plane { name: "XY".into() });
+    h.app.dialog.as_mut().unwrap().inputs[0].items.push(torno_engine::Sel::Plane { name: "XY".into() });
     h.frames(4);
     let typed = offset(&h);
     let bounds = slider(&h).expect("the Distance slider");

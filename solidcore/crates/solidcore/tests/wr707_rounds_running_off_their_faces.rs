@@ -3,10 +3,10 @@
 //! breaking through. Only a section that leaves the part through a face and comes back
 //! into it (a hollow behind a wall it opens, #2299) breaks through.
 //!
-//! The cases are SolidCraft rig cases (SolidCraft `tests/kernel-cases/fillets`, built by
+//! The cases are Torno rig cases (Torno `tests/kernel-cases/fillets`, built by
 //! tangency-labs/smlib 5e8c9c1) that the first version of the flag refused. Each value is
 //! a closed form computed here, or (for the notched block, whose corner blends have none)
-//! the rig's `expected.json`. Every flag is on, as SolidCraft's backend runs them.
+//! the rig's `expected.json`. Every flag is on, as Torno's backend runs them.
 
 #![allow(
     clippy::unwrap_used,
@@ -64,7 +64,7 @@ fn post(k: &mut Kernel, o: [f64; 3], r: f64, h: f64) -> Brep {
     create_cylinder(k, Point3::new(o[0], o[1], o[2]), r, h).unwrap()
 }
 
-/// `SmApiFilletEdges` with SolidCraft's arguments (G1, thumbweight 1): a round
+/// `SmApiFilletEdges` with Torno's arguments (G1, thumbweight 1): a round
 /// (`xsect` 1) or a chamfer (`xsect` 0, the ball radius being the leg on square edges).
 fn blend(
     k: &mut Kernel,
@@ -130,7 +130,7 @@ fn a_chamfer_running_into_openings_builds() {
 
 /// A 40 x 30 x 10 block with a 5 x 5 x 3 notch at a bottom corner, its top outline rounded
 /// R8: past the notch's 7 mm wall the round runs into the notch and is cut by it. The rig's
-/// expected volume (SolidCraft `1080-fillet-notched-block-top-outline-r8`).
+/// expected volume (Torno `1080-fillet-notched-block-top-outline-r8`).
 fn notched(k: &mut Kernel) -> (Brep, solidcore::Result<()>) {
     let block = cuboid(k, [0.0, 0.0, 0.0], [40.0, 30.0, 10.0]);
     let notch = cuboid(k, [35.0, -1.0, -1.0], [6.0, 6.0, 4.0]);
@@ -360,7 +360,7 @@ fn a_round_opening_a_blind_pocket_is_refused() {
 }
 
 /// An 80 x 5 x 5 bar, its long top edge (y = 0, z = 5) rounded R10, wider than both faces
-/// it rounds (SolidCraft `4782-fillet-bar-edge-wider-than-both-faces`; fork 5e8c9c1 does not
+/// it rounds (Torno `4782-fillet-bar-edge-wider-than-both-faces`; fork 5e8c9c1 does not
 /// build it yet). Both rails run off their faces and the section crosses the bar's far
 /// faces only in pieces that reach a rail. In (y, z) the section keeps the bar's square
 /// within the circle of centre (10, -5), radius 10: from y = 10 - sqrt 75, where the circle

@@ -7,11 +7,11 @@ use crate::ui_kit::BackingTooltipExt as _;
 use crate::ui_kit::{choice_row, expr_row, hint_row};
 use serde_json::{Map, Value, json};
 use solidcore_record::Vec3;
-use solidcraft_engine::Sel;
-use solidcraft_engine::doc::expr::Kind as ValueKind;
-use solidcraft_engine::doc::{AxisRef, Direction, FaceAt, FeatureKind, Mat, PlaneRef, Position, ProfileSel, RuledCorners, RuledMode};
-use solidcraft_engine::geom::prelude::*;
-use solidcraft_engine::kernel::{Construction, Continuity};
+use torno_engine::Sel;
+use torno_engine::doc::expr::Kind as ValueKind;
+use torno_engine::doc::{AxisRef, Direction, FaceAt, FeatureKind, Mat, PlaneRef, Position, ProfileSel, RuledCorners, RuledMode};
+use torno_engine::geom::prelude::*;
+use torno_engine::kernel::{Construction, Continuity};
 
 use crate::SolveApp;
 use crate::dialogs::{Kind, OP_LABELS, OPS, combo, form_row, op_index};
@@ -180,7 +180,7 @@ pub(crate) fn continuity_row_explained(
 
 /// The hover text of a continuity choice: each order's own line, which names its code.
 pub(crate) fn continuity_tip(allowed: &[Continuity]) -> String {
-    allowed.iter().map(|g| solidcraft_ui_text::tr(g.tip_id())).collect::<Vec<_>>().join("\n")
+    allowed.iter().map(|g| torno_ui_text::tr(g.tip_id())).collect::<Vec<_>>().join("\n")
 }
 
 /// What each dialog's continuity rows offer: the orders its construction builds, from the
@@ -193,7 +193,7 @@ fn patch_orders() -> Vec<Continuity> {
 /// faces meet each other with different curvatures (tangent only: no surface smooth at the corner
 /// has both curvatures there).
 fn patch_continuity_tip() -> String {
-    format!("{}\n{}", continuity_tip(&patch_orders()), solidcraft_ui_text::tr("ui.patch_continuity_corner_tip"))
+    format!("{}\n{}", continuity_tip(&patch_orders()), torno_ui_text::tr("ui.patch_continuity_corner_tip"))
 }
 
 fn blend_orders() -> Vec<Continuity> {
@@ -295,14 +295,14 @@ pub fn rows(ui: &mut egui::Ui, k: &mut Surf) -> bool {
             form_row(ui, "ui.fair_iterations", |ui| {
                 ui_kit::number_field(ui, iterations, 1..=1000, 1.0, "");
             });
-            enter |= hint_row(ui, "Tolerance", tolerance, solidcraft_ui_text::tr_label("ui.fair_tolerance_default"));
+            enter |= hint_row(ui, "Tolerance", tolerance, torno_ui_text::tr_label("ui.fair_tolerance_default"));
             ui_kit::options(ui, "fair_options", &mut [("ui.fair_keep_edges", keep_edges)]);
         }
         Surf::Match { order } => {
             choice_row(ui, "Continuity", "match_order", order, &MATCH_CONTINUITY.map(|(label, _)| label));
         }
         Surf::Stitch { tolerance } => {
-            enter |= hint_row(ui, "Tolerance", tolerance, solidcraft_ui_text::tr("ui.stitch_tolerance_hint"));
+            enter |= hint_row(ui, "Tolerance", tolerance, torno_ui_text::tr("ui.stitch_tolerance_hint"));
         }
         Surf::Thicken { thickness, symmetric, operation } => {
             enter |= expr_row(ui, "Thickness", thickness);
@@ -903,7 +903,7 @@ fn tool_sel(app: &SolveApp, plane: &PlaneRef, tool: Option<&FaceAt>) -> Option<S
 /// `frame` maps the feature's component frame to the world, for an axis stored as a line.
 pub fn for_feature(app: &SolveApp, kind: &FeatureKind, frame: &Mat) -> Option<(Kind, Vec<SelInput>, Map<String, Value>)> {
     let s = &app.session;
-    let edge = |p: &solidcraft_engine::doc::Position| crate::dialogs::edge_sel(s, p.0);
+    let edge = |p: &torno_engine::doc::Position| crate::dialogs::edge_sel(s, p.0);
     let (k, fill): (Surf, Vec<Vec<Sel>>) = match kind {
         FeatureKind::SurfaceRevolve { sketch, profiles, curves, axis, angle, angle2, symmetric } => {
             let (pick, stored) = match axis {
@@ -968,7 +968,7 @@ pub fn for_feature(app: &SolveApp, kind: &FeatureKind, frame: &Mat) -> Option<(K
             if *crown != 0.0 {
                 extra.insert("crown".into(), json!(crown));
             }
-            if *samples != solidcraft_engine::doc::BOUNDARY_SAMPLES {
+            if *samples != torno_engine::doc::BOUNDARY_SAMPLES {
                 extra.insert("samples".into(), json!(samples));
             }
             if !offered || orders.iter().any(|o| *o != first) {
@@ -986,7 +986,7 @@ pub fn for_feature(app: &SolveApp, kind: &FeatureKind, frame: &Mat) -> Option<(K
             if u.iter().chain(v).any(|c| c.point.is_some()) {
                 return None;
             }
-            let sels = |list: &[solidcraft_engine::doc::NetworkCurve]| -> Vec<Sel> {
+            let sels = |list: &[torno_engine::doc::NetworkCurve]| -> Vec<Sel> {
                 list.iter()
                     .flat_map(|c| {
                         let mut out: Vec<Sel> = c
@@ -1003,7 +1003,7 @@ pub fn for_feature(app: &SolveApp, kind: &FeatureKind, frame: &Mat) -> Option<(K
                     .collect()
             };
             let g = u.iter().chain(v).find(|c| c.body.is_some()).map_or(Continuity::G0, |c| c.continuity);
-            (Surf::Boundary { continuity: g, join: *operation == solidcraft_engine::doc::Operation::Join }, vec![sels(u), sels(v)])
+            (Surf::Boundary { continuity: g, join: *operation == torno_engine::doc::Operation::Join }, vec![sels(u), sels(v)])
         }
         FeatureKind::SurfaceLoft { sections, rails, rail_fit, .. } => {
             let [rail, rail2] = crate::dialogs_sweep::rail_sels(rails, s.active_sketch);
@@ -1130,16 +1130,16 @@ pub fn for_feature(app: &SolveApp, kind: &FeatureKind, frame: &Mat) -> Option<(K
                 extra.insert("neighbours".into(), json!(false));
             }
             match up_to {
-                Some(solidcraft_engine::doc::ExtendTo::Bounds) => {
+                Some(torno_engine::doc::ExtendTo::Bounds) => {
                     extra.insert("up_to".into(), json!("bounds"));
                 }
-                Some(solidcraft_engine::doc::ExtendTo::Face(t)) => {
+                Some(torno_engine::doc::ExtendTo::Face(t)) => {
                     extra.insert("up_to".into(), json!({"body": t.body, "point": pt(t.point.0)}));
                 }
-                Some(solidcraft_engine::doc::ExtendTo::Plane(PlaneRef::Origin { name })) => {
+                Some(torno_engine::doc::ExtendTo::Plane(PlaneRef::Origin { name })) => {
                     extra.insert("up_to".into(), json!(name));
                 }
-                Some(solidcraft_engine::doc::ExtendTo::Plane(PlaneRef::Construction { feature })) => {
+                Some(torno_engine::doc::ExtendTo::Plane(PlaneRef::Construction { feature })) => {
                     let shown = s.doc.feature(feature.0).map(|f| json!(f.name)).unwrap_or_else(|| json!(feature.0));
                     extra.insert("up_to".into(), shown);
                 }
@@ -1227,7 +1227,7 @@ mod tests {
         }
         assert_eq!(blend_orders().last(), Some(&Continuity::G3), "a blend builds up to G3 today");
         for lang in ["en", "ar", "he", "ja", "zh", "de", "ko"] {
-            let locale = solidcraft_ui_text::Locale::for_language(lang);
+            let locale = torno_ui_text::Locale::for_language(lang);
             for g in Continuity::ALL {
                 let (label, tip) = (locale.text(g.label_id()), locale.text(g.tip_id()));
                 assert!(label != g.label_id() && tip != g.tip_id(), "{lang}: {g:?} has no text");

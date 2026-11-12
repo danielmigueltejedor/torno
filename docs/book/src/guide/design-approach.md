@@ -1,7 +1,7 @@
 # How a design is built
 
-SolidCraft is a parametric, history-based modeller. You don't shape geometry directly: you
-describe the steps that make it, and SolidCraft computes the result from those steps. Change a
+Torno is a parametric, history-based modeller. You don't shape geometry directly: you
+describe the steps that make it, and Torno computes the result from those steps. Change a
 step or a value and everything after it is computed again. This page explains that idea and the
 usual ways of working with it. The pages after it cover each tool in detail; the
 [glossary](../reference/glossary.md) defines most of the terms used here.
@@ -90,18 +90,18 @@ design quick and makes the assembly when its structure is clear.
 | Design a bent sheet part | A base flange from a sketch, then flanges, hems and folds under a sheet metal rule | [Sheet metal](sheet-metal.md) |
 | Design a plastic enclosure | A shelled body, then bosses, lip and groove, snap fits, ribs | [Plastic parts](plastic.md) |
 | Work on a part from another program | Open a STEP, IGES, 3MF, STL or OBJ file as a new design | [Import and export](files.md) |
-| Script a design or hand it to an agent | Commands in a script for `solidcraft-cli`, or the MCP server | [Getting started](getting-started.md#cli), [MCP](mcp.md) |
+| Script a design or hand it to an agent | Commands in a script for `torno-cli`, or the MCP server | [Getting started](getting-started.md#cli), [MCP](mcp.md) |
 
 Everything you click is a **command** with named parameters, and the toolbar, scripts, the CLI and
 AI agents all run the same commands. A design built in the window can be turned into a script with
-`solidcraft-cli script`, which rebuilds it without the window (designs with components or joints
+`torno-cli script`, which rebuilds it without the window (designs with components or joints
 are not supported there yet).
 
 ## Terms if you come from another CAD program
 
-Other programs use other words for the same ideas. SolidCraft uses one term for each:
+Other programs use other words for the same ideas. Torno uses one term for each:
 
-| SolidCraft | You may know it as |
+| Torno | You may know it as |
 |---|---|
 | timeline (shown as the History strip) | history, feature tree |
 | rollback marker | rollback bar, end-of-part marker |

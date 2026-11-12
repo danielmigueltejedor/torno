@@ -14,8 +14,8 @@ use schemars::{JsonSchema, Schema, SchemaGenerator, json_schema};
 use serde::de::Error as _;
 use serde::{Deserialize, Deserializer, Serialize};
 use serde_json::{Map, Value, json};
-use solidcraft_doc::expr::Kind;
-use solidcraft_doc::{ParamRow, ParamUser};
+use torno_doc::expr::Kind;
+use torno_doc::{ParamRow, ParamUser};
 
 use super::check::{located, whole};
 
@@ -512,7 +512,7 @@ pub struct FailedFeature {
 
 impl FailedFeature {
     /// The features of `results` that failed.
-    pub fn of(results: &[solidcraft_doc::FeatureResult]) -> Vec<FailedFeature> {
+    pub fn of(results: &[torno_doc::FeatureResult]) -> Vec<FailedFeature> {
         results.iter().filter_map(|r| r.error.as_ref().map(|e| FailedFeature { feature: r.name.clone(), error: e.clone() })).collect()
     }
 }
@@ -999,7 +999,7 @@ impl<'de> Deserialize<'de> for ExprEvaluateParams {
     fn deserialize<D: Deserializer<'de>>(d: D) -> Result<Self, D::Error> {
         let mut value = Value::deserialize(d)?;
         if let Some(keys) = value.as_object_mut()
-            && keys.get("unit").and_then(Value::as_str).is_some_and(solidcraft_doc::text_params::is_text_unit)
+            && keys.get("unit").and_then(Value::as_str).is_some_and(torno_doc::text_params::is_text_unit)
         {
             keys.remove("kind");
         }

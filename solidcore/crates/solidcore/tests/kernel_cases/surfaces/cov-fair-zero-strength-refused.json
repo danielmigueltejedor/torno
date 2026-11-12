@@ -32,6 +32,6 @@
   "ungraded": [],
   "what": "fair with strength 0: refused, a step of nothing",
   "why_not": [
-    "the failure is SolidCraft's, not a kernel operation's: step 5 (surface.fair): invalid parameters for `surface.fair`: `strength` must be greater than 0 and at most 1 (the whole fairing step)"
+    "the failure is Torno's, not a kernel operation's: step 5 (surface.fair): invalid parameters for `surface.fair`: `strength` must be greater than 0 and at most 1 (the whole fairing step)"
   ]
 }

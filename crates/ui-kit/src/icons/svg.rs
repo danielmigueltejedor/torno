@@ -431,9 +431,9 @@ impl IconSet {
     pub fn role_rgb(&self, look: Look, role: usize) -> [u8; 3] {
         let theme = usize::from(look.dark);
         let vision = match look.vision {
-            solidcraft_theme::ColorVision::Off => "",
-            solidcraft_theme::ColorVision::Protan | solidcraft_theme::ColorVision::Deutan => "red-green",
-            solidcraft_theme::ColorVision::Tritan => "blue-yellow",
+            torno_theme::ColorVision::Off => "",
+            torno_theme::ColorVision::Protan | torno_theme::ColorVision::Deutan => "red-green",
+            torno_theme::ColorVision::Tritan => "blue-yellow",
         };
         if let Some((_, _, _, l, d)) = self.data.accent_variants.iter().find(|(v, a, r, _, _)| *v == vision && Some(*a) == look.accent && *r == role)
         {
@@ -463,7 +463,7 @@ impl IconSet {
 
     /// The primary semantic stroke of icon `name` (its `active-3` role), also used by toolbar
     /// affordances. The set owns its value.
-    pub fn primary(&'static self, name: &str, dark: bool, vision: solidcraft_theme::ColorVision) -> egui::Color32 {
+    pub fn primary(&'static self, name: &str, dark: bool, vision: torno_theme::ColorVision) -> egui::Color32 {
         let look = Look::themed(dark, self.resolve(name).accent, vision);
         self.role_colour("active-3", look)
     }
@@ -753,12 +753,12 @@ impl Palette {
 pub struct Look {
     pub dark: bool,
     pub accent: Option<usize>,
-    pub vision: solidcraft_theme::ColorVision,
+    pub vision: torno_theme::ColorVision,
     pub palette: Option<Palette>,
 }
 
 impl Look {
-    pub fn themed(dark: bool, accent: Option<usize>, vision: solidcraft_theme::ColorVision) -> Self {
+    pub fn themed(dark: bool, accent: Option<usize>, vision: torno_theme::ColorVision) -> Self {
         Self { dark, accent, vision, palette: theme_palette(dark) }
     }
 }

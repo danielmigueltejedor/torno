@@ -8,7 +8,7 @@ The audit record lists six fork-main commits as not yet probed. f653ac9 (per-edg
 | --- | --- | --- |
 | 3545008 | A split ProtoEdge's upper EdgeDefinition starts with no owner. | In, on the default path. |
 | 8c4bda5 | `ValidateAndUpdateTolerances` repairs gaps over half the tolerance. | Moot on the SMLib/SM_API path. |
-| 8ea6a20 | Refining a range solution accepts an outside parameter again. | Moot under SolidCraft's preset; one follow-up. |
+| 8ea6a20 | Refining a range solution accepts an outside parameter again. | Moot under Torno's preset; one follow-up. |
 | 9a160ba | A revolved arc's sphere is built on its own domain. | In, by a later fork commit. |
 | 1279539 | A cone's iso circle through a point is at the point's height. | Ported as opt-in `cone_iso_circle_at_axial_height` (WR-704, PR #2289). |
 
@@ -25,7 +25,7 @@ Their result is read only in that debug block. The port has the validate-only re
 
 ## 8ea6a20
 
-8ea6a20 undoes the fork's own `SER(Inversion)` from 8311f8e. In the port that status pass-on exists only behind `query_statuses_pass_on` (`inversion_passed_on` in `refine_cc_solutions`, `crates/solidcore/src/curve/curve/p1.rs`), which SolidCraft's preset leaves off. With it off, the port drops the status, as upstream and the fork after 8ea6a20 do. A zero-length range gives `UNDEF_DOUBLE`, whose magnitude fails the 0.002 shift limit, so the end stays: the same as 8ea6a20's rule. Nothing was run.
+8ea6a20 undoes the fork's own `SER(Inversion)` from 8311f8e. In the port that status pass-on exists only behind `query_statuses_pass_on` (`inversion_passed_on` in `refine_cc_solutions`, `crates/solidcore/src/curve/curve/p1.rs`), which Torno's preset leaves off. With it off, the port drops the status, as upstream and the fork after 8ea6a20 do. A zero-length range gives `UNDEF_DOUBLE`, whose magnitude fails the 0.002 shift limit, so the end stays: the same as 8ea6a20's rule. Nothing was run.
 
 Follow-up: if `query_statuses_pass_on` ships, this site should be exempted from it, so that an outside fraction is judged by the shift limit instead of aborting.
 
@@ -37,7 +37,7 @@ Follow-up: if `query_statuses_pass_on` ships, this site should be exempted from 
 
 The fork's `CreateIsoCircleFromPoint` takes the circle's STEP height as the point's axial height `dParam`, clamped to the cone's height interval, where upstream inverts the point moved onto the cone. The port already took the clamped height when that inversion fails (UB-87, #1067), the case the fork's commit describes.
 
-Probe batch 54g7 ran SolidCraft's preset and the default kernel on main 2be079d409.
+Probe batch 54g7 ran Torno's preset and the default kernel on main 2be079d409.
 - **The fork's own capi test** (`sphere_cone_top_circle`, as the fork's capi builds it): it passes under both. The sphere through the point 2 tol past a 70 degree cone's top gives 2 crossing curves, one of them the top circle at z = 1, with every sample within 2.2e-4 of both surfaces (the test allows 2 tol).
 - **Our circle height against the fork's rule** (the rule re-implemented in the probe, not a run of the fork). Five cones were tested: bottom radius 0 and 0.5, the latter in all four `swap_uv`/`inside_out` combinations. Each took 22 heights, from 2 tol below the bottom to 2 tol above the top, at 5 radial positions.
   - The two agree to 2.2e-16 inside the cone, past the top end, and past the bottom of the cones with no apex there.

@@ -12,11 +12,11 @@
 //! geometry cannot reach stop short at the edge of that stretch and go on past it. It steps only
 //! when the move is long next to the dragged geometry, so a normal mouse frame is a single solve.
 
-use solidcraft_geom::prelude::*;
 use std::f64::consts::{PI, TAU};
+use torno_geom::prelude::*;
 
 use solidcore_record::Vec2;
-use solidcraft_sketch::{Analysis, Budget, ConstraintKind, CurveKind, Hold, Sketch, conic_rho_from_point};
+use torno_sketch::{Analysis, Budget, ConstraintKind, CurveKind, Hold, Sketch, conic_rho_from_point};
 
 use super::{Ent, Left, counted_solve};
 
@@ -64,7 +64,7 @@ enum Path {
     /// An arc's ends move along their rays from the centre `o` to the cursor's radius.
     ArcRadius { o: Vec2, ends: Vec<(usize, Vec2)>, from: f64, to: f64 },
     /// A conic's `rho` follows the cursor, read off its position between the chord's midpoint
-    /// and the apex (see [`solidcraft_sketch::conic_rho_from_point`]). `a`, `b` and `apex` stay
+    /// and the apex (see [`torno_sketch::conic_rho_from_point`]). `a`, `b` and `apex` stay
     /// put; only the curve's fullness changes, the way an ellipse's outline changes its minor
     /// radius rather than sliding the ellipse.
     ConicRho { c: usize, from: f64, to: f64 },
@@ -151,7 +151,7 @@ pub(super) fn drag_entity(
     from: Vec2,
     to: Vec2,
     live: bool,
-    solved: Option<&solidcraft_doc::SolvedSketch>,
+    solved: Option<&torno_doc::SolvedSketch>,
 ) -> (Dragged, Left) {
     // An unchanged, solved entity with no freedom cannot follow a drag. Holding it at a
     // different position only makes its constraints conflict, and a large pattern would spend
@@ -281,7 +281,7 @@ pub(super) fn drag_entity(
         if ahead && batch > 1 && !live && failed.is_some() && line_grab.is_none() {
             let next: Vec<f64> =
                 (1..=batch).map(|j| at(base, dt, k + j)).scan(false, |done, t| (!std::mem::replace(done, t >= 1.0)).then_some(t)).collect();
-            let tried = solidcraft_kernel::map_on_threads(&next, batch, |&t| {
+            let tried = torno_kernel::map_on_threads(&next, batch, |&t| {
                 let mut sk = sk.clone();
                 let mut budget = Budget::full();
                 let ok = held(&mut sk, &last, t, &mut budget);
@@ -391,11 +391,11 @@ pub(super) fn drag_entity(
                 && !geometry.shrank(after)
                 && !geometry.flung(after, reach)
                 && !as_found.squashed(after)
-                && solidcraft_sketch::fillets_kept(before, after)
+                && torno_sketch::fillets_kept(before, after)
         };
         let followed = match (e, line_grab) {
-            (Ent::Point(q), _) => solidcraft_sketch::move_point_towards(sk, q, to, max_step, frame.as_mut(), valid),
-            (_, Some(g)) => solidcraft_sketch::move_line_towards(sk, g.curve, g.local, to, max_step, frame.as_mut(), valid),
+            (Ent::Point(q), _) => torno_sketch::move_point_towards(sk, q, to, max_step, frame.as_mut(), valid),
+            (_, Some(g)) => torno_sketch::move_line_towards(sk, g.curve, g.local, to, max_step, frame.as_mut(), valid),
             _ => false,
         };
         #[cfg(test)]

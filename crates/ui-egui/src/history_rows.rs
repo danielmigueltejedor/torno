@@ -8,7 +8,7 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 
-use solidcraft_engine::doc::{Feature, FeatureKind, TimelineGroup};
+use torno_engine::doc::{Feature, FeatureKind, TimelineGroup};
 
 /// A timeline feature as the History needs it.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -307,7 +307,7 @@ mod tests {
     #[test]
     fn features_read_the_sketches_they_are_built_from_out_of_the_design() {
         use serde_json::json;
-        let mut session = solidcraft_engine::Session::default();
+        let mut session = torno_engine::Session::default();
         for (command, params) in [
             ("sketch.create", json!({"plane": "XY", "name": "Profile"})),
             ("sketch.rectangle.two_point", json!({"p0": [0, 0], "p1": [10, 10]})),

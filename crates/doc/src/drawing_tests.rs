@@ -1,5 +1,5 @@
 use serde_json::json;
-use solidcraft_geom::drawing_sheet::{Margins, Orientation, PaperSize, SheetSize};
+use torno_geom::drawing_sheet::{Margins, Orientation, PaperSize, SheetSize};
 
 use super::*;
 
@@ -123,7 +123,7 @@ fn a_file_may_leave_out_what_has_a_default() {
     assert_eq!((sheet.border, sheet.dpi, sheet.documents, sheet.excluded), (None, DEFAULT_DPI, None, Excluded::default()));
     // The format as this build writes it, however the file spelt it.
     let mut spelt = minimal.clone();
-    spelt["format"] = json!("solidcraft-drawing/+1");
+    spelt["format"] = json!("torno-drawing/+1");
     assert_eq!(read(&spelt).unwrap().format, DRAWING.format_string(DRAWING.current()));
     for key in ["name", "sources", "language", "sheets"] {
         let mut v = minimal.clone();
@@ -290,7 +290,7 @@ fn damaged_files_are_refused_and_never_patched() {
     let why = custom(json!([1e10, 100.0]));
     assert!(why.starts_with("damaged drawing: the number ") && why.ends_with(" is out of range"), "checked before the record: {why}");
     let nan = d.to_json().unwrap().replacen("600.0", "NaN", 1);
-    assert!(Drawing::from_json(&nan).unwrap_err().to_string().starts_with("not a SolidCraft drawing: "), "NaN isn't JSON");
+    assert!(Drawing::from_json(&nan).unwrap_err().to_string().starts_with("not a Torno drawing: "), "NaN isn't JSON");
     assert_eq!(
         refused(&d, |v| v["sheets"][1]["border"]["margins"]["top_mm"] = json!(-1.0)),
         format!("damaged drawing: sheet {bolt_sheet_id}: drawing sheet: a margin is finite and 0 to 5000 mm")
@@ -339,7 +339,7 @@ fn damaged_files_are_refused_and_never_patched() {
     });
     assert!(
         why.starts_with(&format!(
-            "this drawing was saved by a newer SolidCraft (format {newer}, this version reads up to {current}) and this version can't read it: "
+            "this drawing was saved by a newer Torno (format {newer}, this version reads up to {current}) and this version can't read it: "
         )),
         "{why}"
     );
@@ -350,19 +350,16 @@ fn damaged_files_are_refused_and_never_patched() {
     // A design is never read as a drawing, nor a drawing as a design.
     let design = crate::Document::new("Plate").to_json();
     let design_format = crate::format::format_string(crate::format::FORMAT);
-    assert_eq!(Drawing::from_json(&design).unwrap_err().to_string(), format!("not a SolidCraft drawing (format `{design_format}`)"));
+    assert_eq!(Drawing::from_json(&design).unwrap_err().to_string(), format!("not a Torno drawing (format `{design_format}`)"));
     let drawing_format = DRAWING.format_string(current);
-    assert_eq!(
-        crate::Document::from_json(&d.to_json().unwrap()).unwrap_err().to_string(),
-        format!("not a SolidCraft design (format `{drawing_format}`)")
-    );
+    assert_eq!(crate::Document::from_json(&d.to_json().unwrap()).unwrap_err().to_string(), format!("not a Torno design (format `{drawing_format}`)"));
     // Not an object, not JSON, nested too deeply, too large.
-    assert_eq!(Drawing::from_json("[]").unwrap_err().to_string(), "not a SolidCraft drawing (expected a JSON object)");
-    assert!(Drawing::from_json("").unwrap_err().to_string().starts_with("not a SolidCraft drawing: "));
+    assert_eq!(Drawing::from_json("[]").unwrap_err().to_string(), "not a Torno drawing (expected a JSON object)");
+    assert!(Drawing::from_json("").unwrap_err().to_string().starts_with("not a Torno drawing: "));
     let deep: Value = serde_json::from_str(&format!("{}1{}", "[".repeat(100), "]".repeat(100))).unwrap();
     assert_eq!(refused(&d, |v| v["views"] = deep), "damaged drawing: nested too deeply");
     let deeper = format!("{{\"format\": \"{drawing_format}\", \"views\": {}1{}}}", "[".repeat(200), "]".repeat(200));
-    assert!(Drawing::from_json(&deeper).unwrap_err().to_string().starts_with("not a SolidCraft drawing: "));
+    assert!(Drawing::from_json(&deeper).unwrap_err().to_string().starts_with("not a Torno drawing: "));
     let text = d.to_json().unwrap();
     let at_cap = text.clone() + &" ".repeat(MAX_DRAWING_BYTES - text.len());
     assert_eq!(Drawing::from_json(&at_cap).unwrap(), d);
@@ -563,7 +560,7 @@ fn a_newer_builds_drawing_opens_and_keeps_what_it_cant_read() {
     // With nothing it can't read: the same drawing.
     let opened = Drawing::from_json(&file.to_string()).unwrap();
     assert_eq!(opened.sheets, d.sheets);
-    assert!(opened.newer_file.as_ref().unwrap().notice().starts_with("Saved by a newer SolidCraft"));
+    assert!(opened.newer_file.as_ref().unwrap().notice().starts_with("Saved by a newer Torno"));
     assert_eq!(serde_json::from_str::<Value>(&opened.to_json().unwrap()).unwrap()["format"], json!(newer));
     // A field and a second sheet it can't read stay out, named, and go back.
     file["views"] = json!([{"id": "a"}]);

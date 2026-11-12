@@ -10,8 +10,8 @@ use std::sync::Condvar;
 use std::sync::{Arc, Mutex};
 
 use egui::Color32;
-use solidcraft_engine::doc::point_cloud::{Filter, PALETTE, PLAIN, PointCloud, byte, height_ramp};
-use solidcraft_engine::doc::point_cloud_distribution::{Colour, Geometry, histogram, label_changes};
+use torno_engine::doc::point_cloud::{Filter, PALETTE, PLAIN, PointCloud, byte, height_ramp};
+use torno_engine::doc::point_cloud_distribution::{Colour, Geometry, histogram, label_changes};
 
 use super::range_track::Bars;
 use crate::theme::model_color;

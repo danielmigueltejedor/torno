@@ -1,8 +1,8 @@
 //! Keyboard-authored intent must survive stage transitions and later model edits.
 use crate::scenario::Harness;
 use serde_json::json;
-use solidcraft_engine::geom::prelude::*;
-use solidcraft_engine::sketch::{ConstraintKind, CurveKind};
+use torno_engine::geom::prelude::*;
+use torno_engine::sketch::{ConstraintKind, CurveKind};
 
 fn start(command: &str) -> Harness {
     let mut h = Harness::new();

@@ -1,6 +1,6 @@
 use super::*;
 use crate::test_support as harness;
-use solidcraft_ui_registry as registry;
+use torno_ui_registry as registry;
 
 #[test]
 fn fitting_crash_rows_stay_inside_list_and_enclosing_horizontal_viewport() {

@@ -1,4 +1,4 @@
-//! A sample design (used by `solidcraft --sample` and demos): a parametric plate with rounded
+//! A sample design (used by `torno --sample` and demos): a parametric plate with rounded
 //! corners, two holes and a boss.
 
 use serde_json::{Value, json};
@@ -139,7 +139,7 @@ fn vents() -> Value {
 
 #[cfg(test)]
 mod tests {
-    use solidcraft_geom::MeshGeom;
+    use torno_geom::MeshGeom;
 
     #[test]
     fn plate_boss_and_bore_planes_follow_thickness_without_weak_face_references() {
@@ -149,14 +149,14 @@ mod tests {
             .doc
             .features
             .iter()
-            .find(|feature| feature.name == "Boss" && matches!(feature.kind, solidcraft_doc::FeatureKind::Sketch { .. }))
+            .find(|feature| feature.name == "Boss" && matches!(feature.kind, torno_doc::FeatureKind::Sketch { .. }))
             .unwrap()
             .id;
         let bore = session
             .doc
             .features
             .iter()
-            .find(|feature| feature.name == "Bore" && matches!(feature.kind, solidcraft_doc::FeatureKind::Sketch { .. }))
+            .find(|feature| feature.name == "Bore" && matches!(feature.kind, torno_doc::FeatureKind::Sketch { .. }))
             .unwrap()
             .id;
         session.execute("parameters.change", &serde_json::json!({"name":"thickness","expression":"12 mm"})).unwrap();
@@ -171,7 +171,7 @@ mod tests {
         assert!(!plate.contains(solidcore_record::Vec3::new(40., 25., 24.)));
         assert!(!plate.contains(solidcore_record::Vec3::new(40., 25., 2.)));
         assert!(plate.contains(solidcore_record::Vec3::new(40., 35., 2.)));
-        let reopened = crate::Session::new(solidcraft_doc::Document::from_json(&session.doc.to_json()).unwrap());
+        let reopened = crate::Session::new(torno_doc::Document::from_json(&session.doc.to_json()).unwrap());
         assert!((reopened.model.state().sketch(bore).unwrap().plane.origin.z - 26.).abs() < 1e-6);
         let reopened_world = reopened.world_state().unwrap();
         let reopened_plate = reopened_world.body("Plate").unwrap().mesh();

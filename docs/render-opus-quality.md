@@ -47,7 +47,7 @@ the compensated substrate. The existing cosine and visible-normal proposal cover
 lobes with the same PDF used for multiple importance sampling.
 [Imageworks SIGGRAPH course, corrected appendix](https://blog.selfshadow.com/publications/s2017-shading-course/imageworks/s2017_pbs_imageworks_slides_v2.pdf)
 
-The directional loss fit is specific to SolidCraft's separable Smith GGX.
+The directional loss fit is specific to Torno's separable Smith GGX.
 Training integrates the unit-Fresnel BRDF over azimuth analytically and uses
 128-point Gauss–Legendre integration on each side of the mirror peak in
 incident cosine. Least squares uses 73 Chebyshev-spaced roughness values
@@ -105,8 +105,8 @@ approximation. The original Master setup remains available.
 Use the resulting named setup with the native CLI:
 
 ```sh
-solidcraft-cli render OPUS-quality.sc --setup "OPUS Physical CPU 4K" --out cpu.png --timeout 3600
-solidcraft-cli render OPUS-quality.sc --setup "OPUS Physical GPU 4K" --out gpu.png --timeout 3600
+torno-cli render OPUS-quality.sc --setup "OPUS Physical CPU 4K" --out cpu.png --timeout 3600
+torno-cli render OPUS-quality.sc --setup "OPUS Physical GPU 4K" --out gpu.png --timeout 3600
 ```
 
 The exact generated setup names and commands are recorded by the fixture example.

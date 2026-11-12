@@ -1,16 +1,16 @@
-//! The kit's controls with SolidCraft's data: its shipped themes, icons, fonts, menus and panel
+//! The kit's controls with Torno's data: its shipped themes, icons, fonts, menus and panel
 //! host. The kit's own tests draw from plain data; these need the host.
 
-/// Primary and selected actions in SolidCraft's shipped themes.
+/// Primary and selected actions in Torno's shipped themes.
 mod actions {
     use crate::ui_kit::*;
-    use solidcraft_ui_registry as registry;
+    use torno_ui_registry as registry;
 
     #[test]
     fn one_bit_primary_actions_keep_inverted_labels_and_legacy_fills() {
         crate::test_support::host_data();
         use egui::{Color32, Shape};
-        use solidcraft_theme::{Tokens, scoped_tokens};
+        use torno_theme::{Tokens, scoped_tokens};
 
         for base in [crate::theme_files::Base::Dark, crate::theme_files::Base::Light] {
             let old = crate::theme_files::parse(&format!(
@@ -70,12 +70,12 @@ mod actions {
         }
         let mut themes: Vec<_> = [false, true]
             .into_iter()
-            .flat_map(|dark| solidcraft_theme::ColorVision::ALL.into_iter().map(move |vision| solidcraft_theme::Tokens::themed(dark, vision)))
+            .flat_map(|dark| torno_theme::ColorVision::ALL.into_iter().map(move |vision| torno_theme::Tokens::themed(dark, vision)))
             .collect();
         themes.extend(crate::theme_files::builtin().iter().map(crate::theme_files::resolve).filter(|t| t.borders.bevel.is_some()));
         assert!(themes.iter().any(|t| t.borders.bevel.is_some()), "include a real bevel theme");
         for t in themes {
-            let _theme = solidcraft_theme::scoped_tokens(t);
+            let _theme = torno_theme::scoped_tokens(t);
             let ctx = crate::ui_kit::test_support::context();
             let mut selected = egui::Shape::Noop;
             let mut native = egui::Rect::NOTHING;
@@ -111,19 +111,19 @@ mod actions {
     }
 }
 
-/// A checkbox with one of SolidCraft's icons, measured with its fonts.
+/// A checkbox with one of Torno's icons, measured with its fonts.
 mod checks {
     use crate::ui_kit::test_support::*;
     use crate::ui_kit::*;
     use egui::{Rect, Shape, vec2};
-    use solidcraft_theme::Tokens;
+    use torno_theme::Tokens;
 
     /// Customize Toolbar's rows (#11471): the command's icon sits between the box and the label,
     /// is drawn from its artwork, and a click on it toggles the row like a click on the label.
     #[test]
     fn checkbox_icon_draws_the_icon_between_box_and_label_and_toggles_on_it() {
         let t = Tokens::get();
-        let icon = solidcraft_engine::find_command("solid.extrude").map(|c| c.icon).unwrap_or_default();
+        let icon = torno_engine::find_command("solid.extrude").map(|c| c.icon).unwrap_or_default();
         assert!(!icon.is_empty());
         let ctx = crate::fonts::test_context();
         let viewport = Rect::from_min_size(egui::Pos2::ZERO, vec2(400.0, 120.0));
@@ -168,19 +168,19 @@ mod checks {
     }
 }
 
-/// Fields with SolidCraft's data: its view-style menu, its themes and its expressions.
+/// Fields with Torno's data: its view-style menu, its themes and its expressions.
 mod fields {
     use crate::ui_kit::test_support::*;
     use crate::ui_kit::*;
     use egui::Ui;
-    use solidcraft_ui_registry as registry;
+    use torno_ui_registry as registry;
 
     #[test]
     fn dropdown_popups_own_escape_and_return_focus_without_canceling_the_window() {
         use std::cell::Cell;
-        let previous = solidcraft_theme::is_dark();
+        let previous = torno_theme::is_dark();
         for dark in [false, true] {
-            solidcraft_theme::set_dark(dark);
+            torno_theme::set_dark(dark);
             for kind in ["plain", "icons", "compact", "editable"] {
                 let ctx = crate::ui_kit::test_support::context();
                 let action = Cell::new(Action::None);
@@ -262,7 +262,7 @@ mod fields {
                 assert_eq!(selected.get(), 0, "dismissal does not select an option");
             }
         }
-        solidcraft_theme::set_dark(previous);
+        torno_theme::set_dark(previous);
     }
 
     #[test]
@@ -308,11 +308,11 @@ mod fields {
                 dark,
             ));
         }
-        let previous = solidcraft_theme::is_dark();
+        let previous = torno_theme::is_dark();
         for (name, custom, dark) in palettes {
-            solidcraft_theme::set_dark(dark);
+            torno_theme::set_dark(dark);
             crate::theme::set_file_palette(custom);
-            let t = solidcraft_theme::Tokens::get();
+            let t = torno_theme::Tokens::get();
             let [active_filled, active_empty, filled, empty] = [(true, true), (true, false), (false, true), (false, false)].map(|(a, f)| look(a, f));
             let accented = |l: &Look| l.0.iter().any(|&(fill, stroke)| stroke == t.form_primary || fill == t.selected_bg);
             assert!(accented(&active_filled) && accented(&active_empty), "{name}: the active input is accented");
@@ -348,15 +348,15 @@ mod fields {
             assert_eq!(empty.1, Some(t.form_dim), "{name}: an empty input's prompt is dim");
         }
         crate::theme::set_file_palette(None);
-        solidcraft_theme::set_dark(previous);
+        torno_theme::set_dark(previous);
     }
 
     #[test]
     fn navigation_dropdown_popups_own_escape_and_return_focus_without_canceling_the_window() {
         use std::cell::Cell;
-        let previous = solidcraft_theme::is_dark();
+        let previous = torno_theme::is_dark();
         for dark in [false, true] {
-            solidcraft_theme::set_dark(dark);
+            torno_theme::set_dark(dark);
             for kind in ["plain", "compact", "bounded", "editable"] {
                 let ctx = crate::ui_kit::test_support::context();
                 let action = Cell::new(Action::None);
@@ -433,7 +433,7 @@ mod fields {
                 assert_eq!(selected.get(), 0, "dismissal does not select an option");
             }
         }
-        solidcraft_theme::set_dark(previous);
+        torno_theme::set_dark(previous);
     }
 
     #[test]
@@ -507,20 +507,20 @@ mod fields {
     }
 }
 
-/// Layout in SolidCraft's shipped themes and its viewport's navigator axes.
+/// Layout in Torno's shipped themes and its viewport's navigator axes.
 mod layout {
     use crate::ui_kit::test_support::*;
     use crate::ui_kit::*;
     use egui::Ui;
-    use solidcraft_theme::Tokens;
-    use solidcraft_theme::contrast_ratio;
-    use solidcraft_ui_registry as registry;
+    use torno_theme::Tokens;
+    use torno_theme::contrast_ratio;
+    use torno_ui_registry as registry;
 
     #[test]
     fn navigation_cards_keep_their_proportions_and_native_targets_at_narrow_widths() {
-        let previous = solidcraft_theme::is_dark();
+        let previous = torno_theme::is_dark();
         for dark in [false, true] {
-            solidcraft_theme::set_dark(dark);
+            torno_theme::set_dark(dark);
             for available in [140.0, 280.0, 646.0] {
                 for (label, width, aspect, options) in [
                     (
@@ -542,7 +542,7 @@ mod layout {
                                 key: "axes",
                                 label: "Axes (signed)",
                                 figure: |p, rect| {
-                                    paint_navigation_axes(p, rect, &crate::viewport::navigator_axes(&solidcraft_viewport::Camera::default()))
+                                    paint_navigation_axes(p, rect, &crate::viewport::navigator_axes(&torno_viewport::Camera::default()))
                                 },
                             },
                             PictureChoice { key: "cube", label: "Cube (compact)", figure: paint_navigation_cube },
@@ -586,7 +586,7 @@ mod layout {
                 }
             }
         }
-        solidcraft_theme::set_dark(previous);
+        torno_theme::set_dark(previous);
     }
 
     /// Selected text in a form field stands out from the selection in every built-in theme
@@ -607,7 +607,7 @@ mod layout {
     }
 
     /// Themes whose primary colour stands out from the selection keep it, Dark and Light
-    /// included; SolidCraft 95 and CGA, where it is the selection colour itself, take the ink for
+    /// included; Torno 95 and CGA, where it is the selection colour itself, take the ink for
     /// selected elements.
     #[test]
     fn only_themes_whose_primary_vanishes_switch_to_the_selected_ink() {
@@ -624,8 +624,8 @@ mod layout {
             .map(|theme| theme.id.as_str())
             .collect();
         switched.sort_unstable();
-        assert_eq!(switched, ["cga", "solidcraft-95"]);
-        for id in ["solidcraft-95", "cga"] {
+        assert_eq!(switched, ["cga", "torno-95"]);
+        for id in ["torno-95", "cga"] {
             let theme = crate::theme_files::builtin().iter().find(|theme| theme.id == id).unwrap();
             let t = crate::theme_files::resolve(theme);
             assert_eq!(t.form_primary, t.selected_bg, "{id}");
@@ -634,20 +634,20 @@ mod layout {
     }
 }
 
-/// Navigation slots in SolidCraft's shipped themes.
+/// Navigation slots in Torno's shipped themes.
 mod navigation {
     use crate::ui_kit::*;
 
     #[test]
     fn active_navigation_slots_stay_readable_in_every_built_in_theme() {
         crate::test_support::host_data();
-        let mut themes = vec![("Dark", solidcraft_theme::Tokens::dark()), ("Light", solidcraft_theme::Tokens::light())];
+        let mut themes = vec![("Dark", torno_theme::Tokens::dark()), ("Light", torno_theme::Tokens::light())];
         themes.extend(crate::theme_files::builtin().iter().map(|theme| (theme.name.as_str(), crate::theme_files::resolve(theme))));
         let mut failures = Vec::new();
         for (name, tokens) in themes {
             let Some(fill) = navigation_fill(&tokens, NavigationFill::Active) else { continue };
             let ink = navigation_ink(&tokens, NavigationFill::Active);
-            let ratio = solidcraft_theme::contrast_ratio(ink, fill);
+            let ratio = torno_theme::contrast_ratio(ink, fill);
             if ratio < 3.0 {
                 failures.push(format!("{name}: {ratio:.2}:1 ({ink:?} on {fill:?})"));
             }
@@ -656,16 +656,16 @@ mod navigation {
     }
 }
 
-/// Panels in SolidCraft's panel host and shipped themes.
+/// Panels in Torno's panel host and shipped themes.
 mod panel {
     use crate::ui_kit::test_support::*;
     use crate::ui_kit::*;
-    use solidcraft_theme::Tokens;
+    use torno_theme::Tokens;
 
     #[test]
     fn closed_backing_window_noop_does_not_block_real_host_menu_but_visible_returning_window_does() {
         use crate::panel_runtime::{ContentServices, HostControlTarget, HostOptions, HostPointerTarget, PanelMountHarness, WorkspacePanelHost};
-        use solidcraft_engine::panels::{
+        use torno_engine::panels::{
             ActionSink as _, Destination, InstanceId, LogicalRect, Mutation, PanelKind, Point, SectionId, SectionLocation, Size, Zone,
         };
         fn frame(
@@ -857,11 +857,11 @@ mod panel {
         use crate::{frame::Side, ui_kit::LayoutMode};
         let ctx = crate::ui_kit::test_support::context();
         let mut results = Vec::new();
-        for name in ["solidcraft-95", "blueprint", "cupertino"] {
+        for name in ["torno-95", "blueprint", "cupertino"] {
             let t = crate::theme_files::resolve(crate::theme_files::find(name, &[]).unwrap());
-            let _theme = solidcraft_theme::scoped_tokens(t);
+            let _theme = torno_theme::scoped_tokens(t);
             for surface in [Surface::Panel, Surface::Feature, Surface::Window, Surface::Popup, Surface::Navigation, Surface::Toast] {
-                solidcraft_theme::apply(&ctx);
+                torno_theme::apply(&ctx);
                 let floating = Container::for_layout(LayoutMode::Floating, surface).frame(&ctx, t.panel, Side::Left);
                 let bounds = egui::Rect::from_min_size(egui::Pos2::ZERO, egui::vec2(240.0, 180.0));
                 results.push((name, surface, floating.corner_radius, floating.outer_rect(bounds), t));
@@ -884,7 +884,7 @@ mod panel {
 
     #[test]
     fn host_surface_fallback_paints_readable_plain_labels_without_changing_body_layout() {
-        use solidcraft_engine::panels::{ContrastOutcome, PanelSurface};
+        use torno_engine::panels::{ContrastOutcome, PanelSurface};
         let bounds = egui::Rect::from_min_size(egui::pos2(40.0, 40.0), egui::vec2(320.0, 180.0));
         for floating in [false, true] {
             for fallback in [false, true] {
@@ -899,7 +899,7 @@ mod panel {
                 if fallback {
                     authored.text = authored.panel;
                 }
-                let _authored = solidcraft_theme::scoped_panel_tokens(authored);
+                let _authored = torno_theme::scoped_panel_tokens(authored);
                 let style = crate::panel_runtime::HostSurfaceStyle::capture(&ctx, false, Some(0.0), None);
                 let appearance = style.appearance(PanelSurface::Translucent, floating);
                 let failed = matches!(appearance.contrast, ContrastOutcome::RetainReadableFallback { .. });
@@ -971,7 +971,7 @@ mod panel {
     }
 }
 
-/// The view compass with SolidCraft's catalogs.
+/// The view compass with Torno's catalogs.
 mod view_compass {
     use crate::ui_kit::view_compass::{Compass, ViewAxes, show, tips};
     use egui::{Event, Pos2, RawInput, Rect, pos2, vec2};
@@ -1013,9 +1013,9 @@ mod view_compass {
     #[test]
     fn a_tips_hover_text_is_translated() {
         crate::test_support::host_data();
-        let _japanese = solidcraft_ui_text::scope("ja");
+        let _japanese = torno_ui_text::scope("ja");
         for (snap_hint, id) in [(false, "ui.view_compass_tip"), (true, "ui.view_compass_tip_snap")] {
-            let expected = solidcraft_ui_text::format(id, &[("axis", "X")]);
+            let expected = torno_ui_text::format(id, &[("axis", "X")]);
             assert!(expected.starts_with('X') && !expected.contains("View from"), "{id} is in the Japanese catalog: {expected}");
             let texts = hover_text(snap_hint);
             assert!(texts.contains(&expected), "{id}: the tip shows {expected:?}; drawn: {texts:?}");

@@ -1,13 +1,13 @@
 //! Body lookup, planar records and linear mip chains. The quality policy packs
 //! original RGBA8 source texels and linear RGBA16_UNORM mip tails.
 use solidcore_record::Vec3;
-use solidcraft_geom::prelude::*;
-use solidcraft_render::job::{
+use torno_geom::prelude::*;
+use torno_render::job::{
     CancelToken, ErrorCode, JobError, Result,
     textures::{BaseColorMode, RuntimeTextures, TextureMap, normal_direction_variance, unit_normal_texel},
 };
-use solidcraft_render::texture_input::MapRole;
-use solidcraft_render::texture_sampling::{
+use torno_render::texture_input::MapRole;
+use torno_render::texture_sampling::{
     TextureView,
     mips::{MAX_MIP_TAIL_BYTES, MipChain},
 };

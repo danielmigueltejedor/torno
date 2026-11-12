@@ -5,8 +5,8 @@
 //! cloud's own `origin` (double precision), so a scan far from the design's origin keeps its
 //! detail.
 
-use solidcraft_geom::prelude::*;
 use std::sync::Arc;
+use torno_geom::prelude::*;
 
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use solidcore_record::Vec3;

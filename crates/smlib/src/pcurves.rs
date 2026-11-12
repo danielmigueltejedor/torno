@@ -4,8 +4,8 @@
 //! every trim it needs (`SmEdgeuse::GetOrCreateUVTrimCurve`, when the body is exported). They are
 //! SMLib's, relayed as it holds them on the record's parameters; nothing here fits a curve.
 
-use solidcraft_geom::prelude::*;
 use std::collections::HashSet;
+use torno_geom::prelude::*;
 
 use solidcore_ops::pcurve::{SURFACE_GAP_MARGIN, TrimFace, Trims};
 use solidcore_record::brep::{self as b, Curve2, EdgeUseRef, Loop, OrientedEdge, OrientedFace, Region, Shell, Vertex};
@@ -114,7 +114,7 @@ pub(crate) fn on_our_interval(pc: Curve2, ours: &solidcore_ops::pcurve::TrimEdge
     if a == c && b == d {
         return Ok(pc);
     }
-    let curve = solidcraft_geom::brep::eval::CurveEval::new(ours.nurbs.unwrap_or(ours.curve)).map_err(|e| e.to_string())?;
+    let curve = torno_geom::brep::eval::CurveEval::new(ours.nurbs.unwrap_or(ours.curve)).map_err(|e| e.to_string())?;
     let at = |t: f64| curve.point(t).ok_or_else(|| format!("the edge's curve has no point at {t}"));
     let shift = at(a)?.dist(at(c)?).max(at(b)?.dist(at(d)?));
     if !(shift <= tolerance) || !(d > c) {

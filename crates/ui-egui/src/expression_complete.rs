@@ -4,7 +4,7 @@ use crate::ui_kit;
 use egui::Key;
 
 use crate::params_dialog::{every_parameter, exact_token, suggestions_for, unit_token, word_before};
-use solidcraft_theme::Tokens;
+use torno_theme::Tokens;
 
 #[derive(Clone)]
 struct Popup {
@@ -238,10 +238,10 @@ pub(crate) fn complete(ui: &mut egui::Ui, resp: &egui::Response, text: &mut Stri
         .map(|suggestion| ui_kit::PopupOption {
             text: &suggestion.text,
             kind: match suggestion.kind.as_str() {
-                "parameter" => solidcraft_ui_text::tr_label("Parameter"),
-                "function" => solidcraft_ui_text::tr("ui.function"),
-                "unit" => solidcraft_ui_text::tr_label("Unit"),
-                "constant" => solidcraft_ui_text::tr("ui.constant"),
+                "parameter" => torno_ui_text::tr_label("Parameter"),
+                "function" => torno_ui_text::tr("ui.function"),
+                "unit" => torno_ui_text::tr_label("Unit"),
+                "constant" => torno_ui_text::tr("ui.constant"),
                 _ => &suggestion.kind,
             },
             detail: &suggestion.detail,
@@ -261,7 +261,7 @@ pub(crate) fn complete(ui: &mut egui::Ui, resp: &egui::Response, text: &mut Stri
         &options,
         // Unarmed, the typed word is complete and Enter submits it; an arrow key arms the list.
         // Escape is the window's until the box is typed in.
-        solidcraft_ui_text::tr_label(if popup.armed {
+        torno_ui_text::tr_label(if popup.armed {
             "↑ ↓ choose · Enter / Tab complete · Esc dismiss"
         } else if popup.typed {
             "↑ ↓ choose · Enter applies what you typed · Esc dismiss"
@@ -317,7 +317,7 @@ mod tests {
     impl Editor {
         fn new(text: &str) -> Self {
             let ctx = crate::fonts::test_context();
-            let mut app = SolveApp::new(solidcraft_engine::Session::default(), Default::default());
+            let mut app = SolveApp::new(torno_engine::Session::default(), Default::default());
             for (name, value) in [("width", 40), ("width_extra", 50), ("wing", 20), ("wire", 10), ("radius", 10)] {
                 app.run("parameters.add", json!({"name":name,"expression":format!("{value} mm")})).unwrap();
             }
@@ -395,7 +395,7 @@ mod tests {
         let short_w = crate::scenario::rect_of("dialog:suggestions").map(|r| r.width()).unwrap_or(0.0);
 
         let ctx = crate::fonts::test_context();
-        let mut app = SolveApp::new(solidcraft_engine::Session::default(), Default::default());
+        let mut app = SolveApp::new(torno_engine::Session::default(), Default::default());
         let long = "Driver_MountHole_to_Cover_Shared_Base_Layout_Angle";
         app.run("parameters.add", json!({"name": long, "expression": "8 deg"})).unwrap();
         params_dialog::publish(&mut app, &ctx);

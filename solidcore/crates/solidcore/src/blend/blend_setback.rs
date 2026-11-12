@@ -2,7 +2,7 @@
 //! setback, the hole they leave is filled by patches that meet the rounds and the faces to
 //! the order asked (tangent, G1, or curvature continuous, G2).
 //!
-//! Not in the pinned upstream: the SolidCraft fork's `source/SMLib/src/SmBlendSetback.cpp`
+//! Not in the pinned upstream: the Torno fork's `source/SMLib/src/SmBlendSetback.cpp`
 //! and `source/SMLib/inc/SmBlendSetback.h` (tangency-labs/smlib PR #79: `870c970` the module,
 //! the setback distances and the ease moved out of the executive; `beba428` the fill by the
 //! setback split; `3fdb76b` a refusal's reason handed back; `52da453` a setback patch leaves its

@@ -1,6 +1,6 @@
-//! tangency-labs/solidcore#2904: SolidCraft's `34-chamfer-then-fillet`, a 40 x 30 x 20 box
+//! tangency-labs/solidcore#2904: Torno's `34-chamfer-then-fillet`, a 40 x 30 x 20 box
 //! with its four upright edges chamfered 5, then its eight top edges rounded r 2 and one
-//! upright side/chamfer edge r 0.327 in one fillet (as SolidCraft blends a later round
+//! upright side/chamfer edge r 0.327 in one fillet (as Torno blends a later round
 //! together with the rounds it meets). At the top of that edge three rounds of unequal radii
 //! meet, so the corner is a Setback, filled G1 between the front, the chamfer and the top.
 //!

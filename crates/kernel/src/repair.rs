@@ -18,8 +18,8 @@
 
 use solidcore_record::Vec3;
 use solidcore_record::brep::{self as b, Brep};
-use solidcraft_geom::brep::eval::CurveEval;
-use solidcraft_geom::prelude::*;
+use torno_geom::brep::eval::CurveEval;
+use torno_geom::prelude::*;
 
 use crate::body::{Body, SurfaceKind};
 use crate::{Continuity, KernelError, Result};
@@ -125,7 +125,7 @@ fn v3(p: [f64; 3]) -> Vec3 {
 /// applies: SMLib takes it and it has no free edges, or its only free edges bound holes and
 /// `patch_holes` is off (the report's holes are then in the message).
 pub fn repair(body: &Body, opts: &RepairOptions) -> Result<(Body, RepairReport)> {
-    let _span = solidcraft_profile::span("kernel", "repair");
+    let _span = torno_profile::span("kernel", "repair");
     body.require_brep("repair")?;
     if !(opts.gap.is_finite() && opts.gap > 0.0 && opts.gap <= 1.0) {
         return Err(invalid("the gap to sew must be more than 0 and at most 1 mm"));
@@ -213,7 +213,7 @@ fn largest_tolerance(r: &Brep) -> f64 {
 /// Whether SMLib takes face `f` of `r` on its own; `Err` with SMLib's reason when it does not.
 fn alone(r: &Brep, f: usize) -> Result<std::result::Result<(), String>> {
     let one = crate::surfaces::Parts::of(r, &[(f, false)])?.canonical()?;
-    Ok(solidcraft_smlib::Brep::from_record(&one.brep, true).map(|_| ()).map_err(|e| e.to_string()))
+    Ok(torno_smlib::Brep::from_record(&one.brep, true).map(|_| ()).map_err(|e| e.to_string()))
 }
 
 /// Every face of `record` SMLib refuses on its own, rebuilt where its surface allows (into
@@ -251,7 +251,7 @@ fn rebuild_refused(record: &mut Brep, report: &mut RepairReport) -> Result<()> {
 
 /// Face `f` of `r` rebuilt on its own surface: a cylinder, cone, sphere or torus face on a
 /// NURBS form of the surface laid on arcs from where the face starts
-/// ([`solidcraft_geom::brep::form::surface_on_own_arcs`]) instead of its frame's quarter grid, the same surface
+/// ([`torno_geom::brep::form::surface_on_own_arcs`]) instead of its frame's quarter grid, the same surface
 /// exactly, with SMLib's own trims of the face's edges on it (`SmlibTrims`, as the import makes the
 /// trims it has no closed form for). The face's edges and loops stay as they were. `None` for a
 /// face on another surface.
@@ -305,15 +305,15 @@ fn rebuilt_face(r: &Brep, f: usize) -> Result<Option<b::Face>> {
         .iter()
         .map(|&v| r.vertices.get(v as usize).map(|v| v.point).ok_or_else(|| invalid(format!("no vertex {v}"))))
         .collect::<Result<Vec<_>>>()?;
-    let extent = solidcraft_geom::brep::form::extent(&face.surface, &boundary).ok_or_else(|| invalid("its boundary does not lie on its surface"))?;
-    let (form, domain) = solidcraft_geom::brep::form::surface_on_own_arcs(
+    let extent = torno_geom::brep::form::extent(&face.surface, &boundary).ok_or_else(|| invalid("its boundary does not lie on its surface"))?;
+    let (form, domain) = torno_geom::brep::form::surface_on_own_arcs(
         &face.surface,
         extent,
         local.iter().filter_map(|&e| r.edges.get(e as usize)).map(|e| e.tolerance).fold(r.tolerance, f64::max),
     )
     .ok_or_else(|| invalid("no NURBS form of its surface over its boundary"))?;
     let trim = TrimFace { surface: &face.surface, nurbs: Some(&form), domain, edges, vertices: points, loops, tolerance: r.tolerance };
-    let pcurves = solidcraft_smlib::pcurves::SmlibTrims.trims(&trim).map_err(KernelError::Failed)?;
+    let pcurves = torno_smlib::pcurves::SmlibTrims.trims(&trim).map_err(KernelError::Failed)?;
     let mut out = face.clone();
     out.nurbs = Some(form);
     out.domain = domain;

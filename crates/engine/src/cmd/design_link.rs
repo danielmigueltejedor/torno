@@ -5,7 +5,7 @@
 
 use std::path::{Component as PathPart, Path, PathBuf};
 
-use solidcraft_doc::{DesignLink, Document};
+use torno_doc::{DesignLink, Document};
 
 /// The folder relative link paths are kept against: the design's own, once it has a file.
 fn base_dir(path: Option<&str>) -> Option<PathBuf> {

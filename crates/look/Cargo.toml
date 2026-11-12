@@ -1,6 +1,6 @@
 [package]
-name = "solidcraft-look"
-description = "SolidCraft's look, ready to install into the UI kit: its icon masters and colour roles, code-drawn glyphs, IBM Plex interface faces and built-in themes"
+name = "torno-look"
+description = "Torno's look, ready to install into the UI kit: its icon masters and colour roles, code-drawn glyphs, IBM Plex interface faces and built-in themes"
 version.workspace = true
 edition.workspace = true
 license-file = "LICENSE"
@@ -10,9 +10,9 @@ workspace = true
 
 [dependencies]
 # The kit the look is installed into: its icon set, glyph table, type families and theme files.
-solidcraft-ui-kit = { workspace = true }
+torno-ui-kit = { workspace = true }
 # The tokens the glyph painters draw with.
-solidcraft-theme = { workspace = true }
+torno-theme = { workspace = true }
 egui = { workspace = true }
 log = { workspace = true }
 

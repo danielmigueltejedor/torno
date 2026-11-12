@@ -5,8 +5,8 @@
 use std::collections::{BTreeMap, BTreeSet};
 
 use solidcore_record::Vec2;
-use solidcraft_geom::Aabb2;
-use solidcraft_geom::prelude::*;
+use torno_geom::Aabb2;
+use torno_geom::prelude::*;
 
 use super::{LCurve, Layout, curve_points, point_roles, same_shape};
 use crate::model::{ConstraintKind, Result, Sketch};

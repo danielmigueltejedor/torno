@@ -359,7 +359,7 @@ fn add_and_export_replies_match_the_output_schema() {
     matches(output_schema_for::<AddResult>(), "timeline.add", &broken);
 
     // With a path the script is written, and the reply names the file.
-    let dir = std::env::temp_dir().join(format!("solidcraft-timeline-schema-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("torno-timeline-schema-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap_or_else(|e| panic!("{e}"));
     let file = dir.join("script.json");
     let written = run(&mut s, "timeline.export_script", json!({"path": file}));

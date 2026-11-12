@@ -122,11 +122,11 @@
     "boolean2d"
   ],
   "ungraded": [
-    "files: SolidCraft computes it",
-    "results: SolidCraft computes it"
+    "files: Torno computes it",
+    "results: Torno computes it"
   ],
   "what": "sheet.export_dxf of an 80 x 40 x 2 base with a 20 mm flange on its y = 0 edge and a 10 mm hole: outline, cut and bend line",
   "why_not": [
-    "body \"Body1\" is no kernel operation's output nor an operand: SolidCraft built it or changed the kernel's record"
+    "body \"Body1\" is no kernel operation's output nor an operand: Torno built it or changed the kernel's record"
   ]
 }

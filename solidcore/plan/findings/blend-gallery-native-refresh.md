@@ -32,7 +32,7 @@ new elliptical-chamfer picture is preserved.
 | Input | Revision |
 |---|---|
 | solidcore and its corpus | `85bf36811a32670e20c0e147c326129213d42cca` |
-| SolidCraft base | `871014f955a76fd308ce156e68c93e6372906005` |
+| Torno base | `871014f955a76fd308ce156e68c93e6372906005` |
 | Published consumer adapter | `2e8847512baf43c91ab4e2c407750d6f896b6053` in [the kernel-pin update](https://github.com/tangency-labs/solidcraft/pull/12413) |
 | Complete local consumer diff, including Cargo.lock | SHA-256 `3b304405a8da353efbd7e7badaca077a2c9e5b49466239387e85f0fcda44fe99` |
 | Measured CLI | SHA-256 `c209307a0383e3a70cf83be6a05dbd4703cdeccfc61304c9231e0cb8b948fae9` |
@@ -40,9 +40,9 @@ new elliptical-chamfer picture is preserved.
 | SMLib fork main/release checked, not measured | `8eac63c439b2670ecffcc2d7beaf2242849463bf`, `prebuilt-8eac63c439b2670ecffcc2d7beaf2242849463bf` |
 | Legacy reading reference, not executed | `scripts/upstream-pin.env`, `3fd5b9548d19aa8c12c29bc9637a96d42a06f8a5` |
 
-SolidCraft main's older kernel API does not compile directly against this solidcore revision.
+Torno main's older kernel API does not compile directly against this solidcore revision.
 The temporary consumer applies the published adapter's four source files (`core.rs`,
-`core/offset.rs`, `core/trim.rs`, `lib.rs`) to the SolidCraft base, then removes assignments to
+`core/offset.rs`, `core/trim.rs`, `lib.rs`) to the Torno base, then removes assignments to
 these additional retired flags, whose fields no longer exist:
 
 ```text
@@ -147,10 +147,10 @@ share a direction; R7 has a wider view than R2. Whole-part insets use the saved 
 reported box, not seam vertices (a circular edge can have just one seam vertex).
 
 Application capture: run the case's commands with `$CASE` and `$OUT` expanded, save with
-`solidcraft-cli run SCRIPT --save MODEL.sc --json-out MODEL.json`, then:
+`torno-cli run SCRIPT --save MODEL.sc --json-out MODEL.json`, then:
 
 ```sh
-SOLIDCRAFT_GPU=cpu solidcraft-cli snapshot --in MODEL.sc --out detail.png   --width 1080 --height 680 --camera CAMERA_JSON --quality fine --no-grid --no-axes
+TORNO_GPU=cpu torno-cli snapshot --in MODEL.sc --out detail.png   --width 1080 --height 680 --camera CAMERA_JSON --quality fine --no-grid --no-axes
 ```
 
 The context uses the same yaw/pitch, target at the saved box's centre, distance 1.5 times its
@@ -172,7 +172,7 @@ no chroma subsampling. Positions/distances below are millimetres, yaw/pitch radi
 [
   {
     "case": "2893-chamfer-distance-and-angle-past-the-wall-refused",
-    "source": "SolidCraft recipe (input only)",
+    "source": "Torno recipe (input only)",
     "camera": {
       "target": [
         0,
@@ -188,7 +188,7 @@ no chroma subsampling. Positions/distances below are millimetres, yaw/pitch radi
   },
   {
     "case": "5158-fillet-round-just-past-a-10mm-face",
-    "source": "SolidCraft completed recipe",
+    "source": "Torno completed recipe",
     "camera": {
       "target": [
         36,
@@ -204,7 +204,7 @@ no chroma subsampling. Positions/distances below are millimetres, yaw/pitch radi
   },
   {
     "case": "851-fillet-arc-then-top-front",
-    "source": "SolidCraft completed recipe",
+    "source": "Torno completed recipe",
     "camera": {
       "target": [
         40,
@@ -220,7 +220,7 @@ no chroma subsampling. Positions/distances below are millimetres, yaw/pitch radi
   },
   {
     "case": "851-fillet-top-front-then-upright",
-    "source": "SolidCraft completed recipe",
+    "source": "Torno completed recipe",
     "camera": {
       "target": [
         40,
@@ -236,7 +236,7 @@ no chroma subsampling. Positions/distances below are millimetres, yaw/pitch radi
   },
   {
     "case": "cov-fillet-section-curvature-pipe-on-plate-r2",
-    "source": "SolidCraft completed recipe",
+    "source": "Torno completed recipe",
     "camera": {
       "target": [
         56,
@@ -252,7 +252,7 @@ no chroma subsampling. Positions/distances below are millimetres, yaw/pitch radi
   },
   {
     "case": "cov-fillet-turn-swept-boss-base-r1",
-    "source": "SolidCraft completed recipe",
+    "source": "Torno completed recipe",
     "camera": {
       "target": [
         15,
@@ -268,7 +268,7 @@ no chroma subsampling. Positions/distances below are millimetres, yaw/pitch radi
   },
   {
     "case": "cov-fillet-turn-swept-pocket-sharp-corner-refused-r1",
-    "source": "SolidCraft recipe (input only)",
+    "source": "Torno recipe (input only)",
     "camera": {
       "target": [
         10,
@@ -284,7 +284,7 @@ no chroma subsampling. Positions/distances below are millimetres, yaw/pitch radi
   },
   {
     "case": "every-block-cylinder-tangent-concave-arc-r2-partial-chain",
-    "source": "SolidCraft recipe (input only)",
+    "source": "Torno recipe (input only)",
     "camera": {
       "target": [
         0,
@@ -300,7 +300,7 @@ no chroma subsampling. Positions/distances below are millimetres, yaw/pitch radi
   },
   {
     "case": "report-fillet-concave-arc-and-front-top-edge-together-r5-solver-residues",
-    "source": "SolidCraft completed recipe",
+    "source": "Torno completed recipe",
     "camera": {
       "target": [
         37.5,
@@ -316,7 +316,7 @@ no chroma subsampling. Positions/distances below are millimetres, yaw/pitch radi
   },
   {
     "case": "report-fillet-concave-arc-and-front-top-edge-together-r7-solver-residues",
-    "source": "SolidCraft completed recipe",
+    "source": "Torno completed recipe",
     "camera": {
       "target": [
         36.5,
@@ -332,7 +332,7 @@ no chroma subsampling. Positions/distances below are millimetres, yaw/pitch radi
   },
   {
     "case": "report-fillet-concave-arc-and-front-top-edge-together-solver-residues",
-    "source": "SolidCraft completed recipe",
+    "source": "Torno completed recipe",
     "camera": {
       "target": [
         37.5,
@@ -348,7 +348,7 @@ no chroma subsampling. Positions/distances below are millimetres, yaw/pitch radi
   },
   {
     "case": "report-peg-front-and-concave-rounds-together-r2",
-    "source": "SolidCraft completed recipe",
+    "source": "Torno completed recipe",
     "camera": {
       "target": [
         36,
@@ -364,7 +364,7 @@ no chroma subsampling. Positions/distances below are millimetres, yaw/pitch radi
   },
   {
     "case": "report-peg-front-and-concave-rounds-together-r5",
-    "source": "SolidCraft completed recipe",
+    "source": "Torno completed recipe",
     "camera": {
       "target": [
         36,
@@ -380,7 +380,7 @@ no chroma subsampling. Positions/distances below are millimetres, yaw/pitch radi
   },
   {
     "case": "report-peg-step-front-and-concave-rounds-together-r2",
-    "source": "SolidCraft completed recipe",
+    "source": "Torno completed recipe",
     "camera": {
       "target": [
         36,

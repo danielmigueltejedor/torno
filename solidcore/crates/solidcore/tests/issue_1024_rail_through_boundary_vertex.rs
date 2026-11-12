@@ -5,7 +5,7 @@
 //! ends, and refused a round that fits with `NoRoom`. The fork's fix (tangency-labs/smlib
 //! `518566f`, `rails_fit.rs`) judges each run of off-face intervals once.
 //!
-//! The issue's own case (SolidCraft rig fillets/4365) fails earlier in solidcore and in
+//! The issue's own case (Torno rig fillets/4365) fails earlier in solidcore and in
 //! the pinned C++ alike (`SM_FILERR_VERTEX_PROBLEM`, with the flag on or off), so this
 //! test reproduces the mechanism on a prism instead: the top's rail of a round of 2 on
 //! the front top edge, extended past the edge's end at x = 40, runs off the top and

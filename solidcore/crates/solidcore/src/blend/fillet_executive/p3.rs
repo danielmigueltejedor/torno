@@ -2799,7 +2799,7 @@ impl<O: ClassObject + SolutionObject + Ord> FilletExecutive<O> {
             k.check_cancelled(OP)?;
             let topology_noted_before = self.error.code;
             if ignore(access.vertices_make_topology(k, corner, self))?.is_none() {
-                // SolidCraft change (the fork's, smlib#124, fdff996, 61547af, WR-697): a
+                // Torno change (the fork's, smlib#124, fdff996, 61547af, WR-697): a
                 // corner refused as one the blends cannot pass (SM_FILERR_NO_ROOM, noted by
                 // the corner), or one it does not build with its reason, keeps that reason
                 if self.error.code == FilletErrorType::NoRoom as i32
@@ -3274,7 +3274,7 @@ impl<O: ClassObject + SolutionObject + Ord> FilletExecutive<O> {
             }
             let noted_before = self.error.code;
             if ignore(access.edges_calculate(k, corner, self))?.is_none() {
-                // SolidCraft change (the fork's, 41a39ec): a corner that noted why it refused,
+                // Torno change (the fork's, 41a39ec): a corner that noted why it refused,
                 // or one refused as one the blends cannot pass (SM_FILERR_NO_ROOM, noted by
                 // the corner), keeps that reason
                 if self.error.code != noted_before
@@ -3343,7 +3343,7 @@ impl<O: ClassObject + SolutionObject + Ord> FilletExecutive<O> {
         while let Some(corner) = self.corners.get(index).copied() {
             k.check_cancelled(OP)?;
             if ignore(access.vertices_make_topology(k, corner, self))?.is_none() {
-                // SolidCraft change (the fork's, smlib#124, fdff996, 61547af, WR-697): a corner
+                // Torno change (the fork's, smlib#124, fdff996, 61547af, WR-697): a corner
                 // refused as one the blends cannot pass (SM_FILERR_NO_ROOM, noted by the
                 // corner) keeps that reason
                 if self.error.code == FilletErrorType::NoRoom as i32 {

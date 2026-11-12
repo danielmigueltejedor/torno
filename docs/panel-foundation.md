@@ -1,7 +1,7 @@
 # Universal panel foundation
 
-The public contracts are `solidcraft_engine::panels` and
-`solidcraft_ui_egui::panel_runtime`. The #11305 host is explicitly enabled and
+The public contracts are `torno_engine::panels` and
+`torno_ui_egui::panel_runtime`. The #11305 host is explicitly enabled and
 uses synthetic controllers to exercise shared behaviour. Preferences → Layout →
 Use shared panel layout mounts the existing Browser, History, Assistant and Render
 Scene Browser content in that host. Apply enables the setting; clearing it returns

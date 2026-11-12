@@ -8,13 +8,13 @@
 //! the design gives them (`Feature::link_faces`), so a joint on a linked face stays on that face
 //! when the design changes, as it would inside the design, and reports it when the face is gone.
 
-use solidcraft_geom::prelude::*;
 use std::hash::{Hash, Hasher};
 use std::path::{Path, PathBuf};
 use std::sync::Mutex;
+use torno_geom::prelude::*;
 
 use serde_json::{Value, json};
-use solidcraft_doc::{DesignLink, Document, FeatureKind, LinkedBodyProperties, UserMaterial};
+use torno_doc::{DesignLink, Document, FeatureKind, LinkedBodyProperties, UserMaterial};
 
 use super::CommandSpec;
 use super::design_link::{absolute, resolve, stored};
@@ -119,16 +119,16 @@ pub static COMMANDS: &[CommandSpec] = &[
 /// Why the file a stored link names may not be reached, from its text alone (`None`: it may): a
 /// device, or a network location not allowed (`vfs::design_path_refusal`). Both the link as
 /// stored and the file it resolves to are judged, before anything asks the disk or the network.
-fn link_refusal(design: Option<&str>, link: &str) -> Option<solidcraft_io::vfs::Remote> {
+fn link_refusal(design: Option<&str>, link: &str) -> Option<torno_io::vfs::Remote> {
     let file = resolve(design, link);
-    solidcraft_io::vfs::design_path_refusal(link, design).or_else(|| solidcraft_io::vfs::design_path_refusal(&file.to_string_lossy(), design))
+    torno_io::vfs::design_path_refusal(link, design).or_else(|| torno_io::vfs::design_path_refusal(&file.to_string_lossy(), design))
 }
 
 /// The error for a link [`link_refusal`] refuses.
 fn link_refused(design: Option<&str>, link: &str) -> Result<()> {
-    solidcraft_io::vfs::check_design_path(link, design).map_err(|e| EngineError::Other(e.to_string()))?;
+    torno_io::vfs::check_design_path(link, design).map_err(|e| EngineError::Other(e.to_string()))?;
     let file = resolve(design, link);
-    solidcraft_io::vfs::check_design_path(&file.to_string_lossy(), design).map_err(|e| EngineError::Other(e.to_string()))
+    torno_io::vfs::check_design_path(&file.to_string_lossy(), design).map_err(|e| EngineError::Other(e.to_string()))
 }
 
 /// Resolve a design's component links against its original file, before opening it from a
@@ -141,15 +141,15 @@ pub fn resolve_design_links(doc: &mut Document, from: Option<&str>) {
 
 /// The bodies of a linked design: its name, the Import feature that holds them and the names
 /// the design gives their faces (`Feature::link_faces`), with the source's design properties.
-type Linked = (String, solidcraft_io::StepFeature, Vec<Vec<String>>, solidcraft_doc::Metadata, Vec<SourceProperties>);
+type Linked = (String, torno_io::StepFeature, Vec<Vec<String>>, torno_doc::Metadata, Vec<SourceProperties>);
 
 #[derive(Clone)]
 struct SourceProperties {
     material: String,
     definition: Option<UserMaterial>,
-    appearance: Option<solidcraft_doc::appearance::Look>,
+    appearance: Option<torno_doc::appearance::Look>,
     /// Resolved authored overrides, by the face index in this imported body.
-    faces: Vec<(usize, solidcraft_doc::appearance::Look)>,
+    faces: Vec<(usize, torno_doc::appearance::Look)>,
 }
 
 /// What a linked file last gave, by the file: digests of its bytes, of the STEP text it gave and
@@ -190,7 +190,7 @@ fn unchanged_read(file: &Path, bytes: u64, step: u64, faces: u64) -> Option<(Vec
         .map(|r| (r.warnings.clone(), r.properties.clone()))
 }
 
-fn remember_read(file: &Path, bytes: u64, feature: &solidcraft_io::StepFeature, faces: &[Vec<String>], properties: &[SourceProperties]) {
+fn remember_read(file: &Path, bytes: u64, feature: &torno_io::StepFeature, faces: &[Vec<String>], properties: &[SourceProperties]) {
     let FeatureKind::Import { step, .. } = &feature.kind else { return };
     let file = absolute(file);
     let Ok(mut reads) = READS.lock() else { return };
@@ -216,16 +216,16 @@ fn read_link(file: &Path, own: Option<&str>) -> Result<Vec<u8>> {
     }
     // A network location only when its server is allowed, a device never: judged from the text
     // before anything is read (on Windows, reading `\\host\share\x` connects to the host).
-    let design = solidcraft_io::limits::Kind::Design;
-    solidcraft_io::vfs::read_design_path(&shown, own, solidcraft_io::limits::max_design_bytes()).map_err(|e| {
-        let e = solidcraft_io::limits::explain(design, e).to_string();
+    let design = torno_io::limits::Kind::Design;
+    torno_io::vfs::read_design_path(&shown, own, torno_io::limits::max_design_bytes()).map_err(|e| {
+        let e = torno_io::limits::explain(design, e).to_string();
         EngineError::Other(if e.starts_with(&shown) { e } else { format!("{shown}: {e}") })
     })
 }
 
 /// The solid bodies of the design at `file`, evaluated under `validation`, as an Import feature, with the digest of
 /// the bytes read, which the link keeps ([`DesignLink::file_sha256`], #9739).
-fn linked_bodies_read(file: &Path, own: Option<&str>, validation: solidcraft_kernel::Validation) -> Result<(Linked, String)> {
+fn linked_bodies_read(file: &Path, own: Option<&str>, validation: torno_kernel::Validation) -> Result<(Linked, String)> {
     let bytes = read_link(file, own)?;
     Ok((design_bodies(file, &bytes, validation)?, DesignLink::file_digest(&bytes)))
 }
@@ -240,7 +240,7 @@ const DIGESTS_SIZE: usize = 256;
 /// when its time or size changed since; the browser build keeps no times and reads it each time.
 pub(super) fn file_sha256(file: &Path, own: Option<&str>) -> Option<String> {
     let file = absolute(file);
-    let stamp = solidcraft_io::vfs::design_path_stamp(&file.to_string_lossy(), own);
+    let stamp = torno_io::vfs::design_path_stamp(&file.to_string_lossy(), own);
     if let Some(stamp) = stamp
         && let Some(known) = DIGESTS.lock().ok()?.iter().find(|(f, s, _)| *f == file && *s == stamp).map(|(_, _, d)| d.clone())
     {
@@ -259,17 +259,17 @@ pub(super) fn file_sha256(file: &Path, own: Option<&str>) -> Option<String> {
 
 /// The solid bodies of `bytes`, the design at `file`, as an Import feature. The model the file
 /// keeps is its evaluation when this build saved it for exactly that design, as when it is opened.
-fn design_bodies(file: &Path, bytes: &[u8], validation: solidcraft_kernel::Validation) -> Result<Linked> {
+fn design_bodies(file: &Path, bytes: &[u8], validation: torno_kernel::Validation) -> Result<Linked> {
     #[cfg(test)]
     EVALUATED.with(|n| n.set(n.get() + 1));
     let shown = file.display().to_string();
-    let fail = |e: solidcraft_io::IoError| EngineError::Other(format!("{shown}: {e}"));
-    let (doc, saved) = if solidcraft_io::is_design_container(bytes) {
-        let mut reader = solidcraft_io::DesignContainerReader::new(std::io::Cursor::new(bytes)).map_err(fail)?;
+    let fail = |e: torno_io::IoError| EngineError::Other(format!("{shown}: {e}"));
+    let (doc, saved) = if torno_io::is_design_container(bytes) {
+        let mut reader = torno_io::DesignContainerReader::new(std::io::Cursor::new(bytes)).map_err(fail)?;
         let saved = reader.geometry();
         (reader.read_document().map_err(fail)?, saved)
     } else {
-        (solidcraft_io::read_design(bytes).map_err(fail)?, None)
+        (torno_io::read_design(bytes).map_err(fail)?, None)
     };
     let (name, feature, faces, metadata, properties) =
         session_bodies(&Session::opened_at_validating(doc, saved.as_ref(), Some(&shown), validation), &shown)?;
@@ -288,15 +288,15 @@ fn session_bodies(part: &Session, shown: &str) -> Result<Linked> {
     if solids.is_empty() {
         return Err(EngineError::Other(format!("{shown}: the design has no solid bodies to link")));
     }
-    let step = solidcraft_io::export(&part.doc.painted_for_link(&world), &solids, solidcraft_io::Format::Step, &name)
+    let step = torno_io::export(&part.doc.painted_for_link(&world), &solids, torno_io::Format::Step, &name)
         .map_err(|e| EngineError::Other(format!("{shown}: {e}")))?;
-    let mut feature = solidcraft_io::step_import_feature(&step, shown).map_err(|e| EngineError::Other(format!("{shown}: {e}")))?;
+    let mut feature = torno_io::step_import_feature(&step, shown).map_err(|e| EngineError::Other(format!("{shown}: {e}")))?;
     if world.bodies.len() > solids.len() {
         feature.warnings.push(format!("{} mesh bodies of {shown} are not linked", world.bodies.len() - solids.len()));
     }
     // The STEP text keeps no face names: carry the design's own, so references into the linked
     // bodies follow them as they do inside the design (#3330).
-    let faces = solidcraft_doc::naming::carried_face_names(&world, &feature.import.bodies);
+    let faces = torno_doc::naming::carried_face_names(&world, &feature.import.bodies);
     let properties = feature
         .import
         .bodies
@@ -315,7 +315,7 @@ fn session_bodies(part: &Session, shown: &str) -> Result<Linked> {
                         .iter()
                         .filter(|b| !b.body.is_mesh())
                         .filter_map(|b| {
-                            let names = solidcraft_doc::naming::face_names(b);
+                            let names = torno_doc::naming::face_names(b);
                             let count = carried.iter().filter(|n| !n.is_empty() && names.contains(n)).count();
                             (count > 0).then_some((count, b))
                         })
@@ -325,7 +325,7 @@ fn session_bodies(part: &Session, shown: &str) -> Result<Linked> {
                 .ok_or_else(|| EngineError::Other(format!("{shown}: cannot match linked body {} to its source properties", read.name)))?;
             let key = source.definition_name();
             let material = part.doc.body_material(key);
-            let definition = if solidcraft_doc::material_density(&material).is_none() { part.doc.user_material(&material).cloned() } else { None };
+            let definition = if torno_doc::material_density(&material).is_none() { part.doc.user_material(&material).cloned() } else { None };
             let appearance = part
                 .doc
                 .appearances
@@ -333,7 +333,7 @@ fn session_bodies(part: &Session, shown: &str) -> Result<Linked> {
                 .get(key)
                 .cloned()
                 .or_else(|| part.doc.appearances.components.get(&part.doc.model_body_component(source)).cloned());
-            let names = solidcraft_doc::naming::face_names(source);
+            let names = torno_doc::naming::face_names(source);
             let authored: std::collections::BTreeMap<_, _> = part
                 .doc
                 .authored_face_colors(source)
@@ -348,7 +348,7 @@ fn session_bodies(part: &Session, shown: &str) -> Result<Linked> {
 }
 
 fn material_fingerprint(doc: &Document, material: &str) -> Result<Option<String>> {
-    if solidcraft_doc::material_density(material).is_some() {
+    if torno_doc::material_density(material).is_some() {
         return Ok(None);
     }
     doc.user_material(material).map(LinkedBodyProperties::fingerprint).transpose().map_err(|e| EngineError::Other(e.to_string()))
@@ -369,13 +369,13 @@ fn inherit_material(doc: &mut Document, source: &SourceProperties, previous: Opt
             return Ok(existing.name.clone());
         }
     }
-    if doc.user_materials.len() >= solidcraft_doc::MAX_USER_MATERIALS {
+    if doc.user_materials.len() >= torno_doc::MAX_USER_MATERIALS {
         return Err(EngineError::Other("cannot inherit linked material: this design already has 1000 custom materials".into()));
     }
     let mut copy = definition.clone();
     if doc.material_name(&copy.name).is_some() {
         let base: String = copy.name.chars().take(64).collect();
-        let name = (1..=solidcraft_doc::MAX_USER_MATERIALS + 1)
+        let name = (1..=torno_doc::MAX_USER_MATERIALS + 1)
             .map(|i| format!("{base} (linked {i})"))
             .find(|name| doc.material_name(name).is_none())
             .ok_or_else(|| EngineError::Other("cannot name the linked material".into()))?;
@@ -394,15 +394,15 @@ fn inherit_faces(
     name: &str,
     source: &SourceProperties,
     previous: Option<&LinkedBodyProperties>,
-) -> (Vec<solidcraft_doc::appearance::FaceLook>, bool) {
-    use solidcraft_doc::appearance::FaceLook;
+) -> (Vec<torno_doc::appearance::FaceLook>, bool) {
+    use torno_doc::appearance::FaceLook;
     let previous = previous.and_then(|p| p.faces.as_deref()).unwrap_or_default();
     if source.faces.is_empty() && previous.is_empty() {
         return (Vec::new(), false);
     }
     let state = s.model.state();
     let Some(body) = state.body(name) else { return (Vec::new(), false) };
-    let names = solidcraft_doc::naming::face_names(body);
+    let names = torno_doc::naming::face_names(body);
     // A stable named assignment needs no new geometric point. Keep its position in
     // the appearance list and avoid tessellating on unchanged cached reads.
     if previous.len() == source.faces.len()
@@ -426,7 +426,7 @@ fn inherit_faces(
             replaced.push(old);
         } else {
             if let Some(name) = &old.name {
-                blocked.extend(solidcraft_doc::naming::faces_with_stem(body, name));
+                blocked.extend(torno_doc::naming::faces_with_stem(body, name));
             }
             // Remember an explicit local removal too, including after save/reopen.
             inherited.push(old);
@@ -434,7 +434,7 @@ fn inherit_faces(
     }
     s.doc_mut().appearances.faces = local;
     blocked.extend(s.doc.authored_face_colors(body).into_iter().map(|(index, _)| index));
-    let spots = if source.faces.is_empty() { Vec::new() } else { solidcraft_doc::naming::face_spots(body) };
+    let spots = if source.faces.is_empty() { Vec::new() } else { torno_doc::naming::face_spots(body) };
     let mut assignments = Vec::new();
     for (index, look) in &source.faces {
         if blocked.contains(index) {
@@ -566,7 +566,7 @@ fn insert_design(s: &mut Session, p: &Value) -> Result<Value> {
             let parent = if p.get("parent").is_some() { component_key(s, p, "parent", cmd)? } else { s.active_component };
             // Reuse the definition, not another placement's captured or pending move.
             // Insert Design places from the parent origin whether the link is new or reused.
-            let mut transform = solidcraft_doc::IDENTITY;
+            let mut transform = torno_doc::IDENTITY;
             transform[3] = [translate.x, translate.y, translate.z, 1.0];
             let occurrence = s.doc_mut().add_occurrence(component, parent, transform)?;
             return reply(cmd, InsertDesignResult { inserted: DesignInserted::Reused { occurrence, component }, param_warnings: Vec::new() });
@@ -654,7 +654,7 @@ fn update_links(s: &mut Session, p: &Value) -> Result<Value> {
             continue;
         };
         // A window running this off its thread names the design being read again (#5329).
-        solidcraft_doc::progress::item(Some((&cname, index, count)));
+        torno_doc::progress::item(Some((&cname, index, count)));
         let (old, file, bytes) = match read_linked(s, comp, &link) {
             Ok(read) => read,
             Err(e) if go_on => {
@@ -739,7 +739,7 @@ fn update_links(s: &mut Session, p: &Value) -> Result<Value> {
         let changed = inherit_properties(s, comp, &properties)? || changed;
         if changed { updated.push(cname) } else { unchanged.push(cname) }
     }
-    solidcraft_doc::progress::item(None);
+    torno_doc::progress::item(None);
     // None could be read: nothing to take back either.
     if updated.is_empty() && unchanged.is_empty() && !failed.is_empty() {
         return Err(bad(cmd, format!("{}: {}", failed[0].name, failed[0].error)));
@@ -750,7 +750,7 @@ fn update_links(s: &mut Session, p: &Value) -> Result<Value> {
     }
     // A reference whose face the design no longer has says so here, not only in the joint list.
     if !updated.is_empty() {
-        let sol = solidcraft_doc::joints::solve(&s.doc, &s.model.state());
+        let sol = torno_doc::joints::solve(&s.doc, &s.model.state());
         warnings.extend(sol.errors.iter().chain(&sol.conflicts).map(|(_, name, why)| format!("joint {name}: {why}")));
     }
     reply(cmd, UpdateLinksResult { updated, unchanged, warnings, failed, param_warnings: Vec::new() })
@@ -773,9 +773,9 @@ fn read_linked(s: &Session, comp: u64, link: &DesignLink) -> std::result::Result
 /// an update can give to another face.
 fn numbered_references(s: &Session, comp: u64, feature: u64) -> Vec<String> {
     let numbered = format!("F{feature}:face:");
-    let on = |o: &solidcraft_doc::joints::JointOrigin| {
+    let on = |o: &torno_doc::joints::JointOrigin| {
         s.doc.occurrences.iter().any(|x| x.id == o.part() && x.component == comp)
-            && o.snap.face_names().iter().any(|n| n.trim_start_matches(solidcraft_doc::naming::LEGACY_MARK).starts_with(&numbered))
+            && o.snap.face_names().iter().any(|n| n.trim_start_matches(torno_doc::naming::LEGACY_MARK).starts_with(&numbered))
     };
     let joints = s.doc.assembly.joints.iter().filter(|j| on(&j.a) || on(&j.b)).map(|j| format!("joint {}", j.name));
     let origins = s.doc.assembly.origins.iter().filter(|o| on(&o.origin)).map(|o| format!("joint origin {}", o.name));
@@ -794,7 +794,7 @@ fn relink(s: &mut Session, p: &Value) -> Result<Value> {
     let given = str_(p, "path").filter(|x| !x.trim().is_empty() && x.len() < 4096).ok_or_else(|| bad(cmd, "`path` is required"))?;
     let file = absolute(Path::new(given));
     // Any design Insert Design takes: a .sc container (or a legacy one) or a plain JSON design.
-    if !solidcraft_io::is_design_path(given) {
+    if !torno_io::is_design_path(given) {
         return Err(bad(cmd, "choose a saved design (.sc or .json)"));
     }
     // A network or device path is judged from its text before the disk is asked anything.
@@ -865,7 +865,7 @@ fn relink(s: &mut Session, p: &Value) -> Result<Value> {
 
 /// The solver's joint errors and conflicts after a relink: added to `warnings`, and as rows.
 fn joint_diagnostics(s: &Session, warnings: &mut Vec<String>) -> (Vec<JointDiagnostic>, Vec<JointDiagnostic>) {
-    let sol = solidcraft_doc::joints::solve(&s.doc, &s.model.state());
+    let sol = torno_doc::joints::solve(&s.doc, &s.model.state());
     for (_, name, why) in sol.errors.iter().chain(&sol.conflicts) {
         warnings.push(format!("joint {name}: {why}"));
     }
@@ -964,7 +964,7 @@ fn list_links(s: &mut Session, _p: &Value) -> Result<Value> {
             // `\\host\share` exists already connects to the host.
             match link_refusal(s.path.as_deref(), &l.path) {
                 None => {
-                    let found = solidcraft_io::vfs::design_path_is_file(&file, s.path.as_deref());
+                    let found = torno_io::vfs::design_path_is_file(&file, s.path.as_deref());
                     // Whether the file is no longer what this design last read (#9739): `null`
                     // when it isn't found, or the link keeps no digest (made before they were).
                     let changed = l
@@ -974,7 +974,7 @@ fn list_links(s: &mut Session, _p: &Value) -> Result<Value> {
                         .and_then(|kept| file_sha256(Path::new(file.as_ref()), s.path.as_deref()).map(|now| now != *kept));
                     LinkInfo::Looked { component: *c, name, path, file: file.into_owned(), found, changed }
                 }
-                Some(solidcraft_io::vfs::Remote::Network(host)) => LinkInfo::Network {
+                Some(torno_io::vfs::Remote::Network(host)) => LinkInfo::Network {
                     component: *c,
                     name,
                     path,
@@ -983,7 +983,7 @@ fn list_links(s: &mut Session, _p: &Value) -> Result<Value> {
                     reason: format!("on the network location \\\\{host}, which is not allowed"),
                     host,
                 },
-                Some(solidcraft_io::vfs::Remote::Device) => {
+                Some(torno_io::vfs::Remote::Device) => {
                     LinkInfo::Device { component: *c, name, path, file: file.into_owned(), found: None, reason: "names a device, not a file".into() }
                 }
             }
@@ -1015,7 +1015,7 @@ mod tests {
     #[test]
     fn save_as_keeps_link_targets_through_undo_redo_and_checkpoints() {
         for on_copy in [false, true] {
-            let dir = std::env::temp_dir().join(format!("solidcraft-link-save-as-{}-{on_copy}", std::process::id()));
+            let dir = std::env::temp_dir().join(format!("torno-link-save-as-{}-{on_copy}", std::process::id()));
             std::fs::create_dir_all(dir.join("parts")).unwrap();
             std::fs::create_dir_all(dir.join("asm/sub/deeper")).unwrap();
             let part = dir.join("parts/plate.solidcraft");
@@ -1059,7 +1059,7 @@ mod tests {
             let path = s.path.clone().unwrap();
             for format in ["json", "container"] {
                 run(&mut s, "file.save", json!({"format": format}));
-                let disk = solidcraft_io::read_design(&std::fs::read(&path).unwrap()).unwrap();
+                let disk = torno_io::read_design(&std::fs::read(&path).unwrap()).unwrap();
                 assert_eq!(disk.links.values().next().unwrap().path, "../../../parts/plate.solidcraft");
                 run(&mut s, "doc.open", json!({"path": path}));
                 assert!(!s.is_dirty());
@@ -1074,7 +1074,7 @@ mod tests {
 
     #[test]
     fn recovered_relative_links_keep_their_targets_after_save_as() {
-        let dir = std::env::temp_dir().join(format!("solidcraft-link-recovery-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("torno-link-recovery-{}", std::process::id()));
         std::fs::create_dir_all(dir.join("parts")).unwrap();
         std::fs::create_dir_all(dir.join("asm/sub")).unwrap();
         let part = dir.join("parts/plate.solidcraft");
@@ -1089,7 +1089,7 @@ mod tests {
         drop(autosaver);
         let entry = crate::recovery::orphans(&recovery).pop().unwrap();
         // Older autosaves hold paths relative to the design, not the recovery folder.
-        std::fs::write(recovery.join(format!("{}.solidcraft", entry.id)), solidcraft_io::write_design(&s.design())).unwrap();
+        std::fs::write(recovery.join(format!("{}.solidcraft", entry.id)), torno_io::write_design(&s.design())).unwrap();
         let mut recovered = Session::default();
         run(&mut recovered, "doc.recover", json!({"dir": recovery, "id": entry.id}));
         assert_eq!(run(&mut recovered, "component.links", json!({}))["links"][0]["found"], true);
@@ -1102,7 +1102,7 @@ mod tests {
 
     #[test]
     fn a_saved_assembly_reopens_with_its_link_updates_it_and_breaks_it() {
-        let dir = std::env::temp_dir().join(format!("solidcraft-link-reopen-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("torno-link-reopen-{}", std::process::id()));
         std::fs::create_dir_all(dir.join("parts")).unwrap();
         std::fs::create_dir_all(dir.join("asm")).unwrap();
         let part = dir.join("parts").join("plate.solidcraft");
@@ -1141,7 +1141,7 @@ mod tests {
 
     #[test]
     fn update_links_reads_again_only_the_designs_that_changed() {
-        let dir = std::env::temp_dir().join(format!("solidcraft-link-reads-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("torno-link-reads-{}", std::process::id()));
         std::fs::create_dir_all(&dir).unwrap();
         let (plate, block) = (dir.join("plate.solidcraft"), dir.join("block.solidcraft"));
         save_box(&plate, 30.0);
@@ -1180,7 +1180,7 @@ mod tests {
     /// linked designs changed while it was closed; Update Links takes the change and the record.
     #[test]
     fn a_link_says_its_file_changed_while_the_design_was_closed() {
-        let dir = std::env::temp_dir().join(format!("solidcraft-link-changed-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("torno-link-changed-{}", std::process::id()));
         std::fs::create_dir_all(&dir).unwrap();
         let (part, assembly) = (dir.join("p.sc"), dir.join("a.sc"));
         save_box(&part, 10.0);
@@ -1214,7 +1214,7 @@ mod tests {
     /// #9743: a list of links is read in one step that goes on past a design it can't read.
     #[test]
     fn update_links_given_a_list_reads_them_in_one_step_past_a_design_it_cannot_read() {
-        let dir = std::env::temp_dir().join(format!("solidcraft-link-list-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("torno-link-list-{}", std::process::id()));
         std::fs::create_dir_all(&dir).unwrap();
         let (plate, block) = (dir.join("plate.solidcraft"), dir.join("block.solidcraft"));
         save_box(&plate, 30.0);
@@ -1257,7 +1257,7 @@ mod tests {
     #[test]
     fn inserting_a_missing_file_or_bad_parameters_changes_nothing() {
         let mut s = Session::default();
-        let missing = std::env::temp_dir().join(format!("solidcraft-no-such-part-{}.solidcraft", std::process::id()));
+        let missing = std::env::temp_dir().join(format!("torno-no-such-part-{}.solidcraft", std::process::id()));
         assert!(s.execute("component.insert_design", &json!({"path": missing})).is_err());
         assert!(s.execute("component.insert_design", &json!({})).is_err());
         assert!(s.execute("component.insert_design", &json!({"path": "x.solidcraft", "translate": [1, "a", 2]})).is_err());
@@ -1313,7 +1313,7 @@ mod tests {
     /// size that takes the first one's place in the file.
     #[test]
     fn joints_on_a_linked_part_follow_its_faces_through_update_links() {
-        let dir = std::env::temp_dir().join(format!("solidcraft-link-names-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("torno-link-names-{}", std::process::id()));
         std::fs::create_dir_all(&dir).unwrap();
         let path = dir.join("plate.solidcraft");
         let hx = |part: &mut Session, x: &str| {
@@ -1375,7 +1375,7 @@ mod tests {
     /// part gives it, not by the imported file's digest, which any edit of the part changes.
     #[test]
     fn a_sketch_on_a_linked_face_follows_it_through_update_links() {
-        let dir = std::env::temp_dir().join(format!("solidcraft-link-sketch-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("torno-link-sketch-{}", std::process::id()));
         std::fs::create_dir_all(&dir).unwrap();
         let path = dir.join("plate.solidcraft");
         let edits: [(&str, &dyn Fn(&mut Session)); 3] = [
@@ -1405,7 +1405,7 @@ mod tests {
     /// not moved to another face.
     #[test]
     fn a_sketch_whose_linked_face_is_gone_still_fails() {
-        let dir = std::env::temp_dir().join(format!("solidcraft-link-sketch-gone-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("torno-link-sketch-gone-{}", std::process::id()));
         std::fs::create_dir_all(&dir).unwrap();
         let path = dir.join("plate.solidcraft");
         let mut part = plate(&path);
@@ -1425,7 +1425,7 @@ mod tests {
     /// say so instead of moving the joint to another hole of the same size.
     #[test]
     fn a_joint_whose_linked_face_is_gone_is_reported_not_moved() {
-        let dir = std::env::temp_dir().join(format!("solidcraft-link-gone-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("torno-link-gone-{}", std::process::id()));
         std::fs::create_dir_all(&dir).unwrap();
         let path = dir.join("plate.solidcraft");
         let mut part = plate(&path);
@@ -1449,7 +1449,7 @@ mod tests {
     #[test]
     fn jointed_linked_arms_stay_together_through_update_links() {
         use crate::cmd::joints::face_tests::{ARM_EDITS, ARM_FORMS, arm_pairs, arm_part, arm_size, arms_apart, joint_arms};
-        let dir = std::env::temp_dir().join(format!("solidcraft-link-arms-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("torno-link-arms-{}", std::process::id()));
         std::fs::create_dir_all(&dir).unwrap();
         let path = dir.join("arm.solidcraft");
         let mut apart = Vec::new();
@@ -1479,7 +1479,7 @@ mod tests {
     /// place in the file: Update Links says it can't vouch for it, and keeps the names from then on.
     #[test]
     fn update_links_warns_about_joints_on_faces_named_by_their_place() {
-        let dir = std::env::temp_dir().join(format!("solidcraft-link-numbered-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("torno-link-numbered-{}", std::process::id()));
         std::fs::create_dir_all(&dir).unwrap();
         let path = dir.join("plate.solidcraft");
         let mut part = plate(&path);
@@ -1503,7 +1503,7 @@ mod tests {
     /// refuses with the server's name, and nothing in the design changes.
     #[test]
     fn links_to_network_locations_or_devices_touch_nothing_until_allowed() {
-        let dir = std::env::temp_dir().join(format!("solidcraft-link-network-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("torno-link-network-{}", std::process::id()));
         let _ = std::fs::remove_dir_all(&dir);
         std::fs::create_dir_all(dir.join("parts")).unwrap();
         let part = dir.join("parts").join("plate.solidcraft");
@@ -1524,12 +1524,12 @@ mod tests {
         let before = volume(&mut a);
         for link in crafted.iter().chain(&devices) {
             a.doc_mut().links.insert(comp, DesignLink { path: link.to_string(), feature, ..Default::default() });
-            let calls = solidcraft_io::vfs::file_calls();
+            let calls = torno_io::vfs::file_calls();
             let listed = run(&mut a, "component.links", json!({}));
             let entry = &listed["links"][0];
             assert!(entry["found"].is_null() && entry["reason"].is_string(), "{link}: {listed}");
             let err = a.execute("component.update_links", &json!({})).unwrap_err().to_string();
-            assert_eq!(solidcraft_io::vfs::file_calls(), calls, "{link}: a file call was made");
+            assert_eq!(torno_io::vfs::file_calls(), calls, "{link}: a file call was made");
             if devices.contains(link) {
                 assert!(entry["host"].is_null() && err.contains("names a device"), "{link}: {listed} {err}");
             } else {
@@ -1542,7 +1542,7 @@ mod tests {
         #[cfg(unix)]
         {
             a.doc_mut().links.insert(comp, DesignLink { path: crafted[0].to_string(), feature, ..Default::default() });
-            solidcraft_io::vfs::allowing_hosts(&["EVIL.example".to_string()], || {
+            torno_io::vfs::allowing_hosts(&["EVIL.example".to_string()], || {
                 let listed = run(&mut a, "component.links", json!({}));
                 assert_eq!(listed["links"][0]["found"], true, "{listed}");
                 assert_eq!(run(&mut a, "component.update_links", json!({}))["unchanged"], json!(["plate"]));
@@ -1556,10 +1556,10 @@ mod tests {
             assert_eq!(run(&mut a, "component.update_links", json!({}))["unchanged"], json!(["plate"]), "{local}");
         }
         // Relink to a network path (programmatic: no prompt) is refused before the disk is asked.
-        let calls = solidcraft_io::vfs::file_calls();
+        let calls = torno_io::vfs::file_calls();
         let err = a.execute("component.relink", &json!({"component": comp, "path": r"\\evil.example\share\x.solidcraft"})).unwrap_err().to_string();
         assert!(err.contains("network location"), "{err}");
-        assert_eq!(solidcraft_io::vfs::file_calls(), calls);
+        assert_eq!(torno_io::vfs::file_calls(), calls);
         let _ = std::fs::remove_dir_all(&dir);
     }
 

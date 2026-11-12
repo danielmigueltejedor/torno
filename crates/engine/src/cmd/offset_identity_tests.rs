@@ -1,7 +1,7 @@
 #![allow(clippy::unwrap_used, clippy::panic)]
 use serde_json::{Value, json};
-use solidcraft_doc::{Document, FeatureKind, ProfileSel};
-use solidcraft_geom::MeshGeom;
+use torno_doc::{Document, FeatureKind, ProfileSel};
+use torno_geom::MeshGeom;
 
 use crate::Session;
 
@@ -27,7 +27,7 @@ fn rounded_offset(radius: f64) -> (Session, u64, String, String) {
 fn volume(session: &Session, feature: u64) -> f64 {
     let state = session.model.state();
     let body = state.bodies.iter().find(|body| body.feature == feature).unwrap();
-    solidcraft_kernel::measure(&body.body).unwrap().volume
+    torno_kernel::measure(&body.body).unwrap().volume
 }
 
 fn healthy(session: &Session) {
@@ -48,7 +48,7 @@ fn legacy_offset_capture_persists_reserved_curves_without_a_transient_associatio
     let state = session.model.state();
     let solved = state.sketch(sketch).unwrap();
     assert!(solved.sketch.offsets[0].topology.is_some(), "legacy upgrade belongs only to the evaluated copy");
-    let index = solidcraft_doc::profile_selection_indices(solved, &ProfileSel::Curves { loops: vec![reserved.clone()] }).unwrap()[0];
+    let index = torno_doc::profile_selection_indices(solved, &ProfileSel::Curves { loops: vec![reserved.clone()] }).unwrap()[0];
     let extrusion = run(&mut session, "solid.extrude", json!({"sketch":sketch,"profiles":[index],"distance":2,"name":"Legacy inner"}))["feature"]
         .as_u64()
         .unwrap();

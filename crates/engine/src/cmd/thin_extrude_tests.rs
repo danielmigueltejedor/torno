@@ -2,7 +2,7 @@
 //! area times its height).
 
 use serde_json::{Value, json};
-use solidcraft_geom::prelude::*;
+use torno_geom::prelude::*;
 
 use crate::Session;
 
@@ -67,7 +67,7 @@ fn the_thickness_is_a_parameter_and_the_wall_survives_reopening() {
     let t = f.param_names.iter().zip(f.kind.inputs()).find(|(_, (label, _, _))| *label == "Thickness").map(|(n, _)| n.clone()).unwrap();
     run(&mut s, "parameters.change", json!({"name": t, "expression": "4"}));
     close(volume(&mut s), (44.0 * 24.0 - 36.0 * 16.0) * 10.0);
-    let mut reopened = Session { doc: solidcraft_doc::Document::from_json(&s.doc.to_json()).unwrap().into(), ..Session::default() };
+    let mut reopened = Session { doc: torno_doc::Document::from_json(&s.doc.to_json()).unwrap().into(), ..Session::default() };
     reopened.refresh();
     close(volume(&mut reopened), (44.0 * 24.0 - 36.0 * 16.0) * 10.0);
     // A plain extrude of the same sketch fills the rectangle.
@@ -178,14 +178,14 @@ fn hostile_thin_params_never_panic() {
 // sketch doesn't have, so they are certified by the curves the wall follows: the signature the
 // solid caps had when the wall follows the whole profile.
 
-fn attachment(s: &Session, sketch: &str) -> solidcraft_doc::FaceAttachmentStatus {
+fn attachment(s: &Session, sketch: &str) -> torno_doc::FaceAttachmentStatus {
     let id = s.doc.find_feature(sketch).map(|f| f.id).unwrap_or_default();
     s.placed_document().sketch_face_attachment(id, &s.model)
 }
 
-fn attached(s: &Session, sketch: &str) -> (solidcore_record::Plane, Option<solidcraft_doc::config::FaceCertificate>) {
+fn attached(s: &Session, sketch: &str) -> (solidcore_record::Plane, Option<torno_doc::config::FaceCertificate>) {
     match attachment(s, sketch) {
-        solidcraft_doc::FaceAttachmentStatus::Healthy { plane, target, .. } => (plane, target.certificate),
+        torno_doc::FaceAttachmentStatus::Healthy { plane, target, .. } => (plane, target.certificate),
         other => panic!("{sketch}: {other:?}"),
     }
 }
@@ -200,8 +200,8 @@ fn sketch_on(s: &mut Session, at: [f64; 3], name: &str) {
     run(s, "sketch.finish", json!({}));
 }
 
-fn is_extrude_cap(certificate: &Option<solidcraft_doc::config::FaceCertificate>) -> bool {
-    matches!(certificate, Some(solidcraft_doc::config::FaceCertificate::ExtrudeCap { .. }))
+fn is_extrude_cap(certificate: &Option<torno_doc::config::FaceCertificate>) -> bool {
+    matches!(certificate, Some(torno_doc::config::FaceCertificate::ExtrudeCap { .. }))
 }
 
 #[test]
@@ -224,7 +224,7 @@ fn sketches_on_a_solid_extrudes_caps_keep_their_faces_when_it_is_made_thin_and_s
         // The sketch follows the thin wall's height, and keeps its face through a save.
         run(&mut s, "timeline.edit", json!({"feature": "Wall", "set": {"extent": {"distance": "25"}}}));
         assert!((attached(&s, "Top").0.origin.z - 25.0).abs() < 1e-9, "{side}");
-        let mut reopened = Session { doc: solidcraft_doc::Document::from_json(&s.doc.to_json()).unwrap().into(), ..Session::default() };
+        let mut reopened = Session { doc: torno_doc::Document::from_json(&s.doc.to_json()).unwrap().into(), ..Session::default() };
         reopened.refresh();
         no_errors(&reopened, side);
         assert!((attached(&reopened, "Top").0.origin.z - 25.0).abs() < 1e-9, "{side}");
@@ -258,7 +258,7 @@ fn a_thin_wall_along_part_of_the_profile_does_not_take_over_its_cap() {
     run(&mut s, "solid.extrude", json!({"sketch": "Outline", "distance": 10, "name": "Wall"}));
     sketch_on(&mut s, [6.0, 6.0, 10.0], "Top");
     let _ = s.execute("timeline.edit", &json!({"feature": "Wall", "set": {"thin": {"curves": [&sides[0], &sides[1]], "thickness": "2"}}}));
-    assert!(matches!(attachment(&s, "Top"), solidcraft_doc::FaceAttachmentStatus::Lost { .. }), "{:?}", attachment(&s, "Top"));
+    assert!(matches!(attachment(&s, "Top"), torno_doc::FaceAttachmentStatus::Lost { .. }), "{:?}", attachment(&s, "Top"));
 }
 
 #[test]
@@ -273,7 +273,7 @@ fn the_caps_of_walls_apart_attach_by_their_history_names() {
     run(&mut s, "solid.extrude", json!({"sketch": "Outline", "thin": true, "thickness": 1, "side": "inside", "distance": 5}));
     sketch_on(&mut s, [0.5, 0.5, 5.0], "Top");
     let (_, certificate) = attached(&s, "Top");
-    assert!(matches!(certificate, Some(solidcraft_doc::config::FaceCertificate::Lineage)), "{certificate:?}");
+    assert!(matches!(certificate, Some(torno_doc::config::FaceCertificate::Lineage)), "{certificate:?}");
 }
 
 fn no_errors(s: &Session, context: &str) {
@@ -326,7 +326,7 @@ fn the_walls_of_an_open_thin_extrude_take_sketches_that_follow_their_thickness()
                 assert!(moved < 1e-6 || (moved - 1.0).abs() < 1e-6, "{label}: moved {moved}");
                 moved_by_one += usize::from(moved > 0.5);
             }
-            let mut reopened = Session { doc: solidcraft_doc::Document::from_json(&t.doc.to_json()).unwrap().into(), ..Session::default() };
+            let mut reopened = Session { doc: torno_doc::Document::from_json(&t.doc.to_json()).unwrap().into(), ..Session::default() };
             reopened.refresh();
             no_errors(&reopened, side);
             same_plane(&attached(&reopened, &name).0, &thick);
@@ -371,7 +371,7 @@ fn the_round_sides_of_a_thin_ring_are_named_by_the_circle_they_run_beside() {
     run(&mut s, "sketch.finish", json!({}));
     run(&mut s, "solid.extrude", json!({"sketch": "Outline", "thin": true, "thickness": 2, "distance": 5, "name": "Ring"}));
     let world = s.world_state().unwrap();
-    let names = solidcraft_doc::naming::face_names(world.bodies.first().unwrap());
+    let names = torno_doc::naming::face_names(world.bodies.first().unwrap());
     // Each round side is one cylinder, closed along its seam, so its name needs no number.
     let walls: Vec<_> = names.iter().filter(|name| name.contains(":wall:")).collect();
     assert_eq!(walls.len(), 2, "{names:?}");
@@ -381,6 +381,6 @@ fn the_round_sides_of_a_thin_ring_are_named_by_the_circle_they_run_beside() {
         let name = format!("F2:wall:c1:{side}");
         assert!(walls.contains(&&name), "{walls:?}");
         let at = solidcore_record::Vec3::new(0.0, radius, 2.5);
-        assert_eq!(solidcraft_doc::naming::face_names_at(&s.model.state(), &[at]), vec![name.clone()]);
+        assert_eq!(torno_doc::naming::face_names_at(&s.model.state(), &[at]), vec![name.clone()]);
     }
 }

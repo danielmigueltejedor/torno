@@ -1,7 +1,7 @@
 use super::*;
 use egui::{Rect, Ui, pos2, vec2};
-use solidcraft_theme::Tokens;
-use solidcraft_ui_registry as registry;
+use torno_theme::Tokens;
+use torno_ui_registry as registry;
 
 #[test]
 fn blur_meter_boundaries_and_off_thumb() {
@@ -9,7 +9,7 @@ fn blur_meter_boundaries_and_off_thumb() {
         assert_eq!(blur_cost_bars(radius), bars, "{radius}");
     }
     for dark in [false, true] {
-        solidcraft_theme::set_dark(dark);
+        torno_theme::set_dark(dark);
         for radius in [0.0, 18.25, 40.0] {
             let ctx = crate::test_support::context();
             let t = Tokens::get();
@@ -45,9 +45,9 @@ fn blur_meter_boundaries_and_off_thumb() {
 
 #[test]
 fn every_slider_option_uses_the_same_token_thumb_in_both_themes() {
-    let previous = solidcraft_theme::is_dark();
+    let previous = torno_theme::is_dark();
     for dark in [false, true] {
-        solidcraft_theme::set_dark(dark);
+        torno_theme::set_dark(dark);
         for (show_value, integer, enabled) in [(true, false, true), (true, false, false), (false, true, true)] {
             for formatted in [false, true] {
                 let ctx = crate::test_support::context();
@@ -95,7 +95,7 @@ fn every_slider_option_uses_the_same_token_thumb_in_both_themes() {
             }
         }
     }
-    solidcraft_theme::set_dark(previous);
+    torno_theme::set_dark(previous);
 }
 
 #[test]
@@ -201,9 +201,9 @@ fn a_sliders_value_box_takes_typed_numbers_and_clamps_them_to_its_range() {
 /// last column used to survive beside the value box at the maximum (#5708).
 #[test]
 fn slider_endpoints_have_no_duplicate_native_handle_or_rail_and_keep_the_editor() {
-    let previous = solidcraft_theme::is_dark();
+    let previous = torno_theme::is_dark();
     for dark in [false, true] {
-        solidcraft_theme::set_dark(dark);
+        torno_theme::set_dark(dark);
         for show_value in [false, true] {
             for endpoint in [0.0, 2.0] {
                 let ctx = crate::test_support::context();
@@ -217,14 +217,14 @@ fn slider_endpoints_have_no_duplicate_native_handle_or_rail_and_keep_the_editor(
             }
         }
     }
-    solidcraft_theme::set_dark(previous);
+    torno_theme::set_dark(previous);
 }
 
 #[test]
 fn narrow_sliders_do_not_retain_native_chrome_when_the_handle_range_reverses() {
-    let previous = solidcraft_theme::is_dark();
+    let previous = torno_theme::is_dark();
     for dark in [false, true] {
-        solidcraft_theme::set_dark(dark);
+        torno_theme::set_dark(dark);
         for width in [24.0, 28.0] {
             for saved in [0.0, 0.73123456789, 2.0] {
                 let ctx = crate::test_support::context();
@@ -240,7 +240,7 @@ fn narrow_sliders_do_not_retain_native_chrome_when_the_handle_range_reverses() {
             }
         }
     }
-    solidcraft_theme::set_dark(previous);
+    torno_theme::set_dark(previous);
 }
 
 fn slider_test_frame(ctx: &egui::Context, events: Vec<egui::Event>, mut add: impl FnMut(&mut Ui)) -> egui::FullOutput {
@@ -295,16 +295,16 @@ fn assert_slider_paint(shapes: &[egui::epaint::ClippedShape], hit: Rect, t: Toke
 
 #[test]
 fn slider_preserves_translucent_parent_paints_and_inherited_opacity_without_a_backing_rectangle() {
-    let previous = solidcraft_theme::is_dark();
+    let previous = torno_theme::is_dark();
     for dark in [false, true] {
-        solidcraft_theme::set_dark(dark);
+        torno_theme::set_dark(dark);
         for translucent in [false, true] {
             let mut t = Tokens::get();
             if translucent {
                 t.apply_panel_opacity(40.0);
                 assert!(t.dialog_body.a() < 255);
             }
-            let _tokens = solidcraft_theme::scoped_tokens(t);
+            let _tokens = torno_theme::scoped_tokens(t);
             for opacity in [1.0, 0.45] {
                 for show_value in [false, true] {
                     for saved in [0.0, 0.73123456789, 2.0] {
@@ -347,14 +347,14 @@ fn slider_preserves_translucent_parent_paints_and_inherited_opacity_without_a_ba
             }
         }
     }
-    solidcraft_theme::set_dark(previous);
+    torno_theme::set_dark(previous);
 }
 
 #[test]
 fn clipping_out_the_native_track_preserves_the_editor_when_the_paint_signature_differs() {
-    let previous = solidcraft_theme::is_dark();
+    let previous = torno_theme::is_dark();
     for dark in [false, true] {
-        solidcraft_theme::set_dark(dark);
+        torno_theme::set_dark(dark);
         let ctx = crate::test_support::context();
         let mut value = 1.0;
         slider_test_frame(&ctx, vec![], |ui| {
@@ -372,20 +372,20 @@ fn clipping_out_the_native_track_preserves_the_editor_when_the_paint_signature_d
         assert_eq!(output.shapes.iter().filter(|s| matches!(s.shape, egui::Shape::Circle(_))).count(), 1, "only the clipped custom thumb is added");
         assert_eq!(value, 1.0);
     }
-    solidcraft_theme::set_dark(previous);
+    torno_theme::set_dark(previous);
 }
 
 #[test]
 fn slider_keyboard_focus_and_accessibility_keep_native_steps_and_editor_focus() {
-    let previous = solidcraft_theme::is_dark();
+    let previous = torno_theme::is_dark();
     for dark in [false, true] {
-        solidcraft_theme::set_dark(dark);
+        torno_theme::set_dark(dark);
         for translucent in [false, true] {
             let mut t = Tokens::get();
             if translucent {
                 t.apply_panel_opacity(40.0);
             }
-            let _tokens = solidcraft_theme::scoped_tokens(t);
+            let _tokens = torno_theme::scoped_tokens(t);
             for show_value in [false, true] {
                 let ctx = crate::test_support::context();
                 ctx.enable_accesskit();
@@ -443,14 +443,14 @@ fn slider_keyboard_focus_and_accessibility_keep_native_steps_and_editor_focus() 
             }
         }
     }
-    solidcraft_theme::set_dark(previous);
+    torno_theme::set_dark(previous);
 }
 
 #[test]
 fn disabled_and_invisible_sliders_keep_native_input_and_paint_suppression() {
-    let previous = solidcraft_theme::is_dark();
+    let previous = torno_theme::is_dark();
     for dark in [false, true] {
-        solidcraft_theme::set_dark(dark);
+        torno_theme::set_dark(dark);
         for show_value in [false, true] {
             for visible in [false, true] {
                 let ctx = crate::test_support::context();
@@ -495,5 +495,5 @@ fn disabled_and_invisible_sliders_keep_native_input_and_paint_suppression() {
             }
         }
     }
-    solidcraft_theme::set_dark(previous);
+    torno_theme::set_dark(previous);
 }

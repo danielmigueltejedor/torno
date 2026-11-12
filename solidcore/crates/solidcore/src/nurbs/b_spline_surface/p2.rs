@@ -2518,7 +2518,7 @@ mod tests {
         }
     }
 
-    /// #387's half cylinder (centre (0,50), r 40, z -60..60) as SolidCraft's record has
+    /// #387's half cylinder (centre (0,50), r 40, z -60..60) as Torno's record has
     /// it: a rational quadratic in four equal spans (weights 1, .75, .5, .5, .75, 1).
     fn rational_half_cylinder() -> BSplineSurface {
         let ring = [

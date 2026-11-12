@@ -4,7 +4,7 @@ use std::borrow::Cow;
 use std::collections::{BTreeMap, BTreeSet};
 
 use serde_json::{Value, json};
-use solidcraft_doc::appearance::{AppearanceScope, AppearanceTarget, Look};
+use torno_doc::appearance::{AppearanceScope, AppearanceTarget, Look};
 
 use crate::params::bad;
 use crate::{Result, Session};

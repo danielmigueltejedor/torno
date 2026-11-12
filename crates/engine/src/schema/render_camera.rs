@@ -12,7 +12,7 @@ use schemars::{JsonSchema, Schema, SchemaGenerator, json_schema};
 use serde::de::Error as _;
 use serde::{Deserialize, Deserializer, Serialize};
 use serde_json::{Value, json};
-use solidcraft_doc::render_settings::{RenderSettings, RenderSetup};
+use torno_doc::render_settings::{RenderSettings, RenderSetup};
 
 use super::check::whole;
 use super::types::not_blank_pattern;
@@ -35,7 +35,7 @@ const MAX_ASPECT: f64 = 1e6;
 /// refuse an explicit `up`, while a render camera keeps both `roll` and `up`.
 #[derive(Clone, Copy, Debug, PartialEq, Serialize)]
 #[serde(transparent)]
-pub struct RenderCamera(pub solidcraft_viewport::Camera);
+pub struct RenderCamera(pub torno_viewport::Camera);
 
 impl JsonSchema for RenderCamera {
     fn schema_name() -> Cow<'static, str> {

@@ -1,7 +1,7 @@
 //! A box minus a tilted cylinder whose top end cap is centred on the box's top face
 //! plane (#2537): the cut must give one closed solid of the closed-form volume.
 //!
-//! SolidCraft reports the result check refusing this cut with `SmFace::Test #36`
+//! Torno reports the result check refusing this cut with `SmFace::Test #36`
 //! ("Face Surface Seam has suspicious Edge near seam") twice, and the C++ fork
 //! refusing it with eight `Bad Gap` failures besides. The cap plane, the cylinder and
 //! the box's face all meet at the point where the seam ends, so the seam's end sits on
@@ -171,7 +171,7 @@ fn cut(tool: Tool, offset: f64, fixes: &UpstreamFixes) -> (f64, usize) {
         solidcore::topology::brep::p2::is_manifold_solid(&brep).unwrap(),
         "{tool:?} offset {offset}: the result is not a closed manifold solid"
     );
-    // Level2 runs face test 36, the one SolidCraft reports refusing this cut.
+    // Level2 runs face test 36, the one Torno reports refusing this cut.
     let check = check_brep(&mut k, &mut brep, CheckLevel::Level2).unwrap();
     assert!(
         check.is_valid(),
@@ -206,7 +206,7 @@ fn cut(tool: Tool, offset: f64, fixes: &UpstreamFixes) -> (f64, usize) {
 /// The case of the issue: the cap centre exactly on the box's top face plane, so the
 /// cap is bisected by that face and the seam's end lies on cylinder, cap plane and face
 /// at once. One closed solid of 1486369.884 mm3, not a refusal, however the tool is
-/// built and whichever upstream fixes are on (SolidCraft runs all but its held-back
+/// built and whichever upstream fixes are on (Torno runs all but its held-back
 /// ones).
 #[test]
 fn cap_centre_on_the_top_face_leaves_one_closed_solid() {

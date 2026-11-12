@@ -1,4 +1,4 @@
-//! The SolidCraft fork's `round_on_a_definition_is_its_definition` (capi
+//! The Torno fork's `round_on_a_definition_is_its_definition` (capi
 //! `ops_kernel.cpp`, tangency-labs/smlib@7959c0e and c5b6bb7, smlib#101, merged at 852dd8c;
 //! tangency-labs/solidcore#2298): a round on a round by its definition.
 //!
@@ -19,7 +19,7 @@
 //! is a slice by a one-face sheet on the tool surface turned over (`SwapUV`), as the capi
 //! makes it; an edge is picked as the nearest within 0.1 of a point; the rounds are
 //! [`fillet_edges`] (circular, constant radius, then `StitchAndOrient`), on the kernel
-//! SolidCraft runs (every fix on but `geometric_g2_continuity`).
+//! Torno runs (every fix on but `geometric_g2_continuity`).
 #![allow(
     clippy::unwrap_used,
     clippy::expect_used,
@@ -61,8 +61,8 @@ use solidcore::{Brep, Kernel};
 /// `TWIST_TAN`: tan 30 degrees.
 const TWIST_TAN: f64 = 0.577_350_269_189_625_76;
 
-/// The kernel SolidCraft runs: every fix on but `geometric_g2_continuity`.
-fn solidcraft_kernel() -> Kernel {
+/// The kernel Torno runs: every fix on but `geometric_g2_continuity`.
+fn torno_kernel() -> Kernel {
     let mut k = Kernel::new(&KernelOptions::default());
     let mut f = UpstreamFixes::default();
     for &name in UpstreamFixes::NAMES {
@@ -389,7 +389,7 @@ fn round_on_a_round(k: &mut Kernel) -> Outcome {
 /// at 0.36 of its bound (0.37 sampled at 1281 sections along s).
 #[test]
 fn round_on_a_definition_is_its_definition() {
-    let mut k = solidcraft_kernel();
+    let mut k = torno_kernel();
     let o = round_on_a_round(&mut k);
     println!(
         "{} round(s) on a round by definition, {} spans: sections off the ball's circle by {:.3e}, the net at {:.3} of its bound; {} definition evaluations, {} station solves; the rail crosses the inner round's stations {} times, {} without a station of its own",
@@ -462,7 +462,7 @@ fn outside(e: V3<Ivl>, p: Point3) -> f64 {
 /// front face's knot range and Krawczyk's box reaches past it, which is refused.
 #[test]
 fn a_net_with_a_knot_removed_is_enclosed_on_its_definition() {
-    let mut k = solidcraft_kernel();
+    let mut k = torno_kernel();
     let r = rounded_wedge(&mut k);
     let (mut rounds, mut points, mut proved, mut worst) = (0, 0, 0, 0.0_f64);
     let (mut boxes, mut boxes_proved, mut ends_refused) = (0, 0, 0);

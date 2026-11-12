@@ -7,12 +7,12 @@
 //! The helpers here read a body's schema 4 record: planar faces' outward normals, the direction
 //! into a face across an edge, an edge's tangent at its ends.
 
-use solidcraft_geom::prelude::*;
 use std::collections::BTreeSet;
+use torno_geom::prelude::*;
 
 use solidcore_record::Vec3;
 use solidcore_record::brep::{Brep, Curve, Loop, OrientedEdge, Shell, Surface};
-use solidcraft_geom::brep::eval::{CurveEval, SurfaceEval};
+use torno_geom::brep::eval::{CurveEval, SurfaceEval};
 
 use crate::body::Body;
 use crate::{KernelError, Result};
@@ -189,7 +189,7 @@ pub(crate) fn curve_derivative(c: &Curve, t: f64) -> Option<Vec3> {
             v3(*points.get(i + 1)?) - v3(*points.get(i)?)
         }
         Curve::Spline { .. } | Curve::RationalSpline { .. } => match CurveEval::new(c).ok()? {
-            CurveEval::Spline(s) => solidcraft_geom::tess::from_kernel(s.eval(t)?.1),
+            CurveEval::Spline(s) => torno_geom::tess::from_kernel(s.eval(t)?.1),
             _ => return None,
         },
         Curve::SurfaceIntersection { surfaces, leader, .. } => {
@@ -213,7 +213,7 @@ pub(crate) fn curve_derivative(c: &Curve, t: f64) -> Option<Vec3> {
 /// lines the round of `radius` has (zero curvature at the contacts on planar faces), not a
 /// circle. A configuration SMLib cannot blend so is refused, never given a circular round.
 pub fn fillet_g2(body: &Body, edges: &[Vec3], radius: f64) -> Result<Body> {
-    let _span = solidcraft_profile::span("kernel", "fillet_g2");
+    let _span = torno_profile::span("kernel", "fillet_g2");
     body.require_brep("G2 fillet")?;
     if !(radius.is_finite() && radius > 1e-6 && radius < 1e6) {
         return Err(KernelError::Invalid("G2 fillet size must be positive and finite".into()));
@@ -267,7 +267,7 @@ pub fn fillet(body: &Body, edges: &[Vec3], radius: f64) -> Result<Body> {
 
 /// [`fillet`], its rounds turning at side edges as `turn` says.
 fn fillet_turning(body: &Body, edges: &[Vec3], radius: f64, turn: FilletTurn) -> Result<Body> {
-    let _span = solidcraft_profile::span("kernel", "fillet");
+    let _span = torno_profile::span("kernel", "fillet");
     body.require_brep("fillet")?;
     crate::blend_smlib::fillet(body, edges, radius, turn).and_then(|b| closed(body, b))
 }
@@ -276,7 +276,7 @@ fn fillet_turning(body: &Body, edges: &[Vec3], radius: f64, turn: FilletTurn) ->
 /// gone: where some of the rounds overflow their faces, those are built first, and a picked edge
 /// one of them removes whole is not rounded (the others round what is left of their edges).
 pub fn fillet_removing(body: &Body, edges: &[Vec3], radius: f64, turn: FilletTurn) -> Result<(Body, Vec<Vec3>)> {
-    let _span = solidcraft_profile::span("kernel", "fillet");
+    let _span = torno_profile::span("kernel", "fillet");
     body.require_brep("fillet")?;
     let (b, gone) = crate::blend_smlib::fillet_removing(body, edges, radius, turn)?;
     Ok((closed(body, b)?, gone))
@@ -295,7 +295,7 @@ pub const SETBACK_AT_LEAST: &str = "the smallest setback that builds is ";
 /// where some edge is not rounded is refused as not supported, a setback as long as an edge at
 /// its corner as too large.
 pub fn fillet_setback(body: &Body, edges: &[Vec3], radius: f64, setbacks: &[(Vec3, f64)]) -> Result<Body> {
-    let _span = solidcraft_profile::span("kernel", "fillet_setback");
+    let _span = torno_profile::span("kernel", "fillet_setback");
     body.require_brep("fillet")?;
     setbacks_reach(body, edges, radius, setbacks)?;
     crate::blend_smlib::fillet_setback(body, edges, radius, setbacks).and_then(|b| closed(body, b))
@@ -423,7 +423,7 @@ pub fn fillet_g2_with_g2_corners(body: &Body, edges: &[Vec3], radius: f64, setba
 
 /// [`fillet_g2_corners`] (circular sections) or [`fillet_g2_with_g2_corners`] (`curvature`).
 fn g2_corners(body: &Body, edges: &[Vec3], radius: f64, setbacks: &[(Vec3, f64)], curvature: bool) -> Result<Body> {
-    let _span = solidcraft_profile::span("kernel", "fillet_g2_corners");
+    let _span = torno_profile::span("kernel", "fillet_g2_corners");
     body.require_brep("fillet")?;
     if !(radius.is_finite() && radius > 0.0) {
         return Err(KernelError::Invalid("the blend radius must be finite and positive".into()));
@@ -552,7 +552,7 @@ pub fn fillet_max(body: &Body, edges: &[Vec3], radius: f64, turn: FilletTurn) ->
 
 /// [`fillet_max`], with what the search found when nothing builds ([`FitSearch`]).
 pub fn fillet_max_why(body: &Body, edges: &[Vec3], radius: f64, turn: FilletTurn) -> Result<FitSearch> {
-    let _span = solidcraft_profile::span("kernel", "fillet_max");
+    let _span = torno_profile::span("kernel", "fillet_max");
     largest_that_fits(radius, |r| fillet_turning(body, edges, r, turn))
 }
 
@@ -564,7 +564,7 @@ pub fn chamfer_max(body: &Body, edges: &[Vec3], distance: f64) -> Result<Option<
 
 /// [`chamfer_max`], with what the search found when nothing builds ([`FitSearch`]).
 pub fn chamfer_max_why(body: &Body, edges: &[Vec3], distance: f64) -> Result<FitSearch> {
-    let _span = solidcraft_profile::span("kernel", "chamfer_max");
+    let _span = torno_profile::span("kernel", "chamfer_max");
     largest_that_fits(distance, |d| chamfer(body, edges, d))
 }
 
@@ -628,7 +628,7 @@ fn largest_that_fits(size: f64, blend: impl Fn(f64) -> Result<Body>) -> Result<F
 /// up to 16 fillets, and this runs in the live preview). Any failure other than a refusal as too
 /// large is the error.
 pub fn fillet_max_each(body: &Body, edges: &[Vec3], radius: f64, turn: FilletTurn) -> Result<Option<(Vec<f64>, Body)>> {
-    let _span = solidcraft_profile::span("kernel", "fillet_max_each");
+    let _span = torno_profile::span("kernel", "fillet_max_each");
     const MAX_GROUPS: usize = 8;
     const MAX_SEARCHES: usize = 2;
     let one = || -> Result<Option<(Vec<f64>, Body)>> { Ok(fillet_max(body, edges, radius, turn)?.map(|(r, b)| (vec![r; edges.len()], b))) };
@@ -665,7 +665,7 @@ pub fn fillet_max_each(body: &Body, edges: &[Vec3], radius: f64, turn: FilletTur
 /// The fillet of each edge at its own radius (`radii` in `edges`' order), all in one SMLib
 /// blend.
 pub fn fillet_each(body: &Body, edges: &[Vec3], radii: &[f64], turn: FilletTurn) -> Result<Body> {
-    let _span = solidcraft_profile::span("kernel", "fillet_each");
+    let _span = torno_profile::span("kernel", "fillet_each");
     if radii.len() != edges.len() {
         return Err(KernelError::Invalid("one radius per edge".into()));
     }
@@ -712,7 +712,7 @@ fn interacting_groups(body: &Body, pts: &[Vec3]) -> Option<Vec<Vec<usize>>> {
 /// Equal-distance chamfer of the edges nearest to the given points, `distance` back along each
 /// face, neighbouring chamfers meeting in a mitre.
 pub fn chamfer(body: &Body, edges: &[Vec3], distance: f64) -> Result<Body> {
-    let _span = solidcraft_profile::span("kernel", "chamfer");
+    let _span = torno_profile::span("kernel", "chamfer");
     body.require_brep("chamfer")?;
     if !(distance.is_finite() && distance > 1e-6 && distance < 1e6) {
         return Err(KernelError::Invalid("chamfer size must be positive".into()));
@@ -734,7 +734,7 @@ pub enum ChamferSide {
 /// A chamfer with different setbacks on the two faces of each edge: `d1` along the first face
 /// (the one facing up most, the other with `flip`), the second side by distance or angle.
 pub fn chamfer_sides(body: &Body, edges: &[Vec3], d1: f64, side: ChamferSide, flip: bool) -> Result<Body> {
-    let _span = solidcraft_profile::span("kernel", "chamfer_sides");
+    let _span = torno_profile::span("kernel", "chamfer_sides");
     body.require_brep("chamfer")?;
     let ok = |x: f64| x.is_finite() && x > 1e-6 && x < 1e6;
     let valid = ok(d1)

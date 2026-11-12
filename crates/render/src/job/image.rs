@@ -5,16 +5,16 @@
 //! pixel windows, each handed back as straight-alpha sRGB rows). It prepares once (appearances,
 //! projected triangles, glass sorted back to front) and then draws each tile.
 
-use solidcraft_geom::prelude::*;
 use std::collections::BTreeMap;
+use torno_geom::prelude::*;
 
 use serde::Serialize;
 use solidcore_record::{Plane, Vec2, Vec3};
-use solidcraft_geom::pixel_grid::{MAX_SIDE_PX, PixelGrid};
+use torno_geom::pixel_grid::{MAX_SIDE_PX, PixelGrid};
 
 use super::{CancelToken, ErrorCode, ImageRequest, JobError, Phase, Progress, Result};
 use crate::{FaceAppearance, ProductScene, RenderFormat, RenderMode, RenderOperation, RenderRequest};
-use solidcraft_viewport::{Camera, Mat4};
+use torno_viewport::{Camera, Mat4};
 
 #[cfg(test)]
 #[path = "image_tests.rs"]
@@ -503,7 +503,7 @@ impl Projection {
             }
             Self::Ortho { frame, grid } => {
                 let request = |message: &str| JobError::new(ErrorCode::InvalidRequest, message);
-                solidcraft_geom::section::validate_plane(&frame.basis).map_err(|_| request("an orthographic frame needs an orthonormal basis"))?;
+                torno_geom::section::validate_plane(&frame.basis).map_err(|_| request("an orthographic frame needs an orthonormal basis"))?;
                 if !frame.scale.is_finite() || frame.scale <= 0.0 || !frame.shift.is_finite() {
                     return Err(request("an orthographic frame needs a finite scale above 0 and a finite shift"));
                 }
@@ -658,12 +658,8 @@ impl View {
             return Err(invalid("opaque PBR requires opacity 1"));
         }
         let normals = if surface.is_some() {
-            [
-                solidcraft_viewport::surface::unit_direction(na),
-                solidcraft_viewport::surface::unit_direction(nb),
-                solidcraft_viewport::surface::unit_direction(nc),
-            ]
-            .map(|n| n.map_err(|e| invalid(&e.to_string())))
+            [torno_viewport::surface::unit_direction(na), torno_viewport::surface::unit_direction(nb), torno_viewport::surface::unit_direction(nc)]
+                .map(|n| n.map_err(|e| invalid(&e.to_string())))
         } else {
             [Ok(normals[0]), Ok(normals[1]), Ok(normals[2])]
         };
@@ -741,7 +737,7 @@ struct Triangle {
     inv_w: [f64; 3],
     colour: [f64; 3],
     opacity: f64,
-    surface: Option<solidcraft_viewport::surface::OpaqueSurface>,
+    surface: Option<torno_viewport::surface::OpaqueSurface>,
     /// Off for a depth-only body.
     paint: bool,
     centre_depth: f64,
@@ -1296,12 +1292,12 @@ fn raster_pixel(
         [mapped.x, mapped.y, mapped.z]
     } else if let Some(weights) = studio_weights {
         let [r, g, b] = t.colour;
-        let surface = solidcraft_viewport::surface::OpaqueSurface::new(Vec3::new(r, g, b), 0.0, 1.0, 1.5).map_err(|e| invalid(&e.to_string()))?;
+        let surface = torno_viewport::surface::OpaqueSurface::new(Vec3::new(r, g, b), 0.0, 1.0, 1.5).map_err(|e| invalid(&e.to_string()))?;
         let radiance = crate::studio::shade_weighted(surface, n, back, weights).map_err(|e| invalid(&e.to_string()))?;
         let mapped = crate::studio::tone_map(radiance).map_err(|e| invalid(&e.to_string()))?;
         [mapped.x, mapped.y, mapped.z]
     } else {
-        solidcraft_viewport::shade(n, back, t.colour)
+        torno_viewport::shade(n, back, t.colour)
     };
     if colour.iter().any(|v| !v.is_finite()) {
         return Err(invalid("non-finite shaded colour"));

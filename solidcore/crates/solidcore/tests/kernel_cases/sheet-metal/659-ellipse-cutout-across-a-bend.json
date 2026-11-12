@@ -116,6 +116,6 @@
   "ungraded": [],
   "what": "a 160 x 100 plate with a 90 degree flange, unfolded, a 24 x 12 ellipse cut across the bend zone and refolded: the cut's wall folds to a curve on the bend's cylinder",
   "why_not": [
-    "body \"Body1\" is no kernel operation's output nor an operand: SolidCraft built it or changed the kernel's record"
+    "body \"Body1\" is no kernel operation's output nor an operand: Torno built it or changed the kernel's record"
   ]
 }

@@ -1,7 +1,7 @@
 use crate::Session;
 use serde_json::{Value, json};
-use solidcraft_geom::prelude::*;
-use solidcraft_sketch::ConstraintKind;
+use torno_geom::prelude::*;
+use torno_sketch::ConstraintKind;
 
 fn run(s: &mut Session, command: &str, params: Value) -> Value {
     s.execute(command, &params).unwrap_or_else(|error| panic!("{command} {params}: {error}"))
@@ -11,7 +11,7 @@ fn session() -> Session {
     run(&mut s, "sketch.create", json!({"plane":"XY"}));
     s
 }
-fn sketch(s: &Session) -> solidcraft_sketch::Sketch {
+fn sketch(s: &Session) -> torno_sketch::Sketch {
     s.model.state().sketch(s.active_sketch.unwrap()).unwrap().sketch.clone()
 }
 fn draw(s: &mut Session, command: &str, params: Value, dimensions: Value) -> Value {
@@ -23,7 +23,7 @@ fn close(a: f64, b: f64) {
 fn measure(s: &Session, kind: fn(&ConstraintKind) -> bool) -> f64 {
     let sk = sketch(s);
     let c = sk.constraints.iter().find(|c| kind(&c.kind)).unwrap();
-    solidcraft_sketch::measure_dimension(&sk, &c.kind).unwrap()
+    torno_sketch::measure_dimension(&sk, &c.kind).unwrap()
 }
 
 #[test]
@@ -42,7 +42,7 @@ fn typed_line_angle_survives_quadrants_move_reopen_and_one_undo() {
         close(measure(&s, |k| matches!(k, ConstraintKind::Length { .. })), 10.0);
     }
     let encoded = serde_json::to_value(&*s.doc).unwrap();
-    let doc: solidcraft_doc::Document = serde_json::from_value(encoded).unwrap();
+    let doc: torno_doc::Document = serde_json::from_value(encoded).unwrap();
     let mut reopened = Session { doc: std::sync::Arc::new(doc), active_sketch: s.active_sketch, ..Session::default() };
     reopened.refresh();
     close(measure(&reopened, |k| matches!(k, ConstraintKind::LineAngle { .. })), 90f64.to_radians());
@@ -110,7 +110,7 @@ fn a_clockwise_centre_arc_runs_from_its_start_to_its_end_the_other_way_round() {
         close(end.x, 0.0);
         close(end.y, 10.0);
         // Clockwise from 0° to 90° is 270° of arc through the bottom (-90°), not the top.
-        let solidcraft_sketch::CurveKind::Arc { c, a, b } = arc.kind else { panic!("not an arc") };
+        let torno_sketch::CurveKind::Arc { c, a, b } = arc.kind else { panic!("not an arc") };
         let (c, a, b) = (sk.points[c].pos, sk.points[a].pos, sk.points[b].pos);
         close(((b - c).angle() - (a - c).angle()).rem_euclid(std::f64::consts::TAU).to_degrees(), 270.0);
         if dimensions.is_some() {
@@ -168,7 +168,7 @@ fn slots_and_polygon_keep_permanent_typed_dimensions() {
         .iter()
         .filter(|c| !c.construction)
         .filter_map(|c| match c.kind {
-            solidcraft_sketch::CurveKind::Line { a, b } => Some(sk.points[a].pos.dist(sk.points[b].pos)),
+            torno_sketch::CurveKind::Line { a, b } => Some(sk.points[a].pos.dist(sk.points[b].pos)),
             _ => None,
         })
         .collect();
@@ -221,9 +221,9 @@ fn point_at(s: &Session, id: &Value) -> solidcore_record::Vec2 {
 }
 
 /// The solve of the active sketch: no conflict, nothing redundant.
-fn clean_solve(s: &Session) -> solidcraft_sketch::SolveReport {
+fn clean_solve(s: &Session) -> torno_sketch::SolveReport {
     let mut sk = sketch(s);
-    let rep = solidcraft_sketch::solve(&mut sk);
+    let rep = torno_sketch::solve(&mut sk);
     assert!(rep.ok() && rep.redundant.is_empty(), "{rep:?} {:?}", sk.constraints);
     rep
 }
@@ -232,7 +232,7 @@ fn clean_solve(s: &Session) -> solidcraft_sketch::SolveReport {
 fn halfway(s: &Session, out: &Value, r: f64, sweep: f64) {
     let sk = sketch(s);
     let centre = sk.curve_index(out["centre_arc"].as_str().unwrap()).unwrap();
-    let solidcraft_sketch::CurveKind::Arc { c, a, b } = sk.curves[centre].kind else { panic!("an arc") };
+    let torno_sketch::CurveKind::Arc { c, a, b } = sk.curves[centre].kind else { panic!("an arc") };
     let (o, a, b) = (sk.point(c).unwrap(), sk.point(a).unwrap(), sk.point(b).unwrap());
     let m = point_at(s, &out["middle"]);
     close(o.dist(a), r);
@@ -262,7 +262,7 @@ fn every_slot_keeps_a_middle_point_in_the_middle() {
         let sk = sketch(&s);
         let axis = sk.curve_index(out["centre_line"].as_str().unwrap()).unwrap();
         assert!(sk.curves[axis].construction, "{command}");
-        let solidcraft_sketch::CurveKind::Line { a, b } = sk.curves[axis].kind else { panic!("{command}: a line") };
+        let torno_sketch::CurveKind::Line { a, b } = sk.curves[axis].kind else { panic!("{command}: a line") };
         assert!(sk.constraints.iter().any(|c| matches!(c.kind, ConstraintKind::Midpoint { l, .. } if l == axis)), "{command}");
         // Length and width set: only the slot's place and turn are free.
         assert_eq!(clean_solve(&s).dof, 3, "{command}");
@@ -305,7 +305,7 @@ fn every_slot_keeps_a_middle_point_in_the_middle() {
     let sk = sketch(&s);
     let centre = sk.curve_index(out["centre_arc"].as_str().unwrap()).unwrap();
     assert!(m.y > sk.center(centre).unwrap().y, "on the drawn side of the arc: {m:?}");
-    let solidcraft_sketch::CurveKind::Arc { c, a, b } = sk.curves[centre].kind else { panic!("an arc") };
+    let torno_sketch::CurveKind::Arc { c, a, b } = sk.curves[centre].kind else { panic!("an arc") };
     let (o, a, b) = (sk.point(c).unwrap(), sk.point(a).unwrap(), sk.point(b).unwrap());
     halfway(&s, &out, o.dist(a), ((b - o).angle() - (a - o).angle()).rem_euclid(std::f64::consts::TAU));
     // The centre, radius, start and sweep of the centre arc, and the width.
@@ -317,7 +317,7 @@ fn every_slot_keeps_a_middle_point_in_the_middle() {
         assert_eq!(clean_solve(&s).dof, 5, "radius {radius}");
         let sk = sketch(&s);
         let centre = sk.curve_index(out["centre_arc"].as_str().unwrap()).unwrap();
-        let solidcraft_sketch::CurveKind::Arc { c, a, b } = sk.curves[centre].kind else { panic!("an arc") };
+        let torno_sketch::CurveKind::Arc { c, a, b } = sk.curves[centre].kind else { panic!("an arc") };
         let (o, a, b) = (sk.point(c).unwrap(), sk.point(a).unwrap(), sk.point(b).unwrap());
         halfway(&s, &out, f64::from(radius), ((b - o).angle() - (a - o).angle()).rem_euclid(std::f64::consts::TAU));
     }
@@ -373,7 +373,7 @@ fn a_dimensioned_midpoint_line_carries_its_length_and_angle() {
     close(measure(&s, |k| matches!(k, ConstraintKind::LineAngle { .. })), 0.0);
     let sk = sketch(&s);
     let line = sk.curve_index(out["curves"][0].as_str().unwrap()).unwrap();
-    let solidcraft_sketch::CurveKind::Line { a, b } = sk.curves[line].kind else { panic!("a line") };
+    let torno_sketch::CurveKind::Line { a, b } = sk.curves[line].kind else { panic!("a line") };
     // The clicked middle is the line's middle.
     close((sk.points[a].pos.x + sk.points[b].pos.x) * 0.5, 0.0);
     close((sk.points[a].pos.y + sk.points[b].pos.y) * 0.5, 0.0);
@@ -405,7 +405,7 @@ fn dimensioned_authoring_uses_selected_occurrence_and_keeps_local_geometry() {
     assert_eq!(s.active_occurrence_path, Some(vec![second]));
     let sk = sketch(&s);
     let line = sk.curve_index(out["curves"][0].as_str().unwrap()).unwrap();
-    let solidcraft_sketch::CurveKind::Line { a, b } = sk.curves[line].kind else { panic!("line") };
+    let torno_sketch::CurveKind::Line { a, b } = sk.curves[line].kind else { panic!("line") };
     close(sk.points[a].pos.x, 0.0);
     close(sk.points[b].pos.x, 5.0 / std::f64::consts::SQRT_2);
 }
@@ -453,7 +453,7 @@ fn a_typed_definition_defines_the_parameter_that_drives_the_dimension() {
     let is_length = |k: &ConstraintKind| matches!(k, ConstraintKind::Length { .. });
     let sk = sketch(&s);
     let mut lengths: Vec<_> =
-        sk.constraints.iter().filter(|c| is_length(&c.kind)).map(|c| solidcraft_sketch::measure_dimension(&sk, &c.kind).unwrap()).collect();
+        sk.constraints.iter().filter(|c| is_length(&c.kind)).map(|c| torno_sketch::measure_dimension(&sk, &c.kind).unwrap()).collect();
     lengths.sort_by(f64::total_cmp);
     assert_eq!(lengths.len(), 2);
     close(lengths[0], 10.0);
@@ -571,7 +571,7 @@ fn as_drawn_keeps_typed_values_alternatives_and_leaves_out_determined_sizes() {
         .constraints
         .iter()
         .filter(|c| matches!(c.kind, ConstraintKind::Length { .. }))
-        .map(|c| solidcraft_sketch::measure_dimension(&sketch(&s), &c.kind).unwrap())
+        .map(|c| torno_sketch::measure_dimension(&sketch(&s), &c.kind).unwrap())
         .collect();
     assert_eq!(lengths.len(), 2);
     assert!(lengths.iter().any(|l| (l - 40.0).abs() < 1e-6) && lengths.iter().any(|l| (l - 20.0).abs() < 1e-6), "{lengths:?}");

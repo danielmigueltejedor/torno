@@ -4,7 +4,7 @@
     "language": "en",
     "status": "pinned_native",
     "name": "SELENE improved showcase source lock",
-    "authorship": "Original SolidCraft source-admission metadata based on the supplied native file and public source history; the unchanged improved native source is retained.",
+    "authorship": "Original Torno source-admission metadata based on the supplied native file and public source history; the unchanged improved native source is retained.",
     "license": "MIT OR Apache-2.0",
     "provenance_id": "ORIGINAL-2026-10-CATALOG",
     "inspected_on": "2026-10-22"
@@ -13,7 +13,7 @@
     "variant": "SELENE-showcase",
     "file_name": "SELENE-showcase.solidcraft",
     "status": "pinned_native",
-    "repository": "SychPL/solidcraft",
+    "repository": "SychPL/torno",
     "commit": "32ec1720447e3fcc6bb6cc53a63fb5b39cfa21b9",
     "path": "SELENE-showcase.solidcraft",
     "download_url": "https://raw.githubusercontent.com/SychPL/solidcraft/32ec1720447e3fcc6bb6cc53a63fb5b39cfa21b9/SELENE-showcase.solidcraft",
@@ -47,8 +47,8 @@
     ],
     "notices": [
       {
-        "scope": "Original rover geometry and SolidCraft emblem",
-        "author": "0xlillith and SolidCraft contributors",
+        "scope": "Original rover geometry and Torno emblem",
+        "author": "0xlillith and Torno contributors",
         "license": "MIT OR Apache-2.0",
         "source": "https://github.com/0xlillith/solidcraft-rover/blob/b32437915372d32b71419dc8f5143fe22ff1e869/ATTRIBUTION.md"
       },
@@ -63,7 +63,7 @@
         "scope": "Showcase assembly and helper additions",
         "author": "SychPL (Mateusz Sych)",
         "source": "https://github.com/SychPL/solidcraft/blob/32ec1720447e3fcc6bb6cc53a63fb5b39cfa21b9/SELENE-showcase.solidcraft",
-        "note": "Explicit author permission covers redistribution and derivatives, including SELENE-functional.solidcraft.",
+        "note": "Explicit author permission covers redistribution and derivatives, including SELENE-functional.torno.",
         "license": "MIT OR Apache-2.0",
         "license_grant_url": "https://github.com/tangency-labs/solidcraft/pull/5494#issuecomment-6375788360",
         "license_grant_created_at": "2026-10-23T22:13:37Z"
@@ -85,7 +85,7 @@
       "file_name": "Rover-v7.solidcraft",
       "status": "historical_reference_only",
       "eligible_as_active_source": false,
-      "repository": "0xlillith/solidcraft-rover",
+      "repository": "0xlillith/torno-rover",
       "commit": "b32437915372d32b71419dc8f5143fe22ff1e869",
       "path": "models/Rover-v7.solidcraft",
       "url": "https://github.com/0xlillith/solidcraft-rover/blob/b32437915372d32b71419dc8f5143fe22ff1e869/models/Rover-v7.solidcraft",
@@ -111,7 +111,7 @@
       "url": "https://github.com/tangency-labs/solidcraft/blob/463cea0615a22be2f7d6c30512211f9eda97ff28/skills/solidcraft-mechanisms/reference.md",
       "repository": "tangency-labs/solidcraft",
       "commit": "463cea0615a22be2f7d6c30512211f9eda97ff28",
-      "path": "skills/solidcraft-mechanisms/reference.md",
+      "path": "skills/torno-mechanisms/reference.md",
       "scope": "Published SELENE actuator, anchoring, motion-link and visibility example; command units and limitations.",
       "evidence_level": "documentation"
     },
@@ -167,7 +167,7 @@
       "id": "SELENE-REF-006",
       "type": "pinned_media_manifest",
       "url": "https://github.com/SychPL/solidcraft/tree/df2e74230e6659409d65501b5d9396b55c6503d3",
-      "repository": "SychPL/solidcraft",
+      "repository": "SychPL/torno",
       "branch_at_inspection": "media/selene-showcase",
       "commit": "df2e74230e6659409d65501b5d9396b55c6503d3",
       "files": [
@@ -183,7 +183,7 @@
       "id": "SELENE-REF-007",
       "type": "pinned_media_manifest",
       "url": "https://github.com/SychPL/solidcraft/tree/1e2ad6842a5ad5c3b2cedee3e6508a8e4e3eb3d4",
-      "repository": "SychPL/solidcraft",
+      "repository": "SychPL/torno",
       "branch_at_inspection": "media/motion-animation",
       "commit": "1e2ad6842a5ad5c3b2cedee3e6508a8e4e3eb3d4",
       "files": [
@@ -199,7 +199,7 @@
       "id": "SELENE-REF-008",
       "type": "pinned_media_manifest",
       "url": "https://github.com/SychPL/solidcraft/tree/6d79237923e80704a3afb4c092950804b64a5c0a",
-      "repository": "SychPL/solidcraft",
+      "repository": "SychPL/torno",
       "branch_at_inspection": "media/motion-analysis",
       "commit": "6d79237923e80704a3afb4c092950804b64a5c0a",
       "files": [
@@ -214,7 +214,7 @@
       "id": "SELENE-REF-009",
       "type": "pinned_document",
       "url": "https://github.com/0xlillith/solidcraft-rover/blob/b32437915372d32b71419dc8f5143fe22ff1e869/ATTRIBUTION.md",
-      "repository": "0xlillith/solidcraft-rover",
+      "repository": "0xlillith/torno-rover",
       "commit": "b32437915372d32b71419dc8f5143fe22ff1e869",
       "path": "ATTRIBUTION.md",
       "scope": "Original v7 model provenance: MIT OR Apache-2.0; Ubuntu Light lettering has Ubuntu Font Licence 1.0 provenance. This does not establish an unavailable derivative file's complete inventory.",
@@ -227,14 +227,14 @@
       "repository": "tangency-labs/solidcraft",
       "commit": "463cea0615a22be2f7d6c30512211f9eda97ff28",
       "path": "ATTRIBUTION.md",
-      "scope": "Credits docs/screenshots/rover-build.gif and rover-build.mp4 as construction replay of Rover-recorded.solidcraft. Those rows do not identify the improved showcase native file.",
+      "scope": "Credits docs/screenshots/rover-build.gif and rover-build.mp4 as construction replay of Rover-recorded.torno. Those rows do not identify the improved showcase native file.",
       "evidence_level": "upstream_license_document"
     },
     {
       "id": "SELENE-REF-011",
       "type": "pinned_document",
       "url": "https://github.com/0xlillith/solidcraft-rover/blob/b32437915372d32b71419dc8f5143fe22ff1e869/README.md",
-      "repository": "0xlillith/solidcraft-rover",
+      "repository": "0xlillith/torno-rover",
       "commit": "b32437915372d32b71419dc8f5143fe22ff1e869",
       "path": "README.md",
       "scope": "Historical v7 and reconstruction-recording variants; their statistics must not be transferred to the improved showcase.",
@@ -253,7 +253,7 @@
     {
       "id": "SELENE-REF-NATIVE-001",
       "type": "pinned_native_model",
-      "repository": "SychPL/solidcraft",
+      "repository": "SychPL/torno",
       "commit": "32ec1720447e3fcc6bb6cc53a63fb5b39cfa21b9",
       "path": "SELENE-showcase.solidcraft",
       "url": "https://github.com/SychPL/solidcraft/blob/32ec1720447e3fcc6bb6cc53a63fb5b39cfa21b9/SELENE-showcase.solidcraft",
@@ -265,7 +265,7 @@
       "type": "pinned_document",
       "repository": "tangency-labs/solidcraft",
       "commit": "ac1768e08b83ed33212459951f5b50aa7a57cddc",
-      "path": "skills/solidcraft-mechanisms/reference.md",
+      "path": "skills/torno-mechanisms/reference.md",
       "url": "https://github.com/tangency-labs/solidcraft/blob/ac1768e08b83ed33212459951f5b50aa7a57cddc/skills/solidcraft-mechanisms/reference.md",
       "scope": "The exact reference supplied by the owner; command contracts and the earlier SELENE closed-loop example.",
       "evidence_level": "documentation"
@@ -273,7 +273,7 @@
   ],
   "public_search": {
     "inspected_on": "2026-10-21",
-    "method": "Read-only GitHub repository, tree, release, pull-request and comment APIs. Only the SolidCraft project, its original rover repository and contributor fork were inspected.",
+    "method": "Read-only GitHub repository, tree, release, pull-request and comment APIs. Only the Torno project, its original rover repository and contributor fork were inspected.",
     "conclusion": "The improved filename and behavior are documented, but no improved native model or native ZIP attachment was found in the public locations listed below. This is a bounded search result, not proof that the file does not exist elsewhere.",
     "repositories": [
       {
@@ -294,14 +294,14 @@
         "result": "No model assets. Only documentation, templates, CI and authoring checks. Repository-wide CC0 applies to that separate collection."
       },
       {
-        "repository": "0xlillith/solidcraft-rover",
+        "repository": "0xlillith/torno-rover",
         "commit": "b32437915372d32b71419dc8f5143fe22ff1e869",
         "scope": "Default README and ATTRIBUTION; branch inventory.",
         "branches_examined": 1,
         "result": "Only main; still identifies the legacy v7 and reconstruction-recording variants."
       },
       {
-        "repository": "SychPL/solidcraft",
+        "repository": "SychPL/torno",
         "scope": "Complete 109-name branch inventory; four candidate source trees; six relevant media trees and complete histories; release asset inventory.",
         "branch_names_examined": 109,
         "releases_examined": 1,
@@ -310,28 +310,28 @@
     ],
     "candidate_source_trees": [
       {
-        "repository": "SychPL/solidcraft",
+        "repository": "SychPL/torno",
         "branch": "feat/motion-export-animation",
         "commit": "57349b71c7274f19aa37cd9770e6670dc0f19fb2",
         "truncated": false,
         "result": "No SELENE or rover native file."
       },
       {
-        "repository": "SychPL/solidcraft",
+        "repository": "SychPL/torno",
         "branch": "feat/joint-reach",
         "commit": "fd7d51489030f9fd698f11d563b8ba226f58a434",
         "truncated": false,
         "result": "No SELENE or rover native file."
       },
       {
-        "repository": "SychPL/solidcraft",
+        "repository": "SychPL/torno",
         "branch": "feat/usability-integration",
         "commit": "ab05b24deefb72aaac16a668af353bf1ed1563a3",
         "truncated": false,
         "result": "No SELENE or rover native file."
       },
       {
-        "repository": "SychPL/solidcraft",
+        "repository": "SychPL/torno",
         "branch": "skill/mechanisms",
         "commit": "e5a2c41c62d70975c86d056cc3b02dda948ff5e4",
         "truncated": false,
@@ -340,7 +340,7 @@
     ],
     "media_histories": [
       {
-        "repository": "SychPL/solidcraft",
+        "repository": "SychPL/torno",
         "branch": "media/joint-reach",
         "commit": "471b3805bbd66f0b97acc729d91ea1658799760c",
         "commits_examined": 1,
@@ -361,7 +361,7 @@
         "native_files_found": 0
       },
       {
-        "repository": "SychPL/solidcraft",
+        "repository": "SychPL/torno",
         "branch": "media/motion-analysis",
         "commit": "6d79237923e80704a3afb4c092950804b64a5c0a",
         "commits_examined": 1,
@@ -382,7 +382,7 @@
         "native_files_found": 0
       },
       {
-        "repository": "SychPL/solidcraft",
+        "repository": "SychPL/torno",
         "branch": "media/motion-animation",
         "commit": "1e2ad6842a5ad5c3b2cedee3e6508a8e4e3eb3d4",
         "commits_examined": 1,
@@ -408,7 +408,7 @@
         "native_files_found": 0
       },
       {
-        "repository": "SychPL/solidcraft",
+        "repository": "SychPL/torno",
         "branch": "media/motion-traces",
         "commit": "328d3c4b4ff76573145a39180e74d513983a16b8",
         "commits_examined": 1,
@@ -424,7 +424,7 @@
         "native_files_found": 0
       },
       {
-        "repository": "SychPL/solidcraft",
+        "repository": "SychPL/torno",
         "branch": "media/selene-demo",
         "commit": "cffe218d22cb90a125bc133b768f000d307a3de8",
         "commits_examined": 1,
@@ -445,7 +445,7 @@
         "native_files_found": 0
       },
       {
-        "repository": "SychPL/solidcraft",
+        "repository": "SychPL/torno",
         "branch": "media/selene-showcase",
         "commit": "df2e74230e6659409d65501b5d9396b55c6503d3",
         "commits_examined": 1,
@@ -534,7 +534,7 @@
     {
       "id": "SELENE-ADMIT-007",
       "check": "Keep runtime evidence separate.",
-      "acceptance": "A pinned source is not a replay or physics result. Runtime motion needs a recorded SolidCraft revision, command inputs, tolerances, source digest, solved poses, stop/contact reports and review. Changed source bytes invalidate dependent bindings and recordings."
+      "acceptance": "A pinned source is not a replay or physics result. Runtime motion needs a recorded Torno revision, command inputs, tolerances, source digest, solved poses, stop/contact reports and review. Changed source bytes invalidate dependent bindings and recordings."
     }
   ],
   "native_inspection": {
@@ -559,10 +559,10 @@
   },
   "authoring_runtime": {
     "status": "derivative_native_acceptance_passed",
-    "name": "Official SolidCraft CLI",
+    "name": "Official Torno CLI",
     "version": "0.18.2",
     "platform": "linux-x86_64",
-    "release_url": "https://github.com/tangency-labs/solidcraft/releases/tag/v0.18.2",
+    "release_url": "https://github.com/getnodalia/torno/releases/tag/v0.18.2",
     "source_commit": "4927214976ff20758fde35af03bd6b2d6cf73e18",
     "archive_sha256": "9d0c922ac72204f34ad22ca7a171be78016ab002e304ace3c07d34d187d830ff",
     "cli_sha256": "e50fe78292d569c36052b24f46f1732bc4e43d1ecdac6a64092aa1cee3b97086",

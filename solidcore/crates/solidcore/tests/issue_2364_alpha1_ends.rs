@@ -1,19 +1,19 @@
 //! The fork's smlib#130 (`v1.1.0-alpha.1`) fixes to the End at a smooth vertex (smlib#124,
-//! WR-697), on SolidCraft's own inputs: the bodies its rig handed the
-//! fillet (`data/issue_2364_solidcraft_*.smb`, the rig's blend-call dumps, perf-inputs
+//! WR-697), on Torno's own inputs: the bodies its rig handed the
+//! fillet (`data/issue_2364_torno_*.smb`, the rig's blend-call dumps, perf-inputs
 //! 2364-ends).
 //!
 //! - a763ac1: an edge whose faces meet tangentially (the slotted bar's flat top running onto
-//!   its round end, SolidCraft fillets/3369) ends no tangent chain, and the round ends on the
+//!   its round end, Torno fillets/3369) ends no tangent chain, and the round ends on the
 //!   end face past it. Before, its R2 round ended there with two smooth-vertex caps on the
 //!   slot's walls: 13 faces, the same volume. Now 11 faces.
-//! - 9822462: a round that goes second (SolidCraft's `overflow_first`: the rounds that
+//! - 9822462: a round that goes second (Torno's `overflow_first`: the rounds that
 //!   overflow their faces go first, then what is left of the others) meets the rounds that
 //!   went first as one blend. The caller hands the second pass the faces the first made
 //!   (`FilletSession::add_earlier_pass_face`, the fork's `AddEarlierPassFace`), and
 //!   `EndAtSmoothVertex` takes no edge of theirs. Before, the second round was capped where
 //!   it ran on into the first round's end arc, leaving a shoulder of r^3 (pi/4 - 2/3) more
-//!   material at each such corner. SolidCraft fillets/5158 (the plate's two edges rounded
+//!   material at each such corner. Torno fillets/5158 (the plate's two edges rounded
 //!   r 2, the plate's own thickness) and fillets/1080 (the notched block's top outline R8).
 //!
 //! Every value is the fork's at 9822462 (`alpha-1-fixes`, built with `-ffp-contract=off`),
@@ -42,11 +42,11 @@ use solidcore::topology::topology::NotifyRecords;
 use solidcore::topology::{loopuse, EdgeId, FaceId};
 use solidcore::Brep;
 
-const SLOT_BAR: &[u8] = include_bytes!("data/issue_2364_solidcraft_3369_slot_bar.smb");
-const PLATE: &[u8] = include_bytes!("data/issue_2364_solidcraft_5158_plate.smb");
-const NOTCHED: &[u8] = include_bytes!("data/issue_2364_solidcraft_1080_notched_block.smb");
+const SLOT_BAR: &[u8] = include_bytes!("data/issue_2364_torno_3369_slot_bar.smb");
+const PLATE: &[u8] = include_bytes!("data/issue_2364_torno_5158_plate.smb");
+const NOTCHED: &[u8] = include_bytes!("data/issue_2364_torno_1080_notched_block.smb");
 
-/// SolidCraft's rig set at the time (#2364's check): every fix but the four it leaves off.
+/// Torno's rig set at the time (#2364's check): every fix but the four it leaves off.
 fn kernel() -> Kernel {
     let mut f = UpstreamFixes::all();
     f.cone_unbounded_parameterized_as_nurb = false;
@@ -59,7 +59,7 @@ fn kernel() -> Kernel {
     }
 }
 
-/// A SolidCraft file, read under the notification naming as SolidCraft reads it.
+/// A Torno file, read under the notification naming as Torno reads it.
 fn read(k: &mut Kernel, bytes: &[u8]) -> Brep {
     let mut attributes = AttributeStore::default();
     let mut records = NotifyRecords::new();

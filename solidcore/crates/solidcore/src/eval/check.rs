@@ -4,7 +4,7 @@
 //! non-singular placement. A record must pass these and its structural validation before the
 //! kernel takes it; `solidcore-ops`' `record_check` walks a record's edges and faces through them.
 //!
-//! Origin: SolidCraft's `crates/geom/src/brep/check.rs` (MIT OR Apache-2.0), moved here with its
+//! Origin: Torno's `crates/geom/src/brep/check.rs` (MIT OR Apache-2.0), moved here with its
 //! history (RFC 0003). It takes the kernel's evaluation types.
 use super::vec::{v3, VecExt};
 use super::{Curve, Frame, Surface};

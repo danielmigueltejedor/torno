@@ -180,7 +180,7 @@ fn folding_balls_are_refused_on_the_default_kernel() {
 type LawOf<'a> = &'a dyn Fn(&[f64]) -> FilletLaw;
 
 /// The rounds above are their definitions (review of tangency-labs/solidcore#2936): with
-/// SolidCraft's fix set (every fix, so `fillet_round_as_definition` too) each face the
+/// Torno's fix set (every fix, so `fillet_round_as_definition` too) each face the
 /// round makes, its pieces and the corner balls' zones between them, is a
 /// [`solidcore::surface::procedural_blend::ProceduralBlend`], and none is bare
 /// (`blend::definition_check`). The default kernel builds the same faces as their certified

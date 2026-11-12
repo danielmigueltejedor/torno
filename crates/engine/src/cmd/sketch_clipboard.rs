@@ -9,9 +9,9 @@ use std::collections::BTreeMap;
 
 use serde_json::{Value, json};
 use solidcore_record::Vec2;
-use solidcraft_doc::Document;
-use solidcraft_geom::Aabb2;
-use solidcraft_sketch::{ConstraintKind, CurveKind, LinkKind, LinkSource, Sketch};
+use torno_doc::Document;
+use torno_geom::Aabb2;
+use torno_sketch::{ConstraintKind, CurveKind, LinkKind, LinkSource, Sketch};
 
 use super::sketch::edit;
 use super::sketch_store;
@@ -114,15 +114,15 @@ impl SketchClip {
         clip.pastes = 0;
         for c in &mut clip.constraints {
             let Some((expr, unit)) = c.param.as_mut() else { continue };
-            if solidcraft_doc::expr::references(expr).is_empty() {
+            if torno_doc::expr::references(expr).is_empty() {
                 continue;
             }
             let v = c.kind.value().unwrap_or_default();
-            if solidcraft_doc::expr::unit_info(unit).is_none() {
+            if torno_doc::expr::unit_info(unit).is_none() {
                 *unit = if c.kind.is_angle() { "rad" } else { "mm" }.into();
             }
-            let value = if c.kind.is_angle() { solidcraft_doc::expr::Value::angle(v) } else { solidcraft_doc::expr::Value::length(v) };
-            let shown = solidcraft_doc::expr::value_in_unit(value, unit);
+            let value = if c.kind.is_angle() { torno_doc::expr::Value::angle(v) } else { torno_doc::expr::Value::length(v) };
+            let shown = torno_doc::expr::value_in_unit(value, unit);
             *expr = format!("{}", if shown.is_finite() { shown } else { 0.0 });
         }
         for (src, _) in &mut clip.texts {
@@ -370,7 +370,7 @@ fn sketch_in(doc: &Document, key: &Value, cmd: &str) -> Result<u64> {
         _ => return Err(bad(cmd, "`from` must be a sketch id or name")),
     };
     let f = found.ok_or_else(|| bad(cmd, format!("no sketch `{name}`")))?;
-    if !matches!(f.kind, solidcraft_doc::FeatureKind::Sketch { .. }) {
+    if !matches!(f.kind, torno_doc::FeatureKind::Sketch { .. }) {
         return Err(bad(cmd, format!("`{name}` is not a sketch")));
     }
     Ok(f.id)
@@ -402,8 +402,7 @@ fn replace(s: &mut Session, p: &Value) -> Result<Value> {
     };
     let clip = match &file {
         Some(path) => {
-            let (other, _) =
-                solidcraft_io::read_design_file(path, None::<fn(solidcraft_io::DesignPreview)>).map_err(|e| bad(cmd, format!("{path}: {e}")))?;
+            let (other, _) = torno_io::read_design_file(path, None::<fn(torno_io::DesignPreview)>).map_err(|e| bad(cmd, format!("{path}: {e}")))?;
             let source = sketch_in(&other, from, cmd)?;
             whole_clip(&other, source, cmd)?.for_another_design()
         }
@@ -456,8 +455,8 @@ type PastedIds = (Vec<String>, Vec<String>, Vec<String>);
 
 /// Add a copy of `clip`, moved by `t`, to `sk`.
 fn paste_clip(sk: &mut Sketch, doc: &mut Document, clip: &SketchClip, t: Vec2) -> Result<PastedIds> {
-    if sk.curves.len().saturating_add(clip.curves.len()) > solidcraft_sketch::limits::max_curves() {
-        return Err(solidcraft_sketch::SketchError::TooLarge.into());
+    if sk.curves.len().saturating_add(clip.curves.len()) > torno_sketch::limits::max_curves() {
+        return Err(torno_sketch::SketchError::TooLarge.into());
     }
     let mut pts = Vec::with_capacity(clip.points.len());
     let origin = sk.points.iter().position(|q| q.id == ORIGIN);

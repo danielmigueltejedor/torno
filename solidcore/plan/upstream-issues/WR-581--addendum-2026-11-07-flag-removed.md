@@ -15,7 +15,7 @@ code are removed: `CalcTorusFilletGeom`'s blend section, `centre_line_on_axis`,
   cylinder as it was, as the pinned blend curve did. The G^n section is marched and has no
   section to revolve. G1 is invalid input (the G^n section's orders are 2 to 4).
 - **Not fixed here:** the G2 round at r 9.99, which the blend curve built, runs for over 20
-  minutes on the G^n section, as it already did on SolidCraft's set
+  minutes on the G^n section, as it already did on Torno's set
   (tangency-labs/solidcore#2964).
 - **Tests:** `issue_919_full_width_blend_curve` asserts the full-width refusal and the G1
   refusal. Its dome tests are removed with the revolve.

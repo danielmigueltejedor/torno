@@ -5,7 +5,7 @@
 //!
 //! The boss's walls are swept into the fillet sheet and deleted again when no crease is found.
 //! Those edits re-owned the sheet's geometry under the notification naming
-//! (`loopuse::notify_ref`); a target named the same way (SolidCraft reads and converts its
+//! (`loopuse::notify_ref`); a target named the same way (Torno reads and converts its
 //! bodies under that naming) owns a surface under the same key, and the merge refused the
 //! ambiguous owner. The sheet the merge takes is now the one built before the sweep.
 #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)] // test helpers
@@ -27,17 +27,17 @@ use solidcore::topology::topology::NotifyRecords;
 use solidcore::topology::{loopuse, EdgeId, EdgeuseId, FaceId};
 use solidcore::{Brep, Kernel};
 
-/// Default fixes, or every fix on but WR-707 (SolidCraft's profile at its ws/pin-16).
-fn kernel(solidcraft: bool) -> Kernel {
+/// Default fixes, or every fix on but WR-707 (Torno's profile at its ws/pin-16).
+fn kernel(torno: bool) -> Kernel {
     let mut k = Kernel::default();
-    if solidcraft {
+    if torno {
         k.fixes = UpstreamFixes::all();
         k.fixes.fillet_refuse_rounds_breaking_through = false;
     }
     k
 }
 
-/// `bytes`, a binary SMB file, read under the notification naming, as SolidCraft's
+/// `bytes`, a binary SMB file, read under the notification naming, as Torno's
 /// solidcore backend reads a file (its `key_of` is `loopuse::notify_ref`).
 fn read_notify_named(k: &mut Kernel, bytes: Vec<u8>) -> Brep {
     let mut attributes = AttributeStore::default();
@@ -54,11 +54,11 @@ fn read_notify_named(k: &mut Kernel, bytes: Vec<u8>) -> Brep {
     b
 }
 
-/// SolidCraft's joined block and boss (its `box_solid` and `cylinder`, extruded from sketch
+/// Torno's joined block and boss (its `box_solid` and `cylinder`, extruded from sketch
 /// regions with the circle's seam at 0.6131 rad, then `boolean` union), written as binary SMB
-/// by SolidCraft's solidcore backend (SolidCraft ws/pin-16, solidcore 97ed188db).
-fn solidcraft_body(k: &mut Kernel) -> Brep {
-    let bytes = include_bytes!("data/issue_2370_solidcraft_block_boss.smb").to_vec();
+/// by Torno's solidcore backend (Torno ws/pin-16, solidcore 97ed188db).
+fn torno_body(k: &mut Kernel) -> Brep {
+    let bytes = include_bytes!("data/issue_2370_torno_block_boss.smb").to_vec();
     read_notify_named(k, bytes)
 }
 
@@ -115,7 +115,7 @@ fn closed_form(hole: bool) -> f64 {
     4800.0 - (1.0 - PI / 4.0) * 9.0 * 30.0 + PI * 36.0 * 12.0 - hole
 }
 
-/// The front top edge rounded r 3 as SolidCraft rounds it (`SmApiFilletEdgesPerEdge`'s session
+/// The front top edge rounded r 3 as Torno rounds it (`SmApiFilletEdgesPerEdge`'s session
 /// steps, a circular section): one sound solid of the closed form's volume.
 fn round_front_top(mut k: Kernel, mut b: Brep, hole: bool) {
     let e = pick(&k, &b, Point3::new(15.0, 0.0, 8.0));
@@ -141,20 +141,20 @@ fn round_front_top(mut k: Kernel, mut b: Brep, hole: bool) {
 }
 
 /// No feature is kept: the round is the closed form's.
-fn assert_rounds_clear(solidcraft: bool, body: impl Fn(&mut Kernel) -> Brep, hole: bool) {
-    let mut k = kernel(solidcraft);
+fn assert_rounds_clear(torno: bool, body: impl Fn(&mut Kernel) -> Brep, hole: bool) {
+    let mut k = kernel(torno);
     let b = body(&mut k);
     round_front_top(k, b, hole);
 }
 
 #[test]
-fn solidcraft_body_rounds_clear_of_the_boss() {
-    assert_rounds_clear(true, solidcraft_body, false);
+fn torno_body_rounds_clear_of_the_boss() {
+    assert_rounds_clear(true, torno_body, false);
 }
 
 #[test]
-fn solidcraft_body_rounds_clear_of_the_boss_default_fixes() {
-    assert_rounds_clear(false, solidcraft_body, false);
+fn torno_body_rounds_clear_of_the_boss_default_fixes() {
+    assert_rounds_clear(false, torno_body, false);
 }
 
 #[test]

@@ -92,7 +92,7 @@
     "stitch"
   ],
   "ungraded": [
-    "continuity: SolidCraft computes it"
+    "continuity: Torno computes it"
   ],
   "what": "a cylinder r10 x 30 with its top face taken off, the open rim patched g1 (Tangent) and stitched: a dome over the tube that closes it",
   "why_not": []

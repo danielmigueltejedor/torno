@@ -6,7 +6,7 @@ dark dialog. Open any file in a browser to see it. They were extracted verbatim 
 the wrapper styles were removed (width 100 %, aspect ratio, corner radius), the `xmlns` was added and
 `width` and `height` were set to the `viewBox` size.
 
-The figures are original artwork made for SolidCraft; the Orientation pair is copied from the app.
+The figures are original artwork made for Torno; the Orientation pair is copied from the app.
 Their ATTRIBUTION row is in `attribution/pending/preferences-v2.md`.
 
 Not here: the 24x24 line icons on the boards (page-list icons, section icons, the (i) help icon, the

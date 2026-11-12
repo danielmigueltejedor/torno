@@ -3,7 +3,7 @@
 # https://tangency-labs.github.io/solidcore/. SolidCore's own Pages workflow
 # (solidcore/.github/workflows/pages.yml), ported: GitHub does not run a subfolder's workflows.
 #
-# This repository's Pages site is SolidCraft's book and web app (pages.yml), and a repository has
+# This repository's Pages site is Torno's book and web app (pages.yml), and a repository has
 # one Pages site, so this one is pushed to tangency-labs/solidcore's gh-pages branch with the
 # mirror's deploy key (SOLIDCORE_DEPLOY_KEY, solidcore-mirror.yml). That repository's Settings ->
 # Pages -> Source must be "Deploy from a branch", gh-pages, / (root).
@@ -16,7 +16,7 @@
 # - workflow_run of "Mirror to SolidCore" on main: every mirrored change.
 # - schedule (hourly): claims from open "port: <unit id>" pull requests (now in this repository),
 #   and main's newest solids report (SolidCore checks upload it). Not after every CI run on main,
-#   as SolidCore's did: SolidCraft's main runs CI far more often.
+#   as SolidCore's did: Torno's main runs CI far more often.
 # - workflow_dispatch: manual rebuild.
 name: SolidCore pages
 
@@ -83,6 +83,6 @@ jobs:
           git init -q -b gh-pages
           git add -A
           git -c user.name="github-actions[bot]" -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
-            commit -q -m "Site for solidcore $(git -C .. rev-parse --short HEAD) (SolidCraft $SHA)"
+            commit -q -m "Site for solidcore $(git -C .. rev-parse --short HEAD) (Torno $SHA)"
           # The branch holds only the latest site: replacing it is the deploy.
           git push -q --force git@github.com:tangency-labs/solidcore.git gh-pages

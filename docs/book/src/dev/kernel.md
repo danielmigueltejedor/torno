@@ -1,13 +1,13 @@
 # The kernel boundary
 
-`crates/kernel` is SolidCraft's B-rep kernel boundary. The modelling kernel behind it is
+`crates/kernel` is Torno's B-rep kernel boundary. The modelling kernel behind it is
 `solidcore`, the vendored Rust port of NVIDIA's SMLib (`solidcore/`): `crates/smlib` wraps it in a
-safe API, and `crates/kernel` turns that into the operations the app uses. Callers get SolidCraft types (`Body`, face and edge indices, meshes,
+safe API, and `crates/kernel` turns that into the operations the app uses. Callers get Torno types (`Body`, face and edge indices, meshes,
 measures) and a `KernelError` instead of kernel types and panics.
 
 ## `guard`
 
-The vendored kernel can panic on geometry it does not handle. Every call into it goes through `solidcraft_kernel::guard`, which catches the panic and turns it into
+The vendored kernel can panic on geometry it does not handle. Every call into it goes through `torno_kernel::guard`, which catches the panic and turns it into
 `KernelError::Internal`, leaving the model unchanged:
 
 ```rust
@@ -18,10 +18,10 @@ A failing feature shows an error on the timeline; it never takes the app down.
 
 ## What is our own
 
-The B-rep operations are `solidcore`'s. SolidCraft's own code in `crates/kernel` is the boundary
+The B-rep operations are `solidcore`'s. Torno's own code in `crates/kernel` is the boundary
 around it: the public API, display meshes, measures, persistent names and STEP exchange. A
 failing kernel operation stays failing until the kernel is fixed; there is no workaround on
-SolidCraft's side (`tests/kernel-cases/README.md`).
+Torno's side (`tests/kernel-cases/README.md`).
 
 ## The vendored kernel
 

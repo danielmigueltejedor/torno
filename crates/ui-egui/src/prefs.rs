@@ -2,18 +2,18 @@
 //! restores the opening snapshot, Apply keeps editing, and Defaults affects the current page.
 
 use crate::ui_kit::BackingTooltipExt as _;
-use solidcraft_engine::geom::prelude::*;
 use std::collections::BTreeMap;
+use torno_engine::geom::prelude::*;
 
 use egui::{Modifiers, Pos2};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 use solidcore_record::Vec3;
-pub use solidcraft_engine::doc::display_units::{format_length, length_number, length_precision, unit_scale};
-use solidcraft_viewport::Camera;
+pub use torno_engine::doc::display_units::{format_length, length_number, length_precision, unit_scale};
+use torno_viewport::Camera;
 
 /// The key the apps keep the preferences under in eframe's storage.
-pub const STORAGE_KEY: &str = "solidcraft.prefs";
+pub const STORAGE_KEY: &str = "torno.prefs";
 /// The key earlier releases used. Compatibility shim (docs/compatibility.md): read when the
 /// current key is missing, never written.
 pub const LEGACY_STORAGE_KEY: &str = "solvecraft.prefs";
@@ -41,7 +41,7 @@ use crate::prefs_window;
 use crate::tool_modifiers::ModifierCombo;
 use crate::ui_kit;
 use crate::viewport::NavMode;
-use solidcraft_theme::Tokens;
+use torno_theme::Tokens;
 
 pub const UNITS: &[&str] = &["mm", "cm", "m", "in", "ft"];
 pub const OPENSCAD_NAV: &str = "openscad";
@@ -290,14 +290,14 @@ impl NavPreset {
 
     pub(crate) fn translated_label(&self) -> &str {
         match self.id {
-            "creo" => solidcraft_ui_text::tr("nav.creo.label"),
-            TOUCHPAD_NAV => solidcraft_ui_text::tr("nav.touchpad.label"),
-            _ => solidcraft_ui_text::tr_label(self.label),
+            "creo" => torno_ui_text::tr("nav.creo.label"),
+            TOUCHPAD_NAV => torno_ui_text::tr("nav.touchpad.label"),
+            _ => torno_ui_text::tr_label(self.label),
         }
     }
 
     pub(crate) fn translated_help(&self) -> &str {
-        if self.id == "creo" { solidcraft_ui_text::tr("nav.creo.help") } else { solidcraft_ui_text::tr_label(self.help) }
+        if self.id == "creo" { torno_ui_text::tr("nav.creo.help") } else { torno_ui_text::tr_label(self.help) }
     }
 }
 
@@ -533,7 +533,7 @@ pub enum HistorySketches {
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum SectionHatch {
-    /// Each body in its own hatch (`solidcraft_viewport::hatch`): 45 or 135 degrees in one of the
+    /// Each body in its own hatch (`torno_viewport::hatch`): 45 or 135 degrees in one of the
     /// theme's hatch colours, touching bodies never alike. Also what a value this version doesn't
     /// know reads as (`lenient`).
     #[default]
@@ -563,9 +563,9 @@ impl OriginPlaneNames {
     /// language; any other plane (a construction plane) by its own name.
     pub fn label(self, name: &str) -> &str {
         match (self, name) {
-            (Self::TopFrontRight, "XY") => solidcraft_ui_text::tr("ui.top"),
-            (Self::TopFrontRight, "XZ") => solidcraft_ui_text::tr("ui.front"),
-            (Self::TopFrontRight, "YZ") => solidcraft_ui_text::tr("ui.right"),
+            (Self::TopFrontRight, "XY") => torno_ui_text::tr("ui.top"),
+            (Self::TopFrontRight, "XZ") => torno_ui_text::tr("ui.front"),
+            (Self::TopFrontRight, "YZ") => torno_ui_text::tr("ui.right"),
             _ => name,
         }
     }
@@ -682,7 +682,7 @@ fn same_orientation(a: Camera, b: Camera) -> bool {
 
 /// How the offer to stand a file up is made when its header names no program known to save Y up
 /// (Preferences: "For files from unknown programs", #7717). A file from SolidWorks is asked in the
-/// dialog (only the note when it already stands on Z, unless this is Ask); SolidCraft's own files
+/// dialog (only the note when it already stands on Z, unless this is Ask); Torno's own files
 /// are never offered.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
@@ -771,22 +771,22 @@ impl SpaceMouseDriver {
     }
 }
 
-/// The default largest STEP/import file, in MB (`solidcraft_io::MAX_STEP_BYTES`).
-pub const DEFAULT_STEP_MB: u64 = solidcraft_engine::io::limits::FileLimits::DEFAULT.step / solidcraft_engine::io::limits::MB;
-/// The default largest design file, in MB (`solidcraft_io::MAX_DESIGN_BYTES`).
-pub const DEFAULT_DESIGN_MB: u64 = solidcraft_engine::io::limits::FileLimits::DEFAULT.design / solidcraft_engine::io::limits::MB;
+/// The default largest STEP/import file, in MB (`torno_io::MAX_STEP_BYTES`).
+pub const DEFAULT_STEP_MB: u64 = torno_engine::io::limits::FileLimits::DEFAULT.step / torno_engine::io::limits::MB;
+/// The default largest design file, in MB (`torno_io::MAX_DESIGN_BYTES`).
+pub const DEFAULT_DESIGN_MB: u64 = torno_engine::io::limits::FileLimits::DEFAULT.design / torno_engine::io::limits::MB;
 
 /// The file size limits the preferences ask for (Preferences › General › Largest file to open),
 /// brought into range.
-pub fn file_limits(p: &Prefs) -> solidcraft_engine::io::limits::FileLimits {
-    solidcraft_engine::io::limits::FileLimits::from_mb(p.max_step_file_mb, p.max_design_file_mb).clamped()
+pub fn file_limits(p: &Prefs) -> torno_engine::io::limits::FileLimits {
+    torno_engine::io::limits::FileLimits::from_mb(p.max_step_file_mb, p.max_design_file_mb).clamped()
 }
 
 /// Every read from now on uses the preferred file size limits (unless `--max-file-size` gave
 /// this run its own). The browser keeps its defaults.
 pub fn apply_file_limits(p: &Prefs) {
-    if solidcraft_engine::io::limits::ADJUSTABLE
-        && let Err(e) = solidcraft_engine::io::limits::set_preferred(file_limits(p))
+    if torno_engine::io::limits::ADJUSTABLE
+        && let Err(e) = torno_engine::io::limits::set_preferred(file_limits(p))
     {
         log::warn!("preferences: file size limits: {e}");
     }
@@ -795,12 +795,12 @@ pub fn apply_file_limits(p: &Prefs) {
 /// The most points or curves one sketch holds, as the preferences ask (Preferences › Sketch ›
 /// Largest sketch, #10874); a value outside the accepted range (a hand edit) reads as the default.
 pub fn sketch_limit(p: &Prefs) -> usize {
-    if accepted::max_sketch_points(p) { p.max_sketch_points } else { solidcraft_engine::sketch::limits::DEFAULT_POINTS }
+    if accepted::max_sketch_points(p) { p.max_sketch_points } else { torno_engine::sketch::limits::DEFAULT_POINTS }
 }
 
 /// Every sketch built from now on holds up to [`sketch_limit`] points.
 pub fn apply_sketch_limit(p: &Prefs) {
-    if let Err(e) = solidcraft_engine::sketch::limits::set_max_points(sketch_limit(p)) {
+    if let Err(e) = torno_engine::sketch::limits::set_max_points(sketch_limit(p)) {
         log::warn!("preferences: largest sketch: {e}");
     }
 }
@@ -908,11 +908,11 @@ macro_rules! preference_settings {
     (@page) => { None };
     (@page $page:expr) => { Some($page) };
     (@control $app:ident, $ui:ident, $field:ident, check($label:literal $(, $help:literal)?)) => {
-        ui_kit::checkbox($ui, solidcraft_ui_text::tr_label($label), &mut $app.preferences.$field)
-            $(.backing_on_hover_text(solidcraft_ui_text::tr_label($help)))?
+        ui_kit::checkbox($ui, torno_ui_text::tr_label($label), &mut $app.preferences.$field)
+            $(.backing_on_hover_text(torno_ui_text::tr_label($help)))?
     };
     (@control $app:ident, $ui:ident, $field:ident, check_tr($label:literal)) => {
-        ui_kit::checkbox($ui, solidcraft_ui_text::tr($label), &mut $app.preferences.$field)
+        ui_kit::checkbox($ui, torno_ui_text::tr($label), &mut $app.preferences.$field)
     };
     (@control $app:ident, $ui:ident, $field:ident, check_id($label:literal)) => {
         ui_kit::checkbox($ui, $app.tr($label), &mut $app.preferences.$field)
@@ -1023,7 +1023,7 @@ preference_settings! {
     /// Per 3D mouse (`space_mouse::Input::device`), the calibration that puts its axes on
     /// 3Dconnexion's. A device without one is read as it reports. Page resets keep calibrations.
     #[serde(deserialize_with = "calibrations_that_read")]
-    space_mouse_calibrations: std::collections::BTreeMap<String, solidcraft_space_mouse::Calibration> = Default::default();
+    space_mouse_calibrations: std::collections::BTreeMap<String, torno_space_mouse::Calibration> = Default::default();
     /// Per 3D mouse, what each of its buttons does, by number from 1, once the user has changed
     /// any of them; until then a measured device has its printed keys' jobs
     /// (`space_mouse::default_button_jobs`). Kept, like calibrations, when settings are reset.
@@ -1128,7 +1128,7 @@ preference_settings! {
     /// When SMLib's full check runs while features are computed (`diagnostics.validation`):
     /// `each_feature` (the default) checks the bodies each feature keeps once; `each_step`, as
     /// before, checks after every sweep, boolean and blend; `off` (experimental) never does.
-    validation: solidcraft_engine::kernel::Validation = solidcraft_engine::kernel::Validation::EachFeature, PAGE_DESIGN;
+    validation: torno_engine::kernel::Validation = torno_engine::kernel::Validation::EachFeature, PAGE_DESIGN;
     /// A command's value (Extrude's Distance, Fillet's Radius…) in a box beside its handle in the
     /// view (`canvas::boxes_shown`). Off: it is typed in the command window only, which takes the
     /// keyboard after a pick instead, and nothing covers the model (#9479).
@@ -1450,7 +1450,7 @@ preference_settings! {
     /// panels, the compass and the navigation bar, as before.
     home_fit_size: f32 = 1.0, PAGE_NAVIGATION, accept(0.1..=1.0);
     /// Colour vision mode (#778): `off`, `protan`, `deutan` or `tritan`.
-    color_vision: solidcraft_theme::ColorVision = solidcraft_theme::ColorVision::Off, PAGE_APPEARANCE;
+    color_vision: torno_theme::ColorVision = torno_theme::ColorVision::Off, PAGE_APPEARANCE;
     /// Check for updates at start and once a day (docs/updates.md).
     check_updates: bool = true, 0;
     /// When the last update check ran, and the versions skipped or put off (`update::Memo`).
@@ -1504,13 +1504,13 @@ preference_settings! {
     /// the window thread, and the window waits for each, as before (the default).
     agent_off_thread: bool = false, PAGE_ASSISTANT;
     /// Let AI agents connect: the localhost control channel (MCP) listens on
-    /// `agent_control_port`, unless `--control`/`SOLIDCRAFT_CONTROL_PORT` name one for the run.
+    /// `agent_control_port`, unless `--control`/`TORNO_CONTROL_PORT` name one for the run.
     /// Turning it on or off, or changing the port, takes effect at once ([`crate::control_switch`]).
     /// Off until the user turns it on, so a new install listens on no port.
     agent_control: bool = false, PAGE_ASSISTANT;
     /// The control channel's port. The default one takes the next free port when it is taken.
     agent_control_port: u16 = 27878, PAGE_ASSISTANT;
-    /// Add SolidCraft's MCP server to the AI apps installed on this computer at start-up
+    /// Add Torno's MCP server to the AI apps installed on this computer at start-up
     /// ([`crate::ai_connect`]); off takes the entries out again.
     connect_ai_apps: bool = true, PAGE_ASSISTANT;
     /// Agents the user added (the installed ones are found by themselves). API keys are never
@@ -1520,7 +1520,7 @@ preference_settings! {
     agent_default: String = String::new();
     /// The agent the chat last started (an agent's id; empty: none yet).
     agent_last: String = String::new();
-    /// When SolidCraft starts: connect the agent started last (`agent_last`, else the one a new
+    /// When Torno starts: connect the agent started last (`agent_last`, else the one a new
     /// conversation starts with), and open the panel (#7009). Off by default: an agent starts
     /// only when a message is sent or Connect is pressed, and the panel opens when asked for.
     agent_connect_at_start: bool = false, PAGE_ASSISTANT;
@@ -1546,7 +1546,7 @@ preference_settings! {
     /// Custom instructions (#8220): text the agent chat adds to its system note when a session
     /// starts (`agent_chat::acp::system_note`). No page reset discards this user-authored text.
     agent_instructions: String = String::new();
-    /// Compact output for agents connected through the MCP server (`solidcraft-cli mcp`, docs/mcp.md):
+    /// Compact output for agents connected through the MCP server (`torno-cli mcp`, docs/mcp.md):
     /// `inspect_design` summarises sketches and tool JSON is not pretty-printed. Off: as always.
     /// The server asks once per agent session (`mcp.options`), so a change applies to the next one.
     mcp_compact: bool = false, PAGE_ASSISTANT;
@@ -1574,8 +1574,8 @@ preference_settings! {
     project_options_dialog: bool = true, PAGE_SKETCH;
     /// The most points or curves one sketch holds (#10874): from the default (20000), which
     /// sketches have always had, up to 200000, so a dense SVG or DXF drawing fits in one sketch.
-    max_sketch_points: usize = solidcraft_engine::sketch::limits::DEFAULT_POINTS, PAGE_SKETCH,
-        accept(solidcraft_engine::sketch::limits::DEFAULT_POINTS..=solidcraft_engine::sketch::limits::CEILING_POINTS);
+    max_sketch_points: usize = torno_engine::sketch::limits::DEFAULT_POINTS, PAGE_SKETCH,
+        accept(torno_engine::sketch::limits::DEFAULT_POINTS..=torno_engine::sketch::limits::CEILING_POINTS);
     /// Whether Alt/Option also frees gizmo / canvas manipulator arrows (Primary always does).
     manipulator_free_alt: bool = true, PAGE_SKETCH;
     /// A sketch's icon in History and the browser takes the colour of its solve state, and its
@@ -1610,7 +1610,7 @@ preference_settings! {
     sketch_exit_view: SketchExitView = SketchExitView::default(), PAGE_SKETCH;
     /// A shape drawn in a sketch gets all its dimensions at once: the typed values, and every
     /// other size the shape has at its size as drawn (`sketch.draw.dimensioned` with `as_drawn`).
-    /// Shapes `solidcraft_engine::dimension_roles` doesn't list are drawn as before.
+    /// Shapes `torno_engine::dimension_roles` doesn't list are drawn as before.
     sketch_auto_dimensions: bool = false, PAGE_SKETCH;
     /// With `sketch_auto_dimensions`: new shapes are also placed from the sketch origin until they
     /// are fully constrained (`sketch.draw.dimensioned` with `locate`). A shape already anchored to
@@ -1722,7 +1722,7 @@ pub struct PrefsWindow {
     /// The up axis preference the view follows now (applied when it changes, and at startup).
     applied_up: Option<String>,
     /// The Profile operations preference the profiler last followed: applied when it changes,
-    /// so `diagnostics.profile` (an agent) and SOLIDCRAFT_PROFILE can switch it in between.
+    /// so `diagnostics.profile` (an agent) and TORNO_PROFILE can switch it in between.
     applied_profile: Option<bool>,
     /// The appearance last asked of the native window ([`sync_window_theme`]).
     window_theme: Option<egui::SystemTheme>,
@@ -2047,7 +2047,7 @@ fn theme_action(app: &mut SolveApp, ui: &mut egui::Ui, action: Option<&str>, act
         Some("import") => app.pick_open_for(&["json"], |app, path| {
             let Some(path) = path else { return };
             // Through `vfs`, like every other import: in the web app a picked file is there.
-            let text = solidcraft_engine::io::vfs::read_to_string(&path, crate::theme_files::MAX_BYTES).map_err(|e| e.to_string());
+            let text = torno_engine::io::vfs::read_to_string(&path, crate::theme_files::MAX_BYTES).map_err(|e| e.to_string());
             import_theme_text(app, text);
         }),
         #[cfg(not(target_arch = "wasm32"))]
@@ -2067,7 +2067,7 @@ fn theme_action(app: &mut SolveApp, ui: &mut egui::Ui, action: Option<&str>, act
             app.pick_save(&format!("{name}.json"), &["json"], move |app, path| {
                 // Through `vfs`, like every other save: the web app hands it out as a download.
                 if let Some(path) = path
-                    && let Err(e) = solidcraft_engine::io::vfs::write(&path, text.as_bytes())
+                    && let Err(e) = torno_engine::io::vfs::write(&path, text.as_bytes())
                 {
                     app.set_status(format!("Theme export: {e}"), true);
                 }
@@ -2115,7 +2115,7 @@ fn follow_row(app: &mut SolveApp, ui: &mut egui::Ui) {
         }
     });
     if let Some(error) = error.filter(|_| !path.is_empty()) {
-        ui_kit::text(ui, &solidcraft_ui_text::format("prefs.theme_follow_error", &[("error", &error)]), ui_kit::Text::Error("theme_follow"));
+        ui_kit::text(ui, &torno_ui_text::format("prefs.theme_follow_error", &[("error", &error)]), ui_kit::Text::Error("theme_follow"));
     }
     if stop {
         stop_following(app);
@@ -2133,7 +2133,7 @@ fn follow_row(app: &mut SolveApp, ui: &mut egui::Ui) {
 /// The interface font (#1290): the built-in font first, then the installed families, with a
 /// search box. The choice applies at once, like the other preferences.
 fn ui_font_row(app: &mut SolveApp, ui: &mut egui::Ui) {
-    let builtin = solidcraft_ui_text::format("sketch_text.builtin_font", &[("family", "IBM Plex Sans")]);
+    let builtin = torno_ui_text::format("sketch_text.builtin_font", &[("family", "IBM Plex Sans")]);
     let current = if app.preferences.ui_font.trim().is_empty() { builtin.clone() } else { app.preferences.ui_font.clone() };
     let families = crate::sketch_text::families(ui.ctx());
     let mut values = vec![(String::new(), builtin.clone(), "prefs:font_builtin".to_string())];
@@ -2149,10 +2149,10 @@ fn ui_font_row(app: &mut SolveApp, ui: &mut egui::Ui) {
             &mut app.prefs_window.font_filter,
             &options,
             None,
-            families.is_none().then(|| solidcraft_ui_text::tr_label("Listing the installed fonts…")),
+            families.is_none().then(|| torno_ui_text::tr_label("Listing the installed fonts…")),
         )
     });
-    if let Some(rect) = crate::scenario::rect_of(&format!("dialog:widget:{}", solidcraft_ui_text::tr_label("Interface font"))) {
+    if let Some(rect) = crate::scenario::rect_of(&format!("dialog:widget:{}", torno_ui_text::tr_label("Interface font"))) {
         crate::scenario::publish_target("prefs:ui_font", rect);
         crate::scenario::publish_target(&format!("dialog:{}", app.tr("prefs.font")), rect);
         crate::scenario::publish_rect(&format!("dialog:widget:{}", app.tr("prefs.font")), rect);
@@ -2260,7 +2260,7 @@ pub fn desktop_prefers_dark(appearance: Option<u32>, gnome: Option<&str>, gtk_th
 /// the interface scale.
 /// Tell the native window which appearance to take (#8983): the operating system's while the
 /// theme follows it, otherwise the theme's own, so the title bar matches. egui's own window sync
-/// (`Options::sync_window_theme`) went by the egui theme, which [`solidcraft_theme::apply`] always
+/// (`Options::sync_window_theme`) went by the egui theme, which [`torno_theme::apply`] always
 /// sets to light or dark. A macOS window told to be light stays light and no longer reports the
 /// system appearance changing, so a theme following the system never turned with it.
 fn sync_window_theme(app: &mut SolveApp, ctx: &egui::Context, follows_system: bool) {
@@ -2284,19 +2284,19 @@ pub fn apply(app: &mut SolveApp, ctx: &egui::Context) {
     // The features computed from now on are checked as the preference says.
     app.session.set_validation(app.preferences.validation);
     // The profiler records while the preference is on (switched when it changes; at start-up only
-    // when on, so SOLIDCRAFT_PROFILE=1 is not undone by the default).
+    // when on, so TORNO_PROFILE=1 is not undone by the default).
     let profile = app.preferences.profile_operations;
     if app.prefs_window.applied_profile != Some(profile) {
         if profile || app.prefs_window.applied_profile.is_some() {
-            solidcraft_engine::profile::set_enabled(profile);
+            torno_engine::profile::set_enabled(profile);
         }
         app.prefs_window.applied_profile = Some(profile);
     }
     apply_file_limits(&app.preferences);
     apply_sketch_limit(&app.preferences);
     // The viewport's display quality (an unknown saved value draws at Normal).
-    solidcraft_engine::doc::display_quality::set_current(
-        solidcraft_engine::doc::display_quality::DisplayQuality::parse(&app.preferences.display_quality).unwrap_or_default(),
+    torno_engine::doc::display_quality::set_current(
+        torno_engine::doc::display_quality::DisplayQuality::parse(&app.preferences.display_quality).unwrap_or_default(),
     );
     // The view's up axis follows the preference (set in the dialog, by ui.prefs or loaded).
     if app.prefs_window.applied_up.as_deref() != Some(app.preferences.up_axis.as_str()) {
@@ -2326,7 +2326,7 @@ pub fn apply(app: &mut SolveApp, ctx: &egui::Context) {
         app.styled = false;
     }
     sync_window_theme(app, ctx, follows_system);
-    if solidcraft_theme::set_logo_accent(app.preferences.logo_accent) {
+    if torno_theme::set_logo_accent(app.preferences.logo_accent) {
         app.styled = false;
     }
     // egui's end-of-frame shortcuts only change its context; the saved preference would
@@ -2362,7 +2362,7 @@ pub(crate) fn sync_surface_analysis(app: &mut SolveApp) {
 
 /// The network locations the files a design names may be on follow the preferences.
 pub fn apply_network(p: &Prefs) {
-    solidcraft_engine::io::vfs::set_network_policy(solidcraft_engine::io::vfs::NetworkPolicy {
+    torno_engine::io::vfs::set_network_policy(torno_engine::io::vfs::NetworkPolicy {
         allow_all: p.network_locations,
         hosts: p.network_hosts.clone(),
     });
@@ -2483,12 +2483,12 @@ pub(crate) fn pivot_under(app: &SolveApp, proj: &crate::viewport::Proj, at: Pos2
 /// A length typed into a field, in millimetres: a bare number is in the design's units (`scale`
 /// units per millimetre); an explicit unit ("10 mm", "0.5 in", "2 cm + 3 mm") is honoured.
 pub fn parse_length_mm(text: &str, scale: f64) -> Option<f64> {
-    use solidcraft_engine::doc::expr;
+    use torno_engine::doc::expr;
     if !(scale.is_finite() && scale > 0.0) {
         return None;
     }
     let defaults = expr::Defaults { len: 1.0 / scale, ..expr::Defaults::default() };
-    let no_params = |n: &str| Err(solidcraft_engine::doc::DocError::Expr(format!("unknown parameter `{n}`")));
+    let no_params = |n: &str| Err(torno_engine::doc::DocError::Expr(format!("unknown parameter `{n}`")));
     let value = expr::eval_with_defaults(text.trim(), &no_params, defaults).ok()?.to_kind_in(expr::Kind::Length, defaults).ok()?;
     value.is_finite().then_some(value)
 }
@@ -2523,7 +2523,7 @@ pub const GRAPHICS_BACKENDS: &[&str] = if cfg!(target_os = "windows") {
 /// Human-readable API names, retaining legacy manually configured choices for display.
 pub fn graphics_backend_label(backend: &str) -> String {
     match backend {
-        "auto" | "" => solidcraft_ui_text::tr("prefs.graphics_api_auto").to_string(),
+        "auto" | "" => torno_ui_text::tr("prefs.graphics_api_auto").to_string(),
         "dx12" => "Direct3D 12".into(),
         "vulkan" => "Vulkan".into(),
         "gl" => "OpenGL".into(),
@@ -2543,12 +2543,12 @@ pub const WAYLAND_DROP_ISSUE: &str = "https://github.com/rust-windowing/winit/is
 #[cfg(target_os = "linux")]
 fn window_system_row(app: &mut SolveApp, ui: &mut egui::Ui, label_width: f32) {
     let t = Tokens::get();
-    let label = |id: &str| solidcraft_ui_text::tr(&format!("ui.window_system_{id}")).to_string();
+    let label = |id: &str| torno_ui_text::tr(&format!("ui.window_system_{id}")).to_string();
     let labels: Vec<_> = WINDOW_SYSTEMS.iter().copied().map(label).collect();
     let labels: Vec<_> = labels.iter().map(String::as_str).collect();
     let now = app.services.window_system.map(label);
     let text = match &now {
-        Some(now) => solidcraft_ui_text::format("settings.window_system_note_now", &[("now", now)]),
+        Some(now) => torno_ui_text::format("settings.window_system_note_now", &[("now", now)]),
         None => app.tr("settings.msaa_applies_on_restart").to_string(),
     };
     let row_width = (label_width + t.space_14 + t.space_24 * 10.0).min(ui.available_width());
@@ -2627,9 +2627,9 @@ fn save_graphics_backend(app: &SolveApp, backend: &str) -> Result<(), String> {
         } else {
             graphics["backend_trial"] = json!({"previous":previous,"requested":backend,"started":false});
         }
-        solidcraft_engine::io::safe_write::write_atomic(path, graphics.to_string().as_bytes(), false).map_err(|error| error.to_string())
+        torno_engine::io::safe_write::write_atomic(path, graphics.to_string().as_bytes(), false).map_err(|error| error.to_string())
     })();
-    result.map_err(|error: String| solidcraft_ui_text::format("prefs.graphics_api_save_failed", &[("error", &error)]))
+    result.map_err(|error: String| torno_ui_text::format("prefs.graphics_api_save_failed", &[("error", &error)]))
 }
 
 /// Select the graphics API for the next launch without a terminal or environment override.
@@ -2670,7 +2670,7 @@ fn save_graphics(app: &SolveApp) {
             graphics["msaa"] = json!(app.preferences.msaa);
             graphics["window_system"] = json!(app.preferences.window_system);
             graphics["adapter"] = json!(app.preferences.graphics_adapter);
-            solidcraft_engine::io::safe_write::write_atomic(path, graphics.to_string().as_bytes(), false).map_err(|error| error.to_string())
+            torno_engine::io::safe_write::write_atomic(path, graphics.to_string().as_bytes(), false).map_err(|error| error.to_string())
         })();
         if let Err(error) = result {
             log::warn!("graphics preferences were not saved: {error}");
@@ -2698,7 +2698,7 @@ pub fn check_msaa(app: &mut SolveApp, requested: u32) {
     app.settings_reset.push(SettingReset::Msaa { requested, reset, supported });
 }
 
-/// A setting put back at start because it would keep SolidCraft from starting.
+/// A setting put back at start because it would keep Torno from starting.
 #[derive(Clone, Debug, PartialEq)]
 pub enum SettingReset {
     /// Anti-aliasing samples the graphics device can't render with.
@@ -2710,9 +2710,9 @@ impl SettingReset {
     pub fn message(&self) -> String {
         match self {
             SettingReset::Msaa { requested, reset, supported } => {
-                let setting = format!("{} › {}", solidcraft_ui_text::tr("ui.graphics"), solidcraft_ui_text::tr("ui.anti_aliasing"));
+                let setting = format!("{} › {}", torno_ui_text::tr("ui.graphics"), torno_ui_text::tr("ui.anti_aliasing"));
                 let supported = supported.iter().map(|n| format!("{n}")).collect::<Vec<_>>().join("×, ") + "×";
-                solidcraft_ui_text::format(
+                torno_ui_text::format(
                     "settings.msaa_reset",
                     &[("setting", &setting), ("requested", &requested.to_string()), ("reset", &reset.to_string()), ("supported", &supported)],
                 )
@@ -2780,10 +2780,10 @@ pub fn show(app: &mut SolveApp, ctx: &egui::Context) {
             ok: "OK",
             cancel: "Cancel",
             apply: "Apply",
-            search: solidcraft_ui_text::tr("prefs.search"),
-            no_results: solidcraft_ui_text::tr("prefs.search_empty"),
-            restore_defaults: solidcraft_ui_text::tr("prefs.restore_page_defaults"),
-            restore_defaults_hint: solidcraft_ui_text::tr(if layout_page {
+            search: torno_ui_text::tr("prefs.search"),
+            no_results: torno_ui_text::tr("prefs.search_empty"),
+            restore_defaults: torno_ui_text::tr("prefs.restore_page_defaults"),
+            restore_defaults_hint: torno_ui_text::tr(if layout_page {
                 "ui.panel_layout.page_defaults_hint"
             } else {
                 "ui.reset_the_settings_on_this_page"
@@ -2835,7 +2835,7 @@ impl prefs_window::Host for SolveApp {
     /// The panel layout goes back first, through the same transaction as its commands; only when
     /// that succeeds do the other settings.
     fn restore(&mut self, snapshot: &Snapshot) -> Result<(), String> {
-        crate::panel_runtime::restore_preferences(self, snapshot.panel_layout.clone()).map_err(solidcraft_engine::panels::commands::error_text)?;
+        crate::panel_runtime::restore_preferences(self, snapshot.panel_layout.clone()).map_err(torno_engine::panels::commands::error_text)?;
         if let Some(deferred) = &snapshot.panel_layout_deferred {
             self.panel_layout_preferences.clone_from(deferred);
         }
@@ -2848,7 +2848,7 @@ impl prefs_window::Host for SolveApp {
     }
     /// The shared panel layout switches on or off only on Apply.
     fn apply(&mut self) -> Result<(), String> {
-        crate::panel_runtime::sync_production_setting(self).map_err(solidcraft_engine::panels::commands::error_text)
+        crate::panel_runtime::sync_production_setting(self).map_err(torno_engine::panels::commands::error_text)
     }
     fn keys_captured(&self) -> bool {
         crate::keymap::capturing(self)
@@ -2875,7 +2875,7 @@ impl prefs_window::Host for SolveApp {
 
 /// The default orientation changed: the view turns to match.
 fn up_axis_changed(app: &mut SolveApp) {
-    use solidcraft_viewport::UpAxis;
+    use torno_viewport::UpAxis;
     app.prefs_window.applied_up = Some(app.preferences.up_axis.clone());
     let up = if app.preferences.up_axis.eq_ignore_ascii_case("y") { UpAxis::Y } else { UpAxis::Z };
     if app.ui.up_axis != up || app.cam.up != up {
@@ -3022,7 +3022,7 @@ fn hint_under_controls(ui: &mut egui::Ui, text: &str, key: &str) {
 /// Where the motion that drives view axis `axis` sits, as a share of its full travel (calibrated
 /// when the device has a calibration, else the raw reading over full scale), and the share of that
 /// travel which reads as no motion on each side, for the live meter in its row.
-fn axis_meter(calibration: Option<&solidcraft_space_mouse::Calibration>, raw: [i16; 6], source: [usize; 6], axis: usize) -> (f32, [f32; 2]) {
+fn axis_meter(calibration: Option<&torno_space_mouse::Calibration>, raw: [i16; 6], source: [usize; 6], axis: usize) -> (f32, [f32; 2]) {
     let from = source.get(axis).copied().unwrap_or(axis);
     match calibration {
         Some(calibration) => {
@@ -3086,7 +3086,7 @@ fn picture_and_boat(
     let mut boat_and_reset = |ui: &mut egui::Ui| {
         ui.vertical(|ui| {
             crate::test_boat::show(ui, boat, motion, free_orbit, egui::vec2(width.max(0.0), BOAT_HEIGHT));
-            if ui_kit::button(ui, solidcraft_ui_text::tr("ui.3d_mouse_reset_view"), ui_kit::Button::Normal).clicked() {
+            if ui_kit::button(ui, torno_ui_text::tr("ui.3d_mouse_reset_view"), ui_kit::Button::Normal).clicked() {
                 crate::test_boat::reset(boat);
             }
         });
@@ -3111,7 +3111,7 @@ fn picture_and_boat(
 fn space_mouse_buttons(app: &mut SolveApp, ui: &mut egui::Ui) {
     let Some(device) = app.space_mouse.device.clone() else {
         ui_kit::settings_form(ui, FORM_LABEL_WIDTH, |ui| {
-            hint_under_controls(ui, solidcraft_ui_text::tr("ui.3d_mouse_buttons_no_device"), "space_mouse_buttons");
+            hint_under_controls(ui, torno_ui_text::tr("ui.3d_mouse_buttons_no_device"), "space_mouse_buttons");
         });
         return;
     };
@@ -3121,9 +3121,9 @@ fn space_mouse_buttons(app: &mut SolveApp, ui: &mut egui::Ui) {
     numbers.extend((1..=32).filter(|&number| app.space_mouse.seen & bit(number) != 0));
     let mut changed = false;
     ui_kit::settings_form(ui, FORM_LABEL_WIDTH, |ui| {
-        hint_under_controls(ui, solidcraft_ui_text::tr("ui.3d_mouse_buttons_hint"), "space_mouse_buttons");
+        hint_under_controls(ui, torno_ui_text::tr("ui.3d_mouse_buttons_hint"), "space_mouse_buttons");
         for number in numbers {
-            let mut name = solidcraft_ui_text::format("ui.3d_mouse_button", &[("number", &number.to_string())]);
+            let mut name = torno_ui_text::format("ui.3d_mouse_button", &[("number", &number.to_string())]);
             if app.space_mouse.buttons & bit(number) != 0 {
                 name.push_str("  ●");
             }
@@ -3143,7 +3143,7 @@ fn space_mouse_buttons(app: &mut SolveApp, ui: &mut egui::Ui) {
     if app.preferences.space_mouse_buttons.contains_key(&device) {
         ui_kit::settings_form(ui, FORM_LABEL_WIDTH, |ui| {
             ui_kit::row(ui, "", |ui| {
-                if ui_kit::button(ui, solidcraft_ui_text::tr("ui.3d_mouse_buttons_reset"), ui_kit::Button::Normal).clicked() {
+                if ui_kit::button(ui, torno_ui_text::tr("ui.3d_mouse_buttons_reset"), ui_kit::Button::Normal).clicked() {
                     app.preferences.space_mouse_buttons.remove(&device);
                 }
             });
@@ -3155,8 +3155,8 @@ fn space_mouse_buttons(app: &mut SolveApp, ui: &mut egui::Ui) {
 fn button_job_label(app: &SolveApp, job: Option<&crate::space_mouse::ButtonJob>) -> String {
     use crate::space_mouse::{ButtonJob, ButtonKey};
     match job {
-        None => solidcraft_ui_text::tr("ui.3d_mouse_button_nothing").to_string(),
-        Some(ButtonJob::Settings) => solidcraft_ui_text::tr("ui.3d_mouse_button_settings").to_string(),
+        None => torno_ui_text::tr("ui.3d_mouse_button_nothing").to_string(),
+        Some(ButtonJob::Settings) => torno_ui_text::tr("ui.3d_mouse_button_settings").to_string(),
         Some(ButtonJob::View(view)) => {
             let mut name = view.clone();
             if let Some(first) = name.get_mut(0..1) {
@@ -3171,7 +3171,7 @@ fn button_job_label(app: &SolveApp, job: Option<&crate::space_mouse::ButtonJob>)
             ButtonKey::Alt => "Alt",
         }
         .to_string(),
-        Some(ButtonJob::Command(id)) => solidcraft_engine::find_command(id).map_or_else(|| id.clone(), |c| app.tr_label(c.label).to_string()),
+        Some(ButtonJob::Command(id)) => torno_engine::find_command(id).map_or_else(|| id.clone(), |c| app.tr_label(c.label).to_string()),
     }
 }
 
@@ -3198,7 +3198,7 @@ fn button_job_picker(
     use crate::space_mouse::{ButtonJob, ButtonKey};
     let views = ["home", "fit", "top", "front", "right", "left", "back", "bottom"].map(|view| ButtonJob::View(view.into()));
     let keys = [ButtonKey::Esc, ButtonKey::Shift, ButtonKey::Ctrl, ButtonKey::Alt].map(ButtonJob::Key);
-    let commands = solidcraft_engine::command_specs().into_iter().map(|spec| ButtonJob::Command(spec.id.into()));
+    let commands = torno_engine::command_specs().into_iter().map(|spec| ButtonJob::Command(spec.id.into()));
     let jobs: Vec<Option<ButtonJob>> =
         [None, Some(ButtonJob::Settings)].into_iter().chain(views.into_iter().chain(keys).chain(commands).map(Some)).collect();
     let entries: Vec<(String, String)> = jobs.iter().map(|job| (button_job_value(job.as_ref()), button_job_label(app, job.as_ref()))).collect();
@@ -3377,7 +3377,7 @@ fn themes_that_read<'de, D: serde::Deserializer<'de>>(saved: D) -> Result<Vec<cr
 /// format from another release) is dropped on its own, with a log line, not with all the others.
 fn calibrations_that_read<'de, D: serde::Deserializer<'de>>(
     saved: D,
-) -> Result<std::collections::BTreeMap<String, solidcraft_space_mouse::Calibration>, D::Error> {
+) -> Result<std::collections::BTreeMap<String, torno_space_mouse::Calibration>, D::Error> {
     let saved = std::collections::BTreeMap::<String, serde_json::Value>::deserialize(saved)?;
     Ok(saved
         .into_iter()
@@ -3431,8 +3431,7 @@ fn button_jobs_that_read<'de, D: serde::Deserializer<'de>>(
 /// Every theme the Theme list offers, as (id, name): the modes, the built-in theme files, then
 /// the imported ones.
 fn theme_choices(app: &SolveApp) -> Vec<(String, String)> {
-    let modes =
-        THEMES.iter().filter(|(id, _)| *id != "system").map(|(id, label)| ((*id).to_string(), solidcraft_ui_text::tr_label(label).to_string()));
+    let modes = THEMES.iter().filter(|(id, _)| *id != "system").map(|(id, label)| ((*id).to_string(), torno_ui_text::tr_label(label).to_string()));
     let files = crate::theme_files::builtin().iter().chain(&app.preferences.custom_themes).map(|t| (t.id.clone(), t.name.clone()));
     let mut choices: Vec<_> = modes.chain(files).collect();
     choices.sort_by_key(|(id, _)| match id.as_str() {
@@ -3660,9 +3659,9 @@ fn export_theme_file(file: &crate::theme_files::ThemeFile) -> serde_json::Value 
 fn effective_theme_options(
     prefs: &Prefs,
     file: &crate::theme_files::ThemeFile,
-) -> (BTreeMap<String, crate::theme_files::OptionValue>, Vec<solidcraft_engine::schema::ui_prefs::ThemeOptionNotice>) {
+) -> (BTreeMap<String, crate::theme_files::OptionValue>, Vec<torno_engine::schema::ui_prefs::ThemeOptionNotice>) {
     use crate::theme_files::{OptionKind, OptionNoticeKind, OptionValue};
-    use solidcraft_engine::schema::ui_prefs::{ThemeOptionNotice, ThemeOptionNoticeKind as Kind};
+    use torno_engine::schema::ui_prefs::{ThemeOptionNotice, ThemeOptionNoticeKind as Kind};
     let mut saved = BTreeMap::new();
     let mut notices = Vec::new();
     let definitions = crate::theme_files::ordered_options(file);
@@ -3707,7 +3706,7 @@ fn theme_option_text(text: &crate::theme_files::OptionText, language: &str, fall
     text.get(language).or_else(|| text.get("en")).map(String::as_str).unwrap_or(fallback).to_owned()
 }
 
-/// SolidCraft's name and help (message ids) for the theme system's standard option `id`.
+/// Torno's name and help (message ids) for the theme system's standard option `id`.
 fn standard_option_text(id: &str) -> Option<(&'static str, &'static str)> {
     match id {
         "blur" => Some(("prefs.theme_option_blur", "prefs.theme_option_blur_help")),
@@ -3735,7 +3734,7 @@ fn theme_option_rows<'a>(
     blur: crate::theme_options::Availability,
 ) -> Vec<ui_kit::ThemeOptionRow<'a>> {
     use crate::theme_options::{offered, provider};
-    let locale = solidcraft_ui_text::Locale::for_language(language);
+    let locale = torno_ui_text::Locale::for_language(language);
     offered(file, providers)
         .into_iter()
         .map(|definition| {
@@ -3760,17 +3759,17 @@ fn theme_option_rows<'a>(
         .collect()
 }
 
-/// What the theme options list says, from SolidCraft's catalogs.
+/// What the theme options list says, from Torno's catalogs.
 fn theme_options_text() -> ui_kit::ThemeOptionsText<'static> {
     ui_kit::ThemeOptionsText {
         count: |count| {
             let id = if count == 1 { "prefs.appearance.option_count_one" } else { "prefs.appearance.option_count" };
-            solidcraft_ui_text::format(id, &[("count", &count.to_string())])
+            torno_ui_text::format(id, &[("count", &count.to_string())])
         },
-        more: |count| solidcraft_ui_text::format("prefs.theme_options_more", &[("count", &count.to_string())]),
-        reset: solidcraft_ui_text::tr("prefs.theme_options_reset"),
-        blur_off: solidcraft_ui_text::tr("prefs.blur_off"),
-        blur_cost: solidcraft_ui_text::tr("prefs.blur_cost"),
+        more: |count| torno_ui_text::format("prefs.theme_options_more", &[("count", &count.to_string())]),
+        reset: torno_ui_text::tr("prefs.theme_options_reset"),
+        blur_off: torno_ui_text::tr("prefs.blur_off"),
+        blur_cost: torno_ui_text::tr("prefs.blur_cost"),
     }
 }
 
@@ -3783,11 +3782,7 @@ fn theme_options_row(app: &mut SolveApp, ui: &mut egui::Ui) {
         .iter()
         .map(|notice| {
             let raw = app.preferences.theme_options.get(&file.id).and_then(|v| v.get(&notice.id));
-            (
-                notice.id.clone(),
-                format!("{:?}:{raw:?}", notice.kind),
-                solidcraft_ui_text::format("prefs.theme_option_invalid", &[("option", &notice.id)]),
-            )
+            (notice.id.clone(), format!("{:?}:{raw:?}", notice.kind), torno_ui_text::format("prefs.theme_option_invalid", &[("option", &notice.id)]))
         })
         .collect();
     if file.needs_newer() {
@@ -3795,15 +3790,13 @@ fn theme_options_row(app: &mut SolveApp, ui: &mut egui::Ui) {
     }
     for (id, identity, text) in problems {
         let key = theme_notice_key(&file.id, &id, &identity);
-        if !app.blur_session.dismissed(key)
-            && ui_kit::theme_option_notice(ui, &id, &text, solidcraft_ui_text::tr("prefs.theme_notice_dismiss"), false).1
-        {
+        if !app.blur_session.dismissed(key) && ui_kit::theme_option_notice(ui, &id, &text, torno_ui_text::tr("prefs.theme_notice_dismiss"), false).1 {
             app.blur_session.dismiss(key);
         }
     }
     if app.blur_session.guard.notice {
         let (undo, dismiss) =
-            ui_kit::theme_option_notice(ui, "guard", app.tr("prefs.blur_guard"), solidcraft_ui_text::tr("prefs.theme_notice_dismiss"), true);
+            ui_kit::theme_option_notice(ui, "guard", app.tr("prefs.blur_guard"), torno_ui_text::tr("prefs.theme_notice_dismiss"), true);
         if undo {
             app.blur_session.guard.undo();
             ui.ctx().request_repaint();
@@ -3814,7 +3807,7 @@ fn theme_options_row(app: &mut SolveApp, ui: &mut egui::Ui) {
     }
     let rows = theme_option_rows(
         &file,
-        solidcraft_ui_text::effective_language(&app.preferences.language),
+        torno_ui_text::effective_language(&app.preferences.language),
         crate::theme_options::PROVIDERS,
         standard_option_text,
         availability,
@@ -3896,13 +3889,13 @@ fn merge_theme_options(prefs: &mut Prefs, followed: Option<&crate::theme_files::
     Ok(())
 }
 
-fn theme_options_reply(app: &SolveApp) -> solidcraft_engine::schema::ui_prefs::ThemeOptionsReply {
+fn theme_options_reply(app: &SolveApp) -> torno_engine::schema::ui_prefs::ThemeOptionsReply {
     use crate::theme_files::{OptionKind, OptionValue};
-    use solidcraft_engine::schema::ui_prefs::{ThemeChoice, ThemeOptionDef, ThemeOptionKind, ThemeOptionValue, ThemeOptionsReply};
+    use torno_engine::schema::ui_prefs::{ThemeChoice, ThemeOptionDef, ThemeOptionKind, ThemeOptionValue, ThemeOptionsReply};
     let Some(file) = active_theme_file(app) else { return ThemeOptionsReply::default() };
     let text = |texts: &crate::theme_files::OptionText, fallback: &str| {
         texts
-            .get(solidcraft_ui_text::effective_language(&app.preferences.language))
+            .get(torno_ui_text::effective_language(&app.preferences.language))
             .or_else(|| texts.get("en"))
             .map(String::as_str)
             .unwrap_or(fallback)
@@ -3963,8 +3956,8 @@ fn theme_file(app: &SolveApp, id: &str, system_dark: bool) -> serde_json::Value 
     let id = if id == "system" { theme_picker::slot_id(&app.preferences, system_dark) } else { id };
     match find(id, &app.preferences.custom_themes) {
         Some(f) => export_theme_file(f),
-        None if id == "dark" => export("Dark", Base::Dark, &solidcraft_theme::Tokens::dark(), None),
-        None => export("Light", Base::Light, &solidcraft_theme::Tokens::light(), None),
+        None if id == "dark" => export("Dark", Base::Dark, &torno_theme::Tokens::dark(), None),
+        None => export("Light", Base::Light, &torno_theme::Tokens::light(), None),
     }
 }
 
@@ -4039,9 +4032,9 @@ pub(crate) fn migrate_gruvbox(p: &mut Prefs) {
 fn limit_disabled_plugins(mut p: Prefs) -> Prefs {
     // The file size limits, likewise, are brought into range (#4086).
     let limits = file_limits(&p);
-    let mb = solidcraft_engine::io::limits::MB;
+    let mb = torno_engine::io::limits::MB;
     (p.max_step_file_mb, p.max_design_file_mb) =
-        if solidcraft_engine::io::limits::ADJUSTABLE { (limits.step / mb, limits.design / mb) } else { (DEFAULT_STEP_MB, DEFAULT_DESIGN_MB) };
+        if torno_engine::io::limits::ADJUSTABLE { (limits.step / mb, limits.design / mb) } else { (DEFAULT_STEP_MB, DEFAULT_DESIGN_MB) };
     // A hand-edited largest sketch out of range reads as the default (#10874).
     if !accepted::max_sketch_points(&p) {
         p.max_sketch_points = Prefs::default().max_sketch_points;
@@ -4130,7 +4123,7 @@ fn prepare_preferences(
     }
     // Saved preferences read an unknown mode as the default; asked for here, it is an error.
     if let Some(v) = p.get("color_vision")
-        && v.as_str().and_then(solidcraft_theme::ColorVision::from_id).is_none()
+        && v.as_str().and_then(torno_theme::ColorVision::from_id).is_none()
     {
         return Err("`color_vision` must be off, protan, deutan or tritan".into());
     }
@@ -4140,7 +4133,7 @@ fn prepare_preferences(
         return Err("`viewport_theme` must be theme, light or dark".into());
     }
     if let Some(v) = p.get("validation")
-        && v.as_str().and_then(solidcraft_engine::kernel::Validation::parse).is_none()
+        && v.as_str().and_then(torno_engine::kernel::Validation::parse).is_none()
     {
         return Err("`validation` must be each_step, each_feature or off".into());
     }
@@ -4210,10 +4203,10 @@ fn prepare_preferences(
         }
         crate::theme_files::follow_path(&new.theme_follow)?;
     }
-    if new.language != solidcraft_ui_text::SYSTEM && !solidcraft_ui_text::is_supported(&new.language) {
+    if new.language != torno_ui_text::SYSTEM && !torno_ui_text::is_supported(&new.language) {
         return Err(format!(
             "`language` must be `{}` or one of: {}",
-            solidcraft_ui_text::SYSTEM,
+            torno_ui_text::SYSTEM,
             crate::i18n::LOCALES.iter().map(|locale| locale.id).collect::<Vec<_>>().join(", ")
         ));
     }
@@ -4224,18 +4217,16 @@ fn prepare_preferences(
         return Err(format!("`disabled_plugins` must be at most {} ids of lowercase letters, digits and hyphens", crate::plugins::MAX_DISABLED));
     }
     if new.max_step_file_mb != app.preferences.max_step_file_mb || new.max_design_file_mb != app.preferences.max_design_file_mb {
-        let mb = solidcraft_engine::io::limits::MB;
-        let wanted = solidcraft_engine::io::limits::FileLimits {
-            step: new.max_step_file_mb.saturating_mul(mb),
-            design: new.max_design_file_mb.saturating_mul(mb),
-        };
-        if !solidcraft_engine::io::limits::ADJUSTABLE && wanted != solidcraft_engine::io::limits::FileLimits::DEFAULT {
+        let mb = torno_engine::io::limits::MB;
+        let wanted =
+            torno_engine::io::limits::FileLimits { step: new.max_step_file_mb.saturating_mul(mb), design: new.max_design_file_mb.saturating_mul(mb) };
+        if !torno_engine::io::limits::ADJUSTABLE && wanted != torno_engine::io::limits::FileLimits::DEFAULT {
             return Err("`max_step_file_mb` and `max_design_file_mb` can't change in the web app: a browser tab can't hold larger files".into());
         }
         wanted.validate().map_err(|e| {
             format!(
                 "`max_step_file_mb` must be {DEFAULT_STEP_MB}…{max} and `max_design_file_mb` {DEFAULT_DESIGN_MB}…{max}: {e}",
-                max = solidcraft_engine::io::limits::ceiling() / mb
+                max = torno_engine::io::limits::ceiling() / mb
             )
         })?;
     }
@@ -4262,10 +4253,10 @@ fn prepare_preferences(
         return Err("`dimension_step_mm` must be 0.001…1000 and `dimension_step_deg` 0.001…180".into());
     }
     if !accepted::max_sketch_points(&new) {
-        use solidcraft_engine::sketch::limits::{CEILING_POINTS, DEFAULT_POINTS};
+        use torno_engine::sketch::limits::{CEILING_POINTS, DEFAULT_POINTS};
         return Err(format!("`max_sketch_points` must be {DEFAULT_POINTS}…{CEILING_POINTS}"));
     }
-    if solidcraft_engine::doc::display_quality::DisplayQuality::parse(&new.display_quality).is_none() {
+    if torno_engine::doc::display_quality::DisplayQuality::parse(&new.display_quality).is_none() {
         return Err("`display_quality` must be coarse, normal, fine or ultra".into());
     }
     if !SUPERSAMPLING.contains(&new.supersampling) {
@@ -4336,7 +4327,7 @@ pub(crate) fn reveal_preference(h: &mut crate::scenario::Harness, handle: &str) 
         // Match the tolerance used by the colour-vision sample geometry checks.
         let visible = crate::scenario::rect_of(handle)
             .map(|r| page.expand(1.0).contains_rect(r))
-            .unwrap_or_else(|| crate::scenario::handle_at(handle).is_some_and(|p| page.shrink(solidcraft_theme::Tokens::get().space_16).contains(p)));
+            .unwrap_or_else(|| crate::scenario::handle_at(handle).is_some_and(|p| page.shrink(torno_theme::Tokens::get().space_16).contains(p)));
         if visible {
             return;
         }
@@ -4429,7 +4420,7 @@ mod tests {
         let out = h.call("ui.prefs", json!({}));
         assert_eq!(out["result"]["theme_day"], "akari");
         assert_eq!(out["result"]["theme_night"], "onyx");
-        let mut restored = SolveApp::new(solidcraft_engine::Session::default(), Default::default());
+        let mut restored = SolveApp::new(torno_engine::Session::default(), Default::default());
         restored.load_prefs(&h.app.prefs());
         assert_eq!((restored.preferences.theme_day.as_str(), restored.preferences.theme_night.as_str()), ("akari", "onyx"));
         h.call("ui.prefs", json!({"theme_day":"clay", "theme_night":"clay-dark", "open":"Appearance"}));
@@ -4531,7 +4522,7 @@ mod tests {
 
     #[test]
     fn theme_mode_switches_preserve_the_effective_theme_and_fill_only_the_aimed_slot() {
-        let mut app = SolveApp::new(solidcraft_engine::Session::default(), Default::default());
+        let mut app = SolveApp::new(torno_engine::Session::default(), Default::default());
         select_theme(&mut app, "onyx");
         theme_picker::switch_mode(&mut app, true, true);
         assert_eq!((&app.preferences.theme[..], &app.preferences.theme_day[..], &app.preferences.theme_night[..]), ("system", "light", "onyx"));
@@ -4553,7 +4544,7 @@ mod tests {
 
     #[test]
     fn theme_filter_counts_ignore_only_their_own_group() {
-        let mut app = SolveApp::new(solidcraft_engine::Session::default(), Default::default());
+        let mut app = SolveApp::new(torno_engine::Session::default(), Default::default());
         let file = crate::theme_files::from_value(&json!({"format":"solidcraft-theme/1", "name":"Imported maximal", "base":"dark", "colors":{"dialog_footer":"#000000", "form_ink":"#ffffff"}})).unwrap();
         crate::theme_files::add(&mut app.preferences.custom_themes, file).unwrap();
         let entries = theme_picker::entries(&app);
@@ -4613,13 +4604,13 @@ mod tests {
         h.frames(1);
         h.call("ui.prefs", json!({"profile_operations": true}));
         h.frames(2);
-        assert!(solidcraft_engine::profile::enabled());
+        assert!(torno_engine::profile::enabled());
         h.app.session.execute("diagnostics.profile", &json!({"enabled": false})).unwrap();
         h.frames(2);
-        assert!(!solidcraft_engine::profile::enabled(), "the command's choice stands");
+        assert!(!torno_engine::profile::enabled(), "the command's choice stands");
         h.call("ui.prefs", json!({"profile_operations": false}));
         h.frames(2);
-        assert!(!solidcraft_engine::profile::enabled());
+        assert!(!torno_engine::profile::enabled());
     }
 
     /// Preferences saved with a setting this version no longer has still load, every other
@@ -4646,11 +4637,11 @@ mod tests {
     #[test]
     fn invert_navigator_arrows_defaults_off_persists_and_resets() {
         assert!(!Prefs::default().invert_navigator_arrows);
-        let mut app = SolveApp::new(solidcraft_engine::Session::default(), Default::default());
+        let mut app = SolveApp::new(torno_engine::Session::default(), Default::default());
         assert!(!app.preferences.invert_navigator_arrows);
         app.preferences.invert_navigator_arrows = true;
         assert_eq!(serde_json::to_value(&app.preferences).unwrap()["invert_navigator_arrows"], true);
-        let mut restored = SolveApp::new(solidcraft_engine::Session::default(), Default::default());
+        let mut restored = SolveApp::new(torno_engine::Session::default(), Default::default());
         restored.load_prefs(&app.prefs());
         assert!(restored.preferences.invert_navigator_arrows);
         super::reset_preferences(&mut app.preferences, super::PAGE_NAVIGATION);
@@ -4662,11 +4653,11 @@ mod tests {
     #[test]
     fn invert_curved_roll_arrows_defaults_off_persists_and_resets() {
         assert!(!Prefs::default().invert_curved_roll_arrows);
-        let mut app = SolveApp::new(solidcraft_engine::Session::default(), Default::default());
+        let mut app = SolveApp::new(torno_engine::Session::default(), Default::default());
         assert!(!app.preferences.invert_curved_roll_arrows);
         app.preferences.invert_curved_roll_arrows = true;
         assert_eq!(serde_json::to_value(&app.preferences).unwrap()["invert_curved_roll_arrows"], true);
-        let mut restored = SolveApp::new(solidcraft_engine::Session::default(), Default::default());
+        let mut restored = SolveApp::new(torno_engine::Session::default(), Default::default());
         restored.load_prefs(&app.prefs());
         assert!(restored.preferences.invert_curved_roll_arrows);
         super::reset_preferences(&mut app.preferences, super::PAGE_NAVIGATION);
@@ -4680,7 +4671,7 @@ mod tests {
         crate::i18n::install();
         use serde_json::json;
         assert!(!crate::prefs::Prefs::default().keep_unsaved_in_browser);
-        let label = solidcraft_ui_text::tr("prefs.keep_unsaved_in_browser").to_string();
+        let label = torno_ui_text::tr("prefs.keep_unsaved_in_browser").to_string();
         let mut h = crate::scenario::Harness::new();
         h.call("ui.prefs", json!({"open":"General"}));
         h.frames(5);
@@ -4690,7 +4681,7 @@ mod tests {
         h.call("ui.prefs", json!({"open":"General"}));
         h.frames(5);
         assert!(h.widget(&label).is_some(), "the web app offers it beside the other saving options");
-        let ask = solidcraft_ui_text::tr("prefs.keep_unsaved_also_asks").to_string();
+        let ask = torno_ui_text::tr("prefs.keep_unsaved_also_asks").to_string();
         assert!(h.widget(&ask).is_none(), "still asking only means something once work is kept");
         let reply = h.call("ui.prefs", json!({"keep_unsaved_in_browser": true}));
         assert_eq!(reply["ok"], true, "{reply}");
@@ -4707,7 +4698,7 @@ mod tests {
     #[test]
     fn trackpad_zoom_modifier_roundtrips_and_validates_control_values() {
         assert_eq!(Prefs::default().trackpad_zoom_modifier, TrackpadZoomModifier::Off);
-        let mut app = SolveApp::new(solidcraft_engine::Session::default(), Default::default());
+        let mut app = SolveApp::new(torno_engine::Session::default(), Default::default());
         for (id, value) in [
             ("cmd", TrackpadZoomModifier::Cmd),
             ("alt", TrackpadZoomModifier::Alt),
@@ -4719,7 +4710,7 @@ mod tests {
             let saved = serde_json::to_value(&app.preferences).unwrap();
             assert_eq!(saved["trackpad_zoom_modifier"], id);
             assert_eq!(lenient(&saved).trackpad_zoom_modifier, value);
-            let mut restored = SolveApp::new(solidcraft_engine::Session::default(), Default::default());
+            let mut restored = SolveApp::new(torno_engine::Session::default(), Default::default());
             restored.load_prefs(&app.prefs());
             assert_eq!(restored.preferences.trackpad_zoom_modifier, value);
         }
@@ -4739,12 +4730,12 @@ mod tests {
     #[test]
     fn command_dialog_value_memory_defaults_off_persists_and_resets() {
         assert!(!Prefs::default().remember_dialog_values);
-        let mut app = SolveApp::new(solidcraft_engine::Session::default(), Default::default());
+        let mut app = SolveApp::new(torno_engine::Session::default(), Default::default());
         assert!(!app.preferences.remember_dialog_values);
         app.preferences.remember_dialog_values = true;
         assert_eq!(serde_json::to_value(&app.preferences).unwrap()["remember_dialog_values"], true);
 
-        let mut restored = SolveApp::new(solidcraft_engine::Session::default(), Default::default());
+        let mut restored = SolveApp::new(torno_engine::Session::default(), Default::default());
         restored.load_prefs(&app.prefs());
         assert!(restored.preferences.remember_dialog_values);
         reset_preferences(&mut app.preferences, PAGE_TOOLS);
@@ -4958,7 +4949,7 @@ mod tests {
 
     #[test]
     fn navigation_bar_inspector_header_reserves_one_line_for_actions() {
-        let t = solidcraft_theme::Tokens::light();
+        let t = torno_theme::Tokens::light();
         for width in [0.0, 80.0, 200.0, 520.0, 640.0, 760.0, 880.0] {
             for remove_width in [75.0, 160.0] {
                 let bounds = egui::Rect::from_min_size(egui::pos2(10.0, 20.0), egui::vec2(width, t.control_height));
@@ -5065,7 +5056,7 @@ mod tests {
                 for _ in 0..2 {
                     let body = crate::scenario::rect_of("prefs:page_body").unwrap();
                     let window = crate::scenario::rect_of("prefs:window").unwrap();
-                    let t = solidcraft_theme::Tokens::get();
+                    let t = torno_theme::Tokens::get();
                     let inset = t.space_24 - t.space_2 + crate::ui_kit::navigation_popup_frame().stroke.width;
                     assert!((body.right() - (window.right() - inset)).abs() < 0.5, "{width}: {page}");
                     for key in sections {
@@ -5215,21 +5206,16 @@ mod tests {
     #[test]
     fn the_3d_mouse_section_stays_inside_the_panel_at_every_width() {
         for width in [420.0_f32, 560.0, 700.0, 900.0, 1200.0] {
-            let mut app = crate::SolveApp::new(solidcraft_engine::Session::default(), crate::Services::default());
+            let mut app = crate::SolveApp::new(torno_engine::Session::default(), crate::Services::default());
             app.space_mouse.device = Some("hid 046d:c62b".into());
             app.space_mouse.drivers = Some(crate::space_mouse::DriversPresent { spacenavd: true, direct: true, denied: false });
             app.preferences.space_mouse_in_view = true;
             // Calibrated, so the device's picture and the test model sit side by side where there is room.
-            let axes = std::array::from_fn(|source| solidcraft_space_mouse::AxisCalibration {
-                source,
-                reversed: false,
-                rest: 0,
-                dead_zone: 0,
-                full: [350; 2],
-            });
+            let axes =
+                std::array::from_fn(|source| torno_space_mouse::AxisCalibration { source, reversed: false, rest: 0, dead_zone: 0, full: [350; 2] });
             app.preferences.space_mouse_calibrations.insert(
                 "hid 046d:c62b".into(),
-                solidcraft_space_mouse::Calibration { dead_zone_share: 0.0, kind: solidcraft_space_mouse::Kind::ReturnToCenter, axes },
+                torno_space_mouse::Calibration { dead_zone_share: 0.0, kind: torno_space_mouse::Kind::ReturnToCenter, axes },
             );
             let ctx = crate::fonts::test_context();
             let panel = egui::Rect::from_min_size(egui::pos2(10.0, 10.0), egui::vec2(width, 1400.0));
@@ -5260,8 +5246,8 @@ mod tests {
     #[test]
     fn the_calibration_window_keeps_its_contents_inside() {
         for width in [360.0_f32, 520.0, 900.0] {
-            for kind in [solidcraft_space_mouse::Kind::ReturnToCenter, solidcraft_space_mouse::Kind::Trackball] {
-                let mut app = crate::SolveApp::new(solidcraft_engine::Session::default(), crate::Services::default());
+            for kind in [torno_space_mouse::Kind::ReturnToCenter, torno_space_mouse::Kind::Trackball] {
+                let mut app = crate::SolveApp::new(torno_engine::Session::default(), crate::Services::default());
                 app.space_mouse.device = Some("hid 046d:c62b".into());
                 crate::space_mouse_calibration::start(&mut app);
                 app.space_mouse.calibrating.as_mut().unwrap().1.choose(kind);
@@ -5295,7 +5281,7 @@ mod tests {
     #[test]
     fn preferred_units_update_only_a_blank_unsaved_design() {
         for design in ["new", "saved", "content"] {
-            let mut app = crate::SolveApp::new(solidcraft_engine::Session::default(), Default::default());
+            let mut app = crate::SolveApp::new(torno_engine::Session::default(), Default::default());
             match design {
                 "saved" => app.session.path = Some("empty.solidcraft".into()),
                 "content" => {
@@ -5336,7 +5322,7 @@ mod tests {
         assert!(waiting_for_a_record(Some(DriversPresent { spacenavd: false, direct: true, denied: false })), "a readable device, no record yet");
         assert!(waiting_for_a_record(Some(DriversPresent { spacenavd: true, direct: true, denied: false })));
         // The texts differ, and the first one is the Calibrate hint.
-        assert_ne!(solidcraft_ui_text::tr("ui.3d_mouse_none"), solidcraft_ui_text::tr("ui.3d_mouse_calibrate_wait"));
+        assert_ne!(torno_ui_text::tr("ui.3d_mouse_none"), torno_ui_text::tr("ui.3d_mouse_calibrate_wait"));
         // A confirmed device is neither (the status names it).
         let mut h = crate::scenario::Harness::new();
         h.app.home.open = false;
@@ -5357,7 +5343,7 @@ mod tests {
         h.app.space_mouse.device = None;
         crate::prefs::open_at(&mut h.app, crate::prefs::PAGE_MOUSE3D);
         h.frames(5);
-        assert!(solidcraft_ui_text::tr("ui.3d_mouse_calibrate_wait").starts_with("Move the 3D mouse"));
+        assert!(torno_ui_text::tr("ui.3d_mouse_calibrate_wait").starts_with("Move the 3D mouse"));
         crate::space_mouse_calibration::start(&mut h.app);
         h.frames(3);
         assert!(h.app.space_mouse.calibrating.is_none() && h.app.prefs_window.shell.open);
@@ -5436,8 +5422,8 @@ mod tests {
         assert_eq!(axis_meter(None, raw, source, 2), (175.0 / full, [0.0; 2]), "Zoom now shows Rotation X");
         assert_eq!(axis_meter(None, raw, source, 3).0, 0.0, "and the row that gave Rotation X up shows what it took in exchange");
         let axes =
-            std::array::from_fn(|source| solidcraft_space_mouse::AxisCalibration { source, reversed: false, rest: 0, dead_zone: 0, full: [350; 2] });
-        let calibration = solidcraft_space_mouse::Calibration { dead_zone_share: 0.2, kind: solidcraft_space_mouse::Kind::ReturnToCenter, axes };
+            std::array::from_fn(|source| torno_space_mouse::AxisCalibration { source, reversed: false, rest: 0, dead_zone: 0, full: [350; 2] });
+        let calibration = torno_space_mouse::Calibration { dead_zone_share: 0.2, kind: torno_space_mouse::Kind::ReturnToCenter, axes };
         assert_eq!(axis_meter(Some(&calibration), raw, source, 2), (0.5, [0.2; 2]), "calibrated: share of travel, with the dead zone");
     }
 
@@ -5447,8 +5433,8 @@ mod tests {
         let mut h = crate::scenario::Harness::new();
         h.app.home.open = false;
         let axes =
-            std::array::from_fn(|source| solidcraft_space_mouse::AxisCalibration { source, reversed: false, rest: 0, dead_zone: 0, full: [350; 2] });
-        let calibration = solidcraft_space_mouse::Calibration { dead_zone_share: 0.2, kind: solidcraft_space_mouse::Kind::ReturnToCenter, axes };
+            std::array::from_fn(|source| torno_space_mouse::AxisCalibration { source, reversed: false, rest: 0, dead_zone: 0, full: [350; 2] });
+        let calibration = torno_space_mouse::Calibration { dead_zone_share: 0.2, kind: torno_space_mouse::Kind::ReturnToCenter, axes };
         let p = &mut h.app.preferences;
         p.space_mouse_calibrations.insert("hid 046d:c62b".into(), calibration);
         p.space_mouse_buttons.insert("hid 046d:c62b".into(), [(1, crate::space_mouse::ButtonJob::Settings)].into());
@@ -5512,7 +5498,7 @@ mod tests {
             assert!(!old.zoom_stop_at_model && !old.space_mouse_model_pivot, "older saved preferences keep legacy navigation");
             assert_eq!(old.zoom_to_cursor, to_cursor);
         }
-        let mut app = SolveApp::new(solidcraft_engine::Session::default(), Default::default());
+        let mut app = SolveApp::new(torno_engine::Session::default(), Default::default());
         assert!(!app.preferences.zoom_stop_at_model && !app.preferences.space_mouse_model_pivot);
         let enabled = json!({"open": "Navigation", "zoom_stop_at_model": true, "space_mouse_model_pivot": true});
         control(&mut app, &enabled).unwrap();
@@ -5522,7 +5508,7 @@ mod tests {
         assert_eq!(reply["zoom_stop_at_model"], true);
         assert_eq!(reply["space_mouse_model_pivot"], true);
         control(&mut app, &json!({"button": "apply"})).unwrap();
-        let mut other = SolveApp::new(solidcraft_engine::Session::default(), Default::default());
+        let mut other = SolveApp::new(torno_engine::Session::default(), Default::default());
         other.load_prefs(&app.prefs());
         assert!(other.preferences.zoom_stop_at_model && other.preferences.space_mouse_model_pivot);
         assert!(other.preferences.zoom_to_cursor, "enabling model navigation leaves wheel zoom alone");
@@ -5543,8 +5529,8 @@ mod tests {
         h.app.home.open = false;
         h.app.space_mouse.device = device.map(str::to_owned);
         let axes =
-            std::array::from_fn(|source| solidcraft_space_mouse::AxisCalibration { source, reversed: false, rest: 0, dead_zone: 0, full: [350; 2] });
-        let calibration = solidcraft_space_mouse::Calibration { dead_zone_share: 0.2, kind: solidcraft_space_mouse::Kind::ReturnToCenter, axes };
+            std::array::from_fn(|source| torno_space_mouse::AxisCalibration { source, reversed: false, rest: 0, dead_zone: 0, full: [350; 2] });
+        let calibration = torno_space_mouse::Calibration { dead_zone_share: 0.2, kind: torno_space_mouse::Kind::ReturnToCenter, axes };
         let p = &mut h.app.preferences;
         p.space_mouse_calibrations.insert("hid 046d:c62b".into(), calibration);
         p.space_mouse_driver = SpaceMouseDriver::Direct;
@@ -5584,9 +5570,9 @@ mod tests {
 
     #[test]
     fn mouse3d_device_card_uses_content_height_and_paints_status_and_actions_at_its_top() {
-        let previous = solidcraft_theme::is_dark();
+        let previous = torno_theme::is_dark();
         for dark in [false, true] {
-            solidcraft_theme::set_dark(dark);
+            torno_theme::set_dark(dark);
             let t = Tokens::get();
             for width in [280.0, 646.0] {
                 for (drivers, status_id) in [
@@ -5597,7 +5583,7 @@ mod tests {
                     let mut heights = Vec::new();
                     for viewport_height in [900.0, 1800.0] {
                         let ctx = crate::fonts::test_context();
-                        let mut app = SolveApp::new(solidcraft_engine::Session::default(), Default::default());
+                        let mut app = SolveApp::new(torno_engine::Session::default(), Default::default());
                         app.preferences.language = "en".into();
                         app.space_mouse.drivers = drivers;
                         let before = app.preferences.clone();
@@ -5646,7 +5632,7 @@ mod tests {
                 }
             }
         }
-        solidcraft_theme::set_dark(previous);
+        torno_theme::set_dark(previous);
     }
 
     #[test]
@@ -5670,10 +5656,10 @@ mod tests {
     #[test]
     fn the_restore_question_is_short_and_says_what_stays() {
         crate::i18n::install();
-        let english = solidcraft_ui_text::tr("ui.3d_mouse_restore_ask");
+        let english = torno_ui_text::tr("ui.3d_mouse_restore_ask");
         assert_eq!(english, "Set the 3D mouse settings back to their defaults? Your calibration and button mapping stay.");
         for catalog in crate::i18n::LOCALES {
-            let text = solidcraft_ui_text::Locale::for_language(catalog.id).text("ui.3d_mouse_restore_ask");
+            let text = torno_ui_text::Locale::for_language(catalog.id).text("ui.3d_mouse_restore_ask");
             assert!(text.chars().count() > 20 && text.chars().count() < 140 && text != "ui.3d_mouse_restore_ask", "{}", catalog.id);
         }
     }
@@ -5800,10 +5786,10 @@ mod tests {
     fn preferences_says_when_the_daemon_is_read_instead_of_the_device_asked_for() {
         crate::i18n::install();
         use SpaceMouseDriver::{Automatic, Direct, Spacenavd};
-        let note = solidcraft_ui_text::tr("ui.3d_mouse_driver_fallback").to_string();
+        let note = torno_ui_text::tr("ui.3d_mouse_driver_fallback").to_string();
         assert!(note.contains("spacenavd") && note.contains("could not be opened"));
         for catalog in crate::i18n::LOCALES {
-            let text = solidcraft_ui_text::Locale::for_language(catalog.id).text("ui.3d_mouse_driver_fallback");
+            let text = torno_ui_text::Locale::for_language(catalog.id).text("ui.3d_mouse_driver_fallback");
             assert!(text.chars().count() > 20 && text != "ui.3d_mouse_driver_fallback", "{}", catalog.id);
         }
         // (driver, device being read, device present) and whether the note shows.
@@ -5844,16 +5830,11 @@ mod tests {
             h.app.home.open = false;
             h.app.preferences.language = catalog.id.to_string();
             h.app.space_mouse.device = Some("hid 046d:c62b".into());
-            let axes = std::array::from_fn(|source| solidcraft_space_mouse::AxisCalibration {
-                source,
-                reversed: false,
-                rest: 0,
-                dead_zone: 0,
-                full: [350; 2],
-            });
+            let axes =
+                std::array::from_fn(|source| torno_space_mouse::AxisCalibration { source, reversed: false, rest: 0, dead_zone: 0, full: [350; 2] });
             h.app.preferences.space_mouse_calibrations.insert(
                 "hid 046d:c62b".into(),
-                solidcraft_space_mouse::Calibration { dead_zone_share: 0.0, kind: solidcraft_space_mouse::Kind::ReturnToCenter, axes },
+                torno_space_mouse::Calibration { dead_zone_share: 0.0, kind: torno_space_mouse::Kind::ReturnToCenter, axes },
             );
             h.app.preferences.space_mouse_buttons.insert("hid 046d:c62b".into(), [(1, crate::space_mouse::ButtonJob::Settings)].into());
             // The axis assignment is changed, so its reset button is enabled and drawn.
@@ -5865,7 +5846,7 @@ mod tests {
             // The restore question is up, so its whole text can be checked too.
             h.app.space_mouse.restore_pending = true;
             // The frame's language is only set while it runs, so the texts come from the catalog itself.
-            let text = |key: &str| solidcraft_ui_text::Locale::for_language(catalog.id).text(key).to_string();
+            let text = |key: &str| torno_ui_text::Locale::for_language(catalog.id).text(key).to_string();
             h.frames(30);
             let body = crate::scenario::rect_of("prefs:page_body").expect("the page body");
             // The question: all of it is laid out (its box is as tall as its wrapped text needs) and the
@@ -5873,7 +5854,7 @@ mod tests {
             let question = text("ui.3d_mouse_restore_ask");
             match crate::scenario::rect_of("dialog:hint:space_mouse_restore_ask") {
                 Some(note) => {
-                    let t = solidcraft_theme::Tokens::get();
+                    let t = torno_theme::Tokens::get();
                     let needed = h.ctx.fonts_mut(|fonts| {
                         fonts.layout(question.clone(), egui::FontId::proportional(t.font_small), egui::Color32::WHITE, note.width()).size().y
                     });
@@ -5917,12 +5898,12 @@ mod tests {
     fn the_offers_buttons_fit_the_narrowest_card_in_every_language() {
         let ctx = crate::fonts::test_context();
         ctx.run_ui(egui::RawInput::default(), |_| {}).textures_delta.clear();
-        let font = egui::FontId::proportional(solidcraft_theme::Tokens::get().font_label);
+        let font = egui::FontId::proportional(torno_theme::Tokens::get().font_label);
         let mut wide = Vec::new();
         for catalog in crate::i18n::LOCALES {
             use crate::space_mouse_offer::Action;
             for key in [Action::Swap, Action::Calibrate, Action::Never, Action::Close].map(|action| action.label()) {
-                let label = solidcraft_ui_text::Locale::for_language(catalog.id).text(key).to_string();
+                let label = torno_ui_text::Locale::for_language(catalog.id).text(key).to_string();
                 let width = ctx.fonts_mut(|fonts| fonts.layout_no_wrap(label.clone(), font.clone(), egui::Color32::WHITE).size().x);
                 if width > 250.0 {
                     wide.push(format!("{} {key} \"{label}\" is {width:.0} px", catalog.id));
@@ -5947,7 +5928,7 @@ mod tests {
             let mut source = SAME_AXES;
             reassign(&mut source, 2, 1);
             let said = stories("en", mapping, source);
-            let say = |row: usize| solidcraft_ui_text::Locale::for_language("en").format(row_label(mapping, row), &[("n", &(row + 1).to_string())]);
+            let say = |row: usize| torno_ui_text::Locale::for_language("en").format(row_label(mapping, row), &[("n", &(row + 1).to_string())]);
             // Motion 1 is read by row 2 now, motion 2 by row 1; the others by their own rows.
             assert_eq!(said[1], say(2), "{mapping:?}");
             assert_eq!(said[2], say(1), "{mapping:?}");
@@ -5986,7 +5967,7 @@ mod tests {
         assert_ne!(motion_story(mapping, source, 1), motion_story(mapping, SAME_AXES, 1));
         // Not one motion per row: a motion nobody reads has no story.
         assert_eq!(motion_story(mapping, [0, 0, 0, 0, 0, 0], 3), None);
-        assert!(solidcraft_ui_text::tr("ui.3d_mouse_circles_help").contains("test model"));
+        assert!(torno_ui_text::tr("ui.3d_mouse_circles_help").contains("test model"));
     }
 
     /// The "wiggle it" hint is a visible line as well as a tooltip, only while a reader is reachable and
@@ -5994,8 +5975,8 @@ mod tests {
     #[test]
     fn a_visible_line_says_what_the_3d_mouse_waits_for() {
         crate::i18n::install();
-        assert_eq!(solidcraft_ui_text::tr("ui.3d_mouse_waiting"), "Waiting for Movement");
-        assert_eq!(solidcraft_ui_text::tr("ui.3d_mouse_reset_view"), "Reset view");
+        assert_eq!(torno_ui_text::tr("ui.3d_mouse_waiting"), "Waiting for Movement");
+        assert_eq!(torno_ui_text::tr("ui.3d_mouse_reset_view"), "Reset view");
         let mut h = crate::scenario::Harness::new();
         h.app.home.open = false;
         h.app.space_mouse.device = None;
@@ -6005,7 +5986,7 @@ mod tests {
         h.frames(5);
         assert!(crate::scenario::rect_of("dialog:section:Device").is_some(), "the section is drawn with the kit's header");
         assert!(crate::scenario::rect_of("dialog:section:Device:count").is_none());
-        assert!(h.widget(solidcraft_ui_text::tr("ui.3d_mouse_calibrate_wait")).is_some());
+        assert!(h.widget(torno_ui_text::tr("ui.3d_mouse_calibrate_wait")).is_some());
     }
 
     /// The boat's Reset view puts the boat back and nothing else: calibration, sensitivity, axis
@@ -6027,7 +6008,7 @@ mod tests {
         );
         assert_eq!(h.app.cam, before.0, "the document's camera");
         assert_eq!(h.app.preferences, before.1, "every setting, calibration included");
-        assert_eq!(solidcraft_ui_text::tr("ui.3d_mouse_reset_view"), "Reset view");
+        assert_eq!(torno_ui_text::tr("ui.3d_mouse_reset_view"), "Reset view");
     }
 
     /// The "wiggle it" hint exists in every catalog and is a visible line while no device is confirmed,
@@ -6035,15 +6016,15 @@ mod tests {
     #[test]
     fn the_wiggle_hint_has_text_and_shows_until_a_device_is_confirmed() {
         crate::i18n::install();
-        assert_eq!(solidcraft_ui_text::tr("ui.3d_mouse_wiggle"), "If you have one plugged in, wiggle it.");
+        assert_eq!(torno_ui_text::tr("ui.3d_mouse_wiggle"), "If you have one plugged in, wiggle it.");
         for catalog in crate::i18n::LOCALES {
-            let text = solidcraft_ui_text::Locale::for_language(catalog.id).text("ui.3d_mouse_wiggle");
+            let text = torno_ui_text::Locale::for_language(catalog.id).text("ui.3d_mouse_wiggle");
             assert!(!text.is_empty() && text != "ui.3d_mouse_wiggle", "{}", catalog.id);
         }
         let mut h = changed_3d_mouse_settings(None);
         h.app.space_mouse.drivers = Some(crate::space_mouse::DriversPresent { spacenavd: true, direct: false, denied: false });
         h.frames(10);
-        assert!(h.widget(solidcraft_ui_text::tr("ui.3d_mouse_calibrate_wait")).is_some(), "the reader waits for a real record");
+        assert!(h.widget(torno_ui_text::tr("ui.3d_mouse_calibrate_wait")).is_some(), "the reader waits for a real record");
         h.app.space_mouse.device = Some("spacenavd".into());
         h.frames(10);
         assert!(crate::scenario::rect_of("prefs:space_mouse_status").is_none(), "confirmed: the real device replaces the waiting status");
@@ -6056,11 +6037,11 @@ mod tests {
         crate::i18n::install();
         for catalog in crate::i18n::LOCALES {
             for key in ["ui.3d_mouse_denied", "ui.3d_mouse_denied_short"] {
-                let text = solidcraft_ui_text::Locale::for_language(catalog.id).text(key);
+                let text = torno_ui_text::Locale::for_language(catalog.id).text(key);
                 assert!(text.chars().count() > 5 && text != key, "{} {key}", catalog.id);
             }
         }
-        assert!(solidcraft_ui_text::tr("ui.3d_mouse_denied").contains("udev"));
+        assert!(torno_ui_text::tr("ui.3d_mouse_denied").contains("udev"));
         let cases = [
             // (spacenavd there, device found, denied) and whether the denied line shows.
             (false, true, true, true),
@@ -6072,10 +6053,10 @@ mod tests {
             let mut h = changed_3d_mouse_settings(None);
             h.app.space_mouse.drivers = Some(crate::space_mouse::DriversPresent { spacenavd, direct, denied });
             h.frames(10);
-            let said = h.widget(solidcraft_ui_text::tr("ui.3d_mouse_denied_short")).is_some();
+            let said = h.widget(torno_ui_text::tr("ui.3d_mouse_denied_short")).is_some();
             assert_eq!(said, shown, "spacenavd {spacenavd}, found {direct}, denied {denied}");
             let wiggle = h
-                .widget(solidcraft_ui_text::tr(if super::waiting_for_a_record(h.app.space_mouse.drivers) {
+                .widget(torno_ui_text::tr(if super::waiting_for_a_record(h.app.space_mouse.drivers) {
                     "ui.3d_mouse_calibrate_wait"
                 } else {
                     "ui.3d_mouse_none"
@@ -6112,7 +6093,7 @@ mod tests {
     #[test]
     fn the_calibration_choose_screen_fits_at_every_width() {
         for width in [300.0_f32, 360.0, 520.0, 900.0] {
-            let mut app = crate::SolveApp::new(solidcraft_engine::Session::default(), crate::Services::default());
+            let mut app = crate::SolveApp::new(torno_engine::Session::default(), crate::Services::default());
             app.space_mouse.device = Some("hid 046d:c62b".into());
             crate::space_mouse_calibration::start(&mut app);
             let ctx = crate::fonts::test_context();
@@ -6145,7 +6126,7 @@ mod tests {
         for width in [360.0_f32, 520.0, 900.0] {
             let mut heights = Vec::new();
             for values in sets {
-                let mut app = crate::SolveApp::new(solidcraft_engine::Session::default(), crate::Services::default());
+                let mut app = crate::SolveApp::new(torno_engine::Session::default(), crate::Services::default());
                 app.space_mouse.device = Some("hid 046d:c62b".into());
                 app.space_mouse.raw = values.into();
                 crate::space_mouse_calibration::start(&mut app);
@@ -6186,20 +6167,20 @@ mod tests {
     fn the_calibration_window_keeps_its_size_while_the_cap_moves() {
         let mut windows = Vec::new();
         for values in [[0_i16; 6], [-1; 6], [350; 6], [-350; 6], [i16::MAX; 6], [i16::MIN; 6], [159, -5, 0, 32, -17, 5]] {
-            let mut app = crate::SolveApp::new(solidcraft_engine::Session::default(), crate::Services::default());
+            let mut app = crate::SolveApp::new(torno_engine::Session::default(), crate::Services::default());
             app.space_mouse.device = Some("hid 046d:c62b".into());
             crate::space_mouse_calibration::start(&mut app);
             {
                 let wizard = &mut app.space_mouse.calibrating.as_mut().unwrap().1;
-                wizard.choose(solidcraft_space_mouse::Kind::ReturnToCenter);
-                let hold = |wizard: &mut solidcraft_space_mouse::Wizard, reading: [i16; 6], seconds: f64| {
+                wizard.choose(torno_space_mouse::Kind::ReturnToCenter);
+                let hold = |wizard: &mut torno_space_mouse::Wizard, reading: [i16; 6], seconds: f64| {
                     for _ in 0..(seconds / 0.02).round() as usize {
                         wizard.feed(reading, 0.02);
                     }
                 };
                 hold(wizard, [0; 6], 1.6);
                 hold(wizard, [0; 6], 2.6);
-                for step in solidcraft_space_mouse::STEPS {
+                for step in torno_space_mouse::STEPS {
                     let mut raw = [0_i16; 6];
                     raw[step.axis] = if step.positive { 300 } else { -300 };
                     hold(wizard, raw, 0.5);
@@ -6244,7 +6225,7 @@ mod tests {
     /// with the old `usize::MAX` (64-bit native) still reads as having no source on 64 bits.
     #[test]
     fn a_saved_calibration_with_no_source_reads_the_same_on_every_width() {
-        use solidcraft_space_mouse::{Calibration, NO_SOURCE};
+        use torno_space_mouse::{Calibration, NO_SOURCE};
         let axis = |source: &str, full: u32| format!(r#"{{"source":{source},"reversed":false,"rest":0,"dead_zone":3,"full":[{full},{full}]}}"#);
         let json = |absent: &str| {
             let axes = [axis("0", 300), axis("1", 300), axis("2", 300), axis(absent, 1), axis(absent, 1), axis("3", 300)].join(",");
@@ -6630,8 +6611,7 @@ mod tests {
             ]
         );
         assert_eq!(WINDOW_PAGES.len(), PAGES.len());
-        let groups: Vec<_> =
-            WINDOW_PAGES.iter().map(host_page).enumerate().filter_map(|(i, p)| p.group.map(|g| (i, solidcraft_ui_text::tr(g)))).collect();
+        let groups: Vec<_> = WINDOW_PAGES.iter().map(host_page).enumerate().filter_map(|(i, p)| p.group.map(|g| (i, torno_ui_text::tr(g)))).collect();
         assert_eq!(groups, [(PAGE_APPEARANCE, "Look"), (PAGE_DESIGN, "Work"), (PAGE_NAVIGATION, "Input"), (PAGE_ASSISTANT, "Extend")]);
         let mut fields = std::collections::BTreeSet::new();
         for (field, page) in FIELD_PAGES {
@@ -6641,7 +6621,7 @@ mod tests {
         let saved = serde_json::to_value(Prefs::default()).unwrap();
         assert_eq!(fields.len(), saved.as_object().unwrap().len(), "every stored field has exactly one metadata entry");
         for (i, name) in PAGES.iter().enumerate() {
-            assert_eq!(solidcraft_ui_text::tr(host_page(&WINDOW_PAGES[i]).label), *name);
+            assert_eq!(torno_ui_text::tr(host_page(&WINDOW_PAGES[i]).label), *name);
             assert_eq!(host_page(&WINDOW_PAGES[i]).handle, format!("prefs:page:{name}"));
         }
     }
@@ -6821,7 +6801,7 @@ mod tests {
     #[test]
     fn hole_presets_survive_application_preferences_roundtrip_and_page_resets() {
         use serde_json::json;
-        let mut app = crate::SolveApp::new(solidcraft_engine::Session::default(), crate::Services::default());
+        let mut app = crate::SolveApp::new(torno_engine::Session::default(), crate::Services::default());
         let mut row = hole_preset_row("Fixture");
         row["thread_options"] = json!({"full_length":false,"depth":"4 mm"});
         super::set(&mut app, &json!({"hole_presets":[row]})).unwrap();
@@ -6832,7 +6812,7 @@ mod tests {
         }
         assert_eq!(serde_json::to_value(&app.preferences.hole_presets).unwrap(), expected);
         let saved = app.prefs();
-        let mut other = crate::SolveApp::new(solidcraft_engine::Session::default(), crate::Services::default());
+        let mut other = crate::SolveApp::new(torno_engine::Session::default(), crate::Services::default());
         other.load_prefs(&saved);
         assert_eq!(serde_json::to_value(&other.preferences.hole_presets).unwrap(), expected);
         assert!(other.session.doc.features.is_empty());
@@ -6878,7 +6858,7 @@ mod tests {
     #[test]
     fn personal_sheet_rules_survive_application_preferences_roundtrip_and_page_resets() {
         use serde_json::json;
-        let mut app = crate::SolveApp::new(solidcraft_engine::Session::default(), crate::Services::default());
+        let mut app = crate::SolveApp::new(torno_engine::Session::default(), crate::Services::default());
         super::set(&mut app, &json!({"personal_sheet_rules":[personal_sheet_rule_row("CRS 1.6")]})).unwrap();
         let expected = serde_json::to_value(&app.preferences.personal_sheet_rules).unwrap();
         assert_eq!(expected[0]["angle_display"], "included");
@@ -6887,7 +6867,7 @@ mod tests {
         }
         assert_eq!(serde_json::to_value(&app.preferences.personal_sheet_rules).unwrap(), expected);
         let saved = app.prefs();
-        let mut other = crate::SolveApp::new(solidcraft_engine::Session::default(), crate::Services::default());
+        let mut other = crate::SolveApp::new(torno_engine::Session::default(), crate::Services::default());
         other.load_prefs(&saved);
         assert_eq!(serde_json::to_value(&other.preferences.personal_sheet_rules).unwrap(), expected);
         assert!(other.session.doc.sheet.rules.is_empty(), "a personal rule is not a rule of the design");
@@ -6898,15 +6878,15 @@ mod tests {
     #[test]
     fn ui_font_is_checked_saved_and_restored() {
         use serde_json::json;
-        let mut app = crate::SolveApp::new(solidcraft_engine::Session::default(), crate::Services::default());
+        let mut app = crate::SolveApp::new(torno_engine::Session::default(), crate::Services::default());
         assert_eq!(app.preferences.ui_font, "");
-        let family = solidcraft_engine::sketch::DEFAULT_FONT_FAMILY;
+        let family = torno_engine::sketch::DEFAULT_FONT_FAMILY;
         let out = super::set(&mut app, &json!({ "ui_font": family })).unwrap();
         assert_eq!(out["ui_font"], family);
         let e = super::set(&mut app, &json!({"ui_font": "No Such Font 1290"})).unwrap_err();
         assert!(e.contains("ui_font"), "{e}");
         assert_eq!(app.preferences.ui_font, family, "a refused font leaves the choice as it was");
-        let mut other = crate::SolveApp::new(solidcraft_engine::Session::default(), crate::Services::default());
+        let mut other = crate::SolveApp::new(torno_engine::Session::default(), crate::Services::default());
         other.load_prefs(&app.prefs());
         assert_eq!(other.preferences.ui_font, family);
         super::defaults(&mut app, super::PAGE_APPEARANCE);
@@ -6918,7 +6898,7 @@ mod tests {
     /// shortcut the other tab doesn't have included, so both tabs then save the same settings.
     #[test]
     fn settings_loaded_over_changed_ones_replace_them_all() {
-        let new_app = || crate::SolveApp::new(solidcraft_engine::Session::default(), crate::Services::default());
+        let new_app = || crate::SolveApp::new(torno_engine::Session::default(), crate::Services::default());
         let mut writer = new_app();
         writer.sbox.toggle_pin("sketch.line");
         writer.ui.dark = !writer.ui.dark;
@@ -7005,7 +6985,7 @@ mod tests {
             })),
             ..Default::default()
         };
-        let mut app = SolveApp::new(solidcraft_engine::Session::default(), services);
+        let mut app = SolveApp::new(torno_engine::Session::default(), services);
         app.preferences.theme = "system".into();
         app.ui.dark = true;
         let ctx = egui::Context::default();
@@ -7048,7 +7028,7 @@ mod tests {
     /// base and Cancel takes an import back.
     #[test]
     fn system_theme_export_uses_os_slot_without_selecting_it() {
-        let mut app = SolveApp::new(solidcraft_engine::Session::default(), Default::default());
+        let mut app = SolveApp::new(torno_engine::Session::default(), Default::default());
         app.preferences.theme = "light".into();
         app.ui.dark = false;
         assert_eq!(theme_file(&app, "system", true)["base"], "dark");
@@ -7111,7 +7091,7 @@ mod tests {
     #[test]
     fn the_3d_view_takes_the_light_or_dark_themes_colours() {
         use serde_json::json;
-        use solidcraft_theme::{ColorVision, Tokens};
+        use torno_theme::{ColorVision, Tokens};
         let mut h = crate::scenario::Harness::new();
         for (theme, view, dark, view_dark) in
             [("light", "theme", false, false), ("dark", "light", true, false), ("dark", "dark", true, true), ("light", "dark", false, true)]
@@ -7124,7 +7104,7 @@ mod tests {
             assert_eq!(t.viewport_top, Tokens::themed(view_dark, ColorVision::Off).viewport_top, "{theme}, {view}: the view");
         }
 
-        let mut other = crate::SolveApp::new(solidcraft_engine::Session::default(), crate::Services::default());
+        let mut other = crate::SolveApp::new(torno_engine::Session::default(), crate::Services::default());
         other.load_prefs(&h.app.prefs());
         assert_eq!((other.preferences.theme.as_str(), other.ui.dark, other.viewport_dark()), ("light", false, true));
 
@@ -7148,7 +7128,7 @@ mod tests {
     #[test]
     fn the_3d_view_takes_a_background_colour_of_its_own() {
         use serde_json::json;
-        use solidcraft_theme::{ColorVision, Tokens};
+        use torno_theme::{ColorVision, Tokens};
         let mut h = crate::scenario::Harness::new();
         assert_eq!(h.app.preferences.viewport_background, None);
         for (theme, view_dark) in [("light", false), ("dark", true)] {
@@ -7158,12 +7138,12 @@ mod tests {
             let (t, white) = (Tokens::get(), egui::Color32::WHITE);
             assert_eq!((t.viewport_top, t.viewport_bottom, Tokens::view().viewport_top), (white, white, white), "{theme}");
             assert_eq!(t.panel, Tokens::themed(view_dark, ColorVision::Off).panel, "{theme}: the window");
-            let scene = crate::control::view_scene(&h.app, solidcraft_engine::view::Guides::default()).unwrap();
-            let white = solidcraft_viewport::Rgb(255, 255, 255);
+            let scene = crate::control::view_scene(&h.app, torno_engine::view::Guides::default()).unwrap();
+            let white = torno_viewport::Rgb(255, 255, 255);
             assert_eq!(scene.background, Some((white, white)), "{theme}: a picture of the view");
         }
 
-        let mut other = crate::SolveApp::new(solidcraft_engine::Session::default(), crate::Services::default());
+        let mut other = crate::SolveApp::new(torno_engine::Session::default(), crate::Services::default());
         other.load_prefs(&h.app.prefs());
         assert_eq!(other.preferences.viewport_background, Some([255, 255, 255]));
 
@@ -7215,7 +7195,7 @@ mod tests {
         // A file dropped on the Import tile is a theme to import, not a design to open.
         h.frames(2);
         let tile = h.app.prefs_window.import_tile.expect("the Import tile is drawn on the Interface page");
-        let dir = std::env::temp_dir().join(format!("solidcraft-theme-drop-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("torno-theme-drop-{}", std::process::id()));
         std::fs::create_dir_all(&dir).unwrap();
         let file = dir.join("dropped.json");
         std::fs::write(&file, theme("Dropped")).unwrap();
@@ -7241,7 +7221,7 @@ mod tests {
     #[test]
     fn theme_import_reads_through_vfs() {
         use serde_json::json;
-        use solidcraft_engine::io::vfs;
+        use torno_engine::io::vfs;
         let mut h = crate::scenario::Harness::new();
         h.app.home.open = false;
         h.call("ui.prefs", json!({"theme": "dark", "open": "Interface"}));
@@ -7275,13 +7255,13 @@ mod tests {
     fn a_followed_theme_file_applies_reloads_keeps_the_last_good_theme_and_the_flag_is_not_saved() {
         use egui::Color32;
         use serde_json::json;
-        use solidcraft_theme::Tokens;
+        use torno_theme::Tokens;
         let mut h = crate::scenario::Harness::new();
         assert_eq!(h.app.preferences.theme_follow, "", "off by default");
         let out = h.call("ui.prefs", json!({}));
         assert!(out["result"]["theme_followed"].is_null() && out["result"]["theme_follow_error"].is_null(), "{out}");
 
-        let dir = std::env::temp_dir().join(format!("solidcraft-prefs-follow-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("torno-prefs-follow-{}", std::process::id()));
         std::fs::create_dir_all(&dir).unwrap();
         let file = dir.join("live.json");
         let path = file.to_string_lossy().to_string();
@@ -7400,7 +7380,7 @@ mod tests {
                 assert_eq!(h.app.preferences.viewport_theme, crate::theme::ViewportTheme::Theme);
                 assert!(!h.app.preferences.logo_accent);
                 assert!(h.app.preferences.theme_follow.is_empty() && h.app.preferences.ui_font.is_empty());
-                assert_eq!(h.app.preferences.color_vision, solidcraft_theme::ColorVision::Off);
+                assert_eq!(h.app.preferences.color_vision, torno_theme::ColorVision::Off);
                 h.call("ui.prefs", json!({"button":"cancel"}));
             }
         }
@@ -7796,7 +7776,7 @@ mod tests {
         // The internal fixture goes through the real kit. No fake provider is shipped.
         for dark in [false, true] {
             crate::theme::set_file_palette(None);
-            solidcraft_theme::set_dark(dark);
+            torno_theme::set_dark(dark);
             let mut values = crate::theme_files::effective_values(&file, &BTreeMap::new()).0;
             let before = values.clone();
             let ctx = crate::fonts::test_context();
@@ -7836,7 +7816,7 @@ mod tests {
         let file = crate::theme_files::from_value(&source).unwrap();
         for dark in [false, true] {
             crate::theme::set_file_palette(None);
-            solidcraft_theme::set_dark(dark);
+            torno_theme::set_dark(dark);
             for available in [Availability::Available, Availability::Unavailable("prefs.theme_options_unavailable")] {
                 let rows = theme_option_rows(&file, "en", crate::theme_options::PROVIDERS, standard_option_text, available);
                 for radius in [0.0, 1.0, 8.0, 9.0, 18.0, 33.0, 40.0, 18.25] {
@@ -8208,7 +8188,7 @@ mod tests {
     #[test]
     fn theme_options_raw_values_default_while_theme_api_clamps() {
         use crate::theme_files::{OptionNotice, OptionNoticeKind, OptionValue};
-        use solidcraft_engine::schema::ui_prefs::ThemeOptionNoticeKind;
+        use torno_engine::schema::ui_prefs::ThemeOptionNoticeKind;
         let file = crate::theme_files::from_value(&option_theme_file("Options A")).unwrap();
         for (raw, clamped) in [(-1.0, 0.0), (20.0, 10.0)] {
             let (values, notices) = crate::theme_files::effective_values(&file, &BTreeMap::from([("amount".into(), OptionValue::Num(raw))]));
@@ -8253,7 +8233,7 @@ mod tests {
             assert_eq!(out["theme_file"]["options"][1]["default"], 240.0);
             assert_eq!(out["theme_option_values"]["tab_fade_ms"], 123.0, "step is a control increment, never rounding");
             assert_eq!(out["theme_option_defs"].as_array().unwrap().iter().find(|o| o["id"] == "tab_fade_ms").unwrap()["step"], 20.0);
-            let mut restored = SolveApp::new(solidcraft_engine::Session::default(), crate::Services::default());
+            let mut restored = SolveApp::new(torno_engine::Session::default(), crate::Services::default());
             restored.load_prefs(&h.app.prefs());
             assert_eq!(restored.preferences.custom_themes, h.app.preferences.custom_themes);
             assert_eq!(restored.preferences.theme_options, h.app.preferences.theme_options);
@@ -8293,7 +8273,7 @@ mod tests {
         let mut other = source.clone();
         other["id"] = json!("options-b");
         other["name"] = json!("Options B");
-        let mut app = SolveApp::new(solidcraft_engine::Session::default(), crate::Services::default());
+        let mut app = SolveApp::new(torno_engine::Session::default(), crate::Services::default());
         let invalid_tables = [
             ("options", json!((0..17).map(|i| json!({"id":format!("option_{i}"),"type":"bool","default":true})).collect::<Vec<_>>())),
             ("options", json!([{ "id":"amount","type":"range","default":5,"min":10,"max":0,"step":1 }])),
@@ -8319,7 +8299,7 @@ mod tests {
             assert_eq!(app.preferences, before);
             assert!(!app.prefs_window.shell.open);
 
-            let mut restored = SolveApp::new(solidcraft_engine::Session::default(), crate::Services::default());
+            let mut restored = SolveApp::new(torno_engine::Session::default(), crate::Services::default());
             restored.load_prefs(
                 &json!({"preferences":{
                     "custom_themes":[malformed,other],"theme":"options-a","zoom_reverse":true,
@@ -8373,7 +8353,7 @@ mod tests {
         assert_eq!(out["theme_file"]["options"][0]["default"], false);
         assert_eq!(out["theme_file"]["colors"]["panel"], "#112233");
         assert_eq!(out["theme_file"]["overlays"][0]["colors"]["panel"], "#abcdef");
-        let mut other = SolveApp::new(solidcraft_engine::Session::default(), crate::Services::default());
+        let mut other = SolveApp::new(torno_engine::Session::default(), crate::Services::default());
         other.load_prefs(&h.app.prefs());
         assert_eq!(other.preferences.theme_options, h.app.preferences.theme_options);
         control(&mut other, &json!({"theme_options":{"options-a":{"amount":null}}})).unwrap();
@@ -8425,7 +8405,7 @@ mod tests {
                 {"id":"removed","kind":"unknown_option"}, {"id":"style","kind":"unknown_choice"}
             ])
         );
-        let mut other = SolveApp::new(solidcraft_engine::Session::default(), crate::Services::default());
+        let mut other = SolveApp::new(torno_engine::Session::default(), crate::Services::default());
         other.load_prefs(&h.app.prefs());
         assert_eq!(other.preferences.theme_options, h.app.preferences.theme_options);
         assert!(other.preferences.zoom_reverse);
@@ -8474,7 +8454,7 @@ mod tests {
 
     #[test]
     fn theme_options_active_reply_is_localized_ordered_and_matches_schema_types() {
-        use solidcraft_engine::schema::ui_prefs::{PrefsReply, ThemeOptionKind};
+        use torno_engine::schema::ui_prefs::{PrefsReply, ThemeOptionKind};
         let mut h = crate::scenario::Harness::new();
         let out = control(&mut h.app, &json!({"theme_import":option_theme_file("Options A"), "language":"de"})).unwrap();
         let reply: PrefsReply = serde_json::from_value(out.clone()).unwrap();
@@ -8482,7 +8462,7 @@ mod tests {
         let defs = &reply.options.theme_option_defs;
         assert!(defs[0].standard && !defs[0].available);
         let crate::theme_options::Availability::Unavailable(reason) = blur_availability(&h.app) else { panic!("headless fixture has no GPU") };
-        assert_eq!(defs[0].reason.as_deref(), Some(solidcraft_ui_text::Locale::for_language("de").text(reason)));
+        assert_eq!(defs[0].reason.as_deref(), Some(torno_ui_text::Locale::for_language("de").text(reason)));
         assert_eq!((&defs[1].label, &defs[1].help), (&"Aktiv".to_string(), &"Farben verwenden".to_string()));
         assert!(defs[1].available && defs[1].reason.is_none());
         assert!(defs[2].advanced && defs[2].section.as_deref() == Some("Details"));
@@ -8618,7 +8598,7 @@ mod tests {
     #[test]
     fn theme_files_import_apply_export_save_and_remove() {
         use serde_json::json;
-        use solidcraft_theme::{ColorVision, Tokens};
+        use torno_theme::{ColorVision, Tokens};
         let mut h = crate::scenario::Harness::new();
         let out = h.call("ui.prefs", json!({"theme": "gruvbox-dark-hard"}));
         assert_eq!(out["result"]["theme"], "gruvbox-dark", "{out}");
@@ -8630,7 +8610,7 @@ mod tests {
         assert_eq!(Tokens::get().panel, hard.panel);
         assert_eq!(
             crate::viewport::scene_palette(true, ColorVision::Off).background.0,
-            solidcraft_viewport::Rgb(hard.viewport_top.r(), hard.viewport_top.g(), hard.viewport_top.b())
+            torno_viewport::Rgb(hard.viewport_top.r(), hard.viewport_top.g(), hard.viewport_top.b())
         );
 
         let file = json!({"format": "solidcraft-theme/1", "name": "Paper", "base": "light", "colors": {"panel": "#fffdf0", "accent": "#aa3300"}, "borders":{"primary":{"width":2,"color":"#ffffff"},"tertiary":{"width":0,"color":"#000000"}}, "radii": {"radius_sm": 0, "control_radius": 0, "radius_xl": 16}});
@@ -8661,7 +8641,7 @@ mod tests {
         assert_eq!(h.app.preferences.theme, "paper", "a refused file changes nothing");
         assert!(h.call("ui.prefs", json!({"theme": "no-such-theme"}))["error"].is_string());
 
-        let mut other = crate::SolveApp::new(solidcraft_engine::Session::default(), crate::Services::default());
+        let mut other = crate::SolveApp::new(torno_engine::Session::default(), crate::Services::default());
         other.load_prefs(&h.app.prefs());
         assert_eq!((other.preferences.theme.as_str(), other.preferences.custom_themes.len()), ("paper", 1));
         assert_eq!(other.preferences.custom_themes[0].radii, h.app.preferences.custom_themes[0].radii);
@@ -8690,7 +8670,7 @@ mod tests {
     #[test]
     fn theme_export_writes_through_vfs() {
         use serde_json::json;
-        use solidcraft_engine::io::vfs;
+        use torno_engine::io::vfs;
         let mut h = crate::scenario::Harness::new();
         h.app.home.open = false;
         h.call("ui.prefs", json!({"theme": "dark", "open": "Interface"}));
@@ -8823,7 +8803,7 @@ mod tests {
         assert!(body.contains_rect(picker) && picker.contains(combo), "the font picker is inside the visible page before clicking");
         h.call("ui.click", json!({"x":combo.x,"y":combo.y}));
         h.frames(2);
-        let search = format!("dialog:{} search", solidcraft_ui_text::tr_label("Interface font"));
+        let search = format!("dialog:{} search", torno_ui_text::tr_label("Interface font"));
         let field = crate::scenario::handle_at(&search).expect("the font list is open");
         h.call("ui.click", json!({"x":field.x,"y":field.y}));
         h.frames(2);
@@ -8865,7 +8845,7 @@ mod tests {
     #[test]
     fn render_legacy_memory_admission_applies_to_both_hosts_and_roundtrips() {
         use serde_json::json;
-        use solidcraft_engine::render::job::{CpuHost, NativeMemoryPolicy};
+        use torno_engine::render::job::{CpuHost, NativeMemoryPolicy};
         let mut app = crate::SolveApp::new(Default::default(), Default::default());
         let cpu = app.session.render_job_host().unwrap().clone();
         let gpu = CpuHost::cooperative();
@@ -8918,7 +8898,7 @@ mod tests {
     #[test]
     fn display_quality_is_set_checked_and_restored() {
         use serde_json::json;
-        let mut app = crate::SolveApp::new(solidcraft_engine::Session::default(), crate::Services::default());
+        let mut app = crate::SolveApp::new(torno_engine::Session::default(), crate::Services::default());
         assert_eq!(app.preferences.display_quality, "normal");
         let out = super::set(&mut app, &json!({"display_quality": "fine"})).unwrap();
         assert_eq!(out["display_quality"], "fine");
@@ -8935,8 +8915,8 @@ mod tests {
     #[test]
     fn validation_defaults_to_each_feature_and_follows_the_command() {
         use serde_json::json;
-        use solidcraft_engine::kernel::Validation;
-        let mut app = crate::SolveApp::new(solidcraft_engine::Session::default(), crate::Services::default());
+        use torno_engine::kernel::Validation;
+        let mut app = crate::SolveApp::new(torno_engine::Session::default(), crate::Services::default());
         assert_eq!(app.preferences.validation, Validation::EachFeature);
         assert_eq!(super::lenient(&json!({"validation": "sometimes"})).validation, Validation::EachFeature);
         assert!(super::set(&mut app, &json!({"validation": "never"})).unwrap_err().contains("each_step, each_feature or off"));
@@ -8956,7 +8936,7 @@ mod tests {
     #[test]
     fn sketch_halo_is_off_by_default_saved_and_restored() {
         use serde_json::json;
-        let mut app = crate::SolveApp::new(solidcraft_engine::Session::default(), crate::Services::default());
+        let mut app = crate::SolveApp::new(torno_engine::Session::default(), crate::Services::default());
         assert_eq!(serde_json::to_value(&app.preferences).unwrap()["sketch_halo"], false);
         assert_eq!(serde_json::to_value(super::lenient(&json!({}))).unwrap()["sketch_halo"], false);
         let saved = super::set(&mut app, &json!({"sketch_halo": true})).unwrap();
@@ -8970,7 +8950,7 @@ mod tests {
     #[test]
     fn supersampling_is_off_by_default_and_checked() {
         use serde_json::json;
-        let mut app = crate::SolveApp::new(solidcraft_engine::Session::default(), crate::Services::default());
+        let mut app = crate::SolveApp::new(torno_engine::Session::default(), crate::Services::default());
         assert_eq!((app.preferences.supersampling, app.preferences.supersampling_adaptive), (1.0, true));
         super::set(&mut app, &json!({"supersampling": 2.0})).unwrap();
         assert_eq!(app.preferences.supersampling, 2.0);
@@ -8997,11 +8977,11 @@ mod tests {
         let tabs = super::lenient(&json!({"hidden_toolbar_tabs": hidden}));
         assert_eq!(tabs.hidden_toolbar_tabs, ["VIEW", "SHEET METAL", "SURFACE"]);
         // Whole-app load: the other saved state is kept too, and nothing panics.
-        let mut app = crate::SolveApp::new(solidcraft_engine::Session::default(), crate::Services::default());
+        let mut app = crate::SolveApp::new(torno_engine::Session::default(), crate::Services::default());
         app.load_prefs(&json!({"grid": false, "preferences": saved}).to_string());
         assert!(!app.ui.show_grid && app.preferences.nav == "solidworks" && app.preferences.zoom_reverse);
         for junk in ["", "{", "[]", "null", "{\"preferences\": 7, \"recent\": {}, \"shortcuts\": 1, \"toolbar\": \"x\"}"] {
-            crate::SolveApp::new(solidcraft_engine::Session::default(), crate::Services::default()).load_prefs(junk);
+            crate::SolveApp::new(torno_engine::Session::default(), crate::Services::default()).load_prefs(junk);
         }
     }
 
@@ -9054,7 +9034,7 @@ mod tests {
     #[test]
     fn the_largest_file_to_open_defaults_raises_and_refuses_out_of_range() {
         use serde_json::json;
-        use solidcraft_engine::io::limits::{FileLimits, GB};
+        use torno_engine::io::limits::{FileLimits, GB};
         let mut h = crate::scenario::Harness::new();
         assert_eq!((h.app.preferences.max_step_file_mb, h.app.preferences.max_design_file_mb), (512, 256));
         assert_eq!(super::file_limits(&h.app.preferences), FileLimits::DEFAULT);
@@ -9088,7 +9068,7 @@ mod tests {
     #[test]
     fn the_largest_sketch_defaults_raises_and_refuses_out_of_range() {
         use serde_json::json;
-        use solidcraft_engine::sketch::limits::{CEILING_POINTS, DEFAULT_POINTS};
+        use torno_engine::sketch::limits::{CEILING_POINTS, DEFAULT_POINTS};
         let mut h = crate::scenario::Harness::new();
         assert_eq!(h.app.preferences.max_sketch_points, DEFAULT_POINTS);
         let out = h.call("ui.prefs", json!({"max_sketch_points": 50_000}));
@@ -9220,7 +9200,7 @@ mod tests {
                 h.step(&json!({"text":"2048"})).unwrap();
                 h.step(&json!({"key":"Enter"})).unwrap();
                 assert_eq!(h.app.preferences.max_design_file_mb, 2048);
-                assert_eq!(super::file_limits(&h.app.preferences).step, 4096 * solidcraft_engine::io::limits::MB);
+                assert_eq!(super::file_limits(&h.app.preferences).step, 4096 * torno_engine::io::limits::MB);
                 let before = h.app.preferences.clone();
                 for bad in [json!({"max_step_file_mb":16385}), json!({"max_design_file_mb":255})] {
                     assert!(h.call("ui.prefs", bad)["error"].is_string());
@@ -9308,7 +9288,7 @@ mod tests {
         h.step(&json!({"widget":"Restore page defaults"})).unwrap();
         assert_eq!(h.app.autosave_minutes, 5.0);
         assert_eq!(h.app.autosave.as_ref().unwrap().interval, Duration::from_secs(300));
-        assert_eq!(h.app.preferences.language, solidcraft_ui_text::SYSTEM);
+        assert_eq!(h.app.preferences.language, torno_ui_text::SYSTEM);
         assert!(h.app.preferences.reopen_designs);
         assert_eq!(h.app.preferences.nav, "tinkercad", "General's reset leaves other pages alone");
         assert_eq!(h.app.settings_profiles.list, profiles);
@@ -9323,7 +9303,7 @@ mod tests {
     /// Backend edits are saved before restart, with one original recovery choice across edits.
     #[test]
     fn graphics_backend_selection_preserves_recovery_and_other_settings() {
-        let dir = std::env::temp_dir().join(format!("solidcraft-backend-choice-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("torno-backend-choice-{}", std::process::id()));
         std::fs::create_dir_all(&dir).unwrap();
         let path = dir.join("graphics.json");
         std::fs::write(&path, r#"{"backend":"auto","msaa":4,"adapter":"Named GPU","future":{"keep":true}}"#).unwrap();
@@ -9360,7 +9340,7 @@ mod tests {
     /// A manual legacy backend list survives unrelated edits and remains the recovery choice.
     #[test]
     fn graphics_backend_legacy_choice_is_preserved_until_explicitly_changed() {
-        let dir = std::env::temp_dir().join(format!("solidcraft-backend-legacy-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("torno-backend-legacy-{}", std::process::id()));
         std::fs::create_dir_all(&dir).unwrap();
         let path = dir.join("graphics.json");
         std::fs::write(&path, r#"{"backend":"dx12,vulkan","msaa":4}"#).unwrap();
@@ -9383,7 +9363,7 @@ mod tests {
     /// Failed writes or invalid API choices cannot update the UI or discard existing settings.
     #[test]
     fn graphics_backend_save_failure_and_invalid_choice_leave_preferences_unchanged() {
-        let dir = std::env::temp_dir().join(format!("solidcraft-backend-write-failure-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("torno-backend-write-failure-{}", std::process::id()));
         std::fs::create_dir_all(&dir).unwrap();
         let path = dir.join("graphics.json");
         std::fs::create_dir_all(&path).unwrap();
@@ -9413,7 +9393,7 @@ mod tests {
     /// The visible picker uses the same saved preference as ui.prefs and Cancel restores it.
     #[test]
     fn graphics_backend_picker_selects_and_cancels_without_requiring_commands() {
-        let dir = std::env::temp_dir().join(format!("solidcraft-backend-picker-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("torno-backend-picker-{}", std::process::id()));
         std::fs::create_dir_all(&dir).unwrap();
         let path = dir.join("graphics.json");
         let mut h = crate::scenario::Harness::new();
@@ -9440,7 +9420,7 @@ mod tests {
 
     #[test]
     fn graphics_backend_restart_control_refuses_an_override_or_missing_host_command() {
-        let dir = std::env::temp_dir().join(format!("solidcraft-backend-restart-refusal-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("torno-backend-restart-refusal-{}", std::process::id()));
         std::fs::create_dir_all(&dir).unwrap();
         let path = dir.join("graphics.json");
         let original = br#"{"backend":"auto","future":{"keep":true}}"#;
@@ -9454,7 +9434,7 @@ mod tests {
         assert_eq!(app.preferences, before, "a rejected combined request changes no preferences");
         assert_eq!(std::fs::read(&path).unwrap(), original);
         assert!(!app.quit_requested);
-        app.services.graphics_restart = Some(("solidcraft".into(), Vec::new()));
+        app.services.graphics_restart = Some(("torno".into(), Vec::new()));
         app.services.graphics_backend_override = true;
         assert!(control(&mut app, &combined).is_err());
         assert_eq!(app.preferences, before, "an override refuses before saving the new API");
@@ -9468,7 +9448,7 @@ mod tests {
 
     #[test]
     fn graphics_card_picker_selects_named_cards_and_restores_automatic() {
-        let dir = std::env::temp_dir().join(format!("solidcraft-graphics-picker-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("torno-graphics-picker-{}", std::process::id()));
         std::fs::create_dir_all(&dir).unwrap();
         let mut h = crate::scenario::Harness::new();
         h.app.services.graphics_path = Some(dir.join("graphics.json").to_string_lossy().into_owned());
@@ -9487,12 +9467,12 @@ mod tests {
 
     #[test]
     fn graphics_card_preference_persists_cancels_and_resets_without_changing_backend() {
-        let dir = std::env::temp_dir().join(format!("solidcraft-graphics-card-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("torno-graphics-card-{}", std::process::id()));
         std::fs::create_dir_all(&dir).unwrap();
         let path = dir.join("graphics.json");
         std::fs::write(&path, r#"{"backend":"vulkan","msaa":4}"#).unwrap();
         let services = crate::Services { graphics_path: Some(path.to_string_lossy().into()), ..Default::default() };
-        let mut app = SolveApp::new(solidcraft_engine::Session::default(), services);
+        let mut app = SolveApp::new(torno_engine::Session::default(), services);
         let snapshot = Snapshot::take(&app);
         set(&mut app, &json!({"graphics_adapter":"Discrete large"})).unwrap();
         let read = || serde_json::from_str::<serde_json::Value>(&std::fs::read_to_string(&path).unwrap()).unwrap();
@@ -9518,7 +9498,7 @@ mod tests {
 
     #[test]
     fn refused_portable_layout_still_saves_other_settings_without_replacing_stored_recovery() {
-        use solidcraft_engine::panels::{FIXTURE_LAYOUT_V1, MAX_ENVELOPE_BYTES, PanelRegistry, commands::CatalogueState};
+        use torno_engine::panels::{FIXTURE_LAYOUT_V1, MAX_ENVELOPE_BYTES, PanelRegistry, commands::CatalogueState};
 
         // A maximum-sized original v1 record is readable, but projecting its native
         // window to portable v2 can exceed the envelope cap. Keep that real source.
@@ -9552,7 +9532,7 @@ mod tests {
         catalogue.push(0);
         CatalogueState::hydrate(&catalogue, &PanelRegistry::default()).unwrap();
         let refused = json!({"version":1,"selected":"fixture.workspace",
-            "catalogue":solidcraft_engine::doc::canvas::base64_encode(&catalogue)});
+            "catalogue":torno_engine::doc::canvas::base64_encode(&catalogue)});
         let mut app = SolveApp::new(Default::default(), Default::default());
         app.load_prefs(&json!({"panel_layout":refused}).to_string());
         app.ui.show_grid = false;
@@ -9611,7 +9591,7 @@ mod tests {
     #[test]
     fn layout_page_defaults_preserve_arrangements_and_cancel_restores_the_library() {
         use crate::panel_runtime;
-        use solidcraft_engine::panels::{LayoutAction, Mutation};
+        use torno_engine::panels::{LayoutAction, Mutation};
 
         let mut h = crate::scenario::Harness::new();
         h.call("ui.panel_fixture", json!({"preset":"docks","remember":true}));
@@ -9769,7 +9749,7 @@ mod tests {
     #[test]
     fn cancel_keeps_the_original_deferred_legacy_import_with_or_without_a_temporary_catalogue() {
         use crate::panel_runtime;
-        use solidcraft_engine::panels::{InstanceId, LogicalRect, Point, Size};
+        use torno_engine::panels::{InstanceId, LogicalRect, Point, Size};
 
         for enroll in [false, true] {
             let mut app = SolveApp::new(Default::default(), Default::default());
@@ -9814,7 +9794,7 @@ mod tests {
 
     #[test]
     fn unapplied_changes_are_not_saved_while_the_dialog_is_open() {
-        let mut app = SolveApp::new(solidcraft_engine::Session::default(), crate::Services::default());
+        let mut app = SolveApp::new(torno_engine::Session::default(), crate::Services::default());
         assert_eq!(saved_prefs(&app)["preferences"]["theme"], "dark");
         assert_eq!(saved_prefs(&app)["preferences"]["sketch_tab_always"], false);
         // Open the dialog: the snapshot is taken as `show` and the control channel take it.
@@ -9845,7 +9825,7 @@ mod tests {
 
     #[test]
     fn settings_the_dialog_cannot_change_keep_saving_while_it_is_open() {
-        let mut app = SolveApp::new(solidcraft_engine::Session::default(), crate::Services::default());
+        let mut app = SolveApp::new(torno_engine::Session::default(), crate::Services::default());
         app.prefs_window.shell.open = true;
         prefs_window::hold(&mut app);
         // A recent file joins while the dialog is open: not a dialog setting, so it is saved.
@@ -9855,7 +9835,7 @@ mod tests {
 
     #[test]
     fn shortcut_changes_are_not_saved_while_the_dialog_is_open() {
-        let mut app = SolveApp::new(solidcraft_engine::Session::default(), crate::Services::default());
+        let mut app = SolveApp::new(torno_engine::Session::default(), crate::Services::default());
         app.keymap.custom.insert("file.new".into(), vec!["Ctrl+N".into()]);
         app.prefs_window.shell.open = true;
         prefs_window::hold(&mut app);
@@ -9882,7 +9862,7 @@ mod tests {
 
     #[test]
     fn startup_msaa_check_keeps_the_default_unless_fallback_is_confirmed() {
-        let mut app = SolveApp::new(solidcraft_engine::Session::default(), crate::Services::default());
+        let mut app = SolveApp::new(torno_engine::Session::default(), crate::Services::default());
         app.msaa_supported = vec![1, 4, 8];
         for requested in [1, 4, 8] {
             app.preferences.msaa = requested;
@@ -9907,7 +9887,7 @@ mod tests {
         let _ = std::fs::create_dir_all(&dir);
         let path = dir.join("graphics.json");
         let services = crate::Services { graphics_path: Some(path.to_string_lossy().to_string()), ..Default::default() };
-        let mut app = SolveApp::new(solidcraft_engine::Session::default(), services);
+        let mut app = SolveApp::new(torno_engine::Session::default(), services);
         // WebGPU's guarantee for the surface format: 8x saved, the device can only do 1x and 4x.
         app.msaa_supported = vec![1, 4];
         app.preferences.msaa = 8;
@@ -9923,7 +9903,7 @@ mod tests {
             "Graphics › Anti-aliasing: 8× isn't supported by this graphics device; it is now 4× (supported: 1×, 4×)."
         );
         {
-            let _de = solidcraft_ui_text::scope("de");
+            let _de = torno_ui_text::scope("de");
             assert_eq!(
                 app.settings_reset[0].message(),
                 "Grafik › Kantenglättung: 8× wird von diesem Grafikgerät nicht unterstützt; jetzt 4× (unterstützt: 1×, 4×)."
@@ -9948,7 +9928,7 @@ mod tests {
 
     #[test]
     fn control_channel_rejects_msaa_the_device_cannot_do_and_bad_saved_msaa_loads_as_default() {
-        let mut app = SolveApp::new(solidcraft_engine::Session::default(), crate::Services::default());
+        let mut app = SolveApp::new(torno_engine::Session::default(), crate::Services::default());
         app.msaa_supported = vec![1, 4];
         assert!(set(&mut app, &serde_json::json!({ "msaa": 8 })).is_err());
         assert!(set(&mut app, &serde_json::json!({ "msaa": 1 })).is_ok());
@@ -9961,7 +9941,7 @@ mod tests {
     #[test]
     fn agent_control_is_off_unless_saved_on() {
         assert!(!Prefs::default().agent_control);
-        let mut app = SolveApp::new(solidcraft_engine::Session::default(), crate::Services::default());
+        let mut app = SolveApp::new(torno_engine::Session::default(), crate::Services::default());
         app.preferences.agent_control = true;
         app.load_prefs(&serde_json::json!({ "preferences": { "msaa": 4 } }).to_string());
         assert!(!app.preferences.agent_control);
@@ -10025,7 +10005,7 @@ mod tests {
         assert_eq!(h.app.preferences.nav, nav);
         assert_eq!(h.app.cam, camera);
         assert_eq!(h.app.session.doc.to_json(), design);
-        let mut restored = SolveApp::new(solidcraft_engine::Session::default(), Default::default());
+        let mut restored = SolveApp::new(torno_engine::Session::default(), Default::default());
         restored.load_prefs(&h.app.prefs());
         assert_eq!(restored.preferences.navigator_style, NavigatorStyle::Axes, "a change that was not applied is not saved (#9730)");
         let before = h.app.preferences.clone();
@@ -10074,7 +10054,7 @@ mod tests {
         ] {
             h.app.preferences.language = lang.into();
             h.frames(3);
-            let _scope = solidcraft_ui_text::scope(lang);
+            let _scope = torno_ui_text::scope(lang);
             for (id, name) in ["MODEL", "SURFACE", "MESH", "FORM", "SHEET METAL", "RENDER"].into_iter().zip(want) {
                 assert_eq!(crate::workspace::tab_name(id), name, "{lang}");
                 assert_eq!(crate::toolbar::ribbon_label(&h.app, id), name, "{lang}");
@@ -10133,7 +10113,7 @@ mod tests {
         h.call("ui.start", json!({"command":"construct.plane.offset"}));
         h.step(&json!({"click":{"browser":"Front"}})).unwrap();
         let picked = h.app.dialog.as_ref().and_then(|d| d.inputs.first()).map(|i| i.items.clone());
-        assert_eq!(picked, Some(vec![solidcraft_engine::Sel::Plane { name: "XZ".into() }]));
+        assert_eq!(picked, Some(vec![torno_engine::Sel::Plane { name: "XZ".into() }]));
         assert!(painted_texts(&mut h).iter().any(|t| t == "Front"), "the chip shows the plane's name");
         h.step(&json!({"widget":"OK"})).unwrap();
         h.frames(2);
@@ -10147,7 +10127,7 @@ mod tests {
         assert!(!texts.iter().any(|t| t == "Use XY plane"));
         crate::sketch_attachment_ui::clear(&mut h.app);
 
-        let mut restored = SolveApp::new(solidcraft_engine::Session::default(), Default::default());
+        let mut restored = SolveApp::new(torno_engine::Session::default(), Default::default());
         restored.load_prefs(&h.app.prefs());
         assert_eq!(restored.preferences.origin_plane_names, TopFrontRight, "the choice is saved");
         let before = h.app.preferences.clone();
@@ -10170,7 +10150,7 @@ mod tests {
     #[test]
     fn modifier_choice_and_direct_interaction_are_translated() {
         crate::i18n::install();
-        let _japanese = solidcraft_ui_text::scope("ja");
+        let _japanese = torno_ui_text::scope("ja");
         let either = crate::tool_modifiers::ModifierCombo::CTRL_ALT.shown_label();
         assert!(either.contains(" または ") && !either.contains(" or "), "{either}");
         assert_ne!(crate::tool_modifiers::ModifierCombo::NONE.shown_label(), "None");
@@ -10178,7 +10158,7 @@ mod tests {
             "Direct interaction",
             "Work on the model directly in the viewport. Press a flat face or a profile and pull: up extrudes, down into a body cuts, and sideways movement sets the step size",
         ] {
-            assert_ne!(solidcraft_ui_text::tr_label(english), english);
+            assert_ne!(torno_ui_text::tr_label(english), english);
         }
     }
 
@@ -10287,7 +10267,7 @@ mod tests {
 
         let reply = h.call("ui.prefs", json!({"history_sketches": "under_feature"}));
         assert_eq!(reply["result"]["history_sketches"], "under_feature");
-        let mut restored = SolveApp::new(solidcraft_engine::Session::default(), Default::default());
+        let mut restored = SolveApp::new(torno_engine::Session::default(), Default::default());
         restored.load_prefs(&h.app.prefs());
         assert_eq!(restored.preferences.history_sketches, HistorySketches::UnderFeature);
         let before = h.app.preferences.clone();
@@ -10316,7 +10296,7 @@ mod tests {
 
         let reply = h.call("ui.prefs", json!({"dialog_buttons": "top"}));
         assert_eq!(reply["result"]["dialog_buttons"], "top");
-        let mut restored = SolveApp::new(solidcraft_engine::Session::default(), Default::default());
+        let mut restored = SolveApp::new(torno_engine::Session::default(), Default::default());
         restored.load_prefs(&h.app.prefs());
         assert_eq!(restored.preferences.dialog_buttons, DialogButtons::Top);
         let before = h.app.preferences.clone();
@@ -10331,7 +10311,7 @@ mod tests {
 
     #[test]
     fn navigation_legend_follows_all_presets_and_runtime_options_without_mutating_them() {
-        let mut app = SolveApp::new(solidcraft_engine::Session::default(), Default::default());
+        let mut app = SolveApp::new(torno_engine::Session::default(), Default::default());
         for preset in NAV_PRESETS {
             choose_nav_preset(&mut app.preferences, preset);
             let before = app.preferences.clone();
@@ -10343,25 +10323,27 @@ mod tests {
                 assert!(preset.reverse_drag_zoom);
                 assert_eq!(preset.mode(NavButton::Middle, Modifiers::NONE), Some(NavMode::Orbit));
                 assert!(
-                    rows.iter()
-                        .any(|(keys, action)| keys.iter().any(|key| key == "Ctrl/Cmd") && action == solidcraft_ui_text::tr("prefs.gesture_zoom"))
+                    rows.iter().any(|(keys, action)| keys.iter().any(|key| key == "Ctrl/Cmd") && action == torno_ui_text::tr("prefs.gesture_zoom"))
                 );
             }
             if preset.id == TOUCHPAD_NAV {
-                assert!(rows.iter().any(|(keys, action)| keys == &[solidcraft_ui_text::tr("prefs.shift").to_owned()]
-                    && action == solidcraft_ui_text::tr("prefs.gesture_pan")));
                 assert!(
-                    rows.iter().any(|(keys, action)| keys == &["Alt/Option".to_owned()] && action == solidcraft_ui_text::tr("prefs.gesture_orbit"))
+                    rows.iter()
+                        .any(|(keys, action)| keys == &[torno_ui_text::tr("prefs.shift").to_owned()]
+                            && action == torno_ui_text::tr("prefs.gesture_pan"))
                 );
+                assert!(rows.iter().any(|(keys, action)| keys == &["Alt/Option".to_owned()] && action == torno_ui_text::tr("prefs.gesture_orbit")));
                 assert!(!app.preferences.trackpad_pans());
             }
         }
         choose_nav_preset(&mut app.preferences, nav_preset(crate::mouse_gesture::MOUSE_MODE));
         app.preferences.mouse_gestures.enabled = true;
         let rows = navigation::mapping_rows(&app);
-        assert!(rows.iter().any(|(_, action)| action == solidcraft_ui_text::tr("prefs.context_menu_ring")));
-        assert!(!rows.iter().any(|(keys, action)| keys.contains(&solidcraft_ui_text::tr("prefs.button_right").to_owned())
-            && action == solidcraft_ui_text::tr("prefs.gesture_orbit")));
+        assert!(rows.iter().any(|(_, action)| action == torno_ui_text::tr("prefs.context_menu_ring")));
+        assert!(
+            !rows.iter().any(|(keys, action)| keys.contains(&torno_ui_text::tr("prefs.button_right").to_owned())
+                && action == torno_ui_text::tr("prefs.gesture_orbit"))
+        );
     }
 
     #[test]
@@ -10429,7 +10411,7 @@ mod tests {
         h.step(&json!({"click":{"handle":"prefs:orbit_cursor_wrap"}})).unwrap();
         assert!(!h.app.preferences.orbit_cursor_wrap);
         h.call("ui.prefs", json!({"button":"apply"}));
-        let mut restored = SolveApp::new(solidcraft_engine::Session::default(), Default::default());
+        let mut restored = SolveApp::new(torno_engine::Session::default(), Default::default());
         restored.load_prefs(&h.app.prefs());
         assert!(!restored.preferences.orbit_cursor_wrap);
         h.call("ui.prefs", json!({"button":"defaults"}));
@@ -10451,7 +10433,7 @@ mod tests {
         assert!(!h.app.preferences.free_orbit);
         scroll_to_and_click(&mut h, "prefs:free_orbit");
         assert!(h.app.preferences.free_orbit);
-        let mut restored = SolveApp::new(solidcraft_engine::Session::default(), Default::default());
+        let mut restored = SolveApp::new(torno_engine::Session::default(), Default::default());
         restored.load_prefs(&h.app.prefs());
         assert!(!restored.preferences.free_orbit, "a change that was not applied is not saved (#9730)");
         h.call("ui.prefs", json!({"button":"cancel"}));
@@ -10480,7 +10462,7 @@ mod tests {
         }
         h.step(&json!({"widget":"Radial context menu"})).unwrap();
         assert!(h.app.preferences.radial_context_menu, "the actual checkbox enables radial menus");
-        let mut restored = SolveApp::new(solidcraft_engine::Session::default(), Default::default());
+        let mut restored = SolveApp::new(torno_engine::Session::default(), Default::default());
         restored.load_prefs(&h.app.prefs());
         assert!(!restored.preferences.radial_context_menu, "a change that was not applied is not saved (#9730)");
         h.call("ui.prefs", json!({"button":"cancel"}));
@@ -10619,7 +10601,7 @@ mod tests {
         let mut app = SolveApp::new(Default::default(), Default::default());
         super::set(&mut app, &json!({"single_surface_analysis":false,"persistent_ribbon_pressed":false})).unwrap();
         app.run("inspect.zebra", json!({})).unwrap();
-        let mut other = solidcraft_engine::Session::default();
+        let mut other = torno_engine::Session::default();
         other.execute("inspect.draft", &json!({})).unwrap();
         crate::documents::open_tab(&mut app, other).unwrap();
         let before: Vec<_> =
@@ -10737,7 +10719,7 @@ mod tests {
         super::set(&mut app, &json!({"single_surface_analysis":false,"persistent_ribbon_pressed":false})).unwrap();
         app.run("inspect.zebra", json!({})).unwrap();
         app.run("inspect.section", json!({"plane":"XY","at":4})).unwrap();
-        let mut other = solidcraft_engine::Session::default();
+        let mut other = torno_engine::Session::default();
         other.execute("inspect.draft", &json!({})).unwrap();
         other.execute("inspect.section", &json!({"plane":"XZ","at":-3})).unwrap();
         crate::documents::open_tab(&mut app, other).unwrap();
@@ -10792,8 +10774,8 @@ mod tests {
 
     #[test]
     fn single_surface_analysis_preference_syncs_background_designs_and_resets_effects() {
-        fn legacy_session() -> solidcraft_engine::Session {
-            let mut s = solidcraft_engine::Session::default();
+        fn legacy_session() -> torno_engine::Session {
+            let mut s = torno_engine::Session::default();
             s.set_single_surface_analysis(false);
             s.execute("solid.box", &json!({"length":10,"width":10,"height":10})).unwrap();
             s.execute("inspect.zebra", &json!({"stripes":14.5})).unwrap();
@@ -10863,7 +10845,7 @@ mod tests {
         let checkbox = crate::scenario::handle_at("prefs:cosmetic_threads").unwrap();
         h.call("ui.click", json!({"x":checkbox.x,"y":checkbox.y}));
         assert!(h.app.preferences.cosmetic_threads, "the actual checkbox enables the optional markings");
-        let mut restored = SolveApp::new(solidcraft_engine::Session::default(), Default::default());
+        let mut restored = SolveApp::new(torno_engine::Session::default(), Default::default());
         restored.load_prefs(&h.app.prefs());
         assert!(!restored.preferences.cosmetic_threads, "a change that was not applied is not saved (#9730)");
         h.call("ui.prefs", json!({"button":"cancel"}));
@@ -10892,7 +10874,7 @@ mod tests {
         h.call("ui.prefs", json!({"button":"cancel"}));
         assert!(!h.app.preferences.select_hidden_edges);
         h.call("ui.prefs", json!({"open":"Sketch","select_hidden_edges":true,"button":"apply"}));
-        let mut restored = SolveApp::new(solidcraft_engine::Session::default(), Default::default());
+        let mut restored = SolveApp::new(torno_engine::Session::default(), Default::default());
         restored.load_prefs(&h.app.prefs());
         assert!(restored.preferences.select_hidden_edges);
         h.call("ui.prefs", json!({"button":"defaults"}));
@@ -10916,7 +10898,7 @@ mod tests {
         let checkbox = crate::scenario::handle_at("prefs:ground_shadow_follows_model").unwrap();
         h.call("ui.click", json!({"x":checkbox.x,"y":checkbox.y}));
         assert!(h.app.preferences.ground_shadow_follows_model);
-        let mut restored = SolveApp::new(solidcraft_engine::Session::default(), Default::default());
+        let mut restored = SolveApp::new(torno_engine::Session::default(), Default::default());
         restored.load_prefs(&h.app.prefs());
         assert!(!restored.preferences.ground_shadow_follows_model, "an unapplied change is not saved");
         h.call("ui.prefs", json!({"button":"cancel"}));
@@ -10948,7 +10930,7 @@ mod tests {
         assert_eq!(old.suppress_sketch_snap, ModifierCombo::CTRL_ALT);
         assert!(!old.selection_shift_add_only);
         // Classic default: Ctrl/Cmd or Alt each suppress (`command` is primary on all hosts).
-        let mut app = SolveApp::new(solidcraft_engine::Session::default(), Default::default());
+        let mut app = SolveApp::new(torno_engine::Session::default(), Default::default());
         let ctrl = Modifiers { ctrl: true, command: true, ..Default::default() };
         let alt = Modifiers { alt: true, ..Default::default() };
         let shift = Modifiers { shift: true, ..Default::default() };
@@ -10966,7 +10948,7 @@ mod tests {
         assert_eq!(app.preferences.suppress_sketch_snap, ModifierCombo::CTRL);
         assert!(!app.preferences.manipulator_free_alt);
         assert!(app.preferences.selection_shift_add_only);
-        let mut other = SolveApp::new(solidcraft_engine::Session::default(), Default::default());
+        let mut other = SolveApp::new(torno_engine::Session::default(), Default::default());
         other.load_prefs(&app.prefs());
         assert_eq!(other.preferences.suppress_sketch_snap, ModifierCombo::CTRL);
         assert!(!other.preferences.manipulator_free_alt);
@@ -10982,7 +10964,7 @@ mod tests {
     #[test]
     fn wheel_smoothing_persists_and_follows_dialog_buttons() {
         assert!(serde_json::from_value::<Prefs>(json!({})).unwrap().smooth_wheel_zoom);
-        let mut app = SolveApp::new(solidcraft_engine::Session::default(), Default::default());
+        let mut app = SolveApp::new(torno_engine::Session::default(), Default::default());
         control(&mut app, &json!({"open":"Navigation", "smooth_wheel_zoom":false})).unwrap();
         control(&mut app, &json!({"button":"cancel"})).unwrap();
         assert!(app.preferences.smooth_wheel_zoom);
@@ -10990,7 +10972,7 @@ mod tests {
         control(&mut app, &json!({"button":"apply"})).unwrap();
         control(&mut app, &json!({"smooth_wheel_zoom":true, "button":"cancel"})).unwrap();
         assert!(!app.preferences.smooth_wheel_zoom);
-        let mut other = SolveApp::new(solidcraft_engine::Session::default(), Default::default());
+        let mut other = SolveApp::new(torno_engine::Session::default(), Default::default());
         other.load_prefs(&app.prefs());
         assert!(!other.preferences.smooth_wheel_zoom);
         control(&mut app, &json!({"open":"Navigation", "button":"defaults"})).unwrap();
@@ -11001,14 +10983,14 @@ mod tests {
 
     #[test]
     fn touchpad_preset_persists_and_obeys_preference_transactions() {
-        let mut app = SolveApp::new(solidcraft_engine::Session::default(), Default::default());
+        let mut app = SolveApp::new(torno_engine::Session::default(), Default::default());
         control(&mut app, &json!({"open":"Navigation", "nav":"touchpad"})).unwrap();
         assert_eq!(app.preferences.nav, "touchpad");
         assert!(app.preferences.trackpad_pan, "choosing Touchpad must not overwrite the saved scroll preference");
         control(&mut app, &json!({"button":"cancel"})).unwrap();
         assert_eq!(app.preferences.nav, "fusion");
         control(&mut app, &json!({"open":"Navigation", "nav":"touchpad", "button":"apply"})).unwrap();
-        let mut other = SolveApp::new(solidcraft_engine::Session::default(), Default::default());
+        let mut other = SolveApp::new(torno_engine::Session::default(), Default::default());
         other.load_prefs(&app.prefs());
         assert_eq!(other.preferences.nav, "touchpad");
         control(&mut app, &json!({"button":"defaults"})).unwrap();
@@ -11020,7 +11002,7 @@ mod tests {
     #[test]
     fn choosing_the_solidworks_preset_frees_the_right_button_and_fits_on_middle_double_click() {
         let none = Modifiers::default();
-        let mut app = SolveApp::new(solidcraft_engine::Session::default(), Default::default());
+        let mut app = SolveApp::new(torno_engine::Session::default(), Default::default());
         app.preferences.middle_double_click = "off".into();
         set(&mut app, &json!({"nav": "solidworks"})).unwrap();
         assert!(app.preferences.right_drag_orbits, "a saved SolidWorks preset keeps its right-drag orbit");
@@ -11041,7 +11023,7 @@ mod tests {
 
     #[test]
     fn creo_preset_maps_navigation_and_persists() {
-        let mut app = SolveApp::new(solidcraft_engine::Session::default(), Default::default());
+        let mut app = SolveApp::new(torno_engine::Session::default(), Default::default());
         assert_eq!(app.preferences.nav, "fusion");
         choose_nav_preset(&mut app.preferences, nav_preset("creo"));
         assert_eq!(app.preferences.nav, "creo");
@@ -11061,7 +11043,7 @@ mod tests {
         for preset in NAV_PRESETS.iter().filter(|p| p.id != "creo") {
             assert!(!preset.reverse_drag_zoom, "{} keeps its drag zoom direction", preset.id);
         }
-        let mut other = SolveApp::new(solidcraft_engine::Session::default(), Default::default());
+        let mut other = SolveApp::new(torno_engine::Session::default(), Default::default());
         other.load_prefs(&app.prefs());
         assert_eq!(other.preferences.nav, "creo");
         assert_eq!(nav_mode(&other, NavButton::Middle, Modifiers::NONE), Some(NavMode::Orbit));
@@ -11070,8 +11052,8 @@ mod tests {
     #[test]
     fn creo_navigation_settings_show_localised_bindings() {
         crate::i18n::install();
-        let _language = solidcraft_ui_text::scope("de");
-        let mut app = SolveApp::new(solidcraft_engine::Session::default(), Default::default());
+        let _language = torno_ui_text::scope("de");
+        let mut app = SolveApp::new(torno_engine::Session::default(), Default::default());
         control(&mut app, &json!({"open":"Navigation", "nav":"creo", "language":"de"})).unwrap();
         let ctx = crate::fonts::test_context();
         let screen = egui::Rect::from_min_size(Pos2::ZERO, egui::vec2(1400.0, 1000.0));
@@ -11087,16 +11069,13 @@ mod tests {
             draw();
         }
         let output = draw();
-        for label in [
-            "Creo",
-            solidcraft_ui_text::tr("prefs.gesture_orbit"),
-            solidcraft_ui_text::tr("prefs.gesture_pan"),
-            solidcraft_ui_text::tr("prefs.gesture_zoom"),
-        ] {
+        for label in
+            ["Creo", torno_ui_text::tr("prefs.gesture_orbit"), torno_ui_text::tr("prefs.gesture_pan"), torno_ui_text::tr("prefs.gesture_zoom")]
+        {
             assert!(crate::test_support::text_shapes(&output).any(|text| text.galley.text().contains(label)), "missing binding label: {label}");
         }
         assert_ne!(nav_preset("creo").translated_help(), nav_preset("creo").help);
-        if let Ok(dir) = std::env::var("SOLIDCRAFT_CREO_EVIDENCE") {
+        if let Ok(dir) = std::env::var("TORNO_CREO_EVIDENCE") {
             std::fs::create_dir_all(&dir).unwrap();
             crate::ui_kit::test_raster(&ctx, output.shapes, output.pixels_per_point, screen, &textures)
                 .save(std::path::Path::new(&dir).join("creo-navigation-de.png"))
@@ -11106,7 +11085,7 @@ mod tests {
 
     #[test]
     fn creo_preset_obeys_preference_transactions() {
-        let mut app = SolveApp::new(solidcraft_engine::Session::default(), Default::default());
+        let mut app = SolveApp::new(torno_engine::Session::default(), Default::default());
         control(&mut app, &json!({"open":"Navigation", "nav":"creo"})).unwrap();
         assert_eq!(app.preferences.nav, "creo");
         control(&mut app, &json!({"button":"cancel"})).unwrap();
@@ -11120,14 +11099,14 @@ mod tests {
 
     #[test]
     fn openscad_preset_maps_navigation_and_persists() {
-        let mut app = SolveApp::new(solidcraft_engine::Session::default(), Default::default());
+        let mut app = SolveApp::new(torno_engine::Session::default(), Default::default());
         set(&mut app, &json!({"nav": OPENSCAD_NAV})).unwrap();
         for button in [NavButton::Middle, NavButton::Right] {
             assert_eq!(nav_mode(&app, button, Modifiers::default()), Some(NavMode::Pan));
             assert_eq!(nav_mode(&app, button, Modifiers { shift: true, ..Default::default() }), Some(NavMode::Zoom));
         }
         assert_eq!(nav_mode(&app, NavButton::Left, Modifiers::default()), Some(NavMode::Orbit));
-        let mut other = SolveApp::new(solidcraft_engine::Session::default(), Default::default());
+        let mut other = SolveApp::new(torno_engine::Session::default(), Default::default());
         other.load_prefs(&app.prefs());
         assert_eq!(other.preferences.nav, OPENSCAD_NAV);
     }
@@ -11135,11 +11114,11 @@ mod tests {
     #[test]
     fn pan_reverse_x_defaults_off_persists_and_flips_the_sign() {
         assert!(!serde_json::from_value::<Prefs>(json!({})).unwrap().pan_reverse_x);
-        let mut app = SolveApp::new(solidcraft_engine::Session::default(), Default::default());
+        let mut app = SolveApp::new(torno_engine::Session::default(), Default::default());
         assert_eq!(pan_sign_x(&app), 1.0);
         set(&mut app, &json!({"pan_reverse_x": true})).unwrap();
         assert_eq!(pan_sign_x(&app), -1.0);
-        let mut other = SolveApp::new(solidcraft_engine::Session::default(), Default::default());
+        let mut other = SolveApp::new(torno_engine::Session::default(), Default::default());
         other.load_prefs(&app.prefs());
         assert!(other.preferences.pan_reverse_x);
     }
@@ -11147,12 +11126,12 @@ mod tests {
     #[test]
     fn orbit_reverse_defaults_off_persists_and_flips_the_sign() {
         assert!(!serde_json::from_value::<Prefs>(json!({})).unwrap().orbit_reverse);
-        let mut app = SolveApp::new(solidcraft_engine::Session::default(), Default::default());
+        let mut app = SolveApp::new(torno_engine::Session::default(), Default::default());
         assert_eq!(orbit_sign(&app), 1.0);
         set(&mut app, &json!({"orbit_reverse": true})).unwrap();
         assert_eq!(orbit_sign(&app), -1.0);
         assert_eq!((pan_sign_x(&app), pan_sign_y(&app)), (1.0, 1.0));
-        let mut other = SolveApp::new(solidcraft_engine::Session::default(), Default::default());
+        let mut other = SolveApp::new(torno_engine::Session::default(), Default::default());
         other.load_prefs(&app.prefs());
         assert!(other.preferences.orbit_reverse);
     }
@@ -11160,7 +11139,7 @@ mod tests {
     #[test]
     fn pan_reverse_y_defaults_off_persists_and_flips_the_sign() {
         assert!(!serde_json::from_value::<Prefs>(json!({})).unwrap().pan_reverse_y);
-        let mut app = SolveApp::new(solidcraft_engine::Session::default(), Default::default());
+        let mut app = SolveApp::new(torno_engine::Session::default(), Default::default());
         assert_eq!(pan_sign_y(&app), 1.0);
         set(&mut app, &json!({"pan_reverse_y": true})).unwrap();
         assert_eq!(pan_sign_y(&app), -1.0);
@@ -11169,7 +11148,7 @@ mod tests {
         assert_eq!(pan_sign_x(&app), -1.0);
         assert_eq!(pan_sign_y(&app), 1.0);
         set(&mut app, &json!({"pan_reverse_y": true})).unwrap();
-        let mut other = SolveApp::new(solidcraft_engine::Session::default(), Default::default());
+        let mut other = SolveApp::new(torno_engine::Session::default(), Default::default());
         other.load_prefs(&app.prefs());
         assert!(other.preferences.pan_reverse_y);
     }
@@ -11178,14 +11157,14 @@ mod tests {
     fn trackpad_pan_defaults_on_persists_and_follows_dialog_buttons() {
         assert!(serde_json::from_value::<Prefs>(json!({})).unwrap().trackpad_pan);
         assert!(Prefs::default().trackpad_pan);
-        let mut app = SolveApp::new(solidcraft_engine::Session::default(), Default::default());
+        let mut app = SolveApp::new(torno_engine::Session::default(), Default::default());
         control(&mut app, &json!({"open":"Navigation", "trackpad_pan":false})).unwrap();
         control(&mut app, &json!({"button":"cancel"})).unwrap();
         assert!(app.preferences.trackpad_pan);
         control(&mut app, &json!({"open":"Navigation", "trackpad_pan":false})).unwrap();
         control(&mut app, &json!({"button":"apply"})).unwrap();
         assert!(!app.preferences.trackpad_pan);
-        let mut other = SolveApp::new(solidcraft_engine::Session::default(), Default::default());
+        let mut other = SolveApp::new(torno_engine::Session::default(), Default::default());
         other.load_prefs(&app.prefs());
         assert!(!other.preferences.trackpad_pan);
         control(&mut app, &json!({"open":"Navigation", "button":"defaults"})).unwrap();
@@ -11199,7 +11178,7 @@ mod tests {
         // #1090: orbit, pan and zoom all on the middle button; no left or right drag binding, so
         // those stay selection and the context menu (Ctrl+left on empty space orbits in every
         // preset, outside the bindings).
-        let mut app = SolveApp::new(solidcraft_engine::Session::default(), Default::default());
+        let mut app = SolveApp::new(torno_engine::Session::default(), Default::default());
         set(&mut app, &json!({"nav": "blender"})).unwrap();
         let none = Modifiers::default();
         let shift = Modifiers { shift: true, ..Default::default() };
@@ -11212,14 +11191,14 @@ mod tests {
             assert_eq!(nav_mode(&app, NavButton::Right, mods), None);
         }
         assert_eq!(zoom_sign(&app), 1.0, "the wheel turns the usual way");
-        let mut other = SolveApp::new(solidcraft_engine::Session::default(), Default::default());
+        let mut other = SolveApp::new(torno_engine::Session::default(), Default::default());
         other.load_prefs(&app.prefs());
         assert_eq!(other.preferences.nav, "blender");
     }
 
     #[test]
     fn presets_map_the_mouse_and_prefs_round_trip() {
-        let mut app = SolveApp::new(solidcraft_engine::Session::default(), Default::default());
+        let mut app = SolveApp::new(torno_engine::Session::default(), Default::default());
         let shift = Modifiers { shift: true, ..Default::default() };
         let ctrl = Modifiers { ctrl: true, ..Default::default() };
         let none = Modifiers::default();
@@ -11246,7 +11225,7 @@ mod tests {
         assert!(set(&mut app, &json!({"default_units": "furlong"})).is_err());
         assert!(set(&mut app, &json!({"nope": 1})).is_err());
         // Kept between runs.
-        let mut other = SolveApp::new(solidcraft_engine::Session::default(), Default::default());
+        let mut other = SolveApp::new(torno_engine::Session::default(), Default::default());
         other.load_prefs(&app.prefs());
         assert_eq!(other.preferences, app.preferences);
         assert_eq!(format_length(25.4, "in", 3), "1.000 in");
@@ -11257,7 +11236,7 @@ mod tests {
     /// from empty space every preset has, so a Ctrl+click on geometry still adds to the selection.
     #[test]
     fn maya_and_hfss_presets_navigate_with_alt() {
-        let mut app = SolveApp::new(solidcraft_engine::Session::default(), Default::default());
+        let mut app = SolveApp::new(torno_engine::Session::default(), Default::default());
         let none = Modifiers::default();
         let alt = Modifiers { alt: true, ..Default::default() };
         let shift_alt = Modifiers { shift: true, alt: true, ..Default::default() };
@@ -11275,7 +11254,7 @@ mod tests {
         assert_eq!(nav_mode(&app, NavButton::Left, none), None);
         assert_eq!(nav_mode(&app, NavButton::Left, ctrl), None);
         assert_eq!(zoom_sign(&app), 1.0);
-        let mut other = SolveApp::new(solidcraft_engine::Session::default(), Default::default());
+        let mut other = SolveApp::new(torno_engine::Session::default(), Default::default());
         other.load_prefs(&app.prefs());
         assert_eq!(other.preferences.nav, "hfss");
     }
@@ -11286,7 +11265,7 @@ mod tests {
         assert!(h.app.preferences.maya_horizontal_zoom);
         control(&mut h.app, &json!({"open":"Navigation","nav":"maya","maya_horizontal_zoom":false})).unwrap();
         control(&mut h.app, &json!({"button":"apply"})).unwrap();
-        let mut other = SolveApp::new(solidcraft_engine::Session::default(), Default::default());
+        let mut other = SolveApp::new(torno_engine::Session::default(), Default::default());
         other.load_prefs(&h.app.prefs());
         assert_eq!(other.preferences.nav, "maya");
         assert!(!other.preferences.maya_horizontal_zoom, "the legacy direction survives reopening");
@@ -11301,7 +11280,7 @@ mod tests {
     /// keeps them, Restore Defaults resets one page, and the shortcuts menus open its page.
     #[test]
     fn preferences_dialog_cancel_apply_and_defaults() {
-        let mut app = SolveApp::new(solidcraft_engine::Session::default(), Default::default());
+        let mut app = SolveApp::new(torno_engine::Session::default(), Default::default());
         control(&mut app, &json!({"open": "general"})).unwrap();
         assert!(app.prefs_window.shell.open && app.prefs_window.shell.section == 0);
         control(&mut app, &json!({"theme": "light", "ui_scale": 1.25, "zoom_to_cursor": false})).unwrap();
@@ -11319,7 +11298,7 @@ mod tests {
         assert_eq!(app.preferences.nav, "alias", "Cancel goes back to the last Apply");
         let to = {
             let mut c = app.cam;
-            c.set_view(solidcraft_viewport::StandardView::Top);
+            c.set_view(torno_viewport::StandardView::Top);
             c
         };
         app.animate_to(to);
@@ -11348,7 +11327,7 @@ mod tests {
     /// enabled by a change, and disabled again by Apply (#8561).
     #[test]
     fn apply_is_enabled_only_while_something_changed() {
-        let mut app = SolveApp::new(solidcraft_engine::Session::default(), Default::default());
+        let mut app = SolveApp::new(torno_engine::Session::default(), Default::default());
         let ctx = crate::fonts::test_context();
         let input = || egui::RawInput {
             screen_rect: Some(egui::Rect::from_min_size(egui::Pos2::ZERO, egui::vec2(1600.0, 1000.0))),
@@ -11402,9 +11381,9 @@ mod tests {
 
     #[test]
     fn language_preference_switches_and_persists() {
-        let mut app = SolveApp::new(solidcraft_engine::Session::default(), Default::default());
+        let mut app = SolveApp::new(torno_engine::Session::default(), Default::default());
         // A first start follows the system (#10138), which is English in a test.
-        assert_eq!(app.preferences.language, solidcraft_ui_text::SYSTEM);
+        assert_eq!(app.preferences.language, torno_ui_text::SYSTEM);
         assert_eq!(app.tr("ui.preferences"), "Preferences");
         assert_eq!(app.tr("ui.extrude"), "Extrude");
 
@@ -11417,7 +11396,7 @@ mod tests {
         assert_eq!(app.tr("ui.extrude"), "押し出し");
 
         // Preferences round-trip
-        let mut other = SolveApp::new(solidcraft_engine::Session::default(), Default::default());
+        let mut other = SolveApp::new(torno_engine::Session::default(), Default::default());
         other.load_prefs(&app.prefs());
         assert_eq!(other.preferences.language, "ja");
         assert!(other.preferences.timeline_left);
@@ -11428,25 +11407,25 @@ mod tests {
     /// A STEP file opened Z-up is offered to be stood up: a quarter turn about X, undoable.
     #[test]
     fn a_y_up_step_file_can_be_stood_up() {
-        let dir = std::env::temp_dir().join(format!("solidcraft-standup-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("torno-standup-{}", std::process::id()));
         let _ = std::fs::create_dir_all(&dir);
         let path = dir.join("tall_in_y.step").to_string_lossy().to_string();
-        let mut src = SolveApp::new(solidcraft_engine::Session::default(), Default::default());
+        let mut src = SolveApp::new(torno_engine::Session::default(), Default::default());
         src.run("solid.box", json!({"length": 10, "width": 40, "height": 5})).unwrap();
         src.run("file.export", json!({"path": path})).unwrap();
 
-        let mut app = SolveApp::new(solidcraft_engine::Session::default(), Default::default());
+        let mut app = SolveApp::new(torno_engine::Session::default(), Default::default());
         app.open_path(&path);
-        assert!(app.stand_up.is_none(), "SolidCraft's own exports already have Z up");
+        assert!(app.stand_up.is_none(), "Torno's own exports already have Z up");
         // Another originating system is offered (asked in the dialog, without looking at how the
         // flat box rests).
         let text = std::fs::read_to_string(&path).unwrap();
-        std::fs::write(&path, text.replace("'SolidCraft','SolidCraft'", "'SolidCraft','Example CAD'")).unwrap();
+        std::fs::write(&path, text.replace("'Torno','Torno'", "'Torno','Example CAD'")).unwrap();
         app.preferences.stand_up_unknown = StandUpUnknown::Ask;
         app.open_path(&path);
         let offered = app.stand_up.clone().unwrap_or_default();
         assert_eq!(offered.len(), 1, "the file's body is offered");
-        let size = |app: &SolveApp| solidcraft_engine::view::bounds(&app.session).unwrap();
+        let size = |app: &SolveApp| torno_engine::view::bounds(&app.session).unwrap();
         assert!((size(&app).max.y - size(&app).min.y - 40.0).abs() < 1e-6);
         control(&mut app, &json!({"stand_up": true})).unwrap();
         let b = size(&app);
@@ -11456,11 +11435,11 @@ mod tests {
         assert!((size(&app).max.y - size(&app).min.y - 40.0).abs() < 1e-6, "one undo step");
 
         // Not offered when turned off, or with Y up as the default orientation.
-        let mut app = SolveApp::new(solidcraft_engine::Session::default(), Default::default());
+        let mut app = SolveApp::new(torno_engine::Session::default(), Default::default());
         app.preferences.offer_stand_up = false;
         app.open_path(&path);
         assert!(app.stand_up.is_none());
-        let mut app = SolveApp::new(solidcraft_engine::Session::default(), Default::default());
+        let mut app = SolveApp::new(torno_engine::Session::default(), Default::default());
         app.preferences.up_axis = "y".into();
         app.open_path(&path);
         assert!(app.stand_up.is_none());
@@ -11471,7 +11450,7 @@ mod tests {
     /// moved it off to the side.
     #[test]
     fn orbiting_around_the_origin_keeps_it_still() {
-        let mut app = SolveApp::new(solidcraft_engine::Session::default(), Default::default());
+        let mut app = SolveApp::new(torno_engine::Session::default(), Default::default());
         app.run("solid.box", json!({"length": 40, "width": 40, "height": 40})).unwrap();
         let rect = egui::Rect::from_min_size(egui::Pos2::ZERO, egui::vec2(800.0, 600.0));
         app.fit_view();
@@ -11495,7 +11474,7 @@ mod tests {
         assert_eq!(lenient(&json!({})).orbit_around, OrbitAround::ViewCentre);
         assert_eq!(lenient(&json!({"orbit_around": "origin"})).orbit_around, OrbitAround::Origin);
 
-        let mut app = SolveApp::new(solidcraft_engine::Session::default(), Default::default());
+        let mut app = SolveApp::new(torno_engine::Session::default(), Default::default());
         set(&mut app, &json!({"orbit_around": "origin"})).unwrap();
         assert_eq!(app.preferences.orbit_around, OrbitAround::Origin);
         set(&mut app, &json!({"orbit_cursor": true})).unwrap();
@@ -11508,7 +11487,7 @@ mod tests {
     #[test]
     fn constraint_glyph_size_defaults_to_the_old_size_and_stays_in_range() {
         assert_eq!(Prefs::default().constraint_glyph_scale, 1.0);
-        let mut app = SolveApp::new(solidcraft_engine::Session::default(), Default::default());
+        let mut app = SolveApp::new(torno_engine::Session::default(), Default::default());
         set(&mut app, &json!({"constraint_glyph_scale": 2.0})).unwrap();
         assert_eq!(app.preferences.constraint_glyph_scale, 2.0);
         for bad in [0.5, 3.5, -1.0] {
@@ -11527,7 +11506,7 @@ mod tests {
 
     #[test]
     fn orbiting_around_the_cursor_keeps_that_point_still() {
-        let mut app = SolveApp::new(solidcraft_engine::Session::default(), Default::default());
+        let mut app = SolveApp::new(torno_engine::Session::default(), Default::default());
         app.run("solid.box", json!({"length": 40, "width": 40, "height": 40})).unwrap();
         app.preferences.orbit_around = OrbitAround::Cursor;
         let rect = egui::Rect::from_min_size(egui::Pos2::ZERO, egui::vec2(800.0, 600.0));
@@ -11544,7 +11523,7 @@ mod tests {
     #[test]
     fn orbiting_from_an_edge_turns_around_the_point_under_the_cursor() {
         use crate::viewport::Hit;
-        let mut app = SolveApp::new(solidcraft_engine::Session::default(), Default::default());
+        let mut app = SolveApp::new(torno_engine::Session::default(), Default::default());
         app.run("solid.box", json!({"length": 200, "width": 40, "height": 40})).unwrap();
         app.preferences.orbit_around = OrbitAround::Cursor;
         let rect = egui::Rect::from_min_size(egui::Pos2::ZERO, egui::vec2(800.0, 600.0));
@@ -11575,7 +11554,7 @@ mod tests {
     /// On a sketch line too: the line's point under the cursor, not the view's middle.
     #[test]
     fn orbiting_from_a_sketch_line_turns_around_the_point_under_the_cursor() {
-        let mut app = SolveApp::new(solidcraft_engine::Session::default(), Default::default());
+        let mut app = SolveApp::new(torno_engine::Session::default(), Default::default());
         app.run("sketch.create", json!({"plane": "XY"})).unwrap();
         app.run("sketch.line", json!({"points": [[-100, 0], [100, 0]]})).unwrap();
         app.run("sketch.finish", json!({})).unwrap();
@@ -11593,7 +11572,7 @@ mod tests {
     /// point far off to the side; with nothing visible it turns around the view's centre.
     #[test]
     fn orbiting_from_empty_space_turns_around_the_visible_geometry() {
-        let mut app = SolveApp::new(solidcraft_engine::Session::default(), Default::default());
+        let mut app = SolveApp::new(torno_engine::Session::default(), Default::default());
         app.run("solid.box", json!({"length": 40, "width": 40, "height": 40})).unwrap();
         app.preferences.orbit_around = OrbitAround::Cursor;
         let rect = egui::Rect::from_min_size(egui::Pos2::ZERO, egui::vec2(800.0, 600.0));
@@ -11607,7 +11586,7 @@ mod tests {
         orbit(&mut app, rect, 40.0, 25.0, Some(corner));
         assert_eq!(app.viewport.orbit_pivot, Some(centre));
 
-        let mut app = SolveApp::new(solidcraft_engine::Session::default(), Default::default());
+        let mut app = SolveApp::new(torno_engine::Session::default(), Default::default());
         app.preferences.orbit_around = OrbitAround::Cursor;
         app.cam.target = solidcore_record::Vec3::new(5.0, -3.0, 2.0);
         orbit(&mut app, rect, 40.0, 25.0, Some(corner));
@@ -11617,8 +11596,8 @@ mod tests {
     /// The Y up preference turns the view: the camera's up axis follows it, startup included.
     #[test]
     fn up_axis_preference_turns_the_view() {
-        use solidcraft_viewport::UpAxis;
-        let mut app = SolveApp::new(solidcraft_engine::Session::default(), crate::Services::default());
+        use torno_viewport::UpAxis;
+        let mut app = SolveApp::new(torno_engine::Session::default(), crate::Services::default());
         let ctx = crate::fonts::test_context();
         apply(&mut app, &ctx);
         assert_eq!(app.cam.up, UpAxis::Z);
@@ -11704,7 +11683,7 @@ mod ambient_occlusion_tests {
         let checkbox = crate::scenario::handle_at("view:ambient_occlusion").unwrap();
         h.call("ui.click", json!({"x":checkbox.x,"y":checkbox.y}));
         assert!(h.app.preferences.ambient_occlusion);
-        let mut restored = SolveApp::new(solidcraft_engine::Session::default(), Default::default());
+        let mut restored = SolveApp::new(torno_engine::Session::default(), Default::default());
         restored.load_prefs(&h.app.prefs());
         assert!(!restored.preferences.ambient_occlusion, "a change that was not applied is not saved (#9730)");
         h.call("ui.prefs", json!({"button":"cancel"}));
@@ -11731,7 +11710,7 @@ mod ambient_occlusion_tests {
     /// up direction; Restore Defaults turns it off again.
     #[test]
     fn dark_parts_shading_is_optional_persistent_and_follows_the_up_axis() {
-        use solidcraft_viewport::UpAxis;
+        use torno_viewport::UpAxis;
         let old: Prefs = serde_json::from_value(json!({"msaa": 4})).unwrap();
         assert!(!old.dark_parts_shading && !Prefs::default().dark_parts_shading);
         assert_eq!(crate::viewport::sky_uniform(false, UpAxis::Z), [0.0; 4], "off: shaded as before");
@@ -11744,7 +11723,7 @@ mod ambient_occlusion_tests {
         h.call("ui.click", json!({"x":checkbox.x,"y":checkbox.y}));
         assert!(h.app.preferences.dark_parts_shading);
         h.call("ui.prefs", json!({"button":"apply"}));
-        let mut restored = SolveApp::new(solidcraft_engine::Session::default(), Default::default());
+        let mut restored = SolveApp::new(torno_engine::Session::default(), Default::default());
         restored.load_prefs(&h.app.prefs());
         assert!(restored.preferences.dark_parts_shading);
         h.call("ui.prefs", json!({"button":"defaults"}));
@@ -11981,7 +11960,7 @@ mod graphics_preset_tests {
         use egui::accesskit::Role;
         for theme in ["light", "dark"] {
             let mut h = crate::scenario::Harness::new();
-            let dir = std::env::temp_dir().join(format!("solidcraft-graphics-cards-{}-{theme}", std::process::id()));
+            let dir = std::env::temp_dir().join(format!("torno-graphics-cards-{}-{theme}", std::process::id()));
             std::fs::create_dir_all(&dir).unwrap();
             let path = dir.join("graphics.json");
             std::fs::write(&path, r#"{"backend":"vulkan","msaa":4}"#).unwrap();
@@ -12075,7 +12054,7 @@ mod graphics_preset_tests {
             h.call("ui.click", json!({"x":pos.x,"y":pos.y}));
         }
         assert!(h.app.preferences.ambient_occlusion);
-        let mut restored = SolveApp::new(solidcraft_engine::Session::default(), Default::default());
+        let mut restored = SolveApp::new(torno_engine::Session::default(), Default::default());
         restored.load_prefs(&h.app.prefs());
         assert!(!restored.preferences.ambient_occlusion, "a change that was not applied is not saved (#9730)");
         h.call("ui.prefs", json!({"button":"cancel"}));
@@ -12096,7 +12075,7 @@ mod graphics_preset_tests {
         assert_eq!(h.app.preferences.supersampling, 2.0);
         assert!(h.app.preferences.supersampling_adaptive);
         // The dialog is closed now: what is saved is the live state, quality included (#9730).
-        let mut restored = SolveApp::new(solidcraft_engine::Session::default(), Default::default());
+        let mut restored = SolveApp::new(torno_engine::Session::default(), Default::default());
         restored.load_prefs(&h.app.prefs());
         for edit in [
             json!({"display_quality":"ultra"}),
@@ -12133,7 +12112,7 @@ mod perspective_fov_tests {
 
     fn graphics_slider(h: &mut crate::scenario::Harness) -> egui::Rect {
         h.call("ui.prefs", json!({"open": "Graphics"}));
-        let label = solidcraft_ui_text::tr("prefs.perspective_fov");
+        let label = torno_ui_text::tr("prefs.perspective_fov");
         reveal_preference(h, &format!("dialog:slider:{label}"));
         crate::scenario::rect_of(&format!("dialog:slider_track:{label}")).expect("the Field of view slider")
     }
@@ -12277,8 +12256,8 @@ mod perspective_fov_tests {
         let mut h = crate::scenario::Harness::new();
         h.call("ui.set", json!({"perspective": true}));
         h.frames(2);
-        let to = solidcraft_viewport::Camera { distance: 300.0, ..h.app.cam };
-        h.app.cam_anim = Some(solidcraft_viewport::CameraAnim::new(h.app.cam, to, h.app.now));
+        let to = torno_viewport::Camera { distance: 300.0, ..h.app.cam };
+        h.app.cam_anim = Some(torno_viewport::CameraAnim::new(h.app.cam, to, h.app.now));
         let from = h.app.cam;
         set(&mut h.app, &json!({"perspective_fov": 1.0})).unwrap();
         let k = (0.6f64 * 0.5).tan() / 0.5f64.tan();
@@ -12317,7 +12296,7 @@ mod perspective_fov_tests {
     }
 }
 
-// SolidCraft's Preferences window drives the kit's settings search; these run the whole app.
+// Torno's Preferences window drives the kit's settings search; these run the whole app.
 #[cfg(test)]
 mod settings_search_tests {
     use crate::ui_kit::settings_search::*;
@@ -12330,7 +12309,7 @@ mod settings_search_tests {
         assert!(!matches_text("rzd", &["Reverse zoom direction"]));
         assert!(!matches_text("q", &["Units of new designs"]));
         assert!(!matches_text("qqqq", &["Units of new designs"]));
-        let _language = solidcraft_ui_text::scope("fr");
+        let _language = torno_ui_text::scope("fr");
         assert!(matches_text("units", &["Unités des nouvelles conceptions"]));
         assert!(matches_text("preferences", &["préférences"]));
         assert!(matches_text("dark", &["Theme"]));
@@ -12343,13 +12322,13 @@ mod settings_search_tests {
     #[test]
     fn search_finds_right_to_left_labels_typed_in_reading_order() {
         crate::i18n::install();
-        let _language = solidcraft_ui_text::scope("he");
-        let label = solidcraft_ui_text::tr("prefs.bodies_folders");
+        let _language = torno_ui_text::scope("he");
+        let label = torno_ui_text::tr("prefs.bodies_folders");
         assert!(matches_text("תיקיות גופים", &[label]), "the label as it is typed");
         assert!(matches_text("גופים תיקיות", &[label]), "the words swapped still match");
         assert!(matches_text("תיקיות", &[label]), "one word still matches");
-        let _language = solidcraft_ui_text::scope("ar");
-        let label = solidcraft_ui_text::tr("prefs.bodies_folders");
+        let _language = torno_ui_text::scope("ar");
+        let label = torno_ui_text::tr("prefs.bodies_folders");
         assert!(matches_text("مجلدات الأجسام", &[label]), "the label as it is typed");
         assert!(matches_text("الأجسام مجلدات", &[label]), "the words swapped still match");
         assert!(matches_text("مجلدات", &[label]), "one word still matches");
@@ -12358,9 +12337,9 @@ mod settings_search_tests {
     #[test]
     fn the_search_field_names_the_window_it_searches() {
         crate::i18n::install();
-        let name = solidcraft_ui_text::tr("ui.preferences").to_lowercase();
+        let name = torno_ui_text::tr("ui.preferences").to_lowercase();
         for id in ["prefs.search", "prefs.search_empty"] {
-            let text = solidcraft_ui_text::tr(id).to_lowercase();
+            let text = torno_ui_text::tr(id).to_lowercase();
             assert!(text.contains(&name), "`{text}` should name the window `{name}`");
         }
     }
@@ -12388,9 +12367,9 @@ mod settings_search_tests {
             ("prefs.sketch.whole_bodies", "Click selects whole bodies"),
         ];
         for lang in ["en", "en-GB", "ar", "de", "he", "ja", "ko", "vi", "zh"] {
-            let _language = solidcraft_ui_text::scope(lang);
+            let _language = torno_ui_text::scope(lang);
             for (id, legacy) in cases {
-                assert!(matches_text(legacy, &[solidcraft_ui_text::tr(id)]), "{lang}: {legacy} still finds {id}");
+                assert!(matches_text(legacy, &[torno_ui_text::tr(id)]), "{lang}: {legacy} still finds {id}");
             }
         }
     }
@@ -13091,7 +13070,7 @@ mod settings_search_tests {
             h.call("ui.prefs", json!({"open":"Shortcuts","theme":theme}));
             h.step(&json!({"click":{"handle":"keymap:filter"}})).unwrap();
             h.step(&json!({"text":"solid.extrude"})).unwrap();
-            let command = solidcraft_engine::command_specs().last().unwrap().id;
+            let command = torno_engine::command_specs().last().unwrap().id;
             let original = crate::toolbar_custom::export(&h.app);
             h.app.prefs_window.shell.filter = command.into();
             let find = |h: &crate::scenario::Harness| {
@@ -13179,7 +13158,7 @@ mod settings_search_tests {
     }
 }
 
-// SolidCraft's Preferences window on the kit's window, footer and colour components.
+// Torno's Preferences window on the kit's window, footer and colour components.
 #[cfg(test)]
 mod kit_use_tests {
     use crate::scenario;
@@ -13187,9 +13166,9 @@ mod kit_use_tests {
 
     #[test]
     fn preferences_preserves_every_page_and_footer_in_both_themes() {
-        let previous = solidcraft_theme::is_dark();
+        let previous = torno_theme::is_dark();
         for dark in [false, true] {
-            solidcraft_theme::set_dark(dark);
+            torno_theme::set_dark(dark);
             let mut h = crate::scenario::Harness::new();
             h.app.preferences.theme = if dark { "dark" } else { "light" }.into();
             h.app.home.open = false;
@@ -13246,7 +13225,7 @@ mod kit_use_tests {
                 }
             }
         }
-        solidcraft_theme::set_dark(previous);
+        torno_theme::set_dark(previous);
     }
 
     #[test]
@@ -13280,7 +13259,7 @@ mod kit_use_tests {
     #[test]
     fn recent_colours_are_saved_with_the_preferences_and_hostile_entries_dropped() {
         use serde_json::json;
-        let mut app = crate::SolveApp::new(solidcraft_engine::Session::default(), Default::default());
+        let mut app = crate::SolveApp::new(torno_engine::Session::default(), Default::default());
         let mut list = vec![json!([1, 2, 3]), json!([300, 0, 0]), json!("red"), json!([1, 2]), json!(null)];
         list.extend((0..50).map(|i| json!([i, i, i])));
         app.load_prefs(&json!({ "recent_colors": list }).to_string());
@@ -13290,7 +13269,7 @@ mod kit_use_tests {
         crate::ui_kit::recent_colors::share(&ctx, &mut app.ui.recent_colors);
         remember_color(&ctx, [9, 8, 7], None);
         crate::ui_kit::recent_colors::share(&ctx, &mut app.ui.recent_colors);
-        let mut restored = crate::SolveApp::new(solidcraft_engine::Session::default(), Default::default());
+        let mut restored = crate::SolveApp::new(torno_engine::Session::default(), Default::default());
         restored.load_prefs(&app.prefs());
         assert_eq!(restored.ui.recent_colors.first(), Some(&[9, 8, 7]));
         assert_eq!(restored.ui.recent_colors.get(1), Some(&[1, 2, 3]));

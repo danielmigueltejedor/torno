@@ -1,8 +1,8 @@
 //! Device execution for layered weathering and nondestructive presentation.
 use super::*;
 use serde_json::json;
-use solidcraft_geom::MeshGeom;
-use solidcraft_render::job::{
+use torno_geom::MeshGeom;
+use torno_render::job::{
     JobId, Phase,
     aging::{AgingKind, AgingLayer, AgingStack, BodyName, BodyTarget},
     finishing::Finishing,
@@ -44,7 +44,7 @@ fn preflight_without_memory_observations(mut reply: serde_json::Value) -> serde_
 fn saved_targeted_aging_reaches_preflight_and_start_after_cold_reopen() {
     let Some(executor) = executor() else { return };
     assert!(executor.supports_aging());
-    let mut session = solidcraft_engine::Session::default();
+    let mut session = torno_engine::Session::default();
     session.execute("solid.box", &json!({"body_name":"Decoy","length":1,"width":1,"height":1})).unwrap();
     session.execute("solid.box", &json!({"body_name":"Target panel","length":20,"width":15,"height":6})).unwrap();
     let state = session.model.state();
@@ -62,8 +62,8 @@ fn saved_targeted_aging_reaches_preflight_and_start_after_cold_reopen() {
             }}),
         )
         .unwrap();
-    let native = solidcraft_io::write_design_container(&session.doc).unwrap();
-    session = solidcraft_engine::Session::new(solidcraft_io::read_design(&native).unwrap());
+    let native = torno_io::write_design_container(&session.doc).unwrap();
+    session = torno_engine::Session::new(torno_io::read_design(&native).unwrap());
     let host = ImageHost::with_executor(Arc::new(executor)).unwrap();
     session.register_render_job_host(host.clone()).unwrap();
     let document = session.doc.clone();
@@ -204,7 +204,7 @@ fn weathering_reference(@builtin(global_invocation_id) gid:vec3<u32>){
         seen.push(pixels);
         stack.move_layer(0, 1).unwrap();
     }
-    let expected = dust.color_srgb.map(solidcraft_viewport::surface::srgb8_to_linear);
+    let expected = dust.color_srgb.map(torno_viewport::surface::srgb8_to_linear);
     for (actual, expected) in seen[0][0][..3].iter().zip(expected) {
         assert!((f64::from(*actual) - expected).abs() < 1e-6);
     }
@@ -259,7 +259,7 @@ fn photographic_and_ordered_colour_effects_change_png_not_raw_master_and_regrade
     assert_ne!(base.0, photo.0);
     assert_eq!(base.1, photo.1);
     let host = ImageHost::with_executor(Arc::new(executor)).unwrap();
-    let mut session = solidcraft_engine::Session::default();
+    let mut session = torno_engine::Session::default();
     session.register_render_job_host(host).unwrap();
     session.execute("solid.box", &json!({"length":20,"width":15,"height":6})).unwrap();
     let request =
@@ -287,7 +287,7 @@ fn photographic_and_ordered_colour_effects_change_png_not_raw_master_and_regrade
 /// not by a raster-backed test double claiming an unsupported capability.
 #[test]
 fn saved_aging_identity_reaches_real_gpu_after_cold_reopen() {
-    use solidcraft_engine::{Session, doc, io};
+    use torno_engine::{Session, doc, io};
     let Some(executor) = executor() else { return };
     assert!(executor.supports_aging());
     let host = ImageHost::with_executor(Arc::new(executor)).unwrap();
@@ -519,8 +519,8 @@ fn scratch_band_reference(@builtin(global_invocation_id) gid:vec3<u32>){
 
 #[test]
 fn scratch_analytic_triangle_hits_keep_world_phase_for_signed_camera_and_world_origins() {
-    use solidcraft_geom::Mesh;
-    use solidcraft_render::ProductMesh;
+    use torno_geom::Mesh;
+    use torno_render::ProductMesh;
     let Some(executor) = executor() else { return };
     let context = executor.context;
     let source = format!(
@@ -706,9 +706,9 @@ fn inactive_scratch_layers_preserve_exact_default_pixels_raw_master_stream_and_a
 
 #[test]
 fn scratch_keeps_visible_analytic_emission_and_its_raw_master_exact() {
-    use solidcraft_render::job::{AreaLight, AreaLights, StudioLighting};
+    use torno_render::job::{AreaLight, AreaLights, StudioLighting};
     let Some(executor) = executor() else { return };
-    let source = ProductScene { meshes: Vec::new(), bounds: solidcraft_geom::Aabb3::EMPTY };
+    let source = ProductScene { meshes: Vec::new(), bounds: torno_geom::Aabb3::EMPTY };
     let light = AreaLight { center: [0.0; 3], u: [10.0, 0.0, 0.0], v: [0.0, 10.0, 0.0], radiance: [1.5, 0.5, 0.25] };
     let complete = |aging| {
         let options = JobOptions {
@@ -802,7 +802,7 @@ fn saved_coat_gpu_capture_reopen_and_actual_render_match_independent_normal_inci
     }
     use std::f64::consts::{FRAC_PI_2, PI, SQRT_2};
     let Some(executor) = executor() else { return };
-    let mut session = solidcraft_engine::Session::default();
+    let mut session = torno_engine::Session::default();
     session.execute("solid.box", &json!({"body_name":"Panel","corner":[-10,-10,-2],"length":20,"width":20,"height":2})).unwrap();
     session
         .execute(
@@ -821,8 +821,8 @@ fn saved_coat_gpu_capture_reopen_and_actual_render_match_independent_normal_inci
                 "directional_lights":[{"direction":[0,0,1],"color":[1,1,1],"intensity":PI}]}}}}}),
         )
         .unwrap();
-    let container = solidcraft_io::write_design_container(&session.doc).unwrap();
-    session = solidcraft_engine::Session::new(solidcraft_io::read_design(&container).unwrap());
+    let container = torno_io::write_design_container(&session.doc).unwrap();
+    session = torno_engine::Session::new(torno_io::read_design(&container).unwrap());
     session.execute("render.scene", &json!({})).unwrap();
     let host = ImageHost::with_executor(Arc::new(executor)).unwrap();
     session.register_render_job_host(host.clone()).unwrap();
@@ -836,7 +836,7 @@ fn saved_coat_gpu_capture_reopen_and_actual_render_match_independent_normal_inci
     assert_eq!(checked["coats"], json!(session.doc.render.setups["Coat"].coats));
     assert_eq!(checked["resolved"]["executor"], "gpu-path");
     assert_eq!(host.admitted_bytes(), 0);
-    let complete = |session: &mut solidcraft_engine::Session, settings: serde_json::Value| {
+    let complete = |session: &mut torno_engine::Session, settings: serde_json::Value| {
         let start = session.execute("render.start", &json!({"settings":settings})).unwrap();
         let id: JobId = serde_json::from_value(start["job"].clone()).unwrap();
         let handle = session.render_job_handle(id).unwrap();
@@ -874,10 +874,7 @@ fn saved_coat_gpu_capture_reopen_and_actual_render_match_independent_normal_inci
     let row = zero.coats.iter().next().unwrap().clone();
     zero.coats
         .set(
-            solidcraft_engine::doc::render_coat::SavedCoat {
-                coat: solidcraft_engine::doc::render_coat::CoatMaterial { weight: 0.0, ..row.coat },
-                ..row
-            },
+            torno_engine::doc::render_coat::SavedCoat { coat: torno_engine::doc::render_coat::CoatMaterial { weight: 0.0, ..row.coat }, ..row },
             true,
         )
         .unwrap();
@@ -897,7 +894,7 @@ fn saved_coat_gpu_capture_reopen_and_actual_render_match_independent_normal_inci
 #[test]
 fn saved_gpu_coat_survives_builtin_maps_aging_and_guided_filter_without_changing_the_raw_master() {
     let Some(executor) = executor() else { return };
-    let mut session = solidcraft_engine::Session::default();
+    let mut session = torno_engine::Session::default();
     session.execute("solid.box", &json!({"body_name":"Panel","corner":[-10,-10,-2],"length":20,"width":20,"height":2})).unwrap();
     session
         .execute("appearance.assign", &json!({"bodies":["Panel"],"color":[128,64,32],"pbr":{"metallic":0,"roughness":0.5,"dielectric_ior":1}}))
@@ -910,8 +907,8 @@ fn saved_gpu_coat_survives_builtin_maps_aging_and_guided_filter_without_changing
     session
         .execute("render.library.surface.bind", &json!({"name":"Coat","surface":{"id":"SURF-001","body_index":0,"body_name":"Panel","scale":10}}))
         .unwrap();
-    let bytes = solidcraft_io::write_design_container(&session.doc).unwrap();
-    session = solidcraft_engine::Session::new(solidcraft_io::read_design(&bytes).unwrap());
+    let bytes = torno_io::write_design_container(&session.doc).unwrap();
+    session = torno_engine::Session::new(torno_io::read_design(&bytes).unwrap());
     session.execute("render.scene", &json!({})).unwrap();
     let host = ImageHost::with_executor(Arc::new(executor)).unwrap();
     session.register_render_job_host(host).unwrap();
@@ -921,7 +918,7 @@ fn saved_gpu_coat_survives_builtin_maps_aging_and_guided_filter_without_changing
     let world = session.world_state().unwrap();
     let session_camera = session.camera;
     let history = (session.revision, session.model.recomputed, session.undo.len(), session.redo.len());
-    let complete = |variant: &str, session: &mut solidcraft_engine::Session, setup: solidcraft_engine::doc::render_settings::RenderSetup| {
+    let complete = |variant: &str, session: &mut torno_engine::Session, setup: torno_engine::doc::render_settings::RenderSetup| {
         let submitted = std::time::Instant::now();
         let reply = session.execute("render.start", &json!({"settings":setup})).unwrap();
         let id: JobId = serde_json::from_value(reply["job"].clone()).unwrap();
@@ -960,12 +957,12 @@ fn saved_gpu_coat_survives_builtin_maps_aging_and_guided_filter_without_changing
     let no_map = complete("no_map", &mut session, unmapped);
     assert_ne!(actual.linear_exr().unwrap(), no_map.linear_exr().unwrap(), "maps still modify the coated substrate");
     let mut unaged = saved.clone();
-    let Some(solidcraft_engine::doc::render_settings::RenderJob::GpuPath { options, .. }) = &mut unaged.job else { panic!("GPU") };
+    let Some(torno_engine::doc::render_settings::RenderJob::GpuPath { options, .. }) = &mut unaged.job else { panic!("GPU") };
     options.aging = Default::default();
     let no_age = complete("no_age", &mut session, unaged);
     assert_ne!(actual.linear_exr().unwrap(), no_age.linear_exr().unwrap(), "aging still modifies the mapped coat/substrate");
     let mut unfiltered = saved.clone();
-    let Some(solidcraft_engine::doc::render_settings::RenderJob::GpuPath { options, .. }) = &mut unfiltered.job else { panic!("GPU") };
+    let Some(torno_engine::doc::render_settings::RenderJob::GpuPath { options, .. }) = &mut unfiltered.job else { panic!("GPU") };
     options.denoise = false;
     let raw = complete("raw", &mut session, unfiltered);
     assert_eq!(actual.linear_exr().unwrap(), raw.linear_exr().unwrap(), "denoising cannot enter coated raw transport");

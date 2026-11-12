@@ -1,5 +1,5 @@
 use super::*;
-use solidcraft_engine::geom::prelude::*;
+use torno_engine::geom::prelude::*;
 
 /// A sphere mesh of about `2 n²` triangles, each corner its own point.
 fn sphere(n: u32) -> Arc<Mesh> {

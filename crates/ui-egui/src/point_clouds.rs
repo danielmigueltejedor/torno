@@ -7,10 +7,10 @@ use std::collections::HashMap;
 use std::sync::Arc;
 
 use egui::{Painter, Shape};
-use solidcraft_engine::doc::point_cloud::Keep;
-use solidcraft_engine::doc::point_cloud::{ColorBy, On, PLAIN, PointCloud, Source, byte};
-use solidcraft_engine::doc::point_cloud_distribution::color_range_by;
-use solidcraft_viewport_gpu::view::{Cell, CloudFilter, CloudStyle, ColorMode, FILTERS, GpuCloud, cloud_cell};
+use torno_engine::doc::point_cloud::Keep;
+use torno_engine::doc::point_cloud::{ColorBy, On, PLAIN, PointCloud, Source, byte};
+use torno_engine::doc::point_cloud_distribution::color_range_by;
+use torno_viewport_gpu::view::{Cell, CloudFilter, CloudStyle, ColorMode, FILTERS, GpuCloud, cloud_cell};
 
 use crate::SolveApp;
 use crate::browser::point_cloud_tracks::{Ask, Paint, Tracks};
@@ -239,7 +239,7 @@ pub fn gpu_clouds(app: &SolveApp, ctx: &egui::Context) -> Vec<GpuCloud> {
     RECORDS.with(|m| {
         let mut m = m.borrow_mut();
         m.retain(|id, _| doc.point_clouds.iter().any(|c| c.id == *id));
-        solidcraft_engine::view::shown_point_clouds(&app.session)
+        torno_engine::view::shown_point_clouds(&app.session)
             .map(|c| {
                 let key = Key::of(c);
                 let (version, [dots, segments, triangles]) = match m.get(&c.id) {
@@ -266,7 +266,7 @@ pub fn show(app: &SolveApp, painter: &Painter, proj: &Proj) {
     if app.viewport.gpu.is_some() {
         return;
     }
-    let clouds: Vec<&PointCloud> = solidcraft_engine::view::shown_point_clouds(&app.session).collect();
+    let clouds: Vec<&PointCloud> = torno_engine::view::shown_point_clouds(&app.session).collect();
     let total: usize = clouds.iter().map(|c| c.len()).sum();
     if total == 0 {
         return;
@@ -292,7 +292,7 @@ mod tests {
     #[test]
     fn records_are_made_again_only_when_the_cloud_changes_and_its_style_follows_it() {
         let mut h = crate::scenario::Harness::new();
-        let dir = std::env::temp_dir().join(format!("solidcraft-ui-cloud-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("torno-ui-cloud-{}", std::process::id()));
         std::fs::create_dir_all(&dir).unwrap();
         let path = dir.join("two.xyz");
         std::fs::write(&path, "0 0 0 255 0 0\n10 0 0 0 255 0\n").unwrap();
@@ -304,7 +304,7 @@ mod tests {
         assert!(crate::browser::is_open(&h.app, "point_clouds", true));
         let first = gpu_clouds(&h.app, &h.ctx);
         assert_eq!(first.len(), 1);
-        let size = solidcraft_viewport_gpu::view::CELL_SIZE;
+        let size = torno_viewport_gpu::view::CELL_SIZE;
         assert_eq!((first[0].dots.len(), first[0].segments.len()), (2 * size, 0));
         // The second point: at x = 10, green.
         assert_eq!(&first[0].dots[size..size + 4], &10f32.to_le_bytes());
@@ -323,13 +323,13 @@ mod tests {
         let wider = gpu_clouds(&h.app, &h.ctx);
         assert_eq!((wider[0].version, wider[0].style.range), (ramp[0].version, [0.0, 2.0]), "a new range uploads nothing");
         // Hidden, alone or with its folder: nothing drawn; the view frames it while shown.
-        assert!(!solidcraft_engine::view::bounds(&h.app.session).unwrap().is_empty());
+        assert!(!torno_engine::view::bounds(&h.app.session).unwrap().is_empty());
         let first_bounds = crate::viewport::model_bounds(&h.app);
         assert!(!first_bounds.is_empty());
         assert_eq!(crate::viewport::model_bounds(&h.app), first_bounds, "cached sketch bounds keep the point cloud extent");
         h.app.run("pointcloud.edit", serde_json::json!({"cloud": id, "visible": false})).unwrap();
         assert!(gpu_clouds(&h.app, &h.ctx).is_empty());
-        assert!(solidcraft_engine::view::bounds(&h.app.session).unwrap().is_empty());
+        assert!(torno_engine::view::bounds(&h.app.session).unwrap().is_empty());
         assert!(crate::viewport::model_bounds(&h.app).is_empty());
         let _ = std::fs::remove_dir_all(dir);
     }
@@ -337,7 +337,7 @@ mod tests {
     #[test]
     fn an_automatic_range_is_what_is_kept_and_follows_a_playing_filter() {
         let mut h = crate::scenario::Harness::new();
-        let dir = std::env::temp_dir().join(format!("solidcraft-ui-cloud-play-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("torno-ui-cloud-play-{}", std::process::id()));
         std::fs::create_dir_all(&dir).unwrap();
         let path = dir.join("t.ply");
         // One segment, x and t both running 0 to 10 along it.

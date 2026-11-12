@@ -2,7 +2,7 @@
 //! it stays one face with an inner loop, whatever is cut or joined elsewhere afterwards.
 
 use solidcore_record::Vec3;
-use solidcraft_geom::prelude::*;
+use torno_geom::prelude::*;
 
 use crate::{Body, BoolOp, FaceSurface, boolean, box_solid, face_surface, fillet, shell};
 
