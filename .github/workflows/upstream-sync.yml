@@ -78,6 +78,7 @@ jobs:
           if ! git merge --no-ff --no-edit "$up" >/tmp/merge.log 2>&1; then
             # AGENTS.md: upstream's text plus this project's own section at the end.
             if git diff --name-only --diff-filter=U | grep -qx 'AGENTS.md'; then
+              # shellcheck disable=SC2016 # The pattern is an awk expression, not shell expansion.
               block="$(git show "HEAD:AGENTS.md" | awk '/^## Repository-specific deterministic quality contract/{f=1} f')"
               git show "${up}:AGENTS.md" > AGENTS.md
               [ -n "$block" ] && printf '\n%s\n' "$block" >> AGENTS.md
@@ -100,6 +101,7 @@ jobs:
             fi
             kept=""
             if [ -f .github/upstream-keep ]; then
+              # shellcheck disable=SC2016 # These dollar fields belong to awk, not the shell.
               kept="$(git diff --name-only "${ours}...${up}" 2>/dev/null | git check-attr --stdin merge | awk -F': ' '$3=="ours"{print "- `"$1"`"}' | head -40 || true)"
             fi
             kept_text=""
