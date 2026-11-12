@@ -471,7 +471,7 @@ fn corpus_geometry() {
         if contexts.iter().any(|c| *c != u) {
             mixed_units.push(name.clone());
         }
-        // Where a removed check would have decided otherwise: SolidCraft refused a direction
+        // Where a removed check would have decided otherwise: Torno refused a direction
         // whose length is at most 1e-12 (here: only one that is exactly zero), and took the two
         // unit factors of a conic's parameter space as equal within 1e-12 relative (here: only
         // when equal).

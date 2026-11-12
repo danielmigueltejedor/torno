@@ -4,8 +4,8 @@
 //! planes (vertices are triple-plane intersections, edges lines, faces planes, pcurves exact),
 //! taken by SMLib and checked there.
 
-use solidcraft_geom::prelude::*;
 use std::collections::HashMap;
+use torno_geom::prelude::*;
 
 use solidcore_record::Vec3;
 use solidcore_record::brep::{self as rec, Curve2, EdgeUseRef, Loop, OrientedEdge, OrientedFace};
@@ -191,14 +191,14 @@ fn polyhedron_record(hs: &[HalfSpace], verts: &[Vec3], faces: &[(usize, Vec<usiz
 /// came from (face certificates: sketches and press-pulls attach to them), and the body keeps
 /// the lines its faces were split along on purpose.
 pub fn shell(b: &Body, open: &[Vec3], thickness: f64) -> Result<Body> {
-    let _span = solidcraft_profile::span("kernel", "shell");
+    let _span = torno_profile::span("kernel", "shell");
     crate::offset_backend::shell(b, open, thickness)?.inherit_split_lines(&[b]).with_shell_planar_sources(b, thickness, open)
 }
 
 /// Tilt the faces near `faces` by `angle` about their line on the neutral plane, so that they
 /// lean in (positive angle) going along `pull` (SMLib's draft).
 pub fn draft(b: &Body, faces: &[Vec3], neutral: &solidcore_record::Plane, pull: Vec3, angle: f64) -> Result<Body> {
-    let _span = solidcraft_profile::span("kernel", "draft");
+    let _span = torno_profile::span("kernel", "draft");
     b.require_brep("draft")?;
     crate::offset_backend::draft(b, faces, neutral, pull, angle)
 }
@@ -206,7 +206,7 @@ pub fn draft(b: &Body, faces: &[Vec3], neutral: &solidcore_record::Plane, pull: 
 /// Move the faces at the given points along their outward normals by `distance` (negative: into
 /// the body), SMLib's offset of faces: the faces around them are extended or trimmed to meet them.
 pub fn offset_faces(b: &Body, at: &[Vec3], distance: f64) -> Result<Body> {
-    let _span = solidcraft_profile::span("kernel", "offset_faces");
+    let _span = torno_profile::span("kernel", "offset_faces");
     b.require_brep("offset faces")?;
     if !distance.is_finite() || distance.abs() > 1e6 {
         return Err(KernelError::Invalid("offset distance".into()));
@@ -220,7 +220,7 @@ pub fn offset_faces(b: &Body, at: &[Vec3], distance: f64) -> Result<Body> {
             .triangles
             .iter()
             .zip(&mesh.tri_face)
-            .filter_map(|(t, f)| mesh.tri(t).map(|[x, y, z]| (solidcraft_geom::compare::closest_on_triangle(*p, x, y, z).dist(*p), *f as usize)))
+            .filter_map(|(t, f)| mesh.tri(t).map(|[x, y, z]| (torno_geom::compare::closest_on_triangle(*p, x, y, z).dist(*p), *f as usize)))
             .min_by(|a, c| a.0.total_cmp(&c.0));
         match near {
             Some((d, f)) if d < size * 1e-3 + 1e-6 => {

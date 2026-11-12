@@ -256,7 +256,7 @@
     "blend_dropping"
   ],
   "ungraded": [
-    "continuity: SolidCraft computes it"
+    "continuity: Torno computes it"
   ],
   "what": "a circular pattern (6 copies about Y) of a through hole and the 1 mm chamfer on its rim (the report: the pattern is refused because the copied chamfer 'would grow the part'); rebuilt as a hole in a disc, the original design is not in the report",
   "why_not": []

@@ -62,7 +62,7 @@
 //!   pairs processed and their order are the same, and a join of two bodies of n faces
 //!   no longer walks all n^2 pairs to skip them. With an intersection table registered
 //!   every pair is still visited (its lookup copies curves before the box test).
-//! - **Work count** (the SolidCraft fork's `SmWorkCounters`, tangency-labs/smlib@2e9e6b2):
+//! - **Work count** (the Torno fork's `SmWorkCounters`, tangency-labs/smlib@2e9e6b2):
 //!   each face pair the face loop of `IntersectTopology` visits adds one to
 //!   [`WorkCounters::face_pairs`](crate::kernel::WorkCounters::face_pairs). It changes no
 //!   result.
@@ -73,7 +73,7 @@
 //! - **Deleted curves.** `IntersectTopology` and `IntersectInsertRelate` return the
 //!   curve handles deleted (by `SplitIntersectingProtoEdges`, the resolution, the
 //!   imprint and the manager's destructor), as [`p1`](super::p1) does.
-//! - **A failed imprint** (SolidCraft fix, tangency-labs/smlib af8db37, UB-242).
+//! - **A failed imprint** (Torno fix, tangency-labs/smlib af8db37, UB-242).
 //!   Upstream's `IntersectInsertRelate` reports a failure of `ImprintIntersections`
 //!   and then overwrites its status with that of `SetRelationships`, so the boolean
 //!   goes on with both B-reps half imprinted (upstream: reads of freed vertex uses).
@@ -863,7 +863,7 @@ impl<O: ClassObject + SolutionObject + Ord> TopologyIntersector<O> {
                 return Ok(());
             }
         }
-        // SolidCraft change (issue #432): either combination may delete an edge
+        // Torno change (issue #432): either combination may delete an edge
         // independently. Only remove actual mates, keeping both maps in sync [B460].
         if let Some(db) = deleted_brep_edge {
             if let Some(mate) = self.other_mate(Some(db)) {
@@ -1272,7 +1272,7 @@ impl<O: ClassObject + SolutionObject + Ord> TopologyIntersector<O> {
     /// Those of the manager's construction, `IntersectTopology` and
     /// `ResolveIntersections` (the manager then stays installed, as upstream leaks
     /// it); every error of the imprint that may have edited a B-rep, after deleting
-    /// the manager (SolidCraft fix af8db37: upstream goes on with the half-imprinted
+    /// the manager (Torno fix af8db37: upstream goes on with the half-imprinted
     /// B-reps, UB-242, which [`Kernel::note_upstream_ub`] records); an imprint failure
     /// that edited nothing, or a failing `GlueCoincidentBrepVertices`, only warns, as
     /// upstream;
@@ -1333,7 +1333,7 @@ impl<O: ClassObject + SolutionObject + Ord> TopologyIntersector<O> {
         // Imprint Intersections, now we'll modify the Breps. If that didn't work and a
         // failing imprint edited a Brep, the Breps are partly imprinted and no longer
         // consistent: stop here, so that no caller goes on to relate, classify or
-        // measure them (SolidCraft change, tangency-labs/smlib af8db37; upstream only
+        // measure them (Torno change, tangency-labs/smlib af8db37; upstream only
         // warns and overwrites the status). A failure that edited nothing (an edge
         // definition without a final vertex, or a MakeEdgeInFace that finds no vertex
         // sector before its first edit) leaves the Breps consistent, and upstream goes on;
@@ -1496,7 +1496,7 @@ impl<O: ClassObject + SolutionObject + Ord> TopologyIntersector<O> {
                 let Some(&f2) = faces2.get(jj) else {
                     continue;
                 };
-                // (the SolidCraft fork's work count)
+                // (the Torno fork's work count)
                 k.work_counters.add_face_pair();
                 let s1 = brep
                     .face_surface(f1)

@@ -1,4 +1,4 @@
-//! Rounds that would open into a hollow behind them (SolidCraft's `rounds_into_hollow` cases:
+//! Rounds that would open into a hollow behind them (Torno's `rounds_into_hollow` cases:
 //! #1668's thin wall, #2852's U shell), run through [`blend`] with every fix on: the kernel's
 //! `NoRoomReason::BreaksThrough` refuses them as [`Error::TooLarge`] with
 //! [`RoomReason::BreaksThrough`].
@@ -149,7 +149,7 @@ fn a_round_past_an_inside_round_is_refused_as_breaking_through() {
     }
 }
 
-/// SolidCraft builds these (its `rounds_into_hollow` counts the inside edge's concave round,
+/// Torno builds these (its `rounds_into_hollow` counts the inside edge's concave round,
 /// made in the same fillet, as material the outer round runs over: the rig's
 /// 1668-fillet-both-sides-of-thin-wall-r7, 39509.938); the kernel's `BreaksThrough` judges the
 /// outer round against the body before the inside round is added and refuses them. Measured

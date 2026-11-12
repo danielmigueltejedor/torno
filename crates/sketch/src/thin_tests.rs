@@ -1,8 +1,8 @@
 //! Thin walls against areas worked out by hand: a wall along a chain covers its length times
 //! the thickness, less what corners overlap and plus what mitres add.
 
-use solidcraft_geom::prelude::*;
 use std::f64::consts::PI;
+use torno_geom::prelude::*;
 
 use solidcore_record::{Seg2, Vec2};
 

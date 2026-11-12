@@ -293,7 +293,7 @@
     "blend_dropping"
   ],
   "ungraded": [
-    "continuity: SolidCraft computes it"
+    "continuity: Torno computes it"
   ],
   "what": "vertical corner fillets R2 on a 25x25x10 box whose four bottom edges are already rounded R2 (the round meets the earlier mitre)",
   "why_not": []

@@ -2,8 +2,8 @@
 //! This numerical foundation installs no texture sampler, shader or persistent record.
 
 use solidcore_record::Vec3;
-use solidcraft_geom::Aabb3;
-use solidcraft_geom::prelude::*;
+use torno_geom::Aabb3;
+use torno_geom::prelude::*;
 
 /// Admission bounds, not a GPU precision or engineering applicability guarantee.
 pub const MAX_LOCAL_MM: f64 = 1e9;

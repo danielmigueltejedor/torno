@@ -1,4 +1,4 @@
-//! Random modelling sessions for robustness testing (`solidcraft-cli fuzz`, docs/robustness.md).
+//! Random modelling sessions for robustness testing (`torno-cli fuzz`, docs/robustness.md).
 //!
 //! A seeded generator builds realistic feature sequences: a base (box, extruded sketch profile
 //! with an arc, revolved section), then joins and cuts of boxes, cylinders and spheres placed on
@@ -9,9 +9,9 @@
 use serde::Serialize;
 use serde_json::{Value, json};
 use solidcore_record::Vec3;
-use solidcraft_geom::MeshGeom;
-use solidcraft_kernel::fuzz::Rng;
-pub use solidcraft_kernel::fuzz::{BoolCase, boolean_case, boolean_shapes};
+use torno_geom::MeshGeom;
+use torno_kernel::fuzz::Rng;
+pub use torno_kernel::fuzz::{BoolCase, boolean_case, boolean_shapes};
 
 use crate::{EngineError, Session};
 
@@ -68,14 +68,14 @@ pub struct Run {
 }
 
 impl Run {
-    /// The commands as a script for `solidcraft-cli run`.
+    /// The commands as a script for `torno-cli run`.
     pub fn script(&self) -> Value {
         Value::Array(self.steps.iter().flat_map(|s| s.commands.iter().map(|(c, p)| json!({"command": c, "params": p}))).collect())
     }
 }
 
 fn total_volume(s: &Session) -> f64 {
-    s.model.state().bodies.iter().filter_map(|b| solidcraft_kernel::measure(&b.body).ok()).map(|m| m.volume).sum()
+    s.model.state().bodies.iter().filter_map(|b| torno_kernel::measure(&b.body).ok()).map(|m| m.volume).sum()
 }
 
 fn classify(e: &EngineError) -> Outcome {
@@ -389,11 +389,11 @@ mod tests {
     use super::*;
 
     #[allow(clippy::expect_used)]
-    fn body_measures(s: &Session) -> Vec<solidcraft_kernel::BodyMeasure> {
-        s.model.state().bodies.iter().map(|b| solidcraft_kernel::measure(&b.body).expect("measure a valid body")).collect()
+    fn body_measures(s: &Session) -> Vec<torno_kernel::BodyMeasure> {
+        s.model.state().bodies.iter().map(|b| torno_kernel::measure(&b.body).expect("measure a valid body")).collect()
     }
 
-    fn seed_measures(seed: u64) -> Vec<solidcraft_kernel::BodyMeasure> {
+    fn seed_measures(seed: u64) -> Vec<torno_kernel::BodyMeasure> {
         let (run, s) = run_session(seed, 8, &mut |_| {});
         assert_eq!(run.outcome.kind, "ok", "seed {seed}: {:?}", run.outcome);
         body_measures(&s)

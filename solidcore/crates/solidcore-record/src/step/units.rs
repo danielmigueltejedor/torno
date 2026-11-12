@@ -10,11 +10,11 @@
 //! of radians). Only multiplications: the factor of a degree is the number the file writes, not
 //! a π computed here (the record computes no geometric quantity, docs/layers.md §4).
 //!
-//! Origin: SolidCraft's `crates/step/src/units.rs` and the `Units` type of
+//! Origin: Torno's `crates/step/src/units.rs` and the `Units` type of
 //! `crates/step/src/read.rs` at `a5b71ca2` (MIT OR Apache-2.0), carried over with their
 //! behaviour unchanged.
 //!
-//! Deviations from SolidCraft: [`Units`] lives here (it was in `read.rs`, which is not carried
+//! Deviations from Torno: [`Units`] lives here (it was in `read.rs`, which is not carried
 //! over yet). The nesting bound of a `CONVERSION_BASED_UNIT` chain is the named
 //! `MAX_CONVERSION_DEPTH` (was the literal 4). Otherwise only formatting and doc comments on every
 //! public item.
@@ -178,7 +178,7 @@ mod tests {
     use std::f64::consts::PI;
     use std::fmt::Write as _;
 
-    /// Millimetres, radians and steradians as SolidCraft's writer and its topology tests
+    /// Millimetres, radians and steradians as Torno's writer and its topology tests
     /// (`crates/step/src/topology_tests.rs`, `file`) write them.
     const MM: &str = "#1=(LENGTH_UNIT()NAMED_UNIT(*)SI_UNIT(.MILLI.,.METRE.));\
          #2=(NAMED_UNIT(*)PLANE_ANGLE_UNIT()SI_UNIT($,.RADIAN.));\
@@ -204,8 +204,8 @@ mod tests {
     }
 
     #[test]
-    fn solidcraft_file_context() {
-        // SolidCraft's topology test file: mm, rad, sr and an uncertainty of 1e-7 mm.
+    fn torno_file_context() {
+        // Torno's topology test file: mm, rad, sr and an uncertainty of 1e-7 mm.
         let c = ctx(
             &format!(
                 "{MM}#4=UNCERTAINTY_MEASURE_WITH_UNIT(LENGTH_MEASURE(1.E-07),#1,'distance_accuracy_value','');"

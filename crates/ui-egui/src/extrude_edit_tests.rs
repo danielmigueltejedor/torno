@@ -1,8 +1,8 @@
 //! Exercise the actual feature editor, including frames rendered before OK.
 use crate::scenario::Harness;
 use serde_json::{Value, json};
-use solidcraft_engine::doc::{Extent, FeatureKind};
-use solidcraft_engine::geom::MeshGeom;
+use torno_engine::doc::{Extent, FeatureKind};
+use torno_engine::geom::MeshGeom;
 
 fn make(params: Value) -> Harness {
     make_in(Harness::new(), params)
@@ -125,12 +125,12 @@ fn unchanged_all_profiles_includes_profiles_added_after_edit() {
     open(&mut h);
     h.step(&json!({"widget":"OK"})).unwrap();
     let FeatureKind::Extrude { profiles, .. } = &h.app.session.doc.find_feature("Depth").unwrap().kind else { panic!("extrude") };
-    assert!(matches!(profiles, solidcraft_engine::doc::ProfileSel::All));
+    assert!(matches!(profiles, torno_engine::doc::ProfileSel::All));
     h.app.run("sketch.edit", json!({"sketch":"Base"})).unwrap();
     h.app.run("sketch.rectangle.two_point", json!({"p0":[20,0],"p1":[25,5]})).unwrap();
     h.app.run("sketch.finish", json!({})).unwrap();
     let state = h.app.session.world_state().unwrap();
-    let volume: f64 = state.bodies.iter().map(|b| solidcraft_engine::doc::kernel::measure(&b.body).unwrap().volume).sum();
+    let volume: f64 = state.bodies.iter().map(|b| torno_engine::doc::kernel::measure(&b.body).unwrap().volume).sum();
     assert!((volume - 1250.0).abs() < 1e-7, "{volume}");
 }
 
@@ -167,7 +167,7 @@ fn negative_edit_keeps_downstream_distance_reference_positive() {
     h.app.run("solid.box", json!({"length":10,"width":10,"height":"d1","corner":[30,0,0],"body_name":"Dependent"})).unwrap();
     open(&mut h);
     h.step(&json!({"widget":"OK"})).unwrap();
-    assert_eq!(h.app.session.doc.eval("d1", solidcraft_engine::doc::expr::Kind::Length).unwrap(), 10.0);
+    assert_eq!(h.app.session.doc.eval("d1", torno_engine::doc::expr::Kind::Length).unwrap(), 10.0);
     assert_eq!(h.app.session.world_state().unwrap().body("Dependent").unwrap().mesh().bounds().max.z, 10.0);
 }
 
@@ -270,8 +270,8 @@ fn explicit_reverse_keeps_original_expression_and_parameter_sign() {
     h.step(&json!({"widget":"Reverse Direction"})).unwrap();
     h.step(&json!({"widget":"OK"})).unwrap();
     assert_eq!(extent(&h).distance, "10");
-    assert_eq!(extent(&h).direction, solidcraft_engine::doc::Direction::Negative);
-    assert_eq!(h.app.session.doc.eval("d1", solidcraft_engine::doc::expr::Kind::Length).unwrap(), 10.0);
+    assert_eq!(extent(&h).direction, torno_engine::doc::Direction::Negative);
+    assert_eq!(h.app.session.doc.eval("d1", torno_engine::doc::expr::Kind::Length).unwrap(), 10.0);
     assert_eq!(h.app.session.world_state().unwrap().body("Main").unwrap().mesh().bounds().min.z, -10.0);
 }
 
@@ -287,7 +287,7 @@ fn failed_edit_and_cancel_keep_full_history_and_existing_redo() {
     let redo = h.app.session.redo.len();
     assert_eq!(undo, 199);
     assert_eq!(redo, 1);
-    h.app.session.selection = vec![solidcraft_engine::Sel::Body { name: "Main".into() }];
+    h.app.session.selection = vec![torno_engine::Sel::Body { name: "Main".into() }];
     let selection = h.app.session.selection.clone();
     let original = serde_json::to_value(&*h.app.session.doc).unwrap();
     open(&mut h);
@@ -321,7 +321,7 @@ fn tapered_from_and_signed_to_have_correct_start_volume_and_preview_parity() {
         let bounds = body.mesh().bounds();
         assert!((bounds.min.z - lo).abs() < 1e-8 && (bounds.max.z - hi).abs() < 1e-8, "{params}: {bounds:?}");
         let expected = 10.0 * (100.0 + 120.0 + 144.0) / 3.0;
-        let volume = solidcraft_engine::doc::kernel::measure(&body.body).unwrap().volume;
+        let volume = torno_engine::doc::kernel::measure(&body.body).unwrap().volume;
         assert!((volume - expected).abs() < 1e-5, "{params}: volume{volume} expected{expected}");
         let original = extent(&h);
         open(&mut h);
@@ -410,7 +410,7 @@ fn symmetric_total_distance_preview_handle_drag_apply_and_reopen_agree() {
         h.step(&json!({"drag":[{"handle":"arrow"},{"world":[5,5,60]}]})).unwrap();
         let d = h.app.dialog.as_ref().unwrap();
         let crate::dialogs::Kind::Extrude { distance, .. } = &d.kind else { panic!("extrude") };
-        assert_eq!(h.app.session.doc.eval(distance, solidcraft_engine::doc::expr::Kind::Length).unwrap(), total_after_drag);
+        assert_eq!(h.app.session.doc.eval(distance, torno_engine::doc::expr::Kind::Length).unwrap(), total_after_drag);
         let commands = crate::dialogs::apply_commands(&h.app, d).unwrap();
         let preview = h.app.session.preview(&commands).unwrap();
         let preview_bounds = preview.after.body("Main").unwrap().mesh().bounds();
@@ -440,7 +440,7 @@ fn switching_one_side_to_symmetric_in_actual_editor_keeps_total_thickness() {
         assert!((bounds.min.z + 5.0).abs() < 1e-7 && (bounds.max.z - 5.0).abs() < 1e-7);
         h.step(&json!({"widget":"OK"})).unwrap();
         assert_eq!(h.app.session.world_state().unwrap().body("Main").unwrap().mesh().bounds(), bounds);
-        assert_eq!(extent(&h).convention, solidcraft_engine::doc::ExtrudeConvention::TotalDistance);
+        assert_eq!(extent(&h).convention, torno_engine::doc::ExtrudeConvention::TotalDistance);
     }
 }
 
@@ -456,7 +456,7 @@ fn symmetric_through_all_handle_drag_switches_to_total_distance() {
     let d = h.app.dialog.as_ref().unwrap();
     let crate::dialogs::Kind::Extrude { distance, all, .. } = &d.kind else { panic!("extrude") };
     assert!(!all);
-    assert_eq!(h.app.session.doc.eval(distance, solidcraft_engine::doc::expr::Kind::Length).unwrap(), 120.0);
+    assert_eq!(h.app.session.doc.eval(distance, torno_engine::doc::expr::Kind::Length).unwrap(), 120.0);
     h.step(&json!({"widget":"OK"})).unwrap();
     let bounds = h.app.session.world_state().unwrap().body("Main").unwrap().mesh().bounds();
     assert!((bounds.min.z + 60.0).abs() < 1e-7 && (bounds.max.z - 60.0).abs() < 1e-7);
@@ -485,7 +485,7 @@ fn extrusion_arrow_tracks_the_current_drag_frame() {
         h.frame();
         let d = h.app.dialog.as_ref().unwrap();
         let crate::dialogs::Kind::Extrude { distance, .. } = &d.kind else { panic!("extrude") };
-        let distance = h.app.session.doc.eval(distance, solidcraft_engine::doc::expr::Kind::Length).unwrap();
+        let distance = h.app.session.doc.eval(distance, torno_engine::doc::expr::Kind::Length).unwrap();
         assert!(distance > 10.0);
         let (base, normal) = crate::canvas::anchor(&h.app, d).unwrap();
         let world = base + normal.unwrap() * distance;
@@ -506,7 +506,7 @@ fn on_arrow(h: &Harness, at: f64) -> Value {
 fn dialog_distance(h: &Harness) -> f64 {
     let d = h.app.dialog.as_ref().unwrap();
     let crate::dialogs::Kind::Extrude { distance, .. } = &d.kind else { panic!("extrude") };
-    h.app.session.doc.eval(distance, solidcraft_engine::doc::expr::Kind::Length).unwrap()
+    h.app.session.doc.eval(distance, torno_engine::doc::expr::Kind::Length).unwrap()
 }
 
 /// The arrow's stem takes the drag as its tip does (#1740): pressed 4 mm along a 10 mm arrow and
@@ -557,7 +557,7 @@ fn a_click_on_the_extrude_arrow_stem_keeps_the_profile() {
 /// The volume of the body `name`.
 fn volume(h: &Harness, name: &str) -> f64 {
     let state = h.app.session.world_state().unwrap();
-    solidcraft_engine::doc::kernel::measure(&state.body(name).unwrap().body).unwrap().volume
+    torno_engine::doc::kernel::measure(&state.body(name).unwrap().body).unwrap().volume
 }
 
 /// Two Sides with All (#2700): the editor shows Distance 2 and Reverse for a through-all cut, and
@@ -593,7 +593,7 @@ fn two_sides_with_all_shows_distance_2_and_reverse_swaps_the_sides() {
     h.step(&json!({"widget":"OK"})).unwrap();
     assert!(h.app.dialog.is_none(), "{:?}", h.app.session.log);
     let e = extent(&h);
-    assert_eq!((e.direction, e.through_all, e.distance2.as_deref()), (solidcraft_engine::doc::Direction::Negative, true, Some("3 mm")));
+    assert_eq!((e.direction, e.through_all, e.distance2.as_deref()), (torno_engine::doc::Direction::Negative, true, Some("3 mm")));
     assert!((depth(&h) - 33.0).abs() < 0.05, "{}", depth(&h));
     // And it opens reversed again: OK without changes keeps it.
     open(&mut h);
@@ -884,7 +884,7 @@ fn a_single_click_on_a_face_only_selects_it() {
     h.step(&json!({"click":{"world":[5,5,10]}})).unwrap();
     h.frames(30);
     assert!(h.app.dialog.is_none() && h.app.pending_feature_edit.is_none());
-    assert!(h.app.session.selection.iter().any(|s| matches!(s, solidcraft_engine::Sel::Face { .. })), "{:?}", h.app.session.selection);
+    assert!(h.app.session.selection.iter().any(|s| matches!(s, torno_engine::Sel::Face { .. })), "{:?}", h.app.session.selection);
     h.step(&json!({"click":{"world":[5,5,10]},"double":true,"shift":true})).unwrap();
     h.frames(8);
     assert!(h.app.dialog.is_none(), "a double-click with a modifier is left to the selection");

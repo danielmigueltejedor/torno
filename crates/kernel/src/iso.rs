@@ -12,8 +12,8 @@
 
 use solidcore_record::Vec3;
 use solidcore_record::brep;
-use solidcraft_geom::brep::eval::SurfaceEval;
-use solidcraft_geom::prelude::*;
+use torno_geom::brep::eval::SurfaceEval;
+use torno_geom::prelude::*;
 
 use crate::body::Body;
 use crate::point_path::{MAX_CURVE_POINTS, curve_path};
@@ -353,7 +353,7 @@ fn iso_record(surface: &brep::Surface, along_u: bool, fixed: f64, (a, b): (f64, 
 /// The row of a B-spline surface (homogeneous `net[i][j]`, i along u) at `fixed`: along u, each
 /// control point the v-column through it evaluated at `fixed` (along v, the u-row), on `[a, b]`.
 fn spline_iso(u_knots: &[f64], v_knots: &[f64], net: &[Vec<[f64; 4]>], along_u: bool, fixed: f64, a: f64, b: f64) -> Result<(brep::Curve, [f64; 2])> {
-    use solidcraft_geom::bspline::CurveN;
+    use torno_geom::bspline::CurveN;
     let bad = || KernelError::Invalid("iso curve: the surface's B-spline does not evaluate".into());
     let (nu, nv) = (net.len(), net.first().map_or(0, Vec::len));
     if nu * nv > MAX_CURVE_POINTS || net.iter().any(|r| r.len() != nv) {

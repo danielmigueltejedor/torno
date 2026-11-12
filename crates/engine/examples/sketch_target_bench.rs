@@ -4,8 +4,8 @@ mod four_bar;
 use four_bar::Result;
 use serde_json::json;
 use solidcore_record::Vec2;
-use solidcraft_sketch::profiling::capture;
 use std::{io::Write, time::Instant};
+use torno_sketch::profiling::capture;
 
 fn main() -> Result<()> {
     let mut args = std::env::args().skip(1);
@@ -46,7 +46,7 @@ fn main() -> Result<()> {
         }
     }
     let mut out = std::io::BufWriter::new(std::fs::File::create(path)?);
-    serde_json::to_writer_pretty(&mut out, &json!({"schema":"solidcraft/sketch-target-bench/1","repeats":repeats,"warmup":2,"cases":cases}))?;
+    serde_json::to_writer_pretty(&mut out, &json!({"schema":"torno/sketch-target-bench/1","repeats":repeats,"warmup":2,"cases":cases}))?;
     writeln!(out)?;
     out.flush()?;
     Ok(())

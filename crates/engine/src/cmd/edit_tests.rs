@@ -3,7 +3,7 @@
 
 use serde_json::{Value, json};
 use solidcore_record::Vec3;
-use solidcraft_geom::MeshGeom;
+use torno_geom::MeshGeom;
 
 use crate::{EngineError, Sel, Session};
 
@@ -207,7 +207,7 @@ fn creating_after_deleting_future_features_keeps_the_new_feature_active() {
 
 #[test]
 fn g2_fillet_survives_edit_undo_and_reopen() {
-    use solidcraft_doc::{Document, FeatureKind, FilletStyle};
+    use torno_doc::{Document, FeatureKind, FilletStyle};
     let mut s = Session::default();
     run(&mut s, "solid.box", json!({"length": 20, "width": 20, "height": 20, "name": "Base"}));
     run(&mut s, "solid.fillet", json!({"edges": [[20, 0, 10]], "radius": 2, "type": "g2", "name": "Smooth"}));
@@ -229,7 +229,7 @@ fn g2_fillet_survives_edit_undo_and_reopen() {
 
 #[test]
 fn redefining_a_fillet_as_g2_on_sloped_ends_survives_undo_and_reopen() {
-    use solidcraft_doc::{Document, FeatureKind, FilletStyle};
+    use torno_doc::{Document, FeatureKind, FilletStyle};
     let mut s = Session::default();
     run(&mut s, "sketch.create", json!({"plane": "XY"}));
     run(&mut s, "sketch.line", json!({"points": [[0, 0], [40, 0], [30, 20], [10, 20]], "closed": true}));
@@ -252,7 +252,7 @@ fn redefining_a_fillet_as_g2_on_sloped_ends_survives_undo_and_reopen() {
     let volume = |s: &Session| {
         let bodies = &s.model.state().bodies;
         assert_eq!(bodies.len(), 1);
-        bodies.first().unwrap().body.mesh(&solidcraft_kernel::MeshTolerance::chord(0.0001)).unwrap().measure().volume
+        bodies.first().unwrap().body.mesh(&torno_kernel::MeshTolerance::chord(0.0001)).unwrap().measure().volume
     };
     // The curvature section at its equal-area thumbweight removes (1 - pi/4) r² at the square
     // corner, first moment 0.0474559669443 r³ (Green's theorem on the section).
@@ -322,7 +322,7 @@ fn redefining_computes_the_later_features_once() {
     for x in [30, 40, 50] {
         run(&mut s, "solid.box", json!({"length": 5, "width": 5, "height": 5, "corner": [x, 0, 0]}));
     }
-    *s.model.cache.lock().unwrap() = solidcraft_doc::EvalCache::with_budget(1);
+    *s.model.cache.lock().unwrap() = torno_doc::EvalCache::with_budget(1);
     let reply =
         run(&mut s, "timeline.redefine", json!({"feature": "Base", "command": "solid.box", "params": {"length": 25, "width": 10, "height": 5}}));
     assert_eq!((reply["recomputed"].as_u64(), reply["restored"].as_u64()), (Some(4), Some(0)), "{reply}");
@@ -445,7 +445,7 @@ fn redefine_rejects_sheet_exports_before_they_touch_any_files() {
     run(&mut s, "sketch.finish", json!({}));
     run(&mut s, "sheet.flange", json!({"name": "Plate"}));
     let doc = s.doc.clone();
-    let base = std::env::temp_dir().join(format!("solidcraft-redefine-export-{}", std::process::id()));
+    let base = std::env::temp_dir().join(format!("torno-redefine-export-{}", std::process::id()));
     std::fs::create_dir_all(&base).unwrap();
     for command in ["sheet.export_dxf", "sheet.export_bend_table"] {
         for existing in [false, true] {
@@ -492,9 +492,9 @@ fn redefine_keeps_allocator_above_component_and_occurrence_ids() {
     assert_eq!(s.doc.find_feature("Join").unwrap().id, original_feature);
     let combine_index = s.doc.feature_index(original_feature).unwrap();
     assert!(
-        matches!(&s.doc.features[combine_index + 1].kind, solidcraft_doc::FeatureKind::BodyTransfer { bodies, to, .. } if bodies == &["Base"] && *to == destination)
+        matches!(&s.doc.features[combine_index + 1].kind, torno_doc::FeatureKind::BodyTransfer { bodies, to, .. } if bodies == &["Base"] && *to == destination)
     );
-    assert!((solidcraft_kernel::measure(&s.world_state().unwrap().body("Base").unwrap().body).unwrap().volume - 6000.0).abs() < 1e-6);
+    assert!((torno_kernel::measure(&s.world_state().unwrap().body("Base").unwrap().body).unwrap().volume - 6000.0).abs() < 1e-6);
     assert_eq!(s.world_state().unwrap().bodies.len(), 1);
     run(&mut s, "timeline.rollback", json!({"position":combine_index + 1}));
     assert_eq!(s.world_state().unwrap().body("Base").unwrap().component, 0, "the result transfers only AFTER Combine");
@@ -502,9 +502,9 @@ fn redefine_keeps_allocator_above_component_and_occurrence_ids() {
     run(&mut s, "edit.undo", json!({}));
     assert_eq!(*s.doc, *original);
     run(&mut s, "edit.redo", json!({}));
-    let reopened = Session::new(solidcraft_doc::Document::from_json(&s.doc.to_json()).unwrap());
+    let reopened = Session::new(torno_doc::Document::from_json(&s.doc.to_json()).unwrap());
     assert_eq!(reopened.world_state().unwrap().body("Base").unwrap().component, destination);
-    assert!((solidcraft_kernel::measure(&reopened.world_state().unwrap().body("Base").unwrap().body).unwrap().volume - 6000.0).abs() < 1e-6);
+    assert!((torno_kernel::measure(&reopened.world_state().unwrap().body("Base").unwrap().body).unwrap().volume - 6000.0).abs() < 1e-6);
     let max_id =
         s.doc.components.iter().map(|c| c.id).chain(s.doc.occurrences.iter().map(|o| o.id)).chain(s.doc.features.iter().map(|f| f.id)).max().unwrap();
     assert!(s.doc.next_id > max_id);
@@ -525,7 +525,7 @@ fn redefine_cannot_publish_a_second_transfer_that_breaks_existing_ownership() {
     let full = s.doc.to_json();
     let join_index = s.doc.features.iter().position(|feature| feature.name == "Join").unwrap();
     for marker in [None, Some(join_index), Some(join_index + 1)] {
-        let mut s = Session::new(solidcraft_doc::Document::from_json(&full).unwrap());
+        let mut s = Session::new(torno_doc::Document::from_json(&full).unwrap());
         s.doc_mut().marker = marker;
         s.refresh();
         let before = s.doc.to_json();
@@ -535,7 +535,7 @@ fn redefine_cannot_publish_a_second_transfer_that_breaks_existing_ownership() {
         assert_eq!(s.doc.to_json(), before);
         assert_eq!(s.pending_moves, pending);
     }
-    let reopened = Session::new(solidcraft_doc::Document::from_json(&full).unwrap());
+    let reopened = Session::new(torno_doc::Document::from_json(&full).unwrap());
     assert_eq!(reopened.world_state().unwrap().body("Base").unwrap().component, reopened.doc.find_component("Original").unwrap());
     assert!(reopened.doc.features.iter().all(|feature| reopened.model.result(feature.id).is_some_and(|result| result.error.is_none())));
 }
@@ -638,7 +638,7 @@ fn timeline_folders_are_command_backed_saved_undoable_and_follow_feature_ids() {
     run(&mut s, "timeline.move_to_group", json!({"features": [round], "group": null}));
     assert_eq!(s.doc.timeline_groups[0].features, vec![base]);
 
-    let reopened = solidcraft_doc::Document::from_json(&s.doc.to_json()).unwrap();
+    let reopened = torno_doc::Document::from_json(&s.doc.to_json()).unwrap();
     assert_eq!(reopened.timeline_groups, s.doc.timeline_groups);
     run(&mut s, "edit.undo", json!({}));
     assert_eq!(s.doc.timeline_groups[0].features, vec![base, round]);
@@ -667,7 +667,7 @@ fn editing_a_feature_inside_a_folder_leaves_the_folder_as_it_was() {
     let made =
         run(&mut s, "solid.box", json!({"length": 2, "width": 2, "height": 2, "operation": "new", "name": "Later"}))["feature"].as_u64().unwrap();
     assert!(!s.doc.timeline_groups[0].features.contains(&made), "a feature made after the folder is not in it");
-    let reopened = solidcraft_doc::Document::from_json(&s.doc.to_json()).unwrap();
+    let reopened = torno_doc::Document::from_json(&s.doc.to_json()).unwrap();
     assert_eq!(reopened.timeline_groups, s.doc.timeline_groups);
 }
 
@@ -736,7 +736,7 @@ fn timeline_folders_refuse_unknown_non_contiguous_and_split_contents() {
     let first = s.doc.find_feature("First").unwrap().id;
     let third = s.doc.find_feature("Third").unwrap().id;
     damaged["timeline_groups"] = json!([{"id": 1, "name": "Broken", "features": [first, third]}]);
-    let error = solidcraft_doc::Document::from_json(&damaged.to_string()).unwrap_err().to_string();
+    let error = torno_doc::Document::from_json(&damaged.to_string()).unwrap_err().to_string();
     assert!(error.contains("not contiguous"), "{error}");
 }
 
@@ -747,7 +747,7 @@ fn deleted_timeline_group_ids_are_not_reused_after_reopening() {
     let params = json!({"features": ["Block"]});
     let first = run(&mut s, "timeline.group", params.clone())["group"].as_u64().unwrap();
     run(&mut s, "timeline.ungroup", json!({"group": first}));
-    let doc = solidcraft_doc::Document::from_json(&s.doc.to_json()).unwrap();
+    let doc = torno_doc::Document::from_json(&s.doc.to_json()).unwrap();
     *s.doc_mut() = doc;
     let second = run(&mut s, "timeline.group", params)["group"].as_u64().unwrap();
     assert!(second > first, "deleted folder {first} was reused as {second}");
@@ -883,7 +883,7 @@ fn timeline_folders_can_nest_and_reject_cycles() {
     let error = s.execute("timeline.move_many", &json!({"groups": [root], "group": child, "position": 0})).unwrap_err().to_string();
     assert!(error.contains("itself") || error.contains("descendant"), "{error}");
     assert_eq!(s.doc, before);
-    let reopened = solidcraft_doc::Document::from_json(&s.doc.to_json()).unwrap();
+    let reopened = torno_doc::Document::from_json(&s.doc.to_json()).unwrap();
     assert_eq!(reopened.timeline_groups, s.doc.timeline_groups);
     run(&mut s, "timeline.ungroup", json!({"group": root}));
     assert_eq!(s.doc.timeline_groups.iter().find(|group| group.id == child).unwrap().parent, None, "deleting a folder promotes its children");
@@ -957,7 +957,7 @@ fn timeline_delete_takes_a_folder_with_its_features_and_nested_folders() {
     assert_eq!(out["groups"], json!([outer, inner]), "{out}");
     assert_eq!(s.doc.timeline_groups.iter().map(|group| group.id).collect::<Vec<_>>(), [keep], "the nested folder goes too");
     assert_eq!(s.model.state().bodies.len(), 2);
-    let reopened = solidcraft_doc::Document::from_json(&s.doc.to_json()).unwrap();
+    let reopened = torno_doc::Document::from_json(&s.doc.to_json()).unwrap();
     assert_eq!(reopened.timeline_groups, s.doc.timeline_groups);
 
     run(&mut s, "edit.undo", json!({}));
@@ -997,7 +997,7 @@ fn timeline_suppress_takes_a_folder_with_its_nested_folders() {
     assert_eq!(out["groups"], json!([outer]));
     assert_eq!(suppressed(&s), ["Second", "Third"]);
     assert_eq!(s.model.state().bodies.len(), 2);
-    let reopened = solidcraft_doc::Document::from_json(&s.doc.to_json()).unwrap();
+    let reopened = torno_doc::Document::from_json(&s.doc.to_json()).unwrap();
     assert_eq!(reopened.features, s.doc.features);
     run(&mut s, "edit.undo", json!({}));
     assert!(suppressed(&s).is_empty(), "one undo step");
@@ -1182,7 +1182,7 @@ fn suppressing_a_feature_keeps_later_counted_body_names() {
     // Also once the design is opened again with the model its file keeps, which does not keep
     // the names passed by: D computed again from a kept state is still `Body4`.
     let saved = s.model.saved(&s.doc).unwrap();
-    let mut reopened = Session::opened(solidcraft_doc::Document::from_json(&s.doc.to_json()).unwrap(), Some(&saved));
+    let mut reopened = Session::opened(torno_doc::Document::from_json(&s.doc.to_json()).unwrap(), Some(&saved));
     run(&mut reopened, "timeline.edit", json!({"feature": "D", "set": {"length": "12"}}));
     assert_eq!(bodies(&reopened), named(&[("Body2", "B"), ("Body3", "C"), ("Body4", "D")]));
     run(&mut s, "timeline.suppress", json!({"feature": "A", "suppressed": false}));
@@ -1275,7 +1275,7 @@ fn pinning_with_the_bodies_it_read_before_pins_as_reading_them_again() {
         // The fingerprints match the design as fingerprinting the whole timeline again makes them
         // match it: evaluating it again reuses the same results (all, as a rule; the others are
         // computed or taken from the cache the copies share).
-        let again = |model: &solidcraft_doc::Model| {
+        let again = |model: &torno_doc::Model| {
             let mut m = model.clone();
             m.evaluate(&kept.doc);
             m.last_recomputed + m.last_restored
@@ -1409,7 +1409,7 @@ fn renaming_a_feature_evaluates_nothing() {
     run(&mut s, "solid.pattern.rectangular", json!({"features": ["Base plate"], "dir1": [0, 0, 1], "count1": 2, "spacing1": 10, "name": "Copies"}));
     let copies = s.doc.find_feature("Copies").unwrap().id;
     let top = s.doc.find_feature("Top").unwrap().id;
-    if let Some(solidcraft_doc::FeatureKind::Pattern { features, .. }) = s.doc_mut().feature_mut(copies).map(|f| &mut f.kind) {
+    if let Some(torno_doc::FeatureKind::Pattern { features, .. }) = s.doc_mut().feature_mut(copies).map(|f| &mut f.kind) {
         *features = vec![top.into()];
     }
     s.refresh();
@@ -1435,13 +1435,13 @@ fn renaming_a_plane_keeps_its_projections_canvases_and_hidden_state() {
     run(&mut s, "browser.visibility", json!({"items": ["Guide"], "visible": false}));
     let mut png = b"\x89PNG\r\n\x1a\n\0\0\0\rIHDR".to_vec();
     png.extend([0, 0, 0, 4, 0, 0, 0, 2, 8, 6, 0, 0, 0, 0, 0, 0, 0]);
-    run(&mut s, "canvas.insert", json!({"data": solidcraft_doc::canvas::base64_encode(&png), "plane": "Shelf", "width": 40}));
+    run(&mut s, "canvas.insert", json!({"data": torno_doc::canvas::base64_encode(&png), "plane": "Shelf", "width": 40}));
     run(&mut s, "sketch.create", json!({"plane": "XZ", "name": "Profile"}));
     run(&mut s, "sketch.project", json!({"refs": [{"plane": "Shelf"}]}));
     run(&mut s, "sketch.finish", json!({}));
     let plane_link = |s: &Session| match &s.doc.find_feature("Profile").unwrap().kind {
-        solidcraft_doc::FeatureKind::Sketch { sketch, .. } => match &sketch.links[0].source {
-            solidcraft_sketch::LinkSource::Plane { name } => name.clone(),
+        torno_doc::FeatureKind::Sketch { sketch, .. } => match &sketch.links[0].source {
+            torno_sketch::LinkSource::Plane { name } => name.clone(),
             other => panic!("{other:?}"),
         },
         other => panic!("{other:?}"),
@@ -1458,7 +1458,7 @@ fn renaming_a_plane_keeps_its_projections_canvases_and_hidden_state() {
     run(&mut s, "timeline.rename", json!({"feature": "Shelf", "name": "Ledge"}));
     run(&mut s, "timeline.rename", json!({"feature": "Guide", "name": "Rail"}));
     assert_eq!(plane_link(&s), "Ledge");
-    assert_eq!(canvas_plane(&s), solidcraft_doc::PlaneRef::Construction { feature: shelf.into() });
+    assert_eq!(canvas_plane(&s), torno_doc::PlaneRef::Construction { feature: shelf.into() });
     assert_eq!(s.visibility.hidden_origin, ["Rail"]);
     assert_eq!(s.selection, [Sel::Plane { name: "Ledge".into() }]);
     assert!(warnings(&s).is_empty(), "{:?}", warnings(&s));
@@ -1471,7 +1471,7 @@ fn renaming_a_plane_keeps_its_projections_canvases_and_hidden_state() {
         run(&mut s, "edit.undo", json!({}));
     }
     assert_eq!(plane_link(&s), "Shelf");
-    assert_eq!(canvas_plane(&s), solidcraft_doc::PlaneRef::Construction { feature: shelf.into() });
+    assert_eq!(canvas_plane(&s), torno_doc::PlaneRef::Construction { feature: shelf.into() });
     assert_eq!(s.visibility.hidden_origin, ["Guide"], "the hidden plane stays hidden");
     assert!(warnings(&s).is_empty(), "{:?}", warnings(&s));
     assert!((projected_z(&mut s) - 20.0).abs() < 1e-9);
@@ -1500,7 +1500,7 @@ fn a_reorder_keeps_the_model_it_was_checked_on() {
     assert_eq!((s.model.last_recomputed, s.model.last_restored), (0, 0), "the checked model was kept");
     assert_eq!(s.doc.features.get(2).map(|f| f.name.as_str()), Some("Box4"));
     // The kept model is the design's: evaluating it from scratch gives the same bodies.
-    let mut fresh = solidcraft_doc::Model::new();
+    let mut fresh = torno_doc::Model::new();
     fresh.evaluate(&s.doc);
     assert_eq!(fresh.state().bodies.len(), bodies(&s));
 }
@@ -1519,7 +1519,7 @@ fn select_same_look_uses_resolved_looks_without_document_history_edits_and_refus
     run(&mut s, "select.same_look", json!({"body":"A"}));
     assert_eq!(s.selection.len(), 3);
     let point = solidcore_record::Vec3::new(40.0, 5.0, 5.0);
-    let face = solidcraft_doc::appearance::face_index_at(s.world_state().unwrap().body("C").unwrap(), point).unwrap();
+    let face = torno_doc::appearance::face_index_at(s.world_state().unwrap().body("C").unwrap(), point).unwrap();
     run(&mut s, "select.set", json!({"items":[Sel::Face {body:"C".into(),index:face,point}]}));
     run(&mut s, "select.same_look", json!({}));
     assert_eq!(s.selection.len(), 3);
@@ -1585,15 +1585,15 @@ fn timeline_joint_folders_are_mixed_saved_and_undoable() {
     assert_eq!(s.doc.timeline_groups[0].features.len(), 1);
     assert_eq!(run(&mut s, "timeline.inspect", json!({"group":folder}))["joints"], json!([joint]));
     let saved = s.doc.to_json();
-    let reopened = solidcraft_doc::Document::from_json(&saved).unwrap();
+    let reopened = torno_doc::Document::from_json(&saved).unwrap();
     assert_eq!(reopened.to_json(), saved);
     // A folder naming a joint the design doesn't have, or one twice, opens without that entry
     // (#9373).
     let mut damaged: Value = serde_json::from_str(&saved).unwrap();
     damaged["timeline_groups"][0]["joints"] = json!([u64::MAX]);
-    assert!(solidcraft_doc::Document::from_json(&damaged.to_string()).unwrap().timeline_groups[0].joints.is_empty());
+    assert!(torno_doc::Document::from_json(&damaged.to_string()).unwrap().timeline_groups[0].joints.is_empty());
     damaged["timeline_groups"][0]["joints"] = json!([joint, joint]);
-    assert_eq!(solidcraft_doc::Document::from_json(&damaged.to_string()).unwrap().timeline_groups[0].joints, [joint]);
+    assert_eq!(torno_doc::Document::from_json(&damaged.to_string()).unwrap().timeline_groups[0].joints, [joint]);
     let destination = run(&mut s, "timeline.group", json!({"name":"Destination"}))["group"].as_u64().unwrap();
     run(&mut s, "timeline.move_to_group", json!({"joints":[joint], "group":destination}));
     assert!(s.doc.timeline_groups[0].joints.is_empty());
@@ -1634,7 +1634,7 @@ fn timeline_joint_folders_are_mixed_saved_and_undoable() {
     run(&mut s, "component.delete", json!({"component":"Part"}));
     assert!(s.doc.assembly.joints.is_empty());
     assert!(s.doc.timeline_groups[0].joints.is_empty());
-    assert!(solidcraft_doc::Document::from_json(&s.doc.to_json()).is_ok());
+    assert!(torno_doc::Document::from_json(&s.doc.to_json()).is_ok());
 }
 
 #[test]
@@ -1667,7 +1667,7 @@ fn edits_after_a_canvas_share_its_image_with_every_undo_state() {
     let mut png = b"\x89PNG\r\n\x1a\n\0\0\0\rIHDR".to_vec();
     png.extend([0, 0, 0, 4, 0, 0, 0, 2, 8, 6, 0, 0, 0, 0, 0, 0, 0]);
     png.resize(64 << 10, 0);
-    run(&mut s, "canvas.insert", json!({"data": solidcraft_doc::canvas::base64_encode(&png), "plane": "XY", "width": 40}));
+    run(&mut s, "canvas.insert", json!({"data": torno_doc::canvas::base64_encode(&png), "plane": "XY", "width": 40}));
     for i in 0..20 {
         run(&mut s, "parameters.add", json!({"name": format!("p{i}"), "expression": "10 mm"}));
     }
@@ -2175,12 +2175,12 @@ fn holed_box(s: &mut Session) -> String {
 }
 
 /// The face of the first body whose surface satisfies `want`, as a pick.
-fn face_pick(s: &Session, want: impl Fn(solidcraft_kernel::FaceSurface) -> bool) -> Value {
+fn face_pick(s: &Session, want: impl Fn(torno_kernel::FaceSurface) -> bool) -> Value {
     let st = s.model.state();
     let b = st.bodies.first().unwrap();
     let m = b.mesh();
     let n = m.tri_face.iter().map(|f| *f as usize + 1).max().unwrap();
-    let f = (0..n).find(|&f| solidcraft_kernel::face_surface(&b.body, f).is_some_and(&want)).expect("face");
+    let f = (0..n).find(|&f| torno_kernel::face_surface(&b.body, f).is_some_and(&want)).expect("face");
     let p = m.triangles.iter().zip(&m.tri_face).find(|(_, tf)| **tf as usize == f).and_then(|(t, _)| m.tri(t)).unwrap()[0];
     json!({"type": "face", "body": b.name, "index": f, "point": p})
 }
@@ -2207,8 +2207,8 @@ fn empty_selection_is_an_empty_list() {
 fn faces_edges_and_bodies_are_resolved() {
     let mut s = Session::default();
     let body = holed_box(&mut s);
-    let top = face_pick(&s, |f| matches!(f, solidcraft_kernel::FaceSurface::Plane { normal, .. } if normal.z > 0.99));
-    let hole = face_pick(&s, |f| matches!(f, solidcraft_kernel::FaceSurface::Cylinder { .. }));
+    let top = face_pick(&s, |f| matches!(f, torno_kernel::FaceSurface::Plane { normal, .. } if normal.z > 0.99));
+    let hole = face_pick(&s, |f| matches!(f, torno_kernel::FaceSurface::Cylinder { .. }));
     // The top front edge: y = 0, z = 20, along X.
     let line = edge_pick(&s, |p| p.y.abs() < 1e-9 && (p.z - 20.0).abs() < 1e-9);
     // The hole's rim on the top face.

@@ -617,7 +617,7 @@ fn desktop_entries(env: &Env, add: &mut impl FnMut(Slicer, &Path)) {
             // A program we don't know by name counts when it says it opens 3MF or STL files.
             let claims_meshes =
                 entry.get("MimeType").is_some_and(|m| m.split(';').any(|t| MESH_TYPES.iter().any(|w| t.trim().eq_ignore_ascii_case(w))));
-            let ours = normalize(name).starts_with("solidcraft");
+            let ours = normalize(name).starts_with("torno");
             if known.is_none() && (!claims_meshes || ours || flag("Terminal")) {
                 continue;
             }
@@ -1161,7 +1161,7 @@ mod tests {
     use super::*;
 
     fn scratch(tag: &str) -> PathBuf {
-        let d = std::env::temp_dir().join(format!("solidcraft-slicers-{tag}-{}", std::process::id()));
+        let d = std::env::temp_dir().join(format!("torno-slicers-{tag}-{}", std::process::id()));
         let _ = std::fs::remove_dir_all(&d);
         std::fs::create_dir_all(&d).unwrap();
         d
@@ -1235,7 +1235,7 @@ mod tests {
         entry("terminal.desktop", "Name=Console Mesher\nExec=cm\nMimeType=model/stl;\nTerminal=true");
         entry("noclaim.desktop", "Name=Text Editor\nExec=edit %f\nMimeType=text/plain;application/vnd.ms-3mfdocumentation;");
         entry("hiddenprusa.desktop", "Name=PrusaSlicer Beta\nExec=prusa-beta\nNoDisplay=true");
-        entry("ours.desktop", "Name=SolidCraft\nExec=solidcraft %f\nMimeType=model/3mf;model/stl;");
+        entry("ours.desktop", "Name=Torno\nExec=torno %f\nMimeType=model/3mf;model/stl;");
         entry("alias.desktop", "Name=Windows Mesher\nExec=wm\nMimeType=application/vnd.ms-3mfdocument;");
         let found = detect_in(&Env { data_dirs: vec![data], ..Env::default() });
         let listed: Vec<(&str, &str)> = found.iter().map(|f| (f.id.as_str(), f.name.as_str())).collect();

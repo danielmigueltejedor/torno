@@ -9,14 +9,14 @@ use std::collections::BTreeMap;
 
 use egui::{Pos2, RichText, Sense, Stroke, pos2, vec2};
 use serde_json::{Value, json};
-use solidcraft_engine::Session;
-use solidcraft_engine::doc::Mat;
-use solidcraft_engine::doc::joints::JointKind;
+use torno_engine::Session;
+use torno_engine::doc::Mat;
+use torno_engine::doc::joints::JointKind;
 
 use crate::SolveApp;
 use crate::dialogs::{Dialog, Kind, combo, form_row};
 use crate::selection::{BODIES, SelInput};
-use solidcraft_theme::Tokens;
+use torno_theme::Tokens;
 
 #[path = "configurations_ui.rs"]
 mod configurations_ui;
@@ -208,7 +208,7 @@ fn transport(ui: &mut egui::Ui, what: Transport, tip: &str) -> egui::Response {
             p.add(bar(c.x + 6.0));
         }
     }
-    resp.backing_on_hover_text(solidcraft_ui_text::tr_label(tip))
+    resp.backing_on_hover_text(torno_ui_text::tr_label(tip))
 }
 
 /// Study `key` as the Motion Study dialog edits it: (id, name, steps, keys as tracks with values
@@ -273,7 +273,7 @@ pub fn study_params(s: &Session, name: &str, study: Option<&str>, steps: &str, t
         .filter(|t| !t.points.is_empty())
         .map(|t| {
             let j = s.doc.assembly.joints.get(t.joint).ok_or("no such joint")?;
-            let kind = if j.kind.is_angle(t.index) { solidcraft_engine::doc::expr::Kind::Angle } else { solidcraft_engine::doc::expr::Kind::Length };
+            let kind = if j.kind.is_angle(t.index) { torno_engine::doc::expr::Kind::Angle } else { torno_engine::doc::expr::Kind::Length };
             let points: Vec<_> = t.points.iter().map(|(st, v)| json!([st, crate::length_input::expression(&s.doc, v, kind)])).collect();
             Ok(json!({"joint": j.id, "index": t.index, "points": points}))
         })
@@ -327,10 +327,10 @@ pub fn table(v: &Value) -> Table {
 }
 
 /// The unit a value of this kind is shown in.
-fn unit_of(k: solidcraft_engine::doc::expr::Kind) -> Option<&'static str> {
+fn unit_of(k: torno_engine::doc::expr::Kind) -> Option<&'static str> {
     match k {
-        solidcraft_engine::doc::expr::Kind::Length => Some("mm"),
-        solidcraft_engine::doc::expr::Kind::Angle => Some("deg"),
+        torno_engine::doc::expr::Kind::Length => Some("mm"),
+        torno_engine::doc::expr::Kind::Angle => Some("deg"),
         _ => None,
     }
 }
@@ -425,7 +425,7 @@ fn export_animation(app: &mut SolveApp, params: Value, name: &str) {
             )
         });
         match made {
-            Ok(_) => app.set_status(solidcraft_ui_text::format("ui.saved_to", &[("path", &path)]), false),
+            Ok(_) => app.set_status(torno_ui_text::format("ui.saved_to", &[("path", &path)]), false),
             Err(e) => app.set_status(e.to_string(), true),
         }
     });
@@ -461,7 +461,7 @@ pub fn rows(app: &mut SolveApp, ui: &mut egui::Ui, k: &mut Mo, inputs: &mut [Sel
             let list = app.session.execute("contact.list", &json!({})).unwrap_or(Value::Null);
             form_row(ui, "Contact", |ui| {
                 let mut on = list.get("enabled").and_then(Value::as_bool).unwrap_or(false);
-                if crate::ui_kit::checkbox(ui, solidcraft_ui_text::tr_label("Enabled"), &mut on).changed() {
+                if crate::ui_kit::checkbox(ui, torno_ui_text::tr_label("Enabled"), &mut on).changed() {
                     let _ = app.run("contact.enable_sets", json!({ "enabled": on }));
                 }
             });
@@ -472,19 +472,19 @@ pub fn rows(app: &mut SolveApp, ui: &mut egui::Ui, k: &mut Mo, inputs: &mut [Sel
                     ui.horizontal(|ui| {
                         let count = s.get("occurrences").and_then(Value::as_array).map_or(0, Vec::len);
                         ui.label(
-                            RichText::new(solidcraft_ui_text::format("contact.components_count", &[("count", &count.to_string())])).color(t.text_dim),
+                            RichText::new(torno_ui_text::format("contact.components_count", &[("count", &count.to_string())])).color(t.text_dim),
                         );
                         if crate::ui_kit::button(
                             ui,
-                            solidcraft_ui_text::tr_label(if off { "Unsuppress" } else { "Suppress" }),
+                            torno_ui_text::tr_label(if off { "Unsuppress" } else { "Suppress" }),
                             crate::ui_kit::Button::Small,
                         )
                         .clicked()
                         {
                             let _ = app.run("contact.edit", json!({"set": n, "suppressed": !off}));
                         }
-                        if crate::ui_kit::button(ui, solidcraft_ui_text::tr_label("×"), crate::ui_kit::Button::Small)
-                            .backing_on_hover_text(solidcraft_ui_text::tr_label("Delete the set"))
+                        if crate::ui_kit::button(ui, torno_ui_text::tr_label("×"), crate::ui_kit::Button::Small)
+                            .backing_on_hover_text(torno_ui_text::tr_label("Delete the set"))
                             .clicked()
                         {
                             let _ = app.run("contact.edit", json!({"set": n, "delete": true}));
@@ -493,7 +493,7 @@ pub fn rows(app: &mut SolveApp, ui: &mut egui::Ui, k: &mut Mo, inputs: &mut [Sel
                 });
             }
             ui.vertical(|ui| {
-                if crate::ui_kit::button(ui, solidcraft_ui_text::tr_label("Check collisions"), crate::ui_kit::Button::Normal).clicked() {
+                if crate::ui_kit::button(ui, torno_ui_text::tr_label("Check collisions"), crate::ui_kit::Button::Normal).clicked() {
                     *check = Some(app.session.execute("contact.check", &json!({})).unwrap_or_else(|e| json!({"error": e.to_string()})));
                 }
             });
@@ -501,9 +501,9 @@ pub fn rows(app: &mut SolveApp, ui: &mut egui::Ui, k: &mut Mo, inputs: &mut [Sel
                 let hits = c.get("collisions").and_then(Value::as_array).cloned().unwrap_or_default();
                 crate::ui_kit::section(ui, "contact_collisions", "Collisions", true, |ui| {
                     if let Some(e) = c.get("error").and_then(Value::as_str) {
-                        ui.label(RichText::new(solidcraft_ui_text::tr_label(e)).color(t.error));
+                        ui.label(RichText::new(torno_ui_text::tr_label(e)).color(t.error));
                     } else if hits.is_empty() {
-                        ui.label(RichText::new(solidcraft_ui_text::tr_label("none")).color(t.text_dim));
+                        ui.label(RichText::new(torno_ui_text::tr_label("none")).color(t.text_dim));
                     } else {
                         ui.vertical(|ui| {
                             for h in hits {
@@ -541,7 +541,7 @@ pub fn rows(app: &mut SolveApp, ui: &mut egui::Ui, k: &mut Mo, inputs: &mut [Sel
             }
             if let Some(e) = error {
                 ui.vertical(|ui| {
-                    ui.label(RichText::new(solidcraft_ui_text::tr_label(e)).color(t.error));
+                    ui.label(RichText::new(torno_ui_text::tr_label(e)).color(t.error));
                 });
             }
         }
@@ -577,7 +577,7 @@ fn motion_study_rows(app: &mut SolveApp, ui: &mut egui::Ui, k: &mut Mo, inputs: 
     let moving = joints_moving(app);
     if moving.is_empty() {
         ui.vertical(|ui| {
-            ui.label(RichText::new(solidcraft_ui_text::tr_label("no joint that moves yet")).color(t.text_dim));
+            ui.label(RichText::new(torno_ui_text::tr_label("no joint that moves yet")).color(t.text_dim));
         });
         return enter;
     }
@@ -610,7 +610,7 @@ fn motion_study_rows(app: &mut SolveApp, ui: &mut egui::Ui, k: &mut Mo, inputs: 
                 *playing = false;
             }
             ui.add_space(t.space_6);
-            crate::ui_kit::checkbox(ui, solidcraft_ui_text::tr_label("Loop"), looping);
+            crate::ui_kit::checkbox(ui, torno_ui_text::tr_label("Loop"), looping);
             let names: Vec<String> = SPEEDS.iter().map(|x| format!("{x}×")).collect();
             let refs: Vec<&str> = names.iter().map(String::as_str).collect();
             ui.allocate_ui(vec2(t.form_label_width, t.control_height), |ui| combo(ui, "ms_speed", &refs, speed));
@@ -652,12 +652,12 @@ fn motion_study_rows(app: &mut SolveApp, ui: &mut egui::Ui, k: &mut Mo, inputs: 
         let labels: Vec<String> = moving.iter().map(|(_, n, _)| n.clone()).collect();
         let refs: Vec<&str> = labels.iter().map(String::as_str).collect();
         let mut pos = moving.iter().position(|(i, _, _)| *i == tr.joint).unwrap_or(0);
-        form_row(ui, &solidcraft_ui_text::format("motion.track_name", &[("number", &(ti + 1).to_string())]), |ui| {
+        form_row(ui, &torno_ui_text::format("motion.track_name", &[("number", &(ti + 1).to_string())]), |ui| {
             ui.horizontal(|ui| {
                 let width = (ui.available_width() - t.control_height - t.space_8).max(0.0);
                 ui.allocate_ui(vec2(width, t.control_height), |ui| combo(ui, &format!("ms_joint{ti}"), &refs, &mut pos));
-                if crate::ui_kit::button(ui, solidcraft_ui_text::tr_label("×"), crate::ui_kit::Button::Small)
-                    .backing_on_hover_text(solidcraft_ui_text::tr_label("Remove the track"))
+                if crate::ui_kit::button(ui, torno_ui_text::tr_label("×"), crate::ui_kit::Button::Small)
+                    .backing_on_hover_text(torno_ui_text::tr_label("Remove the track"))
                     .clicked()
                 {
                     remove = Some(ti);
@@ -686,8 +686,8 @@ fn motion_study_rows(app: &mut SolveApp, ui: &mut egui::Ui, k: &mut Mo, inputs: 
         }
         ui.vertical(|ui| {
             ui.horizontal(|ui| {
-                if crate::ui_kit::button(ui, solidcraft_ui_text::tr_label("Key here"), crate::ui_kit::Button::Small)
-                    .backing_on_hover_text(solidcraft_ui_text::tr_label("Add a key at this step with the joint's value now"))
+                if crate::ui_kit::button(ui, torno_ui_text::tr_label("Key here"), crate::ui_kit::Button::Small)
+                    .backing_on_hover_text(torno_ui_text::tr_label("Add a key at this step with the joint's value now"))
                     .clicked()
                     && !tr.points.iter().any(|(s, _)| *s == now)
                 {
@@ -702,7 +702,7 @@ fn motion_study_rows(app: &mut SolveApp, ui: &mut egui::Ui, k: &mut Mo, inputs: 
                     tr.points.push((now, format!("0 {unit}")));
                     tr.points.sort_by_key(|p| p.0);
                 }
-                if crate::ui_kit::button(ui, solidcraft_ui_text::tr_label("Delete key"), crate::ui_kit::Button::Small).clicked() {
+                if crate::ui_kit::button(ui, torno_ui_text::tr_label("Delete key"), crate::ui_kit::Button::Small).clicked() {
                     tr.points.retain(|(s, _)| *s != now);
                 }
             });
@@ -714,16 +714,16 @@ fn motion_study_rows(app: &mut SolveApp, ui: &mut egui::Ui, k: &mut Mo, inputs: 
     let mut export = false;
     ui.vertical(|ui| {
         ui.horizontal(|ui| {
-            if crate::ui_kit::button(ui, solidcraft_ui_text::tr_label("Add Key"), crate::ui_kit::Button::Normal)
-                .backing_on_hover_text(solidcraft_ui_text::tr_label("Key a joint's value at this step"))
+            if crate::ui_kit::button(ui, torno_ui_text::tr_label("Add Key"), crate::ui_kit::Button::Normal)
+                .backing_on_hover_text(torno_ui_text::tr_label("Key a joint's value at this step"))
                 .clicked()
                 && let Some((ji, _, kind)) = moving.first()
             {
                 let unit = if kind.is_angle(0) { "deg" } else { crate::length_input::unit(&app.session.doc) };
                 tracks.push(Track { joint: *ji, index: 0, points: vec![(now, format!("0 {unit}"))] });
             }
-            export = crate::ui_kit::button(ui, solidcraft_ui_text::tr_label("Export Animation…"), crate::ui_kit::Button::Normal)
-                .backing_on_hover_text(solidcraft_ui_text::tr_label("Save the study as an animated GIF, seen as the viewport shows it"))
+            export = crate::ui_kit::button(ui, torno_ui_text::tr_label("Export Animation…"), crate::ui_kit::Button::Normal)
+                .backing_on_hover_text(torno_ui_text::tr_label("Save the study as an animated GIF, seen as the viewport shows it"))
                 .clicked();
         });
     });
@@ -755,7 +755,7 @@ fn motion_study_rows(app: &mut SolveApp, ui: &mut egui::Ui, k: &mut Mo, inputs: 
     }
     if let Some(e) = error {
         ui.vertical(|ui| {
-            ui.label(RichText::new(solidcraft_ui_text::tr_label(e)).color(t.text_dim));
+            ui.label(RichText::new(torno_ui_text::tr_label(e)).color(t.text_dim));
         });
     }
     enter
@@ -794,7 +794,7 @@ pub fn commands(app: &SolveApp, k: &Mo, inputs: &[SelInput]) -> Result<Vec<(Stri
         Mo::ContactSet { name, .. } => {
             let mut occs: Vec<u64> = Vec::new();
             for x in inputs.first().map(|i| i.items.as_slice()).unwrap_or(&[]) {
-                if let solidcraft_engine::Sel::Body { name } = x
+                if let torno_engine::Sel::Body { name } = x
                     && let Some(b) = crate::open_meshing::session_world(&app.session).body(name)
                 {
                     let comp = app.session.doc.model_body_component(b);
@@ -936,9 +936,9 @@ mod tests {
     #[test]
     fn shown_poses_are_put_back() {
         let mut app = SolveApp::new(Session::default(), crate::Services::default());
-        app.session.pending_moves.insert(9, solidcraft_engine::doc::IDENTITY);
+        app.session.pending_moves.insert(9, torno_engine::doc::IDENTITY);
         let before = app.session.pending_moves.clone();
-        let mut m = solidcraft_engine::doc::IDENTITY;
+        let mut m = torno_engine::doc::IDENTITY;
         m[3] = [5.0, 0.0, 0.0, 1.0];
         let shown: BTreeMap<u64, Mat> = [(3, m)].into_iter().collect();
         for (kind, applied, kept) in [("study", true, false), ("explode", false, false), ("explode", true, true)] {
@@ -1088,7 +1088,7 @@ mod tests {
         click_config_handle(&mut h, "config:save_rule");
         assert!(!h.app.session.doc.configs.rules.is_empty(), "{:?}", h.app.dialog);
         assert!(
-            matches!(&h.app.session.doc.configs.rules[0].condition,solidcraft_engine::doc::config::RuleCondition::All{conditions} if matches!(&conditions[0],solidcraft_engine::doc::config::RuleCondition::Parameter{..})),
+            matches!(&h.app.session.doc.configs.rules[0].condition,torno_engine::doc::config::RuleCondition::All{conditions} if matches!(&conditions[0],torno_engine::doc::config::RuleCondition::Parameter{..})),
             "{:?}",
             h.app.dialog
         );
@@ -1138,7 +1138,7 @@ mod tests {
         assert_eq!(h.app.session.doc, before);
         configuration_steps(&mut h, &json!([{"widget":"Apply"}])).unwrap();
         assert_eq!(h.app.session.doc.param("length").unwrap().expr, "10");
-        assert_eq!(h.app.session.doc.eval("length", solidcraft_engine::doc::expr::Kind::Length).unwrap(), 10.0);
+        assert_eq!(h.app.session.doc.eval("length", torno_engine::doc::expr::Kind::Length).unwrap(), 10.0);
         assert!(h.app.session.doc.configuration_matches());
         configuration_steps(
             &mut h,
@@ -1223,8 +1223,8 @@ mod tests {
         assert!(h.widget("side:outer").is_some());
         assert!(h.widget("side:inner").is_some());
         h.run(&json!([{"widget":"side:outer"},{"widget":"Library"},{"widget":"ABS - Red"},{"widget":"Apply"}])).unwrap();
-        let solidcraft_engine::doc::config::Column::FaceAppearance(target) = &h.app.session.doc.configs.columns[0] else { panic!() };
-        assert!(matches!(&target.certificate, Some(solidcraft_engine::doc::config::FaceCertificate::ExtrudeSide { curve, .. }) if curve == "outer"));
+        let torno_engine::doc::config::Column::FaceAppearance(target) = &h.app.session.doc.configs.columns[0] else { panic!() };
+        assert!(matches!(&target.certificate, Some(torno_engine::doc::config::FaceCertificate::ExtrudeSide { curve, .. }) if curve == "outer"));
         let state = h.app.session.model.state();
         let body = state.body("Ring").unwrap();
         // The outer circle, one closed curve, is one wall face.
@@ -1321,10 +1321,10 @@ mod tests {
     fn export_animation_saves_the_dialogs_study_as_a_gif() {
         // Drawn as the CLI draws (the headless device), as scenario shots are.
         #[cfg(not(target_arch = "wasm32"))]
-        if solidcraft_engine::capture::installed().is_none() {
-            solidcraft_engine::capture::install(std::sync::Arc::new(|scene, cam, w, h| {
-                let (rgba, renderer) = solidcraft_gpu::env::headless_rgba(scene, cam, w, h)?;
-                Ok(solidcraft_engine::capture::Picture { rgba, renderer })
+        if torno_engine::capture::installed().is_none() {
+            torno_engine::capture::install(std::sync::Arc::new(|scene, cam, w, h| {
+                let (rgba, renderer) = torno_gpu::env::headless_rgba(scene, cam, w, h)?;
+                Ok(torno_engine::capture::Picture { rgba, renderer })
             }));
         }
         let mut h = crate::scenario::Harness::new();

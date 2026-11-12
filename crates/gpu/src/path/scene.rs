@@ -1,16 +1,16 @@
 //! Original median-split BVH. World geometry is rebased around the camera target for f32.
 #[path = "planar_patches.rs"]
 mod planar_patches;
-use solidcraft_geom::prelude::*;
 use std::collections::HashMap;
+use torno_geom::prelude::*;
 
 use solidcore_record::Vec3;
-use solidcraft_render::{
+use torno_render::{
     ProductScene,
     job::{CancelToken, ErrorCode, JobError, Result},
     transmission::Transmission,
 };
-use solidcraft_viewport::surface::{OpaqueSurface, srgb8_to_linear};
+use torno_viewport::surface::{OpaqueSurface, srgb8_to_linear};
 
 pub(super) struct Triangle {
     pub p: [Vec3; 3],
@@ -107,7 +107,7 @@ pub(super) fn flatten_with_media(scene: &ProductScene, origin: Vec3, cancel: &Ca
     let vertex_count = scene.meshes.iter().map(|m| m.mesh.positions.len()).sum::<usize>();
     let mut vertices = reserved(vertex_count * 32)?;
     let mut vertex_offset = 0u32;
-    let mut media_bounds = reserved::<super::media_hierarchy::Region>(solidcraft_render::job::MAX_GPU_DIELECTRICS)?;
+    let mut media_bounds = reserved::<super::media_hierarchy::Region>(torno_render::job::MAX_GPU_DIELECTRICS)?;
     let mut optical_lo = Vec3::new(f64::INFINITY, f64::INFINITY, f64::INFINITY);
     let mut optical_hi = -optical_lo;
     for (body_index, body) in scene.meshes.iter().enumerate() {
@@ -132,7 +132,7 @@ pub(super) fn flatten_with_media(scene: &ProductScene, origin: Vec3, cancel: &Ca
             if !position.is_finite() || [position.x, position.y, position.z].iter().any(|x| x.abs() > 1e7) {
                 return Err(invalid("path geometry must be finite and within 1e7 mm of the camera target"));
             }
-            let normal = solidcraft_viewport::surface::unit_direction(*normal).map_err(|_| invalid("invalid mesh normal"))?;
+            let normal = torno_viewport::surface::unit_direction(*normal).map_err(|_| invalid("invalid mesh normal"))?;
             vector(&mut vertices, position, 0.0);
             vector(&mut vertices, normal, 0.0);
         }
@@ -228,7 +228,7 @@ pub(super) fn flatten_with_media(scene: &ProductScene, origin: Vec3, cancel: &Ca
         validate_medium(&triangles[body_start..], cancel)?;
         let body_triangles = &triangles[body_start..];
         if body_triangles.iter().any(|t| t.transmission.is_some()) {
-            if media_bounds.len() >= solidcraft_render::job::MAX_GPU_DIELECTRICS {
+            if media_bounds.len() >= torno_render::job::MAX_GPU_DIELECTRICS {
                 return Err(invalid("at most 128 disjoint dielectric bodies are supported"));
             }
             let closed = body_triangles.iter().any(|t| t.transmission.is_some_and(|v| v.thin_wall_thickness_mm().is_none()));

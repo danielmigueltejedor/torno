@@ -5,7 +5,7 @@
 //! operands, run the boolean, read the result.
 //!
 //! Each operand face and edge gets its own attribute id (one id per origin, as
-//! SolidCraft tags operands), so a result object's origins are its attribute ids.
+//! Torno tags operands), so a result object's origins are its attribute ids.
 
 #![allow(clippy::expect_used, clippy::indexing_slicing)] // test helpers
 
@@ -17,7 +17,7 @@ use solidcore::primitive::api_primitives::create_box;
 use solidcore::topology::Brep;
 use solidcore::{EntityRef, Kernel};
 
-/// The first application attribute id SolidCraft uses.
+/// The first application attribute id Torno uses.
 const BASE_ID: u64 = 10007;
 
 /// An origin `(operand, kind, index)`.

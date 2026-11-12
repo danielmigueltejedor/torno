@@ -33,6 +33,6 @@
   "ungraded": [],
   "what": "compare with a 0 mm tolerance",
   "why_not": [
-    "the failure is SolidCraft's, not a kernel operation's: step 3 (inspect.compare): invalid parameters for `inspect.compare`: `tolerance` must be a number from 0.001 to 10"
+    "the failure is Torno's, not a kernel operation's: step 3 (inspect.compare): invalid parameters for `inspect.compare`: `tolerance` must be a number from 0.001 to 10"
   ]
 }

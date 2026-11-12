@@ -14,7 +14,7 @@ use crate::ui_kit::BackingTooltipExt as _;
 use std::collections::{HashMap, HashSet};
 
 use serde_json::json;
-use solidcraft_engine::doc::{Document, TimelineGroup};
+use torno_engine::doc::{Document, TimelineGroup};
 
 use crate::SolveApp;
 use crate::timeline_fold::{Folder, History, Strip};
@@ -348,7 +348,7 @@ pub(crate) fn drop_feature(app: &mut SolveApp, folders: &Folders, id: u64, slot:
 mod tests {
     use std::collections::HashMap;
 
-    use solidcraft_engine::doc::TimelineGroup;
+    use torno_engine::doc::TimelineGroup;
 
     use super::{Span, group_parent, spans};
 
@@ -397,8 +397,8 @@ mod tests {
     #[test]
     fn an_import_folder_holds_the_joints_of_its_sub_assemblies() {
         use serde_json::json;
-        use solidcraft_engine::Session;
-        use solidcraft_engine::doc::joints::JointKind;
+        use torno_engine::Session;
+        use torno_engine::doc::joints::JointKind;
         let run = |s: &mut Session, command: &str, params: serde_json::Value| s.execute(command, &params).unwrap();
         // Outer holds a plate and Inner, placed twice: the file nests Inner in Outer.
         let mut s = Session::default();
@@ -408,7 +408,7 @@ mod tests {
         run(&mut s, "solid.box", json!({"length": 10, "width": 10, "height": 10, "body_name": "Block"}));
         run(&mut s, "component.activate", json!({"component": "Outer"}));
         run(&mut s, "occurrence.copy", json!({"component": "Inner", "translate": [0, 0, 30]}));
-        let dir = std::env::temp_dir().join(format!("solidcraft-timeline-folders-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("torno-timeline-folders-{}", std::process::id()));
         std::fs::create_dir_all(&dir).unwrap();
         let path = dir.join("nested.step").to_string_lossy().to_string();
         run(&mut s, "file.export", json!({"path": path}));

@@ -1500,7 +1500,7 @@ impl BSplineSurface {
     }
 
     /// [`create_sweep_surface`](Self::create_sweep_surface) that also reports where
-    /// the section's first, middle and last instances lie (the SolidCraft fork's
+    /// the section's first, middle and last instances lie (the Torno fork's
     /// `pOptPlacements`, tangency-labs/smlib 5d3939e, #1450): the systems the section
     /// curve's own coordinates were carried onto. A translational sweep's instance at
     /// `v` is the section moved by `TrajectoryCurve(v)` (at the trajectory's start,
@@ -1559,7 +1559,7 @@ impl BSplineSurface {
             let surf = create_trans_sweep_srf(nl_curv_t, nl_curv_s)
                 .map_err(SolidError::nurbs_routine(OP))?;
 
-            // SolidCraft fork (5d3939e): the section's instance at v is the section moved
+            // Torno fork (5d3939e): the section's instance at v is the section moved
             // by TrajectoryCurve(v)
             if let Some(placements) = opt_placements {
                 let ivl = trajectory_curve.natural_interval();
@@ -1625,7 +1625,7 @@ impl BSplineSurface {
                     )
                     .map_err(SolidError::nurbs_routine(OP))?;
                     trace = Some(t);
-                    // SolidCraft fork (5d3939e): each instance is the section carried from
+                    // Torno fork (5d3939e): each instance is the section carried from
                     // the global system onto the local one (OL, XL, YL, ZL) it was placed on
                     for (placement, frame) in placements.iter_mut().zip(placed) {
                         *placement = Axis2Placement::new(frame.origin, frame.x, frame.y);

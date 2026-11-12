@@ -5,7 +5,7 @@ use crate::dialogs::Kind;
 use crate::scenario::{Harness, handle_at};
 use crate::sketch_modify_ui::Mod;
 use serde_json::json;
-use solidcraft_engine::geom::prelude::*;
+use torno_engine::geom::prelude::*;
 
 fn spacings(h: &Harness) -> (String, String) {
     match h.app.dialog.as_ref().map(|d| &d.kind) {
@@ -49,8 +49,8 @@ fn a_sketch_pattern_drags_its_second_spacing_square_to_the_first() {
     let (after, after2) = spacings(&h);
     assert_eq!(after, spacing);
     assert_ne!(after2, spacing2);
-    let grown = h.app.session.doc.eval(&after2, solidcraft_engine::doc::expr::Kind::Length).unwrap();
-    let was = h.app.session.doc.eval(&spacing2, solidcraft_engine::doc::expr::Kind::Length).unwrap();
+    let grown = h.app.session.doc.eval(&after2, torno_engine::doc::expr::Kind::Length).unwrap();
+    let was = h.app.session.doc.eval(&spacing2, torno_engine::doc::expr::Kind::Length).unwrap();
     assert!(grown > was, "Spacing 2 {spacing2} -> {after2}");
 }
 
@@ -102,7 +102,7 @@ fn a_pattern_of_features_puts_its_arrow_on_the_patterned_feature() {
     .unwrap();
     h.settle();
     let d = h.app.dialog.as_ref().expect("the pattern dialog");
-    assert!(matches!(d.inputs.first().and_then(|i| i.items.first()), Some(solidcraft_engine::Sel::Feature { .. })), "{:?}", d.inputs);
+    assert!(matches!(d.inputs.first().and_then(|i| i.items.first()), Some(torno_engine::Sel::Feature { .. })), "{:?}", d.inputs);
     // The arrow starts at the middle of the boss and points along X, the pattern's direction.
     let (base, dir) = crate::canvas::anchor(&h.app, d).expect("the pattern has an anchor");
     assert!(base.dist(solidcore_record::Vec3::new(12.0, 10.0, 8.0)) < 1e-6, "{base:?}");
@@ -169,7 +169,7 @@ fn a_solid_pattern_spacing_arrow_dragged_past_zero_goes_negative() {
     let to = at - dir.expect("a direction") * 10.0;
     h.step(&json!({"drag": [{"handle": "arrow"}, {"world": [to.x, to.y, to.z]}], "ctrl": true})).unwrap();
     let (spacing, _) = spacings(&h);
-    let v = h.app.session.doc.eval(&spacing, solidcraft_engine::doc::expr::Kind::Length).unwrap();
+    let v = h.app.session.doc.eval(&spacing, torno_engine::doc::expr::Kind::Length).unwrap();
     assert!((v + 10.0).abs() < 0.5, "dragging 10 mm back from the start gave Spacing {spacing}");
     // Applied, the copies sit on the negative side, as a typed negative spacing puts them.
     h.step(&json!({"widget": "OK"})).unwrap();

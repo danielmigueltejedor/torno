@@ -9,7 +9,7 @@
 //! search (20b1c01, #2344a) gives 7927.724282512234, independently checked by
 //! `harness/cpp/tests/blend_setback_executive.cpp`. With the flag off the
 //! value is this port's pinned corner, 7928.743041465 with 10 faces; the pinned C++ path
-//! is gated by difftest. SolidCraft's engine case
+//! is gated by difftest. Torno's engine case
 //! `a_later_round_at_a_mitred_corner_is_blended_with_the_rounds_there` pins the old value,
 //! 7928.743041, and is re-pinned there.
 #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)] // test helpers

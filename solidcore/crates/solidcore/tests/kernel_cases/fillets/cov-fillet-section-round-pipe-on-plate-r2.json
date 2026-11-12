@@ -147,7 +147,7 @@
     "blend_dropping"
   ],
   "ungraded": [
-    "continuity: SolidCraft computes it"
+    "continuity: Torno computes it"
   ],
   "what": "the concave edge where a pipe dips into a plate rounded r2: the ball's circle (a cylinder along x), tangent to the plane and the pipe",
   "why_not": []

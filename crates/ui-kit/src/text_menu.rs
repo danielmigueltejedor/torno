@@ -253,7 +253,7 @@ pub fn menu(ui: &Ui, response: &mut Response, text: &mut dyn TextBuffer, field: 
             for edit in Edit::ALL {
                 let (row, message, icon, key) = edit.row();
                 let shortcut = super::chord_label(key);
-                let mut item = super::MenuItem::new(row, solidcraft_ui_text::tr(message), icon);
+                let mut item = super::MenuItem::new(row, torno_ui_text::tr(message), icon);
                 item.shortcut = &shortcut;
                 item.enabled = enabled(edit, state);
                 if item.show(ui).clicked() && item.enabled {

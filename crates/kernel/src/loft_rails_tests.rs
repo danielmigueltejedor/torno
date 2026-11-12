@@ -5,8 +5,8 @@
 
 #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 
-use solidcraft_geom::prelude::*;
 use std::f64::consts::PI;
+use torno_geom::prelude::*;
 
 use solidcore_record::{Loop2, Plane, Seg2, Vec2, Vec3};
 
@@ -49,7 +49,7 @@ fn off(b: &crate::Body, p: Vec3) -> f64 {
         .faces
         .iter()
         .filter_map(|f| {
-            let s = solidcraft_geom::brep::eval::SurfaceEval::new(&f.surface).ok()?;
+            let s = torno_geom::brep::eval::SurfaceEval::new(&f.surface).ok()?;
             let uv = s.project(p, None, f64::INFINITY)?;
             Some(s.point(uv)?.dist(p))
         })

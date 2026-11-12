@@ -530,7 +530,7 @@ fn radius_reaching_side_edge_end(
     Ok((past, if past { fit } else { 0.0 }))
 }
 
-/// Not the fork's (#2364 review, SolidCraft #11360's `a_round_ending_in_an_earlier_round`,
+/// Not the fork's (#2364 review, Torno #11360's `a_round_ending_in_an_earlier_round`,
 /// WR-697): whether the End's face G (the side edge's face that
 /// is not the rail's face F) runs on tangentially past the side edge's far end P, so the rail
 /// running past P stays on F and ends on G's tangent continuation. That holds where P has
@@ -601,7 +601,7 @@ fn end_face_runs_on_past_side_edge(
     check_tangential_edgeuse_at_vertex(k, target, eu, far, rad_to_deg(corner.tangency_tol_radians))
 }
 
-/// Not the fork's (SolidCraft's `smooth_edges_and_unfinished_tangent_chains_are_refused_saying_why`,
+/// Not the fork's (Torno's `smooth_edges_and_unfinished_tangent_chains_are_refused_saying_why`,
 /// after #2656): whether this End is one where the blended edge runs on tangentially at the
 /// vertex into an edge not blended, and the blend run on runs out of the part
 /// ([`continuing_edges`] with and without that test). Such a round has no end rib to stop at:

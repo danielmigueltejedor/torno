@@ -1,26 +1,26 @@
 //! Integrated product preview. Shares the installed device/pipelines, not Design's scene policy.
 
 use crate::ui_kit::BackingTooltipExt as _;
-use solidcraft_engine::geom::prelude::*;
 use std::hash::{Hash, Hasher};
 use std::sync::{Arc, Mutex};
+use torno_engine::geom::prelude::*;
 
 use egui::Sense;
 use serde_json::json;
-use solidcraft_engine::doc::render_settings::RenderSetup;
+use torno_engine::doc::render_settings::RenderSetup;
 #[cfg(test)]
-use solidcraft_engine::render::job::LightingPreset;
-use solidcraft_engine::render::job::{ImageHost, Integrator, PreviewInfo, RaytraceOptions};
-use solidcraft_engine::render::{
+use torno_engine::render::job::LightingPreset;
+use torno_engine::render::job::{ImageHost, Integrator, PreviewInfo, RaytraceOptions};
+use torno_engine::render::{
     Availability, ExecutorDescriptor, ExecutorId, ProductScene, RenderLimits, RenderMode, RenderOperation, RenderProfile, RenderRequest,
     ScratchLayout,
 };
-use solidcraft_viewport::Camera;
+use torno_viewport::Camera;
 
 use crate::SolveApp;
 use crate::gpu::{Frame, GpuScene, SceneSlot};
-use solidcraft_theme::Tokens;
-use solidcraft_viewport_egui::ViewportCallback;
+use torno_theme::Tokens;
+use torno_viewport_egui::ViewportCallback;
 
 // Vertex payload only, not an OS/GPU peak-memory promise. Native viewport
 // uploads are already chunked by the installed device's buffer limit.
@@ -156,7 +156,7 @@ pub struct State {
     pub geometry_budget: u64,
     /// A GPU error the preview's last geometry upload caught.
     pub upload_error: crate::gpu::UploadError,
-    pub image_host: Option<solidcraft_engine::render::job::CpuHost>,
+    pub image_host: Option<torno_engine::render::job::CpuHost>,
     live: live::State,
     displayed: displayed::State,
     pub view: ViewState,
@@ -174,20 +174,20 @@ pub struct State {
     scene_signature: Option<(u64, usize, u64, u64)>,
     /// The document and world state `scene_signature` names, held so their addresses cannot be
     /// reused by others while the signature refers to them.
-    scene_sources: Option<(Arc<solidcraft_engine::doc::Document>, Arc<solidcraft_engine::doc::ModelState>)>,
+    scene_sources: Option<(Arc<torno_engine::doc::Document>, Arc<torno_engine::doc::ModelState>)>,
     /// The product scene's palette slots and blocks, kept across scenes ([`gpu_scene_cached`]).
     product_cache: ProductCache,
     scene: Option<ProductScene>,
     scene_error: Option<String>,
     preview_upload_bytes: Option<usize>,
-    image: Option<(solidcraft_engine::render::job::JobId, Result<egui::TextureHandle, String>)>,
-    image_info: Option<solidcraft_engine::render::job::FrameInfo>,
-    denoise_mask_image: Option<(solidcraft_engine::render::job::JobId, Result<egui::TextureHandle, String>)>,
-    denoise_mask_info: Option<solidcraft_engine::render::job::FrameInfo>,
+    image: Option<(torno_engine::render::job::JobId, Result<egui::TextureHandle, String>)>,
+    image_info: Option<torno_engine::render::job::FrameInfo>,
+    denoise_mask_image: Option<(torno_engine::render::job::JobId, Result<egui::TextureHandle, String>)>,
+    denoise_mask_info: Option<torno_engine::render::job::FrameInfo>,
     preview_image: Option<PreviewImage>,
     clipboard_image: Option<egui::ColorImage>,
     clipboard_text: Option<String>,
-    comparison_images: Vec<(solidcraft_engine::render::job::JobId, Result<egui::TextureHandle, String>)>,
+    comparison_images: Vec<(torno_engine::render::job::JobId, Result<egui::TextureHandle, String>)>,
 }
 
 /// Provisional pixels are never an export source and never replace the retained final image.
@@ -202,13 +202,13 @@ struct EntryFit {
     name: String,
     clean: RenderSetup,
     source: Camera,
-    bounds: solidcraft_engine::geom::Aabb3,
+    bounds: torno_engine::geom::Aabb3,
     interim: Camera,
     layout: Option<crate::viewport_layout::Layout>,
 }
 
 struct DisplayImage<'a> {
-    info: &'a solidcraft_engine::render::job::FrameInfo,
+    info: &'a torno_engine::render::job::FrameInfo,
     image: &'a Result<egui::TextureHandle, String>,
     preview: Option<&'a PreviewInfo>,
 }
@@ -245,11 +245,11 @@ impl PathHost {
         // that may spend minutes compiling or warming up its pipelines.
         *self = match std::thread::Builder::new().name("gpu-path-setup".into()).spawn(move || {
             let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(create))
-                .unwrap_or_else(|_| Err(solidcraft_ui_text::tr("render.error_setup_panicked").into()));
+                .unwrap_or_else(|_| Err(torno_ui_text::tr("render.error_setup_panicked").into()));
             let _ = tx.send(result);
         }) {
             Ok(_) => Self::Preparing(rx, std::time::Instant::now()),
-            Err(e) => Self::failed(solidcraft_ui_text::format("render.error_setup_worker", &[("error", &e.to_string())])),
+            Err(e) => Self::failed(torno_ui_text::format("render.error_setup_worker", &[("error", &e.to_string())])),
         };
     }
 
@@ -268,7 +268,7 @@ impl PathHost {
             Ok(Ok(host)) => Self::Ready(host),
             Ok(Err(error)) => Self::failed(error),
             Err(std::sync::mpsc::TryRecvError::Empty) => return None,
-            Err(std::sync::mpsc::TryRecvError::Disconnected) => Self::failed(solidcraft_ui_text::tr("render.error_setup_stopped").into()),
+            Err(std::sync::mpsc::TryRecvError::Disconnected) => Self::failed(torno_ui_text::tr("render.error_setup_stopped").into()),
         };
         matches!(self, Self::Ready(_)).then_some(took)
     }
@@ -374,7 +374,7 @@ impl Stage {
 pub enum RenderSelection {
     #[default]
     Nothing,
-    Object(Vec<solidcraft_engine::Sel>),
+    Object(Vec<torno_engine::Sel>),
     Environment,
     Wear,
     Lighting,
@@ -427,9 +427,9 @@ pub struct ViewState {
     /// an unsaved initial choice that must survive preference or host changes.
     clean_persisted: bool,
     clean_name: String,
-    job: Option<solidcraft_engine::render::job::JobId>,
-    completed: Option<solidcraft_engine::render::job::JobId>,
-    retained: Vec<solidcraft_engine::render_jobs::RetainedResult>,
+    job: Option<torno_engine::render::job::JobId>,
+    completed: Option<torno_engine::render::job::JobId>,
+    retained: Vec<torno_engine::render_jobs::RetainedResult>,
     follow_job: bool,
     /// Only a UI Render action that opened the viewer may automatically return to live.
     auto_result_job: Option<AutoResultJob>,
@@ -450,21 +450,21 @@ pub struct ViewState {
     overwrite: bool,
     result: bool,
     /// Diagnostic viewing is bound to one completed result and never saved with a shot.
-    denoise_mask_job: Option<solidcraft_engine::render::job::JobId>,
+    denoise_mask_job: Option<torno_engine::render::job::JobId>,
     result_camera: Camera,
     result_scale: ResultScale,
     /// Full image domain and explicit scale policy last applied by the host.
     /// Panel geometry is deliberately absent: moving chrome never reframes.
     result_domain: Option<(egui::Rect, [u32; 2], f32, ResultScale)>,
-    result_job: Option<solidcraft_engine::render::job::JobId>,
+    result_job: Option<torno_engine::render::job::JobId>,
 }
 
 /// The engine retains terminal failures as metadata only. Keep the submitted handle while
 /// automatic viewing owns the result, including its native cleanup barrier.
 #[derive(Clone)]
 struct AutoResultJob {
-    job: solidcraft_engine::render::job::JobId,
-    handle: solidcraft_engine::render::job::JobHandle,
+    job: torno_engine::render::job::JobId,
+    handle: torno_engine::render::job::JobHandle,
 }
 impl std::fmt::Debug for AutoResultJob {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -634,7 +634,7 @@ impl State {
         // A driver that takes the process down while it compiles (#9236) is beyond any error
         // scope or unwind guard; the marker is how the next launch learns of it.
         if self.setup_crashed() {
-            self.path_host = PathHost::failed(solidcraft_ui_text::tr("render.gpu_path_crashed").into());
+            self.path_host = PathHost::failed(torno_ui_text::tr("render.gpu_path_crashed").into());
             return;
         }
         let Some(create) = self.pending_setup.take() else {
@@ -781,20 +781,20 @@ pub(crate) fn inspect_state(app: &SolveApp) -> serde_json::Value {
 
 pub fn host_executor(max_dimension: u32, depth: bool, samples: u32) -> Result<ExecutorDescriptor, String> {
     if !matches!(samples, 1 | 2 | 4 | 8 | 16) {
-        return Err(solidcraft_ui_text::tr("render.error_gpu_samples").into());
+        return Err(torno_ui_text::tr("render.error_gpu_samples").into());
     }
     Ok(ExecutorDescriptor {
         id: ExecutorId::new("gpu-viewport").map_err(|e| e.to_string())?,
         availability: if depth && max_dimension > 0 {
             Availability::Available
         } else {
-            Availability::Unavailable { reason: solidcraft_ui_text::tr("render.error_preview_device").into() }
+            Availability::Unavailable { reason: torno_ui_text::tr("render.error_preview_device").into() }
         },
         profiles: vec![RenderProfile {
             mode: RenderMode::Preview,
             operation: RenderOperation::Viewport,
             formats: Vec::new(),
-            features: vec![solidcraft_engine::render::RenderFeature::Pbr],
+            features: vec![torno_engine::render::RenderFeature::Pbr],
         }],
         limits: RenderLimits { max_dimension: u64::from(max_dimension.clamp(1, 4096)), ..Default::default() },
         scratch: ScratchLayout {
@@ -817,7 +817,7 @@ fn wants_path_host(app: &SolveApp) -> bool {
 /// Apply this computer's admission preference without replacing hosts or leases.
 /// A newly completed GPU setup uses the same preference before registration.
 pub(crate) fn apply_memory_policy(app: &SolveApp) {
-    use solidcraft_engine::render::job::NativeMemoryPolicy;
+    use torno_engine::render::job::NativeMemoryPolicy;
     let policy = if app.preferences.render_legacy_memory_admission { NativeMemoryPolicy::SoftwarePoolOnly } else { NativeMemoryPolicy::AvailableRam };
     if let Some(host) = &app.render_workspace.image_host {
         host.set_native_memory_policy(policy);
@@ -960,7 +960,7 @@ pub fn invalidate_scene(app: &mut SolveApp) {
 pub fn enter(app: &mut SolveApp, render: bool) -> Result<(), String> {
     if render {
         if app.session.active_sketch.is_some() || app.tool.is_some() || app.dialog.is_some() || app.file_load.busy() {
-            return Err(solidcraft_ui_text::tr("render.error_finish_operation").into());
+            return Err(torno_ui_text::tr("render.error_finish_operation").into());
         }
         app.run("render.scene", json!({}))?;
         let entering = !active(app);
@@ -997,7 +997,7 @@ pub fn enter(app: &mut SolveApp, render: bool) -> Result<(), String> {
         // Only an uncomposed first view fits automatically. An explicit saved or
         // remembered Render camera keeps its lens projection and exact framing.
         if entering && !restored {
-            let scene = solidcraft_engine::product_scene::extract(&app.session).map_err(|e| e.to_string())?;
+            let scene = torno_engine::product_scene::extract(&app.session).map_err(|e| e.to_string())?;
             if !scene.bounds.is_empty() {
                 let clean =
                     app.render_workspace.view.clean_setup.clone().filter(|clean| {
@@ -1077,7 +1077,7 @@ pub(crate) fn wait_entry_fit_layout(app: &mut SolveApp) -> bool {
 }
 
 /// Called only when a nonanimated pending fit actually installs its final camera.
-pub(crate) fn settle_entry_fit(app: &mut SolveApp, source: Camera, bounds: solidcraft_engine::geom::Aabb3, previous: Camera) {
+pub(crate) fn settle_entry_fit(app: &mut SolveApp, source: Camera, bounds: torno_engine::geom::Aabb3, previous: Camera) {
     let Some(entry) = app.render_workspace.entry_fit.take() else {
         return;
     };
@@ -1159,10 +1159,10 @@ pub(crate) fn output_child_summary(app: &SolveApp, kind: &str) -> String {
                 view.raytrace.progressive.map_or(u32::from(view.raytrace.primary_samples), |p| p.samples_per_pixel)
             }
         ),
-        "effects" => solidcraft_ui_text::format(
+        "effects" => torno_ui_text::format(
             "render.children.look_summary",
             &[
-                ("tone", if view.studio.tone_map == solidcraft_engine::render::job::ToneMap::AcesFitted { "ACES" } else { "Reinhard" }),
+                ("tone", if view.studio.tone_map == torno_engine::render::job::ToneMap::AcesFitted { "ACES" } else { "Reinhard" }),
                 ("count", &view.studio.finishing.looks.len().to_string()),
             ],
         ),
@@ -1223,8 +1223,7 @@ pub(crate) fn browser_mode(app: &mut SolveApp, ui: &mut egui::Ui) -> bool {
     if app.render_workspace.view.search_objects {
         let mut query = app.render_workspace.view.object_query.clone();
         crate::ui_kit::scope(ui, |ui| {
-            if crate::ui_kit::search_field(ui, ui.scope_id().with("render:tree:query"), &mut query, solidcraft_ui_text::tr("render.tree_search"))
-                .changed()
+            if crate::ui_kit::search_field(ui, ui.scope_id().with("render:tree:query"), &mut query, torno_ui_text::tr("render.tree_search")).changed()
             {
                 let _ = app.run("view.render_browser", json!({"query":query}));
             }
@@ -1251,7 +1250,7 @@ fn image_host(app: &SolveApp, method: ImageMethod) -> Result<&ImageHost, String>
         };
         let descriptor = host.descriptor().map_err(|error| error.to_string())?;
         if !host.is_available()
-            || !descriptor.profiles.iter().any(|profile| profile.features.contains(&solidcraft_engine::render::RenderFeature::Progressive))
+            || !descriptor.profiles.iter().any(|profile| profile.features.contains(&torno_engine::render::RenderFeature::Progressive))
         {
             return Err(app.tr("render.gpu_unavailable").to_string());
         }
@@ -1337,7 +1336,7 @@ fn switch_celestial_method(app: &mut SolveApp, method: ImageMethod, enable_indir
     if method == ImageMethod::CpuRaytrace {
         if enable_indirect {
             let depth = u8::try_from(next.max_depth).map_err(|_| app.tr("render.cpu_celestial_switch").to_string())?;
-            let path = solidcraft_engine::render::job::CpuPathOptions { max_depth: depth };
+            let path = torno_engine::render::job::CpuPathOptions { max_depth: depth };
             path.validate().map_err(|error| error.to_string())?;
             next.raytrace.path = Some(path);
             next.raytrace.progressive.get_or_insert_default();
@@ -1471,7 +1470,7 @@ fn method_dropdown(app: &mut SolveApp, ui: &mut egui::Ui) -> egui::Response {
     let label = app.tr(current.label()).to_string();
     let bounded =
         celestial_switch_active(app) || app.render_workspace.view.studio.volume.is_some() || app.render_workspace.view.studio.caustics.is_some();
-    let width = ui.available_width().min(solidcraft_theme::Tokens::get().form_card_width);
+    let width = ui.available_width().min(torno_theme::Tokens::get().form_card_width);
     let choices = |ui: &mut egui::Ui| {
         for (method, handle) in [
             (ImageMethod::Raster, "render:method-raster"),
@@ -1496,7 +1495,7 @@ fn method_dropdown(app: &mut SolveApp, ui: &mut egui::Ui) -> egui::Response {
             && app.render_workspace.view.raytrace.path.is_none()
         {
             let sampling = app.render_workspace.view.raytrace.progressive.unwrap_or_default();
-            let detail = solidcraft_ui_text::format(
+            let detail = torno_ui_text::format(
                 if volume_path { "render.cpu_volume_enable_path_plan" } else { "render.cpu_celestial_adopt" },
                 &[
                     ("depth", &app.render_workspace.view.max_depth.to_string()),
@@ -1608,7 +1607,7 @@ fn image_edit_controls(app: &mut SolveApp, ui: &mut egui::Ui) {
             if crate::ui_kit::button(ui, app.tr("render.result_fit"), crate::ui_kit::Button::Normal).clicked() {
                 let _ = app.run("render.result.view", json!({"view":"fit"}));
             }
-            if crate::ui_kit::button(ui, solidcraft_ui_text::tr("render.result_actual_size"), crate::ui_kit::Button::Enabled(!reduced_display(app)))
+            if crate::ui_kit::button(ui, torno_ui_text::tr("render.result_actual_size"), crate::ui_kit::Button::Enabled(!reduced_display(app)))
                 .backing_on_hover_text(app.tr("render.result_actual_help"))
                 .clicked()
             {
@@ -1680,7 +1679,7 @@ fn image_edit_controls(app: &mut SolveApp, ui: &mut egui::Ui) {
             crate::ui_kit::number_field(
                 ui,
                 &mut app.render_workspace.view.max_depth,
-                1..=u32::from(solidcraft_engine::render::job::MAX_PATH_DEPTH),
+                1..=u32::from(torno_engine::render::job::MAX_PATH_DEPTH),
                 1.0,
                 "",
             );
@@ -1765,7 +1764,7 @@ fn job_controls(app: &mut SolveApp, ui: &mut egui::Ui, compact: bool) {
     if let Some(job) = app.render_workspace.view.job {
         match app.session.execute("render.status", &json!({"job":job})) {
             Ok(status) => {
-                let phase = status["progress"]["phase"].as_str().unwrap_or(solidcraft_ui_text::tr("render.property_unknown"));
+                let phase = status["progress"]["phase"].as_str().unwrap_or(torno_ui_text::tr("render.property_unknown"));
                 busy = matches!(phase, "queued" | "preparing" | "running" | "encoding" | "cancelling");
                 state = Some(status);
             }
@@ -1905,7 +1904,7 @@ fn cache_completed_image(app: &mut SolveApp, ctx: &egui::Context) {
         app.render_workspace.image_info = None;
         let result = (|| -> Result<egui::TextureHandle, String> {
             let handle = app.session.render_job_handle(job).map_err(|e| e.to_string())?;
-            let frame = handle.frame().map_err(|e| e.to_string())?.ok_or(solidcraft_ui_text::tr("render.error_no_completed_image"))?;
+            let frame = handle.frame().map_err(|e| e.to_string())?.ok_or(torno_ui_text::tr("render.error_no_completed_image"))?;
             if let Some((_, cached)) = app.render_workspace.comparison_images.iter().find(|(id, _)| *id == job) {
                 let texture = cached.clone()?;
                 app.render_workspace.image_info = Some(frame.info.clone());
@@ -1913,7 +1912,7 @@ fn cache_completed_image(app: &mut SolveApp, ctx: &egui::Context) {
             }
             let captured = handle.status().map_err(|e| e.to_string())?;
             let budget = if frame.info.executor.as_str() == "gpu-path" {
-                solidcraft_engine::render::job::GPU_PATH_LIMITS
+                torno_engine::render::job::GPU_PATH_LIMITS
             } else {
                 captured_image_limits(&captured.request)
             };
@@ -1941,12 +1940,12 @@ fn cache_denoise_mask(app: &mut SolveApp, ctx: &egui::Context) {
     app.render_workspace.denoise_mask_info = None;
     let result = (|| -> Result<egui::TextureHandle, String> {
         let handle = app.session.render_job_handle(job).map_err(|error| error.to_string())?;
-        let frame = handle.frame().map_err(|error| error.to_string())?.ok_or(solidcraft_ui_text::tr("render.error_no_completed_image"))?;
-        let png = frame.denoise_mask_png().ok_or(solidcraft_ui_text::tr("render.denoise_mask_unavailable"))?;
-        let mask = frame.denoise_mask_info().ok_or(solidcraft_ui_text::tr("render.denoise_mask_unavailable"))?;
+        let frame = handle.frame().map_err(|error| error.to_string())?.ok_or(torno_ui_text::tr("render.error_no_completed_image"))?;
+        let png = frame.denoise_mask_png().ok_or(torno_ui_text::tr("render.denoise_mask_unavailable"))?;
+        let mask = frame.denoise_mask_info().ok_or(torno_ui_text::tr("render.denoise_mask_unavailable"))?;
         let captured = handle.status().map_err(|error| error.to_string())?;
         let budget = if frame.info.executor.as_str() == "gpu-path" {
-            solidcraft_engine::render::job::GPU_PATH_LIMITS
+            torno_engine::render::job::GPU_PATH_LIMITS
         } else {
             captured_image_limits(&captured.request)
         };
@@ -1983,10 +1982,10 @@ fn displayed_image(app: &SolveApp) -> Option<DisplayImage<'_>> {
 }
 
 fn captured_adaptive_preview(
-    status: &solidcraft_engine::render::job::JobStatus,
+    status: &torno_engine::render::job::JobStatus,
     completed: u32,
-) -> Result<Option<solidcraft_engine::render::job::adaptive::AdaptivePreview>, String> {
-    use solidcraft_engine::render::job::adaptive::AdaptivePreview;
+) -> Result<Option<torno_engine::render::job::adaptive::AdaptivePreview>, String> {
+    use torno_engine::render::job::adaptive::AdaptivePreview;
     if status.request.integrator == Integrator::Raytrace && status.resolved.executor.as_str() != "gpu-path" {
         let Some(options) = &status.request.raytrace else {
             return Ok(None);
@@ -1996,7 +1995,7 @@ fn captured_adaptive_preview(
             .as_deref()
             .map(|adaptive| {
                 let maximum =
-                    options.progressive.ok_or_else(|| solidcraft_ui_text::tr("render.error_provisional_identity").to_string())?.samples_per_pixel;
+                    options.progressive.ok_or_else(|| torno_ui_text::tr("render.error_provisional_identity").to_string())?.samples_per_pixel;
                 AdaptivePreview::captured(*adaptive, maximum, completed).map_err(|error| error.to_string())
             })
             .transpose()
@@ -2019,39 +2018,38 @@ fn cache_preview_frame(app: &mut SolveApp, ctx: &egui::Context, info: &PreviewIn
     }
     let result = (|| -> Result<egui::TextureHandle, String> {
         if info.frame_sequence == 0 || info.samples_per_pixel == 0 {
-            return Err(solidcraft_ui_text::tr("render.error_provisional_identity").into());
+            return Err(torno_ui_text::tr("render.error_provisional_identity").into());
         }
         let handle = app.session.render_job_handle(info.frame.job).map_err(|e| e.to_string())?;
         let captured = handle.status().map_err(|e| e.to_string())?;
         if (info.frame.width, info.frame.height) != (captured.request.width, captured.request.height) {
-            return Err(solidcraft_ui_text::tr("render.error_checkpoint_dimensions").into());
+            return Err(torno_ui_text::tr("render.error_checkpoint_dimensions").into());
         }
         if info.frame.executor != captured.resolved.executor || info.frame.scene_generation != captured.scene_generation {
-            return Err(solidcraft_ui_text::tr("render.error_provisional_identity").into());
+            return Err(torno_ui_text::tr("render.error_provisional_identity").into());
         }
         let limits = if info.frame.executor.as_str() == "gpu-path" {
             let target = captured.options.preview_target().map_err(|e| e.to_string())?;
             let adaptive =
-                solidcraft_engine::render::job::adaptive::AdaptivePreview::at(captured.options, info.samples_per_pixel).map_err(|e| e.to_string())?;
+                torno_engine::render::job::adaptive::AdaptivePreview::at(captured.options, info.samples_per_pixel).map_err(|e| e.to_string())?;
             if info.samples_per_pixel >= target || info.adaptive != adaptive {
-                return Err(solidcraft_ui_text::tr("render.error_provisional_identity").into());
+                return Err(torno_ui_text::tr("render.error_provisional_identity").into());
             }
-            solidcraft_engine::render::job::GPU_PATH_LIMITS
+            torno_engine::render::job::GPU_PATH_LIMITS
         } else {
             let adaptive = captured_adaptive_preview(&captured, info.samples_per_pixel)?;
             let exceeds_target = adaptive.is_some()
                 && info.samples_per_pixel
                     >= captured.request.raytrace.as_ref().map_or(Ok(0), RaytraceOptions::preview_target).map_err(|e| e.to_string())?;
             if exceeds_target || info.adaptive != adaptive {
-                return Err(solidcraft_ui_text::tr("render.error_provisional_identity").into());
+                return Err(torno_ui_text::tr("render.error_provisional_identity").into());
             }
-            let options = solidcraft_engine::render::job::CpuProgressiveOptions { samples_per_pixel: info.samples_per_pixel, seed: 0 };
+            let options = torno_engine::render::job::CpuProgressiveOptions { samples_per_pixel: info.samples_per_pixel, seed: 0 };
             let scale = captured.request.raytrace.as_ref().map_or(1, |options| options.supersampling);
             let (width, height) = if scale == 1 {
                 (info.frame.width, info.frame.height)
             } else {
-                solidcraft_engine::render::job::supersampled_dimensions(info.frame.width, info.frame.height, scale)
-                    .map_err(|error| error.to_string())?
+                torno_engine::render::job::supersampled_dimensions(info.frame.width, info.frame.height, scale).map_err(|error| error.to_string())?
             };
             options.validate_image_with_budget(width, height, captured.request.cpu_budget()).map_err(|error| error.to_string())?;
             captured_image_limits(&captured.request)
@@ -2109,7 +2107,7 @@ fn cache_render_images(app: &mut SolveApp, ctx: &egui::Context) {
 }
 
 fn finish_auto_result(app: &mut SolveApp) {
-    use solidcraft_engine::render::job::Phase;
+    use torno_engine::render::job::Phase;
     let Some(auto) = &app.render_workspace.view.auto_result_job else {
         return;
     };
@@ -2174,7 +2172,7 @@ fn follow_batch(app: &mut SolveApp) {
     let queue = app.session.render_queue_state();
     follow_batch_view(&mut app.render_workspace.view, queue);
 }
-fn follow_batch_view(view: &mut ViewState, queue: solidcraft_engine::render_jobs::RenderQueueState) {
+fn follow_batch_view(view: &mut ViewState, queue: torno_engine::render_jobs::RenderQueueState) {
     if let Some(job) = queue.job {
         if view.job != Some(job) {
             view.follow_job = view.compare.is_none();
@@ -2185,7 +2183,7 @@ fn follow_batch_view(view: &mut ViewState, queue: solidcraft_engine::render_jobs
     }
 }
 
-fn captured_image_limits(request: &solidcraft_engine::render::job::ImageRequest) -> RenderLimits {
+fn captured_image_limits(request: &torno_engine::render::job::ImageRequest) -> RenderLimits {
     if request.integrator == Integrator::Raytrace {
         request.cpu_budget().image_limits(request.raytrace.as_ref().is_some_and(|o| o.progressive.is_some()))
     } else {
@@ -2197,14 +2195,14 @@ fn captured_image_limits(request: &solidcraft_engine::render::job::ImageRequest)
 /// full resolution. Avoid asking a viewport device for an unsupported texture.
 fn display_dimensions(width: u32, height: u32, max_texture_side: usize) -> Result<(u32, u32), String> {
     if width == 0 || height == 0 || max_texture_side == 0 {
-        return Err(solidcraft_ui_text::tr("render.error_display_dimensions").into());
+        return Err(torno_ui_text::tr("render.error_display_dimensions").into());
     }
     let max_side = max_texture_side.min(8192) as u64;
     let display = RenderLimits { max_dimension: max_side, max_pixels: 16_777_216, max_scratch_bytes: 512 * 1024 * 1024 };
-    let (w, h) = display.fit(u64::from(width), u64::from(height), None).ok_or(solidcraft_ui_text::tr("render.error_display_fit"))?;
+    let (w, h) = display.fit(u64::from(width), u64::from(height), None).ok_or(torno_ui_text::tr("render.error_display_fit"))?;
     Ok((
-        u32::try_from(w).map_err(|_| solidcraft_ui_text::tr("render.error_display_width"))?,
-        u32::try_from(h).map_err(|_| solidcraft_ui_text::tr("render.error_display_height"))?,
+        u32::try_from(w).map_err(|_| torno_ui_text::tr("render.error_display_width"))?,
+        u32::try_from(h).map_err(|_| torno_ui_text::tr("render.error_display_height"))?,
     ))
 }
 
@@ -2227,18 +2225,18 @@ fn decode_render_image_filtered(
 ) -> Result<egui::ColorImage, String> {
     let size = (u64::from(width), u64::from(height));
     if budget.fit(size.0, size.1, None) != Some(size) {
-        return Err(solidcraft_ui_text::tr("render.error_image_profile").into());
+        return Err(torno_ui_text::tr("render.error_image_profile").into());
     }
     let display_size = display_dimensions(width, height, max_texture_side)?;
     let mut reader = image::ImageReader::with_format(std::io::Cursor::new(png), image::ImageFormat::Png);
     let mut limits = image::Limits::default();
     limits.max_image_width = Some(width);
     limits.max_image_height = Some(height);
-    limits.max_alloc = Some(size.0.checked_mul(size.1).and_then(|n| n.checked_mul(16)).ok_or(solidcraft_ui_text::tr("render.error_decode_budget"))?);
+    limits.max_alloc = Some(size.0.checked_mul(size.1).and_then(|n| n.checked_mul(16)).ok_or(torno_ui_text::tr("render.error_decode_budget"))?);
     reader.limits(limits);
     let image = reader.decode().map_err(|e| e.to_string())?.to_rgba8();
     if image.dimensions() != (width, height) {
-        return Err(solidcraft_ui_text::tr("render.error_image_dimensions").into());
+        return Err(torno_ui_text::tr("render.error_image_dimensions").into());
     }
     let image = if display_size != (width, height) { image::imageops::resize(&image, display_size.0, display_size.1, filter) } else { image };
     Ok(egui::ColorImage::from_rgba_unmultiplied([display_size.0 as usize, display_size.1 as usize], image.as_raw()))
@@ -2478,13 +2476,13 @@ fn classic_result_actions(app: &mut SolveApp, ui: &mut egui::Ui) {
     });
 }
 
-fn result_label(result: &solidcraft_engine::render_jobs::RetainedResult) -> String {
-    let name = result.shot.as_deref().unwrap_or_else(|| solidcraft_ui_text::tr("render.results_unnamed"));
-    let label = solidcraft_ui_text::format(
+fn result_label(result: &torno_engine::render_jobs::RetainedResult) -> String {
+    let name = result.shot.as_deref().unwrap_or_else(|| torno_ui_text::tr("render.results_unnamed"));
+    let label = torno_ui_text::format(
         "render.results_label",
         &[("number", &result.frame.job.serial.to_string()), ("shot", name), ("seconds", &format!("{:.0}", result.seconds))],
     );
-    if result.stale { solidcraft_ui_text::format("render.results_stale_label", &[("result", &label)]) } else { label }
+    if result.stale { torno_ui_text::format("render.results_stale_label", &[("result", &label)]) } else { label }
 }
 
 fn result_header(app: &mut SolveApp, ui: &mut egui::Ui) {
@@ -2660,7 +2658,7 @@ fn host_navigation_captured(app: &SolveApp) -> bool {
 /// Ordinary panel moves cannot mutate either the image or product camera.
 fn update_host_result_camera(app: &mut SolveApp, ctx: &egui::Context, canvas: egui::Rect) {
     use crate::panel_runtime::egui_rect;
-    use solidcraft_engine::panels::Point;
+    use torno_engine::panels::Point;
     let view = &app.render_workspace.view;
     let size = if let Some(comparison) = &view.compare {
         view.retained.iter().find(|result| result.frame.job == comparison.reference).map(|result| [result.frame.width, result.frame.height])
@@ -2843,9 +2841,9 @@ fn preview_signature(app: &mut SolveApp) -> (u64, usize, u64) {
     signature
 }
 
-pub(super) fn adaptive_preview_label(_app: &SolveApp, progress: solidcraft_engine::render::job::adaptive::AdaptivePreview) -> String {
-    use solidcraft_engine::render::job::adaptive::PreviewStage;
-    solidcraft_ui_text::format(
+pub(super) fn adaptive_preview_label(_app: &SolveApp, progress: torno_engine::render::job::adaptive::AdaptivePreview) -> String {
+    use torno_engine::render::job::adaptive::PreviewStage;
+    torno_ui_text::format(
         match progress.stage {
             PreviewStage::Pilot => "render.adaptive.pilot_progress",
             PreviewStage::Production => "render.adaptive.production_progress",
@@ -2872,7 +2870,7 @@ impl State {
                             Err(_) => false,
                         };
                         if !uploaded {
-                            let error = solidcraft_ui_text::tr("render.error_upload_slot").to_string();
+                            let error = torno_ui_text::tr("render.error_upload_slot").to_string();
                             self.scene = None;
                             self.key = None;
                             self.preview_upload_bytes = None;
@@ -2935,12 +2933,12 @@ fn preview_error(app: &mut SolveApp, ui: &mut egui::Ui, rect: egui::Rect, error:
 }
 
 /// Keep the selected image and overwrite consent fixed while the upstream picker holds model input.
-fn export_image(app: &mut SolveApp, job: solidcraft_engine::render::job::JobId, overwrite: bool) {
+fn export_image(app: &mut SolveApp, job: torno_engine::render::job::JobId, overwrite: bool) {
     let origin = app.session.doc.clone();
     app.pick_save("render.png", &["png"], move |app, path| {
         let Some(path) = path else { return };
         if !Arc::ptr_eq(&origin, &app.session.doc) {
-            app.set_status(solidcraft_ui_text::tr("render.error_export_document"), true);
+            app.set_status(torno_ui_text::tr("render.error_export_document"), true);
             return;
         }
         let _ = app.run("render.export", json!({"job":job,"path":path,"overwrite":overwrite}));
@@ -2948,14 +2946,14 @@ fn export_image(app: &mut SolveApp, job: solidcraft_engine::render::job::JobId, 
 }
 
 /// Captures format and completed identity before the asynchronous picker opens.
-fn export_linear_image(app: &mut SolveApp, job: solidcraft_engine::render::job::JobId, overwrite: bool) {
+fn export_linear_image(app: &mut SolveApp, job: torno_engine::render::job::JobId, overwrite: bool) {
     let origin = app.session.doc.clone();
     app.pick_save("render.exr", &["exr"], move |app, path| {
         let Some(path) = path else {
             return;
         };
         if !Arc::ptr_eq(&origin, &app.session.doc) {
-            app.set_status(solidcraft_ui_text::tr("render.error_export_document"), true);
+            app.set_status(torno_ui_text::tr("render.error_export_document"), true);
             return;
         }
         let _ = app.run("render.export", json!({"job":job,"path":path,"overwrite":overwrite,"format":"exr"}));
@@ -2963,12 +2961,12 @@ fn export_linear_image(app: &mut SolveApp, job: solidcraft_engine::render::job::
 }
 
 /// The mask format and completed result stay fixed while the picker is open.
-fn export_denoise_mask(app: &mut SolveApp, job: solidcraft_engine::render::job::JobId, overwrite: bool) {
+fn export_denoise_mask(app: &mut SolveApp, job: torno_engine::render::job::JobId, overwrite: bool) {
     let origin = app.session.doc.clone();
     app.pick_save("render-denoise-mask.png", &["png"], move |app, path| {
         let Some(path) = path else { return };
         if !Arc::ptr_eq(&origin, &app.session.doc) {
-            app.set_status(solidcraft_ui_text::tr("render.error_export_document"), true);
+            app.set_status(torno_ui_text::tr("render.error_export_document"), true);
             return;
         }
         let _ = app.run("render.export", json!({"job":job,"path":path,"overwrite":overwrite,"format":"denoise_mask"}));
@@ -2985,14 +2983,11 @@ struct PreviewUploadPlan {
 }
 impl PreviewUploadPlan {
     fn bytes(self) -> Result<usize, String> {
-        self.pbr
-            .checked_add(self.tris)
-            .and_then(|n| n.checked_add(self.glass))
-            .ok_or_else(|| solidcraft_ui_text::tr("render.error_geometry_size").into())
+        self.pbr.checked_add(self.tris).and_then(|n| n.checked_add(self.glass)).ok_or_else(|| torno_ui_text::tr("render.error_geometry_size").into())
     }
     fn add(&mut self, pbr: bool, glass: bool, triangles: usize, limit: usize) -> Result<(), String> {
         let stride = if pbr { crate::gpu::PBR_SIZE } else { crate::gpu::TRI_SIZE };
-        let bytes = triangles.checked_mul(3).and_then(|n| n.checked_mul(stride)).ok_or(solidcraft_ui_text::tr("render.error_geometry_size"))?;
+        let bytes = triangles.checked_mul(3).and_then(|n| n.checked_mul(stride)).ok_or(torno_ui_text::tr("render.error_geometry_size"))?;
         let count = if pbr {
             &mut self.pbr
         } else if glass {
@@ -3000,34 +2995,34 @@ impl PreviewUploadPlan {
         } else {
             &mut self.tris
         };
-        *count = count.checked_add(bytes).ok_or(solidcraft_ui_text::tr("render.error_geometry_size"))?;
+        *count = count.checked_add(bytes).ok_or(torno_ui_text::tr("render.error_geometry_size"))?;
         admit_geometry(self.bytes()? as u64, limit as u64)
     }
 }
 
 fn preview_upload_plan(scene: &ProductScene, limit: usize) -> Result<PreviewUploadPlan, String> {
-    if scene.meshes.len() > solidcraft_engine::render::job::MAX_CPU_BODIES {
-        return Err(solidcraft_ui_text::tr("render.error_body_bound").into());
+    if scene.meshes.len() > torno_engine::render::job::MAX_CPU_BODIES {
+        return Err(torno_ui_text::tr("render.error_body_bound").into());
     }
     let mut plan = PreviewUploadPlan::default();
     for body in &scene.meshes {
         plan.source_triangles =
-            plan.source_triangles.checked_add(body.mesh.triangles.len()).ok_or(solidcraft_ui_text::tr("render.error_triangle_count"))?;
-        if plan.source_triangles > solidcraft_engine::render::job::MAX_CPU_TRIANGLES {
-            return Err(solidcraft_ui_text::tr("render.error_triangle_bound").into());
+            plan.source_triangles.checked_add(body.mesh.triangles.len()).ok_or(torno_ui_text::tr("render.error_triangle_count"))?;
+        if plan.source_triangles > torno_engine::render::job::MAX_CPU_TRIANGLES {
+            return Err(torno_ui_text::tr("render.error_triangle_bound").into());
         }
         if body.faces.len() > 262_144 {
-            return Err(solidcraft_ui_text::tr("render.error_face_cap").into());
+            return Err(torno_ui_text::tr("render.error_face_cap").into());
         }
         if !body.opacity.is_finite()
             || !(0.0..=1.0).contains(&body.opacity)
             || body.faces.iter().any(|face| !face.opacity.is_finite() || !(0.0..=1.0).contains(&face.opacity))
         {
-            return Err(solidcraft_ui_text::tr("render.error_opacity").into());
+            return Err(torno_ui_text::tr("render.error_opacity").into());
         }
         let looks: std::collections::BTreeMap<_, _> = body.faces.iter().map(|face| (face.face, face)).collect();
         if looks.len() != body.faces.len() {
-            return Err(solidcraft_ui_text::tr("render.error_duplicate_face").into());
+            return Err(torno_ui_text::tr("render.error_duplicate_face").into());
         }
         for index in 0..body.mesh.triangles.len() {
             let face = body.mesh.tri_face.get(index).and_then(|id| looks.get(id));
@@ -3035,7 +3030,7 @@ fn preview_upload_plan(scene: &ProductScene, limit: usize) -> Result<PreviewUplo
                 (face.opacity, face.surface.is_some() && face.transmission.is_none())
             });
             if pbr && opacity != 1.0 {
-                return Err(solidcraft_ui_text::tr("render.error_pbr_opacity").into());
+                return Err(torno_ui_text::tr("render.error_pbr_opacity").into());
             }
             if opacity > 0.0 {
                 plan.add(pbr, opacity < 0.999, 1, usize::MAX)?;
@@ -3073,7 +3068,7 @@ struct ProductBlock {
     classes: u64,
     bytes: Arc<crate::gpu::BlockBytes>,
     /// The meshes the block's key names, held so their addresses are not reused.
-    _meshes: Vec<Arc<solidcraft_engine::geom::Mesh>>,
+    _meshes: Vec<Arc<torno_engine::geom::Mesh>>,
 }
 
 /// How a product triangle is drawn: in a block (opaque or see-through, its palette slot), as
@@ -3081,16 +3076,16 @@ struct ProductBlock {
 #[derive(Clone, Copy, PartialEq)]
 enum ProductDraw {
     Block(crate::gpu::TriClass, crate::gpu::PaletteIndex),
-    Pbr(solidcraft_viewport::surface::OpaqueSurface),
+    Pbr(torno_viewport::surface::OpaqueSurface),
     Hidden,
 }
 
 /// A product body's looks resolved for drawing: the body's own and each face look's, by face.
 struct BodyLooks<'a> {
-    body: &'a solidcraft_engine::render::ProductMesh,
+    body: &'a torno_engine::render::ProductMesh,
     slots: crate::scene_palette::BodySlots,
     /// Face index → its look and its place among the body's face looks (its palette slot).
-    faces: std::collections::BTreeMap<u32, (usize, &'a solidcraft_engine::render::FaceAppearance)>,
+    faces: std::collections::BTreeMap<u32, (usize, &'a torno_engine::render::FaceAppearance)>,
 }
 
 impl BodyLooks<'_> {
@@ -3140,12 +3135,12 @@ pub fn gpu_scene_cached(scene: &ProductScene, budget: u64, cache: &mut ProductCa
     let limit = usize::try_from(budget).unwrap_or(usize::MAX);
     let plan = preview_upload_plan(scene, limit)?;
     let mut gpu = GpuScene::default();
-    gpu.pbr.try_reserve_exact(plan.pbr).map_err(|_| solidcraft_ui_text::tr("render.error_vertex_allocation").to_string())?;
+    gpu.pbr.try_reserve_exact(plan.pbr).map_err(|_| torno_ui_text::tr("render.error_vertex_allocation").to_string())?;
     // Stable slots for every body and face look, allocated before the palette is copied.
     cache.arena.sync(scene.meshes.iter().map(|b| b.name.as_str()));
     let mut looks = Vec::with_capacity(scene.meshes.len());
     for body in &scene.meshes {
-        let faces: std::collections::BTreeMap<u32, (usize, &solidcraft_engine::render::FaceAppearance)> =
+        let faces: std::collections::BTreeMap<u32, (usize, &torno_engine::render::FaceAppearance)> =
             body.faces.iter().enumerate().map(|(k, l)| (l.face, (k, l))).collect();
         let slots = cache.arena.body(&body.name, body.faces.len());
         let alpha = |opacity: f64| (opacity.clamp(0.0, 1.0) * 255.0).round() as u8;
@@ -3210,11 +3205,11 @@ pub fn gpu_scene_cached(scene: &ProductScene, budget: u64, cache: &mut ProductCa
                         for (k, i) in triangle.iter().enumerate() {
                             let (Some(position), Some(normal)) = (b.body.mesh.positions.get(*i as usize), b.body.mesh.normals.get(*i as usize))
                             else {
-                                return Err(solidcraft_ui_text::tr("render.error_product_triangle").into());
+                                return Err(torno_ui_text::tr("render.error_product_triangle").into());
                             };
                             let (position, normal) = (position.to_f32(), normal.to_f32());
                             if !position.iter().chain(&normal).all(|v| v.is_finite()) {
-                                return Err(solidcraft_ui_text::tr("render.error_product_triangle").into());
+                                return Err(torno_ui_text::tr("render.error_product_triangle").into());
                             }
                             (p[k], n[k]) = (position, normal);
                         }
@@ -3237,13 +3232,13 @@ pub fn gpu_scene_cached(scene: &ProductScene, budget: u64, cache: &mut ProductCa
                 hash_surface(Some(surface), &mut pbr_hash);
                 for i in triangle {
                     let (Some(position), Some(normal)) = (b.body.mesh.positions.get(*i as usize), b.body.mesh.normals.get(*i as usize)) else {
-                        return Err(solidcraft_ui_text::tr("render.error_product_triangle").into());
+                        return Err(torno_ui_text::tr("render.error_product_triangle").into());
                     };
-                    let n = solidcraft_viewport::surface::unit_direction(*normal)
-                        .map_err(|_| solidcraft_ui_text::tr("render.error_surface_normals").to_string())?;
+                    let n = torno_viewport::surface::unit_direction(*normal)
+                        .map_err(|_| torno_ui_text::tr("render.error_surface_normals").to_string())?;
                     let (p, n) = (position.to_f32(), n.to_f32());
                     if !p.iter().chain(&n).all(|v| v.is_finite()) {
-                        return Err(solidcraft_ui_text::tr("render.error_product_triangle").into());
+                        return Err(torno_ui_text::tr("render.error_product_triangle").into());
                     }
                     gpu.pbr_tri(p, n, surface);
                 }
@@ -3252,7 +3247,7 @@ pub fn gpu_scene_cached(scene: &ProductScene, budget: u64, cache: &mut ProductCa
     }
     cache.blocks.retain(|k, _| used.contains(k));
     if (gpu.pbr.len(), block_bytes) != (plan.pbr, plan.tris.saturating_add(plan.glass)) {
-        return Err(solidcraft_ui_text::tr("render.error_vertex_packing").into());
+        return Err(torno_ui_text::tr("render.error_vertex_packing").into());
     }
     gpu.palette = Arc::new(crate::gpu::Palette::with_stable(cache.arena.entries()));
     gpu.palette.entries().hash(&mut key);
@@ -3260,7 +3255,7 @@ pub fn gpu_scene_cached(scene: &ProductScene, budget: u64, cache: &mut ProductCa
     Ok((key.finish(), gpu))
 }
 
-fn hash_surface(surface: Option<solidcraft_viewport::surface::OpaqueSurface>, hash: &mut impl Hasher) {
+fn hash_surface(surface: Option<torno_viewport::surface::OpaqueSurface>, hash: &mut impl Hasher) {
     surface.is_some().hash(hash);
     if let Some(s) = surface {
         let c = s.base_color();
@@ -3331,7 +3326,7 @@ pub(crate) fn host_picture_layout(
 pub(crate) fn fit_host_product_bounds(
     app: &SolveApp,
     cam: Camera,
-    bounds: &solidcraft_engine::geom::Aabb3,
+    bounds: &torno_engine::geom::Aabb3,
     layout: &crate::viewport_layout::Layout,
     usable: &crate::panel_runtime::HostUsableRegion,
 ) -> Option<Camera> {
@@ -3344,7 +3339,7 @@ pub(crate) fn fit_host_product_bounds(
 pub(crate) fn centre_host_product_camera(
     app: &SolveApp,
     cam: Camera,
-    bounds: Option<&solidcraft_engine::geom::Aabb3>,
+    bounds: Option<&torno_engine::geom::Aabb3>,
     layout: &crate::viewport_layout::Layout,
     usable: &crate::panel_runtime::HostUsableRegion,
 ) -> Option<Camera> {
@@ -3364,7 +3359,7 @@ pub fn preview_size(executor: Option<&ExecutorDescriptor>, full: (u64, u64)) -> 
 fn preview_background(app: &SolveApp) -> Tokens {
     let view = &app.render_workspace.view;
     let tokens = Tokens::get();
-    if solidcraft_theme::tab_surfaces_enabled()
+    if torno_theme::tab_surfaces_enabled()
         && !app.session.doc.render.setups.contains_key(&view.name)
         && view.clean_setup.as_ref().is_some_and(|clean| clean.background == view.draft.background)
         && !view.transparent
@@ -3448,7 +3443,7 @@ pub fn show(app: &mut SolveApp, ui: &mut egui::Ui) {
         app.viewport.hover = None;
     }
     let background = preview_background(app);
-    solidcraft_viewport_egui::paint_background(ui.painter(), viewport, background.viewport_top, background.viewport_bottom);
+    torno_viewport_egui::paint_background(ui.painter(), viewport, background.viewport_top, background.viewport_bottom);
     if live::has_picture(app) {
         live::paint(app, ui, rect);
         if live::picking_current(app) {
@@ -3464,14 +3459,14 @@ pub fn show(app: &mut SolveApp, ui: &mut egui::Ui) {
     }
 }
 
-fn product_projection(camera: Camera, radius: f64, canvas: egui::Rect, image: Option<egui::Rect>) -> solidcraft_viewport::Mat4 {
+fn product_projection(camera: Camera, radius: f64, canvas: egui::Rect, image: Option<egui::Rect>) -> torno_viewport::Mat4 {
     let image = image.unwrap_or(canvas);
     let projection = camera.view_proj(f64::from(image.width() / image.height().max(1.0)), radius);
     let sx = f64::from(image.width() / canvas.width().max(1.0));
     let sy = f64::from(image.height() / canvas.height().max(1.0));
     let tx = f64::from(2.0 * (image.center().x - canvas.center().x) / canvas.width().max(1.0));
     let ty = f64::from(2.0 * (canvas.center().y - image.center().y) / canvas.height().max(1.0));
-    solidcraft_viewport::Mat4([[sx, 0.0, 0.0, 0.0], [0.0, sy, 0.0, 0.0], [0.0, 0.0, 1.0, 0.0], [tx, ty, 0.0, 1.0]]).mul(&projection)
+    torno_viewport::Mat4([[sx, 0.0, 0.0, 0.0], [0.0, sy, 0.0, 0.0], [0.0, 0.0, 1.0, 0.0], [tx, ty, 0.0, 1.0]]).mul(&projection)
 }
 
 fn paint_product(app: &mut SolveApp, ui: &mut egui::Ui, rect: egui::Rect, camera: Camera, image: Option<egui::Rect>) {
@@ -3483,11 +3478,11 @@ fn paint_product_feedback(app: &mut SolveApp, ui: &mut egui::Ui, rect: egui::Rec
 fn paint_product_kind(app: &mut SolveApp, ui: &mut egui::Ui, rect: egui::Rect, camera: Camera, image: Option<egui::Rect>, feedback: bool) {
     let background = preview_background(app);
     if !feedback {
-        solidcraft_viewport_egui::paint_background(ui.painter(), rect, background.viewport_top, background.viewport_bottom);
+        torno_viewport_egui::paint_background(ui.painter(), rect, background.viewport_top, background.viewport_bottom);
     }
     let result = (|| -> Result<(), String> {
         if app.viewport.gpu.is_none() {
-            return Err(solidcraft_ui_text::tr("render.error_gpu_preview").into());
+            return Err(torno_ui_text::tr("render.error_gpu_preview").into());
         }
         let ppp = ui.ctx().pixels_per_point();
         let setup = &app.render_workspace.view.draft;
@@ -3496,7 +3491,7 @@ fn paint_product_kind(app: &mut SolveApp, ui: &mut egui::Ui, rect: egui::Rect, c
                 || setup.environment_rotation != 0.0
                 || setup.environment_intensity != 1.0)
         {
-            return Err(solidcraft_ui_text::tr("render.error_fixed_preview").into());
+            return Err(torno_ui_text::tr("render.error_fixed_preview").into());
         }
         // A 4K or 5K viewport is past the preview's pixel budget: draw it smaller and filter it
         // up into the viewport rather than refusing the frame.
@@ -3512,9 +3507,9 @@ fn paint_product_kind(app: &mut SolveApp, ui: &mut egui::Ui, rect: egui::Rect, c
             features: Vec::new(),
             policy: Default::default(),
         };
-        solidcraft_engine::render::resolve_request(&[app.session.render_backend()], &request).map_err(|e| e.to_string())?;
+        torno_engine::render::resolve_request(&[app.session.render_backend()], &request).map_err(|e| e.to_string())?;
         if app.session.model.is_stale() {
-            return Err(solidcraft_ui_text::tr("render.error_finish_gesture").into());
+            return Err(torno_ui_text::tr("render.error_finish_gesture").into());
         }
         let (doc, world, visibility) = preview_signature(app);
         let budget = preferred_geometry_budget(app.render_workspace.geometry_budget, app.preferences.render_previous_geometry_budget);
@@ -3522,22 +3517,22 @@ fn paint_product_kind(app: &mut SolveApp, ui: &mut egui::Ui, rect: egui::Rect, c
         let preview = assign::preview(app);
         let previous_key = app.render_workspace.key;
         app.render_workspace.prepare_preview(signature, || {
-            let mut scene = solidcraft_engine::product_scene::extract(&app.session).map_err(|error| error.to_string())?;
+            let mut scene = torno_engine::product_scene::extract(&app.session).map_err(|error| error.to_string())?;
             assign::preview_scene(&mut scene, preview.as_ref())?;
             Ok(scene)
         })?;
         if app.render_workspace.key != previous_key {
             ui.ctx().request_repaint();
         }
-        let scene = app.render_workspace.scene.as_ref().ok_or(solidcraft_ui_text::tr("render.error_no_scene"))?;
+        let scene = app.render_workspace.scene.as_ref().ok_or(torno_ui_text::tr("render.error_no_scene"))?;
         if let Some(error) = app.render_workspace.upload_error.lock().ok().and_then(|e| e.clone()) {
             return Err(upload_refusal(app.render_workspace.preview_upload_bytes.unwrap_or(0) as u64, &error));
         }
         request.features = scene.required_features();
-        solidcraft_engine::render::resolve_request(&[app.session.render_backend()], &request).map_err(|e| e.to_string())?;
-        let key = app.render_workspace.key.ok_or(solidcraft_ui_text::tr("render.error_no_geometry"))?;
+        torno_engine::render::resolve_request(&[app.session.render_backend()], &request).map_err(|e| e.to_string())?;
+        let key = app.render_workspace.key.ok_or(torno_ui_text::tr("render.error_no_geometry"))?;
         if scene.bounds.is_empty() {
-            return Err(solidcraft_ui_text::tr("render.error_visible_solid").into());
+            return Err(torno_ui_text::tr("render.error_visible_solid").into());
         }
         let radius = scene.bounds.diagonal().max(10.0) + scene.bounds.center().dist(camera.target);
         let eye = camera.eye();
@@ -3577,7 +3572,7 @@ fn paint_product_kind(app: &mut SolveApp, ui: &mut egui::Ui, rect: egui::Rect, c
             outline: false,
             // Product rendering has its own lighting; AO is a Design viewport setting.
             ao_radius: 0.0,
-            ao_samples: solidcraft_viewport_gpu::view::AO_SAMPLES,
+            ao_samples: torno_viewport_gpu::view::AO_SAMPLES,
             sky: [0.0; 4],
             eye: [eye.x as f32, eye.y as f32, eye.z as f32, if camera.fov > 0.0 { 1.0 } else { 0.0 }],
             ssaa: if width < full.0 { width as f32 / full.0 as f32 } else { 1.0 },
@@ -3590,7 +3585,7 @@ fn paint_product_kind(app: &mut SolveApp, ui: &mut egui::Ui, rect: egui::Rect, c
             moving: None,
         };
         if feedback {
-            ui.painter().add(egui_wgpu::Callback::new_paint_callback(rect, solidcraft_viewport_egui::ProductHighlightCallback(frame)));
+            ui.painter().add(egui_wgpu::Callback::new_paint_callback(rect, torno_viewport_egui::ProductHighlightCallback(frame)));
         } else {
             crate::blur::viewport(ui.painter(), rect, ViewportCallback(frame), rect, [background.viewport_top, background.viewport_bottom]);
         }
@@ -3743,7 +3738,7 @@ pub(crate) fn apply_command(app: &mut SolveApp, id: &str, reply: &serde_json::Va
 /// GPU setup has no driver progress fraction. Keep its temporary window separate
 /// from the render progress row and retire it as soon as preparation ends.
 pub(crate) fn show_shader_preparation(app: &mut SolveApp, ctx: &egui::Context) -> bool {
-    use solidcraft_engine::render::job::Phase;
+    use torno_engine::render::job::Phase;
 
     let Some(handle) = app.render_workspace.view.job.and_then(|job| app.session.render_job_handle(job).ok()) else {
         return false;
@@ -3818,9 +3813,9 @@ pub(crate) fn environment_overlay(app: &mut SolveApp, ui: &mut egui::Ui, viewpor
     environment::ring_overlay(app, ui, viewport);
 }
 
-pub(crate) fn interactive_command_info(app: &SolveApp, command: &solidcraft_engine::CommandSpec) -> solidcraft_engine::CommandInfo {
+pub(crate) fn interactive_command_info(app: &SolveApp, command: &torno_engine::CommandSpec) -> torno_engine::CommandInfo {
     let mut info = ribbon::command_info(app, command);
-    if let Some(action) = solidcraft_engine::panels::ContextualPanelAction::from_command_id(command.id) {
+    if let Some(action) = torno_engine::panels::ContextualPanelAction::from_command_id(command.id) {
         info.disabled_reason = app.panel_contextual_disabled_reason(action);
         info.enabled = info.disabled_reason.is_none();
         return info;

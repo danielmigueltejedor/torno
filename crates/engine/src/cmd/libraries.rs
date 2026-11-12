@@ -6,7 +6,7 @@ use crate::schema::libraries::{
 use crate::schema::{TypedContract, output_schema_for};
 use crate::{Result, Session, params::bad};
 use serde_json::{Value, json};
-use solidcraft_io::catalog::{Catalog, Definition};
+use torno_io::catalog::{Catalog, Definition};
 
 const INSPECT_CONTRACT: TypedContract<LibraryInspectParams> = TypedContract::new();
 const EXPORT_CONTRACT: TypedContract<LibraryExportParams> = TypedContract::new();
@@ -20,7 +20,7 @@ pub static COMMANDS: &[CommandSpec] = &[
     CommandSpec::new("library.export", "Export Design Library", crate::checked!("library.export", export)).icon("export").noundo().doc_only()
         .contract(&EXPORT_CONTRACT)
         .output(output_schema_for::<LibraryExported>)
-        .params("path: .json; id? (default user.local), name?, provenance?, overwrite? false, format? solidcraft-library/2 (default) | solidcraft-library/1 (refuses PBR/cards). Copies assigned looks and design-local physical definitions; never changes the design"),
+        .params("path: .json; id? (default user.local), name?, provenance?, overwrite? false, format? torno-library/2 (default) | torno-library/1 (refuses PBR/cards). Copies assigned looks and design-local physical definitions; never changes the design"),
     CommandSpec::new("library.apply", "Apply Local Library Entry", crate::checked!("library.apply", apply)).icon("import").enabled(super::not_in_sketch)
         .contract(&APPLY_CONTRACT)
         .output(output_schema_for::<LibraryApplied>)
@@ -51,7 +51,7 @@ fn path(cmd: &str, value: &str) -> Result<()> {
     if value.is_empty() || value.len() > 4096 || value.chars().any(char::is_control) {
         return Err(bad(cmd, "invalid library path"));
     }
-    solidcraft_io::vfs::check(value).map_err(|e| bad(cmd, e.to_string()))
+    torno_io::vfs::check(value).map_err(|e| bad(cmd, e.to_string()))
 }
 fn reply(cmd: &str, reply: impl serde::Serialize) -> Result<Value> {
     serde_json::to_value(reply).map_err(|e| bad(cmd, e.to_string()))
@@ -79,15 +79,15 @@ fn export(s: &mut Session, p: &Value) -> Result<Value> {
     let bytes = catalog.encode().map_err(|e| bad(cmd, e.to_string()))?;
     #[cfg(not(target_arch = "wasm32"))]
     let result = if request.overwrite {
-        solidcraft_io::write_atomic(std::path::Path::new(&request.path), &bytes, false)
+        torno_io::write_atomic(std::path::Path::new(&request.path), &bytes, false)
     } else {
-        solidcraft_io::safe_write::create_atomic(std::path::Path::new(&request.path), &bytes)
+        torno_io::safe_write::create_atomic(std::path::Path::new(&request.path), &bytes)
     };
     #[cfg(target_arch = "wasm32")]
-    let result = if !request.overwrite && solidcraft_io::vfs::exists(&request.path) {
+    let result = if !request.overwrite && torno_io::vfs::exists(&request.path) {
         Err(std::io::Error::new(std::io::ErrorKind::AlreadyExists, "library file already exists"))
     } else {
-        solidcraft_io::vfs::write(&request.path, &bytes)
+        torno_io::vfs::write(&request.path, &bytes)
     };
     result.map_err(|e| bad(cmd, format!("could not export library: {e}")))?;
     let entries = catalog.entries.len();

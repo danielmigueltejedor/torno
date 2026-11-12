@@ -1,7 +1,7 @@
 # Where the time goes: the profiler
 
 Every app is built with the profiler (`crates/profile`, the apps' default `profile` feature).
-It records nothing until switched on: `SOLIDCRAFT_PROFILE=1`, the CLI's `--profile`, the
+It records nothing until switched on: `TORNO_PROFILE=1`, the CLI's `--profile`, the
 **Profile operations** preference (Graphics page) or `diagnostics.profile {"enabled": true}`.
 Off, a span is one relaxed atomic load.
 
@@ -23,9 +23,9 @@ per category) and the individual spans as a Chrome trace-event file for chrome:/
 ui.perfetto.dev (at most 200,000 spans; later ones still count in the table).
 
 ```sh
-solidcraft-cli run part.step --profile --profile-out trace.json   # table on stderr
-solidcraft-cli run part.solidcraft --profile --quiet
-solidcraft-cli bench-open part.step --profile
+torno-cli run part.step --profile --profile-out trace.json   # table on stderr
+torno-cli run part.solidcraft --profile --quiet
+torno-cli bench-open part.step --profile
 ```
 
 Over the control channel or MCP: `diagnostics.profile {"reset": true, "enabled": true}`, do the
@@ -51,7 +51,7 @@ before. The polyline is the same, bit for bit: `edge_polyline_tests` compares it
 previous division (points, order and number of evaluations) on the intersection curves of a
 drilled cylinder and on a circle.
 
-Release `solidcraft-cli` from `main` (73493b94) and the same with the change, 3 alternating
+Release `torno-cli` from `main` (73493b94) and the same with the change, 3 alternating
 pairs (before/after, after/before, before/after), each run a new process timed with
 `/usr/bin/time -v`, started once the 1-minute load average was below 2.5. Medians, with the
 range of the 3 runs. 2018 laptop: Intel Core i7-8565U (4 cores / 8 threads, 15 W), 7.4 GB,
@@ -78,7 +78,7 @@ not traced here; `tess::edges`, the display plans' own edge division, already ev
 point once). In the rover, the second shell (which names every body's faces, so meshes them all)
 goes from 7.8 s to 5.7 s.
 
-No model changed. `solidcraft-cli eval` of the five designs (the bicycle as `bench-agent` saved
+No model changed. `torno-cli eval` of the five designs (the bicycle as `bench-agent` saved
 it) is the same with both binaries apart from the per-feature milliseconds: bodies, volumes,
 areas, centres, bounding boxes, topology counts and warnings. `bench-open` meshes the same
 triangle counts, and the bicycles both binaries save differ only in the document's name.
@@ -96,10 +96,10 @@ difference of the two placements: the same triangles, faces and edge flags, move
 made once, by whichever instance is drawn first. Only a rotation and translation is shared
 this way (anything else meshes itself), and anything that changes what a body shows (split
 lines; any operation, which makes a new body) drops the link. Measurements, booleans and export
-read the instance's own geometry as before, so `solidcraft-cli eval` of an assembly is unchanged.
+read the instance's own geometry as before, so `torno-cli eval` of an assembly is unchanged.
 
 Two generated assemblies (Torno designs with placed copies of components, exported as STEP
-AP214 assemblies), `solidcraft-cli bench-open`, release build, shared 16-core Linux box:
+AP214 assemblies), `torno-cli bench-open`, release build, shared 16-core Linux box:
 
 | file | bodies | mesh phase before | after | CPU before | after | peak RSS before | after |
 |---|---:|---:|---:|---:|---:|---:|---:|
@@ -114,7 +114,7 @@ way is the next step.
 A design an agent builds over MCP is made of many small commands: a cylinder per spoke, a box
 per chain plate, one part built at the origin and its component moved into place. Each command
 did work over the whole design, so the 1,000th command cost far more than the first and a
-1,300-body design took minutes to build and to show. `solidcraft-cli bench-agent` builds such a
+1,300-body design took minutes to build and to show. `torno-cli bench-agent` builds such a
 design (a generated bicycle: about 1,260 commands, 1,280 bodies, 1,250 features, wheels built at
 the origin and moved), timing each command and then what a window needs to draw its result (the
 world state and its display meshes), and finally opens the saved design like `bench-open`. The
@@ -138,7 +138,7 @@ What grew with the design, per command:
   one pass now. The desktop also stops gathering expression completions (eleven parameter
   tables) on every change while no text box has focus.
 
-`solidcraft-cli bench-agent`, release build, 16-core Linux shared with other builds (load
+`torno-cli bench-agent`, release build, 16-core Linux shared with other builds (load
 average 15-20), one run each:
 
 | per command, by design size | before: command | before: display | after: command | after: display |
@@ -150,7 +150,7 @@ average 15-20), one run each:
 | whole build (1,260 commands) | 241 s | | 16.3 s | |
 
 The command column still grows (the timeline's fingerprints and parameter values are walked
-once per command), but slowly. `solidcraft-cli eval` output for the design corpus, the examples,
+once per command), but slowly. `torno-cli eval` output for the design corpus, the examples,
 the regression scripts, the generated bicycle and a 3,300-feature agent-built design is
 unchanged apart from the timings.
 
@@ -220,10 +220,10 @@ are Coons grids; only genuinely trimmed curved faces (holes, more than four corn
 spade's constrained Delaunay with sag and Ruppert refinement. A body the planner cannot
 handle is meshed by truck-meshalgo as before, which also still meshes for modelling
 (booleans, measure, provenance). Evaluating a plan (surface points and normals) runs on the
-CPU (`TessPlan::evaluate`) or in a compute shader (`solidcraft-gpu`).
+CPU (`TessPlan::evaluate`) or in a compute shader (`torno-gpu`).
 
 Release build, Apple M4 Max, medians of five. 400-hole plate (200 × 200 × 5 mm, 806
-faces), `cargo test --release -p solidcraft-gpu bench_plate -- --ignored --nocapture`:
+faces), `cargo test --release -p torno-gpu bench_plate -- --ignored --nocapture`:
 
 | Tolerance | Reference mesher | Plan | CPU evaluation | GPU evaluation | Triangles (reference / plan) |
 |---|---:|---:|---:|---:|---:|
@@ -274,14 +274,14 @@ Cross-part scheduling, parallel B-rep reconstruction and later display meshes re
 Reproduce after compiling, without other builds running:
 
 ```sh
-cargo test -p solidcraft-kernel --profile ci benchmark_independent_step_solids --no-run
-SOLIDCRAFT_STEP_BENCH_COUNT=512 SOLIDCRAFT_STEP_BENCH_KIND=cylinder \
-  cargo test -p solidcraft-kernel --profile ci benchmark_independent_step_solids \
+cargo test -p torno-kernel --profile ci benchmark_independent_step_solids --no-run
+TORNO_STEP_BENCH_COUNT=512 TORNO_STEP_BENCH_KIND=cylinder \
+  cargo test -p torno-kernel --profile ci benchmark_independent_step_solids \
   -- --ignored --nocapture --test-threads=1
 ```
 
 Use `torus` or `box` for the other fixtures and repeat in three fresh processes.
-`SOLIDCRAFT_STEP_BENCH_FIXTURE` optionally writes the original STEP for native inspection.
+`TORNO_STEP_BENCH_FIXTURE` optionally writes the original STEP for native inspection.
 No timing threshold runs in CI. Regressions compare serial and threaded imports with
 different worker counts: exact display meshes, measures, body/face source identities,
 names, colours/opacity, units, rotated assembly placements, duplicates and partial failures
@@ -298,7 +298,7 @@ checks archive budgets, CRCs, hashes, exact lengths, finite coordinates and inde
 Reproduce the storage measurements with an optimized `ci` IO test executable:
 
 ```sh
-cargo test -p solidcraft-io --profile ci benchmark_ -- --ignored --nocapture --test-threads=1
+cargo test -p torno-io --profile ci benchmark_ -- --ignored --nocapture --test-threads=1
 ```
 
 The benchmarks generate an original 100,000-vertex/100,000-triangle mesh and a STEP
@@ -323,7 +323,7 @@ the following medians of the three nine-sample medians (milliseconds, fast mode)
 | STEP decode | 1.479 | 1.318 |
 | STEP atomic save | 7.213 | 7.087 |
 
-Three alternating fresh-process `solidcraft-cli bench-open` runs of each STEP encoding
+Three alternating fresh-process `torno-cli bench-open` runs of each STEP encoding
 returned the same 512 bodies and 6,144 triangles. Median read-plus-parse was 2.274 ms
 for JSON and 2.151 ms for the container; median evaluation was 218.559/236.915 ms and
 display meshing 203.160/197.790 ms respectively. Geometry dominates and these variable
@@ -382,7 +382,7 @@ An actual desktop sensor-enclosure opening on e8a8e0f prepared its saved picture
 24.320 ms; geometry reconstruction, display warmup and thumbnail preparation took
 8,913.212 ms. The same preview experiment is now explicitly opt-in; full geometry
 readiness still requires reconstruction.
-For actual desktop opening phases, launch with `SOLIDCRAFT_PROFILE_OPEN=1`: `ready_ms`
+For actual desktop opening phases, launch with `TORNO_PROFILE_OPEN=1`: `ready_ms`
 reports saved-picture preparation, while the normal phase log reports reconstruction,
 display warmup and thumbnail completion. Neither log measures the exact GPU first frame.
 
@@ -402,16 +402,16 @@ The reproducible engine benchmarks separate atomic saving, provisional mesh read
 reconstruction and final display-mesh readiness:
 
 ```sh
-cargo test -p solidcraft-io --profile ci benchmark_step_storage -- --ignored --nocapture --test-threads=1
-cargo test -p solidcraft-engine --profile ci benchmark_native_cache_save -- --ignored --nocapture --test-threads=1
-cargo test -p solidcraft-engine --profile ci benchmark_native_cache_open -- --ignored --nocapture --test-threads=1
+cargo test -p torno-io --profile ci benchmark_step_storage -- --ignored --nocapture --test-threads=1
+cargo test -p torno-engine --profile ci benchmark_native_cache_save -- --ignored --nocapture --test-threads=1
+cargo test -p torno-engine --profile ci benchmark_native_cache_open -- --ignored --nocapture --test-threads=1
 ```
 
 Use an absolute `CARGO_TARGET_DIR`. The save benchmark defaults to the generated
-512-box STEP document and accepts `SOLIDCRAFT_BENCH_FILE` for another public design.
+512-box STEP document and accepts `TORNO_BENCH_FILE` for another public design.
 It alternates nine saves of each encoding, including flush/replacement/backup, and
 verifies document identity and native-cache presence. It never times initial fixture
-evaluation as save work. Open runs once per process; `SOLIDCRAFT_BENCH_ENCODING`
+evaluation as save work. Open runs once per process; `TORNO_BENCH_ENCODING`
 selects 0=JSON, 1=container without cache, 2=native cache, 3=compact native cache.
 Changing only `cache/key.json`'s application version provides a cache-miss control.
 Fresh processes do not imply a cold operating-system file cache. The engine callback
@@ -420,7 +420,7 @@ profile log and actual screenshots to check the saved picture and completed mode
 
 Measured 2026-10-13 on Windows 11, Ryzen AI MAX+ 395 (16 cores/32 threads), `ci`
 profile, with the neutral codec revision `75381fa`, envelope `SCBREP03`, producer
-`solidcraft-truck-adapter/2`, and opening integration revision `3243422` on upstream `2880525`
+`torno-truck-adapter/2`, and opening integration revision `3243422` on upstream `2880525`
 (0.6.0). These replace the earlier prototype measurements. They compare encodings
 on the same code and do not attribute upstream modelling improvements to the cache.
 Runs started after local builds and the complete CI suite finished; ordinary
@@ -502,7 +502,7 @@ across edits.
 The reproducible microbenchmark is:
 
 ```sh
-cargo test -p solidcraft-doc --profile ci benchmark_prepared_extrude_sources -- --ignored --nocapture
+cargo test -p torno-doc --profile ci benchmark_prepared_extrude_sources -- --ignored --nocapture
 ```
 
 Three Windows x64 optimized `ci` runs, during other compilation, compared the previous
@@ -527,8 +527,8 @@ straight-line projection and exact surface-refinement reuse changes:
 | Local Pi case assembly, 25 features, 2,990 bodies | 14.75 s | 11.57 s | 21.6% |
 
 These are geometry rebuild times, not complete desktop opening times. The public fixture
-can be generated with `solidcraft-cli run examples/acceptance/sensor_enclosure.json
---save sensor.sc --quiet`, then measured with `solidcraft-cli bench-open
+can be generated with `torno-cli run examples/acceptance/sensor_enclosure.json
+--save sensor.sc --quiet`, then measured with `torno-cli bench-open
 sensor.sc`. Each benchmark starts a new process; this does not measure a warm
 timeline-cache hit. The local assembly is private and is not part of the repository.
 
@@ -547,7 +547,7 @@ Both saved fixtures retain exactly the same body names, face/edge/vertex/shell c
 bounds, volumes, and surface areas. Focused tests compare cached and uncached refinement
 coordinates and normals bit for bit on periodic, singular and transformed surfaces.
 
-For desktop phase profiling, set `SOLIDCRAFT_PROFILE_OPEN=1` before launching the app.
+For desktop phase profiling, set `TORNO_PROFILE_OPEN=1` before launching the app.
 Interactive Open reports geometry, placement, tessellation, thumbnail and total worker
 times to stderr without logging the source path. Thumbnails were about 0.1 seconds of
 the slow assembly's open and were not the main bottleneck. Further cold Boolean and
@@ -570,7 +570,7 @@ ready: 13.04 s geometry, 2.20 s placement, 0.53 s meshing and 0.07 s thumbnails.
 the optimized `ci` profile and actual Vulkan rendering, with isolated settings and caches.
 Linux and Windows timings are separate measurements and must not be compared as a speedup.
 
-`solidcraft-cli bench-open design.sc` reports JSON lines for file reading,
+`torno-cli bench-open design.sc` reports JSON lines for file reading,
 JSON decoding and migrations (including input-name repair), timeline evaluation, individual
 features, and world placement/display meshing. `--parse-only` stops before geometry evaluation.
 The parse timer includes document validation and repair, not just the JSON parser.
@@ -643,7 +643,7 @@ every row's place.
 
 # Recompute performance
 
-`solidcraft-cli bench-edit <script> <param> "(<old>) * 1.02"` builds a design from its script
+`torno-cli bench-edit <script> <param> "(<old>) * 1.02"` builds a design from its script
 (timing the build), then times a parameter edit, setting the parameter back to its old
 expression, undo and redo. Each cell is before → after the evaluation cache, with the number of
 features recomputed in parentheses. Release build, on a machine shared with other build jobs (load average about 45; the
@@ -724,7 +724,7 @@ nothing dropped the entries nothing referred to any more. It now also holds at m
 first, and always keeps the newest result, so a single evaluation is never thrown away in the same
 breath.
 
-Release `solidcraft-cli`, `eval <design> --quiet`, wall time of the whole process and peak RSS
+Release `torno-cli`, `eval <design> --quiet`, wall time of the whole process and peak RSS
 from `/usr/bin/time -v`, alternating the baseline and patched binaries, median of 12 runs each
 (8 for the 400-hole plate and the vent plate), no other build or test running (Fedora Linux, AMD
 Ryzen 7 5700X, 8 cores / 16 threads, 32 GB):
@@ -761,7 +761,7 @@ apart from the per-feature milliseconds. The
 kernel's test suite passes, including four new tests for the prism route and its identity rule.
 
 Reproduce after compiling a release build, without other builds running: time
-`target/release/solidcraft-cli eval <design>` with `/usr/bin/time -v`, alternating the
+`target/release/torno-cli eval <design>` with `/usr/bin/time -v`, alternating the
 baseline and patched binaries, and compare the middle of the runs. The corpus (20 generated designs:
 hole plates, box grids, assemblies, many-sketch parts) and the measuring scripts are in
 https://github.com/sahenjp/solidcraft-perf under `perf/`.
@@ -787,7 +787,7 @@ Pi case in 15.2 s and 10.5 s. During those jobs, median `ui.inspect` round trips
 and 8.3 ms; the slowest were 33.7 ms and 28.6 ms. This fixes the window freeze, not the
 remaining cost of cold geometry evaluation.
 
-Recent thumbnails are 240 × 150 PNG files in `SolidCraft/thumbnails` under the platform
+Recent thumbnails are 240 × 150 PNG files in `Torno/thumbnails` under the platform
 cache directory (`LOCALAPPDATA` on Windows). Their keys include the source path, file size
 and modification time. Open and Save render from the model already in memory. Cached
 recents decode the PNG without reading or rebuilding a document, and run before cold
@@ -796,7 +796,7 @@ No thumbnail or base64 image is added to the design JSON. A regression test veri
 source bytes remain unchanged, a cached picture works even without a parseable source
 file, and changing the source invalidates the cache.
 
-`solidcraft-cli bench-open` also accepts STEP/IGES. For exchange files its `parse` phase
+`torno-cli bench-open` also accepts STEP/IGES. For exchange files its `parse` phase
 includes constructing and checking the imported B-rep, not merely decoding STEP syntax.
 
 The live test loaded both cached recent cards in 21 ms and inserted the 2 MB lightweight
@@ -818,7 +818,7 @@ drag's steps are a quarter of the smallest held size instead of an eighth, excep
 ran out of budget: the rest of that drag goes in eighths, as before, and continuation keeps
 the branch the seed no longer places.
 
-`cargo run --release -p solidcraft-sketch --example solve_bench`, macOS arm64, load average
+`cargo run --release -p torno-sketch --example solve_bench`, macOS arm64, load average
 45–75 (best of 5):
 
 | Grid (origin corner fixed, rows horizontal, columns vertical, every edge a distance) | Start | Before | After |
@@ -1024,7 +1024,7 @@ order, its depth and count caps and where it stops are unchanged; a test compare
 scanning walk on 13 shapes and on hostile generated documents. `inside_component` uses the same
 index.
 
-`benchmark_placements_walk` (ignored; `cargo test --release -p solidcraft-doc --lib
+`benchmark_placements_walk` (ignored; `cargo test --release -p torno-doc --lib
 benchmark_placements_walk -- --ignored --nocapture`) times both walks on a generated board-like
 assembly: `top` modules, each holding `parts` parts of 9 pins. It runs each order in turn (the
 scanning walk first in each round, then the tree first), so neither walk always runs on a cache

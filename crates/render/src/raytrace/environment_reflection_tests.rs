@@ -1,8 +1,8 @@
 use super::*;
 use crate::job::{ReflectionBody, ReflectionMode, ReflectionOptions};
 use crate::lighting::{HdrSource, environment_input::EnvironmentInput};
-use solidcraft_geom::Mesh;
 use std::sync::Arc;
+use torno_geom::Mesh;
 
 fn environment(bright: bool, rotation: f64) -> EnvironmentInput {
     let mut bytes = b"#?RADIANCE\nFORMAT=32-bit_rle_rgbe\nPRIMARIES=0.64 0.33 0.30 0.60 0.15 0.06 0.3127 0.3290\n\n-Y 2 +X 4\n".to_vec();
@@ -37,8 +37,8 @@ fn scene(normal: Vec3) -> ProductScene {
     }
 }
 fn request(mode: ReflectionMode) -> ImageRequest {
-    let mut camera = solidcraft_viewport::Camera { distance: 50.0, ..Default::default() };
-    camera.set_view(solidcraft_viewport::StandardView::Top);
+    let mut camera = torno_viewport::Camera { distance: 50.0, ..Default::default() };
+    camera.set_view(torno_viewport::StandardView::Top);
     ImageRequest {
         studio_weights: None,
         environment: None,
@@ -83,7 +83,7 @@ fn ideal_metal_mirror_receives_environment_once_and_camera_background_stays_inde
     let mut empty = req;
     empty.raytrace.as_mut().unwrap().reflections = Some(ReflectionOptions::default());
     let image = ::image::load_from_memory(&render(
-        ProductScene { meshes: Vec::new(), bounds: solidcraft_geom::Aabb3::EMPTY },
+        ProductScene { meshes: Vec::new(), bounds: torno_geom::Aabb3::EMPTY },
         empty,
         Some(environment(false, 0.0)),
     ))
@@ -267,7 +267,7 @@ fn hdr_anisotropic_secondary_hit_yields_before_another_debit_and_observes_cancel
         faces: Vec::new(),
     });
     let mut request = anisotropic_request(ReflectionMode::RoughSpecular, false);
-    request.camera.set_view(solidcraft_viewport::StandardView::Front);
+    request.camera.set_view(torno_viewport::StandardView::Front);
     request.width = 1;
     request.height = 1;
     let options = request.raytrace.clone().unwrap();

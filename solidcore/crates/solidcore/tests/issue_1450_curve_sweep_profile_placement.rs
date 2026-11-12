@@ -1,4 +1,4 @@
-//! tangency-labs/solidcore#1450 (WR-522, WR-523; the SolidCraft fork's tangency-labs/smlib
+//! tangency-labs/solidcore#1450 (WR-522, WR-523; the Torno fork's tangency-labs/smlib
 //! 2dd71a0 and 5d3939e): `SmApiCreateCurveSweep` moves the profile's reference point (its
 //! first curve's start) onto the path's start before sweeping, so a profile that lies round
 //! the path, as a sketch profile does, is swept off its place: round a bend at the wrong

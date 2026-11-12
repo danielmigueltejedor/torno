@@ -44,7 +44,7 @@
 //! geometry by a fixed scheme (`Notify`, `Arena`): a plain entry point's kernel keys
 //! would otherwise leave the curve owned by no edge `ValidateGeometry` knows. Under a
 //! caller's naming (`Caller`, `Unknown`) the environment's key owns it, recorded on `b`.
-//! Not upstream: with `Kernel::fixes.glue_vertices_joins_every_region` (WR-607; SolidCraft
+//! Not upstream: with `Kernel::fixes.glue_vertices_joins_every_region` (WR-607; Torno
 //! change, tangency-labs/smlib 661f79c) [`glue_vertices`] joins the pair of shells of every
 //! region both vertices are in, not only the last pair its search finds.
 //! `SmBrep::Notify` is owned by `topology.brep_p2`, not this unit. Owning-list
@@ -1385,7 +1385,7 @@ fn glue_with_notification_identity(
     }
     let distance = b.vertex(survivor)?.point.distance(b.vertex(deleted)?.point);
     let mut pair = None;
-    // Not upstream (WR-607, `fixes.glue_vertices_joins_every_region`; SolidCraft change,
+    // Not upstream (WR-607, `fixes.glue_vertices_joins_every_region`; Torno change,
     // tangency-labs/smlib 661f79c): every region both vertices are in has its pair of
     // shells, all of which the glue joins (a solid's vertex is in a shell of the solid's
     // region and one of the infinite region's); one pair is kept apart below for the

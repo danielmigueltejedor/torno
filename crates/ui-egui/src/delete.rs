@@ -5,7 +5,7 @@
 use std::sync::Arc;
 
 use serde_json::{Value, json};
-use solidcraft_engine::doc::KeptResults;
+use torno_engine::doc::KeptResults;
 
 use crate::SolveApp;
 use crate::ui_kit;
@@ -25,7 +25,7 @@ pub struct Pending {
 /// What Delete acts on now: the selection (bodies not locked), plus the components picked in
 /// the browser (their occurrences).
 pub fn selection_params(app: &SolveApp) -> Value {
-    use solidcraft_engine::Sel;
+    use torno_engine::Sel;
     let mut items: Vec<Sel> = Vec::new();
     for s in app.session.selection.iter().filter(|s| !matches!(s, Sel::Body { name } if app.session.visibility.locked_bodies.contains(name))) {
         // A MidPoint glyph shared by lines whose midpoints meet removes every constraint it
@@ -185,14 +185,14 @@ pub fn show(app: &mut SolveApp, ctx: &egui::Context) {
     };
     let (deleted, fails) = (list("deleted"), list("would_fail"));
     let shared = shared_occurrences(app, &p.params);
-    let (closed, action) = ui_kit::Confirm::new(egui::Id::unique("sc_delete_confirm"), "delete", solidcraft_ui_text::tr_label("Delete"))
+    let (closed, action) = ui_kit::Confirm::new(egui::Id::unique("sc_delete_confirm"), "delete", torno_ui_text::tr_label("Delete"))
         .tone(ui_kit::Tone::Danger)
         .actions("Delete", "Cancel", None)
         .show(ctx, true, |ui| {
             if shared {
                 ui_kit::text(
                     ui,
-                    solidcraft_ui_text::tr_label("This child is shared. Deleting it removes it from every copy of its parent."),
+                    torno_ui_text::tr_label("This child is shared. Deleting it removes it from every copy of its parent."),
                     ui_kit::Text::Report("shared", false),
                 );
             }
@@ -202,7 +202,7 @@ pub fn show(app: &mut SolveApp, ctx: &egui::Context) {
                 if names.is_empty() {
                     continue;
                 }
-                ui_kit::text(ui, solidcraft_ui_text::tr_label(heading), ui_kit::Text::Report(key, error));
+                ui_kit::text(ui, torno_ui_text::tr_label(heading), ui_kit::Text::Report(key, error));
                 for name in names.iter().take(MAX_LISTED) {
                     ui_kit::text(ui, &format!("  • {name}"), ui_kit::Text::Report(&format!("{key}:{name}"), error));
                 }
@@ -210,7 +210,7 @@ pub fn show(app: &mut SolveApp, ctx: &egui::Context) {
                     let more = (names.len() - MAX_LISTED).to_string();
                     ui_kit::text(
                         ui,
-                        &solidcraft_ui_text::format("delete.and_more", &[("count", &more)]),
+                        &torno_ui_text::format("delete.and_more", &[("count", &more)]),
                         ui_kit::Text::Report(&format!("{key}:more"), error),
                     );
                 }

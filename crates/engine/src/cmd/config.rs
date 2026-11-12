@@ -2,8 +2,8 @@
 //! suppressions) and switching between its rows.
 
 use serde_json::{Value, json};
-use solidcraft_doc::DEFAULT_MATERIAL;
-use solidcraft_doc::config::{Column, ConfigRow, MAX_COLUMNS, MAX_ROWS};
+use torno_doc::DEFAULT_MATERIAL;
+use torno_doc::config::{Column, ConfigRow, MAX_COLUMNS, MAX_ROWS};
 
 use super::CommandSpec;
 use crate::params::{bad, bool_, str_, string_list};
@@ -113,9 +113,8 @@ fn column_of(s: &Session, p: &Value, cmd: &str) -> Result<Column> {
                 .ok_or_else(|| bad(cmd, "no face column"));
         }
         if let Some(target) = value.get("target") {
-            solidcraft_doc::config::validate_face_target_json(target).map_err(|error| bad(cmd, error.to_string()))?;
-            let target: solidcraft_doc::config::ConfigFaceTarget =
-                serde_json::from_value(target.clone()).map_err(|error| bad(cmd, error.to_string()))?;
+            torno_doc::config::validate_face_target_json(target).map_err(|error| bad(cmd, error.to_string()))?;
+            let target: torno_doc::config::ConfigFaceTarget = serde_json::from_value(target.clone()).map_err(|error| bad(cmd, error.to_string()))?;
             let state = s.model.state();
             let body = state.body(&target.body).ok_or_else(|| bad(cmd, "no face definition"))?;
             s.doc.configuration_face_indices(body, &target).map_err(|error| bad(cmd, error.to_string()))?;
@@ -128,7 +127,7 @@ fn column_of(s: &Session, p: &Value, cmd: &str) -> Result<Column> {
         if body.body.is_mesh() {
             return Err(bad(cmd, "mesh faces have no supported semantic lineage"));
         }
-        let index = solidcraft_doc::appearance::face_index_at(body, point).ok_or_else(|| bad(cmd, "no face at picked point"))?;
+        let index = torno_doc::appearance::face_index_at(body, point).ok_or_else(|| bad(cmd, "no face at picked point"))?;
         let target = s.doc.configuration_face_target(body, index, point).map_err(|error| bad(cmd, error.to_string()))?;
         s.doc.certify_config_face(&target).map_err(|error| bad(cmd, error.to_string()))?;
         s.doc.configuration_face_indices(body, &target).map_err(|error| bad(cmd, error.to_string()))?;
@@ -240,7 +239,7 @@ fn table(s: &Session, cmd: &str) -> Result<ConfigTable> {
                     format!(
                         "Face: {} / {}",
                         target.body,
-                        solidcraft_doc::persistent_name::split_feature(&target.name).map(|(_, role)| role).unwrap_or(&target.name)
+                        torno_doc::persistent_name::split_feature(&target.name).map(|(_, role)| role).unwrap_or(&target.name)
                     )
                 }
                 _ => s.doc.config_key(column),
@@ -339,7 +338,7 @@ fn row(s: &mut Session, p: &Value) -> Result<Value> {
                     text = s.doc.material_cell(&text).map_err(|e| bad(cmd, e.to_string()))?.unwrap_or_else(|| DEFAULT_MATERIAL.into());
                 }
                 Some(Column::Appearance(_) | Column::ComponentAppearance(_) | Column::FaceAppearance(_)) => {
-                    text = match solidcraft_doc::config::appearance_cell(&text).map_err(|e| bad(cmd, e.to_string()))? {
+                    text = match torno_doc::config::appearance_cell(&text).map_err(|e| bad(cmd, e.to_string()))? {
                         Some(look) => serde_json::to_string(&look).map_err(|e| bad(cmd, e.to_string()))?,
                         None => String::new(),
                     };
@@ -360,7 +359,7 @@ fn row(s: &mut Session, p: &Value) -> Result<Value> {
     }
     for (column, value) in s.doc.configs.columns.iter().zip(&cells) {
         if matches!(column, Column::Suppress(_)) {
-            solidcraft_doc::config::suppression_cell(value).map_err(|e| bad(cmd, e.to_string()))?;
+            torno_doc::config::suppression_cell(value).map_err(|e| bad(cmd, e.to_string()))?;
         }
     }
     let changes: Vec<_> = s
@@ -420,8 +419,8 @@ fn validate_rows(s: &Session, cmd: &str) -> Result<()> {
 
 /// Adds `value` as a rule, or replaces the rule with its id.
 fn put_rule(s: &mut Session, value: &Value, cmd: &str) -> Result<()> {
-    solidcraft_doc::config::validate_rules_json(&json!({"configs":{"rules":[value]}})).map_err(|e| bad(cmd, e.to_string()))?;
-    let mut rule: solidcraft_doc::config::ConfigRule = serde_json::from_value(value.clone()).map_err(|e| bad(cmd, e.to_string()))?;
+    torno_doc::config::validate_rules_json(&json!({"configs":{"rules":[value]}})).map_err(|e| bad(cmd, e.to_string()))?;
+    let mut rule: torno_doc::config::ConfigRule = serde_json::from_value(value.clone()).map_err(|e| bad(cmd, e.to_string()))?;
     if rule.length_unit.is_none() {
         rule.length_unit = s
             .doc
@@ -436,7 +435,7 @@ fn put_rule(s: &mut Session, value: &Value, cmd: &str) -> Result<()> {
     if let Some(index) = rules.iter().position(|r| r.id == rule.id) {
         rules[index] = rule;
     } else {
-        if rules.len() >= solidcraft_doc::config::MAX_RULES {
+        if rules.len() >= torno_doc::config::MAX_RULES {
             return Err(bad(cmd, "too many rules"));
         }
         rules.push(rule);
@@ -453,7 +452,7 @@ fn rule(s: &mut Session, p: &Value) -> Result<Value> {
         // rebuild per row instead of one per row and rule, and rules that only hold together,
         // such as a body's and its cut's, can be added).
         let values = values.as_array().ok_or_else(|| bad(cmd, "`rules` is a list of rules"))?;
-        if values.len() > solidcraft_doc::config::MAX_RULES {
+        if values.len() > torno_doc::config::MAX_RULES {
             return Err(bad(cmd, "too many rules"));
         }
         for value in values {
@@ -706,7 +705,7 @@ mod tests {
         run(&mut s, "config.rule", json!({"id":"limit","delete":true}));
         run(&mut s, "edit.undo", json!({}));
         assert_eq!(s.doc, before);
-        let reopened = solidcraft_doc::format::read(&s.doc.to_json()).unwrap();
+        let reopened = torno_doc::format::read(&s.doc.to_json()).unwrap();
         assert_eq!(reopened.configs.rules, s.doc.configs.rules);
     }
 
@@ -899,7 +898,7 @@ mod tests {
         assert!((volume(&mut s) - 1000.0).abs() < 1e-6, "captured Default preserves geometry in an inch design");
         run(&mut s, "config.row", json!({"name":"Inches", "values":{length.clone():"2", format!("suppress:{feature}"):"NO"}}));
         run(&mut s, "config.activate", json!({"row":"Inches"}));
-        assert_eq!(s.doc.config_current(&solidcraft_doc::config::Column::Param(length.clone())).as_deref(), Some("2 in"));
+        assert_eq!(s.doc.config_current(&torno_doc::config::Column::Param(length.clone())).as_deref(), Some("2 in"));
         assert!(s.doc.configuration_matches());
         assert!((volume(&mut s) - 5080.0).abs() < 1e-6);
         let feature_id = s.doc.features[0].id;
@@ -999,7 +998,7 @@ mod tests {
         let mass = run(&mut s, "inspect.measure", json!({}));
         assert!((mass["bodies"][0]["mass_g"].as_f64().unwrap() - 2.7).abs() < 1e-6);
         assert_eq!(s.doc.appearances.bodies.get(&body).unwrap().opacity, 0.4);
-        let reopened = solidcraft_doc::format::read(&s.doc.to_json()).unwrap();
+        let reopened = torno_doc::format::read(&s.doc.to_json()).unwrap();
         assert_eq!(reopened, *s.doc);
         assert!(reopened.configuration_matches());
         run(&mut s, "edit.undo", json!({}));
@@ -1057,7 +1056,7 @@ mod tests {
         run(&mut s, "config.activate", json!({"row": "Default"}));
         assert_eq!(s.doc.appearances.bodies.get(&body).unwrap().name, name);
         assert!(s.doc.configuration_matches());
-        let reopened = solidcraft_doc::format::read(&s.doc.to_json()).unwrap();
+        let reopened = torno_doc::format::read(&s.doc.to_json()).unwrap();
         assert!(reopened.configuration_matches());
     }
 
@@ -1092,7 +1091,7 @@ mod tests {
         run(&mut s, "edit.undo", json!({}));
         assert_eq!(run(&mut s, "config.table", json!({}))["columns"][2], "material:Block");
         run(&mut s, "edit.redo", json!({}));
-        let mut reopened = Session::new(solidcraft_doc::format::read(&s.doc.to_json()).unwrap());
+        let mut reopened = Session::new(torno_doc::format::read(&s.doc.to_json()).unwrap());
         run(&mut reopened, "config.activate", json!({"row": "Default"}));
         assert!(!reopened.doc.materials.contains_key("Housing"));
         assert!(!reopened.doc.appearances.bodies.contains_key("Housing"));

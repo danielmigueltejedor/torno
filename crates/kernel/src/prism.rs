@@ -5,7 +5,7 @@
 //! Also the test of whether a record surface is a wall swept along a direction.
 
 use solidcore_record::{Plane, Region2, Seg2, Vec2};
-use solidcraft_geom::prelude::*;
+use torno_geom::prelude::*;
 
 use crate::body::Body;
 use crate::{BoolOp, KernelError, Result};
@@ -114,7 +114,7 @@ mod sheets {
     use solidcore_record::Vec3;
     use solidcore_record::brep::Loop;
     use solidcore_record::brep::Surface;
-    use solidcraft_smlib::{BooleanOp, Brep};
+    use torno_smlib::{BooleanOp, Brep};
 
     use super::*;
     use crate::prism_curve::{Run, projected};

@@ -1,4 +1,4 @@
-//! The SolidCraft document: user and model parameters, and a parametric timeline of features
+//! The Torno document: user and model parameters, and a parametric timeline of features
 //! (sketches, extrudes, revolves, fillets, primitives, combines…). Evaluating the timeline with
 //! the kernel produces the model (bodies and solved sketches). Evaluation is incremental: a
 //! feature is recomputed only when it, a parameter it uses, or an earlier feature changed.
@@ -108,8 +108,8 @@ pub use expr::Expr;
 pub use names::{BodyName, FeatureId, FeatureName, SketchId, copy_name};
 pub use params::{ParamRow, ParamUser, cycles, name_words_match};
 pub use points::{Dir, FacePick, Position, plain};
-pub use solidcraft_kernel as kernel;
-pub use solidcraft_sketch as sketch;
+pub use torno_kernel as kernel;
+pub use torno_sketch as sketch;
 
 #[derive(Debug, Clone, PartialEq, thiserror::Error)]
 pub enum DocError {
@@ -120,9 +120,9 @@ pub enum DocError {
     #[error("unknown {0}")]
     Unknown(String),
     #[error(transparent)]
-    Sketch(#[from] solidcraft_sketch::SketchError),
+    Sketch(#[from] torno_sketch::SketchError),
     #[error(transparent)]
-    Kernel(#[from] solidcraft_kernel::KernelError),
+    Kernel(#[from] torno_kernel::KernelError),
     /// A stored reference (a face or edge name, a piece of a split face) no longer finds exactly
     /// what it named: the feature using it fails, and the user picks it again. `feature` is
     /// empty until the evaluation of the feature fills it in ([`DocError::in_feature`]).

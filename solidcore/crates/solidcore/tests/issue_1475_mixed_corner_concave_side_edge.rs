@@ -1,5 +1,5 @@
 //! tangency-labs/solidcore#1475 (WR-524): a bar 100 x 30 x 10 (x 0..100, y -15..15)
-//! joined with a boss r 20, height 20, on the origin (SolidCraft rig case fillets/1207).
+//! joined with a boss r 20, height 20, on the origin (Torno rig case fillets/1207).
 //! The bar's top front edge (y = -15, z = 10) and the boss's concave base arc over the
 //! bar (both halves, split at the cylinder's seam) are rounded r 2 together. They meet
 //! at (13.229, -15, 10), where the third edge, the boss's line on the bar's front face,
@@ -9,8 +9,8 @@
 //! with status 1001. The opt-in `Kernel::fixes.fillet_3x2_mixed_concave_side_edge`
 //! lets the roles follow the unfilleted edge's convexity, as tangency-labs/smlib@1255993.
 //!
-//! The operand is the C++ union's body as SolidCraft hands it over (its flat arrays,
-//! written with `BrepData::write_to_file`), read back with SolidCraft's `BrepFromFlat`
+//! The operand is the C++ union's body as Torno hands it over (its flat arrays,
+//! written with `BrepData::write_to_file`), read back with Torno's `BrepFromFlat`
 //! options; solidcore's own boolean builds a different body (see the issue).
 #![allow(
     clippy::unwrap_used,
@@ -39,7 +39,7 @@ use solidcore::{EntityRef, Kernel};
 
 const BODY: &[u8] = include_bytes!("data/issue_1475_bar_and_boss.smd");
 
-/// SolidCraft's topology identities (type code, entity index).
+/// Torno's topology identities (type code, entity index).
 fn key_of(e: EntityRef) -> ObjectRef {
     let (type_code, kind, i) = match e {
         EntityRef::Brep(x) => (16011, 0u64, x.index()),
@@ -60,7 +60,7 @@ fn key_of(e: EntityRef) -> ObjectRef {
     }
 }
 
-/// The body as SolidCraft's `BrepFromFlat` builds it: no UV trims, no analytics, same
+/// The body as Torno's `BrepFromFlat` builds it: no UV trims, no analytics, same
 /// tolerances, healer on.
 fn load(k: &mut Kernel) -> Brep {
     let mut data = BrepData::read_from_file(k, BODY.to_vec(), FileType::Ascii).unwrap();
@@ -88,7 +88,7 @@ fn load(k: &mut Kernel) -> Brep {
     b
 }
 
-/// The edge nearest `p` (SolidCraft's pick: its points are display-mesh points, off the arc).
+/// The edge nearest `p` (Torno's pick: its points are display-mesh points, off the arc).
 fn pick(k: &Kernel, b: &Brep, p: [f64; 3]) -> EdgeId {
     let mut best = (f64::MAX, None);
     for e in bp1::edges(b, None).unwrap() {

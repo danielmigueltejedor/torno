@@ -90,9 +90,9 @@ fn native_exr_pixels(bytes: &[u8]) -> ::image::Rgba32FImage {
 use super::*;
 use crate::ProductMesh;
 use crate::job::{ReflectionBody, ReflectionMode, ReflectionOptions};
-use solidcraft_geom::{Aabb3, Mesh};
-use solidcraft_viewport::StandardView;
 use std::sync::Arc;
+use torno_geom::{Aabb3, Mesh};
+use torno_viewport::StandardView;
 
 fn progressive_fixture(samples: u32, seed: u32, left: Option<bool>, exposure: f64) -> ImageTask {
     // Reuse the analytic half-plane camera/geometry, not fixed-AA output.
@@ -224,7 +224,7 @@ fn progressive_film_and_resolve_share_cancellation_and_one_cumulative_work_budge
 }
 
 fn progressive_area_fixture(samples: u32, led: bool) -> ImageTask {
-    let mut camera = solidcraft_viewport::Camera { distance: 10.0, fov: 0.0, ..Default::default() };
+    let mut camera = torno_viewport::Camera { distance: 10.0, fov: 0.0, ..Default::default() };
     camera.set_view(StandardView::Top);
     let receiver = ProductMesh {
         transmission: None,
@@ -366,7 +366,7 @@ fn progressive_area_and_led_shadow_continuations_observe_cancel_and_cumulative_w
 }
 
 fn fixture(samples: u8, r: u8, left: Option<bool>) -> ImageTask {
-    let mut camera = solidcraft_viewport::Camera { distance: 10.0, fov: 0.0, ..Default::default() };
+    let mut camera = torno_viewport::Camera { distance: 10.0, fov: 0.0, ..Default::default() };
     camera.set_view(StandardView::Top);
     let meshes = if let Some(left) = left {
         let (x0, x1) = if left { (0.0, 0.5) } else { (0.5, 1.0) };
@@ -786,7 +786,7 @@ fn cpu_identity_output_and_raw_retention_preserve_original_f64_pngs() {
             assert_eq!(actual.1, original.1, "identity output must preserve the original f64 PNG exactly");
             assert_eq!(actual.2.is_some(), linear_exr);
             if let Some(master) = actual.2 {
-                assert!(master.windows(b"SolidCraft native CPU raytrace".len()).any(|w| w == b"SolidCraft native CPU raytrace"));
+                assert!(master.windows(b"Torno native CPU raytrace".len()).any(|w| w == b"Torno native CPU raytrace"));
             }
         }
     }
@@ -875,7 +875,7 @@ fn cpu_thin_lens_rays_match_rolled_axial_focus_and_uniform_area_pupil() {
     request.height = 6;
     for (yaw, pitch, roll) in [(0.0, 0.0, 0.0), (-0.45, 0.5, 0.7)] {
         request.camera =
-            solidcraft_viewport::Camera { target: Vec3::new(2.0, 3.0, 4.0), distance: 12.0, fov: 0.7, yaw, pitch, roll, ..Default::default() };
+            torno_viewport::Camera { target: Vec3::new(2.0, 3.0, 4.0), distance: 12.0, fov: 0.7, yaw, pitch, roll, ..Default::default() };
         let camera = request.camera;
         let (right, up, back) = camera.basis();
         let lens = job::ThinLens { aperture_radius_mm: 0.4, focus_distance_mm: 9.0 };
@@ -1331,7 +1331,7 @@ fn path_fixture(samples: u32, depth: u8, ceiling: bool) -> ImageTask {
     // changes reflected proposals and their MIS density at depth >= 2.
     // Its 0.8x0.8 mm orthographic footprint fits inside the physical ceiling
     // aperture. No private clipping override or modified producer is needed.
-    let camera = solidcraft_viewport::Camera { distance: 1.0, yaw: 0.0, pitch: std::f64::consts::FRAC_PI_2, roll: 0.0, ..original.request.camera };
+    let camera = torno_viewport::Camera { distance: 1.0, yaw: 0.0, pitch: std::f64::consts::FRAC_PI_2, roll: 0.0, ..original.request.camera };
     assert!((camera.ray(0.5, 0.5, 1.0, 1.0).1 + Vec3::Z).len() < 1e-15, "analytical normal-view fixture");
     let request = ImageRequest { camera, raytrace: Some(options.clone()), ..original.request };
     ImageTask::new(scene, request, CancelToken::default(), options).unwrap()
@@ -1615,7 +1615,7 @@ fn cpu_path_real_rectangular_emitter_and_blocker_have_the_analytic_lambert_mean(
                 seed: Some(81),
                 ..original.options
             };
-            let camera = solidcraft_viewport::Camera { distance: 0.1, fov: 0.001, ..original.request.camera };
+            let camera = torno_viewport::Camera { distance: 0.1, fov: 0.001, ..original.request.camera };
             let request = ImageRequest { camera, raytrace: Some(options.clone()), ..original.request };
             let (actual, _) = path_mean(ImageTask::new(scene, request, CancelToken::default(), options).unwrap());
             if blocker_height.is_some() {
@@ -2010,7 +2010,7 @@ fn cpu_aging_all_kinds_match_independent_full_coverage_optical_values_and_keep_n
 }
 #[test]
 fn cpu_aging_uses_original_material_class_layer_order_targets_and_coat_attenuation() {
-    let coat = solidcraft_viewport::clear_coat::ClearCoat::new(0.8, 0.2, 1.7).unwrap();
+    let coat = torno_viewport::clear_coat::ClearCoat::new(0.8, 0.2, 1.7).unwrap();
     let input = crate::surface_patterns::ShadingSurface {
         surface: OpaqueSurface::new(Vec3::new(0.2, 0.3, 0.4), 1.0, 0.4, 1.6).unwrap().with_clear_coat(coat),
         shading_normal: Vec3::Z,
@@ -2119,7 +2119,7 @@ fn cpu_aging_guides_see_the_aged_material_and_filter_never_changes_raw_intent() 
     // The public constructor's minimum is0.045; it is still strictly inside
     // the smooth-metal guide bypass range (<0.25), before aging changes it.
     let smooth = OpaqueSurface::new(Vec3::new(0.5, 0.5, 0.5), 1.0, 0.045, 1.0).unwrap();
-    assert_eq!(smooth.roughness(), solidcraft_viewport::surface::MIN_ROUGHNESS);
+    assert_eq!(smooth.roughness(), torno_viewport::surface::MIN_ROUGHNESS);
     let mut pristine = aging_image(5, true, true, &[]);
     pristine.scene.meshes[0].surface = Some(smooth);
     let (unaged_guides, _) = composed_panel_guides(pristine);
@@ -2711,7 +2711,7 @@ fn cpu_map_spatial_pixels_use_actual_world_coordinates_for_every_jittered_prefix
         };
         // Keep this coordinate/jitter oracle magnified under the native mip
         // policy; minification has its own independent physical-wood regressions.
-        let camera = solidcraft_viewport::Camera { distance: 0.5, ..original.request.camera };
+        let camera = torno_viewport::Camera { distance: 0.5, ..original.request.camera };
         let request = ImageRequest {
             camera,
             textures: Some(Arc::new(job::textures::RuntimeTextures::new(vec![binding]).unwrap())),
@@ -2975,7 +2975,7 @@ mod adaptive_cpu_images {
         AdaptiveSampling { pilot_samples: 16, min_samples: 16, relative_error: 0.0, absolute_error: 0.2, coverage_error: 0.1 }
     }
     fn adaptive_fixture(denoise: bool, path: bool, lens: bool) -> ImageTask {
-        let mut camera = solidcraft_viewport::Camera { distance: 10.0, fov: 0.0, ..Default::default() };
+        let mut camera = torno_viewport::Camera { distance: 10.0, fov: 0.0, ..Default::default() };
         camera.set_view(StandardView::Top);
         if lens {
             camera.fov = 35.0_f64.to_radians();
@@ -3470,7 +3470,7 @@ mod composed_adaptive_map_aging_tests {
         }
         panic!("bounded combined adaptive map/aging fixture did not finish");
     }
-    fn covered(camera: solidcraft_viewport::Camera, pixel: usize, seed: u32, samples: u32) -> u32 {
+    fn covered(camera: torno_viewport::Camera, pixel: usize, seed: u32, samples: u32) -> u32 {
         (0..samples)
             .filter(|ordinal| {
                 let [x, y] = progressive::variates(seed, pixel as u64, *ordinal, 0);
@@ -3672,7 +3672,7 @@ fn cpu_general_glass_fixture(samples: u32, nested: bool, ior: f64) -> ImageTask 
         ..Default::default()
     };
     let mut request = dielectric::tests::request(options.clone());
-    request.camera = solidcraft_viewport::Camera { distance: 1.0, yaw: 0.0, pitch: std::f64::consts::FRAC_PI_2, roll: 0.0, ..request.camera };
+    request.camera = torno_viewport::Camera { distance: 1.0, yaw: 0.0, pitch: std::f64::consts::FRAC_PI_2, roll: 0.0, ..request.camera };
     ImageTask::new(scene, request, CancelToken::default(), options).unwrap()
 }
 fn opus_serial_optics_fixture(count: usize, depth: u8, inside_last: bool) -> ImageTask {
@@ -4184,7 +4184,7 @@ fn cpu_inside_glass_fixture(samples: u32, nested: bool, endpoint: u8, lens: Opti
             }]);
         }
     }
-    let camera = solidcraft_viewport::Camera {
+    let camera = torno_viewport::Camera {
         target: Vec3::new(0.0, 0.0, 0.5),
         distance: 0.5,
         fov: 0.6,
@@ -4565,7 +4565,7 @@ fn cpu_subsurface_only_keeps_smooth_snell_direction_and_opt_in_caustics_keep_geo
         options.progressive.as_mut().unwrap().seed = seed;
         options.dielectrics[0].subsurface = Some(crate::transmission::subsurface::Subsurface { scattering_per_mm: 0.3, anisotropy: 0.4 });
         options.caustics = caustics.then_some(job::CausticOptions { photons: 1, ..Default::default() });
-        let camera = solidcraft_viewport::Camera { fov: 0.0, ..base.request.camera };
+        let camera = torno_viewport::Camera { fov: 0.0, ..base.request.camera };
         let request = ImageRequest { camera, raytrace: Some(options.clone()), ..base.request.clone() };
         let mut task = ImageTask::new(scene, request, CancelToken::default(), options).unwrap();
         let mut transmitted = None;
@@ -5074,7 +5074,7 @@ fn cpu_volume_fixture(samples: u32, depth: u8, perspective: bool, opaque: bool, 
     };
     let scene =
         if opaque { ProductScene { bounds: body.mesh.bounds(), meshes: vec![body] } } else { ProductScene { bounds: Aabb3::EMPTY, meshes: vec![] } };
-    let camera = solidcraft_viewport::Camera {
+    let camera = torno_viewport::Camera {
         target: Vec3::ZERO,
         distance: 3.0,
         yaw: 0.0,
@@ -5905,7 +5905,7 @@ fn cpu_celestial_lens_adaptive_and_nested_glass_keep_complete_radiance_and_raw()
             output: Some(Box::new(job::OutputOptions { linear_exr: true, ..Default::default() })),
             ..original.options
         };
-        let camera = solidcraft_viewport::Camera { fov: 0.001, ..original.request.camera };
+        let camera = torno_viewport::Camera { fov: 0.001, ..original.request.camera };
         let request = ImageRequest { camera, transparent_background: true, raytrace: Some(options.clone()), ..original.request };
         ImageTask::new(original.scene, request, CancelToken::default(), options).unwrap()
     };
@@ -6353,7 +6353,7 @@ fn cpu_directional_caustic_fixture(photons: u32, radius_mm: f64) -> ImageTask {
         refresh_per_pass: false,
         power_weighted_sources: false,
     });
-    let camera = solidcraft_viewport::Camera {
+    let camera = torno_viewport::Camera {
         target: Vec3::new(0.0, 0.0, 1.0),
         distance: 0.5,
         yaw: 0.0,
@@ -6883,7 +6883,7 @@ fn cpu_hard_rough_fixture(samples: u32, depth: u8, sheet: bool, roughness: f64, 
     options.dielectrics[0].absorption_per_mm = [0.0; 3];
     options.lights = Some(vec![job::DirectionalLightOptions { direction: light, color: [1.0; 3], intensity: 1.0 }]);
     options.environment = Some(job::RaytraceEnvironmentOptions { color: [0.0; 3], intensity: 0.0 });
-    let camera = solidcraft_viewport::Camera {
+    let camera = torno_viewport::Camera {
         target: Vec3::new(0.0, 0.0, if sheet { 0.0 } else { 2.0 }),
         distance: 0.5,
         yaw: 0.0,
@@ -7101,7 +7101,7 @@ fn cpu_selected_hg_hard_point_and_spot_nee_match_independent_collision_phase_and
                 outer_half_angle_radians: 1.1,
             }),
         }]);
-        let camera = solidcraft_viewport::Camera { fov: 1e-9, ..base.request.camera };
+        let camera = torno_viewport::Camera { fov: 1e-9, ..base.request.camera };
         let request = ImageRequest { camera, raytrace: Some(options.clone()), ..base.request.clone() };
         let mut expected = [0.0; 3];
         let mut collisions = 0;
@@ -7193,7 +7193,7 @@ fn cpu_matched_index_coated_rough_delta_transmission_keeps_the_first_continuous_
         dispersion: None,
     });
     options.dielectrics.push(upper_input);
-    let camera = solidcraft_viewport::Camera { target: Vec3::new(0.0, 0.0, 3.0), ..base.request.camera };
+    let camera = torno_viewport::Camera { target: Vec3::new(0.0, 0.0, 3.0), ..base.request.camera };
     let request = ImageRequest { camera, raytrace: Some(options.clone()), ..base.request.clone() };
     let mut task = ImageTask::new(scene, request, CancelToken::default(), options).unwrap();
     let mut reached = false;

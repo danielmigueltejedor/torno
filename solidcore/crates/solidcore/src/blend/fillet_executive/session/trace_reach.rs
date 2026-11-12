@@ -1,7 +1,7 @@
 //! A live fillet solver's trace reach: how far its base surfaces' domains are extended
 //! across the filleted edge, so that the trace reaches as far as its rails can lie.
 //!
-//! Upstream: not in SMLib at the pinned commit. SolidCraft's fork (tangency-labs/smlib,
+//! Upstream: not in SMLib at the pinned commit. Torno's fork (tangency-labs/smlib,
 //! rev `68fb9162`) adds the static `sm_ExtendTraceToItsRails` (`SmFilletExecutive.cpp`)
 //! in commit `a9277fd` (WR-609) and calls it for every solver before the corners'
 //! vertices in commit `6e77631` (WR-610). It runs only with the opt-in

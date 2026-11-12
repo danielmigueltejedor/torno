@@ -217,7 +217,7 @@ impl RowRig {
     }
 
     fn frame(&self, events: Vec<egui::Event>) -> Vec<Action> {
-        solidcraft_ui_registry::clear_handles();
+        torno_ui_registry::clear_handles();
         self.time.set(self.time.get() + 1.0 / 60.0);
         let input = egui::RawInput {
             screen_rect: Some(Rect::from_min_size(egui::Pos2::ZERO, vec2(1000.0, 400.0))),
@@ -233,7 +233,7 @@ impl RowRig {
                 group("B", vec![button("b.on", true), button("b.off", false)]),
             ],
             labels: true,
-            accent: solidcraft_theme::TabAccent::for_ramp(&t, solidcraft_theme::AccentRamp::Main),
+            accent: torno_theme::TabAccent::for_ramp(&t, torno_theme::AccentRamp::Main),
             exit: false,
             reveal: None,
             more_tip: "More",
@@ -266,8 +266,8 @@ impl RowRig {
     }
 
     fn at(&self, name: &str) -> egui::Pos2 {
-        solidcraft_ui_registry::handle_at(name)
-            .or_else(|| solidcraft_ui_registry::rect_of(name).map(|r| r.center()))
+        torno_ui_registry::handle_at(name)
+            .or_else(|| torno_ui_registry::rect_of(name).map(|r| r.center()))
             .unwrap_or_else(|| panic!("{name} is drawn"))
     }
 }
@@ -280,10 +280,10 @@ fn a_click_on_a_button_returns_its_command_and_a_disabled_one_nothing() {
     let actions = rig.click(rig.at("t:button:a.two"));
     let [Action::Run { id, rect, place }] = actions.as_slice() else { panic!("{actions:?}") };
     assert_eq!((id.as_str(), *place), ("a.two", Place::Button));
-    assert_eq!(Some(*rect), solidcraft_ui_registry::rect_of("t:rect:a.two"));
+    assert_eq!(Some(*rect), torno_ui_registry::rect_of("t:rect:a.two"));
     assert_eq!(rig.click(rig.at("t:button:b.off")), Vec::new(), "a disabled button runs nothing");
     assert_eq!(rig.click(rig.at("t:section:B")), vec![Action::Section { group: 1 }]);
-    assert_eq!(solidcraft_ui_registry::count_of("t:in_more"), Some(0.0));
+    assert_eq!(torno_ui_registry::count_of("t:in_more"), Some(0.0));
 }
 
 /// Too narrow for both groups: the last goes into the » menu, whose rows run their commands, and
@@ -291,9 +291,9 @@ fn a_click_on_a_button_returns_its_command_and_a_disabled_one_nothing() {
 #[test]
 fn a_group_that_does_not_fit_is_in_the_more_menu() {
     let rig = RowRig::new(COLLAPSED_WIDTH + MORE_ROOM + 8.0);
-    assert_eq!(solidcraft_ui_registry::count_of("t:in_more"), Some(1.0));
-    assert_eq!(solidcraft_ui_registry::count_of("t:collapsed"), Some(1.0));
-    assert!(solidcraft_ui_registry::handle_at("t:button:b.on").is_none(), "B is not on the row");
+    assert_eq!(torno_ui_registry::count_of("t:in_more"), Some(1.0));
+    assert_eq!(torno_ui_registry::count_of("t:collapsed"), Some(1.0));
+    assert!(torno_ui_registry::handle_at("t:button:b.on").is_none(), "B is not on the row");
     assert_eq!(rig.click(rig.at("t:collapsed:A")), vec![Action::Open { group: 0 }]);
     let open_b = || {
         assert_eq!(rig.click(rig.at("t:more")), Vec::new(), "» opens its menu");
@@ -328,7 +328,7 @@ impl TabsRig {
     }
 
     fn frame(&self, events: Vec<egui::Event>) -> Vec<TabAction> {
-        solidcraft_ui_registry::clear_handles();
+        torno_ui_registry::clear_handles();
         self.time.set(self.time.get() + 1.0 / 60.0);
         let input = egui::RawInput {
             screen_rect: Some(Rect::from_min_size(egui::Pos2::ZERO, vec2(1000.0, 400.0))),
@@ -338,7 +338,7 @@ impl TabsRig {
             ..Default::default()
         };
         let t = Tokens::get();
-        let accent = solidcraft_theme::TabAccent::for_ramp(&t, solidcraft_theme::AccentRamp::Main);
+        let accent = torno_theme::TabAccent::for_ramp(&t, torno_theme::AccentRamp::Main);
         let row = Tabs {
             tabs: vec![
                 Tab { id: "ONE", label: "One", accent, contextual: false, aliases: &[] },
@@ -371,7 +371,7 @@ impl TabsRig {
     }
 
     fn click(&self, name: &str) -> Vec<TabAction> {
-        let at = solidcraft_ui_registry::rect_of(name).map(|r| r.center()).or_else(|| solidcraft_ui_registry::handle_at(name));
+        let at = torno_ui_registry::rect_of(name).map(|r| r.center()).or_else(|| torno_ui_registry::handle_at(name));
         self.press(at.unwrap_or_else(|| panic!("{name} is drawn")), egui::PointerButton::Primary)
     }
 }
@@ -384,11 +384,11 @@ fn the_tab_row_returns_what_was_clicked() {
     let rig = TabsRig::new();
     assert_eq!(rig.click("t:tab_rect:TWO"), vec![TabAction::Select { index: 1, already: false }]);
     assert_eq!(rig.click("t:tab_rect:ONE"), vec![TabAction::Select { index: 0, already: true }]);
-    let edit = solidcraft_ui_registry::rect_of("t:tab_rect:EDIT").expect("the contextual tab is drawn");
-    assert_eq!(solidcraft_ui_registry::handle_at("t:tab:OLD"), Some(edit.center()), "its alias is published at it");
+    let edit = torno_ui_registry::rect_of("t:tab_rect:EDIT").expect("the contextual tab is drawn");
+    assert_eq!(torno_ui_registry::handle_at("t:tab:OLD"), Some(edit.center()), "its alias is published at it");
     let actions = rig.press(edit.center(), egui::PointerButton::Secondary);
     assert!(matches!(actions.as_slice(), [TabAction::Menu { .. }]), "{actions:?}");
-    let add = solidcraft_ui_registry::rect_of("t:add").expect("the + button is drawn");
+    let add = torno_ui_registry::rect_of("t:add").expect("the + button is drawn");
     assert_eq!(rig.click("t:add"), vec![TabAction::Add { rect: add }]);
     assert_eq!(rig.click("t:action:go"), vec![TabAction::Run { id: "go".into() }]);
     assert_eq!(rig.click("t:action:stop"), Vec::new(), "a button that is not ready runs nothing");
@@ -463,7 +463,7 @@ fn menu_style() -> MenuStyle<'static> {
     MenuStyle {
         pin_tip: "Pin",
         unpin_tip: "Unpin",
-        accent: solidcraft_theme::TabAccent::for_ramp(&Tokens::get(), solidcraft_theme::AccentRamp::Main),
+        accent: torno_theme::TabAccent::for_ramp(&Tokens::get(), torno_theme::AccentRamp::Main),
         focus: egui::Id::unique("test_menu"),
         entry: &["t:entry:"],
         pin: "t:pin:",
@@ -491,7 +491,7 @@ impl MenuRig {
     }
 
     fn frame(&self, events: Vec<egui::Event>, wait: f64) -> Vec<(String, MenuAction)> {
-        solidcraft_ui_registry::clear_handles();
+        torno_ui_registry::clear_handles();
         self.time.set(self.time.get() + 1.0 / 60.0 + wait);
         let input = egui::RawInput {
             screen_rect: Some(Rect::from_min_size(egui::Pos2::ZERO, vec2(800.0, 600.0))),
@@ -528,7 +528,7 @@ impl MenuRig {
     }
 
     fn at(&self, name: &str) -> egui::Pos2 {
-        solidcraft_ui_registry::handle_at(name).unwrap_or_else(|| panic!("{name} is drawn"))
+        torno_ui_registry::handle_at(name).unwrap_or_else(|| panic!("{name} is drawn"))
     }
 }
 
@@ -541,7 +541,7 @@ fn a_menu_entry_returns_what_was_chosen() {
         let on = rig.at("t:entry:m.on");
         let chosen = rig.press(on, egui::PointerButton::Primary, 0.0);
         assert!(matches!(chosen.as_slice(), [(id, MenuAction::Run(rect))] if id == "m.on" && rect.contains(on)), "grid {grid}: {chosen:?}");
-        assert_eq!(solidcraft_ui_registry::handle_at("t:hot:m.on"), Some(on), "grid {grid}: the entry under the pointer is hot");
+        assert_eq!(torno_ui_registry::handle_at("t:hot:m.on"), Some(on), "grid {grid}: the entry under the pointer is hot");
         let chosen = rig.press(on, egui::PointerButton::Secondary, 0.0);
         assert!(matches!(chosen.as_slice(), [(id, MenuAction::Menu(_))] if id == "m.on"), "grid {grid}: {chosen:?}");
         assert_eq!(rig.press(rig.at("t:entry:m.off"), egui::PointerButton::Primary, 0.0), Vec::new(), "grid {grid}: a disabled entry runs nothing");
@@ -588,7 +588,7 @@ fn buttons_are_dropped_before_a_button_at_a_groups_end_or_removed_off_the_row() 
     actions.extend(rig.frame(vec![egui::Event::PointerMoved(from + vec2(0.0, 10.0))]));
     let away = pos2(500.0, 300.0);
     actions.extend(rig.frame(vec![egui::Event::PointerMoved(away)]));
-    assert!(solidcraft_ui_registry::handle_at("t:drag_remove").is_some(), "the ghost shows it would be removed");
+    assert!(torno_ui_registry::handle_at("t:drag_remove").is_some(), "the ghost shows it would be removed");
     actions.extend(rig.frame(vec![egui::Event::PointerButton {
         pos: away,
         button: egui::PointerButton::Primary,
@@ -610,13 +610,13 @@ fn a_deferred_button_is_painted_as_the_app_resolves_it() {
     let row = Row {
         groups: vec![group("A", vec![on, button("a.off", true)])],
         labels: true,
-        accent: solidcraft_theme::TabAccent::for_ramp(&t, solidcraft_theme::AccentRamp::Main),
+        accent: torno_theme::TabAccent::for_ramp(&t, torno_theme::AccentRamp::Main),
         exit: false,
         reveal: None,
         more_tip: "More",
         handles: HANDLES,
     };
-    solidcraft_ui_registry::clear_handles();
+    torno_ui_registry::clear_handles();
     let input = egui::RawInput { screen_rect: Some(Rect::from_min_size(egui::Pos2::ZERO, vec2(1000.0, 400.0))), ..Default::default() };
     let mut deferred = Vec::new();
     crate::test_support::raw_frame(&ctx, input, |ui| {
@@ -632,10 +632,10 @@ fn a_deferred_button_is_painted_as_the_app_resolves_it() {
             enabled: true,
             name: "On".into(),
             checkable: true,
-            accent: solidcraft_theme::TabAccent::for_ramp(&t, solidcraft_theme::AccentRamp::Main),
+            accent: torno_theme::TabAccent::for_ramp(&t, torno_theme::AccentRamp::Main),
         };
         paint_deferred(ui, deferred.drain(..).map(|d| (d, look.clone())).collect(), "t:ns");
     });
-    assert!(solidcraft_ui_registry::rect_of("t:ns:pressed:a.on").is_some(), "the pressed button is published");
-    assert_eq!(solidcraft_ui_registry::count_of("t:ns:pressed"), Some(1.0));
+    assert!(torno_ui_registry::rect_of("t:ns:pressed:a.on").is_some(), "the pressed button is published");
+    assert_eq!(torno_ui_registry::count_of("t:ns:pressed"), Some(1.0));
 }

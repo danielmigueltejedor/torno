@@ -4,7 +4,7 @@
 //! circle 1e-13 mm past the side) behave like exact ones.
 
 use solidcore_record::{Loop2, Plane, Region2, Vec2, Vec3};
-use solidcraft_geom::MeshGeom;
+use torno_geom::MeshGeom;
 
 use crate::*;
 

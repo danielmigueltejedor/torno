@@ -61,11 +61,11 @@
   "ungraded": [],
   "what": "a 20 x 10 x 10 box unstitched: six surface bodies, one a face",
   "why_not": [
-    "body \"Body1\" is no kernel operation's output nor an operand: SolidCraft built it or changed the kernel's record",
-    "body \"Body2\" is no kernel operation's output nor an operand: SolidCraft built it or changed the kernel's record",
-    "body \"Body3\" is no kernel operation's output nor an operand: SolidCraft built it or changed the kernel's record",
-    "body \"Body4\" is no kernel operation's output nor an operand: SolidCraft built it or changed the kernel's record",
-    "body \"Body5\" is no kernel operation's output nor an operand: SolidCraft built it or changed the kernel's record",
-    "body \"Body6\" is no kernel operation's output nor an operand: SolidCraft built it or changed the kernel's record"
+    "body \"Body1\" is no kernel operation's output nor an operand: Torno built it or changed the kernel's record",
+    "body \"Body2\" is no kernel operation's output nor an operand: Torno built it or changed the kernel's record",
+    "body \"Body3\" is no kernel operation's output nor an operand: Torno built it or changed the kernel's record",
+    "body \"Body4\" is no kernel operation's output nor an operand: Torno built it or changed the kernel's record",
+    "body \"Body5\" is no kernel operation's output nor an operand: Torno built it or changed the kernel's record",
+    "body \"Body6\" is no kernel operation's output nor an operand: Torno built it or changed the kernel's record"
   ]
 }

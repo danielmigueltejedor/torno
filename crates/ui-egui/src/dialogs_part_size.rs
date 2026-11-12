@@ -3,7 +3,7 @@
 use std::sync::Arc;
 
 use serde_json::{Value, json};
-use solidcraft_engine::{Sel, doc::Document};
+use torno_engine::{Sel, doc::Document};
 
 use crate::SolveApp;
 use crate::dialogs::Kind;
@@ -24,7 +24,7 @@ pub(crate) fn configuration(app: &SolveApp, component: u64) -> Option<String> {
 /// An inch family's length is in fractional inches (`1/2-13 UNC×2 in`), a metric one's in mm.
 fn configuration_name(family: &str, size: &str, length: Option<f64>) -> String {
     match length.filter(|length| length.is_finite() && *length > 0.0) {
-        Some(length) => match solidcraft_engine::cmd::part_length_label(family, length) {
+        Some(length) => match torno_engine::cmd::part_length_label(family, length) {
             Some(label) => format!("{size}×{label}"),
             None => format!("{size}×{length}"),
         },
@@ -197,7 +197,7 @@ pub fn rows(app: &SolveApp, ui: &mut egui::Ui, k: &mut Resize) -> bool {
             ui.label(configuration_name(&k.family.id, size, k.length));
         });
     }
-    crate::ui_kit::text(ui, solidcraft_ui_text::tr("ui.part_size_shared"), crate::ui_kit::Text::Hint("part_size_shared"));
+    crate::ui_kit::text(ui, torno_ui_text::tr("ui.part_size_shared"), crate::ui_kit::Text::Hint("part_size_shared"));
     false
 }
 
@@ -223,8 +223,8 @@ mod tests {
     use super::*;
     use crate::context_menu::{self, Target};
     use solidcore_record::Vec3;
-    use solidcraft_engine::Session;
-    use solidcraft_engine::geom::MeshGeom;
+    use torno_engine::Session;
+    use torno_engine::geom::MeshGeom;
 
     fn part(family: &str, size: &str, length: Option<f64>) -> (SolveApp, u64) {
         let mut app = SolveApp::new(Session::default(), crate::Services::default());
@@ -310,7 +310,7 @@ mod tests {
         assert_eq!(crate::browser::drawn_rows().iter().filter(|(label, _, _, _)| label.ends_with("[M6×20]")).count(), 2);
         h.app.run("edit.redo", json!({})).unwrap();
         assert_eq!(configuration(&h.app, component).as_deref(), Some("M8×25"));
-        let file = std::env::temp_dir().join(format!("solidcraft-part-configuration-{}.solidcraft", std::process::id()));
+        let file = std::env::temp_dir().join(format!("torno-part-configuration-{}.solidcraft", std::process::id()));
         h.app.run("file.save", json!({"path":file})).unwrap();
         let mut reopened = Session::default();
         reopened.execute("doc.open", &json!({"path":file})).unwrap();
@@ -318,7 +318,7 @@ mod tests {
         assert_eq!(configuration(&reopened, component).as_deref(), Some("M8×25"));
         assert_eq!(reopened.session.doc.occurrences, occurrences);
         let _ = std::fs::remove_file(&file);
-        let _ = std::fs::remove_file(file.with_extension("solidcraft.bak"));
+        let _ = std::fs::remove_file(file.with_extension("torno.bak"));
     }
 
     #[test]

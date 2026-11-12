@@ -339,27 +339,27 @@ mod tests {
     /// A new, empty folder of its own for one test (nothing in it is removed).
     fn fresh_dir(tag: &str) -> PathBuf {
         let nanos = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map(|d| d.as_nanos()).unwrap_or(0);
-        let d = std::env::temp_dir().join(format!("solidcraft-safe-write-{tag}-{}-{nanos}", std::process::id()));
+        let d = std::env::temp_dir().join(format!("torno-safe-write-{tag}-{}-{nanos}", std::process::id()));
         fs::create_dir_all(&d).unwrap();
         d
     }
 
     /// The time of a save with its backup, the backup linked against the backup copied (links
     /// refused, as before hard links were used), taking turns. The file saved is
-    /// `SOLIDCRAFT_SAVE_BENCH_FILE` (a design), in a new folder in `SOLIDCRAFT_SAVE_BENCH_DIR`
+    /// `TORNO_SAVE_BENCH_FILE` (a design), in a new folder in `TORNO_SAVE_BENCH_DIR`
     /// (on the drive to measure; else the temporary folder). Run with `--ignored --nocapture`.
     #[test]
     #[ignore = "manual save measurement"]
     fn save_time_with_the_backup_linked_or_copied() {
-        let Some(file) = std::env::var_os("SOLIDCRAFT_SAVE_BENCH_FILE") else { return };
+        let Some(file) = std::env::var_os("TORNO_SAVE_BENCH_FILE") else { return };
         let bytes = fs::read(file).unwrap();
-        let base = std::env::var_os("SOLIDCRAFT_SAVE_BENCH_DIR").map(PathBuf::from).unwrap_or_else(std::env::temp_dir);
+        let base = std::env::var_os("TORNO_SAVE_BENCH_DIR").map(PathBuf::from).unwrap_or_else(std::env::temp_dir);
         let nanos = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map(|d| d.as_nanos()).unwrap_or(0);
         let d = base.join(format!("save-bench-{}-{nanos}", std::process::id()));
         fs::create_dir_all(&d).unwrap();
         let p = d.join("design.solidcraft");
         write_atomic(&p, &bytes, true).unwrap();
-        let rounds: usize = std::env::var("SOLIDCRAFT_SAVE_BENCH_ROUNDS").ok().and_then(|n| n.parse().ok()).unwrap_or(11);
+        let rounds: usize = std::env::var("TORNO_SAVE_BENCH_ROUNDS").ok().and_then(|n| n.parse().ok()).unwrap_or(11);
         let mut times = [Vec::new(), Vec::new()];
         for round in 0..2 * rounds {
             let refused = round % 2 == 1;
@@ -419,7 +419,7 @@ mod tests {
         let d = dir("design-lock");
         let design = d.join("Bracket.solidcraft");
         std::fs::write(&design, b"one").unwrap();
-        assert_eq!(lock::lock_path(&design), d.join(".~Bracket.solidcraft.lock"));
+        assert_eq!(lock::lock_path(&design), d.join(".~Bracket.solidcraft.lock")); // rebrand: keep
         assert!(!crate::is_design_path(&lock::lock_path(&design).to_string_lossy()), "never listed as a design");
 
         let now = lock::now_secs();
@@ -579,7 +579,7 @@ mod tests {
     }
 
     fn dir(tag: &str) -> PathBuf {
-        let d = std::env::temp_dir().join(format!("solidcraft-safe-write-{tag}-{}", std::process::id()));
+        let d = std::env::temp_dir().join(format!("torno-safe-write-{tag}-{}", std::process::id()));
         let _ = fs::remove_dir_all(&d);
         fs::create_dir_all(&d).unwrap();
         d
@@ -844,7 +844,7 @@ mod rename_retry_tests {
     #[test]
     fn native_windows_rename_preserves_old_bytes_until_a_reader_releases_delete_sharing() {
         use std::os::windows::fs::OpenOptionsExt;
-        let directory = std::env::temp_dir().join(format!("solidcraft-rename-reader-release-{}", std::process::id()));
+        let directory = std::env::temp_dir().join(format!("torno-rename-reader-release-{}", std::process::id()));
         fs::create_dir(&directory).unwrap();
         let old = directory.join("image.png");
         let pending = directory.join("completed.tmp");
@@ -880,7 +880,7 @@ mod rename_retry_tests {
     #[test]
     fn a_reader_holding_the_target_for_a_while_delays_the_replace_without_failing_it() {
         use std::os::windows::fs::OpenOptionsExt;
-        let directory = std::env::temp_dir().join(format!("solidcraft-rename-slow-reader-{}", std::process::id()));
+        let directory = std::env::temp_dir().join(format!("torno-rename-slow-reader-{}", std::process::id()));
         let _ = fs::remove_dir_all(&directory);
         fs::create_dir(&directory).unwrap();
         let path = directory.join("library.json");
@@ -902,7 +902,7 @@ mod rename_retry_tests {
     #[cfg(windows)]
     #[test]
     fn a_read_only_target_fails_at_once_and_says_so() {
-        let directory = std::env::temp_dir().join(format!("solidcraft-rename-read-only-{}", std::process::id()));
+        let directory = std::env::temp_dir().join(format!("torno-rename-read-only-{}", std::process::id()));
         let _ = fs::remove_dir_all(&directory);
         fs::create_dir(&directory).unwrap();
         let path = directory.join("render.png");
@@ -926,7 +926,7 @@ mod rename_retry_tests {
     #[test]
     fn persistent_native_lock_is_an_error_without_destroying_or_bypassing_the_target() {
         use std::os::windows::fs::OpenOptionsExt;
-        let directory = std::env::temp_dir().join(format!("solidcraft-rename-persistent-reader-{}", std::process::id()));
+        let directory = std::env::temp_dir().join(format!("torno-rename-persistent-reader-{}", std::process::id()));
         fs::create_dir(&directory).unwrap();
         let path = directory.join("image.exr");
         fs::write(&path, b"old whole raw master").unwrap();

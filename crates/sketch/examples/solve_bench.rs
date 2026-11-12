@@ -1,12 +1,12 @@
 //! Solve times of an n×n grid (origin corner fixed, every row and column edge horizontal or
 //! vertical with a distance), started at the solution and ±1 mm off it, and of one held drag
 //! frame on a strip of rectangles. Run with
-//! `cargo run --release -p solidcraft-sketch --example solve_bench`; results go in docs/perf.md.
+//! `cargo run --release -p torno-sketch --example solve_bench`; results go in docs/perf.md.
 
 use std::time::Instant;
 
 use solidcore_record::Vec2;
-use solidcraft_sketch::{
+use torno_sketch::{
     Analysis, Budget, ConstraintKind, Hold, PatternAlignment, Sketch, SketchPattern, SketchPatternKind, SolveReport, solve, solve_with,
 };
 

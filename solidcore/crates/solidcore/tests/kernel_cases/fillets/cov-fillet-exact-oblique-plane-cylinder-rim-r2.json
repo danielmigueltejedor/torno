@@ -186,7 +186,7 @@
     "blend_dropping"
   ],
   "ungraded": [
-    "continuity: SolidCraft computes it"
+    "continuity: Torno computes it"
   ],
   "what": "a cylinder R10 cut by the plane z = 20 + x/2: its elliptical top rim rounded r2",
   "why_not": []

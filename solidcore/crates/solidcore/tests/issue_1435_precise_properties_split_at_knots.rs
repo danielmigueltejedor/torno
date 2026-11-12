@@ -1,5 +1,5 @@
 //! #1435 (WR-494): `SmFace::ComputePreciseProperties` splits both integration levels at the
-//! surface's knots (the SolidCraft fork's tangency-labs/smlib@08d9a14; the only path, no
+//! surface's knots (the Torno fork's tangency-labs/smlib@08d9a14; the only path, no
 //! flag), so curved primitives' areas and inertia hold 1e-9 of their closed forms at a
 //! requested accuracy of 1e-8.
 #![allow(clippy::unwrap_used, clippy::indexing_slicing)]

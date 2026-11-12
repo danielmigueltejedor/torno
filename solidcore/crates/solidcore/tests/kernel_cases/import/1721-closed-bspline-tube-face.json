@@ -61,6 +61,6 @@
   "ungraded": [],
   "what": "a cylinder r=10 h=30 whose side is a closed (rational B-spline) tube face wrapping all the way round a closed non-periodic surface: it must mesh and measure as the full tube",
   "why_not": [
-    "body \"cylinder_nurbs\" is no kernel operation's output nor an operand: SolidCraft built it or changed the kernel's record"
+    "body \"cylinder_nurbs\" is no kernel operation's output nor an operand: Torno built it or changed the kernel's record"
   ]
 }

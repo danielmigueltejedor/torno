@@ -11,7 +11,7 @@
 use std::collections::{HashMap, VecDeque};
 use std::sync::{Arc, Mutex};
 
-use solidcraft_kernel as kernel;
+use torno_kernel as kernel;
 
 use super::{CachedEval, EvalCache, FeatureResult, KeptSlot, ModelBody, ModelState};
 

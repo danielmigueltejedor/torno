@@ -1,5 +1,5 @@
 {
-  description = "SolidCraft — native app development shell and package for Linux and macOS";
+  description = "Torno — native app development shell and package for Linux and macOS";
 
   inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
 
@@ -25,8 +25,8 @@
       # that is the driver stack the compositor runs on. Verified on an Intel LNL iGPU under
       # Wayland: wgpu picks the GL backend through this loader and draws.
       # The X11 libraries are the ones the app actually uses on a Wayland desktop: with `DISPLAY`
-      # set and `SOLIDCRAFT_WAYLAND` unset, winit runs through XWayland (file drag and drop exists
-      # only there). The Wayland ones are for `SOLIDCRAFT_WAYLAND=1`, and both are needed under
+      # set and `TORNO_WAYLAND` unset, winit runs through XWayland (file drag and drop exists
+      # only there). The Wayland ones are for `TORNO_WAYLAND=1`, and both are needed under
       # `xvfb-run` on a machine with no display at all.
       runtimeLibs =
         pkgs:
@@ -60,11 +60,11 @@
       shellHook = pkgs: ''
         ${pkgs.lib.optionalString pkgs.stdenv.isLinux ''
           if [ ! -d ${driverLibDir pkgs} ]; then
-            echo "SolidCraft: ${driverLibDir pkgs} is missing — on NixOS enable hardware.graphics; on other distributions use a matching nixGL driver wrapper." >&2
+            echo "Torno: ${driverLibDir pkgs} is missing — on NixOS enable hardware.graphics; on other distributions use a matching nixGL driver wrapper." >&2
           fi
         ''}
-        command -v cc >/dev/null || echo "solidcraft: no C linker on PATH, cargo cannot link — use nix develop .#rust" >&2
-        echo "solidcraft: cargo run --release -p solidcraft -- --sample"
+        command -v cc >/dev/null || echo "torno: no C linker on PATH, cargo cannot link — use nix develop .#rust" >&2
+        echo "torno: cargo run --release -p torno -- --sample"
         ${pkgs.lib.optionalString pkgs.stdenv.isLinux ''
           export XDG_DATA_DIRS="${driverShareDir pkgs}:''${XDG_DATA_DIRS:-/usr/local/share:/usr/share}"
         ''}
@@ -77,7 +77,7 @@
         # second rustc — or mkShell's second gcc, with another glibc behind it — would make every
         # `cargo build` produce binaries from somewhere else.
         default = pkgs.mkShellNoCC {
-          name = "solidcraft";
+          name = "torno";
           LD_LIBRARY_PATH = libraryPath pkgs;
           shellHook = shellHook pkgs;
         };
@@ -85,7 +85,7 @@
         # For a machine with no Rust at all: `nix develop .#rust`. Its own target directory, so
         # switching between this toolchain and the system one does not thrash the cache.
         rust = pkgs.mkShell {
-          name = "solidcraft-rust";
+          name = "torno-rust";
           packages = [
             pkgs.cargo
             pkgs.rustc
@@ -97,18 +97,18 @@
           CARGO_TARGET_DIR = "target/nix";
           shellHook = ''
             ${shellHook pkgs}
-            echo "solidcraft: $(rustc --version), building into target/nix"
+            echo "torno: $(rustc --version), building into target/nix"
           '';
         };
       });
 
       packages = forAllSystems (pkgs: rec {
-        default = solidcraft;
-        solidcraft = assert pkgs.lib.assertMsg
+        default = torno;
+        torno = assert pkgs.lib.assertMsg
           (pkgs.lib.versionAtLeast pkgs.rustc.version (pkgs.lib.importTOML ./Cargo.toml).workspace.package.rust-version)
-          "SolidCraft requires the Rust version advertised in Cargo.toml; update the pinned nixpkgs input.";
+          "Torno requires the Rust version advertised in Cargo.toml; update the pinned nixpkgs input.";
           pkgs.rustPlatform.buildRustPackage {
-          pname = "solidcraft";
+          pname = "torno";
           version = (pkgs.lib.importTOML ./Cargo.toml).workspace.package.version;
           src = self;
 
@@ -119,15 +119,15 @@
           # The CLI draws the same packaging icons as the other Linux distributions.
           cargoBuildFlags = [
             "-p"
-            "solidcraft"
+            "torno"
             "-p"
-            "solidcraft-cli"
+            "torno-cli"
           ];
           cargoInstallFlags = [
             "-p"
-            "solidcraft"
+            "torno"
             "-p"
-            "solidcraft-cli"
+            "torno-cli"
           ];
           # `cargo xtask ci` is the test gate (it wants a wasm target and a GPU); the sandbox has
           # neither.
@@ -138,14 +138,14 @@
 
           postInstall = ''
             ${pkgs.lib.optionalString pkgs.stdenv.isLinux ''
-              install -Dm644 assets/platforms/linux/io.tangencylabs.solidcraft.desktop \
-                $out/share/applications/io.tangencylabs.solidcraft.desktop
-              install -Dm644 assets/platforms/linux/io.tangencylabs.solidcraft.mime.xml \
-                $out/share/mime/packages/io.tangencylabs.solidcraft.xml
+              install -Dm644 assets/platforms/linux/dev.danielmiguelt.Torno.desktop \
+                $out/share/applications/dev.danielmiguelt.Torno.desktop
+              install -Dm644 assets/platforms/linux/dev.danielmiguelt.Torno.mime.xml \
+                $out/share/mime/packages/dev.danielmiguelt.Torno.xml
               for size in 16 24 32 48 64 128 256 512; do
-                icon=$out/share/icons/hicolor/''${size}x''${size}/apps/io.tangencylabs.solidcraft.png
+                icon=$out/share/icons/hicolor/''${size}x''${size}/apps/dev.danielmiguelt.Torno.png
                 mkdir -p "$(dirname "$icon")"
-                cp assets/icons/app/linux/exports/hicolor/''${size}x''${size}/apps/io.tangencylabs.solidcraft.png "$icon" >/dev/null
+                cp assets/icons/app/linux/exports/hicolor/''${size}x''${size}/apps/dev.danielmiguelt.Torno.png "$icon" >/dev/null
                 # The .desktop's Icon= is the Nodalia name, dev.danielmiguelt.Torno.
                 cp "$icon" "$(dirname "$icon")/dev.danielmiguelt.Torno.png"
               done
@@ -157,7 +157,7 @@
           # desktop portal and fall back to zenity without one (#2177), so zenity comes along,
           # after the system's own on PATH. macOS needs no wrapper.
           postFixup = pkgs.lib.optionalString pkgs.stdenv.isLinux ''
-            wrapProgram $out/bin/solidcraft \
+            wrapProgram $out/bin/torno \
               --prefix LD_LIBRARY_PATH : "${libraryPath pkgs}" \
               --suffix PATH : "${pkgs.lib.makeBinPath [ pkgs.zenity ]}" \
               --set-default XDG_DATA_DIRS /usr/local/share:/usr/share \
@@ -166,23 +166,23 @@
 
           meta = {
             description = "Rust-native parametric 3D CAD app";
-            homepage = "https://github.com/bherbruck/solidcraft";
+            homepage = "https://github.com/getnodalia/torno";
             license = with pkgs.lib.licenses; [
               mit
               asl20
             ];
-            mainProgram = "solidcraft";
+            mainProgram = "torno";
           };
         };
       });
 
       apps = forAllSystems (pkgs: let
         package = self.packages.${pkgs.stdenv.hostPlatform.system}.solidcraft;
-        desktop = { type = "app"; program = "${package}/bin/solidcraft"; };
+        desktop = { type = "app"; program = "${package}/bin/torno"; };
       in {
         default = desktop;
-        solidcraft = desktop;
-        cli = { type = "app"; program = "${package}/bin/solidcraft-cli"; };
+        torno = desktop;
+        cli = { type = "app"; program = "${package}/bin/torno-cli"; };
       });
     };
 }

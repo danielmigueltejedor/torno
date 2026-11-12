@@ -27,11 +27,11 @@ fn negative_lens_extrude_cuts_a_partial_sphere_and_reopens() {
         assert_eq!(state.bodies.len(), 1);
         let body = &state.bodies[0].body;
         assert!(body.validity().is_empty(), "{:?}", body.validity());
-        assert!(solidcraft_kernel::measure(body).unwrap().bbox.max.z < 20.01, "no lid across the opening");
-        assert_eq!(body.classify_point(Vec3::new(0., -10., 2.)).unwrap(), solidcraft_kernel::PointClass::Inside);
-        assert_eq!(body.classify_point(Vec3::new(0., -10., 15.)).unwrap(), solidcraft_kernel::PointClass::Outside);
+        assert!(torno_kernel::measure(body).unwrap().bbox.max.z < 20.01, "no lid across the opening");
+        assert_eq!(body.classify_point(Vec3::new(0., -10., 2.)).unwrap(), torno_kernel::PointClass::Inside);
+        assert_eq!(body.classify_point(Vec3::new(0., -10., 15.)).unwrap(), torno_kernel::PointClass::Outside);
     };
     check(&mut s);
-    let mut reopened = Session::new(solidcraft_doc::Document::from_json(&s.doc.to_json()).unwrap());
+    let mut reopened = Session::new(torno_doc::Document::from_json(&s.doc.to_json()).unwrap());
     check(&mut reopened);
 }

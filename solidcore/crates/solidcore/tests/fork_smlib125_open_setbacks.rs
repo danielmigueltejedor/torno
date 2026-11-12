@@ -436,7 +436,7 @@ fn bar_into_post(k: &mut Kernel, open: bool) -> Blended {
     blend(k, b, &at, 2.0, [0.0, 0.0, 10.0], 3.0, open)
 }
 
-/// SolidCraft's report-fillet-g2-corner-of-bar-running-into-cylinder, as the fork capi's
+/// Torno's report-fillet-g2-corner-of-bar-running-into-cylinder, as the fork capi's
 /// `setback_open_hole_on_a_body_with_a_closed_face` (7dccbae), left open: the Setback's
 /// hole of nine edges. The cylinder's face is closed; its seam, its own edge run twice by
 /// it, is no free edge (7dccbae fixed the capi's hole reader for that; the kernel counts

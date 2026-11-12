@@ -5,13 +5,13 @@ use crate::schema::render_bindings::{SurfaceBindParams, SurfaceBindingSaved, Sur
 use crate::{Result, Session, params::bad};
 use serde_json::{Value, json};
 use solidcore_record::Vec3;
-use solidcraft_doc::{
+use std::{collections::BTreeMap, sync::Arc};
+use torno_doc::{
     render_resources::HdrId,
     render_settings::{RenderJob, RenderSetup},
     render_surface::{BuiltinSurfaceSource, RenderBodyTarget, SavedSurface, SurfaceBindings, SurfaceSource},
 };
-use solidcraft_render::{ProductScene, job::textures::PlanarFrame};
-use std::{collections::BTreeMap, sync::Arc};
+use torno_render::{ProductScene, job::textures::PlanarFrame};
 
 fn vec(a: [f64; 3]) -> Vec3 {
     Vec3::new(a[0], a[1], a[2])
@@ -19,11 +19,11 @@ fn vec(a: [f64; 3]) -> Vec3 {
 fn array(v: Vec3) -> [f64; 3] {
     [v.x, v.y, v.z]
 }
-pub(super) fn transform(frame: PlanarFrame, m: &solidcraft_doc::Mat, command: &str) -> Result<PlanarFrame> {
+pub(super) fn transform(frame: PlanarFrame, m: &torno_doc::Mat, command: &str) -> Result<PlanarFrame> {
     let result = PlanarFrame {
-        origin: array(solidcraft_doc::apply_point(m, vec(frame.origin))),
-        u: array(solidcraft_doc::apply_vector(m, vec(frame.u))),
-        v: array(solidcraft_doc::apply_vector(m, vec(frame.v))),
+        origin: array(torno_doc::apply_point(m, vec(frame.origin))),
+        u: array(torno_doc::apply_vector(m, vec(frame.u))),
+        v: array(torno_doc::apply_vector(m, vec(frame.v))),
     };
     result.validate().map_err(|e| bad(command, e.to_string()))?;
     Ok(result)
@@ -59,7 +59,7 @@ pub(super) fn targets(s: &Session, command: &str) -> Result<BTreeMap<RenderBodyT
         }
     }
     let frames = s.doc.body_frames_with_source(&state);
-    if frames.len() > solidcraft_render::job::MAX_CPU_BODIES {
+    if frames.len() > torno_render::job::MAX_CPU_BODIES {
         return Err(bad(command, "too many placed surface targets"));
     }
     let mut result = BTreeMap::new();
@@ -186,7 +186,7 @@ pub(super) fn bind(s: &mut Session, params: &Value) -> Result<Value> {
     }
     let world = s.world_state()?;
     let body = world.body(name).ok_or_else(|| bad(command, "surface target disappeared"))?;
-    let inverse = solidcraft_doc::mat_inverse(&body.source_transform).ok_or_else(|| bad(command, "surface mapping transform is singular"))?;
+    let inverse = torno_doc::mat_inverse(&body.source_transform).ok_or_else(|| bad(command, "surface mapping transform is singular"))?;
     let frame: PlanarFrame = serde_json::from_value(prepared["texture"]["frame"].clone()).map_err(|e| bad(command, e.to_string()))?;
     setup
         .surfaces

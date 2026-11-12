@@ -2,7 +2,7 @@
 use crate::job;
 use robust::{Coord, Coord3D, orient2d, orient3d};
 use solidcore_record::Vec3;
-use solidcraft_geom::prelude::*;
+use torno_geom::prelude::*;
 fn invalid(message: &str) -> job::JobError {
     job::JobError::new(job::ErrorCode::InvalidScene, message)
 }

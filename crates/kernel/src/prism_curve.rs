@@ -4,9 +4,9 @@
 //! bounds accept it.
 use solidcore_record::brep::{Brep, Curve};
 use solidcore_record::{Plane, Seg2, Vec2, Vec3};
-use solidcraft_geom::brep::eval::CurveEval;
-use solidcraft_geom::bspline::{self, HPoint};
-use solidcraft_geom::prelude::*;
+use torno_geom::brep::eval::CurveEval;
+use torno_geom::bspline::{self, HPoint};
+use torno_geom::prelude::*;
 
 const MAX_DEGREE: usize = 32;
 /// How far an arc read off a curve may end from the curve's end (mm): half the gap a profile
@@ -606,7 +606,7 @@ fn free_form(spans: &[Vec<H>], a: Vec2, b: Vec2, tol: f64) -> Option<Vec<Seg2>> 
     }
     let rational = span.iter().any(|p| (p[2] - 1.).abs() > 1e-12);
     let seg = match (pts.len(), rational) {
-        (_, false) => solidcraft_geom::bezier(&pts)?,
+        (_, false) => torno_geom::bezier(&pts)?,
         (3, true) => {
             // Weights normalised to 1 at the ends: the middle one is the conic's.
             let (w0, w1, w2) = (span[0][2], span[1][2], span[2][2]);
@@ -814,7 +814,7 @@ mod tests {
             assert_eq!(sweep > 0., forward);
         }
         // A line written at the highest degree a B-rep record holds (MAX_SPLINE_DEGREE).
-        let line = curve(&[0., 10.], &[0.], &[1.], solidcraft_geom::bspline::MAX_SPLINE_DEGREE);
+        let line = curve(&[0., 10.], &[0.], &[1.], torno_geom::bspline::MAX_SPLINE_DEGREE);
         assert!(matches!(segment(&run(&line, true), &Plane::XY, 1e-5, &mut 2_000_000).unwrap()[0], Seg2::Line { .. }));
         // The longitudinal derivative is negative at t=1/3, independently
         // establishing genuine retracing rather than a stationary tangent.

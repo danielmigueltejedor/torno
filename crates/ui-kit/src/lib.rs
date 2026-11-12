@@ -4,7 +4,7 @@
 //! passes or installs (its icon set, glyphs, tab table, text and built-in themes) and returns what
 //! the user chose; nothing here reads an app's state.
 //! `Panel` owns card composition; rows own aligned label/control columns and retain egui focus.
-//! Geometry, typography and colours come from `solidcraft_theme::Tokens`. See `docs/ui-kit.md`.
+//! Geometry, typography and colours come from `torno_theme::Tokens`. See `docs/ui-kit.md`.
 
 // Components: each takes plain data and returns the action chosen.
 pub mod app_bar;

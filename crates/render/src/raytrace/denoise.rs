@@ -8,7 +8,7 @@ use crate::job::{
     denoise::{Guide, SurfaceGuide},
 };
 use solidcore_record::Vec3;
-use solidcraft_geom::prelude::*;
+use torno_geom::prelude::*;
 
 #[derive(Clone, Copy)]
 pub(super) enum GlassCertification<'a> {
@@ -657,7 +657,7 @@ mod tests {
             geometric_normal: Vec3::new(0.0, 0.0, 1.0),
             front_face: true,
             shading_normal: Vec3::new(0.0, 0.0, 1.0),
-            surface: solidcraft_viewport::surface::OpaqueSurface::new(Vec3::new(0.5, 0.5, 0.5), 0.0, 0.5, 1.5).unwrap(),
+            surface: torno_viewport::surface::OpaqueSurface::new(Vec3::new(0.5, 0.5, 0.5), 0.0, 0.5, 1.5).unwrap(),
             vertices: [Vec3::new(-1.0, -1.0, 0.0), Vec3::new(1.0, -1.0, 0.0), Vec3::new(0.0, 2.0, 0.0)],
             barycentric: [1.0 / 3.0; 3],
         }
@@ -686,12 +686,12 @@ mod tests {
     fn optical_endpoint_misses_and_emitters_do_not_classify_the_primary_as_background() {
         let cancel = CancelToken::default();
         let bvh = super::super::bvh::BvhBuilder::new(Vec::new(), Default::default(), &cancel).unwrap().finish().unwrap();
-        let source = crate::ProductScene { meshes: Vec::new(), bounds: solidcraft_geom::Aabb3::EMPTY };
+        let source = crate::ProductScene { meshes: Vec::new(), bounds: torno_geom::Aabb3::EMPTY };
         let request = ImageRequest {
             studio_weights: None,
             integrator: Default::default(),
             raytrace: None,
-            camera: solidcraft_viewport::Camera::default(),
+            camera: torno_viewport::Camera::default(),
             width: 1,
             height: 1,
             background: [0; 3],

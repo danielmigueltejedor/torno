@@ -5,8 +5,8 @@
 //! arcs and points (free-form curves as polylines); the flat pattern's drawing, with ELLIPSE and SPLINE, is
 //! [`crate::write_dxf_drawing`].
 
-use solidcraft_geom::prelude::*;
 use std::collections::HashMap;
+use torno_geom::prelude::*;
 
 use solidcore_record::{MAX_BEZIER_DEGREE, Vec2};
 
@@ -250,7 +250,7 @@ fn convert(ents: &[Ent], k: f64, blocks: &HashMap<String, (Vec2, Vec<Ent>)>, dep
                     if sweep < 1e-9 || std::f64::consts::TAU - sweep < 1e-9 {
                         out.push(Geom2::Ellipse { c, major, minor: a * ratio });
                     } else {
-                        // Partial ellipse (an elliptical arc, as Fusion and SolidCraft's own DXF
+                        // Partial ellipse (an elliptical arc, as Fusion and Torno's own DXF
                         // export write one): exact conic pieces of at most a quarter turn each, not
                         // a spline fitted through samples, which strays from the ellipse between
                         // them (#8155). A piece from s to e is the rational quadratic with its apex
@@ -495,7 +495,7 @@ mod tests {
     use super::*;
 
     /// A DXF is group codes and values the user did not write, and blocks recurse. None of these
-    /// may panic (solidcraft#469).
+    /// may panic (torno#469).
     #[test]
     fn hostile_dxf_never_panics() {
         let good = write_dxf(&[Geom2::Line(Vec2::ZERO, Vec2::new(10.0, 0.0)), Geom2::Circle(Vec2::new(5.0, 5.0), 2.0)]);
@@ -587,7 +587,7 @@ mod tests {
         assert_eq!(once.len(), again.len());
     }
 
-    /// A SPLINE keeps its degree up to the 9 a sketch spline (a G4 blend) has (solidcraft#5269); a
+    /// A SPLINE keeps its degree up to the 9 a sketch spline (a G4 blend) has (torno#5269); a
     /// degree past that is held to 9, and one that isn't a finite number (which the reader drops)
     /// reads as a missing one, 3.
     #[test]

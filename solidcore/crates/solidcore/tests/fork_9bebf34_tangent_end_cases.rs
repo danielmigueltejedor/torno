@@ -1,4 +1,4 @@
-//! The SolidCraft fork's tangent-end blends (tangency-labs/smlib@9bebf34, the first commit
+//! The Torno fork's tangent-end blends (tangency-labs/smlib@9bebf34, the first commit
 //! of smlib#76; #2243), with the fork's marks at the end of smlib#76 (cd47efd).
 //! Its a87c502 (WR-681: a rail's end on its side edge taken as the solver's rail/edge
 //! crossing) was taken back out by 0cc48bd, and so was its flag here: at cd47efd
@@ -22,8 +22,8 @@
 //! it has one, at volume accuracy 1e-7). Where solidcore's outcome differs from the fork's
 //! mark, the case says so ([`Mark::here`]).
 //!
-//! The marks run under [`solidcraft_kernel`], the fork's profile at cd47efd as far as solidcore
-//! models it: every fix SolidCraft turns on but `geometric_g2_continuity` (as
+//! The marks run under [`torno_kernel`], the fork's profile at cd47efd as far as solidcore
+//! models it: every fix Torno turns on but `geometric_g2_continuity` (as
 //! `issue_2174_cap_rim_two_edges.rs`) and WR-710's refusal, not the fork's at cd47efd. The G^n
 //! section and the generic blend's regularity and fit checks (WR-685, WR-696; the fork's
 //! later 11ea2d9 and smlib#79) are on, as solidcore builds them always. At 9bebf34 the fork had neither the
@@ -80,10 +80,10 @@ use solidcore::{Brep, Kernel};
 
 const PI: f64 = core::f64::consts::PI;
 
-/// Every fix SolidCraft turns on: all but `geometric_g2_continuity`, and but WR-710's
+/// Every fix Torno turns on: all but `geometric_g2_continuity`, and but WR-710's
 /// `fillet_refuse_mixed_corner_crossing_rails`, not the fork's (it refuses the rounds
 /// together where no Mixed corner takes the corner). The fork's profile at cd47efd.
-fn solidcraft_kernel() -> Kernel {
+fn torno_kernel() -> Kernel {
     let mut k = Kernel::default();
     let mut f = UpstreamFixes::default();
     for &name in UpstreamFixes::NAMES {
@@ -501,7 +501,7 @@ fn tangent_end_cases(known_failing: bool) -> Vec<String> {
         .iter()
         .filter(|c| c.at_cd47efd.fails_here() == known_failing)
     {
-        let mut k = solidcraft_kernel();
+        let mut k = torno_kernel();
         let out = (c.run)(&mut k);
         let failed = !out.failed.is_empty();
         if failed != known_failing {
@@ -511,7 +511,7 @@ fn tangent_end_cases(known_failing: bool) -> Vec<String> {
     wrong
 }
 
-/// 6d73e4f's marks (cd47efd's: 0cc48bd and b34d61b change none) under SolidCraft's profile.
+/// 6d73e4f's marks (cd47efd's: 0cc48bd and b34d61b change none) under Torno's profile.
 #[test]
 fn tangent_end_cases_pass_at_cd47efd() {
     let wrong = tangent_end_cases(false);

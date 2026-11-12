@@ -65,6 +65,6 @@
   "ungraded": [],
   "what": "003's tray with a rectangular corner relief 4 mm across at each corner",
   "why_not": [
-    "body \"Body1\" is no kernel operation's output nor an operand: SolidCraft built it or changed the kernel's record"
+    "body \"Body1\" is no kernel operation's output nor an operand: Torno built it or changed the kernel's record"
   ]
 }

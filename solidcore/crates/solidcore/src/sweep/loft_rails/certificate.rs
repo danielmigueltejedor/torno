@@ -2,7 +2,7 @@
 //! between the loft's surface and a guide rail, between two stations, by the convex hull of
 //! Bernstein coefficients ([`crate::query::distance_bound`]'s pieces and hull).
 //!
-//! Upstream: none (not in SMLib or SolidCraft; tangency-labs/solidcore#3140, the hull case on #3140).
+//! Upstream: none (not in SMLib or Torno; tangency-labs/solidcore#3140, the hull case on #3140).
 //!
 //! | Rust               | Upstream |
 //! |--------------------|----------|

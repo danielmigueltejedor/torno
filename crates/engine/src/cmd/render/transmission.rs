@@ -3,9 +3,9 @@
 use crate::{Result, params::bad};
 use serde::Deserialize;
 use solidcore_record::Vec3;
-use solidcraft_geom::MeshGeom;
-use solidcraft_render::{ProductScene, transmission::Transmission};
-use solidcraft_viewport::surface::{OpaqueSurface, srgb8_to_linear};
+use torno_geom::MeshGeom;
+use torno_render::{ProductScene, transmission::Transmission};
+use torno_viewport::surface::{OpaqueSurface, srgb8_to_linear};
 #[derive(Default, Deserialize)]
 #[serde(default, deny_unknown_fields)]
 pub(super) struct Raytrace {
@@ -24,7 +24,7 @@ fn bounded_dielectrics<'de, D: serde::Deserializer<'de>>(d: D) -> std::result::R
         fn visit_seq<A: serde::de::SeqAccess<'de>>(self, mut seq: A) -> std::result::Result<Self::Value, A::Error> {
             let mut result = Vec::new();
             while let Some(value) = seq.next_element()? {
-                if result.len() >= solidcraft_render::job::MAX_GPU_DIELECTRICS {
+                if result.len() >= torno_render::job::MAX_GPU_DIELECTRICS {
                     return Err(serde::de::Error::custom("too many GPU dielectric overrides"));
                 }
                 result.try_reserve(1).map_err(serde::de::Error::custom)?;
@@ -40,7 +40,7 @@ fn bounded_dielectrics<'de, D: serde::Deserializer<'de>>(d: D) -> std::result::R
 #[serde(deny_unknown_fields)]
 pub(super) struct Override {
     #[serde(default)]
-    model: Option<solidcraft_render::glass_model::GlassModel>,
+    model: Option<torno_render::glass_model::GlassModel>,
     body_index: usize,
     body_name: String,
     ior: f64,
@@ -50,7 +50,7 @@ pub(super) struct Override {
     #[serde(default)]
     shadow_transmission: Option<bool>,
     #[serde(default)]
-    subsurface: Option<solidcraft_render::transmission::subsurface::Subsurface>,
+    subsurface: Option<torno_render::transmission::subsurface::Subsurface>,
 }
 #[derive(Deserialize)]
 #[serde(try_from = "String")]
@@ -71,7 +71,7 @@ impl TryFrom<String> for Boundary {
     }
 }
 pub(super) fn apply(scene: &mut ProductScene, overrides: &[Override], command: &str) -> Result<()> {
-    if overrides.len() > solidcraft_render::job::MAX_GPU_DIELECTRICS {
+    if overrides.len() > torno_render::job::MAX_GPU_DIELECTRICS {
         return Err(bad(command, "at most 128 runtime dielectric overrides are supported"));
     }
     let mut ordinals = std::collections::BTreeSet::new();
@@ -125,7 +125,7 @@ pub(super) fn apply(scene: &mut ProductScene, overrides: &[Override], command: &
     }
     Ok(())
 }
-fn certify_box(mesh: &solidcraft_geom::Mesh, command: &str) -> Result<()> {
+fn certify_box(mesh: &torno_geom::Mesh, command: &str) -> Result<()> {
     let bounds = mesh.bounds();
     if mesh.triangles.is_empty()
         || !bounds.min.is_finite()
@@ -180,7 +180,7 @@ mod tests {
         assert!(Arc::ptr_eq(&mesh, &scene.meshes[0].mesh));
         assert_eq!(scene.meshes[0].surface.unwrap().dielectric_ior(), 1.5);
         assert_eq!(saved, s.doc.to_json());
-        let reopened = crate::Session::new(solidcraft_doc::Document::from_json(&saved).unwrap());
+        let reopened = crate::Session::new(torno_doc::Document::from_json(&saved).unwrap());
         assert!(!crate::product_scene::extract(&reopened).unwrap().has_transmission());
         assert!(
             s.execute(
@@ -212,7 +212,7 @@ mod tests {
             };
             assert!(rejected, "{key}");
         }
-        for count in [2, solidcraft_render::job::MAX_GPU_DIELECTRICS + 1] {
+        for count in [2, torno_render::job::MAX_GPU_DIELECTRICS + 1] {
             let overrides = serde_json::from_value::<Vec<Override>>(json!(vec![input(); count])).unwrap();
             assert!(apply(&mut crate::product_scene::extract(&s).unwrap(), &overrides, "render.start").is_err());
         }

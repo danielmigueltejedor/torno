@@ -1,17 +1,17 @@
 //! Product-image work and its device-independent, session-scoped protocol.
 //! Hosts own execution; documents and history never contain these values.
 
-use solidcraft_geom::prelude::*;
 use std::fmt;
 use std::sync::{
     Arc,
     atomic::{AtomicBool, Ordering},
 };
+use torno_geom::prelude::*;
 
 use serde::{Deserialize, Serialize};
 
 use crate::{BackendId, ExecutorId};
-use solidcraft_viewport::Camera;
+use torno_viewport::Camera;
 
 pub mod adaptive;
 pub mod aging;
@@ -1484,7 +1484,7 @@ impl RaytraceOptions {
                 || !target.tangent.iter().any(|v| *v != 0.0)
                 || ![target.roughness_x, target.roughness_y]
                     .into_iter()
-                    .all(|v| v.is_finite() && (solidcraft_viewport::surface::MIN_ROUGHNESS..=1.0).contains(&v))
+                    .all(|v| v.is_finite() && (torno_viewport::surface::MIN_ROUGHNESS..=1.0).contains(&v))
             {
                 return Err(JobError::new(ErrorCode::InvalidRequest, "invalid bounded anisotropic planar face options"));
             }

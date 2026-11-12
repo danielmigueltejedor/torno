@@ -5,7 +5,7 @@
 
 use serde_json::{Value, json};
 use solidcore_record::Vec3;
-use solidcraft_geom::prelude::*;
+use torno_geom::prelude::*;
 
 use crate::Session;
 
@@ -77,7 +77,7 @@ fn project_onto_a_plane_built_from_a_sketch_line_follows_the_parameter() {
         assert!(world_point(s, "B", "c1.center").dist(end) < 1e-9);
     };
     check(&s);
-    check(&Session::new(solidcraft_doc::Document::from_json(&s.doc.to_json()).unwrap()));
+    check(&Session::new(torno_doc::Document::from_json(&s.doc.to_json()).unwrap()));
     // Editing the sketch again after the change refreshes its links on the moved plane.
     run(&mut s, "sketch.edit", json!({"sketch": "B"}));
     run(&mut s, "sketch.point", json!({"point": [10, 10]}));

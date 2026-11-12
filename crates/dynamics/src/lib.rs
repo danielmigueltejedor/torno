@@ -1,4 +1,4 @@
-//! Multibody dynamics for SolidCraft (RFC #9719): rigid bodies with masses and inertias, held
+//! Multibody dynamics for Torno (RFC #9719): rigid bodies with masses and inertias, held
 //! together by joints, moved by gravity, springs, dampers and loads, integrated in time.
 //!
 //! The crate knows nothing of documents or occurrences: a [`Model`] lists bodies (mass,

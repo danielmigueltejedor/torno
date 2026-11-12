@@ -32,6 +32,6 @@
   "ungraded": [],
   "what": "a comb with no curve, edge or face",
   "why_not": [
-    "the failure is SolidCraft's, not a kernel operation's: step 2 (inspect.curvature_comb): invalid parameters for `inspect.curvature_comb`: give `curves`, `edges` or `faces`"
+    "the failure is Torno's, not a kernel operation's: step 2 (inspect.curvature_comb): invalid parameters for `inspect.curvature_comb`: give `curves`, `edges` or `faces`"
   ]
 }

@@ -3,7 +3,7 @@ use crate::{
     SolveApp,
     ui_kit::{self, StatusAction, StatusItem, StatusKind},
 };
-use solidcraft_engine::status_items::{StatusId, StatusItem as Effect, StatusSetting};
+use torno_engine::status_items::{StatusId, StatusItem as Effect, StatusSetting};
 
 fn allowed(app: &SolveApp) -> Vec<StatusId> {
     let mut ids = Vec::new();
@@ -51,10 +51,10 @@ pub(crate) fn section_setting(app: &SolveApp, origin: [f64; 3], normal: [f64; 3]
     let distance = crate::prefs::show_mm(app, offset, 1);
     let mut text = match axis {
         Some(axis) => format!("{axis} {distance}"),
-        None => solidcraft_ui_text::format("ui.viewport_status_section_tilted", &[("offset", &distance)]),
+        None => torno_ui_text::format("ui.viewport_status_section_tilted", &[("offset", &distance)]),
     };
     if hatch {
-        text = solidcraft_ui_text::format("ui.viewport_status_section_hatch", &[("setting", &text)]);
+        text = torno_ui_text::format("ui.viewport_status_section_hatch", &[("setting", &text)]);
     }
     Some(text)
 }
@@ -80,14 +80,14 @@ pub(crate) fn presentation(app: &SolveApp, effect: &Effect) -> Option<StatusItem
     if !allowed(app).contains(&effect.id) {
         return None;
     }
-    let command = solidcraft_engine::find_command(&effect.command)?;
+    let command = torno_engine::find_command(&effect.command)?;
     let setting = match effect.setting {
-        StatusSetting::Zebra { stripes } => solidcraft_ui_text::format("ui.viewport_status_stripes", &[("count", &stripes.to_string())]),
+        StatusSetting::Zebra { stripes } => torno_ui_text::format("ui.viewport_status_stripes", &[("count", &stripes.to_string())]),
         StatusSetting::Draft { pull, angle_deg } => format!("{} · {angle_deg}°", direction(pull)),
         StatusSetting::Environment => String::new(),
-        StatusSetting::Accessibility { direction: from } => solidcraft_ui_text::format("ui.viewport_status_from", &[("direction", &direction(from))]),
+        StatusSetting::Accessibility { direction: from } => torno_ui_text::format("ui.viewport_status_from", &[("direction", &direction(from))]),
         StatusSetting::Curvature { radius_mm } => format!("R {}", crate::prefs::show_mm(app, radius_mm, 1)),
-        StatusSetting::Continuity { edge_count } => solidcraft_ui_text::format("ui.viewport_status_edges", &[("count", &edge_count.to_string())]),
+        StatusSetting::Continuity { edge_count } => torno_ui_text::format("ui.viewport_status_edges", &[("count", &edge_count.to_string())]),
         StatusSetting::Section { origin_mm, normal, hatch } => section_setting(app, origin_mm, normal, hatch)?,
     };
     Some(StatusItem {

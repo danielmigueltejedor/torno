@@ -4,7 +4,7 @@
 
 use serde::{Deserialize, Serialize};
 use solidcore_record::Vec3;
-use solidcraft_geom::prelude::*;
+use torno_geom::prelude::*;
 
 use crate::link::{Link, LinkGeom, LinkKind, LinkSource};
 use crate::model::{Result, Sketch, SketchError, in_range3, radius_in_range};
@@ -134,9 +134,9 @@ pub const MAX_FIT_POINTS: usize = 500;
 
 /// The polyline of a drawn 3D curve through `fit`: the point itself, the line, or the centripetal
 /// Catmull–Rom spline through the points (smooth, no overshoot loops), sampled
-/// ([`solidcraft_geom::catmull_rom`] has the curve itself, exactly).
+/// ([`torno_geom::catmull_rom`] has the curve itself, exactly).
 pub fn fit_polyline(fit: &[Vec3]) -> Vec<Vec3> {
-    solidcraft_geom::catmull_rom::samples(fit)
+    torno_geom::catmull_rom::samples(fit)
 }
 
 /// Chord-height tolerance (mm) when sampling a drawn 3D arc into `pts`.
@@ -521,10 +521,10 @@ mod tests {
         let (start, end) = (dir(pts[0], pts[1]), dir(pts[n - 2], pts[n - 1]));
         let mid = |i: usize| dir(pts[i - 1], pts[i]).dot(dir(pts[i], pts[i + 1]));
         assert!(
-            start.dot(end) >= mid(solidcraft_geom::catmull_rom::SPAN_SAMPLES) - 1e-9,
+            start.dot(end) >= mid(torno_geom::catmull_rom::SPAN_SAMPLES) - 1e-9,
             "turn at the close {}, at a fit point {}",
             start.dot(end),
-            mid(solidcraft_geom::catmull_rom::SPAN_SAMPLES)
+            mid(torno_geom::catmull_rom::SPAN_SAMPLES)
         );
         let open = fit_polyline(&ring[..12]);
         assert_eq!(open.first(), ring.first());

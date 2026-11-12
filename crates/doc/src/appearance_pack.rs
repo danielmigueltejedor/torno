@@ -45,7 +45,7 @@ pub struct Provenance {
     pub kind: &'static str,
 }
 pub const ORIGINAL: Provenance = Provenance {
-    author: "SolidCraft contributors",
+    author: "Torno contributors",
     license: "MIT OR Apache-2.0",
     source: "assets/appearances/starter_pack.rs",
     kind: "original illustrative optical authoring; not measured material data",
@@ -154,7 +154,7 @@ impl VisualPreset {
         match self.recipe {
             Recipe::Opaque(r) => r.color,
             // A UI swatch of the transmission values, not rendered glass or absorption.
-            Recipe::Glass(r) => r.transmission_linear_rgb.map(solidcraft_color::srgb::encode8),
+            Recipe::Glass(r) => r.transmission_linear_rgb.map(torno_color::srgb::encode8),
         }
     }
 

@@ -1,9 +1,9 @@
-//! The sweeps against their closed forms (moved from SolidCraft's `crates/smlib` sweep tests):
+//! The sweeps against their closed forms (moved from Torno's `crates/smlib` sweep tests):
 //! each case's volume (relative 1e-9, or within the tolerance its walls are approximated to),
 //! a refused draft corner's reason, a planar sheet's one face. Then the arcs of a profile on one
 //! circle: the queries and the join an application's one-wall rule is built on, and their
 //! refusals. They run under the rig's fix set
-//! (the corpus's `fixes.json`), as SolidCraft's rig ran them: with every fix off, a quarter
+//! (the corpus's `fixes.json`), as Torno's rig ran them: with every fix off, a quarter
 //! torus's volume is 1.3e-9 off its closed form.
 // TODO(d0b44726f): the cases with arcs (extrude_circle*, sweep_circle_*, loft_two_circles,
 // planar_faces_with_a_hole, the joins) take the kernel's arcs as exact circles, at bound 0 by

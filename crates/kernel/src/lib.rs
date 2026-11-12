@@ -1,6 +1,6 @@
 //! The B-rep kernel boundary.
 //!
-//! Everything SolidCraft does with solids goes through this crate: building bodies from planar
+//! Everything Torno does with solids goes through this crate: building bodies from planar
 //! regions (extrude, revolve) and primitives, booleans, fillets and chamfers, tessellation,
 //! measurement and STEP export and import. The implementation uses the vendored `solidcore`
 //! kernel (Apache-2.0, `solidcore`) plus our own local operations (edge fillets and
@@ -216,9 +216,6 @@ pub use prism_curve::{PlanarPiece, PlanarSpline};
 pub use prism_measure::{PrismSection, certified_prism_equivalent, certified_prism_section};
 pub use repair::{Hole, RebuiltFace, RefusedFace, RepairOptions, RepairReport, SewnGap, repair};
 pub use sew::{EdgeSpec, FaceSpec, SurfSpec, sew, sew_touching};
-pub use solidcraft_smlib::hold_a_kernel;
-pub use solidcraft_smlib::stop::Stop;
-pub use solidcraft_smlib::trace as smlib_trace;
 pub use splitface::{SplitTool, split_body, split_faces, split_faces_with_map};
 pub use step::step_export;
 pub use step_in::{
@@ -239,6 +236,9 @@ pub use surfaces::{
 pub use sweep_path::{RailFit, SweepControl, SweepOrientation, sweep_path, sweep_path_with};
 pub use topo::{CylinderFace, cylinder_end_at, cylinder_face, cylinder_face_at, material_in_ring};
 pub use topo::{TopoCounts, merged_topology, seam_flags};
+pub use torno_smlib::hold_a_kernel;
+pub use torno_smlib::stop::Stop;
+pub use torno_smlib::trace as smlib_trace;
 pub use tspline::tspline_sheet;
 pub use validation::{KeptCheck, Validation, check_kept, detach_kept, validating};
 pub use validity::{SmlibCheck, Validity, smlib_dump_dir, validity};
@@ -272,7 +272,7 @@ impl From<solidcore_tess::TessError> for KernelError {
 }
 
 /// Why a kernel step failed: a message, or an error of the solidcore wrapper, which may be a
-/// panic the wrapper caught ([`solidcraft_smlib::Error::Internal`]).
+/// panic the wrapper caught ([`torno_smlib::Error::Internal`]).
 pub(crate) trait Cause: std::fmt::Display {
     /// The panic's message, when the cause is one.
     fn panic(&self) -> Option<&str> {
@@ -280,10 +280,10 @@ pub(crate) trait Cause: std::fmt::Display {
     }
 }
 
-impl Cause for solidcraft_smlib::Error {
+impl Cause for torno_smlib::Error {
     fn panic(&self) -> Option<&str> {
         match self {
-            solidcraft_smlib::Error::Internal(m) => Some(m),
+            torno_smlib::Error::Internal(m) => Some(m),
             _ => None,
         }
     }
@@ -291,8 +291,8 @@ impl Cause for solidcraft_smlib::Error {
 
 impl Cause for str {}
 impl Cause for String {}
-impl Cause for solidcraft_smlib::CheckReport {}
-impl Cause for solidcraft_smlib::export::ExportError {}
+impl Cause for torno_smlib::CheckReport {}
+impl Cause for torno_smlib::export::ExportError {}
 impl Cause for solidcore_record::brep::history::Failed {}
 impl Cause for solidcore_ops::pcurve::Error {}
 impl<T: Cause + ?Sized> Cause for &T {
@@ -315,7 +315,7 @@ impl KernelError {
 
 /// The native kernel call running right now (SMLib), for crash reports.
 pub fn native_call_in_flight() -> Option<String> {
-    solidcraft_smlib::current_call()
+    torno_smlib::current_call()
 }
 
 thread_local! {
@@ -325,13 +325,13 @@ thread_local! {
 /// Is this thread inside [`guard`]? (A panic now will be caught and turned into an error; the
 /// engine's crash reports mark it recovered.)
 pub fn guarded() -> bool {
-    GUARDED.with(std::cell::Cell::get) > 0 || solidcraft_smlib::in_call()
+    GUARDED.with(std::cell::Cell::get) > 0 || torno_smlib::in_call()
 }
 
 /// A panic inside a solidcore call, caught there and reported as the kernel's internal error
 /// ([`KernelError::Internal`]): the crash-report check (`diagnostics.crash_test`'s kernel mode).
 pub fn crash_test() -> Result<()> {
-    solidcraft_smlib::crash_test().map_err(|e| KernelError::smlib("crash test", e))
+    torno_smlib::crash_test().map_err(|e| KernelError::smlib("crash test", e))
 }
 
 /// Is this thread a Rayon pool thread?
@@ -390,7 +390,7 @@ fn catch_worker_panic(message: &str) -> Result<std::thread::Result<()>> {
         let message = message.to_string();
         let pool = rayon::ThreadPoolBuilder::new()
             .num_threads(1)
-            .thread_name(|i| format!("solidcraft-kernel-{i}"))
+            .thread_name(|i| format!("torno-kernel-{i}"))
             .build()
             .map_err(|e| KernelError::Failed(format!("cannot start worker: {e}")))?;
         let (tx, rx) = std::sync::mpsc::channel();

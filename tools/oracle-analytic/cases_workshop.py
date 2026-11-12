@@ -7,7 +7,7 @@ Run from the repository root:
 All dimensions are taken from the actual parameterized oracle recipes. The
 mass properties come from exact box/cylinder subtraction, rounded rectangle
 quarter-spandrels and the same tangent-loop chamfer integration as case 33.
-No SolidCraft result is used to create any expected geometry value.
+No Torno result is used to create any expected geometry value.
 """
 
 import json

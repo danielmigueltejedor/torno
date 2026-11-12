@@ -3,9 +3,9 @@
 //! Visibility is supplied separately for every light by the ray-tracing consumer.
 
 use solidcore_record::Vec3;
-use solidcraft_geom::prelude::*;
+use torno_geom::prelude::*;
 
-use solidcraft_viewport::surface::{OpaqueSurface, unit_direction};
+use torno_viewport::surface::{OpaqueSurface, unit_direction};
 
 use super::{Result, TraceError};
 

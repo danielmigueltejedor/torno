@@ -1,5 +1,5 @@
 use super::*;
-use solidcraft_render::job::{CpuHost, JobId};
+use torno_render::job::{CpuHost, JobId};
 
 #[cfg(not(target_arch = "wasm32"))]
 // Validate each live receipt before comparing deterministic accounting. RAM
@@ -100,37 +100,32 @@ fn saved_raster_jobs_and_legacy_requests_share_output_without_runtime_overrides(
 #[cfg(not(target_arch = "wasm32"))]
 #[test]
 fn saved_gpu_job_routes_before_dispatch_and_reaches_preflight_and_start_without_hardware() {
-    use solidcraft_render::job::{Admission, CancelToken, ImageExecutor, ImageHost, ImageRequest, ImageTask, ImageWork, JobOptions};
+    use torno_render::job::{Admission, CancelToken, ImageExecutor, ImageHost, ImageRequest, ImageTask, ImageWork, JobOptions};
     // A protocol executor verifies the captured inputs without probing a physical GPU.
     struct NumericalGpu(&'static str);
     impl ImageExecutor for NumericalGpu {
-        fn descriptor(&self) -> solidcraft_render::job::Result<solidcraft_render::ExecutorDescriptor> {
+        fn descriptor(&self) -> torno_render::job::Result<torno_render::ExecutorDescriptor> {
             let mut descriptor = CpuHost::cooperative().descriptor()?;
-            descriptor.id = solidcraft_render::ExecutorId::new(self.0).unwrap();
-            descriptor.profiles[0].features.extend([solidcraft_render::RenderFeature::Progressive, solidcraft_render::RenderFeature::Hdri]);
+            descriptor.id = torno_render::ExecutorId::new(self.0).unwrap();
+            descriptor.profiles[0].features.extend([torno_render::RenderFeature::Progressive, torno_render::RenderFeature::Hdri]);
             Ok(descriptor)
         }
-        fn admit(
-            &self,
-            scene: &solidcraft_render::ProductScene,
-            request: &ImageRequest,
-            options: JobOptions,
-        ) -> solidcraft_render::job::Result<Admission> {
+        fn admit(&self, scene: &torno_render::ProductScene, request: &ImageRequest, options: JobOptions) -> torno_render::job::Result<Admission> {
             options.validate()?;
-            solidcraft_render::job::admit(scene, &ImageRequest { environment: None, textures: None, ..request.clone() })
+            torno_render::job::admit(scene, &ImageRequest { environment: None, textures: None, ..request.clone() })
         }
         fn begin(
             &self,
-            scene: solidcraft_render::ProductScene,
+            scene: torno_render::ProductScene,
             request: ImageRequest,
             _: JobOptions,
             cancel: CancelToken,
-        ) -> solidcraft_render::job::Result<Box<dyn ImageWork>> {
+        ) -> torno_render::job::Result<Box<dyn ImageWork>> {
             Ok(Box::new(ImageTask::new(scene, ImageRequest { environment: None, textures: None, ..request }, cancel)?))
         }
     }
     let mut s = Session::default();
-    let camera = solidcraft_viewport::Camera { fov: 0.8, ..Default::default() };
+    let camera = torno_viewport::Camera { fov: 0.8, ..Default::default() };
     s.execute("render.settings.set", &json!({"name":"GPU","set":{
         "width":4,"height":4,"camera":camera,"exposure_ev":1.75,"job":{"method":"gpu_path","transparent_background":true,"options":{
             "samples":7,"max_depth":3,"seed":456,"denoise":true,"clamp_indirect":8,"tone_map":"aces_fitted",
@@ -145,7 +140,7 @@ fn saved_gpu_job_routes_before_dispatch_and_reaches_preflight_and_start_without_
         }}
     }})).unwrap();
     let saved = s.doc.render.setups["GPU"].clone();
-    s = Session::new(solidcraft_doc::Document::from_json(&s.doc.to_json()).unwrap());
+    s = Session::new(torno_doc::Document::from_json(&s.doc.to_json()).unwrap());
     s.set_render_job_host(Some(CpuHost::cooperative())).unwrap();
     s.register_render_job_host(ImageHost::with_executor(Arc::new(NumericalGpu("another-progressive"))).unwrap()).unwrap();
     let named = json!({"setup":"GPU"});
@@ -174,14 +169,10 @@ fn saved_gpu_job_routes_before_dispatch_and_reaches_preflight_and_start_without_
     assert_eq!(sources[0].minimum_distance_mm, 0.002);
     assert_eq!(
         sources[1].cone,
-        Some(solidcraft_render::job::SpotConeOptions {
-            emitted_axis: [-4.0, -5.0, -6.0],
-            inner_half_angle_radians: 0.2,
-            outer_half_angle_radians: 0.7
-        })
+        Some(torno_render::job::SpotConeOptions { emitted_axis: [-4.0, -5.0, -6.0], inner_half_angle_radians: 0.2, outer_half_angle_radians: 0.7 })
     );
     let saved_lighting = match &saved.job {
-        Some(solidcraft_doc::render_settings::RenderJob::GpuPath { options, .. }) => options.lighting.unwrap(),
+        Some(torno_doc::render_settings::RenderJob::GpuPath { options, .. }) => options.lighting.unwrap(),
         _ => panic!("GPU"),
     };
     assert_eq!(captured_options.lighting, Some(saved_lighting), "portable options reach the exact runtime capture unchanged");
@@ -205,7 +196,7 @@ fn saved_gpu_job_routes_before_dispatch_and_reaches_preflight_and_start_without_
     let started = s.execute("render.start", &named).unwrap();
     let id: JobId = serde_json::from_value(started["job"].clone()).unwrap();
     let status = s.render_job_handle(id).unwrap().wait_timeout(std::time::Duration::from_secs(10)).unwrap();
-    assert_eq!(status.progress.phase, solidcraft_render::job::Phase::Completed);
+    assert_eq!(status.progress.phase, torno_render::job::Phase::Completed);
     assert_eq!(status.resolved.executor.as_str(), "gpu-path");
     assert_eq!(json!(status.options), checked["options"]);
     assert_eq!(json!(status.request), checked["request"]);
@@ -216,7 +207,7 @@ fn saved_gpu_job_routes_before_dispatch_and_reaches_preflight_and_start_without_
     // The same protocol executor exercises saved HDR lowering after source removal.
     // It verifies admission and immutable inputs, not physical GPU image quality.
     let nonce = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos();
-    let path = std::env::temp_dir().join(format!("solidcraft-gpu-saved-hdr-{}-{nonce}.hdr", std::process::id()));
+    let path = std::env::temp_dir().join(format!("torno-gpu-saved-hdr-{}-{nonce}.hdr", std::process::id()));
     let mut bytes = b"#?RADIANCE\nFORMAT=32-bit_rle_rgbe\nPRIMARIES=0.64 0.33 0.30 0.60 0.15 0.06 0.3127 0.3290\n\n-Y 2 +X 4\n".to_vec();
     for _ in 0..8 {
         bytes.extend_from_slice(&[128, 64, 32, 129]);
@@ -224,7 +215,7 @@ fn saved_gpu_job_routes_before_dispatch_and_reaches_preflight_and_start_without_
     std::fs::write(&path, &bytes).unwrap();
     let info = s.execute("render.hdr.inspect", &json!({"path":path})).unwrap();
     let mut hdr_setup = saved.clone();
-    let Some(solidcraft_doc::render_settings::RenderJob::GpuPath { options, .. }) = &mut hdr_setup.job else { panic!("GPU fixture") };
+    let Some(torno_doc::render_settings::RenderJob::GpuPath { options, .. }) = &mut hdr_setup.job else { panic!("GPU fixture") };
     options.environment = None;
     let captured = s
         .execute(
@@ -237,7 +228,7 @@ fn saved_gpu_job_routes_before_dispatch_and_reaches_preflight_and_start_without_
         json!({"progressive":true,"settings":{"width":4,"height":4},"environment":{"kind":"hdr","path":path,"expected_sha256":"0".repeat(64)}});
     assert!(s.execute("render.preflight", &bad_file).unwrap_err().to_string().contains("changed since selection"));
     std::fs::remove_file(path).unwrap();
-    let reopened = solidcraft_io::read_design(&solidcraft_io::write_design_container(&s.doc).unwrap()).unwrap();
+    let reopened = torno_io::read_design(&torno_io::write_design_container(&s.doc).unwrap()).unwrap();
     s = Session::new(reopened);
     s.register_render_job_host(gpu.clone()).unwrap();
     let doc = s.doc.clone();
@@ -259,7 +250,7 @@ fn saved_gpu_job_routes_before_dispatch_and_reaches_preflight_and_start_without_
     let started = s.execute("render.start", &json!({"setup":"HDR"})).unwrap();
     let id: JobId = serde_json::from_value(started["job"].clone()).unwrap();
     let status = s.render_job_handle(id).unwrap().wait_timeout(std::time::Duration::from_secs(10)).unwrap();
-    assert_eq!(status.progress.phase, solidcraft_render::job::Phase::Completed);
+    assert_eq!(status.progress.phase, torno_render::job::Phase::Completed);
     assert_eq!(json!(status.environment), checked["environment"]);
     assert_eq!(json!(status.options), checked["options"]);
     assert!(Arc::ptr_eq(&doc, &s.doc));
@@ -283,7 +274,7 @@ fn saved_cpu_job_reopens_and_supplies_exact_options_and_one_exposure_to_check_an
     )
     .unwrap();
     let saved = s.doc.render.setups["CPU"].clone();
-    s = Session::new(solidcraft_doc::Document::from_json(&s.doc.to_json()).unwrap());
+    s = Session::new(torno_doc::Document::from_json(&s.doc.to_json()).unwrap());
     s.set_render_job_host(Some(CpuHost::for_platform().unwrap())).unwrap();
     s.execute("render.scene", &json!({})).unwrap();
     let doc = s.doc.clone();
@@ -302,7 +293,7 @@ fn saved_cpu_job_reopens_and_supplies_exact_options_and_one_exposure_to_check_an
     let started = s.execute("render.start", &named).unwrap();
     let id: JobId = serde_json::from_value(started["job"].clone()).unwrap();
     let status = s.render_job_handle(id).unwrap().wait_timeout(std::time::Duration::from_secs(10)).unwrap();
-    assert_eq!(status.progress.phase, solidcraft_render::job::Phase::Completed, "{:?}", status.error);
+    assert_eq!(status.progress.phase, torno_render::job::Phase::Completed, "{:?}", status.error);
     assert_eq!(json!(status.request), checked["request"]);
     assert_eq!(status.options.exposure_ev, 0.0, "GPU options must not introduce a second CPU exposure");
     assert_eq!(s.doc.render.setups["CPU"], saved);
@@ -316,7 +307,7 @@ fn saved_cpu_hdr_reopens_without_source_and_drives_identical_check_start_and_rea
     let mut s = Session::default();
     s.execute("solid.box", &json!({"length":20,"width":20,"height":20})).unwrap();
     let nonce = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos();
-    let path = std::env::temp_dir().join(format!("solidcraft-cpu-saved-hdr-{}-{nonce}.hdr", std::process::id()));
+    let path = std::env::temp_dir().join(format!("torno-cpu-saved-hdr-{}-{nonce}.hdr", std::process::id()));
     let mut bytes = b"#?RADIANCE\nFORMAT=32-bit_rle_rgbe\nPRIMARIES=0.64 0.33 0.30 0.60 0.15 0.06 0.3127 0.3290\n\n-Y 2 +X 4\n".to_vec();
     for _ in 0..8 {
         bytes.extend_from_slice(&[128, 64, 32, 129]);
@@ -333,7 +324,7 @@ fn saved_cpu_hdr_reopens_without_source_and_drives_identical_check_start_and_rea
         .unwrap();
     assert!(s.render_job_host().is_none());
     std::fs::remove_file(path).unwrap();
-    s = Session::new(solidcraft_io::read_design(&solidcraft_io::write_design_container(&s.doc).unwrap()).unwrap());
+    s = Session::new(torno_io::read_design(&torno_io::write_design_container(&s.doc).unwrap()).unwrap());
     let host = CpuHost::for_platform().unwrap();
     s.set_render_job_host(Some(host.clone())).unwrap();
     s.execute("render.scene", &json!({})).unwrap();
@@ -370,14 +361,14 @@ fn saved_cpu_hdr_reopens_without_source_and_drives_identical_check_start_and_rea
     let started = s.execute("render.start", &unlit).unwrap();
     let id: JobId = serde_json::from_value(started["job"].clone()).unwrap();
     let handle = s.render_job_handle(id).unwrap();
-    assert_eq!(handle.wait_timeout(std::time::Duration::from_secs(10)).unwrap().progress.phase, solidcraft_render::job::Phase::Completed);
+    assert_eq!(handle.wait_timeout(std::time::Duration::from_secs(10)).unwrap().progress.phase, torno_render::job::Phase::Completed);
     let baseline = handle.frame().unwrap().unwrap().png().to_vec();
     let started = s.execute("render.start", &json!({"setup":"HDR"})).unwrap();
     assert_eq!(started["environment"], checked["environment"]);
     let id: JobId = serde_json::from_value(started["job"].clone()).unwrap();
     let handle = s.render_job_handle(id).unwrap();
     let status = handle.wait_timeout(std::time::Duration::from_secs(10)).unwrap();
-    assert_eq!(status.progress.phase, solidcraft_render::job::Phase::Completed, "{:?}", status.error);
+    assert_eq!(status.progress.phase, torno_render::job::Phase::Completed, "{:?}", status.error);
     assert_eq!(json!(status.environment), checked["environment"]);
     assert_eq!(json!(status.request), checked["request"]);
     assert_eq!(status.options.exposure_ev, 0.0);
@@ -389,35 +380,30 @@ fn saved_cpu_hdr_reopens_without_source_and_drives_identical_check_start_and_rea
 #[cfg(not(target_arch = "wasm32"))]
 #[test]
 fn additional_executor_routes_by_capability_and_survives_document_adoption() {
-    use solidcraft_render::job::{Admission, CancelToken, ImageExecutor, ImageHost, ImageRequest, ImageTask, ImageWork, JobOptions};
+    use torno_render::job::{Admission, CancelToken, ImageExecutor, ImageHost, ImageRequest, ImageTask, ImageWork, JobOptions};
     struct Progressive(&'static str);
     impl ImageExecutor for Progressive {
-        fn descriptor(&self) -> solidcraft_render::job::Result<solidcraft_render::ExecutorDescriptor> {
+        fn descriptor(&self) -> torno_render::job::Result<torno_render::ExecutorDescriptor> {
             let mut descriptor = CpuHost::cooperative().descriptor()?;
-            descriptor.id = solidcraft_render::ExecutorId::new(self.0).unwrap();
-            descriptor.profiles[0].features.push(solidcraft_render::RenderFeature::Progressive);
-            descriptor.profiles[0].features.push(solidcraft_render::RenderFeature::Hdri);
+            descriptor.id = torno_render::ExecutorId::new(self.0).unwrap();
+            descriptor.profiles[0].features.push(torno_render::RenderFeature::Progressive);
+            descriptor.profiles[0].features.push(torno_render::RenderFeature::Hdri);
             Ok(descriptor)
         }
-        fn admit(
-            &self,
-            scene: &solidcraft_render::ProductScene,
-            request: &ImageRequest,
-            options: JobOptions,
-        ) -> solidcraft_render::job::Result<Admission> {
+        fn admit(&self, scene: &torno_render::ProductScene, request: &ImageRequest, options: JobOptions) -> torno_render::job::Result<Admission> {
             options.validate()?;
             // admit_geometry counts source geometry only; this executor renders through the
             // CPU task, which ignores the environment and textures, so budget its pixels and
             // PNG with the CPU estimate for the same frame.
-            solidcraft_render::job::admit(scene, &ImageRequest { environment: None, textures: None, ..request.clone() })
+            torno_render::job::admit(scene, &ImageRequest { environment: None, textures: None, ..request.clone() })
         }
         fn begin(
             &self,
-            scene: solidcraft_render::ProductScene,
+            scene: torno_render::ProductScene,
             request: ImageRequest,
             _: JobOptions,
             cancel: CancelToken,
-        ) -> solidcraft_render::job::Result<Box<dyn ImageWork>> {
+        ) -> torno_render::job::Result<Box<dyn ImageWork>> {
             Ok(Box::new(ImageTask::new(scene, request, cancel)?))
         }
     }
@@ -484,7 +470,7 @@ fn additional_executor_routes_by_capability_and_survives_document_adoption() {
     let status = session.render_job_handle(id).unwrap().wait_timeout(std::time::Duration::from_secs(10)).unwrap();
     assert_eq!(status.resolved.executor.as_str(), "test-progressive");
     assert_eq!(status.options.samples, 3);
-    assert_eq!(status.progress.phase, solidcraft_render::job::Phase::Completed);
+    assert_eq!(status.progress.phase, torno_render::job::Phase::Completed);
     finish(&cpu);
     assert_eq!(session.execute("render.status", &json!({"job":cpu_id})).unwrap()["frame"]["executor"], "cpu-product");
     assert!(session.scratch().execute("render.status", &json!({"job":id})).is_err());
@@ -589,8 +575,8 @@ fn preflight_and_start_reject_excessive_pixel_work_without_reserving_a_job() {
     for _ in 0..8 {
         s.execute("solid.box", &json!({"length":20,"width":20,"height":20,"corner":[-10,-10,-10]})).unwrap();
     }
-    let mut camera = solidcraft_viewport::Camera { distance: 1.0, fov: 0.0, ..Default::default() };
-    camera.set_view(solidcraft_viewport::StandardView::Front);
+    let mut camera = torno_viewport::Camera { distance: 1.0, fov: 0.0, ..Default::default() };
+    camera.set_view(torno_viewport::StandardView::Front);
     let params = json!({"settings":{"width":1024,"height":1024,"camera":camera}});
     let doc = s.doc.clone();
     let before = (s.revision, s.evaluations, s.is_dirty(), s.undo.len(), s.redo.len());
@@ -613,15 +599,15 @@ fn preflight_and_start_reject_excessive_pixel_work_without_reserving_a_job() {
         assert!(preflight["admission"].get("projected_pixel_tests").is_none());
         assert_eq!(raytrace_host.admitted_bytes(), 0);
         let retained = preflight["retained_request_bytes"].as_u64().unwrap();
-        let request: solidcraft_render::job::ImageRequest = serde_json::from_value(preflight["request"].clone()).unwrap();
+        let request: torno_render::job::ImageRequest = serde_json::from_value(preflight["request"].clone()).unwrap();
         assert!(request.raytrace.is_none() && request.environment.is_none() && request.textures.is_none());
-        assert_eq!(retained, solidcraft_render::job::ImageRequest::fixed_cpu_metadata_bytes());
+        assert_eq!(retained, torno_render::job::ImageRequest::fixed_cpu_metadata_bytes());
         let started = s.execute("render.start", &params).unwrap();
         let id: JobId = serde_json::from_value(started["job"].clone()).unwrap();
         let handle = s.render_job_handle(id).unwrap();
         s.execute("render.cancel", &json!({"job":id})).unwrap();
         let status = handle.wait_timeout(std::time::Duration::from_secs(10)).unwrap();
-        assert_eq!(status.progress.phase, solidcraft_render::job::Phase::Cancelled);
+        assert_eq!(status.progress.phase, torno_render::job::Phase::Cancelled);
         // Terminal phase precedes actual work/proof release. The retained request
         // belongs to Record and must remain funded while its handle is observed.
         let deadline = std::time::Instant::now() + std::time::Duration::from_secs(10);
@@ -642,7 +628,7 @@ fn preflight_and_start_reject_excessive_pixel_work_without_reserving_a_job() {
             std::thread::yield_now();
         }
         // Plain status/history metadata does not retain Record or its lease.
-        assert_eq!(status.progress.phase, solidcraft_render::job::Phase::Cancelled);
+        assert_eq!(status.progress.phase, torno_render::job::Phase::Cancelled);
         assert_eq!(historical["progress"]["phase"], "cancelled");
         assert!(Arc::ptr_eq(&doc, &s.doc));
         assert_eq!(before, (s.revision, s.evaluations, s.is_dirty(), s.undo.len(), s.redo.len()));
@@ -679,7 +665,7 @@ fn identities_are_isolated_across_documents_scratch_and_new() {
 #[cfg(all(feature = "raytrace-cpu", not(target_arch = "wasm32")))]
 #[test]
 fn saved_cpu_progressive_check_start_and_export_preserve_the_exact_final() {
-    use solidcraft_render::job::Phase;
+    use torno_render::job::Phase;
     let host = CpuHost::for_platform().unwrap();
     let mut s = Session::default();
     s.execute(
@@ -689,7 +675,7 @@ fn saved_cpu_progressive_check_start_and_export_preserve_the_exact_final() {
         }}),
     )
     .unwrap();
-    s = Session::new(solidcraft_doc::Document::from_json(&s.doc.to_json()).unwrap());
+    s = Session::new(torno_doc::Document::from_json(&s.doc.to_json()).unwrap());
     s.set_render_job_host(Some(host)).unwrap();
     s.execute("render.scene", &json!({})).unwrap();
     let doc = s.doc.clone();
@@ -708,7 +694,7 @@ fn saved_cpu_progressive_check_start_and_export_preserve_the_exact_final() {
     assert!(status.preview.is_none());
     assert!(handle.preview().unwrap().is_none());
     let frame = handle.frame().unwrap().unwrap();
-    let path = std::env::temp_dir().join(format!("solidcraft-film-final-{}-{}.png", std::process::id(), id.session));
+    let path = std::env::temp_dir().join(format!("torno-film-final-{}-{}.png", std::process::id(), id.session));
     s.execute("render.export", &json!({"job":id,"path":path})).unwrap();
     assert_eq!(std::fs::read(&path).unwrap(), frame.png());
     assert_eq!(frame.info.png_sha256.len(), 64);
@@ -720,7 +706,7 @@ fn saved_cpu_progressive_check_start_and_export_preserve_the_exact_final() {
 #[cfg(all(feature = "raytrace-cpu", not(target_arch = "wasm32")))]
 #[test]
 fn saved_cpu_output_runs_exports_and_regrades_its_exact_retained_native_master() {
-    use solidcraft_render::job::Phase;
+    use torno_render::job::Phase;
     let mut s = Session::default();
     s.execute(
         "render.settings.set",
@@ -730,7 +716,7 @@ fn saved_cpu_output_runs_exports_and_regrades_its_exact_retained_native_master()
                 "bloom":{"strength":0.2,"threshold":0.5,"radius":1}},"backdrop":{"mode":"radial"},"linear_exr":true}}}}}),
     )
     .unwrap();
-    s = Session::new(solidcraft_doc::Document::from_json(&s.doc.to_json()).unwrap());
+    s = Session::new(torno_doc::Document::from_json(&s.doc.to_json()).unwrap());
     s.set_render_job_host(Some(CpuHost::for_platform().unwrap())).unwrap();
     s.execute("render.scene", &json!({})).unwrap();
     let document = s.doc.clone();
@@ -746,7 +732,7 @@ fn saved_cpu_output_runs_exports_and_regrades_its_exact_retained_native_master()
     assert_eq!(handle.wait_timeout(std::time::Duration::from_secs(30)).unwrap().progress.phase, Phase::Completed);
     let frame = handle.frame().unwrap().unwrap();
     let master = frame.linear_exr().unwrap().to_vec();
-    let path = std::env::temp_dir().join(format!("solidcraft-cpu-master-{}-{}.exr", std::process::id(), id.session));
+    let path = std::env::temp_dir().join(format!("torno-cpu-master-{}-{}.exr", std::process::id(), id.session));
     s.execute("render.export", &json!({"job":id,"path":path,"format":"exr"})).unwrap();
     assert_eq!(std::fs::read(&path).unwrap(), master);
     std::fs::remove_file(path).unwrap();
@@ -805,8 +791,8 @@ fn progressive_limits_and_incompatibilities_fail_before_hdr_or_scene_capture() {
 #[cfg(all(feature = "raytrace-cpu", not(target_arch = "wasm32")))]
 #[test]
 fn a_cancelled_progressive_preview_cannot_replace_or_export_over_the_last_completed_frame() {
-    use solidcraft_render::job::Phase;
     use std::time::{Duration, Instant};
+    use torno_render::job::Phase;
     let mut s = Session::default();
     s.set_render_job_host(Some(CpuHost::for_platform().unwrap())).unwrap();
     let good = start(&mut s);
@@ -839,7 +825,7 @@ fn a_cancelled_progressive_preview_cannot_replace_or_export_over_the_last_comple
     assert!(handle.preview().unwrap().is_none());
     assert!(handle.frame().unwrap().is_none());
     assert!(s.render_jobs.frame(id).is_err());
-    let path = std::env::temp_dir().join(format!("solidcraft-film-cancel-{}-{}.png", std::process::id(), id.session));
+    let path = std::env::temp_dir().join(format!("torno-film-cancel-{}-{}.png", std::process::id(), id.session));
     s.execute("render.export", &json!({"job":good,"path":path})).unwrap();
     assert!(s.execute("render.export", &json!({"job":id,"path":path,"overwrite":true})).is_err());
     assert_eq!(std::fs::read(&path).unwrap(), final_frame.png());
@@ -880,10 +866,10 @@ fn unsupported_intent_is_rejected_and_export_preserves_existing_files() {
         assert_eq!(host.admitted_bytes(), 0);
     }
     let id = start(&mut s);
-    let path = std::env::temp_dir().join(format!("solidcraft-job-{}-{}.png", std::process::id(), id.session));
+    let path = std::env::temp_dir().join(format!("torno-job-{}-{}.png", std::process::id(), id.session));
     assert!(s.execute("render.export", &json!({"job":id,"path":path})).is_err());
     finish(&host);
-    let missing = path.with_file_name("solidcraft-render-missing-directory").join("image.png");
+    let missing = path.with_file_name("torno-render-missing-directory").join("image.png");
     assert!(s.execute("render.export", &json!({"job":id,"path":missing})).is_err());
     assert!(s.render_jobs.frame(id).is_ok());
     s.execute("render.export", &json!({"job":id,"path":path})).unwrap();
@@ -899,30 +885,30 @@ fn unsupported_intent_is_rejected_and_export_preserves_existing_files() {
 #[test]
 fn open_close_and_host_replacement_cancel_work_and_reject_old_ids() {
     let (mut s, host) = session();
-    let path = std::env::temp_dir().join(format!("solidcraft-job-open-{}.solidcraft", std::process::id()));
+    let path = std::env::temp_dir().join(format!("torno-job-open-{}.solidcraft", std::process::id()));
     s.execute("file.save", &json!({"path":path})).unwrap();
     let id = start(&mut s);
     let handle = s.render_job_handle(id).unwrap();
     s.execute("doc.open", &json!({"path":path})).unwrap();
-    assert_eq!(handle.status().unwrap().progress.phase, solidcraft_render::job::Phase::Cancelled);
+    assert_eq!(handle.status().unwrap().progress.phase, torno_render::job::Phase::Cancelled);
     assert!(s.execute("render.status", &json!({"job":id})).is_err());
     assert!(s.render_job_host().unwrap().same_host(&host));
     let id = start(&mut s);
     let handle = s.render_job_handle(id).unwrap();
     s.replace_design(Session::default());
-    assert_eq!(handle.status().unwrap().progress.phase, solidcraft_render::job::Phase::Cancelled);
+    assert_eq!(handle.status().unwrap().progress.phase, torno_render::job::Phase::Cancelled);
     assert!(s.execute("render.status", &json!({"job":id})).is_err());
     assert!(s.render_job_host().unwrap().same_host(&host));
     let id = start(&mut s);
     let handle = s.render_job_handle(id).unwrap();
     let replacement = CpuHost::cooperative();
     s.set_render_job_host(Some(replacement.clone())).unwrap();
-    assert_eq!(handle.status().unwrap().progress.phase, solidcraft_render::job::Phase::Cancelled);
+    assert_eq!(handle.status().unwrap().progress.phase, torno_render::job::Phase::Cancelled);
     assert!(s.execute("render.status", &json!({"job":id})).is_err());
     let id = start(&mut s);
     let handle = s.render_job_handle(id).unwrap();
     drop(s);
-    assert_eq!(handle.status().unwrap().progress.phase, solidcraft_render::job::Phase::Cancelled);
+    assert_eq!(handle.status().unwrap().progress.phase, torno_render::job::Phase::Cancelled);
     finish(&host);
     finish(&replacement);
     std::fs::remove_file(path).unwrap();
@@ -976,8 +962,8 @@ fn native_start_and_cancel_measure_cached_capture_without_timing_assertions() {
     let cancel_request_time = before.elapsed();
     let status = s.render_job_handle(id).unwrap().wait_timeout(Duration::from_secs(60)).unwrap();
     let cancellation_time = before.elapsed();
-    assert!(matches!(status.progress.phase, solidcraft_render::job::Phase::Cancelled | solidcraft_render::job::Phase::Completed));
-    if status.progress.phase == solidcraft_render::job::Phase::Cancelled {
+    assert!(matches!(status.progress.phase, torno_render::job::Phase::Cancelled | torno_render::job::Phase::Completed));
+    if status.progress.phase == torno_render::job::Phase::Cancelled {
         assert!(status.frame.is_none());
     }
     eprintln!(
@@ -989,7 +975,7 @@ fn native_start_and_cancel_measure_cached_capture_without_timing_assertions() {
     let watch = Instant::now();
     let observed = loop {
         let phase = handle.status().unwrap().progress.phase;
-        if phase == solidcraft_render::job::Phase::Running || phase.terminal() {
+        if phase == torno_render::job::Phase::Running || phase.terminal() {
             break phase;
         }
         assert!(watch.elapsed() < Duration::from_secs(60), "native worker did not advance");
@@ -1017,14 +1003,14 @@ fn native_raytrace_preflight_start_and_frame_preserve_document_and_roundtrip_req
     let before = (s.revision, s.evaluations, s.is_dirty(), s.undo.len(), s.redo.len());
     let params = json!({"integrator":"raytrace","settings":{"width":32,"height":32},"raytrace":{"preset":"neutral","shadows":true}});
     let preflight = s.execute("render.preflight", &params).unwrap();
-    let request: solidcraft_render::job::ImageRequest = serde_json::from_value(preflight["request"].clone()).unwrap();
-    assert_eq!(request.integrator, solidcraft_render::job::Integrator::Raytrace);
+    let request: torno_render::job::ImageRequest = serde_json::from_value(preflight["request"].clone()).unwrap();
+    assert_eq!(request.integrator, torno_render::job::Integrator::Raytrace);
     assert_eq!(preflight["resolved"]["executor"], "cpu-raytrace");
     let started = s.execute("render.start", &params).unwrap();
     let id: JobId = serde_json::from_value(started["job"].clone()).unwrap();
     let handle = s.render_job_handle(id).unwrap();
     let status = handle.wait_timeout(std::time::Duration::from_secs(60)).unwrap();
-    assert_eq!(status.progress.phase, solidcraft_render::job::Phase::Completed);
+    assert_eq!(status.progress.phase, torno_render::job::Phase::Completed);
     let frame = handle.frame().unwrap().unwrap();
     assert_eq!(frame.info.job, id);
     assert_eq!(frame.info.executor.as_str(), "cpu-raytrace");
@@ -1044,7 +1030,7 @@ fn captured_hdr_input_lights_geometry_after_source_removal_and_preserves_history
     let mut s = Session::default();
     s.set_render_job_host(Some(host.clone())).unwrap();
     let nonce = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos();
-    let dir = std::env::temp_dir().join(format!("solidcraft-hdri-{}-{nonce}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("torno-hdri-{}-{nonce}", std::process::id()));
     std::fs::create_dir(&dir).unwrap();
     let source = dir.join("original.hdr");
     s.execute("solid.box", &json!({"length":20,"width":20,"height":20})).unwrap();
@@ -1083,7 +1069,7 @@ fn captured_hdr_input_lights_geometry_after_source_removal_and_preserves_history
     // Captured bytes remain sufficient after the source disappears.
     std::fs::remove_file(source).unwrap();
     let handle = s.render_jobs.handle(id).unwrap();
-    assert_eq!(handle.wait_timeout(std::time::Duration::from_secs(60)).unwrap().progress.phase, solidcraft_render::job::Phase::Completed);
+    assert_eq!(handle.wait_timeout(std::time::Duration::from_secs(60)).unwrap().progress.phase, torno_render::job::Phase::Completed);
     assert_ne!(handle.frame().unwrap().unwrap().png(), baseline.as_slice(), "captured HDR must illuminate actual geometry");
     assert_eq!(serde_json::to_value(handle.status().unwrap()).unwrap()["environment"], preflight["environment"]);
     let output = dir.join("background.png");
@@ -1105,8 +1091,8 @@ fn native_spatial_aa_preflight_and_host_forwarding_change_actual_edge_png() {
     s.execute("render.scene", &json!({})).unwrap();
     let scene = crate::product_scene::extract(&s).unwrap();
     let center = scene.bounds.center();
-    let mut camera = solidcraft_viewport::Camera { distance: 2.0, fov: 0.0, ..Default::default() };
-    camera.set_view(solidcraft_viewport::StandardView::Top);
+    let mut camera = torno_viewport::Camera { distance: 2.0, fov: 0.0, ..Default::default() };
+    camera.set_view(torno_viewport::StandardView::Top);
     camera.target = solidcore_record::Vec3::new(scene.bounds.min.x, center.y, center.z);
     let doc = s.doc.clone();
     let before = (s.revision, s.evaluations, s.is_dirty(), s.undo.len(), s.redo.len());
@@ -1119,7 +1105,7 @@ fn native_spatial_aa_preflight_and_host_forwarding_change_actual_edge_png() {
             "raytrace":{"primary_samples":samples,"lights":[],"shadows":false}});
         let admitted = host.admitted_bytes();
         let checked = s.execute("render.preflight", &params).unwrap();
-        let request: solidcraft_render::job::ImageRequest = serde_json::from_value(checked["request"].clone()).unwrap();
+        let request: torno_render::job::ImageRequest = serde_json::from_value(checked["request"].clone()).unwrap();
         assert_eq!(request.raytrace.as_ref().unwrap().primary_samples, samples);
         assert_eq!(checked["resolved"]["executor"], "cpu-raytrace");
         assert_eq!(host.admitted_bytes(), admitted, "preflight reserved host memory");
@@ -1127,7 +1113,7 @@ fn native_spatial_aa_preflight_and_host_forwarding_change_actual_edge_png() {
         let id: JobId = serde_json::from_value(started["job"].clone()).unwrap();
         let handle = s.render_job_handle(id).unwrap();
         let status = handle.wait_timeout(std::time::Duration::from_secs(60)).unwrap();
-        assert_eq!(status.progress.phase, solidcraft_render::job::Phase::Completed);
+        assert_eq!(status.progress.phase, torno_render::job::Phase::Completed);
         assert_eq!(status.request.raytrace.as_ref().unwrap().primary_samples, samples);
         let frame = handle.frame().unwrap().unwrap();
         assert_eq!(frame.info.executor.as_str(), "cpu-raytrace");
@@ -1210,7 +1196,7 @@ fn completed_png_content_identity_matches_status_and_exact_retained_export() {
     assert_eq!(digest.len(), 64);
     assert!(digest.bytes().all(|c| c.is_ascii_digit() || (b'a'..=b'f').contains(&c)));
     let nonce = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos();
-    let dir = std::env::temp_dir().join(format!("solidcraft-frame-digest-{}-{nonce}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("torno-frame-digest-{}-{nonce}", std::process::id()));
     std::fs::create_dir(&dir).unwrap();
     let path = dir.join("retained.png");
     assert!(!path.exists());
@@ -1292,7 +1278,7 @@ fn dielectric_preflight_and_start_resolve_refraction_without_broadening_boundari
     // The default view sends the single pixel's ray exactly through a box edge, which the optics reject
     // as an ambiguous interface normal. Whether the job then ends Failed or Cancelled would depend on
     // whether the cancel below beats the render thread, so view the glass off-axis.
-    let camera = solidcraft_viewport::Camera { yaw: 0.3, pitch: 0.4, ..Default::default() };
+    let camera = torno_viewport::Camera { yaw: 0.3, pitch: 0.4, ..Default::default() };
     let document = s.doc.clone();
     let before = (s.revision, s.evaluations, s.is_dirty(), s.undo.len(), s.redo.len());
     let params = json!({"integrator":"raytrace","settings":{"width":1,"height":1,"camera":camera},"raytrace":{"dielectrics":[{
@@ -1315,7 +1301,7 @@ fn dielectric_preflight_and_start_resolve_refraction_without_broadening_boundari
             s.execute("render.cancel", &json!({"job":id})).unwrap();
             let status = handle.wait_timeout(std::time::Duration::from_secs(10)).unwrap();
             assert!(
-                matches!(status.progress.phase, solidcraft_render::job::Phase::Cancelled | solidcraft_render::job::Phase::Completed),
+                matches!(status.progress.phase, torno_render::job::Phase::Cancelled | torno_render::job::Phase::Completed),
                 "phase {:?}, error {:?}; full status {status:?}",
                 status.progress.phase,
                 status.error
@@ -1362,7 +1348,7 @@ fn dielectric_preflight_refuses_wrong_captured_identity_without_changing_design(
 fn registered_product_camera_fit_changes_only_view_and_keeps_orientation() {
     let mut s = Session::default();
     s.execute("solid.box", &json!({"length":20,"width":15,"height":10})).unwrap();
-    let camera = solidcraft_viewport::Camera { yaw: 0.2, pitch: 0.3, roll: 0.1, ..Default::default() };
+    let camera = torno_viewport::Camera { yaw: 0.2, pitch: 0.3, roll: 0.1, ..Default::default() };
     s.execute("render.camera.set", &json!({"camera":camera})).unwrap();
     let doc = s.doc.to_json();
     let undo = s.undo.len();
@@ -1401,8 +1387,8 @@ fn explicit_render_camera_preserves_orientation_and_refuses_invalid_state_atomic
     let mut s = Session::default();
     let document = s.doc.clone();
     let before = (s.revision, s.evaluations, s.is_dirty(), s.undo.len(), s.redo.len(), s.model.is_stale());
-    for up in [solidcraft_viewport::UpAxis::Z, solidcraft_viewport::UpAxis::Y] {
-        let camera = solidcraft_viewport::Camera { roll: 0.41, yaw: -0.3, pitch: 0.5, up, ..Default::default() };
+    for up in [torno_viewport::UpAxis::Z, torno_viewport::UpAxis::Y] {
+        let camera = torno_viewport::Camera { roll: 0.41, yaw: -0.3, pitch: 0.5, up, ..Default::default() };
         let reply = s.execute("render.camera.set", &json!({"camera":camera})).unwrap();
         assert_eq!(s.camera, Some(camera));
         assert_eq!(reply["camera"], json!(camera));
@@ -1434,7 +1420,7 @@ fn explicit_render_camera_preserves_orientation_and_refuses_invalid_state_atomic
     }
     s.execute("render.camera.set", &json!({"camera":{"target":[0,0,0],"yaw":0.2,"pitch":0.3,"distance":100,"fov":0}})).unwrap();
     assert_eq!(s.camera.unwrap().roll, 0.0);
-    assert_eq!(s.camera.unwrap().up, solidcraft_viewport::UpAxis::Z);
+    assert_eq!(s.camera.unwrap().up, torno_viewport::UpAxis::Z);
     // The Design API still rejects explicit up, as specified by upstream #5094.
     let before_camera = s.camera;
     assert!(s.execute("view.apply", &json!({"camera":before_camera.unwrap()})).is_err());
@@ -1487,8 +1473,8 @@ fn output_viewer_copy_validates_completed_job_without_mutation_or_pixel_payloads
 #[cfg(all(feature = "raytrace-cpu", not(target_arch = "wasm32")))]
 #[test]
 fn cpu_physical_lens_saved_and_runtime_requests_share_one_captured_camera() {
-    let camera = solidcraft_viewport::Camera { fov: 0.7, distance: 20.0, roll: 0.3, ..Default::default() };
-    let lens = solidcraft_render::job::ThinLens { aperture_radius_mm: 0.5, focus_distance_mm: 20.0 };
+    let camera = torno_viewport::Camera { fov: 0.7, distance: 20.0, roll: 0.3, ..Default::default() };
+    let lens = torno_render::job::ThinLens { aperture_radius_mm: 0.5, focus_distance_mm: 20.0 };
     let mut s = Session::default();
     s.execute(
         "render.settings.set",
@@ -1496,7 +1482,7 @@ fn cpu_physical_lens_saved_and_runtime_requests_share_one_captured_camera() {
         "job":{"method":"cpu_raytrace","options":{"lens":lens,"progressive":{"samples_per_pixel":3,"seed":81},"lights":[]}}}}),
     )
     .unwrap();
-    s = Session::new(solidcraft_doc::Document::from_json(&s.doc.to_json()).unwrap());
+    s = Session::new(torno_doc::Document::from_json(&s.doc.to_json()).unwrap());
     s.set_render_job_host(Some(CpuHost::for_platform().unwrap())).unwrap();
     let document = s.doc.clone();
     let before = (s.revision, s.evaluations, s.undo.len(), s.redo.len());
@@ -1514,7 +1500,7 @@ fn cpu_physical_lens_saved_and_runtime_requests_share_one_captured_camera() {
     let started = s.execute("render.start", &json!({"setup":"Focus"})).unwrap();
     let job: JobId = serde_json::from_value(started["job"].clone()).unwrap();
     let handle = s.render_job_handle(job).unwrap();
-    assert_eq!(handle.wait_timeout(std::time::Duration::from_secs(10)).unwrap().progress.phase, solidcraft_render::job::Phase::Completed);
+    assert_eq!(handle.wait_timeout(std::time::Duration::from_secs(10)).unwrap().progress.phase, torno_render::job::Phase::Completed);
     assert!(handle.frame().unwrap().is_some());
     assert!(Arc::ptr_eq(&document, &s.doc));
     assert_eq!(before, (s.revision, s.evaluations, s.undo.len(), s.redo.len()));
@@ -1529,7 +1515,7 @@ fn cpu_lens_refuses_incompatible_sampling_and_camera_before_hdr_or_scene_capture
     let document = s.doc.clone();
     let before = (s.revision, s.evaluations, s.undo.len(), s.redo.len());
     for fixed in [false, true] {
-        let camera = solidcraft_viewport::Camera { fov: if fixed { 0.7 } else { 0.0 }, ..Default::default() };
+        let camera = torno_viewport::Camera { fov: if fixed { 0.7 } else { 0.0 }, ..Default::default() };
         let mut request = json!({"integrator":"raytrace","settings":{"width":8,"height":8,"camera":camera},
             "raytrace":{"lens":{"aperture_radius_mm":0.5,"focus_distance_mm":20.0},"progressive":{"samples_per_pixel":3}},
             "environment":{"path":"must-not-open-cpu-lens.hdr"}});
@@ -1556,7 +1542,7 @@ fn cpu_alpha_refuses_opaque_only_output_before_hdr_io_or_scene_capture() {
     let document = s.doc.clone();
     let before = (s.revision, s.evaluations, s.undo.len(), s.redo.len());
     for output in [json!({"backdrop":{}}), json!({"finishing":{"bloom":{"strength":1}}}), json!({"finishing":{"photographic":{"grain":0.03}}})] {
-        let request = json!({"integrator":"raytrace","transparent_background":true,"settings":{"width":8,"height":8,"camera":solidcraft_viewport::Camera::default()},
+        let request = json!({"integrator":"raytrace","transparent_background":true,"settings":{"width":8,"height":8,"camera":torno_viewport::Camera::default()},
             "raytrace":{"output":output},"environment":{"path":"must-not-open-cpu-alpha.hdr"}});
         for command in ["render.preflight", "render.start"] {
             let error = s.execute(command, &request).unwrap_err().to_string();
@@ -1572,7 +1558,7 @@ fn cpu_alpha_refuses_opaque_only_output_before_hdr_io_or_scene_capture() {
 #[cfg(all(feature = "raytrace-cpu", not(target_arch = "wasm32")))]
 #[test]
 fn saved_cpu_denoise_reports_its_actual_native_request_and_keeps_regrade_raw() {
-    use solidcraft_render::job::Phase;
+    use torno_render::job::Phase;
     let mut s = Session::default();
     s.execute("solid.box", &json!({"length":10,"width":10,"height":3,"body_name":"Filtered"})).unwrap();
     s.execute(
@@ -1583,7 +1569,7 @@ fn saved_cpu_denoise_reports_its_actual_native_request_and_keeps_regrade_raw() {
             "progressive":{"samples_per_pixel":3,"seed":81},"output":{"linear_exr":true}}}}}),
     )
     .unwrap();
-    s = Session::new(solidcraft_doc::Document::from_json(&s.doc.to_json()).unwrap());
+    s = Session::new(torno_doc::Document::from_json(&s.doc.to_json()).unwrap());
     s.set_render_job_host(Some(CpuHost::for_platform().unwrap())).unwrap();
     s.execute("render.scene", &json!({})).unwrap();
     let document = s.doc.clone();
@@ -1622,13 +1608,13 @@ fn saved_cpu_denoise_reports_its_actual_native_request_and_keeps_regrade_raw() {
     assert_ne!(mask_info.sha256, frame.info.png_sha256);
     let decoded = image::load_from_memory(&mask).unwrap().to_rgba8();
     assert_eq!(decoded.dimensions(), (8, 8));
-    assert!(decoded.pixels().all(|pixel| solidcraft_render::job::DenoiseGuideClass::ALL.iter().any(|class| class.color() == pixel.0)));
+    assert!(decoded.pixels().all(|pixel| torno_render::job::DenoiseGuideClass::ALL.iter().any(|class| class.color() == pixel.0)));
     let status_reply = s.execute("render.status", &json!({"job":id})).unwrap();
     assert_eq!(status_reply["denoise_mask"], json!(mask_info));
     assert_eq!(status_reply["denoise_diagnostics"], json!(report));
     let viewed = s.execute("render.result.view", &json!({"view":"denoise_mask"})).unwrap();
     assert_eq!(viewed, json!({"view":"denoise_mask","job":id}));
-    let path = std::env::temp_dir().join(format!("solidcraft-cpu-guide-mask-{}-{}.png", std::process::id(), id.session));
+    let path = std::env::temp_dir().join(format!("torno-cpu-guide-mask-{}-{}.png", std::process::id(), id.session));
     let previous_check = s.param_check;
     s.param_check = crate::schema::ParamCheck::Strict;
     let exported = s.execute("render.export", &json!({"job":id,"path":path,"format":"denoise_mask"})).unwrap();
@@ -1661,11 +1647,11 @@ fn saved_cpu_denoise_reports_its_actual_native_request_and_keeps_regrade_raw() {
 #[cfg(all(feature = "raytrace-cpu", not(target_arch = "wasm32")))]
 #[test]
 fn saved_cpu_optics_match_runtime_capture_pixels_prefixes_cancel_and_accounting() {
-    use solidcraft_render::job::{CancelToken, ImageRequest, Phase};
-    use solidcraft_render::raytrace::image::{ImagePoll, ImageTask};
+    use torno_render::job::{CancelToken, ImageRequest, Phase};
+    use torno_render::raytrace::image::{ImagePoll, ImageTask};
     let mut s = Session::default();
     s.execute("solid.box", &json!({"length":10,"width":10,"height":3,"body_name":"Glass"})).unwrap();
-    let camera = solidcraft_viewport::Camera {
+    let camera = torno_viewport::Camera {
         target: solidcore_record::Vec3::new(5.0, 5.0, 1.5),
         distance: 20.0,
         yaw: 0.3,
@@ -1681,7 +1667,7 @@ fn saved_cpu_optics_match_runtime_capture_pixels_prefixes_cancel_and_accounting(
         "optics":{"ior":1.51,"absorption_per_mm":[0.1,0.02,0.0],"boundary":"closed_mesh"}}),
     )
     .unwrap();
-    s = Session::new(solidcraft_doc::Document::from_json(&s.doc.to_json()).unwrap());
+    s = Session::new(torno_doc::Document::from_json(&s.doc.to_json()).unwrap());
     let host = CpuHost::for_platform().unwrap();
     s.set_render_job_host(Some(host.clone())).unwrap();
     let document = s.doc.clone();
@@ -1703,7 +1689,7 @@ fn saved_cpu_optics_match_runtime_capture_pixels_prefixes_cancel_and_accounting(
         assert_eq!(saved_input.body_name.capacity(), runtime_input.body_name.capacity());
     }
     let extra_slots = runtime_dielectrics.capacity() - saved_dielectrics.capacity();
-    let extra_bytes = (extra_slots * std::mem::size_of::<solidcraft_render::job::DielectricOptions>()) as u64;
+    let extra_bytes = (extra_slots * std::mem::size_of::<torno_render::job::DielectricOptions>()) as u64;
     assert_eq!(saved["retained_request_bytes"].as_u64().unwrap() + extra_bytes, runtime["retained_request_bytes"].as_u64().unwrap());
     // Two options copies belong to image work; a third belongs to the retained
     // immutable request. All other deterministic admission fields remain exact.
@@ -1750,7 +1736,7 @@ fn saved_cpu_optics_match_runtime_capture_pixels_prefixes_cancel_and_accounting(
     }
     assert!(checkpoint, "cancel exercises a real complete saved-optics checkpoint");
     cancel.cancel();
-    assert_eq!(interrupted.step_with_previews(1).err().unwrap().code, solidcraft_render::job::ErrorCode::Cancelled);
+    assert_eq!(interrupted.step_with_previews(1).err().unwrap().code, torno_render::job::ErrorCode::Cancelled);
     assert!(interrupted.take_linear_exr().is_none());
     let started = s.execute("render.start", &json!({"setup":"CPU glass"})).unwrap();
     let id: JobId = serde_json::from_value(started["job"].clone()).unwrap();
@@ -1794,7 +1780,7 @@ fn cpu_saved_closed_optics_do_not_broaden_geometry_or_guess_stale_targets() {
 #[test]
 fn cpu_saved_thin_sheet_uses_its_authored_ior_beer_thickness_and_roundtrips_offline() {
     let nonce = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos();
-    let dir = std::env::temp_dir().join(format!("solidcraft-cpu-saved-sheet-{}-{nonce}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("torno-cpu-saved-sheet-{}-{nonce}", std::process::id()));
     std::fs::create_dir(&dir).unwrap();
     let source = dir.join("Sheet.obj");
     std::fs::write(&source, "o Sheet\nv -10 -10 0\nv 10 -10 0\nv 10 10 0\nv -10 10 0\nf 1 2 3\nf 1 3 4\n").unwrap();
@@ -1802,8 +1788,8 @@ fn cpu_saved_thin_sheet_uses_its_authored_ior_beer_thickness_and_roundtrips_offl
     s.execute("file.insert_mesh", &json!({"path":source})).unwrap();
     let scene = s.execute("render.scene", &json!({})).unwrap();
     let name = scene["bodies"][0]["name"].as_str().unwrap().to_owned();
-    let mut camera = solidcraft_viewport::Camera { distance: 10.0, ..Default::default() };
-    camera.set_view(solidcraft_viewport::StandardView::Top);
+    let mut camera = torno_viewport::Camera { distance: 10.0, ..Default::default() };
+    camera.set_view(torno_viewport::StandardView::Top);
     s.execute(
         "render.settings.set",
         &json!({"name":"Sheet","set":{"camera":camera,"width":1,"height":1,"job":{"method":"cpu_raytrace","options":{
@@ -1816,7 +1802,7 @@ fn cpu_saved_thin_sheet_uses_its_authored_ior_beer_thickness_and_roundtrips_offl
         "optics":{"boundary":"thin_sheet","thickness_mm":2.0,"ior":1.51,"absorption_per_mm":[0.1,0.2,0.0],"shadow_transmission":false}}),
     )
     .unwrap();
-    let reopened = solidcraft_doc::Document::from_json(&s.doc.to_json()).unwrap();
+    let reopened = torno_doc::Document::from_json(&s.doc.to_json()).unwrap();
     std::fs::remove_dir_all(&dir).unwrap();
     s = Session::new(reopened);
     s.set_render_job_host(Some(CpuHost::for_platform().unwrap())).unwrap();
@@ -1828,7 +1814,7 @@ fn cpu_saved_thin_sheet_uses_its_authored_ior_beer_thickness_and_roundtrips_offl
     let id: JobId = serde_json::from_value(started["job"].clone()).unwrap();
     let handle = s.render_job_handle(id).unwrap();
     let status = handle.wait_timeout(std::time::Duration::from_secs(10)).unwrap();
-    assert_eq!(status.progress.phase, solidcraft_render::job::Phase::Completed, "{:?}", status.error);
+    assert_eq!(status.progress.phase, torno_render::job::Phase::Completed, "{:?}", status.error);
     let frame = handle.frame().unwrap().unwrap();
     let decoded = image::load_from_memory(frame.png()).unwrap().to_rgba8();
     let f = ((1.0f64 - 1.51) / (1.0 + 1.51)).powi(2);
@@ -1836,7 +1822,7 @@ fn cpu_saved_thin_sheet_uses_its_authored_ior_beer_thickness_and_roundtrips_offl
         let a = (-sigma * 2.0).exp();
         let denominator = 1.0 - f * f * a * a;
         let scene = f + (1.0 - f).powi(2) * (f * a * a + a) / denominator;
-        solidcraft_color::srgb::encode8(scene / (1.0 + scene))
+        torno_color::srgb::encode8(scene / (1.0 + scene))
     });
     assert_eq!(decoded.get_pixel(0, 0).0, [rgb[0], rgb[1], rgb[2], 255]);
     assert!(Arc::ptr_eq(&before, &s.doc));
@@ -1847,7 +1833,7 @@ fn cpu_saved_thin_sheet_uses_its_authored_ior_beer_thickness_and_roundtrips_offl
 fn cpu_path_saved_and_runtime_captures_execute_without_mutating_document_or_history() {
     let mut s = Session::default();
     s.set_render_job_host(Some(CpuHost::for_platform().unwrap())).unwrap();
-    let camera = solidcraft_viewport::Camera::default();
+    let camera = torno_viewport::Camera::default();
     s.execute("render.settings.set",&json!({"name":"Path","set":{"width":8,"height":8,"camera":camera,"job":{"method":"cpu_raytrace","options":{"path":{"max_depth":3},"progressive":{"samples_per_pixel":3,"seed":9},"lights":[]}}}})).unwrap();
     let saved = s.execute("render.preflight", &json!({"setup":"Path"})).unwrap();
     let runtime=s.execute("render.preflight",&json!({"settings":{"width":8,"height":8,"camera":camera},"integrator":"raytrace","raytrace":{"path":{"max_depth":3},"progressive":{"samples_per_pixel":3,"seed":9},"lights":[]}})).unwrap();
@@ -1858,7 +1844,7 @@ fn cpu_path_saved_and_runtime_captures_execute_without_mutating_document_or_hist
     let started = s.execute("render.start", &json!({"setup":"Path"})).unwrap();
     let id: JobId = serde_json::from_value(started["job"].clone()).unwrap();
     let handle = s.render_job_handle(id).unwrap();
-    assert_eq!(handle.wait_timeout(std::time::Duration::from_secs(10)).unwrap().progress.phase, solidcraft_render::job::Phase::Completed);
+    assert_eq!(handle.wait_timeout(std::time::Duration::from_secs(10)).unwrap().progress.phase, torno_render::job::Phase::Completed);
     assert!(handle.frame().unwrap().is_some());
     assert!(Arc::ptr_eq(&document, &s.doc));
     assert_eq!(before, (s.revision, s.evaluations, s.undo.len(), s.redo.len()));
@@ -1872,7 +1858,7 @@ fn cpu_path_refuses_fixed_or_shadowless_transport_before_hdr_io() {
     let document = s.doc.clone();
     let before = (s.revision, s.evaluations, s.undo.len(), s.redo.len());
     for fixed in [false, true] {
-        let mut request = json!({"integrator":"raytrace","settings":{"width":8,"height":8,"camera":solidcraft_viewport::Camera::default()},"raytrace":{"path":{"max_depth":3},"progressive":{"samples_per_pixel":3},"shadows":false},"environment":{"path":"must-not-open-path.hdr"}});
+        let mut request = json!({"integrator":"raytrace","settings":{"width":8,"height":8,"camera":torno_viewport::Camera::default()},"raytrace":{"path":{"max_depth":3},"progressive":{"samples_per_pixel":3},"shadows":false},"environment":{"path":"must-not-open-path.hdr"}});
         if fixed {
             request["raytrace"].as_object_mut().unwrap().remove("progressive");
             request["raytrace"]["shadows"] = json!(true);
@@ -1975,8 +1961,8 @@ fn cpu_stage_preflight_describes_actual_opt_in_path_transport_without_changing_t
     let history = (s.revision, s.undo.len(), s.redo.len());
     let direct = s.execute("render.preflight", &json!({"setup":"Stage"})).unwrap();
     let mut path = saved.clone();
-    let Some(solidcraft_doc::render_settings::RenderJob::CpuRaytrace { options, .. }) = &mut path.job else { panic!("CPU fixture") };
-    options.path = Some(solidcraft_render::job::CpuPathOptions { max_depth: 3 });
+    let Some(torno_doc::render_settings::RenderJob::CpuRaytrace { options, .. }) = &mut path.job else { panic!("CPU fixture") };
+    options.path = Some(torno_render::job::CpuPathOptions { max_depth: 3 });
     let indirect = s.execute("render.preflight", &json!({"settings":path})).unwrap();
     assert_eq!(direct["stage_transport"], "CPU direct/specular only; no diffuse interreflection");
     assert_eq!(indirect["stage_transport"], "CPU finite-depth opaque diffuse/specular path lighting");
@@ -2004,8 +1990,8 @@ fn cpu_stage_preflight_describes_actual_opt_in_path_transport_without_changing_t
 #[cfg(all(feature = "raytrace-cpu", not(target_arch = "wasm32")))]
 #[test]
 fn saved_cpu_aging_cold_reopen_resolves_exact_target_and_changes_real_png_without_engineering_edits() {
-    use solidcraft_doc::render_aging::SavedAgingStack;
-    use solidcraft_render::job::aging::{AgingKind, AgingLayer};
+    use torno_doc::render_aging::SavedAgingStack;
+    use torno_render::job::aging::{AgingKind, AgingLayer};
     let mut s = Session::default();
     s.execute("solid.box", &json!({"body_name":"Weathered panel","length":10,"width":10,"height":2})).unwrap();
     let targets = super::surface_bindings::targets(&s, "test").unwrap();
@@ -2026,14 +2012,13 @@ fn saved_cpu_aging_cold_reopen_resolves_exact_target_and_changes_real_png_withou
         .unwrap();
     layers.get_mut(0).unwrap().target = Some(target.clone());
     let physical = s.execute("component.properties", &json!({})).unwrap();
-    let mut camera =
-        solidcraft_viewport::Camera { distance: 15.0, target: solidcore_record::Vec3::new(5.0, 5.0, 1.0), fov: 0.0, ..Default::default() };
-    camera.set_view(solidcraft_viewport::StandardView::Top);
+    let mut camera = torno_viewport::Camera { distance: 15.0, target: solidcore_record::Vec3::new(5.0, 5.0, 1.0), fov: 0.0, ..Default::default() };
+    camera.set_view(torno_viewport::StandardView::Top);
     s.execute("render.settings.set", &json!({"name":"CPU aging","set":{"width":8,"height":8,"camera":camera,
         "job":{"method":"cpu_raytrace","options":{"progressive":{"samples_per_pixel":3,"seed":81},"aging":layers,"denoise":true,"output":{"linear_exr":true},"lights":[{"direction":[0,0,1],"color":[1,1,1],"intensity":std::f64::consts::PI}]}}}})).unwrap();
     let saved = s.doc.render.setups["CPU aging"].clone();
-    let native = solidcraft_io::write_design_container(&s.doc).unwrap();
-    s = Session::new(solidcraft_io::read_design(&native).unwrap());
+    let native = torno_io::write_design_container(&s.doc).unwrap();
+    s = Session::new(torno_io::read_design(&native).unwrap());
     assert_eq!(s.doc.render.setups["CPU aging"], saved);
     s.set_render_job_host(Some(CpuHost::for_platform().unwrap())).unwrap();
     s.execute("render.scene", &json!({})).unwrap();
@@ -2049,7 +2034,7 @@ fn saved_cpu_aging_cold_reopen_resolves_exact_target_and_changes_real_png_withou
     let id: JobId = serde_json::from_value(started["job"].clone()).unwrap();
     let handle = s.render_job_handle(id).unwrap();
     let status = handle.wait_timeout(std::time::Duration::from_secs(30)).unwrap();
-    assert_eq!(status.progress.phase, solidcraft_render::job::Phase::Completed, "{:?}", status.error);
+    assert_eq!(status.progress.phase, torno_render::job::Phase::Completed, "{:?}", status.error);
     assert_eq!(json!(status.request), checked["request"]);
     let frame = handle.frame().unwrap().unwrap();
     assert!(frame.linear_exr().is_some());
@@ -2063,7 +2048,7 @@ fn saved_cpu_aging_cold_reopen_resolves_exact_target_and_changes_real_png_withou
     assert_eq!(s.execute("component.properties", &json!({})).unwrap(), physical);
     assert_eq!(s.doc.render.setups["CPU aging"], saved);
     let mut stale = saved;
-    let solidcraft_doc::render_settings::RenderJob::CpuRaytrace { options, .. } = stale.job.as_mut().unwrap() else { panic!("CPU fixture") };
+    let torno_doc::render_settings::RenderJob::CpuRaytrace { options, .. } = stale.job.as_mut().unwrap() else { panic!("CPU fixture") };
     options.aging.get_mut(0).unwrap().target.as_mut().unwrap().feature += 100;
     for command in ["render.preflight", "render.start"] {
         let error = s.execute(command, &json!({"settings":stale})).unwrap_err().to_string();
@@ -2108,11 +2093,11 @@ fn cpu_saved_surface_preflight_and_real_factory_render_captured_builtins_after_r
     let mut s = Session::default();
     s.execute("solid.box", &json!({"length":10,"width":10,"height":2,"body_name":"Coupon"})).unwrap();
     let scene = crate::product_scene::extract(&s).unwrap();
-    let mut camera = solidcraft_viewport::Camera::default();
-    camera.fit(&solidcraft_render::view_bounds(&scene.bounds));
+    let mut camera = torno_viewport::Camera::default();
+    camera.fit(&torno_render::view_bounds(&scene.bounds));
     s.execute("render.library.surface.bind",&json!({"name":"CPU maps","surface":{"id":"SURF-001","body_index":0,"body_name":"Coupon"},
         "set":{"camera":camera,"width":8,"height":8,"job":{"method":"cpu_raytrace","options":{"progressive":{"samples_per_pixel":3,"seed":9},"output":{"linear_exr":true}}}}})).unwrap();
-    s = Session::new(solidcraft_doc::Document::from_json(&s.doc.to_json()).unwrap());
+    s = Session::new(torno_doc::Document::from_json(&s.doc.to_json()).unwrap());
     s.execute("render.scene", &json!({})).unwrap();
     let host = CpuHost::for_platform().unwrap();
     s.set_render_job_host(Some(host.clone())).unwrap();
@@ -2127,7 +2112,7 @@ fn cpu_saved_surface_preflight_and_real_factory_render_captured_builtins_after_r
     let job: JobId = serde_json::from_value(started["job"].clone()).unwrap();
     let handle = s.render_job_handle(job).unwrap();
     let status = handle.wait_timeout(std::time::Duration::from_secs(60)).unwrap();
-    assert_eq!(status.progress.phase, solidcraft_render::job::Phase::Completed, "{:?}", status.error);
+    assert_eq!(status.progress.phase, torno_render::job::Phase::Completed, "{:?}", status.error);
     assert!(status.request.textures.is_none());
     assert_eq!(status.textures.unwrap().bodies, 1);
     let frame = handle.frame().unwrap().unwrap();
@@ -2141,7 +2126,7 @@ fn cpu_saved_surface_preflight_and_real_factory_render_captured_builtins_after_r
     let started = s.execute("render.start", &json!({"settings":plain,"replace":true})).unwrap();
     let job: JobId = serde_json::from_value(started["job"].clone()).unwrap();
     let baseline = s.render_job_handle(job).unwrap();
-    assert_eq!(baseline.wait_timeout(std::time::Duration::from_secs(60)).unwrap().progress.phase, solidcraft_render::job::Phase::Completed);
+    assert_eq!(baseline.wait_timeout(std::time::Duration::from_secs(60)).unwrap().progress.phase, torno_render::job::Phase::Completed);
     assert_ne!(
         frame.png(),
         baseline.frame().unwrap().unwrap().png(),
@@ -2179,7 +2164,7 @@ fn cpu_adaptive_saved_and_runtime_admission_include_pilots_before_hdr_or_geometr
     )
     .unwrap();
     let saved = s.doc.render.setups["Adaptive CPU"].clone();
-    let reopened = solidcraft_doc::Document::from_json(&s.doc.to_json()).unwrap();
+    let reopened = torno_doc::Document::from_json(&s.doc.to_json()).unwrap();
     assert_eq!(reopened.render.setups["Adaptive CPU"], saved);
     s = Session::new(reopened);
     s.set_render_job_host(Some(host)).unwrap();
@@ -2194,7 +2179,7 @@ fn cpu_adaptive_saved_and_runtime_admission_include_pilots_before_hdr_or_geometr
     let id: JobId = serde_json::from_value(s.execute("render.start", &json!({"setup":"Adaptive CPU"})).unwrap()["job"].clone()).unwrap();
     let handle = s.render_job_handle(id).unwrap();
     let status = handle.wait_timeout(std::time::Duration::from_secs(60)).unwrap();
-    assert_eq!(status.progress.phase, solidcraft_render::job::Phase::Completed, "{:?}", status.error);
+    assert_eq!(status.progress.phase, torno_render::job::Phase::Completed, "{:?}", status.error);
     assert_eq!(json!(status.request), checked["request"]);
     let report = status.sampling.unwrap();
     assert_eq!((report.pilot_samples_per_pixel, report.production_samples, report.primary_path_evaluations), (16, 48, 96));
@@ -2206,10 +2191,10 @@ fn cpu_adaptive_saved_and_runtime_admission_include_pilots_before_hdr_or_geometr
 #[cfg(all(feature = "raytrace-cpu", not(target_arch = "wasm32")))]
 #[test]
 fn saved_cpu_general_closed_mesh_path_matches_runtime_and_actual_captured_cylinder_after_reopen() {
-    use solidcraft_render::job::{ImageRequest, Phase};
+    use torno_render::job::{ImageRequest, Phase};
     let mut s = Session::default();
     s.execute("solid.cylinder", &json!({"radius":5,"height":3,"body_name":"Curved"})).unwrap();
-    let camera = solidcraft_viewport::Camera {
+    let camera = torno_viewport::Camera {
         target: solidcore_record::Vec3::new(0.0, 0.0, 1.5),
         distance: 20.0,
         yaw: 0.3,
@@ -2241,7 +2226,7 @@ fn saved_cpu_general_closed_mesh_path_matches_runtime_and_actual_captured_cylind
     assert!(s.doc.render.setups["General Glass"].optics.is_empty());
     s.execute("edit.redo", &json!({})).unwrap();
     assert_eq!(s.doc.to_json(), saved);
-    s = Session::new(solidcraft_doc::Document::from_json(&saved).unwrap());
+    s = Session::new(torno_doc::Document::from_json(&saved).unwrap());
     let host = CpuHost::for_platform().unwrap();
     s.set_render_job_host(Some(host)).unwrap();
     let document = s.doc.clone();
@@ -2250,7 +2235,7 @@ fn saved_cpu_general_closed_mesh_path_matches_runtime_and_actual_captured_cylind
     assert_eq!(checked["dielectric_boundaries"], json!(["thin_sheet", "closed_box", "closed_mesh"]));
     assert_eq!(checked["stage_transport"], "CPU finite-depth diffuse/specular and dielectric path lighting");
     let captured: ImageRequest = serde_json::from_value(checked["request"].clone()).unwrap();
-    assert_eq!(captured.raytrace.as_ref().unwrap().dielectrics[0].boundary, solidcraft_render::job::DielectricBoundary::ClosedMesh);
+    assert_eq!(captured.raytrace.as_ref().unwrap().dielectrics[0].boundary, torno_render::job::DielectricBoundary::ClosedMesh);
     assert_eq!(captured.raytrace.as_ref().unwrap().path.unwrap().max_depth, 12);
     let runtime = s
         .execute("render.preflight", &json!({"integrator":"raytrace","settings":{"camera":camera,"width":3,"height":3},"raytrace":captured.raytrace}))
@@ -2272,14 +2257,14 @@ fn saved_cpu_general_closed_mesh_path_matches_runtime_and_actual_captured_cylind
 #[cfg(all(feature = "raytrace-cpu", not(target_arch = "wasm32")))]
 #[test]
 fn runtime_checked_hdr_keeps_two_stable_glass_targets_and_exact_cpu_options_without_saving_the_draft() {
-    use solidcraft_doc::render_optics::{OpticalMaterial, SavedOptics};
-    use solidcraft_doc::render_settings::RenderJob;
-    use solidcraft_render::job::Phase;
+    use torno_doc::render_optics::{OpticalMaterial, SavedOptics};
+    use torno_doc::render_settings::RenderJob;
+    use torno_render::job::Phase;
     let mut s = Session::default();
     for (name, corner) in [("Saved glass", [0, 0, 0]), ("Draft glass", [4, 0, 0])] {
         s.execute("solid.box", &json!({"body_name":name,"length":2,"width":2,"height":2,"corner":corner,"operation":"new"})).unwrap();
     }
-    let camera = solidcraft_viewport::Camera { target: solidcore_record::Vec3::new(3.0, 1.0, 1.0), distance: 20.0, fov: 0.6, ..Default::default() };
+    let camera = torno_viewport::Camera { target: solidcore_record::Vec3::new(3.0, 1.0, 1.0), distance: 20.0, fov: 0.6, ..Default::default() };
     s.execute("render.settings.set", &json!({"name":"Glass HDR","set":{"width":4,"height":3,"camera":camera,"exposure_ev":0.75,
         "job":{"method":"cpu_raytrace","transparent_background":true,"options":{"path":{"max_depth":12},"progressive":{"samples_per_pixel":3,"seed":81},
         "lights":[],"lens":{"aperture_radius_mm":0.01,"focus_distance_mm":20},"output":{"linear_exr":true}}}}})).unwrap();
@@ -2307,7 +2292,7 @@ fn runtime_checked_hdr_keeps_two_stable_glass_targets_and_exact_cpu_options_with
     let options = options.to_runtime(draft.exposure_ev).unwrap();
     draft.exposure_ev = 0.0;
     let nonce = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos();
-    let path = std::env::temp_dir().join(format!("solidcraft-stable-glass-hdr-{}-{nonce}.hdr", std::process::id()));
+    let path = std::env::temp_dir().join(format!("torno-stable-glass-hdr-{}-{nonce}.hdr", std::process::id()));
     let mut bytes = b"#?RADIANCE\nFORMAT=32-bit_rle_rgbe\nPRIMARIES=0.64 0.33 0.30 0.60 0.15 0.06 0.3127 0.3290\n\n-Y 2 +X 4\n".to_vec();
     for _ in 0..8 {
         bytes.extend_from_slice(&[128, 128, 128, 129]);
@@ -2323,14 +2308,14 @@ fn runtime_checked_hdr_keeps_two_stable_glass_targets_and_exact_cpu_options_with
     let model = s.model.state();
     let history = (s.revision, s.evaluations, s.undo.len(), s.redo.len());
     let checked = s.execute("render.preflight", &params).unwrap();
-    let mut captured: solidcraft_render::job::ImageRequest = serde_json::from_value(checked["request"].clone()).unwrap();
+    let mut captured: torno_render::job::ImageRequest = serde_json::from_value(checked["request"].clone()).unwrap();
     let optics = &captured.raytrace.as_ref().unwrap().dielectrics;
     assert_eq!(optics.len(), 2);
     for (name, ior, absorption) in [("Saved glass", 1.5, [0.1, 0.0, 0.0]), ("Draft glass", 1.2, [0.0, 0.2, 0.0])] {
         let actual = optics.iter().find(|entry| entry.body_name == name).unwrap();
         assert_eq!(actual.body_index, target(name)["ordinal"].as_u64().unwrap() as usize);
         assert_eq!((actual.ior, actual.absorption_per_mm), (ior, absorption));
-        assert_eq!(actual.boundary, solidcraft_render::job::DielectricBoundary::ClosedMesh);
+        assert_eq!(actual.boundary, torno_render::job::DielectricBoundary::ClosedMesh);
     }
     captured.raytrace.as_mut().unwrap().dielectrics.clear();
     assert_eq!(captured.raytrace.as_ref().unwrap(), &options);
@@ -2348,7 +2333,7 @@ fn runtime_checked_hdr_keeps_two_stable_glass_targets_and_exact_cpu_options_with
     raster["environment"]["path"] = json!("must-not-open-raster-stable-glass.hdr");
     assert!(s.execute("render.preflight", &raster).unwrap_err().to_string().contains("stable optics require"));
     let mut over_cap = params.clone();
-    let optical_limit = solidcraft_render::job::MAX_OPTICAL_TARGETS;
+    let optical_limit = torno_render::job::MAX_OPTICAL_TARGETS;
     over_cap["settings"]["optics"] = json!(
         (0..=optical_limit)
             .map(|i| {
@@ -2391,9 +2376,9 @@ fn saved_cpu_path_maps_glass_and_targeted_aging_reach_real_preflight_and_render_
     let glass = targets["items"].as_array().unwrap().iter().find(|target| target["name"] == "Glass").unwrap().clone();
     let panel = targets["items"].as_array().unwrap().iter().find(|target| target["name"] == "Panel").unwrap().clone();
     let scene = crate::product_scene::extract(&s).unwrap();
-    let mut camera = solidcraft_viewport::Camera::default();
-    camera.set_view(solidcraft_viewport::StandardView::Top);
-    camera.fit(&solidcraft_render::view_bounds(&scene.bounds));
+    let mut camera = torno_viewport::Camera::default();
+    camera.set_view(torno_viewport::StandardView::Top);
+    camera.fit(&torno_render::view_bounds(&scene.bounds));
     s.execute(
         "render.settings.set",
         &json!({"name":"Mixed","set":{"camera":camera,"width":8,"height":8,"job":{"method":"cpu_raytrace","options":{
@@ -2412,7 +2397,7 @@ fn saved_cpu_path_maps_glass_and_targeted_aging_reach_real_preflight_and_render_
     s.execute("render.library.surface.bind", &json!({"name":"Mixed","surface":{"id":"SURF-001","body_index":panel["ordinal"],"body_name":"Panel"}}))
         .unwrap();
     let setup = s.doc.render.setups["Mixed"].clone();
-    s = Session::new(solidcraft_doc::Document::from_json(&s.doc.to_json()).unwrap());
+    s = Session::new(torno_doc::Document::from_json(&s.doc.to_json()).unwrap());
     s.execute("render.scene", &json!({})).unwrap();
     let host = CpuHost::for_platform().unwrap();
     s.set_render_job_host(Some(host.clone())).unwrap();
@@ -2432,7 +2417,7 @@ fn saved_cpu_path_maps_glass_and_targeted_aging_reach_real_preflight_and_render_
         let id: JobId = serde_json::from_value(started["job"].clone()).unwrap();
         let handle = session.render_job_handle(id).unwrap();
         let status = handle.wait_timeout(std::time::Duration::from_secs(60)).unwrap();
-        assert_eq!(status.progress.phase, solidcraft_render::job::Phase::Completed, "{:?}", status.error);
+        assert_eq!(status.progress.phase, torno_render::job::Phase::Completed, "{:?}", status.error);
         let started_cleanup = std::time::Instant::now();
         while !handle.work_released() && started_cleanup.elapsed() < std::time::Duration::from_secs(60) {
             std::thread::yield_now();
@@ -2459,7 +2444,7 @@ fn saved_cpu_path_maps_glass_and_targeted_aging_reach_real_preflight_and_render_
             binding.target = invalid.optics.iter().next().unwrap().target.clone();
             invalid.surfaces = Default::default();
             invalid.surfaces.set(binding, false).unwrap();
-        } else if let Some(solidcraft_doc::render_settings::RenderJob::CpuRaytrace { options, .. }) = &mut invalid.job {
+        } else if let Some(torno_doc::render_settings::RenderJob::CpuRaytrace { options, .. }) = &mut invalid.job {
             options.path = None;
         }
         let bytes = host.admitted_bytes();
@@ -2531,8 +2516,8 @@ fn saved_coat_cpu_direct_and_path_render_match_independent_normal_incidence_laye
         [channel(3), channel(2), channel(1), channel(0)]
     }
     use solidcore_record::Vec3;
-    use solidcraft_doc::render_coat::SavedCoat;
     use std::f64::consts::{FRAC_PI_2, PI, SQRT_2};
+    use torno_doc::render_coat::SavedCoat;
     for indirect in [false, true] {
         let mut s = Session::default();
         s.execute("solid.box", &json!({"body_name":"Panel","corner":[-10,-10,-2],"length":20,"width":20,"height":2})).unwrap();
@@ -2543,7 +2528,7 @@ fn saved_coat_cpu_direct_and_path_render_match_independent_normal_incidence_laye
         )
         .unwrap();
         let camera =
-            solidcraft_viewport::Camera { target: Vec3::ZERO, distance: 1.0, yaw: 0.0, pitch: FRAC_PI_2, roll: 0.0, fov: 0.0, ..Default::default() };
+            torno_viewport::Camera { target: Vec3::ZERO, distance: 1.0, yaw: 0.0, pitch: FRAC_PI_2, roll: 0.0, fov: 0.0, ..Default::default() };
         let mut options = json!({"progressive":{"samples_per_pixel":4,"seed":81},"lights":[{"direction":[0,0,1],"color":[1,1,1],"intensity":PI}],
             "environment":{"color":[0,0,0],"intensity":0},"output":{"linear_exr":true}});
         if indirect {
@@ -2551,8 +2536,8 @@ fn saved_coat_cpu_direct_and_path_render_match_independent_normal_incidence_laye
         }
         s.execute("render.coat.bind", &json!({"name":"Coat","body_index":0,"body_name":"Panel","expected_revision":s.revision,
             "coat":{"weight":0.63,"roughness":0.61,"ior":1.7},"set":{"camera":camera,"width":1,"height":1,"job":{"method":"cpu_raytrace","options":options}}})).unwrap();
-        let container = solidcraft_io::write_design_container(&s.doc).unwrap();
-        s = Session::new(solidcraft_io::read_design(&container).unwrap());
+        let container = torno_io::write_design_container(&s.doc).unwrap();
+        s = Session::new(torno_io::read_design(&container).unwrap());
         s.execute("render.scene", &json!({})).unwrap();
         let host = CpuHost::for_platform().unwrap();
         s.set_render_job_host(Some(host.clone())).unwrap();
@@ -2568,7 +2553,7 @@ fn saved_coat_cpu_direct_and_path_render_match_independent_normal_incidence_laye
             let job: JobId = serde_json::from_value(reply["job"].clone()).unwrap();
             let handle = s.render_job_handle(job).unwrap();
             let status = handle.wait_timeout(std::time::Duration::from_secs(60)).unwrap();
-            assert_eq!(status.progress.phase, solidcraft_render::job::Phase::Completed, "{:?}", status.error);
+            assert_eq!(status.progress.phase, torno_render::job::Phase::Completed, "{:?}", status.error);
             handle.frame().unwrap().unwrap()
         };
         let setup = s.doc.render.setups["Coat"].clone();
@@ -2600,7 +2585,7 @@ fn saved_coat_cpu_direct_and_path_render_match_independent_normal_incidence_laye
         assert_eq!(checked["retained_request_bytes"], plain_check["retained_request_bytes"]);
         let mut zero = setup;
         let row = zero.coats.iter().next().unwrap().clone();
-        zero.coats.set(SavedCoat { coat: solidcraft_doc::render_coat::CoatMaterial { weight: 0.0, ..row.coat }, ..row }, true).unwrap();
+        zero.coats.set(SavedCoat { coat: torno_doc::render_coat::CoatMaterial { weight: 0.0, ..row.coat }, ..row }, true).unwrap();
         let baseline = complete(&mut s, json!(plain));
         let identity = complete(&mut s, json!(zero));
         assert_eq!(baseline.png(), identity.png());
@@ -2618,8 +2603,7 @@ fn saved_cpu_coat_survives_builtin_maps_aging_and_guided_filter_without_changing
     let mut s = Session::default();
     s.execute("solid.box", &json!({"body_name":"Panel","corner":[-10,-10,-2],"length":20,"width":20,"height":2})).unwrap();
     s.execute("appearance.assign", &json!({"bodies":["Panel"],"color":[128,64,32],"pbr":{"metallic":0,"roughness":0.5,"dielectric_ior":1}})).unwrap();
-    let camera =
-        solidcraft_viewport::Camera { distance: 10.0, yaw: 0.0, pitch: std::f64::consts::FRAC_PI_2, roll: 0.0, fov: 0.0, ..Default::default() };
+    let camera = torno_viewport::Camera { distance: 10.0, yaw: 0.0, pitch: std::f64::consts::FRAC_PI_2, roll: 0.0, fov: 0.0, ..Default::default() };
     s.execute(
         "render.coat.bind",
         &json!({"name":"Coat","body_index":0,"body_name":"Panel","expected_revision":s.revision,
@@ -2631,20 +2615,20 @@ fn saved_cpu_coat_survives_builtin_maps_aging_and_guided_filter_without_changing
     .unwrap();
     s.execute("render.library.surface.bind", &json!({"name":"Coat","surface":{"id":"SURF-001","body_index":0,"body_name":"Panel","scale":10}}))
         .unwrap();
-    let bytes = solidcraft_io::write_design_container(&s.doc).unwrap();
-    s = Session::new(solidcraft_io::read_design(&bytes).unwrap());
+    let bytes = torno_io::write_design_container(&s.doc).unwrap();
+    s = Session::new(torno_io::read_design(&bytes).unwrap());
     s.execute("render.scene", &json!({})).unwrap();
     let host = CpuHost::for_platform().unwrap();
     s.set_render_job_host(Some(host)).unwrap();
     let document = s.doc.clone();
     let state = s.model.state();
     let history = (s.revision, s.evaluations, s.undo.len(), s.redo.len());
-    let complete = |s: &mut Session, setup: solidcraft_doc::render_settings::RenderSetup| {
+    let complete = |s: &mut Session, setup: torno_doc::render_settings::RenderSetup| {
         let reply = s.execute("render.start", &json!({"settings":setup})).unwrap();
         let id: JobId = serde_json::from_value(reply["job"].clone()).unwrap();
         let handle = s.render_job_handle(id).unwrap();
         let status = handle.wait_timeout(std::time::Duration::from_secs(60)).unwrap();
-        assert_eq!(status.progress.phase, solidcraft_render::job::Phase::Completed, "{:?}", status.error);
+        assert_eq!(status.progress.phase, torno_render::job::Phase::Completed, "{:?}", status.error);
         handle.frame().unwrap().unwrap()
     };
     let saved = s.doc.render.setups["Coat"].clone();
@@ -2658,12 +2642,12 @@ fn saved_cpu_coat_survives_builtin_maps_aging_and_guided_filter_without_changing
     let no_map = complete(&mut s, unmapped);
     assert_ne!(actual.linear_exr().unwrap(), no_map.linear_exr().unwrap(), "saved maps must still reach the coated closure");
     let mut unaged = saved.clone();
-    let Some(solidcraft_doc::render_settings::RenderJob::CpuRaytrace { options, .. }) = &mut unaged.job else { panic!("CPU") };
+    let Some(torno_doc::render_settings::RenderJob::CpuRaytrace { options, .. }) = &mut unaged.job else { panic!("CPU") };
     options.aging = Default::default();
     let no_age = complete(&mut s, unaged);
     assert_ne!(actual.linear_exr().unwrap(), no_age.linear_exr().unwrap(), "aging still modifies the mapped coat/substrate");
     let mut unfiltered = saved.clone();
-    let Some(solidcraft_doc::render_settings::RenderJob::CpuRaytrace { options, .. }) = &mut unfiltered.job else { panic!("CPU") };
+    let Some(torno_doc::render_settings::RenderJob::CpuRaytrace { options, .. }) = &mut unfiltered.job else { panic!("CPU") };
     options.denoise = false;
     let raw = complete(&mut s, unfiltered);
     assert_eq!(actual.linear_exr().unwrap(), raw.linear_exr().unwrap(), "guided finishing cannot modify coated raw transport");
@@ -2676,10 +2660,10 @@ fn saved_cpu_coat_survives_builtin_maps_aging_and_guided_filter_without_changing
 #[cfg(all(feature = "raytrace-cpu", not(target_arch = "wasm32")))]
 #[test]
 fn saved_cpu_subsurface_cold_capture_matches_runtime_real_png_raw_and_one_undo_without_geometry_changes() {
-    use solidcraft_render::job::{ImageRequest, Phase};
+    use torno_render::job::{ImageRequest, Phase};
     let mut s = Session::default();
     s.execute("solid.box", &json!({"length":10,"width":10,"height":2,"body_name":"Scattering"})).unwrap();
-    let camera = solidcraft_viewport::Camera {
+    let camera = torno_viewport::Camera {
         target: solidcore_record::Vec3::new(5.0, 5.0, 0.5),
         distance: 0.5,
         yaw: 0.0,
@@ -2712,7 +2696,7 @@ fn saved_cpu_subsurface_cold_capture_matches_runtime_real_png_raw_and_one_undo_w
     assert_eq!(s.doc, before);
     s.execute("edit.redo", &json!({})).unwrap();
     assert_eq!(s.doc, saved);
-    s = Session::new(solidcraft_io::read_design(&solidcraft_io::write_design_container(&saved).unwrap()).unwrap());
+    s = Session::new(torno_io::read_design(&torno_io::write_design_container(&saved).unwrap()).unwrap());
     let host = CpuHost::for_platform().unwrap();
     s.set_render_job_host(Some(host.clone())).unwrap();
     s.execute("render.scene", &json!({})).unwrap();
@@ -2745,10 +2729,10 @@ fn saved_cpu_subsurface_cold_capture_matches_runtime_real_png_raw_and_one_undo_w
 #[cfg(all(feature = "raytrace-cpu", not(target_arch = "wasm32")))]
 #[test]
 fn saved_cpu_atmosphere_cold_capture_start_matches_runtime_pixels_raw_and_one_undo_without_camera_or_geometry_edits() {
-    use solidcraft_render::job::{ImageRequest, Phase};
+    use torno_render::job::{ImageRequest, Phase};
     let mut s = Session::default();
     s.execute("solid.box", &json!({"length":10,"width":10,"height":2,"body_name":"Fog receiver"})).unwrap();
-    let camera = solidcraft_viewport::Camera {
+    let camera = torno_viewport::Camera {
         target: solidcore_record::Vec3::new(5.0, 5.0, 1.0),
         distance: 5.0,
         yaw: 0.0,
@@ -2775,7 +2759,7 @@ fn saved_cpu_atmosphere_cold_capture_start_matches_runtime_pixels_raw_and_one_un
     assert_eq!(s.doc, before);
     s.execute("edit.redo", &json!({})).unwrap();
     assert_eq!(s.doc, saved);
-    s = Session::new(solidcraft_io::read_design(&solidcraft_io::write_design_container(&saved).unwrap()).unwrap());
+    s = Session::new(torno_io::read_design(&torno_io::write_design_container(&saved).unwrap()).unwrap());
     let host = CpuHost::for_platform().unwrap();
     s.set_render_job_host(Some(host.clone())).unwrap();
     s.execute("render.scene", &json!({})).unwrap();
@@ -2783,7 +2767,7 @@ fn saved_cpu_atmosphere_cold_capture_start_matches_runtime_pixels_raw_and_one_un
     let history = (s.revision, s.evaluations, s.undo.len(), s.redo.len());
     let checked = s.execute("render.preflight", &json!({"setup":"Fog"})).unwrap();
     let request: ImageRequest = serde_json::from_value(checked["request"].clone()).unwrap();
-    let authored: solidcraft_render::job::volume::HomogeneousVolume = serde_json::from_value(volume).unwrap();
+    let authored: torno_render::job::volume::HomogeneousVolume = serde_json::from_value(volume).unwrap();
     assert_eq!(request.raytrace.as_ref().unwrap().volume, Some(authored));
     let runtime = json!({"integrator":"raytrace","settings":{"camera":camera,"width":8,"height":8},"raytrace":request.raytrace});
     assert_eq!(s.execute("render.preflight", &runtime).unwrap()["request"], checked["request"]);
@@ -2814,7 +2798,8 @@ fn saved_cpu_atmosphere_incompatibility_is_pure_before_hdr_capture_and_keeps_aut
         [json!({"volume":volume,"denoise":true,"path":{"max_depth":4},"progressive":{"samples_per_pixel":4,"seed":9}}), json!({"volume":volume})]
     {
         options["hdr"] = json!({"resource":"0".repeat(64),"rotation_rad":0,"intensity":1,"samples":16});
-        let params = json!({"settings":{"camera":solidcraft_viewport::Camera::default(),"width":4,"height":4,"job":{"method":"cpu_raytrace","options":options}}});
+        let params =
+            json!({"settings":{"camera":torno_viewport::Camera::default(),"width":4,"height":4,"job":{"method":"cpu_raytrace","options":options}}});
         let error = s.execute("render.preflight", &params).unwrap_err().to_string();
         assert!(error.contains("Atmosphere"), "{error}");
         assert!(Arc::ptr_eq(&before, &s.doc));
@@ -2849,19 +2834,19 @@ fn saved_cpu_atmosphere_and_glass_refuse_before_missing_hdr_access_without_dropp
 #[cfg(all(feature = "raytrace-cpu", not(target_arch = "wasm32")))]
 #[test]
 fn cpu_sun_sky_named_runtime_reopen_and_actual_output_keep_the_same_capture() {
-    use solidcraft_render::job::Phase;
+    use torno_render::job::Phase;
     let mut s = Session::default();
     let host = CpuHost::for_platform().unwrap();
     s.set_render_job_host(Some(host.clone())).unwrap();
     s.execute("solid.box", &json!({"length":10,"width":10,"height":3})).unwrap();
-    let camera = solidcraft_viewport::Camera { distance: 30.0, fov: 0.7, ..Default::default() };
+    let camera = torno_viewport::Camera { distance: 30.0, fov: 0.7, ..Default::default() };
     let options = json!({"path":{"max_depth":3},"progressive":{"samples_per_pixel":3,"seed":81},"lights":[],"denoise":true,
         "sun":{"direction":[0.2,-0.3,0.9],"angular_radius_rad":0.2,"radiance":[10,8,6]},
         "sky":{"kind":"sky","gradient":{"zenith":[0.25,0.5,1.0],"horizon":[0.75,0.5,0.25],"ground":[0.125,0.25,0.5]},"rotation_rad":0.731,"intensity":1.75},
         "lens":{"aperture_radius_mm":0.01,"focus_distance_mm":30},"output":{"linear_exr":true}});
     s.execute("render.settings.set",&json!({"name":"CPU celestial","set":{"width":8,"height":6,"camera":camera,"job":{"method":"cpu_raytrace","transparent_background":true,"options":options}}})).unwrap();
     let saved = s.doc.render.setups["CPU celestial"].clone();
-    let reopened = solidcraft_doc::Document::from_json(&s.doc.to_json()).unwrap();
+    let reopened = torno_doc::Document::from_json(&s.doc.to_json()).unwrap();
     assert_eq!(reopened.render.setups["CPU celestial"], saved);
     s = Session::new(reopened);
     s.set_render_job_host(Some(host.clone())).unwrap();
@@ -2917,9 +2902,9 @@ fn cpu_celestial_conflicts_refuse_before_hdr_vfs_and_never_mutate_the_scene() {
 mod bounded_render_preparation {
     use super::*;
     use crate::render_preparation::{Kind, finish, prepare};
-    use solidcraft_render::job::{CancelToken, CpuHost, JobId};
+    use torno_render::job::{CancelToken, CpuHost, JobId};
 
-    fn camera_bits(camera: Option<solidcraft_viewport::Camera>) -> Option<(solidcraft_viewport::UpAxis, [u64; 8])> {
+    fn camera_bits(camera: Option<torno_viewport::Camera>) -> Option<(torno_viewport::UpAxis, [u64; 8])> {
         camera.map(|camera| {
             (
                 camera.up,
@@ -2970,7 +2955,7 @@ mod bounded_render_preparation {
         assert!(session.scratch().execute("render.status", &json!({"job":id})).is_err(), "the scratch registry never owns the final job");
         drain(&host);
         let handle = session.render_job_handle(id).unwrap();
-        assert_eq!(handle.status().unwrap().progress.phase, solidcraft_render::job::Phase::Completed);
+        assert_eq!(handle.status().unwrap().progress.phase, torno_render::job::Phase::Completed);
         let actual = handle.frame().unwrap().unwrap();
         let (mut control, control_host) = fixture();
         let control_id: JobId = serde_json::from_value(control.execute("render.start", &params()).unwrap()["job"].clone()).unwrap();
@@ -2990,7 +2975,7 @@ mod bounded_render_preparation {
             match change {
                 0 => cancel.cancel(),
                 1 => session.revision += 1,
-                2 => session.camera = Some(solidcraft_viewport::Camera { distance: 51.0, ..Default::default() }),
+                2 => session.camera = Some(torno_viewport::Camera { distance: 51.0, ..Default::default() }),
                 3 => session.set_render_job_host(Some(CpuHost::cooperative())).unwrap(),
                 4 => {
                     let (mut unrelated, _) = fixture();
@@ -3025,11 +3010,11 @@ mod bounded_render_preparation {
         session.set_command_check(Some(Arc::new(|command, _, _| {
             if command == "render.preflight" { Err("embedding policy refuses checking".into()) } else { Ok(()) }
         })));
-        let error = prepare(session.scratch(), Kind::Check, params(), solidcraft_render::job::CancelToken::default()).err().unwrap();
+        let error = prepare(session.scratch(), Kind::Check, params(), torno_render::job::CancelToken::default()).err().unwrap();
         assert!(error.to_string().contains("embedding policy refuses checking"));
         assert_eq!(host.admitted_bytes(), 0);
         session.set_command_check(None);
-        let prepared = prepare(session.scratch(), Kind::Start, params(), solidcraft_render::job::CancelToken::default()).unwrap();
+        let prepared = prepare(session.scratch(), Kind::Start, params(), torno_render::job::CancelToken::default()).unwrap();
         session.set_command_check(Some(Arc::new(|command, _, _| {
             if command == "render.start" { Err("embedding policy changed before publication".into()) } else { Ok(()) }
         })));
@@ -3044,7 +3029,7 @@ mod bounded_render_preparation {
             let (mut session, host) = fixture();
             let doc = session.doc.clone();
             let baseline_refs = Arc::strong_count(&doc);
-            let cancel = solidcraft_render::job::CancelToken::default();
+            let cancel = torno_render::job::CancelToken::default();
             let snapshot = session.scratch();
             let kind = if outcome == "check" { Kind::Check } else { Kind::Start };
             // The same bounded worker prepares, yields ownership, waits for it
@@ -3069,16 +3054,16 @@ mod bounded_render_preparation {
                 "queue" => {
                     // Fill the actual shared host after preparation, without
                     // minting any job in this Session's real registry.
-                    let empty = || solidcraft_render::ProductScene { meshes: Vec::new(), bounds: solidcraft_geom::Aabb3::EMPTY };
+                    let empty = || torno_render::ProductScene { meshes: Vec::new(), bounds: torno_geom::Aabb3::EMPTY };
                     for serial in 1..=2 {
                         host.submit(
                             JobId { session: 991, serial, generation: serial },
                             0,
                             empty(),
-                            solidcraft_render::job::ImageRequest {
+                            torno_render::job::ImageRequest {
                                 width: 1,
                                 height: 1,
-                                integrator: solidcraft_render::job::Integrator::Raster,
+                                integrator: torno_render::job::Integrator::Raster,
                                 camera: Default::default(),
                                 raytrace: None,
                                 studio_weights: None,
@@ -3119,13 +3104,13 @@ mod bounded_render_preparation {
 mod native_camera_queue_preparation {
     use super::*;
     use crate::render_preparation::{batch, batch_payload};
-    use solidcraft_render::job::{CancelToken, Phase};
     use std::sync::mpsc::{Receiver, SyncSender};
+    use torno_render::job::{CancelToken, Phase};
 
     fn fixture(count: usize) -> (Session, CpuHost) {
         let (mut s, host) = super::session();
         for i in 0..count {
-            let camera = solidcraft_viewport::Camera { yaw: i as f64 * 0.2, pitch: 0.3, distance: 51.0 + i as f64, ..Default::default() };
+            let camera = torno_viewport::Camera { yaw: i as f64 * 0.2, pitch: 0.3, distance: 51.0 + i as f64, ..Default::default() };
             s.execute(
                 "render.settings.set",
                 &json!({"name":format!("Shot{i:02}"),"set":{
@@ -3222,8 +3207,7 @@ mod native_camera_queue_preparation {
         let model = s.model.state();
         let camera = s.camera;
         let history = (s.revision, s.evaluations, s.undo.len(), s.redo.len());
-        let cameras: [solidcraft_viewport::Camera; 32] =
-            s.doc.render.setups.values().map(|setup| setup.camera).collect::<Vec<_>>().try_into().unwrap();
+        let cameras: [torno_viewport::Camera; 32] = s.doc.render.setups.values().map(|setup| setup.camera).collect::<Vec<_>>().try_into().unwrap();
         let (mut prepared, worker) = initial(&mut s, json!({}));
         assert!(prepared.is_first() && prepared.owner_matches(&s) && !prepared.committed());
         assert!(s.render_queue_state().job.is_none(), "no scratch or invented preparing job ID");
@@ -3305,7 +3289,7 @@ mod native_camera_queue_preparation {
         let (mut s, _) = fixture(2);
         let host = CpuHost::for_platform().unwrap();
         s.set_render_job_host(Some(host.clone())).unwrap();
-        let wait_released = |handle: &solidcraft_render::job::JobHandle| {
+        let wait_released = |handle: &torno_render::job::JobHandle| {
             assert_eq!(handle.wait_timeout(std::time::Duration::from_secs(10)).unwrap().progress.phase, Phase::Completed);
             let deadline = std::time::Instant::now() + std::time::Duration::from_secs(10);
             while !handle.work_released() && std::time::Instant::now() < deadline {
@@ -3430,32 +3414,27 @@ mod native_camera_queue_preparation {
     }
     #[test]
     fn native_batch_plan_and_first_job_obey_exact_same_pool_boundary_before_arena_publication() {
-        use solidcraft_render::job::{Admission, ErrorCode, ImageExecutor, ImageHost, ImageRequest, ImageWork, JobError, JobOptions};
+        use torno_render::job::{Admission, ErrorCode, ImageExecutor, ImageHost, ImageRequest, ImageWork, JobError, JobOptions};
         struct BudgetExecutor(u64);
         impl ImageExecutor for BudgetExecutor {
-            fn descriptor(&self) -> solidcraft_render::job::Result<solidcraft_render::ExecutorDescriptor> {
+            fn descriptor(&self) -> torno_render::job::Result<torno_render::ExecutorDescriptor> {
                 let mut d = CpuHost::cooperative().descriptor()?;
-                d.id = solidcraft_render::ExecutorId::new("batch-budget").map_err(|e| JobError::new(ErrorCode::Internal, e.to_string()))?;
+                d.id = torno_render::ExecutorId::new("batch-budget").map_err(|e| JobError::new(ErrorCode::Internal, e.to_string()))?;
                 Ok(d)
             }
             fn memory_limit_bytes(&self) -> u64 {
                 self.0
             }
-            fn admit(
-                &self,
-                scene: &solidcraft_render::ProductScene,
-                request: &ImageRequest,
-                _: JobOptions,
-            ) -> solidcraft_render::job::Result<Admission> {
-                solidcraft_render::job::admit(scene, request)
+            fn admit(&self, scene: &torno_render::ProductScene, request: &ImageRequest, _: JobOptions) -> torno_render::job::Result<Admission> {
+                torno_render::job::admit(scene, request)
             }
             fn begin(
                 &self,
-                _: solidcraft_render::ProductScene,
+                _: torno_render::ProductScene,
                 _: ImageRequest,
                 _: JobOptions,
                 _: CancelToken,
-            ) -> solidcraft_render::job::Result<Box<dyn ImageWork>> {
+            ) -> torno_render::job::Result<Box<dyn ImageWork>> {
                 Err(JobError::new(ErrorCode::Internal, "boundary test never enqueues a renderer"))
             }
         }
@@ -3652,7 +3631,7 @@ mod native_camera_queue_preparation {
         assert_eq!(host.admitted_bytes(), 0, "same worker drops ownership before acknowledgement");
         s.set_command_check(None);
         let reply = s.execute("render.start", &json!({"settings":{"width":1,"height":1,"job":{"method":"raster"}}})).unwrap();
-        let job: solidcraft_render::job::JobId = serde_json::from_value(reply["job"].clone()).unwrap();
+        let job: torno_render::job::JobId = serde_json::from_value(reply["job"].clone()).unwrap();
         assert_eq!(job.serial, 1, "refused Batch and scratch preparation consumed no actual registry identity");
         complete(&host);
     }
@@ -3666,24 +3645,22 @@ mod native_camera_queue_preparation {
         }
         impl Drop for DropInScope {
             fn drop(&mut self) {
-                let scope = solidcraft_io::vfs::current_scope().expect("source destruction stays in its original worker permission context");
+                let scope = torno_io::vfs::current_scope().expect("source destruction stays in its original worker permission context");
                 scope.check(&self.path).unwrap();
                 self.seen.store(true, Ordering::Release);
             }
         }
         let (mut s, host) = fixture(2);
         let seen = Arc::new(AtomicBool::new(false));
-        let probe = DropInScope {
-            path: solidcraft_io::vfs::temp_dir().join("solidcraft-batch-scope-drop.hdr").to_string_lossy().into_owned(),
-            seen: seen.clone(),
-        };
+        let probe =
+            DropInScope { path: torno_io::vfs::temp_dir().join("torno-batch-scope-drop.hdr").to_string_lossy().into_owned(), seen: seen.clone() };
         s.set_command_check(Some(Arc::new(move |_, _, _| {
             assert!(!probe.path.is_empty());
             Ok(())
         })));
         let mut params = Some(json!({}));
         // The long-name spelling: the path check refuses a short (8.3) %TEMP% such as ABCDEF~1.XYZ (#14320).
-        let mut scope = Some(solidcraft_io::vfs::PathScope::new([solidcraft_io::vfs::temp_dir()]));
+        let mut scope = Some(torno_io::vfs::PathScope::new([torno_io::vfs::temp_dir()]));
         let claim = batch::claim(&mut s, &mut params, &mut scope, CancelToken::default()).unwrap();
         let (mut prepared, worker) = Worker::prepare(claim);
         batch::finish_retained(&mut s, &mut prepared).unwrap();
@@ -3717,10 +3694,10 @@ mod native_camera_queue_preparation {
 #[cfg(all(feature = "raytrace-cpu", not(target_arch = "wasm32")))]
 #[test]
 fn tessellated_cpu_sheet_saved_and_prospective_bindings_certify_and_render_without_saving_the_draft() {
-    use solidcraft_doc::render_optics::{OpticalBoundary, OpticalMaterial, SavedOptics};
-    use solidcraft_render::job::{ImageRequest, Phase};
+    use torno_doc::render_optics::{OpticalBoundary, OpticalMaterial, SavedOptics};
+    use torno_render::job::{ImageRequest, Phase};
     let nonce = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos();
-    let directory = std::env::temp_dir().join(format!("solidcraft-cpu-path-tiled-sheets-{}-{nonce}", std::process::id()));
+    let directory = std::env::temp_dir().join(format!("torno-cpu-path-tiled-sheets-{}-{nonce}", std::process::id()));
     std::fs::create_dir(&directory).unwrap();
     let mut s = Session::default();
     for (name, offset) in [("SavedSheet", 0), ("DraftSheet", 30)] {
@@ -3747,8 +3724,8 @@ fn tessellated_cpu_sheet_saved_and_prospective_bindings_certify_and_render_witho
     let draft_name = scene.meshes[1].name.clone();
     let targets = s.execute("render.library.targets", &json!({})).unwrap();
     let draft_target = targets["items"].as_array().unwrap().iter().find(|row| row["name"] == draft_name).unwrap()["stable_target"].clone();
-    let mut camera = solidcraft_viewport::Camera { target: solidcore_record::Vec3::new(15.0, 0.0, 0.0), distance: 30.0, ..Default::default() };
-    camera.set_view(solidcraft_viewport::StandardView::Top);
+    let mut camera = torno_viewport::Camera { target: solidcore_record::Vec3::new(15.0, 0.0, 0.0), distance: 30.0, ..Default::default() };
+    camera.set_view(torno_viewport::StandardView::Top);
     s.execute(
         "render.settings.set",
         &json!({"name":"Sheets","set":{"camera":camera,"width":8,"height":4,
@@ -3762,9 +3739,9 @@ fn tessellated_cpu_sheet_saved_and_prospective_bindings_certify_and_render_witho
         "optics":{"boundary":"thin_sheet","ior":1,"thickness_mm":2,"absorption_per_mm":[0.1,0.2,0]}}),
     )
     .unwrap();
-    let persisted = solidcraft_io::write_design_container(&s.doc).unwrap();
+    let persisted = torno_io::write_design_container(&s.doc).unwrap();
     std::fs::remove_dir_all(directory).unwrap();
-    s = Session::new(solidcraft_io::read_design(&persisted).unwrap());
+    s = Session::new(torno_io::read_design(&persisted).unwrap());
     s.execute("render.scene", &json!({})).unwrap();
     let saved = s.doc.render.setups["Sheets"].clone();
     let mut draft = saved.clone();
@@ -3797,7 +3774,7 @@ fn tessellated_cpu_sheet_saved_and_prospective_bindings_certify_and_render_witho
     assert_eq!(optics.len(), 2, "prospective stable optics add to the saved binding");
     for (name, absorption) in [(&saved_name, [0.1, 0.2, 0.0]), (&draft_name, [0.3, 0.0, 0.2])] {
         let input = optics.iter().find(|input| input.body_name == *name).unwrap();
-        assert_eq!(input.boundary, solidcraft_render::job::DielectricBoundary::ThinSheet);
+        assert_eq!(input.boundary, torno_render::job::DielectricBoundary::ThinSheet);
         assert_eq!((input.ior, input.thickness_mm, input.absorption_per_mm), (1.0, 2.0, absorption));
     }
     let runtime = json!({"integrator":"raytrace","settings":{"camera":camera,"width":8,"height":4},"raytrace":captured.raytrace});
@@ -3855,8 +3832,8 @@ fn saved_final_cpu_image_preserves_mode_executor_and_authored_quality_through_st
     let id = serde_json::from_value(started["job"].clone()).unwrap();
     let job = session.render_job_handle(id).unwrap();
     let status = job.wait_timeout(std::time::Duration::from_secs(30)).unwrap();
-    assert_eq!(status.progress.phase, solidcraft_render::job::Phase::Completed);
-    assert_eq!(status.resolved.profile.mode, solidcraft_render::RenderMode::Final);
+    assert_eq!(status.progress.phase, torno_render::job::Phase::Completed);
+    assert_eq!(status.resolved.profile.mode, torno_render::RenderMode::Final);
     assert_eq!(status.resolved.executor.as_str(), "cpu-raytrace");
     let options = status.request.raytrace.unwrap();
     assert_eq!(options.path.unwrap().max_depth, 64);

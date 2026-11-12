@@ -1,6 +1,6 @@
 use serde_json::{Value, json};
 use solidcore_record::Vec3;
-use solidcraft_geom::prelude::*;
+use torno_geom::prelude::*;
 
 use crate::Session;
 
@@ -52,7 +52,7 @@ fn named<'a>(faces: &'a [(Option<String>, Vec3, Option<f64>)], name: &str) -> Ve
 
 /// The point on the face with this name, as a command taking a face name finds it.
 fn point(s: &Session, name: &str) -> Vec3 {
-    solidcraft_doc::naming::named_face_point(&s.model.state(), None, name).unwrap_or_else(|e| panic!("{name}: {e}"))
+    torno_doc::naming::named_face_point(&s.model.state(), None, name).unwrap_or_else(|e| panic!("{name}: {e}"))
 }
 
 #[test]
@@ -101,7 +101,7 @@ fn a_trays_faces_have_readable_sheet_names_that_follow_its_size() {
     let rim = format!("sheet:Body1:F{fb}.1:rim.far");
     let far = point(&s, &rim);
     let st = s.model.state();
-    let hit = solidcraft_doc::naming::locate_one(&st, None, &rim).unwrap();
+    let hit = torno_doc::naming::locate_one(&st, None, &rim).unwrap();
     on_planar_face(&st.bodies[hit.body].body, hit.face, far);
     assert!((far.z - 30.0).abs() < 1e-9 && (199.0..=200.0).contains(&far.y), "the back flange's far rim: {far:?}");
 }
@@ -109,13 +109,13 @@ fn a_trays_faces_have_readable_sheet_names_that_follow_its_size() {
 /// `p` lies on face `face` of `body`, on its exact geometry: within rounding at the part's scale
 /// of the plane the face lies on, and inside the boundary its edges trace there (each a line,
 /// counted by crossings).
-fn on_planar_face(body: &solidcraft_kernel::Body, face: usize, p: Vec3) {
+fn on_planar_face(body: &torno_kernel::Body, face: usize, p: Vec3) {
     use solidcore_record::brep::{Curve, Loop};
     let rounding = 1e-12 * body.size().max(1.0);
-    let surface = solidcraft_kernel::face_surface(body, face).unwrap();
+    let surface = torno_kernel::face_surface(body, face).unwrap();
     let on = surface.nearest(p).unwrap();
     assert!(on.dist(p) <= rounding, "{p:?} is {} off face {face}'s surface", on.dist(p));
-    let solidcraft_kernel::FaceSurface::Plane { normal, .. } = surface else { panic!("face {face} is not planar: {surface:?}") };
+    let torno_kernel::FaceSurface::Plane { normal, .. } = surface else { panic!("face {face} is not planar: {surface:?}") };
     // Coordinates in the plane: along `x` and `y`, square to its normal.
     let x = if normal.cross(Vec3::X).len() > 0.5 { normal.cross(Vec3::X).normalized().unwrap() } else { normal.cross(Vec3::Y).normalized().unwrap() };
     let y = normal.cross(x);
@@ -158,8 +158,8 @@ fn a_flanges_sheet_names_hold_when_another_flange_goes() {
     assert!((after.x - 319.0).abs() < 1e-3 && (after.z - before.z).abs() < 16.0, "{before:?} {after:?}");
     // The names of the flanges that went are gone; asking for one says so.
     let gone = format!("sheet:Body1:F{fb}.0:top");
-    assert!(solidcraft_doc::naming::named_face_point(&s.model.state(), None, &gone).is_err());
-    assert!(solidcraft_doc::naming::named_face_point(&s.model.state(), Some("Body2"), &right).is_err());
+    assert!(torno_doc::naming::named_face_point(&s.model.state(), None, &gone).is_err());
+    assert!(torno_doc::naming::named_face_point(&s.model.state(), Some("Body2"), &right).is_err());
 }
 
 /// A fold at 45° across a strip, with a bend zone wide for the strip: about a third of the bend's

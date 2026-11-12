@@ -1,7 +1,7 @@
 //! The confirmation and notice prompts share the kit's card: header (icon, title, close), body
 //! and pinned footer. Each keeps its answers (buttons, close, Esc, Enter).
 use serde_json::json;
-use solidcraft_engine::Sel;
+use torno_engine::Sel;
 
 use crate::scenario::{self, Harness};
 
@@ -296,7 +296,7 @@ fn save_prompt_frames_dont_save_and_clicking_it_discards_for_close_and_quit() {
                 .any(|(_, node)| { node.label() == Some("Don't Save") && node.role() == egui::accesskit::Role::Button }),
             "discard remains an accessible button"
         );
-        let t = solidcraft_theme::Tokens::get();
+        let t = torno_theme::Tokens::get();
         let mut framed = false;
         for shape in &output.shapes {
             crate::test_support::each_shape(&shape.shape, &mut |s| {
@@ -305,7 +305,7 @@ fn save_prompt_frames_dont_save_and_clicking_it_discards_for_close_and_quit() {
             });
         }
         assert!(framed, "Don't Save needs a visible secondary button frame before hover or selection");
-        if let Ok(dir) = std::env::var("SOLIDCRAFT_SAVE_PROMPT_EVIDENCE") {
+        if let Ok(dir) = std::env::var("TORNO_SAVE_PROMPT_EVIDENCE") {
             let bounds = scenario::rect_of("dialog:header").unwrap().union(scenario::rect_of("dialog:footer").unwrap()).expand(t.space_24);
             let image = crate::ui_kit::test_raster(&h.ctx, output.shapes, output.pixels_per_point, bounds, &textures);
             std::fs::create_dir_all(&dir).unwrap();

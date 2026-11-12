@@ -2,8 +2,8 @@
 //! A valid shell hierarchy alternates material and void at every nesting level.
 
 use solidcore_record::Vec3;
-use solidcraft_geom::prelude::*;
-use solidcraft_geom::{Aabb3, BoxedTriangle, Mesh, find_close_pair};
+use torno_geom::prelude::*;
+use torno_geom::{Aabb3, BoxedTriangle, Mesh, find_close_pair};
 
 use crate::{KernelError, Result};
 

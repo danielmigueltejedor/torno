@@ -469,7 +469,7 @@
     "extrude"
   ],
   "ungraded": [
-    "results: SolidCraft computes it"
+    "results: Torno computes it"
   ],
   "what": "motion.plot of a crank-slider's slider over a full turn of the crank, every 30 degrees",
   "why_not": []

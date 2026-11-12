@@ -1,6 +1,6 @@
 use serde_json::{Value, json};
 use solidcore_record::Vec3;
-use solidcraft_geom::prelude::*;
+use torno_geom::prelude::*;
 
 use crate::Session;
 
@@ -38,7 +38,7 @@ fn deleted_motion_item_ids_are_not_reused_after_reopening() {
         let first = run(&mut s, create, params.clone())[key].as_u64().unwrap();
         let deleting = deletion(delete, key, first);
         run(&mut s, delete, deleting.clone());
-        let doc = solidcraft_doc::Document::from_json(&s.doc.to_json()).unwrap();
+        let doc = torno_doc::Document::from_json(&s.doc.to_json()).unwrap();
         *s.doc_mut() = doc;
         let second = run(&mut s, create, params)[key].as_u64().unwrap();
         assert!(second > first, "{create}: deleted item {first} was reused as {second}");
@@ -453,7 +453,7 @@ fn joint_pose_save_and_reopen_keep_definitions_at_new_angles() {
     let mut s = joined_motion_part(PartAuthoring::RootThenTransfer, JoinSelection::Named);
     run(&mut s, "joint.drive", json!({"joint":"Turn","value":5}));
     let directory = std::env::temp_dir().join(format!(
-        "solidcraft-joint-pose-{}-{}",
+        "torno-joint-pose-{}-{}",
         std::process::id(),
         std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos()
     ));
@@ -666,7 +666,7 @@ fn motion_study_plays_and_exports() {
     // The B occurrence's origin moves by the slider value (it starts at 0 offset with value 0 at 10 mm… so 10 → −5).
     assert!((bx(&rows[1]) - bx(&rows[0]) + 3.75).abs() < 1e-6, "{e}");
     assert!(rows[4]["stopped_by_contact"].is_object());
-    let dir = solidcraft_io::vfs::temp_dir().join(format!("solidcraft-motion-{}", std::process::id()));
+    let dir = torno_io::vfs::temp_dir().join(format!("torno-motion-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
     let csv = dir.join("push.csv");
     run(&mut s, "motion.export", json!({"study": "Push", "samples": 3, "path": csv.to_string_lossy()}));
@@ -675,7 +675,7 @@ fn motion_study_plays_and_exports() {
     // For an agent (#205) the export lands only inside its folders.
     let root = dir.join("root");
     std::fs::create_dir_all(&root).unwrap();
-    solidcraft_io::vfs::scoped(Some(solidcraft_io::vfs::PathScope::new([root.clone()])), || {
+    torno_io::vfs::scoped(Some(torno_io::vfs::PathScope::new([root.clone()])), || {
         run(&mut s, "motion.export", json!({"study": "Push", "samples": 2, "path": root.join("in.json").to_string_lossy()}));
         let e = s.execute("motion.export", &json!({"study": "Push", "samples": 2, "path": dir.join("out.json").to_string_lossy()})).unwrap_err();
         assert!(e.to_string().contains("outside the folders this agent may use"), "{e}");
@@ -695,7 +695,7 @@ fn a_motion_csv_keeps_each_placement_name_in_its_field() {
     let mut s = rail();
     run(&mut s, "motion.study", json!({"name": "Push", "steps": 100, "keys": [{"joint": "Rail", "points": [[0, 10], [100, -5]]}]}));
     run(&mut s, "component.rename", json!({"component": "B", "name": "=B, \"x\"\ny"}));
-    let dir = solidcraft_io::vfs::temp_dir().join(format!("solidcraft-motion-names-{}", std::process::id()));
+    let dir = torno_io::vfs::temp_dir().join(format!("torno-motion-names-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
     let csv = dir.join("names.csv");
     run(&mut s, "motion.export", json!({"study": "Push", "samples": 2, "path": csv.to_string_lossy()}));
@@ -829,13 +829,13 @@ fn exploded_view_is_greyed_out_until_there_are_two_components() {
 }
 
 /// Pictures drawn by the CPU rasterizer (the engine has no GPU): real views of the scene.
-fn cpu(scene: &solidcraft_viewport::Scene, cam: &solidcraft_viewport::Camera, w: u32, h: u32) -> Result<crate::capture::Picture, String> {
-    Ok(crate::capture::Picture { rgba: solidcraft_viewport::render(scene, cam, w as usize, h as usize).rgba, renderer: "cpu" })
+fn cpu(scene: &torno_viewport::Scene, cam: &torno_viewport::Camera, w: u32, h: u32) -> Result<crate::capture::Picture, String> {
+    Ok(crate::capture::Picture { rgba: torno_viewport::render(scene, cam, w as usize, h as usize).rgba, renderer: "cpu" })
 }
 
 /// A folder of its own for one test's files.
 fn out_dir(test: &str) -> std::path::PathBuf {
-    let dir = solidcraft_io::vfs::temp_dir().join(format!("solidcraft-anim-{test}-{}", std::process::id()));
+    let dir = torno_io::vfs::temp_dir().join(format!("torno-anim-{test}-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&dir);
     std::fs::create_dir_all(&dir).unwrap();
     dir
@@ -953,7 +953,7 @@ fn an_animation_is_drawn_from_the_camera_given() {
     let seen = std::sync::Arc::new(std::sync::Mutex::new(Vec::new()));
     let record = {
         let seen = seen.clone();
-        move |scene: &solidcraft_viewport::Scene, cam: &solidcraft_viewport::Camera, w: u32, h: u32| {
+        move |scene: &torno_viewport::Scene, cam: &torno_viewport::Camera, w: u32, h: u32| {
             seen.lock().unwrap().push(*cam);
             cpu(scene, cam, w, h)
         }
@@ -1003,7 +1003,7 @@ fn an_exploded_view_animates_apart_and_back_without_moving_the_design() {
     let seen = std::sync::Arc::new(std::sync::Mutex::new(Vec::new()));
     let record = {
         let seen = seen.clone();
-        move |scene: &solidcraft_viewport::Scene, cam: &solidcraft_viewport::Camera, w: u32, h: u32| {
+        move |scene: &torno_viewport::Scene, cam: &torno_viewport::Camera, w: u32, h: u32| {
             let mut lows: Vec<[i64; 2]> =
                 scene.meshes.iter().map(|m| m.mesh.bounds().min).map(|v| [(v.x * 1e3).round() as i64, (v.z * 1e3).round() as i64]).collect();
             lows.sort();
@@ -1024,7 +1024,7 @@ fn an_exploded_view_animates_apart_and_back_without_moving_the_design() {
         assert_eq!(gif_frames(&std::fs::read(&gif).unwrap()), (24, 16, seen.len()));
         seen
     };
-    let lows = |seen: &[(Vec<[i64; 2]>, solidcraft_viewport::Camera)]| seen.iter().map(|(l, _)| l.clone()).collect::<Vec<_>>();
+    let lows = |seen: &[(Vec<[i64; 2]>, torno_viewport::Camera)]| seen.iter().map(|(l, _)| l.clone()).collect::<Vec<_>>();
     // A at x 0, B at x 20: each moves 10 mm out, at a steady pace.
     let at = |x: i64| vec![[x * 1000, 0], [(20 - x) * 1000, 0]];
     let apart = frames(json!({"view": "Apart", "samples": 3}));
@@ -1034,8 +1034,8 @@ fn an_exploded_view_animates_apart_and_back_without_moving_the_design() {
     assert_eq!(lows(&round), [at(0), at(-5), at(-10), at(-5), at(0)]);
     // One camera for the whole clip, framing the parts assembled and exploded alike.
     assert!(round.iter().all(|(_, c)| *c == round[0].1));
-    let mut framed = solidcraft_viewport::Camera::default();
-    framed.fit(&solidcraft_render::view_bounds(&solidcraft_geom::Aabb3 { min: Vec3::new(-10.0, 0.0, 0.0), max: Vec3::new(40.0, 10.0, 10.0) }));
+    let mut framed = torno_viewport::Camera::default();
+    framed.fit(&torno_render::view_bounds(&torno_geom::Aabb3 { min: Vec3::new(-10.0, 0.0, 0.0), max: Vec3::new(40.0, 10.0, 10.0) }));
     assert!(round[0].1.target.dist(framed.target) < 1e-9 && (round[0].1.distance - framed.distance).abs() < 1e-9, "{:?}", round[0].1);
     // Without samples: 41 frames, or 81 with back (the middle one exploded).
     assert_eq!(frames(json!({"view": "Apart"})).len(), 41);
@@ -1125,7 +1125,7 @@ fn hostile_animation_params_are_refused() {
     // An agent's export lands only inside its folders.
     let root = dir.join("root");
     std::fs::create_dir_all(&root).unwrap();
-    solidcraft_io::vfs::scoped(Some(solidcraft_io::vfs::PathScope::new([root.clone()])), || {
+    torno_io::vfs::scoped(Some(torno_io::vfs::PathScope::new([root.clone()])), || {
         let e = refused(json!({"path": dir.join("out").to_string_lossy()})).unwrap();
         assert!(e.contains("outside the folders this agent may use"), "{e}");
         assert!(refused(json!({"path": root.join("in.gif").to_string_lossy()})).is_none());
@@ -1140,7 +1140,7 @@ fn hostile_animation_params_are_refused() {
         (b, Vec3::new(1e300, 0.0, 0.0)),
         (999, Vec3::new(1.0, 0.0, 0.0)),
     ];
-    s.doc_mut().assembly.exploded.push(solidcraft_doc::motion::ExplodedView { id: 900, name: "Bad".into(), moves });
+    s.doc_mut().assembly.exploded.push(torno_doc::motion::ExplodedView { id: 900, name: "Bad".into(), moves });
     let p = json!({"view": "Bad", "path": gif, "samples": 2, "width": 16, "height": 16});
     super::animation::export_with(&s, &p, Some(&cpu)).unwrap();
     run(&mut s, "explode.show", json!({"view": "Bad"}));
@@ -1190,7 +1190,7 @@ fn pivot(in_context: bool) -> Session {
 }
 
 /// Every body of `model` and `full` the same: names, faces and where their meshes lie.
-fn same_bodies(model: &solidcraft_doc::ModelState, full: &solidcraft_doc::ModelState) {
+fn same_bodies(model: &torno_doc::ModelState, full: &torno_doc::ModelState) {
     assert_eq!(model.bodies.len(), full.bodies.len());
     for (a, b) in model.bodies.iter().zip(&full.bodies) {
         assert_eq!(a.name, b.name);
@@ -1201,8 +1201,8 @@ fn same_bodies(model: &solidcraft_doc::ModelState, full: &solidcraft_doc::ModelS
 }
 
 /// The model `s` shows, evaluated again from nothing.
-fn rebuilt(s: &Session) -> std::sync::Arc<solidcraft_doc::ModelState> {
-    let mut full = solidcraft_doc::Model::default();
+fn rebuilt(s: &Session) -> std::sync::Arc<torno_doc::ModelState> {
+    let mut full = torno_doc::Model::default();
     full.no_cache = true;
     full.evaluate(&s.doc);
     full.state()
@@ -1247,9 +1247,9 @@ fn an_in_context_sketch_follows_only_the_parts_it_reads() {
     // The whole assembly moved as one (both occurrences by the same turn and shift): nothing the
     // sketch reads moved relative to it.
     let model = s.model.state();
-    let turn = solidcraft_doc::rigid(Vec3::new(5.0, -3.0, 2.0), Vec3::new(1.0, 2.0, 0.0), Vec3::new(0.3, 0.2, 1.0), 0.7);
+    let turn = torno_doc::rigid(Vec3::new(5.0, -3.0, 2.0), Vec3::new(1.0, 2.0, 0.0), Vec3::new(0.3, 0.2, 1.0), 0.7);
     for o in &mut s.doc_mut().occurrences {
-        o.transform = solidcraft_doc::mat_mul(&turn, &o.transform);
+        o.transform = torno_doc::mat_mul(&turn, &o.transform);
     }
     s.refresh();
     assert_eq!(s.model.last_recomputed, 0);
@@ -1259,7 +1259,7 @@ fn an_in_context_sketch_follows_only_the_parts_it_reads() {
 
 /// `deepest` as it was before its triangles were indexed: every sample point and edge tested
 /// against every triangle of the other mesh. The reference the indexed one must equal.
-fn deepest_scanning(a: &solidcraft_geom::Mesh, b: &solidcraft_geom::Mesh, tol: f64) -> f64 {
+fn deepest_scanning(a: &torno_geom::Mesh, b: &torno_geom::Mesh, tol: f64) -> f64 {
     let tb = super::tris(b);
     let bx = b.bounds();
     let mut pts: Vec<Vec3> = a.positions.clone();
@@ -1340,12 +1340,12 @@ impl Rng {
     }
 }
 
-fn mesh_of(positions: Vec<Vec3>, triangles: Vec<[u32; 3]>) -> solidcraft_geom::Mesh {
-    solidcraft_geom::Mesh { positions, triangles, ..Default::default() }
+fn mesh_of(positions: Vec<Vec3>, triangles: Vec<[u32; 3]>) -> torno_geom::Mesh {
+    torno_geom::Mesh { positions, triangles, ..Default::default() }
 }
 
 /// A closed lumpy sphere: `n` segments round, `n / 2` rings, each vertex's radius jittered.
-fn blob(rng: &mut Rng, centre: Vec3, r: f64, n: usize) -> solidcraft_geom::Mesh {
+fn blob(rng: &mut Rng, centre: Vec3, r: f64, n: usize) -> torno_geom::Mesh {
     let rings = (n / 2).max(2);
     let mut positions = vec![centre + Vec3::new(0.0, 0.0, r), centre - Vec3::new(0.0, 0.0, r)];
     for i in 1..rings {
@@ -1370,7 +1370,7 @@ fn blob(rng: &mut Rng, centre: Vec3, r: f64, n: usize) -> solidcraft_geom::Mesh 
 }
 
 /// A closed axis-aligned box (faces square to the axes), its sides split `n` ways.
-fn boxed(lo: Vec3, hi: Vec3, n: usize) -> solidcraft_geom::Mesh {
+fn boxed(lo: Vec3, hi: Vec3, n: usize) -> torno_geom::Mesh {
     let mut positions = Vec::new();
     let mut triangles = Vec::new();
     let lerp = |a: f64, b: f64, t: f64| a + (b - a) * t;
@@ -1406,7 +1406,7 @@ fn boxed(lo: Vec3, hi: Vec3, n: usize) -> solidcraft_geom::Mesh {
 
 /// Loose triangles near `centre`: ordinary ones, slivers, repeated and collinear vertices, and
 /// ones lying all but along the parity ray or along an axis.
-fn soup(rng: &mut Rng, centre: Vec3, r: f64, n: usize) -> solidcraft_geom::Mesh {
+fn soup(rng: &mut Rng, centre: Vec3, r: f64, n: usize) -> torno_geom::Mesh {
     let mut positions = Vec::new();
     for k in 0..n {
         let a = rng.point(centre, r);
@@ -1439,7 +1439,7 @@ fn soup(rng: &mut Rng, centre: Vec3, r: f64, n: usize) -> solidcraft_geom::Mesh 
 
 /// Each query of the index answers as a scan of every triangle would: the nearest distance
 /// (bit for bit), ray parity and the multiset of segment hits.
-fn assert_queries_match(rng: &mut Rng, m: &solidcraft_geom::Mesh, label: &str) {
+fn assert_queries_match(rng: &mut Rng, m: &torno_geom::Mesh, label: &str) {
     let tb = super::tris(m);
     let surface = super::Surface::new(tb.clone());
     let bx = m.bounds();
@@ -1523,7 +1523,7 @@ fn the_overlap_depth_of_pins_in_each_other_is_the_scan_of_every_triangle() {
         run(&mut s, "solid.cylinder", json!({"base": [0, 0, 0], "axis": [0, 0, 1], "radius": radius, "height": 20, "operation": "new"}));
     }
     let (post, arm) = (occ(&s, "Post"), occ(&s, "Arm"));
-    let mesh = |b: &solidcraft_kernel::Body| b.mesh(&solidcraft_kernel::MeshTolerance::chord((b.size() * 1e-3).max(1e-3))).unwrap();
+    let mesh = |b: &torno_kernel::Body| b.mesh(&torno_kernel::MeshTolerance::chord((b.size() * 1e-3).max(1e-3))).unwrap();
     let bodies = super::placed(&s);
     let of = |o: u64| bodies.iter().filter(|(path, _)| path.contains(&o)).map(|(_, b)| (mesh(b), b.size())).collect::<Vec<_>>();
     let (posts, arms) = (of(post), of(arm));

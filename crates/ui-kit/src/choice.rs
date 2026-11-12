@@ -8,7 +8,7 @@ use super::{
 use crate::BackingTooltipExt as _;
 use crate::{Container, Surface};
 use egui::{Ui, vec2};
-use solidcraft_theme::Tokens;
+use torno_theme::Tokens;
 
 /// Text segments retain mixed states and optional compact clipping instead of dropdown fallback.
 #[derive(Default)]
@@ -59,13 +59,13 @@ pub fn segmented(ui: &mut Ui, selected: &mut usize, options: &[&str], config: Se
         intrinsic,
         proportional,
     } = config;
-    let accent = solidcraft_theme::TabAccent::current(ui.ctx());
+    let accent = torno_theme::TabAccent::current(ui.ctx());
     let t = Tokens::get();
     let catalog = super::layout::in_catalog(ui);
     let font_size = if small || catalog { t.font_small } else { t.font_label };
     // Callers pass English source labels or text they translated; either way a segment shows it
     // translated, as the dropdown it falls back to does. Handles keep the option as passed.
-    let shown: Vec<&str> = options.iter().map(|option| solidcraft_ui_text::tr_label(option)).collect();
+    let shown: Vec<&str> = options.iter().map(|option| torno_ui_text::tr_label(option)).collect();
     let natural: Vec<_> = shown
         .iter()
         .enumerate()
@@ -194,11 +194,11 @@ pub fn segmented(ui: &mut Ui, selected: &mut usize, options: &[&str], config: Se
         );
         t.button_bevel_with_radius(ui, &response, on, rounding);
         response.widget_info(|| egui::WidgetInfo::selected(egui::Role::Button, segment_enabled, on, *text));
-        solidcraft_ui_registry::publish_target(&format!("dialog:{}:{option}", label(ui)), segment);
+        torno_ui_registry::publish_target(&format!("dialog:{}:{option}", label(ui)), segment);
         if let Some(target) = targets.get(index) {
             let visible = segment.intersect(ui.clip_rect());
             if visible.is_positive() {
-                solidcraft_ui_registry::publish_target(target, visible);
+                torno_ui_registry::publish_target(target, visible);
             }
         }
         let response =
@@ -216,7 +216,7 @@ pub fn segmented(ui: &mut Ui, selected: &mut usize, options: &[&str], config: Se
             egui::StrokeKind::Inside,
         );
     }
-    solidcraft_ui_registry::publish_target_as(&format!("dialog:{}", label(ui)), &format!("dialog:segments:{}", label(ui)), rect);
+    torno_ui_registry::publish_target_as(&format!("dialog:{}", label(ui)), &format!("dialog:segments:{}", label(ui)), rect);
     clicked
 }
 
@@ -235,7 +235,7 @@ pub struct IconSegment {
 pub fn segmented_icons(ui: &mut Ui, selected: &mut usize, options: &[IconSegment], states: &[bool]) -> bool {
     let t = Tokens::get();
     let catalog = super::layout::in_catalog(ui);
-    let accent = solidcraft_theme::TabAccent::current(ui.ctx());
+    let accent = torno_theme::TabAccent::current(ui.ctx());
     let (rect, _) =
         ui.allocate_exact_size(vec2(dimension(ui.available_width()), if catalog { t.space_24 } else { row_height() }), egui::Sense::hover());
     if !catalog {
@@ -280,8 +280,8 @@ pub fn segmented_icons(ui: &mut Ui, selected: &mut usize, options: &[IconSegment
         }
         t.button_bevel_with_radius(ui, &response, on, rounding);
         response.widget_info(|| egui::WidgetInfo::selected(egui::Role::Button, ui.is_enabled(), on, option.key));
-        solidcraft_ui_registry::publish_handle(&format!("dialog:{}:{}", label(ui), option.key), segment.center());
-        solidcraft_ui_registry::publish_target(option.key, segment);
+        torno_ui_registry::publish_handle(&format!("dialog:{}:{}", label(ui), option.key), segment.center());
+        torno_ui_registry::publish_target(option.key, segment);
         let response = response.backing_on_hover_text(&option.tip);
         if response.clicked() {
             *selected = index;
@@ -291,7 +291,7 @@ pub fn segmented_icons(ui: &mut Ui, selected: &mut usize, options: &[IconSegment
     if !catalog && t.borders.bevel.is_none() {
         ui.painter().rect_stroke(rect, t.control_radius, t.control_border_stroke(t.control_border), egui::StrokeKind::Inside);
     }
-    solidcraft_ui_registry::publish_target_as(&format!("dialog:{}", label(ui)), &format!("dialog:segments:{}", label(ui)), rect);
+    torno_ui_registry::publish_target_as(&format!("dialog:{}", label(ui)), &format!("dialog:segments:{}", label(ui)), rect);
     clicked
 }
 
@@ -311,12 +311,12 @@ pub fn checkbox_grid(ui: &mut Ui, items: &mut [(&str, &mut bool)], columns: usiz
                 }
                 let square = super::checks::box_at(ui, egui::pos2(rect.left() + t.space_14 / 2.0, rect.center().y));
                 super::checks::paint_box(ui, square, &response, **value, false);
-                let translated = solidcraft_ui_text::tr_label(label);
+                let translated = torno_ui_text::tr_label(label);
                 let text = if translated == "Tangent Chain" { "Tangent chain" } else { translated };
                 let text_rect = egui::Rect::from_min_max(egui::pos2((square.right() + t.space_6).min(rect.right()), rect.top()), rect.max);
                 paint_text(ui, text_rect, text, egui::FontId::proportional(t.font_body), t.form_ink, false);
                 response.widget_info(|| egui::WidgetInfo::selected(egui::Role::CheckBox, ui.is_enabled(), **value, translated));
-                solidcraft_ui_registry::publish_target_as(&format!("dialog:{label}"), &format!("dialog:checkbox:{label}"), rect);
+                torno_ui_registry::publish_target_as(&format!("dialog:{label}"), &format!("dialog:checkbox:{label}"), rect);
             }
         });
     }
@@ -338,13 +338,13 @@ pub fn checkbox_row(ui: &mut egui::Ui, key: &str, label: &str, on: bool) -> bool
         ui.painter().rect_filled(rect, t.control_radius, t.hover);
     }
     super::checks::paint_box(ui, square, &response, on, false);
-    let label = solidcraft_ui_text::tr_label(label);
+    let label = torno_ui_text::tr_label(label);
     let painter = ui
         .painter()
         .with_clip_rect(ui.clip_rect().intersect(egui::Rect::from_min_max(rect.min, egui::pos2(square.left() - t.space_6, rect.bottom()))));
     painter.text(rect.left_center(), egui::Align2::LEFT_CENTER, label, egui::FontId::proportional(t.font_label), t.form_ink);
     response.widget_info(|| egui::WidgetInfo::selected(egui::Role::CheckBox, ui.is_enabled(), on, label));
-    solidcraft_ui_registry::publish_target(&format!("sketch_palette:toggle:{key}"), rect);
+    torno_ui_registry::publish_target(&format!("sketch_palette:toggle:{key}"), rect);
     response.backing_on_hover_text(label).clicked()
 }
 
@@ -371,7 +371,7 @@ pub fn text_emphasis(ui: &mut Ui, bold: &mut bool, italic: &mut bool, bold_enabl
             response = response.backing_on_disabled_hover_text(labels.no_bold);
         }
         response.widget_info(|| egui::WidgetInfo::selected(egui::Role::Button, ui.is_enabled() && enabled, *value, label));
-        solidcraft_ui_registry::publish_target_as(&format!("dialog:{key}"), &format!("dialog:emphasis:{key}"), response.rect);
+        torno_ui_registry::publish_target_as(&format!("dialog:{key}"), &format!("dialog:emphasis:{key}"), response.rect);
     }
 }
 
@@ -405,7 +405,7 @@ pub fn tool_choices<'a>(ui: &mut Ui, label: &str, current: &str, choices: &[Tool
             );
             crate::icons::paint_icon(ui.painter(), response.rect.shrink(t.space_6), choice.icon, f32::from(t.icon.a()) / 255.0);
             t.button_bevel(ui, &response, on);
-            solidcraft_ui_registry::publish_target(&format!("sketch_palette:feature:{}", choice.key), response.rect);
+            torno_ui_registry::publish_target(&format!("sketch_palette:feature:{}", choice.key), response.rect);
             response.widget_info(|| egui::WidgetInfo::selected(egui::Role::Button, enabled, on, choice.label));
             if response.backing_on_hover_text(choice.label).clicked() && enabled {
                 start = Some(choice.key);
@@ -423,13 +423,13 @@ pub fn toggle_icon(ui: &mut Ui, row: &str, label: &str, selected: &mut bool, ico
     let response =
         ui.add(egui::Button::new("").selected(*selected).min_size(vec2(t.space_24 + t.space_4, t.control_height)).sense(egui::Sense::CLICK));
     crate::icons::paint_icon(ui.painter(), response.rect.shrink(t.space_3), icon, f32::from(t.icon.a()) / 255.0);
-    response.widget_info(|| egui::WidgetInfo::selected(egui::Role::Button, true, *selected, solidcraft_ui_text::tr_label(label)));
+    response.widget_info(|| egui::WidgetInfo::selected(egui::Role::Button, true, *selected, torno_ui_text::tr_label(label)));
     t.button_bevel(ui, &response, *selected);
-    solidcraft_ui_registry::publish_handle(&format!("dialog:{row}:{label}"), response.rect.center());
-    if response.clone().backing_on_hover_text(solidcraft_ui_text::tr_label(label)).clicked() {
+    torno_ui_registry::publish_handle(&format!("dialog:{row}:{label}"), response.rect.center());
+    if response.clone().backing_on_hover_text(torno_ui_text::tr_label(label)).clicked() {
         *selected = !*selected;
     }
-    solidcraft_ui_registry::publish_rect(&format!("dialog:{row}:{label}"), response.rect);
+    torno_ui_registry::publish_rect(&format!("dialog:{row}:{label}"), response.rect);
     response
 }
 
@@ -442,7 +442,7 @@ mod tests;
 pub fn list_picker(ui: &mut Ui, key: &str, text: &str, selected: bool) -> egui::Response {
     let response =
         ui.add_sized(egui::vec2(super::metrics::dimension(ui.available_width()), super::row_height()), egui::Button::selectable(selected, text));
-    solidcraft_ui_registry::publish_target(&format!("dialog:list:{key}"), response.rect);
+    torno_ui_registry::publish_target(&format!("dialog:list:{key}"), response.rect);
     response
 }
 
@@ -465,11 +465,11 @@ pub fn choice_chip(ui: &mut Ui, key: &str, text: &str, selected: bool) -> egui::
         );
         super::settings_search::remember(ui, text, response.rect);
         super::settings_search::follow(ui, text, response.rect);
-        solidcraft_ui_registry::publish_target(&format!("dialog:list:{key}"), response.rect);
+        torno_ui_registry::publish_target(&format!("dialog:list:{key}"), response.rect);
         return response;
     }
     if super::layout::in_catalog(ui) {
-        let accent = solidcraft_theme::TabAccent::current(ui.ctx());
+        let accent = torno_theme::TabAccent::current(ui.ctx());
         let width = ui.painter().layout_no_wrap(text.to_string(), crate::type_face::semibold(t.font_small), t.form_ink).size().x + t.space_16;
         let (rect, response) = ui.allocate_exact_size(vec2(width, t.space_16 + t.space_4), egui::Sense::click());
         ui.painter().rect_filled(rect, t.radius_xl, if selected { accent.soft } else { t.control_fill });
@@ -482,13 +482,13 @@ pub fn choice_chip(ui: &mut Ui, key: &str, text: &str, selected: bool) -> egui::
             false,
         );
         response.widget_info(|| egui::WidgetInfo::selected(egui::Role::Button, ui.is_enabled(), selected, text));
-        solidcraft_ui_registry::publish_target(&format!("dialog:list:{key}"), rect);
+        torno_ui_registry::publish_target(&format!("dialog:list:{key}"), rect);
         return response;
     }
     let width = (ui.painter().layout_no_wrap(text.to_owned(), crate::type_face::semibold(t.font_label), t.text).size().x + t.space_24)
         .clamp(t.control_height * 2.0, t.form_card_width);
     let response = ui.add_sized(vec2(width, super::row_height()), egui::Button::selectable(selected, text).truncate());
-    solidcraft_ui_registry::publish_target(&format!("dialog:list:{key}"), response.rect);
+    torno_ui_registry::publish_target(&format!("dialog:list:{key}"), response.rect);
     response
 }
 
@@ -531,7 +531,7 @@ pub fn thumbnail_choice(ui: &mut Ui, key: &str, text: &str, state: ThumbnailChoi
         + t.space_8
         + t.space_14;
     let (rect, response) = ui.allocate_exact_size(vec2(width, height), egui::Sense::click());
-    let accent = solidcraft_theme::TabAccent::current(ui.ctx());
+    let accent = torno_theme::TabAccent::current(ui.ctx());
     let ink = if state.selected { accent.ink } else { t.form_ink };
     ui.painter().rect(
         rect,
@@ -565,7 +565,7 @@ pub fn thumbnail_choice(ui: &mut Ui, key: &str, text: &str, state: ThumbnailChoi
     if state.modified {
         let dot = egui::pos2(rect.right() - t.space_6, rect.top() + t.space_6);
         ui.painter().circle_filled(dot, t.space_3, t.warning);
-        solidcraft_ui_registry::publish_rect(&format!("dialog:list:{key}:modified"), egui::Rect::from_center_size(dot, vec2(t.space_6, t.space_6)));
+        torno_ui_registry::publish_rect(&format!("dialog:list:{key}:modified"), egui::Rect::from_center_size(dot, vec2(t.space_6, t.space_6)));
     }
     if let Some(progress) = state.progress {
         let center = thumb.center();
@@ -580,10 +580,10 @@ pub fn thumbnail_choice(ui: &mut Ui, key: &str, text: &str, state: ThumbnailChoi
             })
             .collect();
         ui.painter().add(egui::Shape::line(points, egui::Stroke::new(t.space_2, accent.ink)));
-        solidcraft_ui_registry::publish_rect(&format!("dialog:list:{key}:progress"), thumb);
+        torno_ui_registry::publish_rect(&format!("dialog:list:{key}:progress"), thumb);
     }
     response.widget_info(|| egui::WidgetInfo::selected(egui::Role::Button, ui.is_enabled(), state.selected, text));
-    solidcraft_ui_registry::publish_target(&format!("dialog:list:{key}"), response.rect);
+    torno_ui_registry::publish_target(&format!("dialog:list:{key}"), response.rect);
     response.backing_on_hover_text(text)
 }
 
@@ -616,7 +616,7 @@ pub fn color_swatch<T: Send + Sync + 'static>(
     tip: &str,
     payload: T,
 ) -> egui::Response {
-    let t = solidcraft_theme::Tokens::get();
+    let t = torno_theme::Tokens::get();
     let response = ui
         .dnd_drag_source(id, payload, |ui| {
             let side = t.control_height + t.space_6;
@@ -690,7 +690,7 @@ pub fn popup_list(
     options: &[PopupOption<'_>],
     hint: &str,
 ) -> Option<usize> {
-    let t = solidcraft_theme::Tokens::get();
+    let t = torno_theme::Tokens::get();
     let mut chosen = None;
     let mut rows = Vec::with_capacity(options.len());
     // Wide enough for the longest suggestion; still capped so a hostile name cannot fill the screen (#8533).
@@ -700,7 +700,7 @@ pub fn popup_list(
         .iter()
         .map(|option| {
             let text_w = ctx.fonts_mut(|fonts| fonts.layout_no_wrap(option.text.to_owned(), mono.clone(), option.color)).size().x;
-            let kind = solidcraft_ui_text::tr_label(option.kind);
+            let kind = torno_ui_text::tr_label(option.kind);
             let kind_w = ctx.fonts_mut(|fonts| fonts.layout_no_wrap(kind.to_owned(), kind_font.clone(), t.form_dim)).size().x;
             text_w + kind_w + t.space_8 * 3.0
         })
@@ -740,7 +740,7 @@ pub fn popup_list(
                             ui.painter().rect_filled(rect, t.control_radius, if picked { t.selected_bg } else { t.hover });
                         }
                         let inner = rect.shrink2(vec2(t.space_8, 0.0));
-                        let kind = solidcraft_ui_text::tr_label(option.kind);
+                        let kind = torno_ui_text::tr_label(option.kind);
                         let kind_width = super::metrics::label_width(ui, kind);
                         let text_rect = egui::Rect::from_min_max(
                             inner.min,
@@ -752,7 +752,7 @@ pub fn popup_list(
                         // Tip the full name first: long identifiers still clip inside a capped popup.
                         let tip = if option.detail.is_empty() { option.text.to_owned() } else { format!("{}\n{}", option.text, option.detail) };
                         let response = response.backing_on_hover_text(tip);
-                        solidcraft_ui_registry::publish_handle(&format!("dialog:suggestion:{index}"), response.rect.center());
+                        torno_ui_registry::publish_handle(&format!("dialog:suggestion:{index}"), response.rect.center());
                         if response.clicked() {
                             chosen = Some(index);
                         }
@@ -766,7 +766,7 @@ pub fn popup_list(
             })
         });
     });
-    solidcraft_ui_registry::publish_rect("dialog:suggestions", area.response.rect);
+    torno_ui_registry::publish_rect("dialog:suggestions", area.response.rect);
     ctx.data_mut(|d| d.insert_temp(id.with("rows"), rows));
     chosen
 }

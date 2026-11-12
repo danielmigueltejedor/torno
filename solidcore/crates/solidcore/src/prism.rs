@@ -2,7 +2,7 @@
 //! exact reading of a curve in a plane, a planar sheet read back as regions, a region extruded
 //! between two levels, and the certified section of a body that is a uniform prism.
 //!
-//! Not upstream: SolidCraft's planar regions and prism measures (`prism_curve.rs`,
+//! Not upstream: Torno's planar regions and prism measures (`prism_curve.rs`,
 //! `prism_measure.rs` and the geometry of `prism.rs`), moved into the kernel so the layers above
 //! compute no geometry (docs/layers.md §1). Their recipes (the planar boolean and extrusion) are
 //! `solidcore-ops`'.

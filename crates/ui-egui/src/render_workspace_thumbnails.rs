@@ -3,8 +3,8 @@ use std::collections::BTreeMap;
 use std::hash::{Hash, Hasher};
 
 use crate::SolveApp;
-use solidcraft_engine::render::job::CancelToken;
-use solidcraft_viewport::Camera;
+use torno_engine::render::job::CancelToken;
+use torno_viewport::Camera;
 
 pub(super) const LIMIT: usize = 16;
 #[cfg(not(target_arch = "wasm32"))]
@@ -138,7 +138,7 @@ pub(super) fn refresh(app: &mut SolveApp, ctx: &egui::Context) {
         }
         let permit = WorkerPermit;
         let Some(setup) = app.session.doc.render.setups.get(&key.name) else { return };
-        let request = solidcraft_engine::render::job::ImageRequest {
+        let request = torno_engine::render::job::ImageRequest {
             studio_weights: None,
             camera: setup.camera,
             width: SIZE[0],
@@ -150,7 +150,7 @@ pub(super) fn refresh(app: &mut SolveApp, ctx: &egui::Context) {
             environment: None,
             textures: None,
         };
-        let scene = solidcraft_engine::product_scene::extract(&app.session);
+        let scene = torno_engine::product_scene::extract(&app.session);
         let cancel = CancelToken::default();
         let worker_cancel = cancel.clone();
         let (send, result) = std::sync::mpsc::sync_channel(1);
@@ -158,11 +158,11 @@ pub(super) fn refresh(app: &mut SolveApp, ctx: &egui::Context) {
             let _permit = permit;
             let image = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
                 let scene = scene.ok()?;
-                let mut task = solidcraft_engine::render::job::ImageTask::new(scene, request, worker_cancel).ok()?;
+                let mut task = torno_engine::render::job::ImageTask::new(scene, request, worker_cancel).ok()?;
                 loop {
                     match task.step(1024).ok()? {
-                        solidcraft_engine::render::job::TaskPoll::Pending(_) => {}
-                        solidcraft_engine::render::job::TaskPoll::Complete(png) => {
+                        torno_engine::render::job::TaskPoll::Pending(_) => {}
+                        torno_engine::render::job::TaskPoll::Complete(png) => {
                             let image = image::load_from_memory(&png).ok()?.to_rgba8();
                             return Some(egui::ColorImage::from_rgba_unmultiplied([SIZE[0] as usize, SIZE[1] as usize], image.as_raw()));
                         }

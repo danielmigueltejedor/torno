@@ -128,7 +128,7 @@ mod tests {
         assert!(decoder.step(&bytes, &CancelToken::default()).unwrap());
         assert_eq!(decoder.finish().unwrap(), pixels);
         let mut foreign = bytes;
-        let at = foreign.windows(b"SolidCraft native CPU raytrace".len()).position(|w| w == b"SolidCraft native CPU raytrace").unwrap();
+        let at = foreign.windows(b"Torno native CPU raytrace".len()).position(|w| w == b"Torno native CPU raytrace").unwrap();
         foreign[at] ^= 1;
         assert!(Decoder::new(&foreign, 2, 1, &CancelToken::default()).is_err());
     }

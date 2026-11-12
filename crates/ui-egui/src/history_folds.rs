@@ -149,12 +149,12 @@ mod tests {
     use crate::SolveApp;
 
     fn new_app() -> SolveApp {
-        SolveApp::new(solidcraft_engine::Session::default(), crate::Services::default())
+        SolveApp::new(torno_engine::Session::default(), crate::Services::default())
     }
 
     /// An empty folder of its own for one test's designs.
     fn folder(test: &str) -> std::path::PathBuf {
-        let dir = std::env::temp_dir().join(format!("solidcraft-history-folds-{test}-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("torno-history-folds-{test}-{}", std::process::id()));
         let _ = std::fs::remove_dir_all(&dir);
         std::fs::create_dir_all(&dir).expect("a folder");
         dir

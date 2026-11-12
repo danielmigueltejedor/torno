@@ -1,4 +1,4 @@
-// The eight closed 48-point star outlines of tangency-labs/solidcore#1480 (SolidCraft's rig recipe
+// The eight closed 48-point star outlines of tangency-labs/solidcore#1480 (Torno's rig recipe
 // booleans/4623-join-crossing-pleated-loft-skins): (z, points).
 const CONELO: (f64, [[f64; 2]; 48]) = (-1.0, [
     [115.7949, 0.0],

@@ -1,4 +1,4 @@
-//! WR-533 (the fork's tangency-labs/smlib@f11d0ac, SolidCraft's `boolean_regression`
+//! WR-533 (the fork's tangency-labs/smlib@f11d0ac, Torno's `boolean_regression`
 //! `lip_swept_flush_round_a_corner_joins`) through a boolean (#1954): a 50 x 40 x 10 block
 //! with its corners rounded r 4.5, and a 1 x 1 lip swept along half its top rim, flush with
 //! it, round two corners, united. This is the fork's capi test `lip_swept_flush_round_a_corner`

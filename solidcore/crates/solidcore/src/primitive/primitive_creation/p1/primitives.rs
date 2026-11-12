@@ -27,11 +27,11 @@
 //! Face construction uses caller notification records, attributes and identity keys.
 //! No recursion.
 //! Not upstream (WR-565, tangency-labs/solidcore#1477, opt-in
-//! `Kernel::fixes.linear_sweep_arc_is_cylinder`; SolidCraft change, tangency-labs/smlib
+//! `Kernel::fixes.linear_sweep_arc_is_cylinder`; Torno change, tangency-labs/smlib
 //! 12918e9): [`PrimitiveCreation::create_linear_sweep`] makes a circular arc short of a
 //! whole turn that is swept square to its plane a cylinder (`arc_sweep_cylinder`), where
 //! upstream makes it an `SmSurfOfExtrusion`.
-//! Not upstream (WR-576, tangency-labs/solidcore#1507; SolidCraft change,
+//! Not upstream (WR-576, tangency-labs/solidcore#1507; Torno change,
 //! tangency-labs/smlib fd59111): [`PrimitiveCreation::create_linear_sweep`] tests a profile curve for an arc
 //! to the zero an `SmCylinder`'s own check holds its generating curve to (`arc_zero`),
 //! not to the B-rep's tolerance.

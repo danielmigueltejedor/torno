@@ -102,6 +102,6 @@
   "ungraded": [],
   "what": "a fillet of radius 6.9 on a cylinder rim whose flat top ring (round the joined boss) is only 4.3 mm wide must be refused, not grow the part",
   "why_not": [
-    "the failure is SolidCraft's, not a kernel operation's: step 3 (solid.fillet): not supported yet: the fillet is larger than the faces beside its edges allow, at the edge at (-5.725, -4.028, 48.200): the blend runs off a face into the material; the largest radius that fits is 4.3 mm"
+    "the failure is Torno's, not a kernel operation's: step 3 (solid.fillet): not supported yet: the fillet is larger than the faces beside its edges allow, at the edge at (-5.725, -4.028, 48.200): the blend runs off a face into the material; the largest radius that fits is 4.3 mm"
   ]
 }

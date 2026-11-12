@@ -4,17 +4,17 @@
 
 use crate::ui_kit::BackingTooltipExt as _;
 use crate::ui_kit::choice_row;
-use solidcraft_engine::geom::prelude::*;
 use std::hash::{Hash, Hasher};
+use torno_engine::geom::prelude::*;
 
 use egui::{RichText, vec2};
 use serde_json::{Value, json};
 use solidcore_record::Vec3;
-use solidcraft_engine::Sel;
-use solidcraft_engine::Session;
-use solidcraft_engine::doc::expr::Kind as ValueKind;
-use solidcraft_engine::doc::{AxisRef, Direction, FeatureKind, FilletStyle, HoleKind, Operation, PatternKind, PlaneRef, ProfileSel, ThinSide};
-use solidcraft_engine::geom::Aabb3;
+use torno_engine::Sel;
+use torno_engine::Session;
+use torno_engine::doc::expr::Kind as ValueKind;
+use torno_engine::doc::{AxisRef, Direction, FeatureKind, FilletStyle, HoleKind, Operation, PatternKind, PlaneRef, ProfileSel, ThinSide};
+use torno_engine::geom::Aabb3;
 
 use crate::SolveApp;
 use crate::selection::{
@@ -23,7 +23,7 @@ use crate::selection::{
 };
 use crate::tool_modifiers::{Audit, Scope, ToolModifiers};
 use crate::viewport::Hit;
-use solidcraft_theme::Tokens;
+use torno_theme::Tokens;
 
 #[path = "dialogs_dense.rs"]
 mod dense;
@@ -476,7 +476,7 @@ pub struct HoleOpts {
     pub thread_full_depth: bool,
     pub thread_depth: String,
     /// The tapped thread's hand (right or left).
-    pub hand: solidcraft_engine::doc::thread_forms::ThreadHand,
+    pub hand: torno_engine::doc::thread_forms::ThreadHand,
     /// The tapped thread cut into the wall, not only listed.
     pub modeled: bool,
     /// A modelled tapped thread's inner end, towards the bottom: square or a fade.
@@ -501,7 +501,7 @@ impl Default for HoleOpts {
             refs: Default::default(),
             thread_full_depth: true,
             thread_depth: "10 mm".into(),
-            hand: solidcraft_engine::doc::thread_forms::ThreadHand::Right,
+            hand: torno_engine::doc::thread_forms::ThreadHand::Right,
             modeled: false,
             ease_out: crate::dialogs_thread::Ease::default(),
             drill: None,
@@ -619,7 +619,7 @@ impl DialogComputation {
         })
     }
 
-    fn compute(self) -> Result<solidcraft_engine::ComputedCommands, String> {
+    fn compute(self) -> Result<torno_engine::ComputedCommands, String> {
         match self.editing {
             Some(state) => self.session.compute_editor_commands(&self.cmds, &state.source, state.original),
             None => self.session.compute_commands(&self.cmds, self.marker),
@@ -628,7 +628,7 @@ impl DialogComputation {
     }
 }
 
-fn adopt_dialog(app: &mut SolveApp, prepared: solidcraft_engine::ComputedCommands, d: &Dialog) -> Result<(), String> {
+fn adopt_dialog(app: &mut SolveApp, prepared: torno_engine::ComputedCommands, d: &Dialog) -> Result<(), String> {
     if app.file_load.busy() || app.file_picker_busy() {
         return Err("a file operation is in progress".into());
     }
@@ -648,18 +648,18 @@ fn adopt_dialog(app: &mut SolveApp, prepared: solidcraft_engine::ComputedCommand
 
 /// A complete feature transaction, evaluated without changing the displayed session.
 pub struct Applying {
-    pub(crate) done: std::sync::mpsc::Receiver<Result<solidcraft_engine::ComputedCommands, String>>,
-    pub(crate) ready: Option<Result<solidcraft_engine::ComputedCommands, String>>,
+    pub(crate) done: std::sync::mpsc::Receiver<Result<torno_engine::ComputedCommands, String>>,
+    pub(crate) ready: Option<Result<torno_engine::ComputedCommands, String>>,
     pub(crate) seen: bool,
     /// When OK was pressed (ms).
     pub(crate) started: f64,
     pub(crate) cmds: Vec<(String, Value)>,
-    pub(crate) progress: std::sync::Arc<solidcraft_engine::doc::progress::Progress>,
-    pub(crate) quality: solidcraft_engine::doc::display_quality::DisplayQuality,
+    pub(crate) progress: std::sync::Arc<torno_engine::doc::progress::Progress>,
+    pub(crate) quality: torno_engine::doc::display_quality::DisplayQuality,
 }
 
 impl Applying {
-    fn finished(&mut self) -> Option<Result<solidcraft_engine::ComputedCommands, String>> {
+    fn finished(&mut self) -> Option<Result<torno_engine::ComputedCommands, String>> {
         if !self.seen {
             self.seen = true;
             return None;
@@ -681,8 +681,8 @@ impl Drop for Applying {
 /// How long OK waits before displaying its computing state.
 pub const APPLY_AT_ONCE: std::time::Duration = std::time::Duration::from_millis(150);
 
-fn display_quality(app: &SolveApp) -> solidcraft_engine::doc::display_quality::DisplayQuality {
-    solidcraft_engine::doc::display_quality::DisplayQuality::parse(&app.preferences.display_quality).unwrap_or_default()
+fn display_quality(app: &SolveApp) -> torno_engine::doc::display_quality::DisplayQuality {
+    torno_engine::doc::display_quality::DisplayQuality::parse(&app.preferences.display_quality).unwrap_or_default()
 }
 
 /// Desktop feature dialogs evaluate the entire command and its dependent suffix once; so does
@@ -711,16 +711,16 @@ pub(crate) fn begin_applying(app: &SolveApp, d: &Dialog) -> Option<Applying> {
 #[cfg(not(target_arch = "wasm32"))]
 fn start_applying(
     cmds: Vec<(String, Value)>,
-    quality: solidcraft_engine::doc::display_quality::DisplayQuality,
+    quality: torno_engine::doc::display_quality::DisplayQuality,
     started: f64,
     wait: std::time::Duration,
-    compute: impl FnOnce() -> Result<solidcraft_engine::ComputedCommands, String> + Send + 'static,
+    compute: impl FnOnce() -> Result<torno_engine::ComputedCommands, String> + Send + 'static,
 ) -> Applying {
-    let progress = std::sync::Arc::new(solidcraft_engine::doc::progress::Progress::default());
+    let progress = std::sync::Arc::new(torno_engine::doc::progress::Progress::default());
     let watching = progress.clone();
     let (tx, rx) = std::sync::mpsc::channel();
     let worker = std::thread::Builder::new().name("apply".into()).spawn(move || {
-        let result = solidcraft_engine::doc::progress::watch(watching.clone(), || {
+        let result = torno_engine::doc::progress::watch(watching.clone(), || {
             let prepared = compute()?;
             if watching.is_cancelled() {
                 return Err("feature computation cancelled".into());
@@ -745,12 +745,12 @@ fn start_applying(
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-fn warm_applying(app: &SolveApp, prepared: solidcraft_engine::ComputedCommands, cmds: Vec<(String, Value)>, started: f64) -> Option<Applying> {
+fn warm_applying(app: &SolveApp, prepared: torno_engine::ComputedCommands, cmds: Vec<(String, Value)>, started: f64) -> Option<Applying> {
     Some(start_applying(cmds, display_quality(app), started, std::time::Duration::ZERO, move || Ok(prepared)))
 }
 
 #[cfg(target_arch = "wasm32")]
-fn warm_applying(_app: &SolveApp, _prepared: solidcraft_engine::ComputedCommands, _cmds: Vec<(String, Value)>, _started: f64) -> Option<Applying> {
+fn warm_applying(_app: &SolveApp, _prepared: torno_engine::ComputedCommands, _cmds: Vec<(String, Value)>, _started: f64) -> Option<Applying> {
     None
 }
 
@@ -1296,7 +1296,7 @@ impl Dialog {
                         return None;
                     }
                     let curve = sketch.sketch.curves.get(sketch.sketch.curve_index(id)?)?;
-                    (curve.construction && matches!(curve.kind, solidcraft_engine::sketch::CurveKind::Line { .. })).then_some(curve)
+                    (curve.construction && matches!(curve.kind, torno_engine::sketch::CurveKind::Line { .. })).then_some(curve)
                 });
                 if let Some(line) = lines.next()
                     && lines.next().is_none()
@@ -1560,7 +1560,7 @@ impl Dialog {
         let mut faces = Vec::new();
         for (name, points) in by_body {
             if let Some(body) = state.body(name) {
-                faces.extend(solidcraft_engine::doc::tangent_face_chain(body, &points).into_iter().map(|(index, point)| Sel::Face {
+                faces.extend(torno_engine::doc::tangent_face_chain(body, &points).into_iter().map(|(index, point)| Sel::Face {
                     body: name.to_string(),
                     index,
                     point,
@@ -2022,7 +2022,7 @@ impl Dialog {
                 let model = st.body(body);
                 inp.items.retain(|pick| {
                     let Sel::Face { body: b, point, .. } = pick else { return true };
-                    b != body || !model.is_some_and(|m| solidcraft_engine::doc::tangent_face_chain(m, &[*point]).iter().any(|(f, _)| f == index))
+                    b != body || !model.is_some_and(|m| torno_engine::doc::tangent_face_chain(m, &[*point]).iter().any(|(f, _)| f == index))
                 });
             }
             // Without the model to find the chain in, the row goes on its own.
@@ -2154,7 +2154,7 @@ pub(crate) fn fillet_least_setback(ctx: &egui::Context, s: &Session, items: &[Se
     let least = bodies
         .iter()
         .filter_map(|b| st.body(b))
-        .flat_map(|b| corners.iter().filter_map(|c| solidcraft_engine::doc::kernel::fillet_least_setback(&b.body, *c, radius).ok().flatten()))
+        .flat_map(|b| corners.iter().filter_map(|c| torno_engine::doc::kernel::fillet_least_setback(&b.body, *c, radius).ok().flatten()))
         .reduce(f64::max);
     ctx.data_mut(|d| d.insert_temp(id, (key, least)));
     least
@@ -2163,7 +2163,7 @@ pub(crate) fn fillet_least_setback(ctx: &egui::Context, s: &Session, items: &[Se
 /// The profiles of a sketch that aren't the island inside another profile's hole: a circle in a
 /// rectangle gives the rectangle-with-hole and the disc, and taking both would fill the hole.
 /// Loops are compared as sets of curve ids, so where a loop starts or which way it runs doesn't matter.
-fn outermost_profiles(profiles: &[solidcraft_engine::sketch::Profile]) -> impl Iterator<Item = usize> + '_ {
+fn outermost_profiles(profiles: &[torno_engine::sketch::Profile]) -> impl Iterator<Item = usize> + '_ {
     let key = |ids: &[String]| {
         let mut v = ids.to_vec();
         v.sort();
@@ -2229,16 +2229,16 @@ pub(crate) fn snaps_to_points(accept: Accept) -> bool {
 pub(crate) struct SnapPoints<'a> {
     /// Show Projected is off: no linked point is taken.
     hide_linked: bool,
-    shown: solidcraft_engine::view::SketchPointVisibility<'a>,
+    shown: torno_engine::view::SketchPointVisibility<'a>,
 }
 
 impl<'a> SnapPoints<'a> {
-    pub(crate) fn of(sk: &'a solidcraft_engine::sketch::Sketch) -> Self {
-        Self { hide_linked: sk.view.hide_projected, shown: solidcraft_engine::view::SketchPointVisibility::new(sk) }
+    pub(crate) fn of(sk: &'a torno_engine::sketch::Sketch) -> Self {
+        Self { hide_linked: sk.view.hide_projected, shown: torno_engine::view::SketchPointVisibility::new(sk) }
     }
 
     /// Does a face place snap to point `p` of the sketch?
-    pub(crate) fn takes(&self, p: &solidcraft_engine::sketch::SPoint) -> bool {
+    pub(crate) fn takes(&self, p: &torno_engine::sketch::SPoint) -> bool {
         self.shown.takes(p) && !(self.hide_linked && p.link.is_some())
     }
 }
@@ -2510,7 +2510,7 @@ fn sketch_curve_edge(s: &Session, sel: &Sel) -> Option<Sel> {
             if !m.edge_pickable(index) {
                 continue;
             }
-            let pts: Vec<Vec3> = e.iter().map(|p| solidcraft_engine::doc::apply_point(&place, *p)).collect();
+            let pts: Vec<Vec3> = e.iter().map(|p| torno_engine::doc::apply_point(&place, *p)).collect();
             let (Some(p), Some(q)) = (pts.first(), pts.last()) else { continue };
             if !((p.dist(a) < tol && q.dist(b) < tol) || (p.dist(b) < tol && q.dist(a) < tol)) {
                 continue;
@@ -2555,10 +2555,10 @@ pub fn planar_face(s: &Session, body: &str, face: usize) -> Option<(Vec3, Vec3)>
 
 /// The fillet or chamfer feature whose blend a body face is (a piece or copy of one too).
 pub fn blend_feature(s: &Session, body: &str, face: usize) -> Option<u64> {
-    use solidcraft_engine::doc::persistent_name;
+    use torno_engine::doc::persistent_name;
     let st = crate::open_meshing::session_world(s);
     let b = st.body(body)?;
-    let names = solidcraft_engine::doc::naming::face_names(b);
+    let names = torno_engine::doc::naming::face_names(b);
     let name = names.get(face).filter(|n| persistent_name::is_blend(n))?;
     let f = s.doc.feature(persistent_name::made_by(name)?)?;
     matches!(f.kind, FeatureKind::Fillet { .. } | FeatureKind::Chamfer { .. }).then_some(f.id)
@@ -2570,7 +2570,7 @@ thread_local! {
     /// imported part of a few million triangles, and an open Section Analysis on a face asks
     /// for its plane several times a frame.
     #[allow(clippy::type_complexity)]
-    static FACE_PLANES: std::cell::RefCell<(Option<std::sync::Arc<solidcraft_engine::doc::ModelState>>, Vec<(String, usize, Option<(Vec3, Vec3)>)>)> =
+    static FACE_PLANES: std::cell::RefCell<(Option<std::sync::Arc<torno_engine::doc::ModelState>>, Vec<(String, usize, Option<(Vec3, Vec3)>)>)> =
         const { std::cell::RefCell::new((None, Vec::new())) };
 }
 
@@ -2607,7 +2607,7 @@ pub(crate) fn combo(ui: &mut egui::Ui, id: &str, labels: &[&str], sel: &mut usiz
 }
 
 fn tr(text: &str) -> &str {
-    solidcraft_ui_text::tr_label(text)
+    torno_ui_text::tr_label(text)
 }
 
 fn publish_check(ui: &egui::Ui, response: &egui::Response, selected: bool) {
@@ -2740,7 +2740,7 @@ pub(crate) fn feature_of_face(s: &Session, body: &str, index: usize, p: Vec3) ->
     }) {
         return hit;
     }
-    let on_model = |st: &solidcraft_engine::doc::ModelState| {
+    let on_model = |st: &torno_engine::doc::ModelState| {
         st.bodies.iter().any(|b| {
             let m = b.mesh();
             let bb = m.bounds();
@@ -2807,8 +2807,7 @@ fn object_type_row(d: &mut Dialog, ui: &mut egui::Ui) {
     let cur = usize::from(inp.accept == selection::FEATURES);
     let mut ty = cur;
     // What the two kinds are, and that a sketch is neither (#10057).
-    choice_row(ui, "Object Type", "pat_obj", &mut ty, &["Bodies", "Features"])
-        .backing_on_hover_text(solidcraft_ui_text::tr("ui.pattern_object_type_tip"));
+    choice_row(ui, "Object Type", "pat_obj", &mut ty, &["Bodies", "Features"]).backing_on_hover_text(torno_ui_text::tr("ui.pattern_object_type_tip"));
     if ty != cur {
         inp.accept = if ty == 1 { selection::FEATURES } else { BODIES };
         inp.label = objects_label(inp.accept);
@@ -2981,26 +2980,25 @@ fn occurrence_paths(s: &Session, items: &[Sel]) -> Vec<Vec<u64>> {
 pub(crate) fn selection_label(s: &Session, names: crate::prefs::OriginPlaneNames, d: &Dialog, inp: &SelInput, item: &Sel) -> String {
     let axis = inp.accept == selection::AXIS_PICKS && round_axis(s, item).is_some();
     let sketch_name = |id| {
-        s.doc.feature(id).map(|f| f.name.clone()).unwrap_or_else(|| solidcraft_ui_text::format("browser.sketch_name", &[("number", &id.to_string())]))
+        s.doc.feature(id).map(|f| f.name.clone()).unwrap_or_else(|| torno_ui_text::format("browser.sketch_name", &[("number", &id.to_string())]))
     };
     match item {
         Sel::SketchCurve { id, .. } => id.clone(),
         Sel::SketchPoint { id } => crate::sketch_modify_ui::point_id(s, item).unwrap_or(id).to_string(),
-        Sel::SketchMidpoint { id } => solidcraft_ui_text::format("dialog.selection_midpoint", &[("id", id)]),
+        Sel::SketchMidpoint { id } => torno_ui_text::format("dialog.selection_midpoint", &[("id", id)]),
         Sel::ExternalSketchCurve { sketch, id } => {
-            solidcraft_ui_text::format("dialog.selection_external_curve", &[("sketch", &sketch_name(*sketch)), ("id", id)])
+            torno_ui_text::format("dialog.selection_external_curve", &[("sketch", &sketch_name(*sketch)), ("id", id)])
         }
         // Another sketch's point (a Sphere's centre, #9403), named as Select Other names it.
         Sel::ExternalSketchPoint { sketch, id } => {
             let state = crate::open_meshing::session_world(s);
             let point = state.sketch(*sketch).map_or_else(|| id.clone(), |ss| crate::select_other::point_label(&ss.sketch, id));
-            solidcraft_ui_text::format("dialog.selection_external_point", &[("point", &point), ("sketch", &sketch_name(*sketch))])
+            torno_ui_text::format("dialog.selection_external_point", &[("point", &point), ("sketch", &sketch_name(*sketch))])
         }
-        Sel::SketchConstraint { id } => solidcraft_ui_text::format("dialog.selection_constraint", &[("id", id)]),
-        Sel::Profile { sketch, index } => solidcraft_ui_text::format(
-            "dialog.selection_profile",
-            &[("sketch", &sketch_name(*sketch)), ("number", &index.saturating_add(1).to_string())],
-        ),
+        Sel::SketchConstraint { id } => torno_ui_text::format("dialog.selection_constraint", &[("id", id)]),
+        Sel::Profile { sketch, index } => {
+            torno_ui_text::format("dialog.selection_profile", &[("sketch", &sketch_name(*sketch)), ("number", &index.saturating_add(1).to_string())])
+        }
         Sel::Plane { name } => names.label(name).to_string(),
         Sel::Axis { name } | Sel::ConstructionPoint { name } | Sel::Body { name } => name.clone(),
         Sel::Face { body, index, .. } if axis => format!("{body} · face {index} axis"),
@@ -3051,11 +3049,11 @@ fn stored_input_reference_key(d: &Dialog, index: usize) -> Option<&'static str> 
 
 /// An explicit revolve axis as its dialog holds it, in the world: the origin evaluated with the
 /// parameters (an untouched axis is restored as saved, expressions included:
-/// `solidcraft_engine::frames::to_local`). An origin that cannot be evaluated is kept as saved.
-pub(crate) fn line_axis_value(s: &Session, frame: &solidcraft_engine::doc::Mat, origin: &solidcraft_engine::doc::PointExpr, dir: Vec3) -> Value {
-    let dir_world = pt(solidcraft_engine::doc::apply_vector(frame, dir));
+/// `torno_engine::frames::to_local`). An origin that cannot be evaluated is kept as saved.
+pub(crate) fn line_axis_value(s: &Session, frame: &torno_engine::doc::Mat, origin: &torno_engine::doc::PointExpr, dir: Vec3) -> Value {
+    let dir_world = pt(torno_engine::doc::apply_vector(frame, dir));
     match s.doc.eval_point(origin) {
-        Ok(at) => json!({"origin": pt(solidcraft_engine::doc::apply_point(frame, at)), "dir": dir_world}),
+        Ok(at) => json!({"origin": pt(torno_engine::doc::apply_point(frame, at)), "dir": dir_world}),
         Err(_) => json!({"origin": origin, "dir": dir_world}),
     }
 }
@@ -3100,18 +3098,18 @@ pub(crate) fn input_rows_range(d: &mut Dialog, ui: &mut egui::Ui, s: &Session, n
                 let filled = !inp.items.is_empty() || custom_axis || stored_reference.is_some();
                 let text = if filled {
                     RichText::new(if stored_reference.is_some() && matches!(d.kind, Kind::Section { .. }) {
-                        solidcraft_ui_text::tr("ui.viewport_status_section_plane").into()
+                        torno_ui_text::tr("ui.viewport_status_section_plane").into()
                     } else if custom_axis || stored_reference.is_some() {
-                        solidcraft_ui_text::tr("dialog.custom_axis").into()
+                        torno_ui_text::tr("dialog.custom_axis").into()
                     } else if !inp.multi {
                         inp.items.first().map(|item| selection_label(s, names, d, inp, item)).unwrap_or_default()
                     } else {
                         let count = if i == 0 { shell_count.unwrap_or(inp.items.len()) } else { inp.items.len() };
-                        solidcraft_ui_text::format("dialog.selected_count", &[("count", &count.to_string())])
+                        torno_ui_text::format("dialog.selected_count", &[("count", &count.to_string())])
                     })
                     .color(t.on_accent)
                 } else {
-                    RichText::new(solidcraft_ui_text::tr("dialog.select")).color(t.text)
+                    RichText::new(torno_ui_text::tr("dialog.select")).color(t.text)
                 };
                 let selected_text = text.text().strip_prefix("↖ ").unwrap_or_else(|| text.text());
                 let prompt = if !filled && inp.label == "Edges" { tr("Select edges") } else { selected_text };
@@ -3141,7 +3139,7 @@ pub(crate) fn input_rows_range(d: &mut Dialog, ui: &mut egui::Ui, s: &Session, n
                         hint(inp).to_string()
                     }
                 } else if let Some(id) = inp.tip {
-                    solidcraft_ui_text::tr(id).to_string()
+                    torno_ui_text::tr(id).to_string()
                 } else {
                     format!("{} (click to pick into this input)", hint(inp))
                 };
@@ -3166,7 +3164,7 @@ pub(crate) fn input_rows_range(d: &mut Dialog, ui: &mut egui::Ui, s: &Session, n
                     if inp.multi {
                         let open = d.listed == Some(i);
                         let at = rect.translate(vec2(-t.space_24, 0.0));
-                        let label = solidcraft_ui_text::tr_label(if open { "Hide the picked items" } else { "Show the picked items" });
+                        let label = torno_ui_text::tr_label(if open { "Hide the picked items" } else { "Show the picked items" });
                         let arrow = crate::ui_kit::disclosure_button_at(ui, at, open, label);
                         crate::scenario::publish_handle(&format!("dialog:list_toggle:{}", inp.label), arrow.rect.center());
                         if arrow.clicked() {
@@ -3238,7 +3236,7 @@ pub(crate) fn input_rows_range(d: &mut Dialog, ui: &mut egui::Ui, s: &Session, n
 
 /// Feature patterns use the same source-fixed slot ordering and controls as sketch patterns.
 fn feature_pattern_alignment_row(ui: &mut egui::Ui, extra: &mut serde_json::Map<String, Value>, index: usize) {
-    use solidcraft_engine::sketch::PatternAlignment;
+    use torno_engine::sketch::PatternAlignment;
     let (label, alignment_key, reversed_key) =
         if index == 0 { ("Alignment", "alignment", "reversed") } else { ("Alignment 2", "alignment2", "reversed2") };
     let alignment = extra.get(alignment_key).cloned().and_then(|v| serde_json::from_value::<PatternAlignment>(v).ok()).unwrap_or_default();
@@ -3290,7 +3288,7 @@ fn already_linked(error: &str) -> bool {
 /// command this dialog runs, so the sketch ended or the mode changed under it.
 fn command_disabled(app: &SolveApp, d: &Dialog, error: &str) -> bool {
     let Some(id) = d.command() else { return false };
-    let Some(spec) = solidcraft_engine::find_command(id) else { return false };
+    let Some(spec) = torno_engine::find_command(id) else { return false };
     spec.disabled_refusal(&app.session).is_some_and(|refusal| refusal == error)
 }
 
@@ -3309,7 +3307,7 @@ fn error_rows(app: &mut SolveApp, ctx: &egui::Context, d: &mut Dialog, ui: &mut 
     // Under the fold in a short window, a new note scrolls into view once, as a refusal does.
     let note_shown_id = egui::Id::unique("sc_dialog_pick_refused_shown");
     if let Some(id) = d.pick_refused.filter(|_| d.error.is_none() && app.preview.error.is_none()) {
-        let note = crate::ui_kit::text(ui, solidcraft_ui_text::tr(id), crate::ui_kit::Text::Hint("pick_refused"));
+        let note = crate::ui_kit::text(ui, torno_ui_text::tr(id), crate::ui_kit::Text::Hint("pick_refused"));
         crate::scenario::publish_rect("dialog:pick_refused", note.rect);
         if ui.data(|m| m.get_temp::<&'static str>(note_shown_id)) != Some(id) {
             ui.scroll_to_rect(note.rect, None);
@@ -3339,15 +3337,15 @@ fn error_rows(app: &mut SolveApp, ctx: &egui::Context, d: &mut Dialog, ui: &mut 
             ui.vertical(|ui| {
                 crate::ui_kit::text(ui, &crate::refused_part::message(&part, operation.as_deref()), crate::ui_kit::Text::Report("error", true));
                 ui.horizontal(|ui| {
-                    let ready = solidcraft_engine::find_command(crate::refused_part::REPAIR).map(|c| c.info(&app.session));
+                    let ready = torno_engine::find_command(crate::refused_part::REPAIR).map(|c| c.info(&app.session));
                     let enabled = ready.as_ref().is_some_and(|i| i.enabled);
-                    let repair = crate::ui_kit::button(ui, solidcraft_ui_text::tr("refused.repair"), crate::ui_kit::Button::Enabled(enabled));
+                    let repair = crate::ui_kit::button(ui, torno_ui_text::tr("refused.repair"), crate::ui_kit::Button::Enabled(enabled));
                     crate::scenario::publish_handle("dialog:repair_part", repair.rect.center());
                     if repair.clicked() {
                         crate::refused_part::repair(app, &part.body);
                     }
                     if part.face.is_some() {
-                        let show = crate::ui_kit::button(ui, solidcraft_ui_text::tr("refused.show_face"), crate::ui_kit::Button::Normal);
+                        let show = crate::ui_kit::button(ui, torno_ui_text::tr("refused.show_face"), crate::ui_kit::Button::Normal);
                         crate::scenario::publish_handle("dialog:show_face", show.rect.center());
                         if show.clicked() {
                             crate::refused_part::show_face(app, &part);
@@ -3438,10 +3436,10 @@ pub(crate) fn fillet_plain_error(error: &str, setback_in_field: bool) -> Option<
         return Some(FilletRefusal::InField);
     }
     // A setback too short for its corner's patch: the least that builds, as the kernel names it
-    if let Some((_, rest)) = error.split_once(solidcraft_engine::kernel::SETBACK_AT_LEAST)
+    if let Some((_, rest)) = error.split_once(torno_engine::kernel::SETBACK_AT_LEAST)
         && let Some(least) = rest.split_once(" mm").map(|(n, _)| n.trim()).filter(|n| n.parse::<f64>().is_ok())
     {
-        return Some(FilletRefusal::Plain(solidcraft_ui_text::format("ui.fillet_error_setback_short", &[("least", &format!("{least} mm"))])));
+        return Some(FilletRefusal::Plain(torno_ui_text::format("ui.fillet_error_setback_short", &[("least", &format!("{least} mm"))])));
     }
     let too_large = error.contains("larger than the faces beside its edges allow");
     let corner = error.contains("setback") || error.contains("G2 corner") || error.contains("corner patch");
@@ -3479,7 +3477,7 @@ fn reveal_refusal(on_ok: bool, typing: bool, shown: Option<&str>, error: &str) -
 /// message is in the catalogs.
 fn shown_error(error: &str) -> String {
     let msg = error.strip_prefix("invalid parameters for `").and_then(|rest| rest.split_once("`: ")).map_or(error, |(_, msg)| msg);
-    crate::i18n::tr_diagnostic(solidcraft_ui_text::tr_label(msg))
+    crate::i18n::tr_diagnostic(torno_ui_text::tr_label(msg))
 }
 
 /// Find the Boundary Fill cells again when the tool bodies changed (keeping the choices of
@@ -3504,13 +3502,13 @@ fn update_fill_cells(app: &SolveApp, d: &mut Dialog) {
 
 /// The cells a set of tool bodies makes: each region inside some of them and outside the rest,
 /// as a point inside it and which tools hold it. Found by sampling a grid over the tools.
-pub(crate) fn fill_cells(st: &solidcraft_engine::doc::ModelState, tools: &[String]) -> Vec<(Vec3, String)> {
+pub(crate) fn fill_cells(st: &torno_engine::doc::ModelState, tools: &[String]) -> Vec<(Vec3, String)> {
     let bodies: Vec<_> = tools.iter().filter_map(|n| st.body(n).map(|b| (n.clone(), b.mesh()))).take(16).collect();
     if bodies.is_empty() {
         return Vec::new();
     }
     let indexes: Vec<_> = bodies.iter().map(|(_, m)| m.inside_index()).collect();
-    let bb = bodies.iter().fold(solidcraft_engine::geom::Aabb3::EMPTY, |b, (_, m)| b.union(&m.bounds()));
+    let bb = bodies.iter().fold(torno_engine::geom::Aabb3::EMPTY, |b, (_, m)| b.union(&m.bounds()));
     let n = 20;
     let at = |i: usize, lo: f64, hi: f64| lo + (hi - lo) * (i as f64 + 0.5) / n as f64;
     // Signature (which tools hold the point) → the points with it.
@@ -3657,7 +3655,7 @@ fn auto_operation(app: &SolveApp, d: &mut Dialog) {
     }
     // Showing or hiding a body changes what the extrude meets: the latch was decided among the
     // bodies shown before (#9919).
-    let shown = solidcraft_engine::shown_scope(&app.session);
+    let shown = torno_engine::shown_scope(&app.session);
     if let Kind::Extrude { smart, .. } = &mut d.kind
         && smart.shown != shown
     {
@@ -3666,7 +3664,7 @@ fn auto_operation(app: &SolveApp, d: &mut Dialog) {
     }
     // To an object, the extrude goes to it on whichever side it is: that is the side (#1633).
     if params.get("to").is_some()
-        && let Some(reach) = solidcraft_engine::extrude_reach(&app.session, &params)
+        && let Some(reach) = torno_engine::extrude_reach(&app.session, &params)
     {
         side = crate::smart_extrude::side(reach, 0);
     }
@@ -3696,7 +3694,7 @@ fn auto_operation(app: &SolveApp, d: &mut Dialog) {
             None => {
                 #[cfg(test)]
                 AUTO_OPERATION_ASKED.with(|n| n.set(n.get() + 1));
-                let op = solidcraft_engine::auto_operation(&app.session, &params).ok().flatten();
+                let op = torno_engine::auto_operation(&app.session, &params).ok().flatten();
                 if let Kind::Extrude { smart, .. } = &mut d.kind {
                     smart.auto = Some((key, op));
                 }
@@ -3712,7 +3710,7 @@ fn auto_operation(app: &SolveApp, d: &mut Dialog) {
     }
 }
 
-/// What [`solidcraft_engine::auto_operation`] depends on besides its parameters: the design
+/// What [`torno_engine::auto_operation`] depends on besides its parameters: the design
 /// (its revision counts every change, shown bodies too), which design it is, and the active
 /// component the extrude goes into.
 fn auto_operation_key(app: &SolveApp, params: &Value) -> u64 {
@@ -3779,7 +3777,7 @@ pub(crate) fn sync_feature_edit(app: &mut SolveApp) {
         | FeatureKind::Revolve { sketch, .. }
         | FeatureKind::SheetBase { sketch, .. }
         | FeatureKind::SheetContour { sketch, .. }
-        | FeatureKind::Hole { points: Some(solidcraft_engine::doc::SketchPoints { sketch, single: false, .. }), .. } => Some(**sketch),
+        | FeatureKind::Hole { points: Some(torno_engine::doc::SketchPoints { sketch, single: false, .. }), .. } => Some(**sketch),
         _ => None,
     });
 }
@@ -3846,7 +3844,7 @@ pub fn show(app: &mut SolveApp, ctx: &egui::Context) {
         return;
     }
     crate::sketch_text::sync_path(&mut d);
-    let _language = solidcraft_ui_text::scope(&app.preferences.language);
+    let _language = torno_ui_text::scope(&app.preferences.language);
     if let Kind::TextMove(k) = &d.kind
         && !crate::sketch_text_move::valid(app, k)
     {
@@ -3915,7 +3913,7 @@ pub fn show(app: &mut SolveApp, ctx: &egui::Context) {
 
     let raw_title = title_of(&d);
     let heading =
-        if d.editing.is_some() { solidcraft_ui_text::format("dialog.edit_title", &[("title", tr(raw_title))]) } else { tr(raw_title).to_string() };
+        if d.editing.is_some() { torno_ui_text::format("dialog.edit_title", &[("title", tr(raw_title))]) } else { tr(raw_title).to_string() };
     let frame = crate::ui_kit::Panel::feature_frame(ctx, app.ui.layout, side);
     // OK is offered once the inputs make a feature.
     let has_ok = !matches!(d.kind, Kind::Sketch | Kind::Measure { .. });
@@ -3992,9 +3990,9 @@ pub fn show(app: &mut SolveApp, ctx: &egui::Context) {
             painted = ui.is_visible() && !ui.is_sizing_pass();
             // A Press Pull's extrude shows the Press Pull command, not Extrude (#11705).
             let spec = if press_pull_extrude(&d) {
-                solidcraft_engine::find_command("solid.press_pull")
+                torno_engine::find_command("solid.press_pull")
             } else {
-                dense::command(&d.kind).and_then(solidcraft_engine::find_command)
+                dense::command(&d.kind).and_then(torno_engine::find_command)
             };
             let icon = spec.as_ref().map_or("", |s| s.icon);
             let label = spec.as_ref().map_or(heading.as_str(), |s| tr(s.label));
@@ -4020,7 +4018,7 @@ pub fn show(app: &mut SolveApp, ctx: &egui::Context) {
                 }
                 let text = app.applying.as_ref().map(|job| {
                     let seconds = ((crate::now_ms() - job.started) / 1000.0).floor().max(0.0);
-                    solidcraft_ui_text::format("dialog.computing", &[("seconds", &format!("{seconds:.0}"))])
+                    torno_ui_text::format("dialog.computing", &[("seconds", &format!("{seconds:.0}"))])
                 });
                 crate::ui_kit::ComputeStatus { text, busy: app.applying.is_some() || app.preview.busy, applying: app.applying.is_some() }
             };
@@ -4199,7 +4197,7 @@ pub fn show(app: &mut SolveApp, ctx: &egui::Context) {
     let finished = if cancel { None } else { app.applying.as_mut().and_then(Applying::finished) };
     // Preferences received after this frame's renderer setup take effect next frame.
     // Keep the result ready until the viewport will consume the prepared quality.
-    let finished = if finished.is_some() && solidcraft_engine::doc::display_quality::current() != display_quality(app) {
+    let finished = if finished.is_some() && torno_engine::doc::display_quality::current() != display_quality(app) {
         if let Some(job) = app.applying.as_mut() {
             job.ready = finished;
         }
@@ -4530,7 +4528,7 @@ pub(crate) fn right_click(app: &mut SolveApp) {
 
 /// The hint a right-click shows while `input` is empty and needed.
 fn pick_first(input: &SelInput) -> String {
-    solidcraft_ui_text::format("dialog.right_click_pick", &[("input", tr(input.label))])
+    torno_ui_text::format("dialog.right_click_pick", &[("input", tr(input.label))])
 }
 
 /// Close the dialog without applying it (Esc, Cancel). An edit puts the timeline marker back.
@@ -4788,7 +4786,7 @@ pub(crate) fn stored_length(s: &Session, e: &str) -> String {
 /// bare number inside an expression is, so it shows with that unit written out. Any other radius
 /// shows as stored, on Radius.
 fn round_size(s: &Session, radius: &str) -> (&'static str, String) {
-    use solidcraft_engine::doc::expr::is_bare_number;
+    use torno_engine::doc::expr::is_bare_number;
     match crate::length_input::diameter_of(radius) {
         Some(diameter) if is_bare_number(diameter) => ("diameter", crate::length_input::default(&s.doc, diameter)),
         Some(diameter) => ("diameter", diameter.to_string()),
@@ -4806,7 +4804,7 @@ pub(crate) fn shown_expr(e: &str, kind: ValueKind) -> String {
         ValueKind::Angle => "deg",
         _ => return e.to_string(),
     };
-    if solidcraft_engine::doc::expr::is_bare_number(e) { format!("{} {unit}", e.trim()) } else { e.to_string() }
+    if torno_engine::doc::expr::is_bare_number(e) { format!("{} {unit}", e.trim()) } else { e.to_string() }
 }
 
 fn hole_defaults(s: &Session) -> Kind {
@@ -4875,7 +4873,7 @@ fn flip_toward_viewer(app: &SolveApp, name: &str) -> Option<&'static str> {
 /// active component sits at the origin (the name says the same) or for a construction plane.
 fn shown_origin_plane(app: &SolveApp, name: &str) -> Option<Value> {
     let p = solidcore_record::Plane::named(name)?;
-    if app.session.doc.find_feature(name).is_some() || solidcraft_engine::doc::is_identity(&app.session.active_component_frame()) {
+    if app.session.doc.find_feature(name).is_some() || torno_engine::doc::is_identity(&app.session.active_component_frame()) {
         return None;
     }
     Some(json!({"origin": [0.0, 0.0, 0.0], "x_dir": pt(p.x), "y_dir": pt(p.y)}))
@@ -4891,12 +4889,12 @@ pub(crate) fn plane_by_name(s: &Session, name: &str) -> Option<solidcore_record:
         .iter()
         .find(|c| c.name == name)
         .and_then(|c| match &c.geom {
-            solidcraft_engine::doc::construct::ConstructGeom::Plane(pl) => Some(*pl),
+            torno_engine::doc::construct::ConstructGeom::Plane(pl) => Some(*pl),
             _ => None,
         })
         // With occurrences the world state leaves construction geometry out; the viewport's
         // planes are evaluated in place.
-        .or_else(|| solidcraft_engine::view::construction_planes(s).into_iter().find(|(_, n, _)| n == name).map(|(_, _, pl)| pl))
+        .or_else(|| torno_engine::view::construction_planes(s).into_iter().find(|(_, n, _)| n == name).map(|(_, _, pl)| pl))
 }
 
 /// Animate the camera to look straight at the active sketch plane.
@@ -4941,7 +4939,7 @@ fn look_at_sketch_from(app: &mut SolveApp, again: bool) {
 /// be (#9029). Facing the plane alone left a sketch on a turned component tilted on screen.
 /// Along world up/down, yaw turns the image (roll stays 0, as Top/Bottom views do); elsewhere
 /// roll squares the axes.
-pub(crate) fn square_sketch_axes(mut cam: solidcraft_viewport::Camera, sketch_x: Vec3, sketch_y: Vec3) -> solidcraft_viewport::Camera {
+pub(crate) fn square_sketch_axes(mut cam: torno_viewport::Camera, sketch_x: Vec3, sketch_y: Vec3) -> torno_viewport::Camera {
     let b = cam.back();
     let in_view = |v: Vec3| v - b * v.dot(b);
     let Some(mut x) = in_view(sketch_x).normalized() else {
@@ -4973,7 +4971,7 @@ pub(crate) fn square_sketch_axes(mut cam: solidcraft_viewport::Camera, sketch_x:
 /// zoomed out when that would not fit in the view; it never zooms in, so a zoom the user chose
 /// stays. A sketch without geometry keeps its plane's origin. Centring on the origin alone left a
 /// sketch drawn away from it (a part placed far from the origin, as imports often are) out of view.
-pub(crate) fn onto_sketch(mut to: solidcraft_viewport::Camera, ss: &solidcraft_engine::doc::SolvedSketch) -> solidcraft_viewport::Camera {
+pub(crate) fn onto_sketch(mut to: torno_viewport::Camera, ss: &torno_engine::doc::SolvedSketch) -> torno_viewport::Camera {
     let Some((lo, hi)) = ss.sketch.bounds() else {
         to.target = ss.plane.origin;
         return to;
@@ -4983,7 +4981,7 @@ pub(crate) fn onto_sketch(mut to: solidcraft_viewport::Camera, ss: &solidcraft_e
         b.add(ss.plane.to_world(p));
     }
     let keep = to.distance;
-    to.fit(&solidcraft_engine::render::view_bounds(&b));
+    to.fit(&torno_engine::render::view_bounds(&b));
     if keep.is_finite() && keep > to.distance {
         to.distance = keep;
     }
@@ -5120,15 +5118,15 @@ fn link_status(app: &SolveApp, cmd: &str, reply: &Value) -> Option<String> {
         None if curves.is_empty() => points.len(),
         None => 0,
     };
-    let command = solidcraft_ui_text::tr(if cmd == "sketch.intersect" { "ui.intersect" } else { "ui.project" });
-    let counted = |id: &str, n: usize| solidcraft_ui_text::format(id, &[("command", command), ("count", &n.to_string())]);
+    let command = torno_ui_text::tr(if cmd == "sketch.intersect" { "ui.intersect" } else { "ui.project" });
+    let counted = |id: &str, n: usize| torno_ui_text::format(id, &[("command", command), ("count", &n.to_string())]);
     let mut text = match (curves.len(), lone) {
         (0, 0) => return None,
         (1, 0) => counted("ui.sketch_links_added_curve", 1),
         (n, 0) => counted("ui.sketch_links_added_curves", n),
         (0, 1) => counted("ui.sketch_links_added_point", 1),
         (0, n) => counted("ui.sketch_links_added_points", n),
-        (c, p) => solidcraft_ui_text::format(
+        (c, p) => torno_ui_text::format(
             "ui.sketch_links_added_curves_and_points",
             &[
                 ("command", command),
@@ -5140,7 +5138,7 @@ fn link_status(app: &SolveApp, cmd: &str, reply: &Value) -> Option<String> {
     let linked = links.iter().any(|l| l.get("link").is_some_and(|l| !l.is_null()));
     if linked && sketch.is_some_and(|sk| sk.view.hide_projected) {
         text.push(' ');
-        text.push_str(&solidcraft_ui_text::format("ui.sketch_links_hidden", &[("option", solidcraft_ui_text::tr("ui.show_projected_geometries"))]));
+        text.push_str(&torno_ui_text::format("ui.sketch_links_hidden", &[("option", torno_ui_text::tr("ui.show_projected_geometries"))]));
     }
     Some(text)
 }
@@ -5198,7 +5196,7 @@ fn same_cut(a: (Vec3, Vec3), b: (Vec3, Vec3)) -> bool {
 }
 
 /// Placement used to edit a definition in the selected authoring occurrence.
-pub(crate) fn feature_frame(s: &Session, component: u64) -> solidcraft_engine::doc::Mat {
+pub(crate) fn feature_frame(s: &Session, component: u64) -> torno_engine::doc::Mat {
     if component == s.active_component { s.active_component_frame() } else { s.placed_document().component_transform(component) }
 }
 
@@ -5313,9 +5311,9 @@ pub(crate) fn emboss_profile_plane(app: &SolveApp, sketch: u64) -> Result<Option
     let plane = sketch.plane;
     let frame = face.sketch_frame(&app.session.doc, feature.component, owner, body).map_err(|error| error.to_string())?;
     solidcore_record::Plane::new(
-        solidcraft_engine::doc::apply_point(&frame, plane.origin),
-        solidcraft_engine::doc::apply_vector(&frame, plane.x),
-        solidcraft_engine::doc::apply_vector(&frame, plane.y),
+        torno_engine::doc::apply_point(&frame, plane.origin),
+        torno_engine::doc::apply_vector(&frame, plane.x),
+        torno_engine::doc::apply_vector(&frame, plane.y),
     )
     .map(Some)
     .ok_or_else(|| "the Emboss author frame is degenerate".into())
@@ -5969,10 +5967,10 @@ fn dialog_commands(app: &SolveApp, d: &Dialog) -> Result<Vec<(String, Value)>, S
         }
         Kind::Material { index, editor } => {
             if editor.editing() {
-                return Err(solidcraft_ui_text::tr("material.editor.save_or_discard").to_string());
+                return Err(torno_ui_text::tr("material.editor.save_or_discard").to_string());
             }
             need(0, "bodies")?;
-            let name = s.doc.material_names().get(*index).cloned().ok_or_else(|| solidcraft_ui_text::tr("material.selection.choose").to_string())?;
+            let name = s.doc.material_names().get(*index).cloned().ok_or_else(|| torno_ui_text::tr("material.selection.choose").to_string())?;
             ("material.assign", json!({"bodies": sels(d, 0).body_names(), "material": name}))
         }
         Kind::Section { offset, flip, hatch } => {
@@ -5990,7 +5988,7 @@ fn dialog_commands(app: &SolveApp, d: &Dialog) -> Result<Vec<(String, Value)>, S
                     json!({"origin": pt(*point), "normal": pt(n)})
                 }
                 Some(Sel::Plane { name }) => {
-                    let pl = solidcraft_engine::view::construction_planes(s)
+                    let pl = torno_engine::view::construction_planes(s)
                         .into_iter()
                         .find(|(_, n, _)| n == name)
                         .map(|(_, _, pl)| pl)
@@ -6097,13 +6095,13 @@ fn dialog_commands(app: &SolveApp, d: &Dialog) -> Result<Vec<(String, Value)>, S
                     if let Some(error) = opts.custom_thread.as_ref().and_then(|draft| draft.error.as_ref()) {
                         return Err(error.clone());
                     }
-                    solidcraft_engine::doc::parse_tapped_thread(&opts.thread)
+                    torno_engine::doc::parse_tapped_thread(&opts.thread)
                         .ok_or("select a valid metric or catalogued UNC/UNF, G, Rp, Rc or NPT thread size")?;
                     params["thread"] = json!(opts.thread.trim());
                     if !opts.thread_full_depth {
                         params["thread_depth"] = json!(opts.thread_depth.trim());
                     }
-                    if opts.hand != solidcraft_engine::doc::thread_forms::ThreadHand::Right {
+                    if opts.hand != torno_engine::doc::thread_forms::ThreadHand::Right {
                         params["hand"] = json!(opts.hand);
                     }
                     if opts.modeled {
@@ -6268,9 +6266,9 @@ fn box_corner(s: &Session, fields: &[(&'static str, String)], p: Vec3, normal: O
         // A plain length ("20 mm", "2 in"; a bare number has the design's unit by now) gives a
         // plain number (mm).
         // A size typed as `l = 20` is placed by its value: `l` exists only once the box does.
-        let size = solidcraft_engine::doc::expr::definition(&size).map_or(size.clone(), |(_, rhs)| rhs.to_string());
-        let plain = solidcraft_engine::doc::expr::is_literal(&size)
-            .then(|| solidcraft_engine::doc::Document::eval_in(&Default::default(), &size, ValueKind::Length).ok())
+        let size = torno_engine::doc::expr::definition(&size).map_or(size.clone(), |(_, rhs)| rhs.to_string());
+        let plain = torno_engine::doc::expr::is_literal(&size)
+            .then(|| torno_engine::doc::Document::eval_in(&Default::default(), &size, ValueKind::Length).ok())
             .flatten();
         match plain.filter(|v| v.is_finite()) {
             Some(v) => json!(c - back * v),
@@ -6379,7 +6377,7 @@ pub fn axis_of(app: &SolveApp, sel: &Sel) -> Option<(Vec3, Vec3)> {
             "Y" => Some((Vec3::ZERO, Vec3::Y)),
             "Z" => Some((Vec3::ZERO, Vec3::Z)),
             // A construction axis.
-            n => solidcraft_engine::view::construction_axes(&app.session).into_iter().find(|(_, an, _, _)| an == n).map(|(_, _, o, d)| (o, d)),
+            n => torno_engine::view::construction_axes(&app.session).into_iter().find(|(_, an, _, _)| an == n).map(|(_, _, o, d)| (o, d)),
         },
         Sel::SketchCurve { id, .. } => {
             let st = crate::open_meshing::session_world(&app.session);
@@ -6387,7 +6385,7 @@ pub fn axis_of(app: &SolveApp, sel: &Sel) -> Option<(Vec3, Vec3)> {
             let ss = st.sketch(sid)?;
             let (pa, pb) = if let Some(i) = ss.sketch.curve_index(id) {
                 let c = ss.sketch.curves.get(i)?;
-                let solidcraft_engine::sketch::CurveKind::Line { a, b } = c.kind else { return None };
+                let torno_engine::sketch::CurveKind::Line { a, b } = c.kind else { return None };
                 (ss.plane.to_world(ss.sketch.point(a)?), ss.plane.to_world(ss.sketch.point(b)?))
             } else {
                 let w = ss.sketch.wires.get(ss.sketch.wire_index(id)?)?;
@@ -6427,9 +6425,9 @@ pub(crate) fn edge_circle(s: &Session, body: &str, index: usize) -> Option<(Vec3
 }
 
 /// [`edge_circle`] in a given model state (a dialog editing a feature looks at the model before it).
-pub(crate) fn edge_circle_in(st: &solidcraft_engine::doc::ModelState, body: &str, index: usize) -> Option<(Vec3, Vec3, f64)> {
+pub(crate) fn edge_circle_in(st: &torno_engine::doc::ModelState, body: &str, index: usize) -> Option<(Vec3, Vec3, f64)> {
     let b = st.body(body)?;
-    let c = solidcraft_engine::kernel::edge_circle(&b.body, index)?;
+    let c = torno_engine::kernel::edge_circle(&b.body, index)?;
     let tol = (b.body.size() * 1e-6).max(1e-9) * 10.0;
     let on = |p: &Vec3| (p.dist(c.center) - c.radius).abs() <= tol && (*p - c.center).dot(*c.axis).abs() <= tol;
     b.mesh().edges.get(index)?.iter().all(on).then_some((c.center, *c.axis, c.radius))
@@ -6439,7 +6437,7 @@ pub(crate) fn edge_circle_in(st: &solidcraft_engine::doc::ModelState, body: &str
 /// torus face, pointing the way the command will find it (`construct::canonical_dir`). `None`
 /// for any other pick: those have no axis of their own.
 pub(crate) fn round_axis(s: &Session, sel: &Sel) -> Option<(Vec3, Vec3)> {
-    use solidcraft_engine::kernel::{self, FaceSurface};
+    use torno_engine::kernel::{self, FaceSurface};
     let (o, d) = match sel {
         Sel::Edge { body, index, .. } => edge_circle(s, body, *index).map(|(c, n, _)| (c, n))?,
         Sel::Face { body, index, .. } => {
@@ -6454,7 +6452,7 @@ pub(crate) fn round_axis(s: &Session, sel: &Sel) -> Option<(Vec3, Vec3)> {
         }
         _ => return None,
     };
-    o.is_finite().then(|| (o, solidcraft_engine::doc::construct::canonical_dir(d)))
+    o.is_finite().then(|| (o, torno_engine::doc::construct::canonical_dir(d)))
 }
 
 /// An axis pick that the command keeps as a reference to the model (`{edge|face: [x,y,z]}`), so
@@ -6523,7 +6521,7 @@ fn profile_axis_line(app: &SolveApp, sketch: u64, id: &str) -> Option<(Vec3, Vec
     let st = app.session.world_state().ok()?;
     let ss = st.sketch(sketch)?;
     let c = ss.sketch.curves.get(ss.sketch.curve_index(id)?)?;
-    let solidcraft_engine::sketch::CurveKind::Line { a, b } = c.kind else { return None };
+    let torno_engine::sketch::CurveKind::Line { a, b } = c.kind else { return None };
     let pa = ss.plane.to_world(ss.sketch.point(a)?);
     let pb = ss.plane.to_world(ss.sketch.point(b)?);
     let dir = (pb - pa).normalized()?;
@@ -6558,21 +6556,19 @@ const AXIS_PICK: &str =
     "the axis must be an origin or construction axis, a sketch line, a straight or circular edge, or a cylinder, cone or torus face";
 
 /// Which profiles of a sketch a profile selection means.
-pub(crate) fn profile_indices(ss: &solidcraft_engine::doc::SolvedSketch, sel: &ProfileSel) -> Vec<usize> {
+pub(crate) fn profile_indices(ss: &torno_engine::doc::SolvedSketch, sel: &ProfileSel) -> Vec<usize> {
     let ps = &ss.profiles;
     match sel {
         ProfileSel::All => (0..ps.len()).collect(),
         ProfileSel::Indices { indices } => indices.iter().copied().filter(|i| *i < ps.len()).collect(),
         ProfileSel::OffsetBoundaries { .. } | ProfileSel::WholeBoundaries { .. } => {
-            solidcraft_engine::doc::profile_selection_indices(ss, sel).unwrap_or_default()
+            torno_engine::doc::profile_selection_indices(ss, sel).unwrap_or_default()
         }
         ProfileSel::Curves { loops } => loops
             .iter()
-            .filter_map(|l| {
-                solidcraft_engine::doc::profile_selection_indices(ss, &ProfileSel::Curves { loops: vec![l.clone()] }).ok()?.first().copied()
-            })
+            .filter_map(|l| torno_engine::doc::profile_selection_indices(ss, &ProfileSel::Curves { loops: vec![l.clone()] }).ok()?.first().copied())
             .collect(),
-        ProfileSel::Points { points } => points.iter().filter_map(|q| solidcraft_engine::doc::sketch::profile_at_point(ps, *q)).collect(),
+        ProfileSel::Points { points } => points.iter().filter_map(|q| torno_engine::doc::sketch::profile_at_point(ps, *q)).collect(),
     }
 }
 
@@ -6600,13 +6596,13 @@ impl Drop for Refill {
 /// A point stored in a feature, as it shows on world body `body`: features keep their picks in
 /// the frame of the body they were on, so each body's placement takes the point to the world
 /// (a moved component, a pasted instance). Other points are the world already.
-fn stored_on(frames: &Option<Vec<(String, solidcraft_engine::doc::Mat)>>, body: &str, p: Vec3) -> Vec3 {
-    frames.as_ref().and_then(|f| f.iter().find(|(n, _)| n == body)).map(|(_, m)| solidcraft_engine::doc::apply_point(m, p)).unwrap_or(p)
+fn stored_on(frames: &Option<Vec<(String, torno_engine::doc::Mat)>>, body: &str, p: Vec3) -> Vec3 {
+    frames.as_ref().and_then(|f| f.iter().find(|(n, _)| n == body)).map(|(_, m)| torno_engine::doc::apply_point(m, p)).unwrap_or(p)
 }
 
 /// Body placements while filling a dialog from a feature (when anything is placed).
-fn stored_frames(s: &Session) -> Option<Vec<(String, solidcraft_engine::doc::Mat)>> {
-    if !REFILL.with(std::cell::Cell::get) || !solidcraft_engine::frames::placed(s) {
+fn stored_frames(s: &Session) -> Option<Vec<(String, torno_engine::doc::Mat)>> {
+    if !REFILL.with(std::cell::Cell::get) || !torno_engine::frames::placed(s) {
         return None;
     }
     let st = s.model.state();
@@ -6643,14 +6639,14 @@ pub(crate) fn face_sel(s: &Session, p0: Vec3) -> Option<Sel> {
 
 /// [`face_sel`], searching only the body called `only` when given (a pick saved on that body).
 pub(crate) fn face_sel_on(s: &Session, only: Option<&str>, p0: Vec3) -> Option<Sel> {
-    use solidcraft_engine::kernel::{self, FaceSurface};
+    use torno_engine::kernel::{self, FaceSurface};
 
     if !p0.is_finite() {
         return None;
     }
     let st = crate::open_meshing::session_world(s);
     let frames = stored_frames(s);
-    let mut best: Option<(f64, &solidcraft_engine::doc::ModelBody, usize, Vec3)> = None;
+    let mut best: Option<(f64, &torno_engine::doc::ModelBody, usize, Vec3)> = None;
     for b in st.bodies.iter().filter(|b| only.is_none_or(|n| b.name == n)) {
         let p = stored_on(&frames, &b.name, p0);
         let m = b.mesh();
@@ -6677,7 +6673,7 @@ pub(crate) fn face_sel_on(s: &Session, only: Option<&str>, p0: Vec3) -> Option<S
 /// Resolve a stored name on the current input body before placing its pick in the viewport.
 /// Keep the resolved index: a face point can lie on a boundary shared with another face.
 fn named_refill(s: &Session, body: Option<&str>, name: &str, point: Vec3, edge: bool) -> Option<Sel> {
-    use solidcraft_engine::doc::naming;
+    use torno_engine::doc::naming;
 
     if name.is_empty() {
         return None;
@@ -6702,20 +6698,20 @@ fn named_refill(s: &Session, body: Option<&str>, name: &str, point: Vec3, edge: 
         .body_frames_with_source(&st)
         .into_iter()
         .find(|(_, definition, _, _, _)| definition == source.definition_name())
-        .map(|(world, _, _, _, frame)| (world, solidcraft_engine::doc::apply_point(&frame, point)))
+        .map(|(world, _, _, _, frame)| (world, torno_engine::doc::apply_point(&frame, point)))
         .unwrap_or_else(|| (source.name.clone(), point));
     crate::open_meshing::session_world(s).body(&body)?;
     Some(if edge { Sel::Edge { body, index, point } } else { Sel::Face { body, index, point } })
 }
 
-fn emboss_face_sel(s: &Session, component: u64, face: &solidcraft_engine::doc::EmbossFace, persistent: &str) -> Option<Sel> {
+fn emboss_face_sel(s: &Session, component: u64, face: &torno_engine::doc::EmbossFace, persistent: &str) -> Option<Sel> {
     let source = s.model.state();
     let body = source.body(&face.body)?;
-    let index = solidcraft_engine::doc::naming::face_names(body).iter().position(|name| name == persistent)?;
+    let index = torno_engine::doc::naming::face_names(body).iter().position(|name| name == persistent)?;
     let owner = s.doc.model_body_component(body);
     let world_name = s.doc.world_body_name(&source, &face.body, owner, &face.path);
-    let author = solidcraft_engine::doc::EmbossFace::component_frame(&s.doc, component, &face.author_path).ok()?;
-    let point = solidcraft_engine::doc::apply_point(&author, face.at.0);
+    let author = torno_engine::doc::EmbossFace::component_frame(&s.doc, component, &face.author_path).ok()?;
+    let point = torno_engine::doc::apply_point(&author, face.at.0);
     crate::open_meshing::session_world(s).body(&world_name)?;
     Some(Sel::Face { body: world_name, index, point })
 }
@@ -6831,8 +6827,8 @@ pub(crate) fn angle_pivot(d: &Dialog) -> Option<&Sel> {
 }
 
 /// A stored point reference back into a dialog pick: a body vertex, sketch point or construction point.
-fn point_sel(s: &Session, g: &solidcraft_engine::doc::construct::GeoRef) -> Option<Sel> {
-    use solidcraft_engine::doc::construct::GeoRef;
+fn point_sel(s: &Session, g: &torno_engine::doc::construct::GeoRef) -> Option<Sel> {
+    use torno_engine::doc::construct::GeoRef;
     match g {
         GeoRef::Vertex { at, .. } => match face_sel(s, *at)? {
             Sel::Face { body, .. } => Some(Sel::Vertex { body, point: *at }),
@@ -6848,8 +6844,8 @@ fn point_sel(s: &Session, g: &solidcraft_engine::doc::construct::GeoRef) -> Opti
 
 /// A feature's axis on an edge or round face of the model back into a dialog pick: the edge or
 /// face where it is now.
-pub(crate) fn model_axis_sel(s: &Session, g: &solidcraft_engine::doc::construct::GeoRef) -> Option<Sel> {
-    use solidcraft_engine::doc::construct::GeoRef;
+pub(crate) fn model_axis_sel(s: &Session, g: &torno_engine::doc::construct::GeoRef) -> Option<Sel> {
+    use torno_engine::doc::construct::GeoRef;
     let at = g.picked_point(&crate::open_meshing::session_world(s))?;
     match g {
         GeoRef::Edge { .. } => edge_sel(s, at),
@@ -6859,10 +6855,10 @@ pub(crate) fn model_axis_sel(s: &Session, g: &solidcraft_engine::doc::construct:
 }
 
 /// A stored construction reference back into a dialog pick.
-fn geo_sel(s: &Session, g: &solidcraft_engine::doc::construct::GeoRef) -> Option<Sel> {
+fn geo_sel(s: &Session, g: &torno_engine::doc::construct::GeoRef) -> Option<Sel> {
     match g {
-        solidcraft_engine::doc::construct::GeoRef::Plane { plane } => plane_sel(s, plane),
-        solidcraft_engine::doc::construct::GeoRef::Face { at, .. } => face_sel(s, *at),
+        torno_engine::doc::construct::GeoRef::Plane { plane } => plane_sel(s, plane),
+        torno_engine::doc::construct::GeoRef::Face { at, .. } => face_sel(s, *at),
         _ => None,
     }
 }
@@ -6901,7 +6897,7 @@ fn pt3(v: Vec3) -> Value {
 }
 
 /// A point of expressions: numbers as numbers, expressions as strings.
-fn pt_expr(p: &solidcraft_engine::doc::PointExpr) -> Value {
+fn pt_expr(p: &torno_engine::doc::PointExpr) -> Value {
     Value::Array(p.iter().map(|e| e.parse::<f64>().ok().filter(|x| x.is_finite()).map_or_else(|| json!(e), |x| json!(x))).collect())
 }
 
@@ -6947,7 +6943,7 @@ pub fn for_feature(app: &SolveApp, id: u64, marker: Option<usize>) -> Option<Dia
                 if let Some(point) = point {
                     set_object(&mut d.inputs, &mut d.active, label, true);
                     if let Some(input) = d.inputs.iter_mut().find(|i| i.label == label) {
-                        input.items = vec![Sel::Vertex { body: String::new(), point: solidcraft_engine::doc::apply_point(&frame, point.0) }];
+                        input.items = vec![Sel::Vertex { body: String::new(), point: torno_engine::doc::apply_point(&frame, point.0) }];
                     }
                 }
             }
@@ -6987,7 +6983,7 @@ pub fn for_feature(app: &SolveApp, id: u64, marker: Option<usize>) -> Option<Dia
             if let Some(point) = to {
                 set_to_object(&mut d.inputs, &mut d.active, true);
                 if let Some(input) = d.inputs.iter_mut().find(|i| i.label == TO_OBJECT) {
-                    input.items = vec![Sel::Vertex { body: String::new(), point: solidcraft_engine::doc::apply_point(&frame, point.0) }];
+                    input.items = vec![Sel::Vertex { body: String::new(), point: torno_engine::doc::apply_point(&frame, point.0) }];
                 }
             }
             let items = st.sketch(sketch.0).map(|ss| profile_indices(ss, profiles)).unwrap_or_default();
@@ -7043,7 +7039,7 @@ pub fn for_feature(app: &SolveApp, id: u64, marker: Option<usize>) -> Option<Dia
             }
             // A fillet that reduces or tapers a radius too large for its edges.
             if let FeatureKind::Fillet { fit, .. } = &f.kind {
-                use solidcraft_engine::doc::FilletFit;
+                use torno_engine::doc::FilletFit;
                 let mode = match fit {
                     FilletFit::Exact => None,
                     FilletFit::Reduce => Some("reduce"),
@@ -7189,7 +7185,7 @@ pub fn for_feature(app: &SolveApp, id: u64, marker: Option<usize>) -> Option<Dia
                     // A saved drill other than the tap maker's for the size stays the hole's
                     // (an older design's d - P metric drill among them).
                     let saved = s.doc.eval(diameter, ValueKind::Length).ok();
-                    let tabulated = solidcraft_engine::doc::parse_tapped_thread(th).map(|t| t.tap_drill);
+                    let tabulated = torno_engine::doc::parse_tapped_thread(th).map(|t| t.tap_drill);
                     if saved.zip(tabulated).is_none_or(|(a, b)| (a - b).abs() > 1e-9) {
                         opts.drill = Some(diameter.to_string());
                     }
@@ -7262,7 +7258,7 @@ pub fn for_feature(app: &SolveApp, id: u64, marker: Option<usize>) -> Option<Dia
                     // direction when the body moves; seed the Face pick there too (#10689).
                     // Keep `position_exprs.point` as the stored value so expressions stay only
                     // when the pick is still that point (a moved face drops them for numbers).
-                    let on_face = solidcraft_engine::doc::hole_on_surface(&crate::open_meshing::session_world(s), position.0, direction.0, &[]);
+                    let on_face = torno_engine::doc::hole_on_surface(&crate::open_meshing::session_world(s), position.0, direction.0, &[]);
                     if let Some(inp) = d.inputs.first_mut() {
                         // Editing a Single hole places it at exactly one point: a pick replaces.
                         inp.multi = false;
@@ -7393,7 +7389,7 @@ pub fn for_feature(app: &SolveApp, id: u64, marker: Option<usize>) -> Option<Dia
             }
             d.extra.insert("base".into(), pt_expr(base));
             d.extra.insert("axis".into(), pt3(axis.0));
-            if *section == solidcraft_engine::doc::CoilSection::Square {
+            if *section == torno_engine::doc::CoilSection::Square {
                 d.extra.insert("section".into(), json!("square"));
             }
             match position {
@@ -7433,7 +7429,7 @@ pub fn for_feature(app: &SolveApp, id: u64, marker: Option<usize>) -> Option<Dia
             let mut d = start("solid.boundary_fill")?;
             // The cells again, ticked where a stored cell point lies in the same cell.
             let before = s.model.state_before(f.id);
-            let found = fill_cells(&before, &solidcraft_engine::doc::plain(tools));
+            let found = fill_cells(&before, &torno_engine::doc::plain(tools));
             let filled: Vec<String> =
                 cells.iter().filter_map(|c| found.iter().min_by(|a, b| a.0.dist(c.0).total_cmp(&b.0.dist(c.0))).map(|x| x.1.clone())).collect();
             let items: Vec<Sel> = tools.iter().map(|n| Sel::Body { name: n.to_string() }).collect();
@@ -7658,10 +7654,10 @@ pub fn for_feature(app: &SolveApp, id: u64, marker: Option<usize>) -> Option<Dia
         FeatureKind::ConstructionPlane { plane: PlaneRef::AlongPath { path, t } } => {
             let mut d = start("construct.plane.along_path")?;
             let (item, sketch) = match path.as_ref() {
-                solidcraft_engine::doc::construct::GeoRef::SketchCurve { sketch, curve } => {
+                torno_engine::doc::construct::GeoRef::SketchCurve { sketch, curve } => {
                     (crate::selection::curve_pick(curve, *sketch, s.active_sketch), Some(*sketch))
                 }
-                solidcraft_engine::doc::construct::GeoRef::Edge { at, name } => {
+                torno_engine::doc::construct::GeoRef::Edge { at, name } => {
                     // Preserve the saved named reference until a replacement is picked.
                     d.extra.insert("path".into(), json!({"type":"edge","at":pt3(*at),"name":name}));
                     (Sel::Edge { body: String::new(), index: 0, point: *at }, None)
@@ -7683,16 +7679,16 @@ pub fn for_feature(app: &SolveApp, id: u64, marker: Option<usize>) -> Option<Dia
                 // Keep the exact saved references when no new pick has replaced them.
                 // Fixed points also need a visible pick to keep the shared form complete.
                 input.items = vec![match reference.as_ref() {
-                    solidcraft_engine::doc::construct::GeoRef::World { axis } => Sel::Axis { name: axis.clone() },
-                    solidcraft_engine::doc::construct::GeoRef::Axis { name } => Sel::Axis { name: name.to_string() },
-                    solidcraft_engine::doc::construct::GeoRef::ConstructPoint { name } => Sel::ConstructionPoint { name: name.to_string() },
-                    solidcraft_engine::doc::construct::GeoRef::SketchPoint { sketch, point } => Sel::SketchPoint { id: format!("{sketch}:{point}") },
-                    solidcraft_engine::doc::construct::GeoRef::SketchCurve { sketch, curve } => {
+                    torno_engine::doc::construct::GeoRef::World { axis } => Sel::Axis { name: axis.clone() },
+                    torno_engine::doc::construct::GeoRef::Axis { name } => Sel::Axis { name: name.to_string() },
+                    torno_engine::doc::construct::GeoRef::ConstructPoint { name } => Sel::ConstructionPoint { name: name.to_string() },
+                    torno_engine::doc::construct::GeoRef::SketchPoint { sketch, point } => Sel::SketchPoint { id: format!("{sketch}:{point}") },
+                    torno_engine::doc::construct::GeoRef::SketchCurve { sketch, curve } => {
                         Sel::SketchCurve { id: curve.clone(), sketch: Some(*sketch) }
                     }
-                    solidcraft_engine::doc::construct::GeoRef::Vertex { at, .. } => Sel::Vertex { body: String::new(), point: *at },
-                    solidcraft_engine::doc::construct::GeoRef::Point { p } => Sel::Vertex { body: String::new(), point: *p },
-                    solidcraft_engine::doc::construct::GeoRef::Origin => Sel::Vertex { body: String::new(), point: Vec3::ZERO },
+                    torno_engine::doc::construct::GeoRef::Vertex { at, .. } => Sel::Vertex { body: String::new(), point: *at },
+                    torno_engine::doc::construct::GeoRef::Point { p } => Sel::Vertex { body: String::new(), point: *p },
+                    torno_engine::doc::construct::GeoRef::Origin => Sel::Vertex { body: String::new(), point: Vec3::ZERO },
                     other => model_axis_sel(s, other)?,
                 }];
             }
@@ -7893,13 +7889,13 @@ pub fn for_feature(app: &SolveApp, id: u64, marker: Option<usize>) -> Option<Dia
                 })
                 .unwrap_or_else(|| feature_frame(s, f.component));
             let mut world_translate = translate.clone();
-            if !solidcraft_engine::doc::is_identity(&frame) {
-                solidcraft_engine::doc::map_vector_expr(&frame, &mut world_translate);
+            if !torno_engine::doc::is_identity(&frame) {
+                torno_engine::doc::map_vector_expr(&frame, &mut world_translate);
             }
             crate::dialogs_move::for_feature(
                 &s.doc,
                 &mut d,
-                &solidcraft_engine::doc::plain(bodies),
+                &torno_engine::doc::plain(bodies),
                 &world_translate,
                 rotate_axis.map(Vec3::from),
                 angle.as_ref(),
@@ -7956,7 +7952,7 @@ pub fn for_feature(app: &SolveApp, id: u64, marker: Option<usize>) -> Option<Dia
 #[cfg(test)]
 mod param_refusal_tests {
     use super::*;
-    use solidcraft_engine::Session;
+    use torno_engine::Session;
 
     #[test]
     fn a_refused_parameter_change_shows_why() {
@@ -8055,11 +8051,11 @@ mod refused_ok_tests {
         params["sketch"] = json!(sketches[0]);
         h.app.run(command, params).unwrap();
         let feature = h.app.session.doc.features.last().unwrap().id;
-        assert!(!solidcraft_engine::view::sketch_shown(&h.app.session, sketches[0]));
+        assert!(!torno_engine::view::sketch_shown(&h.app.session, sketches[0]));
         h.app.edit_feature(feature);
         h.frames(1);
         assert_eq!(h.app.session.feature_edit_sketch, Some(sketches[0]), "{command}");
-        assert!(solidcraft_engine::view::sketch_shown(&h.app.session, sketches[0]), "{command}");
+        assert!(torno_engine::view::sketch_shown(&h.app.session, sketches[0]), "{command}");
         (h, sketches[0])
     }
 
@@ -8083,7 +8079,7 @@ mod refused_ok_tests {
                 assert_eq!(h.app.session.feature_edit_sketch, None, "{command} {how}");
                 // A new design has no such sketch; in the edited one it is hidden again.
                 if h.app.session.doc.feature(sketch).is_some() {
-                    assert!(!solidcraft_engine::view::sketch_shown(&h.app.session, sketch), "{command} {how}");
+                    assert!(!torno_engine::view::sketch_shown(&h.app.session, sketch), "{command} {how}");
                 }
             }
         }
@@ -8631,7 +8627,7 @@ mod awaiting_selection_tests {
             h.step(&serde_json::json!({"key":"Enter"})).unwrap();
             h.frames(2);
             assert_eq!(h.app.dialog.as_ref().and_then(|d| d.error.as_deref()), Some(english), "{command}");
-            let _japanese = solidcraft_ui_text::scope("ja");
+            let _japanese = torno_ui_text::scope("ja");
             let shown = super::shown_error(english);
             assert!(shown != english && !shown.is_ascii(), "{command} shows {shown:?}");
         }
@@ -8676,7 +8672,7 @@ mod extrude_mixed_pick_tests {
         h.step(&json!({"key":"Enter"})).unwrap();
         assert!(h.app.dialog.is_none(), "OK: {:?}", h.app.dialog.as_ref().and_then(|d| d.error.clone()));
         let st = crate::open_meshing::session_world(&h.app.session);
-        let volume: f64 = st.bodies.iter().map(|b| solidcraft_engine::doc::kernel::measure(&b.body).unwrap().volume).sum();
+        let volume: f64 = st.bodies.iter().map(|b| torno_engine::doc::kernel::measure(&b.body).unwrap().volume).sum();
         assert!((volume - 8000.0).abs() < 1e-6, "the box grown to 20 mm: {volume}");
     }
 }
@@ -8863,7 +8859,7 @@ mod construct_ask_tests {
         h.frames(2);
         assert!(h.app.dialog.is_none(), "Create closes the dialog: {:?}", status_error(&h.app));
         assert!(status_error(&h.app).is_none(), "{:?}", status_error(&h.app));
-        let axes = solidcraft_engine::view::construction_axes(&h.app.session);
+        let axes = torno_engine::view::construction_axes(&h.app.session);
         assert!(axes.iter().any(|(_, _, _, dir)| dir.z.abs() > 1.0 - 1e-6), "an axis along the cylinder: {axes:?}");
     }
 
@@ -8880,7 +8876,7 @@ mod construct_ask_tests {
         h.frames(2);
         assert!(h.app.dialog.is_none(), "Create closes the dialog: {:?}", status_error(&h.app));
         assert!(status_error(&h.app).is_none(), "{:?}", status_error(&h.app));
-        assert!(!solidcraft_engine::view::construction_planes(&h.app.session).is_empty(), "the tangent plane is created");
+        assert!(!torno_engine::view::construction_planes(&h.app.session).is_empty(), "the tangent plane is created");
     }
 
     /// #8822: a reference plane and an angle place the tangent plane, and editing it brings both back.
@@ -8900,7 +8896,7 @@ mod construct_ask_tests {
         h.step(&json!({"key": "Enter"})).unwrap();
         h.frames(2);
         assert!(h.app.dialog.is_none(), "Create closes the dialog: {:?}", status_error(&h.app));
-        let planes = solidcraft_engine::view::construction_planes(&h.app.session);
+        let planes = torno_engine::view::construction_planes(&h.app.session);
         let (id, _, pl) = planes.last().expect("the tangent plane is created");
         // XZ faces ±Y; turned 30° about the axis (Z), on the side of the pick (+X).
         let n = Vec3::new(0.5, -(3f64.sqrt()) / 2.0, 0.0);

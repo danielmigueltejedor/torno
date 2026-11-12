@@ -4,15 +4,15 @@ mod raster;
 
 use egui::{ColorImage, Rect, TextureId};
 use serde_json::json;
-use solidcraft_ui_egui::{
+use std::collections::HashMap;
+use torno_ui_egui::{
     scenario::{self, Harness},
     ui_kit::LayoutMode,
 };
-use std::collections::HashMap;
 
 #[test]
 fn appearance_and_browser_folds_keep_handles_and_render_both_states() {
-    let previous = solidcraft_theme::is_dark();
+    let previous = torno_theme::is_dark();
     let dir = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../target/disclosure-review");
     std::fs::create_dir_all(&dir).unwrap();
     for dark in [false, true] {
@@ -22,7 +22,7 @@ fn appearance_and_browser_folds_keep_handles_and_render_both_states() {
         h.call("ui.set", json!({"dark":dark}));
         h.app.ui.layout = LayoutMode::Floating;
         h.app.run("solid.box", json!({"length":10,"width":10,"height":10})).unwrap();
-        h.app.session.selection = vec![solidcraft_engine::Sel::Body { name: "Body1".into() }];
+        h.app.session.selection = vec![torno_engine::Sel::Body { name: "Body1".into() }];
         h.app.start("appearance.assign");
         h.frames(3);
         for open in [true, false] {
@@ -36,8 +36,8 @@ fn appearance_and_browser_folds_keep_handles_and_render_both_states() {
             assert_eq!(scenario::handle_at("appearance:search").is_some(), open);
             // Fresh context transfers all textures to the software renderer, including fonts.
             h.ctx = egui::Context::default();
-            solidcraft_ui_egui::fonts::setup_fonts(&h.ctx);
-            solidcraft_theme::apply(&h.ctx);
+            torno_ui_egui::fonts::setup_fonts(&h.ctx);
+            torno_theme::apply(&h.ctx);
             let mut textures: HashMap<TextureId, ColorImage> = HashMap::new();
             for _ in 0..8 {
                 raster::paint(&mut h, &mut textures, vec![]);
@@ -58,7 +58,7 @@ fn appearance_and_browser_folds_keep_handles_and_render_both_states() {
             }
         }
     }
-    solidcraft_theme::set_dark(previous);
+    torno_theme::set_dark(previous);
 }
 
 #[test]
@@ -68,7 +68,7 @@ fn render_browser_uses_shared_rows_in_both_lenses_and_themes() {
     for dark in [false, true] {
         let mut h = Harness::new();
         h.app.home.open = false;
-        h.app.session.run_script(&solidcraft_engine::sample::script()).unwrap();
+        h.app.session.run_script(&torno_engine::sample::script()).unwrap();
         h.app.run("solid.box", json!({"corner":[60,0,0],"length":10,"width":10,"height":10,"body_name":"Detail block"})).unwrap();
         h.app.run("appearance.assign", json!({"bodies":["Plate"],"appearance":"ABS - Red"})).unwrap();
         h.app.run("appearance.assign", json!({"bodies":["Detail block"],"appearance":"ABS - Blue"})).unwrap();
@@ -86,8 +86,8 @@ fn render_browser_uses_shared_rows_in_both_lenses_and_themes() {
         h.app.run("render.settings.set", json!({"name":"Detail","set":{"job":{"method":"raster"}}})).unwrap();
         h.call("ui.workspace", json!({"workspace":"render"}));
         h.ctx = egui::Context::default();
-        solidcraft_ui_egui::fonts::setup_fonts(&h.ctx);
-        solidcraft_theme::apply(&h.ctx);
+        torno_ui_egui::fonts::setup_fonts(&h.ctx);
+        torno_theme::apply(&h.ctx);
         let mut textures: HashMap<TextureId, ColorImage> = HashMap::new();
         for _ in 0..8 {
             raster::paint(&mut h, &mut textures, vec![]);
@@ -118,7 +118,7 @@ fn render_browser_uses_shared_rows_in_both_lenses_and_themes() {
             for action in ["render:tree:lights:add", "render:tree:light:0:solo", "render:tree:light:0:mute", "render:tree:shots:add"] {
                 assert!(scenario::rect_of(action).is_some(), "{action}");
             }
-            assert_eq!(solidcraft_theme::is_dark(), dark);
+            assert_eq!(torno_theme::is_dark(), dark);
             assert_eq!(scenario::rect_of("render:tree:look:0").is_some(), lens == "look");
             let browser = scenario::rect_of("browser:card").unwrap();
             let screenshot = raster::raster(&mut h, &textures, output);

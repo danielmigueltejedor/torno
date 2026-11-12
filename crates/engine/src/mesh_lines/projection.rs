@@ -1,12 +1,12 @@
 //! Vector hidden-line removal: intersect each projected edge with triangle half planes and
 //! its depth plane, then union occluded parameter intervals. A BVH bounds the candidate work.
 use solidcore_record::{Vec2, Vec3};
-use solidcraft_geom::Aabb3;
-#[cfg(test)]
-use solidcraft_geom::Mesh;
-use solidcraft_geom::prelude::*;
-use solidcraft_viewport::Camera;
 use std::collections::BTreeMap;
+use torno_geom::Aabb3;
+#[cfg(test)]
+use torno_geom::Mesh;
+use torno_geom::prelude::*;
+use torno_viewport::Camera;
 
 pub(crate) struct Drawing {
     pub lines: Vec<Line>,

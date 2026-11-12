@@ -1,5 +1,5 @@
 //! Sweep paths through 3D sketch curves ([`PointPath`]): drawn 3D splines, which the kernel gets
-//! as their fit points and so exactly ([`solidcraft_geom::catmull_rom`]); curves it holds
+//! as their fit points and so exactly ([`torno_geom::catmull_rom`]); curves it holds
 //! exactly as path segments (sketch curves, body edges: [`edge_path`]); and polylines (curves
 //! that reach it only as points: projected onto a face, intersection and iso curves). SMLib
 //! follows the path's segments ([`PointPath::segs`]), each free-form span exactly as a
@@ -8,9 +8,9 @@
 
 use solidcore_record::brep;
 use solidcore_record::{MAX_BEZIER_CTRL, MAX_BEZIER_DEGREE, Plane, Region2, Vec3};
-use solidcraft_geom::bspline::{HPoint, bezier_point, segment};
-use solidcraft_geom::catmull_rom;
-use solidcraft_geom::prelude::*;
+use torno_geom::bspline::{HPoint, bezier_point, segment};
+use torno_geom::catmull_rom;
+use torno_geom::prelude::*;
 
 use crate::body::Body;
 use crate::{KernelError, PathSeg, Result, SweepControl};
@@ -203,7 +203,7 @@ pub fn project_onto_face(
 /// the face's normal there (its exact normal from the record) and `along`: SMLib's section curves
 /// on that face, as record curves on their intervals.
 pub fn face_section_along(body: &Body, face: usize, at: Vec3, along: Vec3) -> Result<Vec<(brep::Curve, [f64; 2])>> {
-    use solidcraft_geom::brep::eval::SurfaceEval;
+    use torno_geom::brep::eval::SurfaceEval;
     let f = body.record().faces.get(face).ok_or_else(|| KernelError::Invalid(format!("the body has no face {face}")))?;
     let eval = SurfaceEval::new(f.parameters()).map_err(|e| KernelError::Failed(format!("face section: {e}")))?;
     let [[u0, u1], [v0, v1]] = f.domain;

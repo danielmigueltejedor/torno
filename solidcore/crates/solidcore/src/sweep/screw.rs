@@ -4,7 +4,7 @@
 //! surface as its definition, the wall its certified net (#2572,
 //! [`crate::surface::procedural_sweep::ProceduralSweep`]).
 //!
-//! Source: the SolidCraft fork's C API, `capi/src/smlib_sweeps.cpp` of
+//! Source: the Torno fork's C API, `capi/src/smlib_sweeps.cpp` of
 //! tangency-labs/smlib at `83748ba` (Apache-2.0), commits `d6d44b4` (the screw sweep),
 //! `9ddb350` (walls within the tolerance asked, end spans included, #1162), `a19e7bf`
 //! (a profile line along the axis sweeps an exact cylinder, #1163), `9354003`

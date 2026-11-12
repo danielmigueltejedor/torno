@@ -816,7 +816,7 @@ fn knife_edge_chamfers() {
     }
 }
 
-/// The part from SolidCraft #871: a plate with a narrower block on top and a window through both.
+/// The part from Torno #871: a plate with a narrower block on top and a window through both.
 fn part_871() -> Body {
     let (a, b) = (12.74437365538526, 22.69275963366936);
     let at = |lo: [f64; 3], hi: [f64; 3]| make_box(lo, [hi[0] - lo[0], hi[1] - lo[1], hi[2] - lo[2]]).unwrap();

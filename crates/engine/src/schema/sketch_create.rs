@@ -385,7 +385,7 @@ impl<'de> Deserialize<'de> for BlendContinuity {
         if v.as_str().is_some_and(|s| s.trim().is_empty()) {
             return Ok(BlendContinuity(String::new()));
         }
-        params::continuity("", Some(&v), "`continuity`", solidcraft_kernel::Construction::BlendCurve)
+        params::continuity("", Some(&v), "`continuity`", torno_kernel::Construction::BlendCurve)
             .map(|g| BlendContinuity(g.as_str().to_string()))
             .map_err(|e| D::Error::custom(whole(message_of(e))))
     }
@@ -442,7 +442,7 @@ impl<'de> Deserialize<'de> for SplinePoints {
         let Value::Array(list) = Value::deserialize(d)? else {
             return Err(D::Error::custom(whole("`points` must be a list")));
         };
-        if list.len() < 2 || list.len() > solidcraft_sketch::MAX_SPLINE_POINTS {
+        if list.len() < 2 || list.len() > torno_sketch::MAX_SPLINE_POINTS {
             return Err(D::Error::custom(whole("a spline needs 2 to 500 points")));
         }
         for v in &list {
@@ -460,7 +460,7 @@ impl JsonSchema for SplinePoints {
         let point = generator.subschema_for::<SnapPoint>();
         json_schema!({
             "description": "The spline's points, 2 to 500, each [x, y], a point id or a snap; consecutive points must differ.",
-            "type": "array", "items": point, "minItems": 2, "maxItems": solidcraft_sketch::MAX_SPLINE_POINTS
+            "type": "array", "items": point, "minItems": 2, "maxItems": torno_sketch::MAX_SPLINE_POINTS
         })
     }
 }
@@ -1147,14 +1147,14 @@ pub struct LineTypeResult {
 fn text_words<'de, D: Deserializer<'de>>(d: D) -> Result<Option<String>, D::Error> {
     nullable(d, |v| match v {
         Value::String(t) if t.trim().is_empty() => refuse("`text` must not be empty"),
-        Value::String(t) if t.chars().count() > solidcraft_sketch::MAX_TEXT_CHARS => refuse("text too long"),
+        Value::String(t) if t.chars().count() > torno_sketch::MAX_TEXT_CHARS => refuse("text too long"),
         Value::String(t) => Ok(t),
         _ => refuse("`text` must be a string"),
     })
 }
 
 fn text_words_schema(_: &mut SchemaGenerator) -> Schema {
-    json_schema!({"type": "string", "pattern": not_blank_pattern(), "maxLength": solidcraft_sketch::MAX_TEXT_CHARS})
+    json_schema!({"type": "string", "pattern": not_blank_pattern(), "maxLength": torno_sketch::MAX_TEXT_CHARS})
 }
 
 fn text_expression<'de, D: Deserializer<'de>>(d: D) -> Result<Option<String>, D::Error> {

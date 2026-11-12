@@ -1,7 +1,7 @@
-//! The SolidCraft fork's tangency-labs/smlib@db4a655 (`fillet_cliff_overflow`, WR-631 /
+//! The Torno fork's tangency-labs/smlib@db4a655 (`fillet_cliff_overflow`, WR-631 /
 //! WR-635 / WR-636): a closed rim blended past the far end of its wall is built as if the
 //! wall went on, then cut by the face beyond. The disc R13 x 2 with its top rim rounded
-//! R2.5 (solidcraft#190): the round's rail on the wall lies 0.5 below the disc's bottom,
+//! R2.5 (torno#190): the round's rail on the wall lies 0.5 below the disc's bottom,
 //! past the cylinder's domain, so the wall is continued as itself, the rail is one closed
 //! edge (one circle), and the removal region closes on the band of the continued wall
 //! between the rail and the blended rim.

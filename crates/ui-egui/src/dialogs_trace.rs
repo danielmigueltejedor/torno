@@ -6,14 +6,14 @@ use crate::ui_kit::{choice_row, expr_row, text_row};
 use egui::{Pos2, Stroke};
 use serde_json::{Value, json};
 use solidcore_record::Vec3;
-use solidcraft_engine::doc::{IDENTITY, Mat, apply_point, mat_inverse, mat_mul};
-use solidcraft_engine::{Sel, Session};
+use torno_engine::doc::{IDENTITY, Mat, apply_point, mat_inverse, mat_mul};
+use torno_engine::{Sel, Session};
 
 use super::{Hover, body_of, capital, movable, num, pt, sel_items, snap_of};
 use crate::dialogs::{combo, form_row};
 use crate::selection::SelInput;
 use crate::viewport::Proj;
-use solidcraft_theme::Tokens;
+use torno_theme::Tokens;
 
 #[derive(Clone, Debug)]
 pub struct TraceForm {
@@ -87,12 +87,12 @@ pub fn params(s: &Session, f: &TraceForm, inputs: &[SelInput]) -> Result<Value, 
         let mut reference = snap.param;
         reference["occurrence"] = json!(path.last().copied().unwrap_or(0));
         for key in ["point", "face", "circle", "edge", "corner"] {
-            if let Some(at) = reference.get(key).and_then(solidcraft_engine::params::vec3) {
+            if let Some(at) = reference.get(key).and_then(torno_engine::params::vec3) {
                 reference[key] = pt(apply_point(&placed, apply_point(&inverse, at)));
             }
         }
-        if let Some(z) = reference.get("z").and_then(solidcraft_engine::params::vec3) {
-            reference["z"] = pt(solidcraft_engine::doc::apply_vector(&placed, solidcraft_engine::doc::apply_vector(&inverse, z)));
+        if let Some(z) = reference.get("z").and_then(torno_engine::params::vec3) {
+            reference["z"] = pt(torno_engine::doc::apply_vector(&placed, torno_engine::doc::apply_vector(&inverse, z)));
         }
         p["point_ref"] = reference;
     }
@@ -102,7 +102,7 @@ pub fn params(s: &Session, f: &TraceForm, inputs: &[SelInput]) -> Result<Value, 
         let j = s.doc.assembly.joints.get(f.joint).ok_or("no joint that moves yet")?;
         p["joint"] = json!(j.id);
         p["index"] = json!(f.index);
-        let kind = if j.kind.is_angle(f.index) { solidcraft_engine::doc::expr::Kind::Angle } else { solidcraft_engine::doc::expr::Kind::Length };
+        let kind = if j.kind.is_angle(f.index) { torno_engine::doc::expr::Kind::Angle } else { torno_engine::doc::expr::Kind::Length };
         p["from"] = json!(crate::length_input::expression(&s.doc, &f.from, kind));
         p["to"] = json!(crate::length_input::expression(&s.doc, &f.to, kind));
     }
@@ -136,10 +136,10 @@ pub(crate) fn stop_text(v: &Value) -> Option<String> {
     // The values come from the engine: a missing key is an empty name, never a panic.
     let name = |m: &serde_json::Map<String, Value>, key: &str| m.get(key).and_then(Value::as_str).unwrap_or_default().to_string();
     if let Some(l) = v["stopped_by_loop"].as_object() {
-        return Some(solidcraft_ui_text::format("trace.stopped_by_loop", &[("sample", &at), ("joint", &name(l, "joint"))]));
+        return Some(torno_ui_text::format("trace.stopped_by_loop", &[("sample", &at), ("joint", &name(l, "joint"))]));
     }
     let c = v["stopped_by_contact"].as_object()?;
-    Some(solidcraft_ui_text::format("trace.stopped_by_contact", &[("sample", &at), ("a", &name(c, "a")), ("b", &name(c, "b"))]))
+    Some(torno_ui_text::format("trace.stopped_by_contact", &[("sample", &at), ("a", &name(c, "a")), ("b", &name(c, "b"))]))
 }
 
 /// The dialog's rows; true when Enter was pressed in a value.
@@ -200,9 +200,9 @@ pub fn rows(app: &mut crate::SolveApp, ui: &mut egui::Ui, f: &mut TraceForm, inp
         let (text, tone) = match r {
             Ok(v) => match stop_text(v) {
                 Some(why) => (why, crate::ui_kit::StatusTone::Warning),
-                None => (solidcraft_ui_text::format("trace.points", &[("count", &v["samples"].to_string())]), crate::ui_kit::StatusTone::Dim),
+                None => (torno_ui_text::format("trace.points", &[("count", &v["samples"].to_string())]), crate::ui_kit::StatusTone::Dim),
             },
-            Err(e) => (solidcraft_ui_text::tr_label(e).to_string(), crate::ui_kit::StatusTone::Dim),
+            Err(e) => (torno_ui_text::tr_label(e).to_string(), crate::ui_kit::StatusTone::Dim),
         };
         crate::ui_kit::status_line(ui, &text, tone);
     }
@@ -244,15 +244,15 @@ mod shared_status_baseline_tests {
         }
         assert_eq!(
             stop_text(&json!({"stopped_at":3,"stopped_by_loop":{"joint":"Hinge"},"stopped_by_contact":{"a":"A","b":"B"}})),
-            Some(solidcraft_ui_text::format("trace.stopped_by_loop", &[("sample", "3"), ("joint", "Hinge")]))
+            Some(torno_ui_text::format("trace.stopped_by_loop", &[("sample", "3"), ("joint", "Hinge")]))
         );
         assert_eq!(
             stop_text(&json!({"stopped_at":4,"stopped_by_contact":{"a":"A","b":"B"}})),
-            Some(solidcraft_ui_text::format("trace.stopped_by_contact", &[("sample", "4"), ("a", "A"), ("b", "B")]))
+            Some(torno_ui_text::format("trace.stopped_by_contact", &[("sample", "4"), ("a", "A"), ("b", "B")]))
         );
         assert_eq!(
             stop_text(&json!({"stopped_at":0,"stopped_by_contact":{"a":1,"b":null}})),
-            Some(solidcraft_ui_text::format("trace.stopped_by_contact", &[("sample", "0"), ("a", ""), ("b", "")]))
+            Some(torno_ui_text::format("trace.stopped_by_contact", &[("sample", "0"), ("a", ""), ("b", "")]))
         );
     }
 }

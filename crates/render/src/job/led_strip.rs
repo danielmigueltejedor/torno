@@ -3,7 +3,7 @@
 use super::{ErrorCode, JobError, RaytraceOptions, RectangleLightOptions, Result};
 use serde::{Deserialize, Serialize};
 use solidcore_record::Vec3;
-use solidcraft_geom::prelude::*;
+use torno_geom::prelude::*;
 
 /// Illustrative linear RGB choices, not measured LED spectra or calibrated CCT.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]

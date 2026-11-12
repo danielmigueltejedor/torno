@@ -2,7 +2,7 @@
 //! in inches and degrees, and what it refuses. Expected values are the file's numbers times the
 //! unit factors, written as the same products, so every comparison is exact.
 //!
-//! Origin: SolidCraft's `crates/step/src/geom_tests.rs` at `a5b71ca2`, without the parts that
+//! Origin: Torno's `crates/step/src/geom_tests.rs` at `a5b71ca2`, without the parts that
 //! test evaluation (`Curve::point`, `Surface::point`) or the writer, which are not in the record;
 //! a case that checked a value by evaluating checks the data the value comes from instead.
 
@@ -343,7 +343,7 @@ fn polyline_and_trimmed_curve() {
 
 /// A trimmed curve's parameters are its basis's: through an offset, a trimmed or a surface
 /// curve of a conic they are still angles, so a file in degrees gives radians (a review on
-/// #2592). SolidCraft's reader looked at the direct basis only and kept 90 unscaled.
+/// #2592). Torno's reader looked at the direct basis only and kept 90 unscaled.
 #[test]
 fn trims_on_a_curve_over_a_conic_are_angles() {
     let deg = Units { len: 1.0, ang: DEG };

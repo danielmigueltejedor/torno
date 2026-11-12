@@ -8,9 +8,9 @@
 //! end to its own vertex: the C++ fork's union has 1096 edges and 712 vertices, with
 //! every edge end within 1.206e-5 of its vertex.
 //!
-//! The operands are SolidCraft's rig recipe (booleans/4623) on solidcore alone: each is a
+//! The operands are Torno's rig recipe (booleans/4623) on solidcore alone: each is a
 //! capped ruled loft minus a slightly larger one, and both are copied into their own key
-//! domain before each boolean, as SolidCraft's backend does.
+//! domain before each boolean, as Torno's backend does.
 #![allow(
     clippy::unwrap_used,
     clippy::expect_used,
@@ -44,7 +44,7 @@ fn named(entity: EntityRef, domain: u64) -> ObjectRef {
     }
 }
 
-/// `api_brep_copy` into key domain `n`, as SolidCraft copies boolean operands.
+/// `api_brep_copy` into key domain `n`, as Torno copies boolean operands.
 fn copy_of(k: &mut Kernel, b: &Brep, n: u64) -> Brep {
     let target = move |e| named(e, n * 100_000_000);
     let mut state = p2::ArenaNotifyState::new(&Brep::new());
@@ -117,7 +117,7 @@ fn union_edge_ends(k: &mut Kernel) -> (usize, usize, f64) {
 /// The two imprint flags, with `new_edge_vertex_tolerance_covers_gap` (whose wider vertex
 /// tolerances gave the extension its reach in #1480's bisect). Without ffaf4e8 the flags-on
 /// union had 992 edges, 608 vertices and an edge end 8.061e-5 off its vertex. With every
-/// `UpstreamFixes` flag on (SolidCraft's set) the union is the C++ fork's: 1096 edges, 712
+/// `UpstreamFixes` flag on (Torno's set) the union is the C++ fork's: 1096 edges, 712
 /// vertices, worst edge end 1.206e-5.
 fn kernel(trim: bool, extend: bool) -> Kernel {
     let mut k = Kernel::new(&KernelOptions::default());

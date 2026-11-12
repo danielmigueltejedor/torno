@@ -10,12 +10,12 @@
 //! straight edge between the moved corners. Anything else (curved neighbours, a gap the
 //! neighbours cannot close) is refused, naming the face.
 
-use solidcraft_geom::prelude::*;
 use std::collections::{BTreeSet, HashMap};
+use torno_geom::prelude::*;
 
 use solidcore_record::Vec3;
 use solidcore_record::brep::Curve;
-use solidcraft_geom::Aabb3;
+use torno_geom::Aabb3;
 
 use crate::assemble::{AFace, AUse, Assembly};
 use crate::body::Body;
@@ -102,7 +102,7 @@ fn position(asm: &Assembly, moved: &HashMap<u32, Vec3>, v: u32) -> Result<Vec3> 
 /// Delete faces (indices in the body's face order, as in its mesh's `tri_face`) and heal the
 /// gap by extending the neighbouring planes. The result's history is over `[body]`.
 pub fn delete_faces(body: &Body, faces: &[usize]) -> Result<Body> {
-    let _span = solidcraft_profile::span("kernel", "delete_faces");
+    let _span = torno_profile::span("kernel", "delete_faces");
     body.require_brep("Delete Face")?;
     let rec = crate::native::brep_record(body)?;
     let n = rec.faces.len();
@@ -328,7 +328,7 @@ pub fn delete_faces(body: &Body, faces: &[usize]) -> Result<Body> {
 #[cfg(test)]
 mod tests {
     use solidcore_record::Vec3;
-    use solidcraft_geom::MeshGeom;
+    use torno_geom::MeshGeom;
 
     use super::delete_faces;
     use crate::{BoolOp, boolean, box_solid, chamfer, cylinder, fillet};

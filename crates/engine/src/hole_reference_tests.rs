@@ -3,12 +3,12 @@
 //! when the part changes (also after the design is saved and reopened), and a bad reference is
 //! refused with an error. A cylinder takes the same references for its base (#6380).
 
-use solidcraft_geom::prelude::*;
 use std::f64::consts::PI;
+use torno_geom::prelude::*;
 
 use serde_json::{Value, json};
 use solidcore_record::Vec3;
-use solidcraft_doc::FeatureKind;
+use torno_doc::FeatureKind;
 
 use crate::{EngineError, Session};
 
@@ -20,7 +20,7 @@ fn run(s: &mut Session, id: &str, p: Value) -> Value {
 }
 
 fn solid_at(s: &Session, p: Vec3) -> bool {
-    s.model.state().bodies.iter().any(|b| b.body.classify_point(p).unwrap() == solidcraft_kernel::PointClass::Inside)
+    s.model.state().bodies.iter().any(|b| b.body.classify_point(p).unwrap() == torno_kernel::PointClass::Inside)
 }
 
 /// The bore (5 mm across, 4 mm deep, down from the top face at z = `top`) is about (x, y):
@@ -37,7 +37,7 @@ fn bore_at(s: &Session, x: f64, y: f64, top: f64) {
 }
 
 /// The last feature's position and reference edges.
-fn hole(s: &Session) -> (Vec3, Vec<solidcraft_doc::HoleReference>) {
+fn hole(s: &Session) -> (Vec3, Vec<torno_doc::HoleReference>) {
     match &s.doc.features.last().map(|f| &f.kind) {
         Some(FeatureKind::Hole { position, references, .. }) => (position.0, references.clone()),
         other => panic!("the last feature is not a hole: {other:?}"),
@@ -100,7 +100,7 @@ fn a_hole_follows_its_edges_when_the_box_grows() {
     run(&mut s, "parameters.change", json!({"name": "len", "expression": "30 mm"}));
     bore_at(&s, 20.0, 45.0, 10.0);
     // Saved and reopened, the hole keeps its references and its place.
-    let mut t = Session::new(solidcraft_doc::Document::from_json(&s.doc.to_json()).unwrap());
+    let mut t = Session::new(torno_doc::Document::from_json(&s.doc.to_json()).unwrap());
     t.refresh();
     bore_at(&t, 20.0, 45.0, 10.0);
     assert_eq!(hole(&t).1, hole(&s).1);
@@ -194,7 +194,7 @@ fn hostile_references_never_panic() {
 }
 
 /// The last feature's base and reference edges.
-fn cylinder(s: &Session) -> (solidcraft_doc::PointExpr, Vec<solidcraft_doc::HoleReference>) {
+fn cylinder(s: &Session) -> (torno_doc::PointExpr, Vec<torno_doc::HoleReference>) {
     match &s.doc.features.last().map(|f| &f.kind) {
         Some(FeatureKind::Cylinder { base, references, .. }) => (base.clone(), references.clone()),
         other => panic!("the last feature is not a cylinder: {other:?}"),
@@ -251,7 +251,7 @@ fn a_cylinder_follows_its_edges_when_the_plate_changes() {
     run(&mut s, "edit.redo", json!({}));
     pin_at(&s, 70.0, 20.0);
     // Saved and reopened, it keeps its references and its place.
-    let mut t = Session::new(solidcraft_doc::Document::from_json(&s.doc.to_json()).unwrap());
+    let mut t = Session::new(torno_doc::Document::from_json(&s.doc.to_json()).unwrap());
     t.refresh();
     pin_at(&t, 70.0, 20.0);
     assert_eq!(cylinder(&t).1, cylinder(&s).1);

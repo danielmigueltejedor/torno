@@ -197,19 +197,19 @@ fn swept_net() -> BSplineSurface {
     BSplineSurface::from_nurb(nurb, false)
 }
 
-/// SolidCraft's own fix profile at its `ws/pin-16`: every flag on but the two it holds
+/// Torno's own fix profile at its `ws/pin-16`: every flag on but the two it holds
 /// back, `fillet_refuse_rounds_breaking_through` and keep features (the default since
 /// #2426, so no longer held back here), as `issue_2370_keep_features_band_clear_of_boss`
 /// names that profile. The issue measured
-/// through SolidCraft, so this is the set its refusal came from.
-fn solidcraft_fixes() -> UpstreamFixes {
+/// through Torno, so this is the set its refusal came from.
+fn torno_fixes() -> UpstreamFixes {
     let mut fixes = UpstreamFixes::all();
     fixes.fillet_refuse_rounds_breaking_through = false;
     fixes
 }
 
 /// The fix sets this test runs, each with the name it is reported under: the pinned C++
-/// behaviour, SolidCraft's profile, every flag on, and each flag alone on top of the
+/// behaviour, Torno's profile, every flag on, and each flag alone on top of the
 /// default.
 ///
 /// That is `3 + UpstreamFixes::NAMES.len()` of the `2 ^ NAMES.len()` sets the type can
@@ -218,7 +218,7 @@ fn solidcraft_fixes() -> UpstreamFixes {
 fn measured_fix_sets() -> Vec<(&'static str, UpstreamFixes)> {
     let mut sets = vec![
         ("default", UpstreamFixes::default()),
-        ("solidcraft", solidcraft_fixes()),
+        ("torno", torno_fixes()),
         ("all", UpstreamFixes::all()),
     ];
     for &name in UpstreamFixes::NAMES {

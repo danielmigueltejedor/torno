@@ -1,7 +1,7 @@
 //! A controlled sweep along a path with corners: built piece by piece, exactly, the pieces
 //! meeting at the corners' mitres.
 //!
-//! Upstream: none (not in SMLib). SolidCraft builds the same body (`cornered_controlled`,
+//! Upstream: none (not in SMLib). Torno builds the same body (`cornered_controlled`,
 //! `crates/kernel/src/smlib_sweeps.rs` at 52afe21) by sweeping each run, carrying it on past
 //! its corners as a prism, cutting it back to the plane halving the corner and uniting the
 //! runs. Here no boolean is needed: each piece of the path is swept on its own, as
@@ -10,7 +10,7 @@
 //!
 //! | Rust              | Upstream |
 //! |-------------------|----------|
-//! | [`cornered_sweep`] | (none; SolidCraft's `cornered_controlled`) |
+//! | [`cornered_sweep`] | (none; Torno's `cornered_controlled`) |
 //!
 //! **The sections.** Each joint of the path (and its start and end) has one section, placed
 //! once from its station ([`super::stations`]) and handed to both pieces that meet there, so

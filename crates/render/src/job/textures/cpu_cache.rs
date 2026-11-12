@@ -7,8 +7,8 @@ use crate::{
     job::{CancelToken, ErrorCode, JobError, RaytraceOptions, Result},
     surface_patterns::ShadingSurface,
 };
-use solidcraft_geom::prelude::*;
 use std::sync::Arc;
+use torno_geom::prelude::*;
 fn invalid_owned(message: String) -> JobError {
     JobError::new(ErrorCode::InvalidRequest, message)
 }

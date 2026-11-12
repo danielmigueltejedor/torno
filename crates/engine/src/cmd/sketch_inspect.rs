@@ -3,8 +3,8 @@
 
 use serde_json::Value;
 use solidcore_record::{Seg2, Vec2, Vec3};
-use solidcraft_geom::Aabb3;
-use solidcraft_geom::prelude::*;
+use torno_geom::Aabb3;
+use torno_geom::prelude::*;
 
 use super::CommandSpec;
 use crate::params::{bad, bool_, num, string_list, vec3};
@@ -108,8 +108,8 @@ fn teeth_exact(teeth: &[crate::kernel::CombTooth]) -> Vec<(Vec3, f64, Vec3)> {
 
 /// The comb of the body edge whose exact curve passes nearest `at`, over the model's B-rep bodies
 /// (mesh bodies have no curves): `density` exact teeth along it.
-fn edge_teeth(st: &solidcraft_doc::ModelState, at: Vec3, density: usize) -> Result<Option<Vec<(Vec3, f64, Vec3)>>> {
-    let mut best: Option<(f64, &solidcraft_doc::ModelBody, usize)> = None;
+fn edge_teeth(st: &torno_doc::ModelState, at: Vec3, density: usize) -> Result<Option<Vec<(Vec3, f64, Vec3)>>> {
+    let mut best: Option<(f64, &torno_doc::ModelBody, usize)> = None;
     for b in st.bodies.iter().filter(|b| !b.body.is_mesh()) {
         if let Some((d, edge)) = crate::kernel::comb_edge_near(&b.body, at)?
             && best.is_none_or(|x| d < x.0)
@@ -264,7 +264,7 @@ fn min_of(teeth: &[(Vec3, f64, Vec3)]) -> Option<(f64, Vec3)> {
 }
 
 /// The face of a body at `at` (nearest triangle): (body index, face index).
-fn face_at(st: &solidcraft_doc::ModelState, at: Vec3) -> Option<(usize, u32)> {
+fn face_at(st: &torno_doc::ModelState, at: Vec3) -> Option<(usize, u32)> {
     let mut best: Option<(f64, usize, u32)> = None;
     for (bi, b) in st.bodies.iter().enumerate() {
         let m = b.mesh();
@@ -301,7 +301,7 @@ fn closest_on_triangle(p: Vec3, a: Vec3, b: Vec3, c: Vec3) -> Vec3 {
 
 /// Smallest radius of curvature over a face of a mesh, from the turn of the vertex normals
 /// along each triangle side: (radius, where).
-fn face_min_radius(m: &solidcraft_geom::Mesh, face: u32) -> Option<(f64, Vec3)> {
+fn face_min_radius(m: &torno_geom::Mesh, face: u32) -> Option<(f64, Vec3)> {
     let mut best: Option<(f64, Vec3)> = None;
     for (ti, t) in m.triangles.iter().enumerate() {
         if m.tri_face.get(ti) != Some(&face) {
@@ -377,20 +377,20 @@ fn minimum_radius(s: &mut Session, p: &Value) -> Result<Value> {
 const DEFAULT_ISO_COUNT: usize = 8;
 
 /// The visible model body whose face is nearest `at` (within its pick tolerance), and that face.
-fn iso_face_at<'a>(s: &Session, st: &'a solidcraft_doc::ModelState, at: Vec3) -> Option<(&'a solidcraft_doc::ModelBody, usize)> {
+fn iso_face_at<'a>(s: &Session, st: &'a torno_doc::ModelState, at: Vec3) -> Option<(&'a torno_doc::ModelBody, usize)> {
     st.bodies
         .iter()
         .filter(|b| s.body_visible(&b.name))
         .filter_map(|b| {
-            let (d, f) = solidcraft_doc::appearance::nearest_face(b, at)?;
-            (d <= solidcraft_doc::appearance::pick_tolerance(b)).then_some((d, b, f))
+            let (d, f) = torno_doc::appearance::nearest_face(b, at)?;
+            (d <= torno_doc::appearance::pick_tolerance(b)).then_some((d, b, f))
         })
         .min_by(|a, b| a.0.total_cmp(&b.0))
         .map(|(_, b, f)| (b, f))
 }
 
 /// `inspect.isocurve`: the picked faces' isoparametric curves (`count` each way, exact and cut to
-/// each face's trims, [`solidcraft_doc::ModelBody::iso_lines`]), kept so the viewport draws them.
+/// each face's trims, [`torno_doc::ModelBody::iso_lines`]), kept so the viewport draws them.
 /// View state only, like the other analyses: the design and its undo history are untouched.
 fn isocurves(s: &mut Session, p: &Value) -> Result<Value> {
     let cmd = "inspect.isocurve";
@@ -426,9 +426,7 @@ fn isocurves(s: &mut Session, p: &Value) -> Result<Value> {
     if bool_(p, "add").unwrap_or(false) {
         // A face picked again shows its new count, once.
         let again = |k: &crate::IsoPick| {
-            picks
-                .iter()
-                .any(|(f, n)| n.body == k.body && st.body(&k.body).and_then(|b| solidcraft_doc::appearance::face_index_at(b, k.at)) == Some(*f))
+            picks.iter().any(|(f, n)| n.body == k.body && st.body(&k.body).and_then(|b| torno_doc::appearance::face_index_at(b, k.at)) == Some(*f))
         };
         s.isocurves.retain(|k| !again(k));
     } else {
@@ -442,7 +440,7 @@ fn isocurves(s: &mut Session, p: &Value) -> Result<Value> {
 impl Session {
     /// The curves Isocurve Analysis shows, for the viewport to draw: those of each face in
     /// [`Session::isocurves`] of a visible body, found again from its picked point (worked out
-    /// once per face and count, [`solidcraft_doc::ModelBody::iso_lines`]). A pick whose body or
+    /// once per face and count, [`torno_doc::ModelBody::iso_lines`]). A pick whose body or
     /// face is gone shows nothing.
     pub fn isocurve_lines(&self) -> Vec<std::sync::Arc<[crate::kernel::IsoLine]>> {
         if self.isocurves.is_empty() {
@@ -453,7 +451,7 @@ impl Session {
             .iter()
             .filter_map(|k| {
                 let b = st.body(&k.body).filter(|b| self.body_visible(&b.name))?;
-                let face = solidcraft_doc::appearance::face_index_at(b, k.at)?;
+                let face = torno_doc::appearance::face_index_at(b, k.at)?;
                 b.iso_lines(face, k.count).ok()
             })
             .collect()
@@ -507,7 +505,7 @@ fn center_of_mass(s: &mut Session, p: &Value) -> Result<Value> {
 #[cfg(test)]
 mod tests {
     use serde_json::{Value, json};
-    use solidcraft_geom::prelude::*;
+    use torno_geom::prelude::*;
 
     use crate::Session;
 
@@ -594,7 +592,7 @@ mod tests {
     /// out of the circle (away from its centre), and `density` is the number of teeth.
     #[test]
     fn an_edge_comb_is_exact_and_has_density_teeth() {
-        use solidcraft_doc::display_quality::{DisplayQuality, set_current};
+        use torno_doc::display_quality::{DisplayQuality, set_current};
         let mut s = Session::default();
         s.execute("solid.cylinder", &json!({"base": [50, 0, 0], "radius": 0.75, "height": 40})).unwrap();
         let mut feet = Vec::new();

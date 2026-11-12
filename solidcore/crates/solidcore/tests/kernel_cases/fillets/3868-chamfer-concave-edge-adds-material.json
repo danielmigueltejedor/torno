@@ -147,7 +147,7 @@
     "blend_dropping"
   ],
   "ungraded": [
-    "continuity: SolidCraft computes it"
+    "continuity: Torno computes it"
   ],
   "what": "a chamfer of an inside (concave) edge fills the corner and adds material, one on the outside edge removes it",
   "why_not": []

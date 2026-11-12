@@ -6,8 +6,8 @@ use crate::dialogs_surface::Surf;
 use crate::scenario::Harness;
 use serde_json::{Map, json};
 use solidcore_record::Vec3;
-use solidcraft_engine::Sel;
-use solidcraft_engine::doc::{FeatureKind, Operation, kernel::Continuity};
+use torno_engine::Sel;
+use torno_engine::doc::{FeatureKind, Operation, kernel::Continuity};
 
 fn ok(h: &mut Harness) {
     h.frames(2);

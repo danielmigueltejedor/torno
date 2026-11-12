@@ -1,4 +1,4 @@
-//! tangency-labs/solidcore#1253: SolidCraft ladder case 09/010
+//! tangency-labs/solidcore#1253: Torno ladder case 09/010
 //! (`tests/kernel-cases/ladder/09-shells-and-offsets/010-shell-under-rounded-top`): a
 //! 60 x 40 x 20 box with its four top edges rounded r3, shelled 2 mm inward open at the
 //! bottom. The SMLib fork built without fused multiply-adds (`-ffp-contract=off`) refuses

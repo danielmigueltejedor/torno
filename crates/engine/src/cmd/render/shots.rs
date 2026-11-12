@@ -4,8 +4,8 @@ use crate::schema::TypedContract;
 use crate::schema::render_shots::{ShotChange, ShotOperation, ShotParams};
 use crate::{Result, Session, params::bad};
 use serde_json::Value;
-use solidcraft_doc::render_settings::RenderSettings;
 use std::sync::Arc;
+use torno_doc::render_settings::RenderSettings;
 
 pub(super) const CONTRACT: TypedContract<ShotParams> = TypedContract::new();
 

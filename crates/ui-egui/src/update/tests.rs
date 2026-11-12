@@ -37,121 +37,112 @@ fn probe(os: &str, release: bool, env: &[(&str, &str)], exe: &str, files: &[&str
 
 #[test]
 fn install_kinds_are_told_apart() {
-    let home = "/home/me/Apps/solidcraft";
+    let home = "/home/me/Apps/torno";
     assert_eq!(probe("linux", false, &[("APPIMAGE", "/x.AppImage")], home, &[]), InstallKind::Dev, "dev builds never check");
-    assert_eq!(probe("linux", true, &[("FLATPAK_ID", APP_ID)], "/app/bin/solidcraft", &[]), InstallKind::Flatpak(APP_ID.into()));
+    assert_eq!(probe("linux", true, &[("FLATPAK_ID", APP_ID)], "/app/bin/torno", &[]), InstallKind::Flatpak(APP_ID.into()));
     let snap = |rev: &str| {
-        probe(
-            "linux",
-            true,
-            &[("SNAP", "/snap/solidcraft/12"), ("SNAP_NAME", "solidcraft"), ("SNAP_REVISION", rev)],
-            "/snap/solidcraft/12/usr/bin/solidcraft",
-            &[],
-        )
+        probe("linux", true, &[("SNAP", "/snap/torno/12"), ("SNAP_NAME", "torno"), ("SNAP_REVISION", rev)], "/snap/torno/12/usr/bin/torno", &[])
     };
     assert_eq!(snap("12"), InstallKind::Snap { store: true });
     assert_eq!(snap("x3"), InstallKind::Snap { store: false }, "installed from a file with --dangerous");
     assert_eq!(
-        probe("linux", true, &[("APPIMAGE", "/home/me/SolidCraft.AppImage")], "/tmp/.mount_SolidXYZ/usr/bin/solidcraft", &[]),
-        InstallKind::AppImage("/home/me/SolidCraft.AppImage".into())
+        probe("linux", true, &[("APPIMAGE", "/home/me/Torno.AppImage")], "/tmp/.mount_SolidXYZ/usr/bin/torno", &[]),
+        InstallKind::AppImage("/home/me/Torno.AppImage".into())
     );
     // An empty variable doesn't count.
-    assert_eq!(probe("linux", true, &[("APPIMAGE", "")], "/opt/sc/bin/solidcraft", &[]), InstallKind::LinuxTarball);
-    assert_eq!(probe("linux", true, &[], "/usr/bin/solidcraft", &["/var/lib/dpkg/info/solidcraft.list", "/var/lib/rpm"]), InstallKind::Deb);
-    assert_eq!(probe("linux", true, &[], "/usr/bin/solidcraft", &["/var/lib/rpm"]), InstallKind::Rpm);
-    assert_eq!(probe("linux", true, &[], "/usr/bin/solidcraft", &["/usr/lib/sysimage/rpm"]), InstallKind::Rpm);
-    assert_eq!(probe("linux", true, &[], "/usr/bin/solidcraft", &[]), InstallKind::Other);
+    assert_eq!(probe("linux", true, &[("APPIMAGE", "")], "/opt/sc/bin/torno", &[]), InstallKind::LinuxTarball);
+    assert_eq!(probe("linux", true, &[], "/usr/bin/torno", &["/var/lib/dpkg/info/torno.list", "/var/lib/rpm"]), InstallKind::Deb);
+    assert_eq!(probe("linux", true, &[], "/usr/bin/torno", &["/var/lib/rpm"]), InstallKind::Rpm);
+    assert_eq!(probe("linux", true, &[], "/usr/bin/torno", &["/usr/lib/sysimage/rpm"]), InstallKind::Rpm);
+    assert_eq!(probe("linux", true, &[], "/usr/bin/torno", &[]), InstallKind::Other);
     assert_eq!(probe("linux", true, &[], home, &[]), InstallKind::LinuxTarball);
 
     let pf = [("ProgramFiles", "C:\\Program Files"), ("ProgramFiles(x86)", "C:\\Program Files (x86)")];
-    assert_eq!(probe("windows", true, &pf, "C:\\Program Files\\SolidCraft\\solidcraft.exe", &[]), InstallKind::WindowsMsi);
-    assert_eq!(probe("windows", true, &pf, "c:\\program files\\SolidCraft\\solidcraft.exe", &[]), InstallKind::WindowsMsi, "case-insensitive");
+    assert_eq!(probe("windows", true, &pf, "C:\\Program Files\\Torno\\torno.exe", &[]), InstallKind::WindowsMsi);
+    assert_eq!(probe("windows", true, &pf, "c:\\program files\\Torno\\torno.exe", &[]), InstallKind::WindowsMsi, "case-insensitive");
     // "C:\Program Files Extra" is not under "C:\Program Files".
-    assert_eq!(probe("windows", true, &pf, "C:\\Program Files Extra\\solidcraft.exe", &[]), InstallKind::WindowsExe);
-    let portable = "C:\\Users\\me\\solidcraft-0.10.0-windows-x64-portable\\solidcraft.exe";
-    let cli = "C:\\Users\\me\\solidcraft-0.10.0-windows-x64-portable\\solidcraft-cli.exe";
+    assert_eq!(probe("windows", true, &pf, "C:\\Program Files Extra\\torno.exe", &[]), InstallKind::WindowsExe);
+    let portable = "C:\\Users\\me\\torno-0.10.0-windows-x64-portable\\torno.exe";
+    let cli = "C:\\Users\\me\\torno-0.10.0-windows-x64-portable\\torno-cli.exe";
     // Path::parent splits on `\` only on Windows; this test describes the layout either way.
     if cfg!(windows) {
         assert_eq!(probe("windows", true, &pf, portable, &[cli]), InstallKind::WindowsPortable);
     }
-    assert_eq!(probe("windows", true, &pf, "C:\\Users\\me\\Downloads\\SolidCraft-0.10.0-windows-x64.exe", &[]), InstallKind::WindowsExe);
+    assert_eq!(probe("windows", true, &pf, "C:\\Users\\me\\Downloads\\Torno-0.10.0-windows-x64.exe", &[]), InstallKind::WindowsExe);
 
-    assert_eq!(
-        probe("macos", true, &[], "/Applications/SolidCraft.app/Contents/MacOS/solidcraft", &[]),
-        InstallKind::MacApp("/Applications/SolidCraft.app".into())
-    );
-    assert_eq!(probe("macos", true, &[], "/usr/local/bin/solidcraft", &[]), InstallKind::Other);
-    assert_eq!(probe("macos", false, &[], "/Applications/SolidCraft.app/Contents/MacOS/solidcraft", &[]), InstallKind::Dev);
-    assert_eq!(probe("freebsd", true, &[], "/usr/local/bin/solidcraft", &[]), InstallKind::Other);
+    assert_eq!(probe("macos", true, &[], "/Applications/Torno.app/Contents/MacOS/torno", &[]), InstallKind::MacApp("/Applications/Torno.app".into()));
+    assert_eq!(probe("macos", true, &[], "/usr/local/bin/torno", &[]), InstallKind::Other);
+    assert_eq!(probe("macos", false, &[], "/Applications/Torno.app/Contents/MacOS/torno", &[]), InstallKind::Dev);
+    assert_eq!(probe("freebsd", true, &[], "/usr/local/bin/torno", &[]), InstallKind::Other);
     assert!(!InstallKind::Dev.checks() && !InstallKind::Web.checks() && InstallKind::Snap { store: true }.checks());
     assert!(!InstallKind::Flatpak(APP_ID.into()).checks(), "the Flatpak has no network permission; Flatpak updates it");
 }
 
 #[test]
 fn portable_windows_layout_is_recognised() {
-    let exe = PathBuf::from("/portable/solidcraft.exe");
+    let exe = PathBuf::from("/portable/torno.exe");
     let get = |k: &str| (k == "ProgramFiles").then(|| "C:\\Program Files".to_string());
-    let exists = |p: &Path| p == Path::new("/portable/solidcraft-cli.exe");
+    let exists = |p: &Path| p == Path::new("/portable/torno-cli.exe");
     assert_eq!(
         detect(&Probe { os: "windows", release_build: true, env: &get, exe: Some(exe), exists: &exists, msi_dir: None }),
         InstallKind::WindowsPortable
     );
 }
 
-/// #1870: the installer's wizard can put SolidCraft anywhere, and it puts solidcraft-cli.exe
+/// #1870: the installer's wizard can put Torno anywhere, and it puts torno-cli.exe
 /// beside it as the portable zip does. The folder it recorded is what tells its copy apart.
 #[test]
 fn an_msi_install_outside_program_files_is_recognised() {
-    let exe = PathBuf::from(r"D:\Program Files\SolidCraft\solidcraft.exe");
+    let exe = PathBuf::from(r"D:\Program Files\Torno\torno.exe");
     let get = |k: &str| match k {
         "ProgramFiles" | "ProgramW6432" => Some(r"C:\Program Files".to_string()),
         "ProgramFiles(x86)" => Some(r"C:\Program Files (x86)".to_string()),
         _ => None,
     };
-    // solidcraft-cli.exe is beside it.
+    // torno-cli.exe is beside it.
     let exists = |_: &Path| true;
     let kind = |msi_dir: Option<&str>| {
         detect(&Probe { os: "windows", release_build: true, env: &get, exe: Some(exe.clone()), exists: &exists, msi_dir: msi_dir.map(PathBuf::from) })
     };
     // The installer records [INSTALLFOLDER], which ends in a backslash; Windows paths ignore case.
-    assert_eq!(kind(Some(r"D:\Program Files\SolidCraft\")), InstallKind::WindowsMsi);
-    assert_eq!(kind(Some(r"d:\program files\solidcraft")), InstallKind::WindowsMsi);
+    assert_eq!(kind(Some(r"D:\Program Files\Torno\")), InstallKind::WindowsMsi);
+    assert_eq!(kind(Some(r"d:\program files\torno")), InstallKind::WindowsMsi);
     // No installer copy here: the portable zip, as before.
     assert_eq!(kind(None), InstallKind::WindowsPortable);
     assert_eq!(kind(Some("")), InstallKind::WindowsPortable);
-    assert_eq!(kind(Some(r"D:\Program Files\SolidCraft2\")), InstallKind::WindowsPortable, "a folder whose name only starts the same");
+    assert_eq!(kind(Some(r"D:\Program Files\Torno2\")), InstallKind::WindowsPortable, "a folder whose name only starts the same");
 }
 
 /// The assets of v0.10.0, as published.
 fn release() -> Release {
     let names = [
         "SHA256SUMS.txt",
-        "solidcraft-0.10.0-linux-x86_64.AppImage",
-        "solidcraft-0.10.0-linux-x86_64.AppImage.zsync",
-        "solidcraft-0.10.0-linux-x86_64.tar.gz",
-        "solidcraft-0.10.0-linux-aarch64.tar.gz",
-        "SolidCraft-0.10.0-windows-x64.exe",
-        "solidcraft-linux-aarch64.AppImage",
-        "solidcraft-linux-aarch64.deb",
-        "solidcraft-linux-x86_64.AppImage",
-        "solidcraft-linux-x86_64.deb",
-        "solidcraft-linux-x86_64.flatpak",
-        "solidcraft-linux-x86_64.rpm",
-        "solidcraft-linux-x86_64.snap",
-        "solidcraft-macos-universal.dmg",
-        "solidcraft-windows-arm64-portable.zip",
-        "solidcraft-windows-arm64.msi",
-        "solidcraft-windows-x64-portable.zip",
-        "solidcraft-windows-x64.msi",
-        "solidcraft-windows-x86-portable.zip",
-        "solidcraft-windows-x86.msi",
+        "torno-0.10.0-linux-x86_64.AppImage",
+        "torno-0.10.0-linux-x86_64.AppImage.zsync",
+        "torno-0.10.0-linux-x86_64.tar.gz",
+        "torno-0.10.0-linux-aarch64.tar.gz",
+        "Torno-0.10.0-windows-x64.exe",
+        "torno-linux-aarch64.AppImage",
+        "torno-linux-aarch64.deb",
+        "torno-linux-x86_64.AppImage",
+        "torno-linux-x86_64.deb",
+        "torno-linux-x86_64.flatpak",
+        "torno-linux-x86_64.rpm",
+        "torno-linux-x86_64.snap",
+        "torno-macos-universal.dmg",
+        "torno-windows-arm64-portable.zip",
+        "torno-windows-arm64.msi",
+        "torno-windows-x64-portable.zip",
+        "torno-windows-x64.msi",
+        "torno-windows-x86-portable.zip",
+        "torno-windows-x86.msi",
     ];
     let assets: Vec<Value> = names
         .iter()
         .map(|n| json!({"name": n, "size": 10, "browser_download_url": format!("https://github.com/danielmigueltejedor/torno/releases/download/v0.10.0/{n}")}))
         .collect();
     let body = json!({
-        "tag_name": "v0.10.0", "name": "SolidCraft v0.10.0", "body": "**What's new**\n\n- Surface tools.",
+        "tag_name": "v0.10.0", "name": "Torno v0.10.0", "body": "**What's new**\n\n- Surface tools.",
         "html_url": "https://github.com/danielmigueltejedor/torno/releases/tag/v0.10.0", "draft": false, "prerelease": false, "assets": assets,
     });
     Release::parse(body.to_string().as_bytes()).unwrap()
@@ -161,41 +152,38 @@ fn release() -> Release {
 fn each_installation_gets_its_own_file() {
     let r = release();
     let name = |k: InstallKind, arch: &str| r.asset_for(&k, arch).map(|a| a.name.clone());
-    assert_eq!(name(InstallKind::AppImage("/a".into()), "x86_64").as_deref(), Some("solidcraft-linux-x86_64.AppImage"));
-    assert_eq!(name(InstallKind::AppImage("/a".into()), "aarch64").as_deref(), Some("solidcraft-linux-aarch64.AppImage"));
-    assert_eq!(name(InstallKind::Deb, "x86_64").as_deref(), Some("solidcraft-linux-x86_64.deb"));
-    assert_eq!(name(InstallKind::Rpm, "x86_64").as_deref(), Some("solidcraft-linux-x86_64.rpm"));
-    assert_eq!(name(InstallKind::LinuxTarball, "aarch64").as_deref(), Some("solidcraft-0.10.0-linux-aarch64.tar.gz"));
-    assert_eq!(name(InstallKind::WindowsMsi, "x86_64").as_deref(), Some("solidcraft-windows-x64.msi"));
-    assert_eq!(name(InstallKind::WindowsMsi, "aarch64").as_deref(), Some("solidcraft-windows-arm64.msi"));
-    assert_eq!(name(InstallKind::WindowsMsi, "x86").as_deref(), Some("solidcraft-windows-x86.msi"));
-    assert_eq!(name(InstallKind::WindowsPortable, "x86_64").as_deref(), Some("solidcraft-windows-x64-portable.zip"));
-    assert_eq!(name(InstallKind::WindowsExe, "x86_64").as_deref(), Some("SolidCraft-0.10.0-windows-x64.exe"));
-    assert_eq!(name(InstallKind::WindowsExe, "aarch64").as_deref(), Some("solidcraft-windows-arm64-portable.zip"));
-    assert_eq!(name(InstallKind::MacApp("/A.app".into()), "aarch64").as_deref(), Some("solidcraft-macos-universal.dmg"));
+    assert_eq!(name(InstallKind::AppImage("/a".into()), "x86_64").as_deref(), Some("torno-linux-x86_64.AppImage"));
+    assert_eq!(name(InstallKind::AppImage("/a".into()), "aarch64").as_deref(), Some("torno-linux-aarch64.AppImage"));
+    assert_eq!(name(InstallKind::Deb, "x86_64").as_deref(), Some("torno-linux-x86_64.deb"));
+    assert_eq!(name(InstallKind::Rpm, "x86_64").as_deref(), Some("torno-linux-x86_64.rpm"));
+    assert_eq!(name(InstallKind::LinuxTarball, "aarch64").as_deref(), Some("torno-0.10.0-linux-aarch64.tar.gz"));
+    assert_eq!(name(InstallKind::WindowsMsi, "x86_64").as_deref(), Some("torno-windows-x64.msi"));
+    assert_eq!(name(InstallKind::WindowsMsi, "aarch64").as_deref(), Some("torno-windows-arm64.msi"));
+    assert_eq!(name(InstallKind::WindowsMsi, "x86").as_deref(), Some("torno-windows-x86.msi"));
+    assert_eq!(name(InstallKind::WindowsPortable, "x86_64").as_deref(), Some("torno-windows-x64-portable.zip"));
+    assert_eq!(name(InstallKind::WindowsExe, "x86_64").as_deref(), Some("Torno-0.10.0-windows-x64.exe"));
+    assert_eq!(name(InstallKind::WindowsExe, "aarch64").as_deref(), Some("torno-windows-arm64-portable.zip"));
+    assert_eq!(name(InstallKind::MacApp("/A.app".into()), "aarch64").as_deref(), Some("torno-macos-universal.dmg"));
     assert_eq!(name(InstallKind::Other, "x86_64"), None);
     assert_eq!(name(InstallKind::Deb, "riscv64"), None);
     // Download: the file, or the page when there is none or a package manager updates it.
     assert_eq!(
         r.download_url(&InstallKind::WindowsMsi, "x86_64"),
-        "https://github.com/danielmigueltejedor/torno/releases/download/v0.10.0/solidcraft-windows-x64.msi"
+        "https://github.com/danielmigueltejedor/torno/releases/download/v0.10.0/torno-windows-x64.msi"
     );
     assert_eq!(r.download_url(&InstallKind::Other, "x86_64"), "https://github.com/danielmigueltejedor/torno/releases/tag/v0.10.0");
     assert_eq!(r.download_url(&InstallKind::Flatpak(APP_ID.into()), "x86_64"), r.page);
     assert_eq!(r.download_url(&InstallKind::Snap { store: true }, "x86_64"), r.page);
     assert_eq!(
         r.download_url(&InstallKind::Snap { store: false }, "x86_64"),
-        "https://github.com/danielmigueltejedor/torno/releases/download/v0.10.0/solidcraft-linux-x86_64.snap"
+        "https://github.com/danielmigueltejedor/torno/releases/download/v0.10.0/torno-linux-x86_64.snap"
     );
     assert_eq!(
-        InstallKind::Snap { store: false }.update_command(Some("solidcraft-linux-x86_64.snap")).as_deref(),
-        Some("sudo snap install --dangerous ./solidcraft-linux-x86_64.snap")
+        InstallKind::Snap { store: false }.update_command(Some("torno-linux-x86_64.snap")).as_deref(),
+        Some("sudo snap install --dangerous ./torno-linux-x86_64.snap")
     );
-    assert_eq!(InstallKind::Flatpak(APP_ID.into()).update_command(None).as_deref(), Some("flatpak update io.tangencylabs.solidcraft"));
-    assert_eq!(
-        InstallKind::Deb.update_command(Some("solidcraft-linux-x86_64.deb")).as_deref(),
-        Some("sudo apt install ./solidcraft-linux-x86_64.deb")
-    );
+    assert_eq!(InstallKind::Flatpak(APP_ID.into()).update_command(None).as_deref(), Some("flatpak update dev.danielmiguelt.Torno"));
+    assert_eq!(InstallKind::Deb.update_command(Some("torno-linux-x86_64.deb")).as_deref(), Some("sudo apt install ./torno-linux-x86_64.deb"));
     assert_eq!(InstallKind::WindowsMsi.update_command(None), None);
 }
 
@@ -211,8 +199,8 @@ fn release_answers_are_checked() {
     // Links elsewhere are dropped: the page falls back to the releases page, foreign assets go.
     let r = Release::parse(
         json!({"tag_name": "v1.0.0", "html_url": "https://evil.example/x", "assets": [
-            {"name": "solidcraft-windows-x64.msi", "browser_download_url": "https://evil.example/a.msi"},
-            {"name": "solidcraft-windows-x86.msi", "browser_download_url": "https://github.com/danielmigueltejedor/torno/releases/download/v1.0.0/solidcraft-windows-x86.msi"},
+            {"name": "torno-windows-x64.msi", "browser_download_url": "https://evil.example/a.msi"},
+            {"name": "torno-windows-x86.msi", "browser_download_url": "https://github.com/danielmigueltejedor/torno/releases/download/v1.0.0/torno-windows-x86.msi"},
         ]})
         .to_string()
         .as_bytes(),
@@ -220,7 +208,7 @@ fn release_answers_are_checked() {
     .unwrap();
     assert_eq!(r.page, RELEASES_PAGE);
     assert_eq!(r.assets.len(), 1);
-    assert_eq!(r.name, "SolidCraft v1.0.0");
+    assert_eq!(r.name, "Torno v1.0.0");
     // Huge notes are cut (on a character boundary).
     let r = Release::parse(json!({"tag_name": "v1.0.0", "body": "é".repeat(MAX_NOTES)}).to_string().as_bytes()).unwrap();
     assert!(r.notes.len() <= MAX_NOTES + 8 && r.notes.ends_with('…'));
@@ -293,19 +281,19 @@ impl Drop for Scratch {
 fn scratch() -> Scratch {
     static N: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
     let n = N.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
-    let dir = std::env::temp_dir().join(format!("solidcraft-update-test-{}-{n}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("torno-update-test-{}-{n}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
     Scratch(dir)
 }
 
-/// A release one minor version past this build, as the `SOLIDCRAFT_UPDATE_FEED` file gives it.
+/// A release one minor version past this build, as the `TORNO_UPDATE_FEED` file gives it.
 fn next_release_feed(dir: &Path) -> (PathBuf, String) {
     let mut v = parse_version(current_version()).unwrap();
     v = semver::Version::new(v.major, v.minor + 1, 0);
     let path = dir.join("latest.json");
     let body = json!({
         "tag_name": format!("v{v}"),
-        "name": format!("SolidCraft {v}"),
+        "name": format!("Torno {v}"),
         "body": "## What's new\n\n- Faster rebuilds.",
         "html_url": format!("https://github.com/getnodalia/torno/releases/tag/v{v}"),
         "assets": []
@@ -367,7 +355,7 @@ fn help_menu_checks_with_automatic_checks_off_and_offers_installation() {
     h.app.preferences.update.skipped = format!("v{version}");
     h.app.preferences.update.remind_after = unix_now() + REMIND_DELAY_S;
     h.app.updater.feed = Some(feed);
-    h.app.updater.kind = Some(InstallKind::MacApp("/Applications/SolidCraft.app".into()));
+    h.app.updater.kind = Some(InstallKind::MacApp("/Applications/Torno.app".into()));
     h.app.updater.managed = Some(None);
     h.app.services.http_get = Some(Arc::new(|_| panic!("the check must use the test feed")));
     h.app.services.http_download = Some(Arc::new(|_, _, _| panic!("offering an update must not install it")));
@@ -381,7 +369,7 @@ fn help_menu_checks_with_automatic_checks_off_and_offers_installation() {
     assert!(h.app.updater.open);
     assert!(h.app.preferences.update.skipped.is_empty());
     assert_eq!(h.app.preferences.update.remind_after, 0.0);
-    assert!(h.widget(&format!("SolidCraft {version} is available")).is_some());
+    assert!(h.widget(&format!("Torno {version} is available")).is_some());
     assert!(h.widget("Download and open").is_some(), "the macOS installation is offered immediately");
     assert!(h.app.updater.job.is_none());
 }
@@ -413,7 +401,7 @@ fn help_check_shows_progress_and_up_to_date_then_closes() {
     tx.send(Ok(release)).unwrap();
     h.frames(2);
     assert_eq!(h.app.updater.status, Status::UpToDate);
-    assert!(h.widget("SolidCraft is up to date.").is_some());
+    assert!(h.widget("Torno is up to date.").is_some());
     assert!(h.widget("Download").is_none() && h.widget("Update now").is_none());
     let [x, y] = h.widget("Close").unwrap();
     h.call("ui.click", json!({"x": x, "y": y}));
@@ -421,7 +409,7 @@ fn help_check_shows_progress_and_up_to_date_then_closes() {
     // Reopening during the cooldown still shows the result, without another request.
     h.app.updater.last_manual = unix_now();
     h.call("ui.help", json!({"item": "updates"}));
-    assert!(h.widget("SolidCraft is up to date.").is_some());
+    assert!(h.widget("Torno is up to date.").is_some());
     assert!(h.app.updater.rx.is_none());
 }
 
@@ -434,7 +422,7 @@ fn help_check_reports_network_errors_and_rate_limits_in_the_window() {
         h.frames(2);
         assert_eq!(h.app.updater.status, Status::Failed(error.to_string()));
         assert!(h.widget(&format!("Couldn't check: {error}")).is_some());
-        assert!(h.widget("SolidCraft is up to date.").is_none());
+        assert!(h.widget("Torno is up to date.").is_none());
         if matches!(error, FetchError::RateLimited { .. }) {
             h.call("ui.help", json!({"item": "updates"}));
             assert!(h.app.updater.rx.is_none(), "the server's rate limit is honoured");
@@ -451,16 +439,16 @@ fn help_check_result_follows_the_selected_language() {
     let release = Release::parse(json!({"tag_name": current_version(), "assets": []}).to_string().as_bytes()).unwrap();
     tx.send(Ok(release)).unwrap();
     h.frames(2);
-    assert!(h.widget("SolidCraft ist aktuell.").is_some());
+    assert!(h.widget("Torno ist aktuell.").is_some());
     for (language, title, message) in [
-        ("fr", "Rechercher des mises à jour", "SolidCraft est à jour."),
-        ("ja", "アップデートを確認", "SolidCraft は最新です。"),
-        ("zh-TW", "檢查更新", "SolidCraft 已是最新版本。"),
+        ("fr", "Rechercher des mises à jour", "Torno est à jour."),
+        ("ja", "アップデートを確認", "Torno は最新です。"),
+        ("zh-TW", "檢查更新", "Torno 已是最新版本。"),
     ] {
         h.call("ui.prefs", json!({"language": language}));
         assert!(h.widget(title).is_some(), "the window title follows {language}");
         assert!(h.widget(message).is_some(), "the result follows {language}");
-        assert!(h.widget("SolidCraft is up to date.").is_none());
+        assert!(h.widget("Torno is up to date.").is_none());
     }
 }
 
@@ -470,7 +458,7 @@ fn help_check_explains_when_checks_are_unavailable() {
     h.app.updater.off = true;
     h.call("ui.help", json!({"item": "updates"}));
     assert!(h.widget("Update checks are not available for this installation.").is_some());
-    assert!(h.widget("SolidCraft is up to date.").is_none());
+    assert!(h.widget("Torno is up to date.").is_none());
     assert!(h.app.updater.rx.is_none());
 }
 
@@ -585,7 +573,7 @@ fn the_memo_survives_with_the_preferences() {
 
 #[test]
 fn release_notes_read_as_markdown() {
-    let md = "## What's new\n\n**Why 0.10:** a minor\nbump.\n\n- **Surface tools.** Revolve and `solidcraft-cli mcp`\n  continued ([#925](https://x/925)).\n  - nested\n* Fix by @a in https://github.com/danielmigueltejedor/torno/pull/1064\n\nSee https://example.com/x.";
+    let md = "## What's new\n\n**Why 0.10:** a minor\nbump.\n\n- **Surface tools.** Revolve and `torno-cli mcp`\n  continued ([#925](https://x/925)).\n  - nested\n* Fix by @a in https://github.com/danielmigueltejedor/torno/pull/1064\n\nSee https://example.com/x.";
     let b = parse_markdown(md);
     assert_eq!(b.first(), Some(&Block::Heading(vec![Span::Text("What's new".into())])));
     assert_eq!(b.get(1), Some(&Block::Paragraph(vec![Span::Strong("Why 0.10:".into()), Span::Text(" a minor bump.".into())])));
@@ -596,7 +584,7 @@ fn release_notes_read_as_markdown() {
             vec![
                 Span::Strong("Surface tools.".into()),
                 Span::Text(" Revolve and ".into()),
-                Span::Code("solidcraft-cli mcp".into()),
+                Span::Code("torno-cli mcp".into()),
                 Span::Text(" continued (".into()),
                 Span::Link { text: "#925".into(), url: Some("https://x/925".into()) },
                 Span::Text(").".into()),
@@ -657,10 +645,10 @@ fn a_pipe_table_reads_as_one_entry_per_row() {
 /// addresses are kept (a relative or other link shows as text that opens nothing).
 #[test]
 fn release_note_links_keep_their_web_targets() {
-    let spans = inline("[guide](https://docs.solidcraft.io/guide) and [file](file:///etc/passwd) and [rel](../x)");
+    let spans = inline("[guide](https://getnodalia.github.io/torno/guide) and [file](file:///etc/passwd) and [rel](../x)");
     let links: Vec<(String, Option<String>)> =
         spans.into_iter().filter_map(|s| if let Span::Link { text, url } = s { Some((text, url)) } else { None }).collect();
-    assert_eq!(links, vec![("guide".into(), Some("https://docs.solidcraft.io/guide".into())), ("file".into(), None), ("rel".into(), None)]);
+    assert_eq!(links, vec![("guide".into(), Some("https://getnodalia.github.io/torno/guide".into())), ("file".into(), None), ("rel".into(), None)]);
 }
 
 #[test]
@@ -669,7 +657,7 @@ fn releases_under_either_owner_are_accepted() {
         let base = format!("https://github.com/{owner}/releases");
         Release::parse(
             json!({"tag_name": "v1.0.0", "html_url": format!("{base}/tag/v1.0.0"), "assets": [
-                {"name": "solidcraft-windows-x64.msi", "browser_download_url": format!("{base}/download/v1.0.0/solidcraft-windows-x64.msi")},
+                {"name": "torno-windows-x64.msi", "browser_download_url": format!("{base}/download/v1.0.0/torno-windows-x64.msi")},
             ]})
             .to_string()
             .as_bytes(),
@@ -707,8 +695,8 @@ fn the_version_links_to_its_release_notes() {
 #[test]
 fn unavailable_preferences_show_disabled_update_controls_and_real_values() {
     use egui::accesskit::{Role, Toggled};
-    let _language = solidcraft_ui_text::scope("en");
-    for kind in [InstallKind::Dev, InstallKind::Web, InstallKind::Flatpak("io.solidcraft.SolidCraft".into())] {
+    let _language = torno_ui_text::scope("en");
+    for kind in [InstallKind::Dev, InstallKind::Web, InstallKind::Flatpak("io.torno.Torno".into())] {
         for checked in [false, true] {
             let mut h = crate::scenario::Harness::new();
             h.app.home.open = false;
@@ -735,7 +723,7 @@ fn unavailable_preferences_show_disabled_update_controls_and_real_values() {
                     assert_eq!(controls[0].1.toggled(), Some(if checked { Toggled::True } else { Toggled::False }));
                 }
             }
-            let reason = solidcraft_ui_text::tr("update.check_unavailable");
+            let reason = torno_ui_text::tr("update.check_unavailable");
             assert_eq!(tree.nodes.iter().filter(|(_, node)| node.role() == Role::Label && node.value() == Some(reason)).count(), 1);
             let texts: Vec<_> = h
                 .shapes
@@ -745,12 +733,11 @@ fn unavailable_preferences_show_disabled_update_controls_and_real_values() {
             assert!(texts.contains(&reason), "{kind:?}: the unavailable reason is painted");
             assert!(h.widget("Up to date").is_none(), "unavailability is not a successful check");
             let note = match &kind {
-                InstallKind::Web => solidcraft_ui_text::tr("update.prefs_web").to_string(),
-                InstallKind::Flatpak(id) => solidcraft_ui_text::format(
-                    "update.prefs_flatpak",
-                    &[("version", current_version()), ("command", &format!("flatpak update {id}"))],
-                ),
-                _ => solidcraft_ui_text::format("update.prefs_dev", &[("version", current_version())]),
+                InstallKind::Web => torno_ui_text::tr("update.prefs_web").to_string(),
+                InstallKind::Flatpak(id) => {
+                    torno_ui_text::format("update.prefs_flatpak", &[("version", current_version()), ("command", &format!("flatpak update {id}"))])
+                }
+                _ => torno_ui_text::format("update.prefs_dev", &[("version", current_version())]),
             };
             assert!(
                 tree.nodes.iter().any(|(_, node)| node.role() == Role::Label && node.value() == Some(note.as_str())),
@@ -795,7 +782,7 @@ fn general_updates_show_real_status_and_time_and_check_now_uses_the_existing_fee
             assert_eq!(controls[0].1.toggled(), Some(egui::accesskit::Toggled::False));
         }
     }
-    let checked = solidcraft_ui_text::format("prefs.general.last_check", &[("time", &solidcraft_engine::crash::utc(1_700_000_000))]);
+    let checked = torno_ui_text::format("prefs.general.last_check", &[("time", &torno_engine::crash::utc(1_700_000_000))]);
     assert!(h.widget(&checked).is_some(), "the persisted check time is shown");
     let button = crate::scenario::rect_of("prefs:check_now").unwrap();
     h.step(&json!({"click":[button.center().x, button.center().y]})).unwrap();
@@ -810,7 +797,7 @@ fn no_env(_: &str) -> Option<String> {
 }
 
 fn record(path: &str) -> Vec<u8> {
-    json!({"apps": {"solidcraft": {"version": "0.25.1", "kind": "AppImage", "path": path, "installed_at": 1}}}).to_string().into_bytes()
+    json!({"apps": {"torno": {"version": "0.25.1", "kind": "AppImage", "path": path, "installed_at": 1}}}).to_string().into_bytes()
 }
 
 #[test]
@@ -819,18 +806,18 @@ fn the_variable_names_the_manager() {
     let kind = InstallKind::LinuxTarball;
     let with = |value: &'static str| {
         let env = move |k: &str| (k == MANAGED_ENV).then(|| value.to_string());
-        managed_by("linux", &env, Some(Path::new("/opt/sc/solidcraft")), &kind, &nothing)
+        managed_by("linux", &env, Some(Path::new("/opt/sc/torno")), &kind, &nothing)
     };
     assert_eq!(with("ArtCraft Launcher").as_deref(), Some("ArtCraft Launcher"));
     assert_eq!(with("  Other \u{7}Manager\n").as_deref(), Some("Other Manager"), "padding and control characters are dropped");
     assert_eq!(with("   "), None, "an empty value is not a manager");
     assert_eq!(with(&"x".repeat(500).leak()[..]).map(|n| n.len()), Some(64), "a long name is cut");
-    assert_eq!(managed_by("linux", &no_env, Some(Path::new("/opt/sc/solidcraft")), &kind, &nothing), None);
+    assert_eq!(managed_by("linux", &no_env, Some(Path::new("/opt/sc/torno")), &kind, &nothing), None);
 }
 
 #[test]
 fn the_launchers_record_marks_the_install_it_made() {
-    let exe = Path::new("/home/me/Apps/SolidCraft.AppImage");
+    let exe = Path::new("/home/me/Apps/Torno.AppImage");
     let appimage = InstallKind::AppImage(exe.to_path_buf());
     let env = |k: &str| (k == "HOME").then(|| "/home/me".to_string());
     let seen = std::cell::RefCell::new(Vec::new());
@@ -842,19 +829,19 @@ fn the_launchers_record_marks_the_install_it_made() {
         }
     };
     // The AppImage the launcher recorded; the running executable is inside its mount.
-    let run = |path: &str| managed_by("linux", &env, Some(Path::new("/tmp/.mount_SolidXYZ/usr/bin/solidcraft")), &appimage, &read(record(path)));
-    assert_eq!(run("/home/me/Apps/SolidCraft.AppImage").as_deref(), Some("ArtCraft Launcher"));
+    let run = |path: &str| managed_by("linux", &env, Some(Path::new("/tmp/.mount_SolidXYZ/usr/bin/torno")), &appimage, &read(record(path)));
+    assert_eq!(run("/home/me/Apps/Torno.AppImage").as_deref(), Some("ArtCraft Launcher"));
     assert_eq!(seen.borrow().as_slice(), [PathBuf::from("/home/me/.local/share/artcraft-launcher/installed.json")]);
     // Another copy, a prefix that is not a folder of ours, the root and a relative path are not ours.
     assert_eq!(run("/home/me/Apps/Other.AppImage"), None);
-    assert_eq!(run("/home/me/Apps/SolidCraft.AppImage.old"), None);
+    assert_eq!(run("/home/me/Apps/Torno.AppImage.old"), None);
     assert_eq!(run("/"), None);
-    assert_eq!(run("Apps/SolidCraft.AppImage"), None);
-    // No record, a damaged one, one without SolidCraft, and a record file of any other shape.
+    assert_eq!(run("Apps/Torno.AppImage"), None);
+    // No record, a damaged one, one without Torno, and a record file of any other shape.
     let one = |bytes: &'static [u8]| managed_by("linux", &env, Some(exe), &appimage, &|_: &Path| Some(bytes.to_vec()));
     assert_eq!(one(b"{not json"), None);
-    assert_eq!(one(br#"{"apps": {"photocraft": {"path": "/home/me/Apps/SolidCraft.AppImage"}}}"#), None);
-    assert_eq!(one(br#"{"apps": {"solidcraft": {"path": 7}}}"#), None);
+    assert_eq!(one(br#"{"apps": {"photocraft": {"path": "/home/me/Apps/Torno.AppImage"}}}"#), None);
+    assert_eq!(one(br#"{"apps": {"torno": {"path": 7}}}"#), None);
     assert_eq!(one(b"[]"), None);
     assert_eq!(managed_by("linux", &env, Some(exe), &appimage, &|_: &Path| None), None);
     // XDG_DATA_HOME moves the record.
@@ -872,33 +859,33 @@ fn the_record_matches_folders_bundles_and_windows_paths() {
     let nothing_else = |bytes: Vec<u8>| move |_: &Path| Some(bytes.clone());
     // An unpacked tarball: the record names the folder, and the launcher's own HOME is no help,
     // so the record is found beside the `apps` folder the app runs from.
-    let exe = Path::new("/home/me/.local/share/artcraft-launcher/apps/solidcraft/bin/solidcraft");
+    let exe = Path::new("/home/me/.local/share/artcraft-launcher/apps/torno/bin/torno");
     let read = |p: &Path| {
         (p == Path::new("/home/me/.local/share/artcraft-launcher/installed.json"))
-            .then(|| record("/home/me/.local/share/artcraft-launcher/apps/solidcraft"))
+            .then(|| record("/home/me/.local/share/artcraft-launcher/apps/torno"))
     };
-    let home = |k: &str| (k == "HOME").then(|| "/home/me/.local/share/artcraft-launcher/apps/solidcraft/home".to_string());
+    let home = |k: &str| (k == "HOME").then(|| "/home/me/.local/share/artcraft-launcher/apps/torno/home".to_string());
     assert_eq!(managed_by("linux", &home, Some(exe), &InstallKind::LinuxTarball, &read).as_deref(), Some("ArtCraft Launcher"));
     // macOS: the bundle.
-    let bundle = PathBuf::from("/Applications/SolidCraft.app");
+    let bundle = PathBuf::from("/Applications/Torno.app");
     let mac = InstallKind::MacApp(bundle.clone());
-    let exe = Path::new("/Applications/SolidCraft.app/Contents/MacOS/solidcraft");
+    let exe = Path::new("/Applications/Torno.app/Contents/MacOS/torno");
     let home = |k: &str| (k == "HOME").then(|| "/Users/me".to_string());
     let read = |p: &Path| {
         assert_eq!(p, Path::new("/Users/me/Library/Application Support/ArtCraft Launcher/installed.json"));
-        Some(record("/Applications/SolidCraft.app"))
+        Some(record("/Applications/Torno.app"))
     };
     assert_eq!(managed_by("macos", &home, Some(exe), &mac, &read).as_deref(), Some("ArtCraft Launcher"));
     // Windows: case and the verbatim prefix don't matter, and the record is under LOCALAPPDATA.
     let local = |k: &str| (k == "LOCALAPPDATA").then(|| r"C:\Users\me\AppData\Local".to_string());
-    let exe = Path::new(r"C:\Users\me\AppData\Local\Programs\SolidCraft\solidcraft.exe");
-    let read = nothing_else(record(r"\\?\c:\users\me\appdata\local\programs\solidcraft\SOLIDCRAFT.EXE"));
+    let exe = Path::new(r"C:\Users\me\AppData\Local\Programs\Torno\torno.exe");
+    let read = nothing_else(record(r"\\?\c:\users\me\appdata\local\programs\torno\TORNO.EXE"));
     assert_eq!(managed_by("windows", &local, Some(exe), &InstallKind::WindowsExe, &read).as_deref(), Some("ArtCraft Launcher"));
-    let read = nothing_else(record(r"C:\Users\me\AppData\Local\Programs\SolidCraft2"));
+    let read = nothing_else(record(r"C:\Users\me\AppData\Local\Programs\Torno2"));
     assert_eq!(managed_by("windows", &local, Some(exe), &InstallKind::WindowsExe, &read), None, "a folder whose name only starts the same");
     // Linux paths are case-sensitive.
     let read = nothing_else(record("/OPT/SC"));
-    assert_eq!(managed_by("linux", &no_env, Some(Path::new("/opt/sc/solidcraft")), &InstallKind::LinuxTarball, &read), None);
+    assert_eq!(managed_by("linux", &no_env, Some(Path::new("/opt/sc/torno")), &InstallKind::LinuxTarball, &read), None);
 }
 
 /// A harness with a newer release found and the Update window open, on an AppImage that a
@@ -911,7 +898,7 @@ fn open_update_window(managed: Option<&str>) -> (crate::scenario::Harness, Scrat
     let download: install::HttpDownload = Arc::new(|_, _, _| Err(FetchError::Failed("offline".into())));
     h.app.services.http_get = Some(get);
     h.app.services.http_download = Some(download);
-    h.app.updater.kind = Some(InstallKind::AppImage("/home/me/SolidCraft.AppImage".into()));
+    h.app.updater.kind = Some(InstallKind::AppImage("/home/me/Torno.AppImage".into()));
     h.app.updater.managed = Some(managed.map(str::to_string));
     h.app.updater.feed = Some(feed);
     h.frame();
@@ -926,7 +913,7 @@ fn open_update_window(managed: Option<&str>) -> (crate::scenario::Harness, Scrat
 fn a_managed_install_points_to_its_manager_instead_of_updating_itself() {
     let (mut h, _dir) = open_update_window(Some("ArtCraft Launcher"));
     assert_eq!(install_method(&mut h.app), None, "no AppImage self-replace");
-    assert!(h.widget("Update available: update SolidCraft in ArtCraft Launcher").is_some());
+    assert!(h.widget("Update available: update Torno in ArtCraft Launcher").is_some());
     for gone in ["Update now", "Download", "Open release page"] {
         assert!(h.widget(gone).is_none(), "{gone} is not offered");
     }
@@ -939,10 +926,10 @@ fn a_managed_install_points_to_its_manager_instead_of_updating_itself() {
 #[test]
 fn an_unmanaged_install_updates_itself_as_before() {
     let (mut h, _dir) = open_update_window(None);
-    assert_eq!(install_method(&mut h.app), Some(install::Method::AppImage("/home/me/SolidCraft.AppImage".into())));
+    assert_eq!(install_method(&mut h.app), Some(install::Method::AppImage("/home/me/Torno.AppImage".into())));
     assert!(h.widget("Update now").is_some());
     assert!(h.widget("Download").is_some());
-    assert!(h.widget("Update available: update SolidCraft in ArtCraft Launcher").is_none());
+    assert!(h.widget("Update available: update Torno in ArtCraft Launcher").is_none());
 }
 
 #[test]
@@ -955,7 +942,7 @@ fn periodic_checks_refresh_the_offered_label() {
     wait_for_check(&mut h);
     h.frames(2);
     assert!(h.widget(&format!("Update to {first}")).is_some());
-    h.app.updater.installed = Some(Ok(install::Outcome::Restart(dir.0.join("SolidCraft.AppImage"))));
+    h.app.updater.installed = Some(Ok(install::Outcome::Restart(dir.0.join("Torno.AppImage"))));
     let v = parse_version(&first).unwrap();
     let next = format!("{}.{}.0", v.major, v.minor + 1);
     std::fs::write(feed, json!({"tag_name": format!("v{next}")}).to_string()).unwrap();
@@ -970,7 +957,7 @@ fn periodic_checks_refresh_the_offered_label() {
 #[test]
 fn install_selection_refreshes_the_button_and_progress_before_completion() {
     let dir = scratch();
-    let target = dir.0.join("SolidCraft.AppImage");
+    let target = dir.0.join("Torno.AppImage");
     let name = asset_name(&InstallKind::AppImage(target.clone()), std::env::consts::ARCH, "999.1.0").unwrap();
     let mut h = crate::scenario::Harness::new();
     h.app.preferences.check_updates = false;
@@ -1014,7 +1001,7 @@ fn cancel_download_leaves_downloading_immediately() {
     // Cancel must clear the job from the UI at once so the card leaves "Downloading" without
     // waiting for a stalled feed or checksum GET (#8908).
     let dir = scratch();
-    let target = dir.0.join("SolidCraft.AppImage");
+    let target = dir.0.join("Torno.AppImage");
     let name = asset_name(&InstallKind::AppImage(target.clone()), std::env::consts::ARCH, "999.1.0").unwrap();
     let mut h = crate::scenario::Harness::new();
     h.app.preferences.check_updates = false;
@@ -1100,7 +1087,7 @@ fn an_installer_completing_during_graphics_restart_owns_the_pending_launch() {
     restart_graphics(&mut h.app);
     assert!(h.app.updater.graphics_restart && h.app.docs.quitting.is_some() && !h.app.quit_requested);
 
-    let installer = PathBuf::from("solidcraft-installer");
+    let installer = PathBuf::from("torno-installer");
     let arguments = vec!["install-package".to_string()];
     let (tx, rx) = std::sync::mpsc::channel();
     h.app.updater.job = Some((rx, Arc::new(install::Progress::default())));

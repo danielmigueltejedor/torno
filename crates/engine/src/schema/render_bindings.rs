@@ -12,8 +12,8 @@
 use schemars::{JsonSchema, Schema, SchemaGenerator, json_schema};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
-use solidcraft_doc::render_optics::OpticalMaterial;
-use solidcraft_doc::render_surface::RenderBodyTarget;
+use torno_doc::render_optics::OpticalMaterial;
+use torno_doc::render_surface::RenderBodyTarget;
 
 /// `set`'s default: no change to the setup.
 fn no_change() -> Value {
@@ -76,7 +76,7 @@ fn target_schema(_: &mut SchemaGenerator) -> Schema {
     })
 }
 
-/// Optical numbers for a body, as `solidcraft_doc::render_optics::OpticalMaterial` reads them.
+/// Optical numbers for a body, as `torno_doc::render_optics::OpticalMaterial` reads them.
 /// Every field has a default, so `{}` is clear glass with a refractive index of 1.5.
 fn optics_schema(_: &mut SchemaGenerator) -> Schema {
     json_schema!({

@@ -103,7 +103,7 @@
     "stitch"
   ],
   "ungraded": [
-    "continuity: SolidCraft computes it"
+    "continuity: Torno computes it"
   ],
   "what": "three r2 rounds at a top corner of a bar whose far end runs tangent into a cylinder, with the curvature (g2) corner set back 3: SMLib refused the result coming back (a cylinder over more than a turn); reported from the app (2026-10-30, test-peg part)",
   "why_not": []

@@ -139,9 +139,9 @@ pub(crate) fn tick(app: &mut SolveApp, ctx: &egui::Context) {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use solidcraft_engine::geom::prelude::*;
     use std::cell::{Cell, RefCell};
     use std::rc::Rc;
+    use torno_engine::geom::prelude::*;
 
     #[derive(Default)]
     struct Answer {
@@ -198,7 +198,7 @@ mod tests {
                 count.set(count.get() + 1);
             };
             if save {
-                h.app.pick_save("part.solidcraft", &["solidcraft"], callback);
+                h.app.pick_save("part.solidcraft", &["torno"], callback);
             } else {
                 h.app.pick_open(callback);
             }
@@ -587,7 +587,7 @@ mod tests {
             h.app.run("sketch.create", json!({"plane":"XY"})).unwrap();
         }
         let path = h.dir.join("image.png");
-        let png = solidcraft_viewport::png(1, 1, vec![255, 0, 0, 255]).unwrap();
+        let png = torno_viewport::png(1, 1, vec![255, 0, 0, 255]).unwrap();
         std::fs::write(&path, png).unwrap();
         let answer = picker(&mut h.app, false);
         h.app.start(command);

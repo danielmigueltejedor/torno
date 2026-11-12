@@ -1,6 +1,6 @@
 use serde_json::{Value, json};
-use solidcraft_geom::prelude::*;
-use solidcraft_geom::tess::EvaluateMesh as _;
+use torno_geom::prelude::*;
+use torno_geom::tess::EvaluateMesh as _;
 
 use crate::Session;
 
@@ -34,7 +34,7 @@ fn grouped_face_auto_operation_keeps_implicit_and_explicit_participants() {
             params["operation"] = json!("auto");
             let made = run(&mut actual, "solid.extrude", params);
             let body = actual.model.state().body("Stock").unwrap().body.clone();
-            let volume = solidcraft_kernel::measure(&body).unwrap().volume;
+            let volume = torno_kernel::measure(&body).unwrap().volume;
             assert!(
                 (volume - (1000. + 100. * distance)).abs() < 1e-6,
                 "offset={offset}, distance={distance}, volume={volume}, feature={:?}",
@@ -48,7 +48,7 @@ fn grouped_face_auto_operation_keeps_implicit_and_explicit_participants() {
             let mut single = s.scratch();
             run(&mut grouped, "solid.extrude", json!({"faces":[[32,2,10],[38,8,10]],"face_body":"Stock","distance":-2,"operation":"cut"}));
             run(&mut single, "solid.extrude", json!({"face":[32,2,10],"face_body":"Stock","distance":-2,"operation":"cut"}));
-            let volume = |session: &Session| solidcraft_kernel::measure(&session.model.state().body("Stock").unwrap().body).unwrap().volume;
+            let volume = |session: &Session| torno_kernel::measure(&session.model.state().body("Stock").unwrap().body).unwrap().volume;
             assert!((volume(&grouped) - volume(&single)).abs() < 1e-6);
         }
     }
@@ -62,7 +62,7 @@ fn grouped_face_auto_operation_keeps_implicit_and_explicit_participants() {
         let mut p = params.clone();
         p["operation"] = json!(operation);
         run(&mut t, "solid.extrude", p);
-        let volume = |name: &str| solidcraft_kernel::measure(&t.model.state().body(name).unwrap().body).unwrap().volume;
+        let volume = |name: &str| torno_kernel::measure(&t.model.state().body(name).unwrap().body).unwrap().volume;
         assert!(
             (volume("Stock") - 800.).abs() < 1e-6 && (volume("Other") - 1000.).abs() < 1e-6,
             "{operation}: {} {}",
@@ -106,7 +106,7 @@ fn sketch_on_a_part_in_another_component_joins_and_cuts_it() {
             run(&mut t, "solid.extrude", p);
             let st = t.model.state();
             assert_eq!(st.bodies.len(), 1, "{params} {operation}: no separate body");
-            let got = solidcraft_kernel::measure(&st.body("Stock").unwrap().body).unwrap().volume;
+            let got = torno_kernel::measure(&st.body("Stock").unwrap().body).unwrap().volume;
             assert!((got - volume).abs() < 1e-2, "{params} {operation}: volume {got}, expected {volume}");
         }
     }
@@ -168,7 +168,7 @@ fn every_inward_extrude_into_a_part_in_another_component_cuts_it() {
             }
             let st = t.model.state();
             let names: Vec<_> = st.bodies.iter().map(|b| b.name.to_string()).collect();
-            let got = st.body("Stock").and_then(|b| solidcraft_kernel::measure(&b.body).ok()).map(|m| m.volume);
+            let got = st.body("Stock").and_then(|b| torno_kernel::measure(&b.body).ok()).map(|m| m.volume);
             if names != ["Stock"] || got.is_none_or(|v| (v - volume).abs() > 1e-2) {
                 wrong.push(format!("{params} {operation}: bodies {names:?}, Stock volume {got:?}, expected {volume:.3}"));
             }
@@ -180,7 +180,7 @@ fn every_inward_extrude_into_a_part_in_another_component_cuts_it() {
 /// #5679's part: a 10 mm cube `Stock` in component Part, its placement moved to (30, 5, 2) and
 /// turned 35 degrees about (1, 2, 0), with the top level active; with `base`, the top level has a
 /// body of its own, a 20 x 20 x 5 `Base` at (-40, -40, 0). Returns Part's placement.
-fn turned_part(base: bool) -> (Session, solidcraft_doc::Mat) {
+fn turned_part(base: bool) -> (Session, torno_doc::Mat) {
     let mut s = Session::default();
     let part = run(&mut s, "component.create", json!({"name": "Part", "grounded": false}));
     run(&mut s, "solid.box", json!({"length": 10, "width": 10, "height": 10, "body_name": "Stock"}));
@@ -203,7 +203,7 @@ fn sketch_on_face(s: &mut Session, at: solidcore_record::Vec3, draw: impl FnOnce
         .iter()
         .rev()
         .find_map(|f| match &f.kind {
-            solidcraft_doc::FeatureKind::Sketch { plane: solidcraft_doc::PlaneRef::Face { plane, .. }, .. } => Some(*plane),
+            torno_doc::FeatureKind::Sketch { plane: torno_doc::PlaneRef::Face { plane, .. }, .. } => Some(*plane),
             _ => None,
         })
         .unwrap();
@@ -212,7 +212,7 @@ fn sketch_on_face(s: &mut Session, at: solidcore_record::Vec3, draw: impl FnOnce
 }
 
 fn body_volume(s: &Session, name: &str) -> f64 {
-    solidcraft_kernel::measure(&s.model.state().body(name).unwrap().body).unwrap().volume
+    torno_kernel::measure(&s.model.state().body(name).unwrap().body).unwrap().volume
 }
 
 /// #5679: with the top level active, a circle sketched on the top face of a part in a moved and
@@ -225,7 +225,7 @@ fn a_sketch_on_a_turned_sub_components_face_cuts_and_joins_it_from_the_top_level
     let hole = std::f64::consts::PI * 4.0 * 3.0;
     for base in [false, true] {
         let (mut s, placed) = turned_part(base);
-        let top = solidcraft_doc::apply_point(&placed, solidcore_record::Vec3::new(5.0, 5.0, 10.0));
+        let top = torno_doc::apply_point(&placed, solidcore_record::Vec3::new(5.0, 5.0, 10.0));
         sketch_on_face(&mut s, top, |s, c, _| {
             run(s, "sketch.circle.center", json!({"center": [c.x, c.y], "radius": 2}));
         });
@@ -263,7 +263,7 @@ fn a_revolve_from_a_turned_sub_components_face_joins_and_cuts_it_from_the_top_le
     let half = std::f64::consts::PI * 3.0;
     for (operation, want) in [("join", 1000.0 + half), ("cut", 1000.0 - half)] {
         let (mut s, placed) = turned_part(true);
-        let top = solidcraft_doc::apply_point(&placed, solidcore_record::Vec3::new(5.0, 5.0, 10.0));
+        let top = torno_doc::apply_point(&placed, solidcore_record::Vec3::new(5.0, 5.0, 10.0));
         let mut axis = json!(null);
         sketch_on_face(&mut s, top, |s, c, plane| {
             run(s, "sketch.rectangle.two_point", json!({"p0": [c.x - 3.0, c.y], "p1": [c.x + 3.0, c.y + 1.0]}));
@@ -283,13 +283,13 @@ fn a_revolve_from_a_turned_sub_components_face_joins_and_cuts_it_from_the_top_le
 #[test]
 fn a_loft_from_a_turned_sub_components_face_joins_it_from_the_top_level() {
     let (mut s, placed) = turned_part(true);
-    let top = solidcraft_doc::apply_point(&placed, solidcore_record::Vec3::new(5.0, 5.0, 10.0));
+    let top = torno_doc::apply_point(&placed, solidcore_record::Vec3::new(5.0, 5.0, 10.0));
     let mut centre = solidcore_record::Vec2::new(0.0, 0.0);
     sketch_on_face(&mut s, top, |s, c, _| {
         run(s, "sketch.circle.center", json!({"center": [c.x, c.y], "radius": 2}));
         centre = c;
     });
-    let low = s.doc.features.iter().rev().find(|f| matches!(f.kind, solidcraft_doc::FeatureKind::Sketch { .. })).unwrap().id;
+    let low = s.doc.features.iter().rev().find(|f| matches!(f.kind, torno_doc::FeatureKind::Sketch { .. })).unwrap().id;
     let high = run(&mut s, "sketch.create", json!({"plane": {"face": [top.x, top.y, top.z]}, "offset": 5, "project_edges": false}))["sketch"].clone();
     run(&mut s, "sketch.circle.center", json!({"center": [centre.x, centre.y], "radius": 2}));
     run(&mut s, "sketch.finish", json!({}));
@@ -309,7 +309,7 @@ fn a_loft_from_a_turned_sub_components_face_joins_it_from_the_top_level() {
 fn a_cut_from_the_top_level_shows_in_every_placement_and_a_later_placement_is_refused() {
     let (mut s, placed) = turned_part(true);
     let second = run(&mut s, "occurrence.copy", json!({"component": "Part", "translate": [0, 40, 0]}))["occurrence"].as_u64().unwrap();
-    let top = solidcraft_doc::apply_point(&placed, solidcore_record::Vec3::new(5.0, 5.0, 10.0));
+    let top = torno_doc::apply_point(&placed, solidcore_record::Vec3::new(5.0, 5.0, 10.0));
     let mut first = s.scratch();
     sketch_on_face(&mut first, top, |s, c, _| {
         run(s, "sketch.circle.center", json!({"center": [c.x, c.y], "radius": 2}));
@@ -317,13 +317,13 @@ fn a_cut_from_the_top_level_shows_in_every_placement_and_a_later_placement_is_re
     run(&mut first, "solid.extrude", json!({"distance": -3, "operation": "cut"}));
     let world = first.world_state().unwrap();
     let placements: Vec<f64> =
-        world.bodies.iter().filter(|b| b.definition_name() == "Stock").map(|b| solidcraft_kernel::measure(&b.body).unwrap().volume).collect();
+        world.bodies.iter().filter(|b| b.definition_name() == "Stock").map(|b| torno_kernel::measure(&b.body).unwrap().volume).collect();
     let want = 1000.0 - std::f64::consts::PI * 4.0 * 3.0;
     assert_eq!(placements.len(), 2, "{placements:?}");
     assert!(placements.iter().all(|v| (v - want).abs() < 1e-2), "{placements:?}");
 
     let (_, moved) = s.doc.path_placement(&[second]).unwrap();
-    let top = solidcraft_doc::apply_point(&moved, solidcore_record::Vec3::new(5.0, 5.0, 10.0));
+    let top = torno_doc::apply_point(&moved, solidcore_record::Vec3::new(5.0, 5.0, 10.0));
     sketch_on_face(&mut s, top, |s, c, _| {
         run(s, "sketch.circle.center", json!({"center": [c.x, c.y], "radius": 2}));
     });
@@ -404,12 +404,12 @@ fn separated_profile_cut_preserves_participants_and_removes_only_consumed_bodies
             assert!(state.body("A").is_none());
             for (name, expected) in [("B", 210.), ("C", if explicit { 250. } else { 210. })] {
                 let body = &state.body(name).unwrap().body;
-                assert!((solidcraft_kernel::measure(body).unwrap().volume - expected).abs() < 1e-6);
+                assert!((torno_kernel::measure(body).unwrap().volume - expected).abs() < 1e-6);
                 assert!(body.validity().is_empty());
             }
         };
         check(&s);
-        check(&Session::new(solidcraft_doc::Document::from_json(&s.doc.to_json()).unwrap()));
+        check(&Session::new(torno_doc::Document::from_json(&s.doc.to_json()).unwrap()));
         run(&mut s, "edit.undo", json!({}));
         assert_eq!(s.doc.to_json(), before);
         run(&mut s, "edit.redo", json!({}));
@@ -531,7 +531,7 @@ fn cylinder_badge() -> Session {
 }
 
 fn exact_cylinder_volume(s: &Session) -> f64 {
-    s.model.state().body("Sleeve").unwrap().body.mesh(&solidcraft_kernel::MeshTolerance::chord(1e-4)).unwrap().measure().volume
+    s.model.state().body("Sleeve").unwrap().body.mesh(&torno_kernel::MeshTolerance::chord(1e-4)).unwrap().measure().volume
 }
 
 #[test]
@@ -548,14 +548,14 @@ fn cylinder_emboss_persists_selection_and_replays_radial_depth() {
     let state = s.model.state();
     let body = &state.body("Sleeve").unwrap().body;
     assert_eq!(body.shell_count(), 1);
-    let mesh = body.mesh(&solidcraft_kernel::MeshTolerance::chord(0.001)).unwrap();
+    let mesh = body.mesh(&torno_kernel::MeshTolerance::chord(0.001)).unwrap();
     assert!(mesh.contains(Vec3::new(-10.5 * 0.15_f64.sin(), 10.5 * 0.15_f64.cos(), 7.5)));
     let feature = s.doc.find_feature("Raised Badge").unwrap();
     assert!(
-        matches!(&feature.kind,solidcraft_doc::FeatureKind::Emboss{face:Some(face),..} if face.body=="Sleeve"&&face.at.dist(Vec3::new(0.,10.,7.5))<1e-10)
+        matches!(&feature.kind,torno_doc::FeatureKind::Emboss{face:Some(face),..} if face.body=="Sleeve"&&face.at.dist(Vec3::new(0.,10.,7.5))<1e-10)
     );
     let saved = s.doc.to_json();
-    let mut loaded = Session { doc: solidcraft_doc::Document::from_json(&saved).unwrap().into(), ..Default::default() };
+    let mut loaded = Session { doc: torno_doc::Document::from_json(&saved).unwrap().into(), ..Default::default() };
     loaded.refresh();
     assert!(loaded.model.results.iter().all(|f| f.error.is_none()), "{:?}", loaded.model.results);
     assert!((exact_cylinder_volume(&loaded) - before - 21.0).abs() < 0.02);
@@ -599,7 +599,7 @@ fn cylinder_small_chord_pick_is_saved_on_the_exact_surface() {
         .unwrap();
     assert!(((pick.x * pick.x + pick.y * pick.y).sqrt() - 0.1).abs() > 1e-7);
     run(&mut s, "solid.emboss", json!({"sketch":"Badge","profiles":"all","face":[pick.x,pick.y,pick.z],"depth":"0.01mm","targets":["Tiny"]}));
-    let solidcraft_doc::FeatureKind::Emboss { face: Some(face), .. } = &s.doc.features.last().unwrap().kind else {
+    let torno_doc::FeatureKind::Emboss { face: Some(face), .. } = &s.doc.features.last().unwrap().kind else {
         panic!("missing face");
     };
     assert!(((face.at.x * face.at.x + face.at.y * face.at.y).sqrt() - 0.1).abs() < 1e-12);
@@ -614,7 +614,7 @@ fn cylinder_cross_component_emboss_keeps_source_owner_and_placements() {
         let a = run(&mut s, "component.create", json!({"name":"Source","grounded":false}))["component"].as_u64().unwrap();
         run(&mut s, "solid.cylinder", json!({"radius":10,"height":20,"body_name":"Sleeve"}));
         let source_feature = s.model.state().bodies.first().unwrap().feature;
-        let source_names = solidcraft_doc::naming::face_names(s.model.state().body("Sleeve").unwrap());
+        let source_names = torno_doc::naming::face_names(s.model.state().body("Sleeve").unwrap());
         let before = exact_cylinder_volume(&s);
         run(&mut s, "occurrence.move", json!({"occurrence":"Source:1","axis":[0,0,1],"angle":"90 deg","translate":[50,0,0]}));
         let second = run(&mut s, "occurrence.copy", json!({"component":a,"translate":[80,0,0]}))["occurrence"].as_u64().unwrap();
@@ -634,11 +634,7 @@ fn cylinder_cross_component_emboss_keeps_source_owner_and_placements() {
             .bodies
             .iter()
             .find(|b| {
-                b.body.mesh(&solidcraft_kernel::MeshTolerance::chord(0.001)).unwrap().contains(solidcore_record::Vec3::new(
-                    40.5 + pick_offset,
-                    0.,
-                    7.5,
-                ))
+                b.body.mesh(&torno_kernel::MeshTolerance::chord(0.001)).unwrap().contains(solidcore_record::Vec3::new(40.5 + pick_offset, 0., 7.5))
             })
             .unwrap()
             .name
@@ -648,7 +644,7 @@ fn cylinder_cross_component_emboss_keeps_source_owner_and_placements() {
             "solid.emboss",
             json!({"sketch":"Badge","profiles":"all","face":[40.+pick_offset,0,7.5],"depth":"badge_depth","targets":[target.clone()]}),
         );
-        let solidcraft_doc::FeatureKind::Emboss { face: Some(face), .. } = &s.doc.features.last().unwrap().kind else {
+        let torno_doc::FeatureKind::Emboss { face: Some(face), .. } = &s.doc.features.last().unwrap().kind else {
             panic!("missing selection");
         };
         assert_eq!(face.path, if pick_offset == 0. { s.doc.first_path(a) } else { vec![second] });
@@ -666,12 +662,12 @@ fn cylinder_cross_component_emboss_keeps_source_owner_and_placements() {
             assert!(
                 world.bodies.iter().any(|b| b
                     .body
-                    .mesh(&solidcraft_kernel::MeshTolerance::chord(0.001))
+                    .mesh(&torno_kernel::MeshTolerance::chord(0.001))
                     .unwrap()
                     .contains(solidcore_record::Vec3::new(x, 0., 7.5)))
             );
         }
-        let mut loaded = Session { doc: solidcraft_doc::Document::from_json(&s.doc.to_json()).unwrap().into(), ..Default::default() };
+        let mut loaded = Session { doc: torno_doc::Document::from_json(&s.doc.to_json()).unwrap().into(), ..Default::default() };
         loaded.refresh();
         assert!(loaded.model.results.iter().all(|r| r.error.is_none()), "{:?}", loaded.model.results);
         run(&mut loaded, "parameters.change", json!({"name":"badge_depth","expression":"2mm"}));
@@ -695,7 +691,7 @@ fn cylinder_cross_component_emboss_keeps_source_owner_and_placements() {
         assert!((exact_cylinder_volume(&loaded) - before - 69.).abs() < 0.02);
         let mut broken = loaded.doc.as_ref().clone();
         let id = broken.features.last().unwrap().id;
-        let solidcraft_doc::FeatureKind::Emboss { face: Some(face), .. } = &mut broken.feature_mut(id).unwrap().kind else {
+        let torno_doc::FeatureKind::Emboss { face: Some(face), .. } = &mut broken.feature_mut(id).unwrap().kind else {
             panic!("missing selection");
         };
         face.path = vec![u64::MAX];
@@ -724,12 +720,12 @@ fn check_active_second_source(auto: bool) {
     run(&mut s, "sketch.finish", json!({}));
     run(&mut s, "solid.emboss", json!({"sketch":"Badge","profiles":"all","face":[80,10,7.5],"depth":1}));
     assert!((exact_cylinder_volume(&s) - before - 21.).abs() < 0.02);
-    let solidcraft_doc::FeatureKind::Emboss { face: Some(face), .. } = &s.doc.features.last().unwrap().kind else {
+    let torno_doc::FeatureKind::Emboss { face: Some(face), .. } = &s.doc.features.last().unwrap().kind else {
         panic!("missing selection");
     };
     assert_eq!(face.path, vec![second]);
     assert_eq!(face.author_path, vec![second]);
-    let mut loaded = Session { doc: solidcraft_doc::Document::from_json(&s.doc.to_json()).unwrap().into(), ..Default::default() };
+    let mut loaded = Session { doc: torno_doc::Document::from_json(&s.doc.to_json()).unwrap().into(), ..Default::default() };
     loaded.refresh();
     assert!(loaded.model.results.iter().all(|r| r.error.is_none()), "{:?}", loaded.model.results);
     assert!((exact_cylinder_volume(&loaded) - before - 21.).abs() < 0.02);
@@ -823,7 +819,7 @@ fn check_body_offset(auto: bool) {
             .body("Sleeve")
             .unwrap()
             .body
-            .mesh(&solidcraft_kernel::MeshTolerance::chord(0.001))
+            .mesh(&torno_kernel::MeshTolerance::chord(0.001))
             .unwrap()
             .contains(solidcore_record::Vec3::new(0., 10.5, 7.5))
     );
@@ -898,7 +894,7 @@ fn align_can_keep_the_offset_to_chosen_axes() {
     let made = run(&mut s, "solid.align", json!({"bodies": ["A"], "from": [0, 0, 0], "to": [1, 2, 3], "axes": [true, true, true]}));
     let id = made["feature"].as_u64().expect("the feature id");
     let f = s.doc.feature(id).expect("the saved feature");
-    assert!(matches!(&f.kind, solidcraft_doc::FeatureKind::Align { axes: None, .. }));
+    assert!(matches!(&f.kind, torno_doc::FeatureKind::Align { axes: None, .. }));
 }
 
 /// The z range and the x minimum of body `name`.
@@ -993,7 +989,7 @@ fn align_by_frames_follows_its_target() {
     // The circle moves: B follows it, and still does in the saved design.
     run(&mut s, "parameters.change", json!({"name": "X", "expression": "30 mm"}));
     assert_bounds(&mut s, "B", [25., -5., 0.], [35., 15., 10.]);
-    let mut r = Session::new(solidcraft_doc::Document::from_json(&s.doc.to_json()).unwrap());
+    let mut r = Session::new(torno_doc::Document::from_json(&s.doc.to_json()).unwrap());
     assert_bounds(&mut r, "B", [25., -5., 0.], [35., 15., 10.]);
     // A quarter turn about the circle's z through its centre.
     let mut s = target();
@@ -1041,7 +1037,7 @@ fn align_by_frames_follows_its_target() {
     run(&mut s, "solid.box", json!({"length": 5, "width": 5, "height": 5, "corner": [80, 0, 0], "body_name": "P"}));
     run(&mut s, "component.activate", json!({"component": "root"}));
     assert!(s.execute("solid.align", &json!({"bodies": ["B", "P"], "from_frame": bottom, "to_frame": ring})).is_err());
-    assert!(!s.doc.features.iter().any(|f| matches!(f.kind, solidcraft_doc::FeatureKind::Align { .. })), "nothing refused was added");
+    assert!(!s.doc.features.iter().any(|f| matches!(f.kind, torno_doc::FeatureKind::Align { .. })), "nothing refused was added");
     // A design file whose frame no longer resolves (here a degenerate one) fails the feature
     // with a message; it never panics.
     let mut s = target();
@@ -1061,7 +1057,7 @@ fn align_by_frames_follows_its_target() {
         }
     }
     spoil(&mut v);
-    let mut r = Session::new(solidcraft_doc::Document::from_json(&v.to_string()).unwrap());
+    let mut r = Session::new(torno_doc::Document::from_json(&v.to_string()).unwrap());
     measure(&mut r);
     assert!(r.model.results.iter().any(|x| x.error.as_deref().is_some_and(|e| e.contains("degenerate"))), "the Align reports its frame");
 }
@@ -1159,7 +1155,7 @@ fn cylinder_auto_inference_saves_a_profile_anchor_and_replays_both_depth_signs()
         let initial = s.doc.to_json();
         run(&mut s, "solid.emboss", json!({"sketch":"Badge","profiles":"all","depth":"badge_depth","mode":mode,"name":"Auto Badge"}));
         let feature = s.doc.find_feature("Auto Badge").unwrap().clone();
-        let solidcraft_doc::FeatureKind::Emboss { face: Some(face), targets, .. } = &feature.kind else {
+        let torno_doc::FeatureKind::Emboss { face: Some(face), targets, .. } = &feature.kind else {
             panic!("missing inferred association");
         };
         assert_eq!(targets, &["Sleeve"]);
@@ -1173,18 +1169,14 @@ fn cylinder_auto_inference_saves_a_profile_anchor_and_replays_both_depth_signs()
         let body = &state.body("Sleeve").unwrap().body;
         assert_eq!(body.shell_count(), 1);
         assert_eq!(
-            body.mesh(&solidcraft_kernel::MeshTolerance::chord(0.001)).unwrap().contains(Vec3::new(
-                0.,
-                if mode == "emboss" { 10.5 } else { 9.5 },
-                7.5
-            )),
+            body.mesh(&torno_kernel::MeshTolerance::chord(0.001)).unwrap().contains(Vec3::new(0., if mode == "emboss" { 10.5 } else { 9.5 }, 7.5)),
             mode == "emboss"
         );
         run(&mut s, "edit.undo", json!({}));
         assert_eq!(s.doc.to_json(), initial);
         run(&mut s, "edit.redo", json!({}));
         assert_eq!(s.doc.find_feature("Auto Badge").unwrap().kind, feature.kind);
-        let mut loaded = Session { doc: solidcraft_doc::Document::from_json(&s.doc.to_json()).unwrap().into(), ..Default::default() };
+        let mut loaded = Session { doc: torno_doc::Document::from_json(&s.doc.to_json()).unwrap().into(), ..Default::default() };
         loaded.refresh();
         assert!(loaded.model.results.iter().all(|r| r.error.is_none()), "{:?}", loaded.model.results);
         run(
@@ -1212,13 +1204,10 @@ fn cylinder_auto_inference_ignores_remote_finite_tangent_walls_in_each_body_orde
         run(&mut s, "sketch.rectangle.two_point", json!({"p0":[-2,5],"p1":[2,10]}));
         run(&mut s, "sketch.finish", json!({}));
         let before = exact_cylinder_volume(&s);
-        let remote = s.model.state().body("Remote").unwrap().body.mesh(&solidcraft_kernel::MeshTolerance::chord(1e-4)).unwrap().measure().volume;
+        let remote = s.model.state().body("Remote").unwrap().body.mesh(&torno_kernel::MeshTolerance::chord(1e-4)).unwrap().measure().volume;
         run(&mut s, "solid.emboss", json!({"sketch":"Badge","depth":1}));
         assert!((exact_cylinder_volume(&s) - before - 21.).abs() < 0.02);
-        assert_eq!(
-            s.model.state().body("Remote").unwrap().body.mesh(&solidcraft_kernel::MeshTolerance::chord(1e-4)).unwrap().measure().volume,
-            remote
-        );
+        assert_eq!(s.model.state().body("Remote").unwrap().body.mesh(&torno_kernel::MeshTolerance::chord(1e-4)).unwrap().measure().volume, remote);
     }
 }
 
@@ -1239,7 +1228,7 @@ fn cylinder_auto_inference_retains_selected_holes_and_nested_islands() {
         let st = s.model.state();
         let body = &st.body("Sleeve").unwrap().body;
         assert_eq!(body.shell_count(), 1);
-        let mesh = body.mesh(&solidcraft_kernel::MeshTolerance::chord(0.001)).unwrap();
+        let mesh = body.mesh(&torno_kernel::MeshTolerance::chord(0.001)).unwrap();
         for (s, raised) in [(0., true), (0.75, false), (1.5, true)] {
             let theta = s / 10.0_f64;
             let radius = if mode == "emboss" { 10.5 } else { 9.5 };
@@ -1257,7 +1246,7 @@ fn cylinder_auto_inference_refuses_ambiguity_curves_and_seam_crossing_atomically
     assert!(error.contains("multiple tangent cylinders"), "{error}");
     assert_eq!(s.doc.to_json(), before);
     run(&mut s, "solid.emboss", json!({"sketch":"Badge","depth":1,"targets":["Sleeve"]}));
-    assert!(matches!(&s.doc.features.last().unwrap().kind,solidcraft_doc::FeatureKind::Emboss{face:Some(face),..} if face.body=="Sleeve"));
+    assert!(matches!(&s.doc.features.last().unwrap().kind,torno_doc::FeatureKind::Emboss{face:Some(face),..} if face.body=="Sleeve"));
     for circle in [false, true] {
         let mut s = cylinder_badge();
         run(&mut s, "sketch.create", json!({"plane":{"origin":[0,10,0],"x_dir":[-1,0,0],"y_dir":[0,0,1]},"name":"Unsupported"}));
@@ -1309,8 +1298,8 @@ fn loft_joined_onto_a_box_exports_one_connected_mesh() {
     let v = volume(&mut s);
     assert!(rel(v, 24000.0 + loft) < 1e-5, "{v} vs {}", 24000.0 + loft);
     // The exported mesh, its vertices merged, is one connected piece.
-    let mesh = s.model.state().body("Box").unwrap().body.mesh(&solidcraft_kernel::MeshTolerance::chord(0.01)).unwrap();
-    let (positions, triangles) = solidcraft_io::weld(&mesh.positions, &mesh.triangles, 1e-4);
+    let mesh = s.model.state().body("Box").unwrap().body.mesh(&torno_kernel::MeshTolerance::chord(0.01)).unwrap();
+    let (positions, triangles) = torno_io::weld(&mesh.positions, &mesh.triangles, 1e-4);
     let mut piece: Vec<usize> = (0..positions.len()).collect();
     let root = |piece: &mut Vec<usize>, mut i: usize| {
         while piece[i] != i {
@@ -1347,7 +1336,7 @@ fn assert_loft_leaves_upper_block(s: &Session) {
     assert_eq!(st.bodies.len(), 2, "a hidden body must not be consumed by Join (#1988)");
     for (name, expected) in [("Lower", 1148.0), ("Upper", 500.0)] {
         let body = &st.body(name).unwrap().body;
-        let got = solidcraft_kernel::measure(body).unwrap().volume;
+        let got = torno_kernel::measure(body).unwrap().volume;
         assert!((got - expected).abs() < 1e-6, "{name}: {got} vs {expected}");
         assert!(body.validity().is_empty());
     }
@@ -1365,7 +1354,7 @@ fn loft_join_keeps_hidden_bodies_and_persists_its_targets() {
     assert_loft_leaves_upper_block(&s);
     // Visibility is only consulted when the feature is made, never when it is rebuilt.
     run(&mut s, "browser.visibility", json!({"items": ["Upper"], "visible": true}));
-    let reopened = Session::new(solidcraft_doc::Document::from_json(&s.doc.to_json()).unwrap());
+    let reopened = Session::new(torno_doc::Document::from_json(&s.doc.to_json()).unwrap());
     assert!(reopened.model.results.iter().all(|r| r.error.is_none()));
     assert_loft_leaves_upper_block(&reopened);
 }
@@ -1476,7 +1465,7 @@ fn blind_bore_into_a_joined_boss_meshes() {
 #[test]
 fn cutting_a_text_removes_each_letter_whether_its_letters_stand_apart_or_touch() {
     // Letters apart (cut at once by all of them), and two touching blocks (cut one after the other).
-    for (text, touching) in [("SOLIDCRAFT", false), ("", true)] {
+    for (text, touching) in [("TORNO", false), ("", true)] {
         let mut s = Session::default();
         run(&mut s, "sketch.create", json!({"plane":"XY"}));
         run(&mut s, "sketch.rectangle.two_point", json!({"p0":[0,0],"p1":[200,40]}));
@@ -1498,7 +1487,7 @@ fn cutting_a_text_removes_each_letter_whether_its_letters_stand_apart_or_touch()
             ids.sort();
             ids
         };
-        let counter = |p: &solidcraft_sketch::Profile| ss.profiles.iter().any(|q| q.hole_curves.iter().any(|h| sorted(h) == sorted(&p.outer_curves)));
+        let counter = |p: &torno_sketch::Profile| ss.profiles.iter().any(|q| q.hole_curves.iter().any(|h| sorted(h) == sorted(&p.outer_curves)));
         let area: f64 = ss.profiles.iter().filter(|p| !counter(p)).map(|p| p.area).sum();
         run(&mut s, "sketch.finish", json!({}));
         run(&mut s, "solid.extrude", json!({"distance":2,"operation":"cut"}));
@@ -1543,7 +1532,7 @@ fn letters(s: &Session) -> Vec<solidcore_record::Region2> {
         ids.sort();
         ids
     };
-    let counter = |p: &solidcraft_sketch::Profile| ss.profiles.iter().any(|q| q.hole_curves.iter().any(|h| sorted(h) == sorted(&p.outer_curves)));
+    let counter = |p: &torno_sketch::Profile| ss.profiles.iter().any(|q| q.hole_curves.iter().any(|h| sorted(h) == sorted(&p.outer_curves)));
     ss.profiles.iter().filter(|p| !counter(p)).map(|p| p.region.clone()).collect()
 }
 
@@ -1602,7 +1591,7 @@ fn a_tapered_text_joins_a_block_on_its_face_or_hanging_over_its_edge() {
                 // Half-way up each letter is its outline grown by h/2 tan a: every point of the
                 // straight letter's outline lies inside.
                 let state = t.model.state();
-                let mesh = state.bodies[0].body.mesh(&solidcraft_kernel::MeshTolerance::chord(1e-3)).unwrap();
+                let mesh = state.bodies[0].body.mesh(&torno_kernel::MeshTolerance::chord(1e-3)).unwrap();
                 for r in &regions {
                     for seg in std::iter::once(&r.outer).chain(&r.holes).flat_map(|l| &l.segs) {
                         for i in 0..8 {
@@ -1710,7 +1699,7 @@ fn a_tapered_foot_under_a_part_joins_as_drawn() {
 /// with the offset and no taper. Two-sided and symmetric tapers are still refused, by name.
 #[test]
 fn a_drafted_extrude_starts_at_an_offset() {
-    use solidcraft_kernel::{FaceSurface, face_surface, measure as measure_body};
+    use torno_kernel::{FaceSurface, face_surface, measure as measure_body};
     // A 30 x 20 profile, 12 mm long, drafted 6 deg, started 4 mm along the normal.
     let (w, d, h, off) = (30.0, 20.0, 12.0, 4.0);
     let part = |p: Value| -> Session {
@@ -1810,11 +1799,11 @@ fn a_drafted_extrude_starts_at_an_offset() {
 /// lies wholly in material, so the cut removes exactly the frustum over its profile.
 #[test]
 fn a_drafted_offset_cut_into_a_body_with_history() {
-    use solidcraft_kernel::{FaceSurface, face_surface, measure as measure_body};
+    use torno_kernel::{FaceSurface, face_surface, measure as measure_body};
     let (w, d, h, off) = (30.0, 20.0, 12.0, 18.0);
     let (ang, t) = (6f64.to_radians(), 6f64.to_radians().tan());
     let frustum = w * d * h + (w + d) * t * h * h + 4.0 / 3.0 * t * t * h * h * h;
-    let unnamed = |b: &solidcraft_kernel::Body| (0..b.face_count()).filter(|i| face_surface(b, *i).is_none()).count();
+    let unnamed = |b: &torno_kernel::Body| (0..b.face_count()).filter(|i| face_surface(b, *i).is_none()).count();
 
     let mut s = Session::default();
     // A 60 x 40 x 30 block, a round boss joined through its far side and out of its top, and a
@@ -1884,12 +1873,7 @@ fn knife_edge_part() -> Session {
 /// the concave arc). It holds to about 1e-3 of what a blend removes here; the bounds below are
 /// about twice what each test reads.
 fn planned(s: &Session) -> f64 {
-    s.model
-        .state()
-        .bodies
-        .iter()
-        .map(|b| b.body.mesh_plan(&solidcraft_kernel::MeshTolerance::chord(2e-4)).unwrap().evaluate_mesh().measure().volume)
-        .sum()
+    s.model.state().bodies.iter().map(|b| b.body.mesh_plan(&torno_kernel::MeshTolerance::chord(2e-4)).unwrap().evaluate_mesh().measure().volume).sum()
 }
 
 /// The middle of the part's arc.
@@ -2057,7 +2041,7 @@ fn a_line_of_text_cuts_into_a_block_at_any_depth() {
             ids.sort();
             ids
         };
-        let counter = |p: &solidcraft_sketch::Profile| ss.profiles.iter().any(|q| q.hole_curves.iter().any(|h| sorted(h) == sorted(&p.outer_curves)));
+        let counter = |p: &torno_sketch::Profile| ss.profiles.iter().any(|q| q.hole_curves.iter().any(|h| sorted(h) == sorted(&p.outer_curves)));
         area = ss.profiles.iter().filter(|p| !counter(p)).map(|p| p.area).sum();
         run(&mut s, "sketch.finish", json!({}));
         run(&mut s, "solid.extrude", json!({"distance":-depth,"operation":"cut"}));
@@ -2080,7 +2064,7 @@ fn a_line_of_text_cuts_into_a_block_at_any_depth() {
 #[test]
 fn a_fillet_saved_on_a_piece_of_a_tapered_side_that_is_whole_now_asks_for_its_edge_again() {
     let text = include_str!("../../../../tests/taper/before-1014/two_tapered_bosses_filleted.json");
-    let mut s = Session::new(solidcraft_doc::Document::from_json(text).unwrap());
+    let mut s = Session::new(torno_doc::Document::from_json(text).unwrap());
     let volume = run(&mut s, "inspect.measure", json!({}))["total"]["volume_mm3"].as_f64().unwrap();
     for name in ["Extrude2", "Fillet1"] {
         let id = s.doc.find_feature(name).unwrap().id;
@@ -2089,7 +2073,7 @@ fn a_fillet_saved_on_a_piece_of_a_tapered_side_that_is_whole_now_asks_for_its_ed
     }
     let fillet = s.doc.find_feature("Fillet2").unwrap().id;
     let error = s.model.result(fillet).unwrap().error.clone().unwrap();
-    assert_eq!(solidcraft_doc::reselect_parts(&error), Some(("Fillet2", "F4:side:c1#1|F4:top#[F4:side:c1]")), "{error}");
+    assert_eq!(torno_doc::reselect_parts(&error), Some(("Fillet2", "F4:side:c1#1|F4:top#[F4:side:c1]")), "{error}");
     // In closed form: the 80 × 40 × 20 block, the 20 × 20 boss 10 high tapered 5° in (a frustum,
     // top 20 − 20 tan 5° square: 3660.251034), the Ø16 boss tapered alike (a cone frustum, top
     // radius 8 − 10 tan 5°: 1798.751833); less the R1 round along a sloping corner (the corner's
@@ -2452,7 +2436,7 @@ fn a_loaded_coil_cannot_be_both_primitive_and_from_a_sketch() {
     let mut v: Value = serde_json::from_str(&s.doc.to_json()).unwrap();
     let coil = v["features"].as_array_mut().unwrap().iter_mut().find(|f| f["type"] == "coil").unwrap();
     coil["diameter"] = json!("40");
-    let reopened = Session::new(solidcraft_doc::Document::from_json(&v.to_string()).unwrap());
+    let reopened = Session::new(torno_doc::Document::from_json(&v.to_string()).unwrap());
     let err = reopened.model.results.iter().find_map(|r| r.error.clone()).unwrap_or_default();
     assert!(err.contains("cannot also set"), "{err}");
 }
@@ -2468,7 +2452,7 @@ fn a_loaded_sketch_coil_cannot_also_set_the_primitive_section() {
         let mut v: Value = serde_json::from_str(&s.doc.to_json()).unwrap();
         let coil = v["features"].as_array_mut().unwrap().iter_mut().find(|f| f["type"] == "coil").unwrap();
         coil[field] = value;
-        let reopened = Session::new(solidcraft_doc::Document::from_json(&v.to_string()).unwrap());
+        let reopened = Session::new(torno_doc::Document::from_json(&v.to_string()).unwrap());
         let err = reopened.model.results.iter().find_map(|r| r.error.clone()).unwrap_or_default();
         assert!(err.contains("cannot also set"), "{field}: {err}");
     }
@@ -2510,7 +2494,7 @@ fn a_sketch_coil_never_panics_on_hostile_parameters() {
     }
 }
 
-fn placed_bounds(s: &Session, name: &str) -> solidcraft_geom::Aabb3 {
+fn placed_bounds(s: &Session, name: &str) -> torno_geom::Aabb3 {
     s.world_state().unwrap().body(name).unwrap_or_else(|| panic!("no {name}")).mesh().bounds()
 }
 
@@ -2541,7 +2525,7 @@ fn twice_placed_blade(s: &mut Session) -> (String, String) {
     (names[0].clone(), names[1].clone())
 }
 
-fn shifted(a: solidcraft_geom::Aabb3, b: solidcraft_geom::Aabb3, by: [f64; 3]) -> bool {
+fn shifted(a: torno_geom::Aabb3, b: torno_geom::Aabb3, by: [f64; 3]) -> bool {
     [
         (a.min.x, b.min.x, by[0]),
         (a.max.x, b.max.x, by[0]),
@@ -2583,7 +2567,7 @@ fn placements_of_one_part_moved_together_each_go_the_way_asked() {
 /// imported component: the move goes to the placement of the whole import, once.
 #[test]
 fn an_imported_assembly_with_a_repeated_part_moves_as_one() {
-    let dir = std::env::temp_dir().join(format!("solidcraft-4768-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("torno-4768-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
     let path = dir.join("rep.step").to_string_lossy().to_string();
     let mut src = Session::default();
@@ -2620,7 +2604,7 @@ fn placed_plate(s: &mut Session, name: &str, x0: f64, angle: f64) {
     }
 }
 
-fn world_bounds(s: &Session, name: &str) -> solidcraft_geom::Aabb3 {
+fn world_bounds(s: &Session, name: &str) -> torno_geom::Aabb3 {
     s.world_state().unwrap().body(name).unwrap_or_else(|| panic!("no {name}")).mesh().bounds()
 }
 

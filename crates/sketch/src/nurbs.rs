@@ -4,7 +4,7 @@
 
 use serde::{Deserialize, Serialize};
 use solidcore_record::{Seg2, Vec2, Vec3};
-use solidcraft_geom::bspline::{self, HPoint};
+use torno_geom::bspline::{self, HPoint};
 
 use crate::model::{Result, SketchError};
 
@@ -154,7 +154,7 @@ impl Nurbs {
             .map(|span| {
                 let pts: Vec<Vec2> = span.iter().map(flat).collect::<Option<_>>()?;
                 match (rational, pts.as_slice()) {
-                    (false, _) => solidcraft_geom::bezier(&pts),
+                    (false, _) => torno_geom::bezier(&pts),
                     (true, [a, apex, b]) => {
                         let w = span.get(1)?.w / (span.first()?.w * span.get(2)?.w).sqrt();
                         (w.is_finite() && w > 0.0).then_some(Seg2::Conic { a: *a, apex: *apex, b: *b, w })

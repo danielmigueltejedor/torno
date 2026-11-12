@@ -1,6 +1,6 @@
 [package]
-name = "solidcraft-theme"
-description = "The token contract UI components draw with: SolidCraft's light and dark tokens, colour vision, tab accents and the theme state a host sets"
+name = "torno-theme"
+description = "The token contract UI components draw with: Torno's light and dark tokens, colour vision, tab accents and the theme state a host sets"
 version.workspace = true
 edition.workspace = true
 license-file = "LICENSE"
@@ -12,4 +12,4 @@ workspace = true
 egui = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
-solidcraft-color = { workspace = true }
+torno-color = { workspace = true }

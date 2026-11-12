@@ -2,7 +2,7 @@ use super::*;
 use solidcore_record::brep::{
     Brep as Record, Curve, Curve2, Edge, EdgeUseRef, Face, Loop, OrientedEdge, OrientedFace, Region, Shell, Surface, Vertex,
 };
-use solidcraft_geom::prelude::*;
+use torno_geom::prelude::*;
 
 /// A closed polyhedron record from its corner points and its faces, each a cycle of corner
 /// indices counter-clockwise seen from outside: planar faces, straight edges, canonical order.
@@ -179,7 +179,7 @@ fn first_nurbs(a: &Arrays) -> (Surface, [f64; 4]) {
 
 #[test]
 fn revolutions_become_the_same_surface_as_a_rational_spline() {
-    use solidcraft_geom::brep::eval::SurfaceEval;
+    use torno_geom::brep::eval::SurfaceEval;
     // A quarter-circle profile (rational) away from the axis, so the surface is a torus piece.
     let s = std::f64::consts::FRAC_1_SQRT_2;
     let profile = Curve::RationalSpline {
@@ -244,7 +244,7 @@ fn arcs_past_a_turn_come_a_turn_back() {
 fn only_a_tube_clear_of_its_axis_is_a_ring_torus() {
     let ring = |major: f64| {
         let frame = solidcore_record::brep::Frame { origin: [major, 0.0, 0.0], x_axis: [1.0, 0.0, 0.0], y_axis: [0.0, 0.0, 1.0] };
-        let (profile, _) = solidcraft_geom::brep::form::curve(&Curve::Circle { frame, radius: 1.0 }, [-1.0, 1.0]).unwrap();
+        let (profile, _) = torno_geom::brep::form::curve(&Curve::Circle { frame, radius: 1.0 }, [-1.0, 1.0]).unwrap();
         let identity = [[1.0, 0.0, 0.0, 0.0], [0.0, 1.0, 0.0, 0.0], [0.0, 0.0, 1.0, 0.0], [0.0, 0.0, 0.0, 1.0]];
         let surface =
             Surface::PlacedRevolution { profile: Box::new(profile), origin: [0.0; 3], axis: [0.0, 0.0, 1.0], matrix: identity, forward: false };

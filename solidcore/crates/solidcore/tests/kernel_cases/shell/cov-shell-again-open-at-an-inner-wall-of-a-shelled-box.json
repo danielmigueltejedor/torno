@@ -91,7 +91,7 @@
       9017.6,
       9038.3
     ],
-    "what": "a 70 x 50 x 30 box with R6 vertical rounds shelled 2 mm open on top, shelled again 0.5 mm open at an inner wall: its 2 mm walls hollowed (action matrix (apps/solidcraft-cli/tests/action_matrix.rs): typical/filleted-shelled-box, Body1/F4:inner:F2:side:l1 face.shell)"
+    "what": "a 70 x 50 x 30 box with R6 vertical rounds shelled 2 mm open on top, shelled again 0.5 mm open at an inner wall: its 2 mm walls hollowed (action matrix (apps/torno-cli/tests/action_matrix.rs): typical/filleted-shelled-box, Body1/F4:inner:F2:side:l1 face.shell)"
   },
   "expressible": true,
   "operation_expressible": true,
@@ -141,6 +141,6 @@
     "shell"
   ],
   "ungraded": [],
-  "what": "a 70 x 50 x 30 box with R6 vertical rounds shelled 2 mm open on top, shelled again 0.5 mm open at an inner wall: its 2 mm walls hollowed (action matrix (apps/solidcraft-cli/tests/action_matrix.rs): typical/filleted-shelled-box, Body1/F4:inner:F2:side:l1 face.shell)",
+  "what": "a 70 x 50 x 30 box with R6 vertical rounds shelled 2 mm open on top, shelled again 0.5 mm open at an inner wall: its 2 mm walls hollowed (action matrix (apps/torno-cli/tests/action_matrix.rs): typical/filleted-shelled-box, Body1/F4:inner:F2:side:l1 face.shell)",
   "why_not": []
 }

@@ -1,7 +1,7 @@
 use crate::Session;
 use serde_json::{Value, json};
-use solidcraft_doc::config::{Column, ConfigFaceTarget};
-use solidcraft_geom::prelude::*;
+use torno_doc::config::{Column, ConfigFaceTarget};
+use torno_geom::prelude::*;
 fn run(s: &mut Session, command: &str, params: Value) -> Value {
     s.execute(command, &params).unwrap_or_else(|error| panic!("{command} {params}: {error}"))
 }
@@ -64,7 +64,7 @@ fn strict_face_rows_resize_rename_preview_suppress_and_roundtrip() {
     let mb = state.body(&body).unwrap();
     let colors = s.doc.face_colors(mb);
     assert_eq!(colors.len(), 1);
-    let names = solidcraft_doc::naming::face_names(mb);
+    let names = torno_doc::naming::face_names(mb);
     assert!(names[colors[0].0].ends_with(":+z"));
     assert!(s.doc.appearances.faces[0].strict_name);
     run(&mut s, "appearance.assign", json!({"faces":[{"body":body,"point":[5,5,20]}]}));
@@ -77,7 +77,7 @@ fn strict_face_rows_resize_rename_preview_suppress_and_roundtrip() {
     let hidden = run(&mut s, "config.activate", json!({"row":"Hidden"}));
     assert_eq!(hidden["styles"][0]["dormant"], true);
     assert!(s.model.state().bodies.is_empty());
-    let reopened = solidcraft_doc::format::read(&s.doc.to_json()).unwrap();
+    let reopened = torno_doc::format::read(&s.doc.to_json()).unwrap();
     assert_eq!(reopened, *s.doc);
     run(&mut s, "config.activate", json!({"row":"Tall"}));
     assert_eq!(s.doc.face_colors(s.model.state().body("Housing").unwrap())[0].1.name, "ABS - Red");
@@ -104,9 +104,9 @@ fn strict_face_split_pieces_share_lineage_without_index_targets() {
     let state = s.model.state();
     let body = state.body(&body).unwrap();
     let colors = s.doc.face_colors(body);
-    let names = solidcraft_doc::naming::face_names(body);
+    let names = torno_doc::naming::face_names(body);
     assert!(colors.len() >= 2, "split should create multiple painted pieces: {names:?}");
-    assert!(colors.iter().all(|(index, look)| solidcraft_doc::naming::strip_piece(&names[*index]).ends_with(":+z") && look.name == "ABS - Red"));
+    assert!(colors.iter().all(|(index, look)| torno_doc::naming::strip_piece(&names[*index]).ends_with(":+z") && look.name == "ABS - Red"));
 }
 
 #[test]
@@ -128,8 +128,8 @@ fn strict_face_missing_lineage_never_retargets_and_rolls_back() {
     assert_eq!(s.doc, before);
     assert_eq!(s.revision, revision);
     assert_eq!(s.undo.len(), history);
-    let look = solidcraft_doc::appearance::library("ABS - Red").unwrap();
-    s.doc_mut().appearances.faces.push(solidcraft_doc::appearance::FaceLook {
+    let look = torno_doc::appearance::library("ABS - Red").unwrap();
+    s.doc_mut().appearances.faces.push(torno_doc::appearance::FaceLook {
         body: body.clone(),
         point: solidcore_record::Vec3::new(5., 5., 10.),
         name: Some(format!("F{other}:+z")),
@@ -151,7 +151,7 @@ fn face_occurrence_pick_uses_definition_identity_and_coordinates() {
     let world = s.world_state().unwrap();
     let placed = world.bodies.iter().find(|body| body.name != body.definition_name()).unwrap();
     let placed_name = placed.name.clone();
-    let point = solidcraft_doc::apply_point(&placed.source_transform, solidcore_record::Vec3::new(5., 5., 10.));
+    let point = torno_doc::apply_point(&placed.source_transform, solidcore_record::Vec3::new(5., 5., 10.));
     let key = face_column(&mut s, &placed_name, json!(point));
     let Column::FaceAppearance(target) = &s.doc.configs.columns[0] else { panic!() };
     assert_eq!(target.body, body);
@@ -172,10 +172,10 @@ fn extrude_cap_certification_follows_actual_positive_negative_and_symmetric_name
         let state = s.model.state();
         let body = state.body("Pad").unwrap();
         let faces = body.body.faces(0.01).unwrap();
-        let names = solidcraft_doc::naming::face_names(body);
+        let names = torno_doc::naming::face_names(body);
         let mut caps = 0;
         for face in faces {
-            let name = solidcraft_doc::naming::strip_piece(&names[face.index]);
+            let name = torno_doc::naming::strip_piece(&names[face.index]);
             let origin = name.strip_prefix('F').unwrap().split_once(':').unwrap().0.parse().unwrap();
             let target = ConfigFaceTarget { body: "Pad".into(), origin_feature: origin, name: name.into(), point: face.centroid, certificate: None };
             if name.ends_with(":start") || name.ends_with(":top") || name.ends_with(":bottom") {
@@ -226,7 +226,7 @@ fn hostile_and_uncertified_face_targets_are_rejected() {
         json!({"body":body,"origin_feature":id,"name":format!("F{id}:+z"),"point":[0,0,1e20]}),
         json!({"body":body,"origin_feature":id,"name":format!("F{id}:+z"),"point":[0,0,0],"extra":[[]]}),
     ] {
-        assert!(solidcraft_doc::config::validate_styles_json(&json!({"configs":{"columns":[{"face_appearance":value}]}})).is_err());
+        assert!(torno_doc::config::validate_styles_json(&json!({"configs":{"columns":[{"face_appearance":value}]}})).is_err());
     }
     assert!(s.execute("config.column", &json!({"component_appearance":0})).is_err());
     assert!(s.execute("config.column", &json!({"face_appearance":{"body":body,"point":[0,0,1e20]}})).is_err());

@@ -3,8 +3,8 @@ use crate::{
     ProductMesh,
     job::{self, CancelToken, DielectricBoundary, ImageRequest, Integrator, RaytraceOptions, TaskPoll},
 };
-use solidcraft_geom::Mesh;
 use std::sync::Arc;
+use torno_geom::Mesh;
 
 pub(in crate::raytrace) fn box_body(thickness: f64) -> ProductMesh {
     let positions = (0..8)
@@ -43,8 +43,8 @@ fn environment() -> Option<crate::job::RaytraceEnvironmentOptions> {
     Some(crate::job::RaytraceEnvironmentOptions { color: [1.0; 3], intensity: 1.0 })
 }
 pub(in crate::raytrace) fn request(options: RaytraceOptions) -> ImageRequest {
-    let mut camera = solidcraft_viewport::Camera { distance: 50.0, ..Default::default() };
-    camera.set_view(solidcraft_viewport::StandardView::Top);
+    let mut camera = torno_viewport::Camera { distance: 50.0, ..Default::default() };
+    camera.set_view(torno_viewport::StandardView::Top);
     ImageRequest {
         studio_weights: None,
         environment: None,
@@ -365,7 +365,7 @@ fn actual_oblique_png_selects_the_snell_shifted_colour_target() {
             }),
             color: [255; 3],
             opacity: 1.0,
-            surface: Some(solidcraft_viewport::surface::OpaqueSurface::new(color, 0.0, 1.0, 1.0).unwrap()),
+            surface: Some(torno_viewport::surface::OpaqueSurface::new(color, 0.0, 1.0, 1.0).unwrap()),
             faces: Vec::new(),
         }
     }

@@ -1,5 +1,5 @@
 //! Not upstream: fitting an intersection edge's ends to its proto vertices before
-//! `SmEdgeDefinition::Imprint` makes the edge (the SolidCraft fork's changes, opt-in).
+//! `SmEdgeDefinition::Imprint` makes the edge (the Torno fork's changes, opt-in).
 //!
 //! A cylinder minus a screw-swept thread groove crosses the shaft's rim at a grazing angle
 //! (3 degrees for an M33x3.5 external or an M10x1.5 internal thread), so where the groove

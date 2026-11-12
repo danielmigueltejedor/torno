@@ -6,7 +6,7 @@
 //! The grooves are cut by a screw motion: the section in a meridian plane, sixteen
 //! sections a turn, skinned cubically from a pitch below the body to a pitch above it.
 //! (`create_curve_sweep` along a helix is not a thread: its frame twists about 21 degrees
-//! a turn, so its profile runs into the body. The SolidCraft rig uses the fork's screw
+//! a turn, so its profile runs into the body. The Torno rig uses the fork's screw
 //! sweep, which SMLib does not have.)
 //!
 //! An M33x3.5 groove on a 14 mm shaft (the rig's case 2193): upstream, two edges end

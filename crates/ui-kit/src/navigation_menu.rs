@@ -3,7 +3,7 @@ use super::{Container, Surface, navigation::*};
 use crate::BackingTooltipExt as _;
 use crate::icons;
 use egui::{Align2, FontId, Rect, Response, Sense, Ui, pos2, vec2};
-use solidcraft_theme::Tokens;
+use torno_theme::Tokens;
 
 pub fn navigation_popup_frame() -> egui::Frame {
     Container::menu_frame().inner_margin(egui::Margin::same(NAV_POPUP_PADDING))

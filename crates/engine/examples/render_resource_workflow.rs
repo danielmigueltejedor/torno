@@ -2,12 +2,12 @@
 //! the enormous full engine test binary for every resource/UI-adapter change.
 //! Original analytic fixture; no external CAD or image data. New output folder only.
 use serde_json::{Value, json};
-use solidcraft_engine::{
+use std::{error::Error, fs, path::PathBuf, time::Duration};
+use torno_engine::{
     Session,
     doc::Document,
     render::job::{CpuHost, Phase},
 };
-use std::{error::Error, fs, path::PathBuf, time::Duration};
 fn require(condition: bool, message: &str) -> Result<(), Box<dyn Error>> {
     if condition { Ok(()) } else { Err(message.into()) }
 }

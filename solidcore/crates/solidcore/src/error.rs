@@ -404,7 +404,7 @@ pub enum SolidError {
     /// A round refused for the room it leaves or takes, with what the refusal found
     /// ([`crate::blend::round_room::RoundRefusal`]): rounds whose result crosses a face's
     /// boundary over itself, or a variable round along a straight edge between planes whose
-    /// band does not fit its faces. Not upstream (SolidCraft's checks, made the kernel's).
+    /// band does not fit its faces. Not upstream (Torno's checks, made the kernel's).
     /// `code` is the status (`SM_ERR`) so [`SolidError::sm_status`] reads as an ordinary
     /// failure.
     #[error("{operation}: upstream status {code}: refused ({refusal:?})")]
@@ -2048,7 +2048,7 @@ mod tests {
 
     /// A B-spline method whose NLib call fails keeps that failure as its cause, with the
     /// status `SM_ERR` it returned before; the answers no upstream status stands for pass
-    /// through unwrapped, so callers (and SolidCraft through solidcore-ops) still see
+    /// through unwrapped, so callers (and Torno through solidcore-ops) still see
     /// them at the top.
     #[test]
     fn a_failed_nurbs_routine_is_kept_as_the_cause_and_port_answers_pass_through() {

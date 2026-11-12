@@ -305,7 +305,7 @@ class Paths(unittest.TestCase):
             self.assertEqual(c.base_list(Path(tmp) / "solidcore", "HEAD"), [row()])
 
     def test_the_base_list_is_read_from_a_commit_of_the_folder_alone(self):
-        # CI's base inside SolidCraft: a commit whose tree is `solidcore/` alone.
+        # CI's base inside Torno: a commit whose tree is `solidcore/` alone.
         with tempfile.TemporaryDirectory() as tmp:
             outer, alone = Path(tmp, "outer"), Path(tmp, "alone")
             alone.mkdir()

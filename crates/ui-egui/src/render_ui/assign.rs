@@ -2,12 +2,12 @@
 use crate::{SolveApp, ui_kit, viewport::Hit};
 use egui::Modifiers;
 use serde_json::{Value, json};
-use solidcraft_engine::{
+use std::hash::{Hash, Hasher};
+use torno_engine::{
     Sel,
     doc::appearance::Look,
     render::{FaceAppearance, ProductScene},
 };
-use std::hash::{Hash, Hasher};
 
 #[derive(Clone, Debug, Default)]
 pub(crate) struct State {
@@ -26,7 +26,7 @@ pub(crate) struct State {
 #[derive(Clone, Debug)]
 struct Replacement {
     from: Value,
-    document: std::sync::Weak<solidcraft_engine::doc::Document>,
+    document: std::sync::Weak<torno_engine::doc::Document>,
     revision: u64,
 }
 
@@ -347,7 +347,7 @@ pub(crate) fn banner(app: &mut SolveApp, ui: &mut egui::Ui) {
     let text = if s.sampling {
         app.tr("render.pick_up_prompt").to_string()
     } else {
-        solidcraft_ui_text::format("render.painting_with", &[("name", s.look.as_ref().and_then(|l| l["name"].as_str()).unwrap_or(""))])
+        torno_ui_text::format("render.painting_with", &[("name", s.look.as_ref().and_then(|l| l["name"].as_str()).unwrap_or(""))])
     };
     ui_kit::text(ui, &text, ui_kit::Text::Inline);
     if ui_kit::button(ui, app.tr_label("Done"), ui_kit::Button::Normal).clicked() {
@@ -449,7 +449,7 @@ pub(crate) fn context(app: &mut SolveApp, candidate: &(Hit, Sel)) {
 pub(crate) fn assigned(app: &mut SolveApp, result: &Value) {
     if let Some(look) = result.get("appearance").filter(|look| !look.is_null()) {
         remember(app, look.clone());
-        app.set_status(solidcraft_ui_text::format("render.look_applied", &[("name", look["name"].as_str().unwrap_or(""))]), false);
+        app.set_status(torno_ui_text::format("render.look_applied", &[("name", look["name"].as_str().unwrap_or(""))]), false);
         app.status_undo = true;
     }
 }
@@ -486,10 +486,8 @@ pub(crate) fn hover_tooltip(app: &mut SolveApp, response: &egui::Response, candi
     let Some((_, sel)) = candidate else { return };
     let Ok(target) = chain_target(app, sel) else { return };
     let Ok(reply) = app.session.execute("appearance.pick_up", &json!({"target":target})) else { return };
-    let tip = solidcraft_ui_text::format(
-        "render.hover_look",
-        &[("object", &selection_name(app, sel)), ("look", reply["look"]["name"].as_str().unwrap_or(""))],
-    );
+    let tip =
+        torno_ui_text::format("render.hover_look", &[("object", &selection_name(app, sel)), ("look", reply["look"]["name"].as_str().unwrap_or(""))]);
     ui_kit::Container::tooltip(response, &tip);
 }
 
@@ -533,7 +531,7 @@ pub(crate) fn selection_bar(app: &mut SolveApp, ui: &mut egui::Ui, free: egui::R
         .collect::<Vec<_>>();
     let anchor = egui::pos2(
         crate::ui_kit::within(screen.center().x, free.left(), free.right()),
-        crate::ui_kit::within(screen.top() - solidcraft_theme::Tokens::get().space_12, free.top(), free.bottom()),
+        crate::ui_kit::within(screen.top() - torno_theme::Tokens::get().space_12, free.top(), free.bottom()),
     );
     let ctx = ui.ctx().clone();
     let pill = ui_kit::Container::selection_card(&ctx, egui::Id::unique("render_selection"), anchor, free, |ui| {

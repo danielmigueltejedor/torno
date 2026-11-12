@@ -3,7 +3,7 @@
 //! still caches it apart from the display plan, so the viewport's cache, keyed by each plan's
 //! allocation, keeps its uploads from frame to frame.
 
-use solidcraft_geom::tess::TessPlan;
+use torno_geom::tess::TessPlan;
 
 /// `plan` in the form the viewport evaluates on the GPU: solidcore-tess's plan, which the kernel's
 /// already is.
@@ -20,7 +20,7 @@ mod tests {
     /// converted.
     #[test]
     fn a_bodys_gpu_plan_is_one_allocation_across_reads() {
-        let body = solidcraft_kernel::box_solid(Vec3::ZERO, Vec3::new(10.0, 8.0, 4.0)).unwrap();
+        let body = torno_kernel::box_solid(Vec3::ZERO, Vec3::new(10.0, 8.0, 4.0)).unwrap();
         let b = crate::ModelBody::new("Body1".into(), body, 0);
         let q = crate::display_quality::DisplayQuality::default();
         let first = b.gpu_plan_at(q).unwrap();

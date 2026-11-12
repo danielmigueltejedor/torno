@@ -1,10 +1,10 @@
 //! Undo/redo, the timeline, deletion and selection.
 
-use solidcraft_geom::prelude::*;
 use std::collections::BTreeMap;
+use torno_geom::prelude::*;
 
 use serde_json::{Value, json};
-use solidcraft_doc::{Feature, FeatureKind};
+use torno_doc::{Feature, FeatureKind};
 
 use super::CommandSpec;
 use crate::params::{bad, bool_, name_or_id_values, num, str_};
@@ -347,7 +347,7 @@ fn restore_checkpoint(s: &mut Session, p: &Value) -> Result<Value> {
 
 fn compute_all(s: &mut Session, _p: &Value) -> Result<Value> {
     let validation = s.validation();
-    s.model = solidcraft_doc::Model::new();
+    s.model = torno_doc::Model::new();
     s.set_validation(validation);
     s.refresh();
     let errors = s.model.results.iter().filter(|r| r.error.is_some()).count();
@@ -495,7 +495,7 @@ fn group_joints(s: &Session, p: &Value, cmd: &str) -> Result<Vec<u64>> {
     Ok(ids.into_iter().collect())
 }
 
-fn group_joint_ids(doc: &solidcraft_doc::Document, roots: &[u64]) -> Vec<u64> {
+fn group_joint_ids(doc: &torno_doc::Document, roots: &[u64]) -> Vec<u64> {
     let folders = group_tree(doc, roots).0;
     let ids: std::collections::BTreeSet<u64> =
         doc.timeline_groups.iter().filter(|group| folders.contains(&group.id)).flat_map(|group| group.joints.iter().copied()).collect();
@@ -546,13 +546,13 @@ fn group_move_would_cycle(s: &Session, target: u64, sources: &[u64]) -> bool {
     false
 }
 
-fn group_feature_ids(doc: &solidcraft_doc::Document, roots: &[u64]) -> std::collections::BTreeSet<u64> {
+fn group_feature_ids(doc: &torno_doc::Document, roots: &[u64]) -> std::collections::BTreeSet<u64> {
     group_tree(doc, roots).1
 }
 
 /// The timeline folders `roots` and every folder nested in them, and the features they hold.
-fn group_tree(doc: &solidcraft_doc::Document, roots: &[u64]) -> (std::collections::BTreeSet<u64>, std::collections::BTreeSet<u64>) {
-    let by_id: std::collections::BTreeMap<u64, &solidcraft_doc::TimelineGroup> = doc.timeline_groups.iter().map(|group| (group.id, group)).collect();
+fn group_tree(doc: &torno_doc::Document, roots: &[u64]) -> (std::collections::BTreeSet<u64>, std::collections::BTreeSet<u64>) {
+    let by_id: std::collections::BTreeMap<u64, &torno_doc::TimelineGroup> = doc.timeline_groups.iter().map(|group| (group.id, group)).collect();
     let mut children = std::collections::BTreeMap::<u64, Vec<u64>>::new();
     for group in &doc.timeline_groups {
         if let Some(parent) = group.parent {
@@ -574,23 +574,23 @@ fn group_tree(doc: &solidcraft_doc::Document, roots: &[u64]) -> (std::collection
     (visited, features)
 }
 
-fn sort_group_features(doc: &mut solidcraft_doc::Document) {
+fn sort_group_features(doc: &mut torno_doc::Document) {
     sort_folder_features(&doc.features, &mut doc.timeline_groups);
 }
 
-fn sort_folder_features(features: &[Feature], folders: &mut [solidcraft_doc::TimelineGroup]) {
+fn sort_folder_features(features: &[Feature], folders: &mut [torno_doc::TimelineGroup]) {
     let positions: std::collections::BTreeMap<u64, usize> = features.iter().enumerate().map(|(index, feature)| (feature.id, index)).collect();
     for group in folders {
         group.features.sort_by_key(|feature| positions.get(feature).copied().unwrap_or(usize::MAX));
     }
 }
 
-fn require_contiguous_groups(doc: &solidcraft_doc::Document, cmd: &str) -> Result<()> {
-    let Some(id) = solidcraft_doc::non_contiguous_timeline_group(&doc.features, &doc.timeline_groups) else { return Ok(()) };
+fn require_contiguous_groups(doc: &torno_doc::Document, cmd: &str) -> Result<()> {
+    let Some(id) = torno_doc::non_contiguous_timeline_group(&doc.features, &doc.timeline_groups) else { return Ok(()) };
     Err(not_contiguous(&doc.timeline_groups, id, cmd))
 }
 
-fn not_contiguous(folders: &[solidcraft_doc::TimelineGroup], id: u64, cmd: &str) -> EngineError {
+fn not_contiguous(folders: &[torno_doc::TimelineGroup], id: u64, cmd: &str) -> EngineError {
     let name = folders.iter().find(|group| group.id == id).map(|group| group.name.as_str()).unwrap_or("unknown");
     bad(cmd, format!("timeline folder `{name}` must contain one contiguous run of features"))
 }
@@ -598,11 +598,7 @@ fn not_contiguous(folders: &[solidcraft_doc::TimelineGroup], id: u64, cmd: &str)
 /// The design's folders once `folder` is added, taking its features and joints out of any other
 /// folder and becoming the parent of the folders `groups` (whose features and joints it then holds
 /// through them), and the first folder that would no longer be one run of features, if any.
-fn folders_with(
-    doc: &solidcraft_doc::Document,
-    mut folder: solidcraft_doc::TimelineGroup,
-    groups: &[u64],
-) -> (Vec<solidcraft_doc::TimelineGroup>, Option<u64>) {
+fn folders_with(doc: &torno_doc::Document, mut folder: torno_doc::TimelineGroup, groups: &[u64]) -> (Vec<torno_doc::TimelineGroup>, Option<u64>) {
     let nested = group_feature_ids(doc, groups);
     folder.features.retain(|feature| !nested.contains(feature));
     let nested_joints = group_joint_ids(doc, groups);
@@ -617,7 +613,7 @@ fn folders_with(
     }
     next.push(folder);
     sort_folder_features(&doc.features, &mut next);
-    let broken = solidcraft_doc::non_contiguous_timeline_group(&doc.features, &next);
+    let broken = torno_doc::non_contiguous_timeline_group(&doc.features, &next);
     (next, broken)
 }
 
@@ -631,7 +627,7 @@ pub(crate) fn new_folder(s: &mut Session, name: &str, features: Vec<u64>, joints
     }
     let name = if name.is_empty() { format!("Folder{}", s.doc.timeline_groups.len() + 1) } else { name };
     let id = s.doc_mut().allocate_id()?;
-    let (folders, broken) = folders_with(&s.doc, solidcraft_doc::TimelineGroup { id, name, parent, features, joints }, &[]);
+    let (folders, broken) = folders_with(&s.doc, torno_doc::TimelineGroup { id, name, parent, features, joints }, &[]);
     if let Some(broken) = broken {
         return Err(not_contiguous(&folders, broken, cmd));
     }
@@ -650,7 +646,7 @@ impl Session {
         if features.is_empty() {
             return Some("No features are selected".into());
         }
-        let trial = solidcraft_doc::TimelineGroup { id: TRIAL_FOLDER, name: String::new(), parent, features: features.to_vec(), joints: Vec::new() };
+        let trial = torno_doc::TimelineGroup { id: TRIAL_FOLDER, name: String::new(), parent, features: features.to_vec(), joints: Vec::new() };
         let (folders, broken) = folders_with(&self.doc, trial, &[]);
         let broken = broken?;
         if broken == TRIAL_FOLDER {
@@ -681,7 +677,7 @@ fn group(s: &mut Session, p: &Value) -> Result<Value> {
     {
         return Err(bad(cmd, "a new folder cannot contain an ancestor of its parent"));
     }
-    let folder = solidcraft_doc::TimelineGroup { id, name: name.clone(), parent, features, joints };
+    let folder = torno_doc::TimelineGroup { id, name: name.clone(), parent, features, joints };
     let (folders, broken) = folders_with(&s.doc, folder, &groups);
     if let Some(broken) = broken {
         return Err(not_contiguous(&folders, broken, cmd));
@@ -1282,7 +1278,7 @@ const NOT_EDITABLE: &[&str] = &["id", "type", "name", "suppressed", "param_names
 /// timeline.edit keeps accepting names for pattern and mirror seeds and for construction planes
 /// (#1134): each name in the merged definition resolves to the feature's id, refused when it
 /// finds no feature, as the commands that take names refuse it.
-fn resolve_feature_names(v: &mut Value, doc: &solidcraft_doc::Document, cmd: &str) -> Result<()> {
+fn resolve_feature_names(v: &mut Value, doc: &torno_doc::Document, cmd: &str) -> Result<()> {
     match v {
         Value::Object(o) => {
             if o.get("type").and_then(Value::as_str) == Some("construction") {
@@ -1402,11 +1398,11 @@ fn edit_feature(s: &mut Session, p: &Value) -> Result<Value> {
     // never read a symmetric distance.
     if let (FeatureKind::Extrude { extent: old, .. }, FeatureKind::Extrude { extent: new, .. })
     | (FeatureKind::SurfaceExtrude { extent: old, .. }, FeatureKind::SurfaceExtrude { extent: new, .. }) = (&f.kind, &mut nf.kind)
-        && old.direction != solidcraft_doc::Direction::Symmetric
-        && new.direction == solidcraft_doc::Direction::Symmetric
+        && old.direction != torno_doc::Direction::Symmetric
+        && new.direction == torno_doc::Direction::Symmetric
         && set.get("extent").and_then(|e| e.get("convention")).is_none()
     {
-        new.convention = solidcraft_doc::ExtrudeConvention::TotalDistance;
+        new.convention = torno_doc::ExtrudeConvention::TotalDistance;
     }
     if std::mem::discriminant(&nf.kind) != std::mem::discriminant(&f.kind) {
         return Err(bad(cmd, "the feature type cannot change"));
@@ -1418,7 +1414,7 @@ fn edit_feature(s: &mut Session, p: &Value) -> Result<Value> {
         return Err(bad(cmd, unknown_field_message(&field, &before, &f.kind)));
     }
     if let FeatureKind::BodyTransfer { bodies, from, to, transform } = &nf.kind {
-        solidcraft_doc::validate_body_transfer(&s.doc, &solidcraft_doc::plain(bodies), *from, *to, transform)?;
+        torno_doc::validate_body_transfer(&s.doc, &torno_doc::plain(bodies), *from, *to, transform)?;
         nf.component = *to;
     }
     if let (FeatureKind::Sketch { sketch: a, .. }, FeatureKind::Sketch { sketch: b, .. }) = (&nf.kind, &f.kind)
@@ -1434,36 +1430,36 @@ fn edit_feature(s: &mut Session, p: &Value) -> Result<Value> {
         && a != b
     {
         let before = s.model.state_before(id);
-        nf.edge_refs = solidcraft_doc::edge_refs(&before, body, &solidcraft_doc::plain(a));
-        nf.edge_names = solidcraft_doc::edge_names_for(&before, body, &solidcraft_doc::plain(a));
+        nf.edge_refs = torno_doc::edge_refs(&before, body, &torno_doc::plain(a));
+        nf.edge_names = torno_doc::edge_names_for(&before, body, &torno_doc::plain(a));
     }
     // New or reordered flange edges: their names now, so each edge's own angle and height stay
     // with the edge they were given for.
     if let (FeatureKind::SheetFlange { edges: a, .. }, FeatureKind::SheetFlange { edges: b, .. }) = (&nf.kind, &f.kind) {
-        let points = |e: &[solidcraft_doc::FlangeEdge]| e.iter().map(|x| x.point).collect::<Vec<_>>();
+        let points = |e: &[torno_doc::FlangeEdge]| e.iter().map(|x| x.point).collect::<Vec<_>>();
         if points(a) != points(b) {
-            nf.edge_names = solidcraft_doc::sheet::sheet_edge_names(&s.model.state_before(id), &solidcraft_doc::plain(&points(a)));
+            nf.edge_names = torno_doc::sheet::sheet_edge_names(&s.model.state_before(id), &torno_doc::plain(&points(a)));
         }
     }
     // New reference edges for a hole (#37): the names of the edges there now.
     if let (FeatureKind::Hole { references: a, position, .. }, FeatureKind::Hole { references: b, .. }) = (&nf.kind, &f.kind) {
-        let edges = |r: &[solidcraft_doc::HoleReference]| r.iter().map(|x| x.edge.0).collect::<Vec<_>>();
+        let edges = |r: &[torno_doc::HoleReference]| r.iter().map(|x| x.edge.0).collect::<Vec<_>>();
         if edges(a) != edges(b) {
-            nf.edge_names = solidcraft_doc::hole_reference::reference_edge_names(&s.model.state_before(id), position.0, &edges(a));
+            nf.edge_names = torno_doc::hole_reference::reference_edge_names(&s.model.state_before(id), position.0, &edges(a));
         }
     }
     // New reference edges for a cylinder (#6380): likewise.
     if let (FeatureKind::Cylinder { references: a, base, .. }, FeatureKind::Cylinder { references: b, .. }) = (&nf.kind, &f.kind) {
-        let edges = |r: &[solidcraft_doc::HoleReference]| r.iter().map(|x| x.edge.0).collect::<Vec<_>>();
+        let edges = |r: &[torno_doc::HoleReference]| r.iter().map(|x| x.edge.0).collect::<Vec<_>>();
         if edges(a) != edges(b) {
-            nf.edge_names = solidcraft_doc::hole_reference::cylinder_edge_names(&s.model.state_before(id), base, a);
+            nf.edge_names = torno_doc::hole_reference::cylinder_edge_names(&s.model.state_before(id), base, a);
         }
     }
     // New bend edges for a conversion: the names of the body's edges there now.
     if let (FeatureKind::SheetConvert { bends: a, body, .. }, FeatureKind::SheetConvert { bends: b, body: was, .. }) = (&nf.kind, &f.kind)
         && (a != b || body != was)
     {
-        nf.edge_names = solidcraft_doc::sheet::bend_edge_names(&s.model.state_before(id), body, &solidcraft_doc::plain(a));
+        nf.edge_names = torno_doc::sheet::bend_edge_names(&s.model.state_before(id), body, &torno_doc::plain(a));
     }
     // Profiles picked by index or point are kept by their curves, as when the feature was made.
     if nf.kind.clone().profile_sels_mut() != f.kind.clone().profile_sels_mut() {
@@ -1471,7 +1467,7 @@ fn edit_feature(s: &mut Session, p: &Value) -> Result<Value> {
     }
     // New face points: their faces' names now.
     if nf.kind.face_points() != f.kind.face_points() {
-        nf.face_names = solidcraft_doc::face_point_names(&s.doc, &s.model.state_before(id), &nf.kind, nf.component)?;
+        nf.face_names = torno_doc::face_point_names(&s.doc, &s.model.state_before(id), &nf.kind, nf.component)?;
     }
     if let Some(slot) = s.doc_mut().feature_mut(id) {
         *slot = nf;
@@ -1497,7 +1493,7 @@ fn selection_item(s: &Session, value: Value) -> Result<Sel> {
     let (index, point) = match (index, point) {
         (Some(index), None) => {
             let point = if face {
-                solidcraft_doc::naming::face_spot(b, index).map(|spot| spot.point)
+                torno_doc::naming::face_spot(b, index).map(|spot| spot.point)
             } else {
                 let mesh = b.mesh();
                 mesh.edges.get(index).and_then(|edge| match edge.as_slice() {
@@ -1511,7 +1507,7 @@ fn selection_item(s: &Session, value: Value) -> Result<Sel> {
         }
         (None, Some(point)) if point.is_finite() => {
             let index = if face {
-                solidcraft_doc::appearance::face_index_at(b, point)
+                torno_doc::appearance::face_index_at(b, point)
             } else {
                 let mesh = b.mesh();
                 mesh.edges
@@ -1520,7 +1516,7 @@ fn selection_item(s: &Session, value: Value) -> Result<Sel> {
                     .filter_map(|(index, edge)| {
                         let distance =
                             edge.windows(2).filter_map(|w| Some(point.dist_to_segment(*w.first()?, *w.get(1)?))).fold(f64::INFINITY, f64::min);
-                        (distance <= solidcraft_doc::appearance::pick_tolerance(b)).then_some((index, distance))
+                        (distance <= torno_doc::appearance::pick_tolerance(b)).then_some((index, distance))
                     })
                     .min_by(|(_, a), (_, b)| a.total_cmp(b))
                     .map(|(index, _)| index)
@@ -1626,7 +1622,7 @@ fn select_clear(s: &mut Session, _p: &Value) -> Result<Value> {
 }
 
 /// Features that worked in `before` and fail in `after`: (name, error).
-fn newly_broken(before: &solidcraft_doc::Model, after: &solidcraft_doc::Model) -> Vec<(String, String)> {
+fn newly_broken(before: &torno_doc::Model, after: &torno_doc::Model) -> Vec<(String, String)> {
     after
         .results
         .iter()
@@ -1645,15 +1641,15 @@ fn newly_broken(before: &solidcraft_doc::Model, after: &solidcraft_doc::Model) -
 /// that only show at the end of the timeline (#3471). A change that leaves them the same inputs
 /// needs no such evaluation ([`only_constraints_changed`]).
 pub(super) fn newly_broken_in_history(
-    before_doc: &solidcraft_doc::Document,
-    before: &solidcraft_doc::Model,
-    after_doc: &solidcraft_doc::Document,
-    after: &solidcraft_doc::Model,
+    before_doc: &torno_doc::Document,
+    before: &torno_doc::Model,
+    after_doc: &torno_doc::Document,
+    after: &torno_doc::Model,
 ) -> Vec<(String, String)> {
     if (before_doc.marker.is_none() && after_doc.marker.is_none()) || only_constraints_changed(before_doc, before, after_doc, after) {
         return newly_broken(before, after);
     }
-    let whole = |doc: &solidcraft_doc::Document, model: &solidcraft_doc::Model| {
+    let whole = |doc: &torno_doc::Document, model: &torno_doc::Model| {
         let mut doc = doc.clone();
         doc.marker = None;
         // A copy keeps nothing on its own: it keeps what the model keeps, so a delete checked
@@ -1679,12 +1675,12 @@ pub(super) fn newly_broken_in_history(
 /// from the same inputs, so evaluating the whole history twice would find nothing new (#7253):
 /// deleting one dimension of a sketch with a long rolled-back history after it took minutes.
 fn only_constraints_changed(
-    before_doc: &solidcraft_doc::Document,
-    before: &solidcraft_doc::Model,
-    after_doc: &solidcraft_doc::Document,
-    after: &solidcraft_doc::Model,
+    before_doc: &torno_doc::Document,
+    before: &torno_doc::Model,
+    after_doc: &torno_doc::Document,
+    after: &torno_doc::Model,
 ) -> bool {
-    let without_constraints = |doc: &solidcraft_doc::Document| {
+    let without_constraints = |doc: &torno_doc::Document| {
         let mut doc = doc.clone();
         for f in &mut doc.features {
             if let FeatureKind::Sketch { sketch, .. } = &mut f.kind {
@@ -1702,7 +1698,7 @@ fn only_constraints_changed(
         return false;
     }
     // What a later feature reads of a sketch: the solved geometry, its plane, profiles and ends.
-    let solved = |model: &solidcraft_doc::Model, id: u64| {
+    let solved = |model: &torno_doc::Model, id: u64| {
         let r = model.result(id).filter(|r| !r.skipped && r.error.is_none())?;
         let s = r.state.sketch(id)?;
         let mut sketch = s.sketch.clone();
@@ -1819,7 +1815,7 @@ fn active_param(p: &Value, cmd: &str) -> Result<Option<bool>> {
 /// With `active` given, put the history marker of the reordered `next` so the `moving` features
 /// are active (before it) or rolled back (behind it) while every other feature keeps its state, in
 /// the same step as the move. Refused when `position` puts them on the other side of it.
-fn place_marker(s: &Session, next: &mut solidcraft_doc::Document, moving: &[u64], active: Option<bool>, cmd: &str) -> Result<()> {
+fn place_marker(s: &Session, next: &mut torno_doc::Document, moving: &[u64], active: Option<bool>, cmd: &str) -> Result<()> {
     let Some(active) = active else { return Ok(()) };
     let n = s.doc.features.len();
     let was_active: std::collections::BTreeSet<u64> = s.doc.features.iter().take(s.doc.marker.unwrap_or(n)).map(|feature| feature.id).collect();
@@ -1858,12 +1854,12 @@ fn reorder_many(s: &mut Session, p: &Value) -> Result<Value> {
 /// (none when the order didn't change), for the caller to keep (#6186).
 fn reorder_features(
     s: &Session,
-    mut next: solidcraft_doc::Document,
+    mut next: torno_doc::Document,
     ids: &[u64],
     slot: usize,
     allow_errors: bool,
     cmd: &str,
-) -> Result<(solidcraft_doc::Document, Vec<u64>, Vec<(String, String)>, Option<solidcraft_doc::Model>)> {
+) -> Result<(torno_doc::Document, Vec<u64>, Vec<(String, String)>, Option<torno_doc::Model>)> {
     let n = next.features.len();
     let slot = slot.min(n);
     let selected: std::collections::BTreeSet<u64> = ids.iter().copied().collect();
@@ -1968,7 +1964,7 @@ fn edge_pick_tolerance(s: &Session, kind: &FeatureKind) -> f64 {
             state.sheets.iter().filter_map(|sh| sh.edge_at(e.point.0).map(|at| (sh, at.4))).min_by(|a, b| a.1.total_cmp(&b.1)).map(|(sh, _)| sh)
         }),
     };
-    sheet.and_then(|sh| state.body(&sh.body)).map_or(NONE, solidcraft_doc::appearance::pick_tolerance)
+    sheet.and_then(|sh| state.body(&sh.body)).map_or(NONE, torno_doc::appearance::pick_tolerance)
 }
 
 /// Whether an old key and a new key name the same input: the same key, or the same field (and, for
@@ -1985,24 +1981,24 @@ fn keys_match(old_key: &str, key: &str, tol: f64) -> bool {
     }
 }
 
-fn input_keys(kind: &FeatureKind) -> Vec<(String, solidcraft_doc::expr::Kind)> {
+fn input_keys(kind: &FeatureKind) -> Vec<(String, torno_doc::expr::Kind)> {
     let mut keys: Vec<_> = kind.inputs().into_iter().map(|(label, _, unit)| (label.to_string(), unit)).collect();
     if let FeatureKind::Fillet { style, .. } = kind {
         if let Some((key, _)) = keys.first_mut() {
             *key = "fillet.radius".into();
         }
         match style {
-            solidcraft_doc::FilletStyle::Variable { mid, .. } => {
+            torno_doc::FilletStyle::Variable { mid, .. } => {
                 for ((key, _), (position, _)) in keys.iter_mut().skip(2).zip(mid) {
                     *key = format!("fillet.mid.{}", position.to_bits());
                 }
             }
-            solidcraft_doc::FilletStyle::Spline { .. } => {
+            torno_doc::FilletStyle::Spline { .. } => {
                 for (i, (key, _)) in keys.iter_mut().enumerate().skip(1) {
                     *key = format!("fillet.control.{i}");
                 }
             }
-            solidcraft_doc::FilletStyle::Constant | solidcraft_doc::FilletStyle::Chord | solidcraft_doc::FilletStyle::Curvature => {}
+            torno_doc::FilletStyle::Constant | torno_doc::FilletStyle::Chord | torno_doc::FilletStyle::Curvature => {}
         }
     }
     // Every segment's angle and height has the same label ("Segment angle", "Segment height"), so
@@ -2096,11 +2092,8 @@ fn redefine(s: &mut Session, p: &Value) -> Result<Value> {
         && matches!(cid, "solid.extrude" | "surface.extrude")
         && let Some(parameters) = params.as_object_mut()
     {
-        let convention = if extent.direction == solidcraft_doc::Direction::Symmetric {
-            extent.convention
-        } else {
-            solidcraft_doc::ExtrudeConvention::TotalDistance
-        };
+        let convention =
+            if extent.direction == torno_doc::Direction::Symmetric { extent.convention } else { torno_doc::ExtrudeConvention::TotalDistance };
         parameters.entry("convention").or_insert_with(|| json!(convention));
     }
     if let FeatureKind::Revolve { convention, .. } = &old.kind
@@ -2215,7 +2208,7 @@ fn redefine(s: &mut Session, p: &Value) -> Result<Value> {
     // material it still is, below: the value it still has first, then the span it still covers.
     let new_inputs = new.kind.inputs();
     let new_labels: Vec<String> = new_inputs.iter().map(|(label, _, _)| label.to_string()).collect();
-    let mut old_inputs: Vec<(String, String, solidcraft_doc::expr::Kind, String, String)> = input_keys(&old.kind)
+    let mut old_inputs: Vec<(String, String, torno_doc::expr::Kind, String, String)> = input_keys(&old.kind)
         .into_iter()
         .zip(old.kind.inputs())
         .zip(&old.param_names)
@@ -2347,7 +2340,7 @@ fn redefine(s: &mut Session, p: &Value) -> Result<Value> {
     // body's is (#4957), so no other cap is given it and what was set on it stays behind.
     let cap_names = match (&old.kind, &new.kind) {
         (FeatureKind::FrameEndCap { ends: before, .. }, FeatureKind::FrameEndCap { ends: after, .. }) => {
-            let key = |e: &solidcraft_doc::end_cap::End| (e.member.clone(), super::sketch::face::anchor(&e.plane).map(|a| a.target.key()));
+            let key = |e: &torno_doc::end_cap::End| (e.member.clone(), super::sketch::face::anchor(&e.plane).map(|a| a.target.key()));
             let names = after
                 .iter()
                 .map(|e| before.iter().position(|b| key(b) == key(e)).and_then(|i| old.body_names.get(i)).cloned().unwrap_or_default())

@@ -1,4 +1,4 @@
-//! WR-704 (the SolidCraft fork's tangency-labs/smlib@1279539): `SmCone::CreateIsoCircleFromPoint`
+//! WR-704 (the Torno fork's tangency-labs/smlib@1279539): `SmCone::CreateIsoCircleFromPoint`
 //! on a cone whose apex is its lower end (bottom radius 0, semi-angle 70, height 1). A
 //! reference point up to the tolerance below the apex passes the height test, but moved onto
 //! the cone at its height it lies on the far nappe; upstream's inversion mirrors it through

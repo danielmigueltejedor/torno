@@ -1,4 +1,4 @@
-//! SolidCraft's navigation bar slots: what each slot shows, says and runs, and the bar a new
+//! Torno's navigation bar slots: what each slot shows, says and runs, and the bar a new
 //! preferences file starts with. The bar component (`navigation_bar`) reads this catalogue once
 //! [`install`] has run.
 use crate::navigation_bar::{Catalogue, Slot};
@@ -76,7 +76,7 @@ pub(crate) const CATALOGUE: &[Slot] = &[
     slot!("separator", Separator, "", None),
 ];
 
-/// SolidCraft's bar: its slots, the bar a new preferences file holds, the menus that show their
+/// Torno's bar: its slots, the bar a new preferences file holds, the menus that show their
 /// value until the user chooses (the selection and render modes, once they are slots) and the
 /// View menu, which only ever shows its icon.
 static HOST: Catalogue = Catalogue {
@@ -86,7 +86,7 @@ static HOST: Catalogue = Catalogue {
     icon_menus: &["display"],
 };
 
-/// Installs SolidCraft's catalogue, once per process, before preferences are read or the first
+/// Installs Torno's catalogue, once per process, before preferences are read or the first
 /// frame; later calls find it installed.
 pub fn install() {
     crate::navigation_bar::install_catalogue(&HOST);

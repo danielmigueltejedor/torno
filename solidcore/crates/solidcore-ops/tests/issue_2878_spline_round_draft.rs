@@ -1,10 +1,10 @@
-//! #2878: SolidCraft's oracle 81-fillet-spline-radius, a 40 x 30 x 20 box whose top front edge
+//! #2878: Torno's oracle 81-fillet-spline-radius, a 40 x 30 x 20 box whose top front edge
 //! is rounded by a clamped cubic radius law (2, 5, 1.5, 4, 1, 3 from x = 0), and its action
 //! matrix's draft of the front face's neighbours (the bottom and both ends, 2 degrees, the
 //! front's plane y = 0 neutral, pulled along -y). It built at 8ddce9016 and was refused once
 //! the exact extension replaced the fitted one: the round's rational B-spline face, extended
 //! Ruled past its end, could not reach the local operation's margin. In its own test binary:
-//! SolidCraft's fixes are process-wide (`session::set_fixes`).
+//! Torno's fixes are process-wide (`session::set_fixes`).
 
 #![allow(
     clippy::unwrap_used,
@@ -21,8 +21,8 @@ use common::{edge_at, vertex_at};
 use solidcore_ops::{draft, fillet_variable, make_box, session, Body, CheckLevel};
 use solidcore_record::brep::Brep as Record;
 
-/// SolidCraft's fixes.
-fn solidcraft_fixes() {
+/// Torno's fixes.
+fn torno_fixes() {
     let fixes: Vec<String> = serde_json::from_str(include_str!(
         "../../solidcore/tests/kernel_cases/fixes.json"
     ))
@@ -98,7 +98,7 @@ fn end_take(t: f64, r: f64) -> f64 {
 /// against wedges of about 1279 mm^3).
 #[test]
 fn the_oracle_spline_radius_round_box_drafts_its_bottom_and_ends() {
-    solidcraft_fixes();
+    torno_fixes();
     let t = 2.0_f64.to_radians().tan();
     let plain = make_box([0.0; 3], [40.0, 30.0, 20.0]).unwrap();
     draft_bottom_and_ends(&plain).unwrap();
@@ -126,7 +126,7 @@ fn the_oracle_spline_radius_round_box_drafts_its_bottom_and_ends() {
 /// less the ends' take.
 #[test]
 fn a_flat_ended_spline_radius_round_box_drafts_by_its_closed_form() {
-    solidcraft_fixes();
+    torno_fixes();
     let t = 2.0_f64.to_radians().tan();
     let b = rounded(&[2.0, 2.0, 5.0, 1.5, 3.0, 3.0]);
     let before = b.volume(1e-10).unwrap();

@@ -3,8 +3,8 @@
 
 use egui::{Event, PointerButton, Pos2, RawInput, Rect, ViewportCommand, ViewportId, pos2, vec2};
 use serde_json::json;
-use solidcraft_engine::Session;
-use solidcraft_engine::geom::prelude::*;
+use torno_engine::Session;
+use torno_engine::geom::prelude::*;
 
 use crate::SolveApp;
 
@@ -73,7 +73,7 @@ fn large_design(dir: &std::path::Path, n: usize) -> String {
 }
 
 fn scratch(name: &str) -> std::path::PathBuf {
-    let d = std::env::temp_dir().join(format!("solidcraft-file-load-{name}-{}", std::process::id()));
+    let d = std::env::temp_dir().join(format!("torno-file-load-{name}-{}", std::process::id()));
     let _ = std::fs::create_dir_all(&d);
     d
 }
@@ -83,7 +83,7 @@ fn fingerprint(s: &Session) -> serde_json::Value {
     let world = s.world_state().unwrap();
     let bodies: Vec<_> = world.bodies.iter().map(|b| (b.name.clone(), b.mesh().triangles.len())).collect();
     let errors = s.model.results.iter().filter(|r| r.error.is_some()).count();
-    let b = solidcraft_engine::view::bounds(s).unwrap();
+    let b = torno_engine::view::bounds(s).unwrap();
     json!({
         "name": s.doc.name,
         "path": s.path,
@@ -303,12 +303,12 @@ fn insert_design_reads_the_saved_design_while_the_window_draws() {
     assert!(h.app.file_load.busy(), "Insert Design reads the design off the window thread");
     until(&mut h, &|app| app.file_load.features().is_some_and(|(done, total)| done >= 2 && total == 3));
     assert!(h.app.file_load.busy(), "Insert Design is still reading the plate");
-    assert!(h.widget(solidcraft_ui_text::tr("file_load.inserting")).is_some(), "the overlay says a file is going in");
+    assert!(h.widget(torno_ui_text::tr("file_load.inserting")).is_some(), "the overlay says a file is going in");
     assert!(h.widget("plate.solidcraft…").is_some(), "and names the design being read");
     assert_eq!(h.app.file_load.features(), Some((2, 3)), "and the plate's rebuild progress, held before its third feature");
     assert!(std::sync::Arc::ptr_eq(&h.app.session.doc, &design), "the design waits");
     // Cancel on the overlay keeps the design as it was.
-    let [x, y] = h.widget(solidcraft_ui_text::tr("ui.cancel")).expect("the overlay's Cancel");
+    let [x, y] = h.widget(torno_ui_text::tr("ui.cancel")).expect("the overlay's Cancel");
     let at = pos2(x as f32, y as f32);
     let button = |pressed| Event::PointerButton { pos: at, button: PointerButton::Primary, pressed, modifiers: Default::default() };
     for event in [Event::PointerMoved(at), button(true), button(false)] {
@@ -323,7 +323,7 @@ fn insert_design_reads_the_saved_design_while_the_window_draws() {
     // Run through, it brings the plate in as a linked component and says so.
     insert(&mut h);
     until(&mut h, &|app| app.file_load.idle());
-    assert!(h.widget(solidcraft_ui_text::tr("file_load.inserting")).is_none(), "the overlay goes once it is done");
+    assert!(h.widget(torno_ui_text::tr("file_load.inserting")).is_none(), "the overlay goes once it is done");
     assert_eq!(links(&mut h.app), 1, "the plate is a linked component");
     near(&mut h.app, 1000.0 + plate);
     assert_eq!(h.app.status.as_ref().map(|s| s.0.as_str()), Some("Inserted plate"));
@@ -367,7 +367,7 @@ fn reloading_a_point_cloud_runs_off_the_window_thread() {
     let design = h.app.session.doc.clone();
     let (started, release) = hold(&mut h);
     // Frame by frame: a scenario step would wait for the file operation it starts.
-    let [x, y] = h.widget(solidcraft_ui_text::tr("ui.point_cloud_reload")).expect("the card offers a reload");
+    let [x, y] = h.widget(torno_ui_text::tr("ui.point_cloud_reload")).expect("the card offers a reload");
     let at = pos2(x as f32, y as f32);
     let button = |pressed| Event::PointerButton { pos: at, button: PointerButton::Primary, pressed, modifiers: Default::default() };
     for event in [Event::PointerMoved(at), button(true), button(false)] {
@@ -480,7 +480,7 @@ fn update_links_and_open_linked_design_ask_before_a_network_location() {
     let comp = h.app.run("component.insert_design", json!({"path": part})).unwrap()["component"].as_u64().unwrap();
     h.app.run("file.save", json!({"path": case})).unwrap();
     let feature = h.app.session.doc.links[&comp].feature;
-    h.app.session.doc_mut().links.insert(comp, solidcraft_engine::doc::DesignLink { path: crafted.into(), feature, ..Default::default() });
+    h.app.session.doc_mut().links.insert(comp, torno_engine::doc::DesignLink { path: crafted.into(), feature, ..Default::default() });
     save_part(8.0);
     let until_idle = |h: &mut crate::scenario::Harness| {
         let began = std::time::Instant::now();
@@ -635,9 +635,9 @@ fn a_control_import_passes_up_and_names_on() {
     let mut src = Session::default();
     src.execute("solid.box", &json!({"length": 10, "width": 40, "height": 5})).unwrap();
     src.execute("file.export", &json!({"path": path})).unwrap();
-    // Another program's file: SolidCraft's own exports are not offered (#5150).
+    // Another program's file: Torno's own exports are not offered (#5150).
     let text = std::fs::read_to_string(&path).unwrap();
-    std::fs::write(&path, text.replace("'SolidCraft','SolidCraft'", "'SolidCraft','Example CAD'")).unwrap();
+    std::fs::write(&path, text.replace("'Torno','Torno'", "'Torno','Example CAD'")).unwrap();
 
     // The reply, the part's height and whether the offer is up, for an import by this window.
     let import = |params: serde_json::Value| {
@@ -661,7 +661,7 @@ fn a_control_import_passes_up_and_names_on() {
         assert_eq!(reply["ok"], true, "{params}: {reply}");
         let mut sync = Session::default();
         assert_eq!(reply["result"], sync.execute("file.insert_step", &params).unwrap(), "the window's reply is the session's");
-        let b = solidcraft_engine::view::bounds(&w.app.session).unwrap();
+        let b = torno_engine::view::bounds(&w.app.session).unwrap();
         (reply, [b.max.x - b.min.x, b.max.y - b.min.y, b.max.z - b.min.z], w.app.stand_up.is_some())
     };
 
@@ -705,7 +705,7 @@ fn a_control_import_passes_its_matrix_and_name_on() {
     assert_eq!(reply["ok"], true, "{reply}");
     let mut sync = Session::default();
     assert_eq!(reply["result"], sync.execute("file.insert_step", &params).unwrap(), "the window's reply is the session's");
-    let b = solidcraft_engine::view::bounds(&w.app.session).unwrap();
+    let b = torno_engine::view::bounds(&w.app.session).unwrap();
     assert!((b.min.x - 100.0).abs() < 1e-6 && (b.max.x - 160.0).abs() < 1e-6, "moved by the matrix: {b:?}");
     assert!(w.app.session.doc.components.iter().any(|c| c.name == "Bracket"), "named as asked");
     let _ = std::fs::remove_dir_all(&dir);
@@ -771,7 +771,7 @@ fn an_opened_design_shows_its_bodies_as_they_are_meshed() {
     assert!(seen.windows(2).all(|p| p[0] <= p[1]), "the picture only grows: {seen:?}");
     let world = w.app.session.world_state().unwrap();
     // Then the whole design (in the order its bodies came, kept until the design changes).
-    let names = |st: &solidcraft_engine::doc::ModelState| {
+    let names = |st: &torno_engine::doc::ModelState| {
         let mut n: Vec<String> = st.bodies.iter().map(|b| b.name.clone()).collect();
         n.sort();
         n
@@ -964,11 +964,11 @@ fn cancelling_a_step_open_releases_the_slot_before_the_worker_returns() {
 /// before (which left the design wherever the camera happened to be).
 #[test]
 fn an_opened_design_comes_up_at_the_home_view() {
-    use solidcraft_viewport::StandardView;
+    use torno_viewport::StandardView;
     let dir = scratch("home-view");
     let path = large_design(&dir, 4);
     let home_angles = {
-        let mut cam = solidcraft_viewport::Camera::default();
+        let mut cam = torno_viewport::Camera::default();
         cam.set_view(StandardView::Iso);
         (cam.yaw, cam.pitch, cam.roll)
     };
@@ -1032,7 +1032,7 @@ fn an_opened_design_comes_up_at_the_home_view() {
     let _ = std::fs::remove_dir_all(&dir);
 }
 
-/// A design a newer SolidCraft saved opens in the window: the status line says so without a
+/// A design a newer Torno saved opens in the window: the status line says so without a
 /// dialog, Messages names what wasn't read, and editing that feature says why it can't be edited.
 #[test]
 fn a_newer_design_opens_with_a_notice_and_no_dialog() {
@@ -1041,8 +1041,8 @@ fn a_newer_design_opens_with_a_notice_and_no_dialog() {
     let mut design = Session::default();
     design.execute("solid.box", &json!({"length": 2, "width": 3, "height": 4})).unwrap();
     let mut file: serde_json::Value = serde_json::from_str(&design.doc.to_json()).unwrap();
-    let (reads, newer) = (solidcraft_engine::doc::format::FORMAT, solidcraft_engine::doc::format::FORMAT + 1);
-    file["format"] = json!(solidcraft_engine::doc::format::format_string(newer));
+    let (reads, newer) = (torno_engine::doc::format::FORMAT, torno_engine::doc::format::FORMAT + 1);
+    file["format"] = json!(torno_engine::doc::format::format_string(newer));
     file["features"].as_array_mut().unwrap().push(json!({"id": 900, "name": "Lattice1", "type": "gyroid_lattice"}));
     let path = dir.join("newer.json");
     std::fs::write(&path, file.to_string()).unwrap();
@@ -1050,7 +1050,7 @@ fn a_newer_design_opens_with_a_notice_and_no_dialog() {
     app.open_path(&path.to_string_lossy());
 
     let (text, _, error) = app.status.clone().unwrap();
-    assert_eq!(text, format!("Saved by a newer SolidCraft (format {newer}, this version reads up to {reads}). If something's missing, update."));
+    assert_eq!(text, format!("Saved by a newer Torno (format {newer}, this version reads up to {reads}). If something's missing, update."));
     assert!(!error);
     assert!(app.dialog.is_none());
     assert!(app.messages.iter().any(|m| m.text.contains("Lattice1") && m.text.contains("Saving keeps it")));

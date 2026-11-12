@@ -4,8 +4,8 @@
 
 use serde_json::{Value, json};
 use solidcore_record::Vec3;
-use solidcraft_geom::prelude::*;
-use solidcraft_sketch::LinkSource;
+use torno_geom::prelude::*;
+use torno_sketch::LinkSource;
 
 use crate::Session;
 
@@ -121,7 +121,7 @@ fn a_body_the_sketch_sits_on_stays_shown() {
     };
     run(&mut s, "sketch.create", json!({"plane": top, "name": "Edited"}));
     let anchored = match s.doc.find_feature("Edited").map(|f| &f.kind) {
-        Some(solidcraft_doc::FeatureKind::Sketch { plane: solidcraft_doc::PlaneRef::Face { anchor, .. }, .. }) => anchor.is_some(),
+        Some(torno_doc::FeatureKind::Sketch { plane: torno_doc::PlaneRef::Face { anchor, .. }, .. }) => anchor.is_some(),
         other => panic!("not attached to a face: {other:?}"),
     };
     assert!(anchored, "the face attachment names its body");

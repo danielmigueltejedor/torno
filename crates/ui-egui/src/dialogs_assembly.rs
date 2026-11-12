@@ -13,12 +13,12 @@ use crate::ui_kit::{choice_row, expr_row, text_row};
 use egui::{Color32, Pos2, RichText, Stroke, vec2};
 use serde_json::{Value, json};
 use solidcore_record::Vec3;
-use solidcraft_engine::Sel;
-use solidcraft_engine::Session;
-use solidcraft_engine::doc::expr::Kind as ValueKind;
-use solidcraft_engine::doc::joints::{JointKind, JointOrigin, Snap};
-use solidcraft_engine::geom::prelude::*;
-use solidcraft_engine::geom::{Aabb3, Mesh};
+use torno_engine::Sel;
+use torno_engine::Session;
+use torno_engine::doc::expr::Kind as ValueKind;
+use torno_engine::doc::joints::{JointKind, JointOrigin, Snap};
+use torno_engine::geom::prelude::*;
+use torno_engine::geom::{Aabb3, Mesh};
 
 use crate::SolveApp;
 use crate::dialogs::{Dialog, Kind, combo, field, form_row};
@@ -27,7 +27,7 @@ use crate::selection::{
     AXES, BODIES, CONSTRUCTION_POINTS, EDGES, FACES, ORIGIN, PLANES, POINTS, SelInput, SelectionExt as _, VERTICES, items as sel_items,
     point_value as pt, polyline_mid,
 };
-use solidcraft_theme::Tokens;
+use torno_theme::Tokens;
 
 use crate::viewport::Proj;
 
@@ -74,7 +74,7 @@ pub(crate) fn kind_label(kind: JointKind) -> &'static str {
 
 /// A joint as the joint lists name it: its name, and its type in the user's language.
 pub(crate) fn joint_choice(name: &str, kind: JointKind) -> String {
-    format!("{name} ({})", solidcraft_ui_text::tr_label(kind_label(kind)))
+    format!("{name} ({})", torno_ui_text::tr_label(kind_label(kind)))
 }
 
 /// What a joint origin input accepts: snaps on faces, edges and vertices, the world origin, a
@@ -145,7 +145,7 @@ pub enum Asm {
 #[derive(Clone, Debug)]
 pub struct Check {
     reply: std::sync::Arc<std::sync::Mutex<Option<(Value, Vec<Mesh>)>>>,
-    design: std::sync::Weak<solidcraft_engine::doc::Document>,
+    design: std::sync::Weak<torno_engine::doc::Document>,
     of: Vec<Sel>,
     started: f64,
 }
@@ -163,7 +163,7 @@ pub struct Search {
 /// The design and the joint (the commands OK would run for it) a search was for.
 #[derive(Clone, Debug)]
 pub struct Searched {
-    design: std::sync::Weak<solidcraft_engine::doc::Document>,
+    design: std::sync::Weak<torno_engine::doc::Document>,
     joint: Vec<(String, Value)>,
 }
 
@@ -216,7 +216,7 @@ pub struct JointForm {
 }
 
 impl JointForm {
-    fn new(as_built: bool, doc: &solidcraft_engine::doc::Document) -> JointForm {
+    fn new(as_built: bool, doc: &torno_engine::doc::Document) -> JointForm {
         JointForm {
             name: String::new(),
             as_built,
@@ -244,7 +244,7 @@ impl JointForm {
     }
 
     /// Limits rows sized to the joint's values.
-    fn fit_limits(&mut self, doc: &solidcraft_engine::doc::Document) {
+    fn fit_limits(&mut self, doc: &torno_engine::doc::Document) {
         let k = self.joint_kind();
         let n = k.dofs().len();
         while self.limits.len() < n {
@@ -410,9 +410,9 @@ fn side_pick(app: &SolveApp, o: &JointOrigin) -> Option<Sel> {
         Snap::Edge { pick, edge, .. } => (*pick, None, edge.as_deref()),
         Snap::Plane { plane, .. } => {
             let name = match plane.as_ref() {
-                solidcraft_engine::doc::PlaneRef::Origin { name } => Some(name.clone()),
-                solidcraft_engine::doc::PlaneRef::Datum { datum } => Some(datum.key()),
-                solidcraft_engine::doc::PlaneRef::Construction { feature } => {
+                torno_engine::doc::PlaneRef::Origin { name } => Some(name.clone()),
+                torno_engine::doc::PlaneRef::Datum { datum } => Some(datum.key()),
+                torno_engine::doc::PlaneRef::Construction { feature } => {
                     let id = feature.0;
                     s.doc
                         .feature(id)
@@ -421,7 +421,7 @@ fn side_pick(app: &SolveApp, o: &JointOrigin) -> Option<Sel> {
                 }
                 _ => None,
             }?;
-            if matches!(plane.as_ref(), solidcraft_engine::doc::PlaneRef::Datum { .. }) {
+            if matches!(plane.as_ref(), torno_engine::doc::PlaneRef::Datum { .. }) {
                 return Some(Sel::Plane { name });
             }
             let name = if o.occurrence == 0 {
@@ -434,15 +434,13 @@ fn side_pick(app: &SolveApp, o: &JointOrigin) -> Option<Sel> {
         }
         Snap::Axis { axis, .. } => {
             let name = match axis.as_ref() {
-                solidcraft_engine::doc::joints::AxisRef::Name(name) => Some(name.clone()),
-                solidcraft_engine::doc::joints::AxisRef::Target(solidcraft_engine::doc::joints::AxisTarget::Origin { axis }) => Some(axis.clone()),
-                solidcraft_engine::doc::joints::AxisRef::Target(solidcraft_engine::doc::joints::AxisTarget::Construction { name }) => {
-                    Some(name.clone())
-                }
-                solidcraft_engine::doc::joints::AxisRef::Target(solidcraft_engine::doc::joints::AxisTarget::Datum { datum }) => Some(datum.key()),
+                torno_engine::doc::joints::AxisRef::Name(name) => Some(name.clone()),
+                torno_engine::doc::joints::AxisRef::Target(torno_engine::doc::joints::AxisTarget::Origin { axis }) => Some(axis.clone()),
+                torno_engine::doc::joints::AxisRef::Target(torno_engine::doc::joints::AxisTarget::Construction { name }) => Some(name.clone()),
+                torno_engine::doc::joints::AxisRef::Target(torno_engine::doc::joints::AxisTarget::Datum { datum }) => Some(datum.key()),
                 _ => None,
             }?;
-            if matches!(axis.as_ref(), solidcraft_engine::doc::joints::AxisRef::Target(solidcraft_engine::doc::joints::AxisTarget::Datum { .. })) {
+            if matches!(axis.as_ref(), torno_engine::doc::joints::AxisRef::Target(torno_engine::doc::joints::AxisTarget::Datum { .. })) {
                 return Some(Sel::Axis { name });
             }
             let name = if o.occurrence == 0 {
@@ -458,9 +456,9 @@ fn side_pick(app: &SolveApp, o: &JointOrigin) -> Option<Sel> {
     // The pick is in its part's coordinates; the placed bodies are in the world.
     let path = origin_placement(s, o)?;
     let (_, at) = s.doc.path_placement(&path)?;
-    let p = solidcraft_engine::doc::apply_point(&at, pick);
+    let p = torno_engine::doc::apply_point(&at, pick);
     let st = crate::open_meshing::session_world(s);
-    let own: Vec<&solidcraft_engine::doc::ModelBody> = st.bodies.iter().filter(|b| placement_of_body(s, &b.name).as_ref() == Some(&path)).collect();
+    let own: Vec<&torno_engine::doc::ModelBody> = st.bodies.iter().filter(|b| placement_of_body(s, &b.name).as_ref() == Some(&path)).collect();
     let named = match (face, edge) {
         (Some(name), _) => own.iter().filter_map(|b| named_face(b, name, p)).min_by(|a, b| a.0.total_cmp(&b.0)),
         (None, Some(name)) => own.iter().filter_map(|b| named_edge(b, name, p)).min_by(|a, b| a.0.total_cmp(&b.0)),
@@ -486,9 +484,9 @@ fn edge_dist(m: &Mesh, i: usize, p: Vec3) -> Option<f64> {
 }
 
 /// The face of `b` the name `name` names, the piece nearest `p` when it has several.
-fn named_face(b: &solidcraft_engine::doc::ModelBody, name: &str, p: Vec3) -> Option<(f64, Sel)> {
+fn named_face(b: &torno_engine::doc::ModelBody, name: &str, p: Vec3) -> Option<(f64, Sel)> {
     let m = b.mesh();
-    let names = solidcraft_engine::doc::naming::face_names(b);
+    let names = torno_engine::doc::naming::face_names(b);
     names
         .iter()
         .enumerate()
@@ -498,13 +496,13 @@ fn named_face(b: &solidcraft_engine::doc::ModelBody, name: &str, p: Vec3) -> Opt
 }
 
 /// The edge of `b` the name `name` names (a split edge: the piece nearest `p`).
-fn named_edge(b: &solidcraft_engine::doc::ModelBody, name: &str, p: Vec3) -> Option<(f64, Sel)> {
+fn named_edge(b: &torno_engine::doc::ModelBody, name: &str, p: Vec3) -> Option<(f64, Sel)> {
     let m = b.mesh();
-    let names = solidcraft_engine::doc::naming::edge_names(b);
+    let names = torno_engine::doc::naming::edge_names(b);
     let index = match names.iter().position(|n| n == name) {
         Some(i) => i,
         None => {
-            let at = solidcraft_engine::doc::naming::find_edge(b, name, p).ok()?;
+            let at = torno_engine::doc::naming::find_edge(b, name, p).ok()?;
             (0..m.edges.len())
                 .min_by(|x, y| edge_dist(&m, *x, at).unwrap_or(f64::INFINITY).total_cmp(&edge_dist(&m, *y, at).unwrap_or(f64::INFINITY)))?
         }
@@ -514,7 +512,7 @@ fn named_edge(b: &solidcraft_engine::doc::ModelBody, name: &str, p: Vec3) -> Opt
 }
 
 /// The face (or edge) of the bodies `own` nearest `p`.
-fn nearest_pick(own: &[&solidcraft_engine::doc::ModelBody], p: Vec3, edges: bool) -> Option<Sel> {
+fn nearest_pick(own: &[&torno_engine::doc::ModelBody], p: Vec3, edges: bool) -> Option<Sel> {
     let mut best: Option<(f64, Sel)> = None;
     for b in own {
         let m = b.mesh();
@@ -539,7 +537,7 @@ fn nearest_pick(own: &[&solidcraft_engine::doc::ModelBody], p: Vec3, edges: bool
 }
 
 /// Default name for a new joint based on its type (e.g. "Planar Joint1", "Revolute Joint1").
-pub(crate) fn default_joint_name(doc: &solidcraft_engine::doc::Document, kind: JointKind) -> String {
+pub(crate) fn default_joint_name(doc: &torno_engine::doc::Document, kind: JointKind) -> String {
     let prefix = format!("{} Joint", kind_label(kind));
     let names: std::collections::BTreeSet<_> = doc.assembly.joints.iter().map(|j| j.name.as_str()).collect();
     let number = (1..=doc.assembly.joints.len().saturating_add(1)).find(|n| !names.contains(format!("{prefix}{n}").as_str())).unwrap_or(1);
@@ -602,7 +600,7 @@ pub fn find_joint(app: &mut SolveApp, id: u64) {
         return;
     }
     let mut cam = app.cam;
-    cam.fit(&solidcraft_engine::render::view_bounds(&bb));
+    cam.fit(&torno_engine::render::view_bounds(&bb));
     app.animate_to(cam);
 }
 
@@ -728,9 +726,9 @@ pub(crate) fn face_normal_near(m: &Mesh, f: u32, p: Vec3) -> Option<Vec3> {
 /// The hover label tag: "Plane" or "Axis" when picking planes or axes, else the snap kind's name.
 pub(crate) fn snap_tag(s: &SnapPt) -> &'static str {
     if s.param.get("plane").is_some() {
-        solidcraft_ui_text::tr("ui.plane")
+        torno_ui_text::tr("ui.plane")
     } else if s.param.get("axis").is_some() {
-        solidcraft_ui_text::tr("ui.axis")
+        torno_ui_text::tr("ui.axis")
     } else {
         snap_name(s.kind)
     }
@@ -743,13 +741,13 @@ pub fn snap_of(s: &Session, sel: &Sel) -> Option<SnapPt> {
     let (body, mut snap) = match sel {
         Sel::Plane { name } => {
             // A datum side round-trips through its key: the pick stands for that placement's datum.
-            if let Some(datum) = solidcraft_engine::doc::construct::DatumRef::parse_key(name) {
+            if let Some(datum) = torno_engine::doc::construct::DatumRef::parse_key(name) {
                 let occ = datum.path.last().copied().unwrap_or(0);
-                let t = if occ == 0 { solidcraft_engine::doc::IDENTITY } else { solidcraft_engine::doc::joints::occurrence_world(&s.doc, occ) };
+                let t = if occ == 0 { torno_engine::doc::IDENTITY } else { torno_engine::doc::joints::occurrence_world(&s.doc, occ) };
                 let (at, z) = match datum.item.geom() {
-                    solidcraft_engine::doc::construct::ConstructGeom::Plane(p) => (
-                        solidcraft_engine::doc::apply_point(&t, p.origin),
-                        solidcraft_engine::doc::apply_vector(&t, p.normal()).normalized().unwrap_or(Vec3::Z),
+                    torno_engine::doc::construct::ConstructGeom::Plane(p) => (
+                        torno_engine::doc::apply_point(&t, p.origin),
+                        torno_engine::doc::apply_vector(&t, p.normal()).normalized().unwrap_or(Vec3::Z),
                     ),
                     _ => return None,
                 };
@@ -786,27 +784,26 @@ pub fn snap_of(s: &Session, sel: &Sel) -> Option<SnapPt> {
                 let c = model_st.construct.iter().find(|c| {
                     c.name == plane_name
                         && s.doc.feature(c.feature).map(|f| f.component) == Some(selected_component)
-                        && matches!(&c.geom, solidcraft_engine::doc::construct::ConstructGeom::Plane(_))
+                        && matches!(&c.geom, torno_engine::doc::construct::ConstructGeom::Plane(_))
                 })?;
                 match &c.geom {
-                    solidcraft_engine::doc::construct::ConstructGeom::Plane(p) => (p.origin, p.normal().normalized().unwrap_or(Vec3::Z)),
+                    torno_engine::doc::construct::ConstructGeom::Plane(p) => (p.origin, p.normal().normalized().unwrap_or(Vec3::Z)),
                     _ => return None,
                 }
             };
-            let t = if occ == 0 { solidcraft_engine::doc::IDENTITY } else { solidcraft_engine::doc::joints::occurrence_world(&s.doc, occ) };
-            let at = solidcraft_engine::doc::apply_point(&t, local_origin);
-            let z = solidcraft_engine::doc::apply_vector(&t, local_normal).normalized().unwrap_or(Vec3::Z);
+            let t = if occ == 0 { torno_engine::doc::IDENTITY } else { torno_engine::doc::joints::occurrence_world(&s.doc, occ) };
+            let at = torno_engine::doc::apply_point(&t, local_origin);
+            let z = torno_engine::doc::apply_vector(&t, local_normal).normalized().unwrap_or(Vec3::Z);
             ("", SnapPt { at, z, kind: SnapKind::FaceCenter, param: json!({"occurrence": occ, "plane": plane_name}) })
         }
         Sel::Axis { name } => {
-            if let Some(datum) = solidcraft_engine::doc::construct::DatumRef::parse_key(name) {
+            if let Some(datum) = torno_engine::doc::construct::DatumRef::parse_key(name) {
                 let occ = datum.path.last().copied().unwrap_or(0);
-                let t = if occ == 0 { solidcraft_engine::doc::IDENTITY } else { solidcraft_engine::doc::joints::occurrence_world(&s.doc, occ) };
+                let t = if occ == 0 { torno_engine::doc::IDENTITY } else { torno_engine::doc::joints::occurrence_world(&s.doc, occ) };
                 let (at, z) = match datum.item.geom() {
-                    solidcraft_engine::doc::construct::ConstructGeom::Axis { origin, dir } => (
-                        solidcraft_engine::doc::apply_point(&t, origin),
-                        solidcraft_engine::doc::apply_vector(&t, dir).normalized().unwrap_or(Vec3::Z),
-                    ),
+                    torno_engine::doc::construct::ConstructGeom::Axis { origin, dir } => {
+                        (torno_engine::doc::apply_point(&t, origin), torno_engine::doc::apply_vector(&t, dir).normalized().unwrap_or(Vec3::Z))
+                    }
                     _ => return None,
                 };
                 return Some(SnapPt { at, z, kind: SnapKind::EdgeMid, param: json!({"occurrence": occ, "axis": name}) });
@@ -844,26 +841,26 @@ pub fn snap_of(s: &Session, sel: &Sel) -> Option<SnapPt> {
             } else {
                 let c = model_st.construct.iter().find(|c| c.name == axis_name)?;
                 match &c.geom {
-                    solidcraft_engine::doc::construct::ConstructGeom::Axis { origin, dir } => (*origin, dir.normalized().unwrap_or(Vec3::Z)),
+                    torno_engine::doc::construct::ConstructGeom::Axis { origin, dir } => (*origin, dir.normalized().unwrap_or(Vec3::Z)),
                     _ => return None,
                 }
             };
-            let t = if occ == 0 { solidcraft_engine::doc::IDENTITY } else { solidcraft_engine::doc::joints::occurrence_world(&s.doc, occ) };
-            let at = solidcraft_engine::doc::apply_point(&t, local_origin);
-            let z = solidcraft_engine::doc::apply_vector(&t, local_dir).normalized().unwrap_or(Vec3::Z);
+            let t = if occ == 0 { torno_engine::doc::IDENTITY } else { torno_engine::doc::joints::occurrence_world(&s.doc, occ) };
+            let at = torno_engine::doc::apply_point(&t, local_origin);
+            let z = torno_engine::doc::apply_vector(&t, local_dir).normalized().unwrap_or(Vec3::Z);
             ("", SnapPt { at, z, kind: SnapKind::EdgeMid, param: json!({"occurrence": occ, "axis": axis_name}) })
         }
         Sel::ConstructionPoint { name } => {
             let c = model_st.construct.iter().find(|c| c.name == *name)?;
             let p = match &c.geom {
-                solidcraft_engine::doc::construct::ConstructGeom::Point(p) => *p,
+                torno_engine::doc::construct::ConstructGeom::Point(p) => *p,
                 _ => return None,
             };
             let comp = s.doc.feature(c.feature).map(|f| f.component).unwrap_or(0);
             let occ = if comp == 0 { 0 } else { s.doc.occurrence_of(comp).map(|o| o.id).unwrap_or(0) };
-            let t = if occ == 0 { solidcraft_engine::doc::IDENTITY } else { solidcraft_engine::doc::joints::occurrence_world(&s.doc, occ) };
-            let at = solidcraft_engine::doc::apply_point(&t, p);
-            let z = solidcraft_engine::doc::apply_vector(&t, Vec3::Z).normalized().unwrap_or(Vec3::Z);
+            let t = if occ == 0 { torno_engine::doc::IDENTITY } else { torno_engine::doc::joints::occurrence_world(&s.doc, occ) };
+            let at = torno_engine::doc::apply_point(&t, p);
+            let z = torno_engine::doc::apply_vector(&t, Vec3::Z).normalized().unwrap_or(Vec3::Z);
             ("", SnapPt { at, z, kind: SnapKind::Vertex, param: json!({"occurrence": occ, "point": pt(at), "z": pt(z)}) })
         }
         Sel::Face { body, index, point } => {
@@ -873,7 +870,7 @@ pub fn snap_of(s: &Session, sel: &Sel) -> Option<SnapPt> {
             match f.plane_normal {
                 Some(n) => (body.as_str(), SnapPt { at: f.centroid, z: n, kind: SnapKind::FaceCenter, param: json!({"face": pt(*point)}) }),
                 None => {
-                    let c = solidcraft_engine::kernel::cylinder_face_at(&b.body, *point)?;
+                    let c = torno_engine::kernel::cylinder_face_at(&b.body, *point)?;
                     let sv = (*point - c.axis_point).dot(c.axis);
                     let (at, dir) = if (sv - c.start).abs() <= (c.end - sv).abs() { (c.start, -1.0) } else { (c.end, 1.0) };
                     (
@@ -916,7 +913,7 @@ pub fn snap_of(s: &Session, sel: &Sel) -> Option<SnapPt> {
             // The corner of the edges meeting there, kept by their names, z along the part's +Z
             // as a point's is.
             let z = occurrence_of_body(s, body)
-                .map_or(Vec3::Z, |o| solidcraft_engine::doc::apply_vector(&solidcraft_engine::doc::joints::occurrence_world(&s.doc, o), Vec3::Z));
+                .map_or(Vec3::Z, |o| torno_engine::doc::apply_vector(&torno_engine::doc::joints::occurrence_world(&s.doc, o), Vec3::Z));
             (
                 body.as_str(),
                 SnapPt { at: *point, z: Vec3::Z, kind: SnapKind::Vertex, param: json!({"edge": pt(*point), "corner": pt(*point), "z": pt(z)}) },
@@ -954,8 +951,8 @@ pub(crate) struct SnapMemo(std::sync::Mutex<Snaps>);
 
 #[derive(Default)]
 struct Snaps {
-    world: std::sync::Weak<solidcraft_engine::doc::ModelState>,
-    doc: std::sync::Weak<solidcraft_engine::doc::Document>,
+    world: std::sync::Weak<torno_engine::doc::ModelState>,
+    doc: std::sync::Weak<torno_engine::doc::Document>,
     active_sketch: Option<u64>,
     /// Least recently used first.
     snaps: Vec<(Sel, Option<SnapPt>)>,
@@ -1020,7 +1017,7 @@ pub fn rows(app: &mut SolveApp, ui: &mut egui::Ui, k: &mut Asm, inputs: &mut [Se
             }
         }
         Asm::NewComponent { name, activate } => {
-            enter |= text_row(ui, "Name", name, solidcraft_ui_text::tr_label("Component1")).0;
+            enter |= text_row(ui, "Name", name, torno_ui_text::tr_label("Component1")).0;
             crate::ui_kit::options(ui, "component_options", &mut [("Activate", activate)]);
         }
         Asm::Joint(f) => {
@@ -1033,8 +1030,8 @@ pub fn rows(app: &mut SolveApp, ui: &mut egui::Ui, k: &mut Asm, inputs: &mut [Se
                 ui.vertical(|ui| {
                     crate::ui_kit::status_line(ui, &why, crate::ui_kit::StatusTone::Warning);
                     if !bodies.is_empty()
-                        && crate::ui_kit::button(ui, solidcraft_ui_text::tr("cmd.component_from_bodies"), crate::ui_kit::Button::Normal)
-                            .backing_on_hover_text(solidcraft_ui_text::tr("joint.from_bodies_hint"))
+                        && crate::ui_kit::button(ui, torno_ui_text::tr("cmd.component_from_bodies"), crate::ui_kit::Button::Normal)
+                            .backing_on_hover_text(torno_ui_text::tr("joint.from_bodies_hint"))
                             .clicked()
                     {
                         // A refusal shows on the status line; the picks stay either way.
@@ -1070,9 +1067,9 @@ pub fn rows(app: &mut SolveApp, ui: &mut egui::Ui, k: &mut Asm, inputs: &mut [Se
             let kind = f.joint_kind();
             if kind != JointKind::Rigid {
                 form_row(ui, "Animate", |ui| {
-                    let label = solidcraft_ui_text::tr(if f.animate { "ui.joint_stop" } else { "ui.joint_play" });
+                    let label = torno_ui_text::tr(if f.animate { "ui.joint_stop" } else { "ui.joint_play" });
                     if crate::ui_kit::button(ui, label, crate::ui_kit::Button::Normal)
-                        .backing_on_hover_text(solidcraft_ui_text::tr_label("Play the joint's motion in the view"))
+                        .backing_on_hover_text(torno_ui_text::tr_label("Play the joint's motion in the view"))
                         .clicked()
                     {
                         f.animate = !f.animate;
@@ -1116,7 +1113,7 @@ pub fn rows(app: &mut SolveApp, ui: &mut egui::Ui, k: &mut Asm, inputs: &mut [Se
             }
         }
         Asm::JointOrigin { name, .. } => {
-            enter |= text_row(ui, "Name", name, solidcraft_ui_text::tr_label("Joint Origin1")).0;
+            enter |= text_row(ui, "Name", name, torno_ui_text::tr_label("Joint Origin1")).0;
         }
         Asm::RigidGroup => {}
         Asm::Drive { joint, values, focus } => {
@@ -1128,9 +1125,9 @@ pub fn rows(app: &mut SolveApp, ui: &mut egui::Ui, k: &mut Asm, inputs: &mut [Se
             if let Some((id, name)) = &rigid {
                 let mut edit = false;
                 ui.vertical(|ui| {
-                    let why = solidcraft_ui_text::format("drive.rigid", &[("joint", name.as_str())]);
+                    let why = torno_ui_text::format("drive.rigid", &[("joint", name.as_str())]);
                     crate::ui_kit::status_line(ui, &why, crate::ui_kit::StatusTone::Warning);
-                    let r = crate::ui_kit::button(ui, solidcraft_ui_text::tr_label("Edit Joint"), crate::ui_kit::Button::Normal);
+                    let r = crate::ui_kit::button(ui, torno_ui_text::tr_label("Edit Joint"), crate::ui_kit::Button::Normal);
                     crate::scenario::publish_handle("drive:edit_joint", r.rect.center());
                     edit = r.clicked();
                 });
@@ -1142,7 +1139,7 @@ pub fn rows(app: &mut SolveApp, ui: &mut egui::Ui, k: &mut Asm, inputs: &mut [Se
             if list.is_empty() {
                 if rigid.is_none() {
                     ui.vertical(|ui| {
-                        ui.label(RichText::new(solidcraft_ui_text::tr_label("no joint that moves yet")).color(t.text_dim));
+                        ui.label(RichText::new(torno_ui_text::tr_label("no joint that moves yet")).color(t.text_dim));
                     });
                 }
                 return false;
@@ -1216,7 +1213,7 @@ pub fn rows(app: &mut SolveApp, ui: &mut egui::Ui, k: &mut Asm, inputs: &mut [Se
                 ui.vertical(|ui| {
                     ui.label(
                         RichText::new(format!("{} … {}{}", fmt(lo), fmt(hi), if limited { "  (limits)" } else { "  (no limits)" }))
-                            .size(solidcraft_theme::Tokens::get().font_small)
+                            .size(torno_theme::Tokens::get().font_small)
                             .color(if limited { t.text } else { t.text_dim }),
                     );
                 });
@@ -1287,14 +1284,14 @@ pub fn rows(app: &mut SolveApp, ui: &mut egui::Ui, k: &mut Asm, inputs: &mut [Se
                         let seconds = ((crate::now_ms() - started) / 1000.0).floor().max(0.0);
                         ui.add(egui::Spinner::new().size(t.font_small));
                         ui.label(
-                            RichText::new(solidcraft_ui_text::format("dialog.computing", &[("seconds", &format!("{seconds:.0}"))])).color(t.text_dim),
+                            RichText::new(torno_ui_text::format("dialog.computing", &[("seconds", &format!("{seconds:.0}"))])).color(t.text_dim),
                         );
                     });
                 });
             }
             form_row(ui, "", |ui| {
                 if check.is_some() {
-                    if crate::ui_kit::button(ui, solidcraft_ui_text::tr("ui.cancel"), crate::ui_kit::Button::Normal).clicked() {
+                    if crate::ui_kit::button(ui, torno_ui_text::tr("ui.cancel"), crate::ui_kit::Button::Normal).clicked() {
                         // Its thread finishes the check; the reply is left unread.
                         *check = None;
                     }
@@ -1303,7 +1300,7 @@ pub fn rows(app: &mut SolveApp, ui: &mut egui::Ui, k: &mut Asm, inputs: &mut [Se
                 let stale = result.is_some() && *of != picked;
                 if crate::ui_kit::button(
                     ui,
-                    solidcraft_ui_text::tr(if stale { "dialog.compute_again" } else { "dialog.compute" }),
+                    torno_ui_text::tr(if stale { "dialog.compute_again" } else { "dialog.compute" }),
                     crate::ui_kit::Button::Normal,
                 )
                 .clicked()
@@ -1336,7 +1333,7 @@ fn find_limits_row(app: &mut SolveApp, ui: &mut egui::Ui, f: &mut JointForm, id:
     if let Some(search) = &f.search {
         // A poisoned lock: the search's thread panicked.
         let reply =
-            search.reply.lock().map(|mut r| r.take()).unwrap_or_else(|_| Some(Err(solidcraft_ui_text::tr("joint.find_limits_failed").to_string())));
+            search.reply.lock().map(|mut r| r.take()).unwrap_or_else(|_| Some(Err(torno_ui_text::tr("joint.find_limits_failed").to_string())));
         match reply {
             Some(reply) => {
                 // Found for a design changed since (by a script, the control channel, undo), or
@@ -1347,7 +1344,7 @@ fn find_limits_row(app: &mut SolveApp, ui: &mut egui::Ui, f: &mut JointForm, id:
                     f.searched = Some(searched);
                     fill_limits(&app.session.doc, f, reply);
                 } else {
-                    f.found_note = Some(solidcraft_ui_text::tr("joint.find_limits_stale").to_string());
+                    f.found_note = Some(torno_ui_text::tr("joint.find_limits_stale").to_string());
                 }
                 // The rows above were drawn before this: once more, with what was found.
                 ui.ctx().request_repaint();
@@ -1363,20 +1360,20 @@ fn find_limits_row(app: &mut SolveApp, ui: &mut egui::Ui, f: &mut JointForm, id:
     {
         f.searched = None;
         f.found.clear();
-        f.found_note = Some(solidcraft_ui_text::tr("joint.find_limits_stale").to_string());
+        f.found_note = Some(torno_ui_text::tr("joint.find_limits_stale").to_string());
     }
     form_row(ui, "", |ui| {
         if f.search.is_some() {
             ui.horizontal(|ui| {
                 ui.add(egui::Spinner::new().size(t.font_small));
-                ui.label(RichText::new(solidcraft_ui_text::tr("joint.finding_limits")).color(t.text_dim));
-                if crate::ui_kit::button(ui, solidcraft_ui_text::tr("ui.cancel"), crate::ui_kit::Button::Normal).clicked() {
+                ui.label(RichText::new(torno_ui_text::tr("joint.finding_limits")).color(t.text_dim));
+                if crate::ui_kit::button(ui, torno_ui_text::tr("ui.cancel"), crate::ui_kit::Button::Normal).clicked() {
                     // Its thread finishes within its work budget; the reply is left unread.
                     f.search = None;
                 }
             });
-        } else if crate::ui_kit::button(ui, solidcraft_ui_text::tr("joint.find_limits"), crate::ui_kit::Button::Normal)
-            .backing_on_hover_text(solidcraft_ui_text::tr("joint.find_limits_hint"))
+        } else if crate::ui_kit::button(ui, torno_ui_text::tr("joint.find_limits"), crate::ui_kit::Button::Normal)
+            .backing_on_hover_text(torno_ui_text::tr("joint.find_limits_hint"))
             .clicked()
         {
             find_limits(app, f, id, inputs);
@@ -1448,7 +1445,7 @@ fn find_limits(app: &SolveApp, f: &mut JointForm, id: u64, inputs: &[SelInput]) 
 /// tenth of a degree, a hundredth of the design's length unit), and its row ticked once both
 /// are; a side with nothing to meet keeps what it had. A line under each row says what stopped
 /// each side.
-fn fill_limits(doc: &solidcraft_engine::doc::Document, f: &mut JointForm, reply: Result<Value, String>) {
+fn fill_limits(doc: &torno_engine::doc::Document, f: &mut JointForm, reply: Result<Value, String>) {
     let r = match reply {
         Ok(r) => r,
         Err(e) => {
@@ -1458,7 +1455,7 @@ fn fill_limits(doc: &solidcraft_engine::doc::Document, f: &mut JointForm, reply:
     };
     let kind = f.joint_kind();
     let unit = crate::length_input::unit(doc).to_string();
-    let scale = solidcraft_engine::doc::expr::unit_info(&unit).map(|(_, scale)| scale).filter(|s| *s > 0.0).unwrap_or(1.0);
+    let scale = torno_engine::doc::expr::unit_info(&unit).map(|(_, scale)| scale).filter(|s| *s > 0.0).unwrap_or(1.0);
     f.found = vec![String::new(); f.limits.len()];
     for v in r["values"].as_array().into_iter().flatten() {
         let Some(i) = v["index"].as_u64().and_then(|i| usize::try_from(i).ok()) else { continue };
@@ -1478,20 +1475,20 @@ fn fill_limits(doc: &solidcraft_engine::doc::Document, f: &mut JointForm, reply:
         let (min, max) = (lo.map(shown), hi.map(shown));
         let mut lines = Vec::new();
         for (label, found, by) in [("Minimum", &min, &v["min_by"]), ("Maximum", &max, &v["max_by"])] {
-            let which = solidcraft_ui_text::tr_label(label);
+            let which = torno_ui_text::tr_label(label);
             let value = found.as_ref().map(|(_, shown)| shown.as_str()).unwrap_or_default();
             lines.push(match by.as_str() {
-                Some("loop") => solidcraft_ui_text::format("joint.limit_loop", &[("side", which), ("value", value)]),
-                Some("limit") => solidcraft_ui_text::format("joint.limit_limit", &[("side", which), ("value", value)]),
-                Some("turn") => solidcraft_ui_text::format("joint.limit_turn", &[("side", which), ("value", value)]),
+                Some("loop") => torno_ui_text::format("joint.limit_loop", &[("side", which), ("value", value)]),
+                Some("limit") => torno_ui_text::format("joint.limit_limit", &[("side", which), ("value", value)]),
+                Some("turn") => torno_ui_text::format("joint.limit_turn", &[("side", which), ("value", value)]),
                 Some(_) => {
                     // Down to a tenth, so it never claims more than was searched.
                     let range = (v["range"].as_f64().filter(|x| x.is_finite()).unwrap_or(0.0) / scale * 10.0).floor() / 10.0;
-                    solidcraft_ui_text::format("joint.limit_range", &[("side", which), ("range", &num(range, &unit))])
+                    torno_ui_text::format("joint.limit_range", &[("side", which), ("range", &num(range, &unit))])
                 }
                 None => {
                     let (a, b) = (by["a"].as_str().unwrap_or_default(), by["b"].as_str().unwrap_or_default());
-                    solidcraft_ui_text::format("joint.limit_contact", &[("side", which), ("value", value), ("a", a), ("b", b)])
+                    torno_ui_text::format("joint.limit_contact", &[("side", which), ("value", value), ("a", a), ("b", b)])
                 }
             });
         }
@@ -1512,7 +1509,7 @@ fn fill_limits(doc: &solidcraft_engine::doc::Document, f: &mut JointForm, reply:
         .map(|o| format!("{} / {}", o["a"].as_str().unwrap_or_default(), o["b"].as_str().unwrap_or_default()))
         .collect();
     if !overlapping.is_empty() {
-        f.found_note = Some(solidcraft_ui_text::format("joint.limits_overlapping", &[("pairs", &overlapping.join(", "))]));
+        f.found_note = Some(torno_ui_text::format("joint.limits_overlapping", &[("pairs", &overlapping.join(", "))]));
     }
 }
 
@@ -1535,7 +1532,7 @@ fn interference(app: &SolveApp, picked: &[Sel], clearance: &str) -> Check {
             if app.apply_off_thread.is_some() {
                 let (ahead, world, out, params) =
                     (app.session.ahead(), crate::open_meshing::session_world(&app.session), check.reply.clone(), p.clone());
-                let spawned = solidcraft_engine::kernel::kernel_thread("interference").spawn(move || {
+                let spawned = torno_engine::kernel::kernel_thread("interference").spawn(move || {
                     let r = check_now(ahead, &world, params);
                     if let Ok(mut slot) = out.lock() {
                         *slot = Some(r);
@@ -1547,7 +1544,7 @@ fn interference(app: &SolveApp, picked: &[Sel], clearance: &str) -> Check {
             }
             check_now(app.session.ahead(), &crate::open_meshing::session_world(&app.session), p)
         }
-        _ => (json!({ "error": solidcraft_ui_text::tr("dialog.clearance_invalid") }), Vec::new()),
+        _ => (json!({ "error": torno_ui_text::tr("dialog.clearance_invalid") }), Vec::new()),
     };
     if let Ok(mut slot) = check.reply.lock() {
         *slot = Some(reply);
@@ -1557,7 +1554,7 @@ fn interference(app: &SolveApp, picked: &[Sel], clearance: &str) -> Check {
 
 /// `inspect.clearance` with `p` on a copy of the session, and the volume each pair it finds
 /// overlapping shares ([`overlap_meshes`]).
-fn check_now(ahead: solidcraft_engine::Ahead, world: &solidcraft_engine::doc::ModelState, p: Value) -> (Value, Vec<Mesh>) {
+fn check_now(ahead: torno_engine::Ahead, world: &torno_engine::doc::ModelState, p: Value) -> (Value, Vec<Mesh>) {
     // One reply for the one command.
     match ahead.replies(&[("inspect.clearance".to_string(), p)]).pop() {
         Some(Ok(r)) => {
@@ -1572,8 +1569,8 @@ fn check_now(ahead: solidcraft_engine::Ahead, world: &solidcraft_engine::doc::Mo
 /// The volume each pair in an `inspect.clearance` reply's `overlaps` shares, meshed in world
 /// placement. Each pair runs on a kernel worker with the kernel's stack, whatever thread asks
 /// (the window thread's is 1 MiB on Windows).
-fn overlap_meshes(st: &solidcraft_engine::doc::ModelState, r: &Value) -> Vec<Mesh> {
-    use solidcraft_engine::kernel;
+fn overlap_meshes(st: &torno_engine::doc::ModelState, r: &Value) -> Vec<Mesh> {
+    use torno_engine::kernel;
     let pairs: Vec<_> =
         r["overlaps"].as_array().into_iter().flatten().filter_map(|hit| Some((st.body(hit["a"].as_str()?)?, st.body(hit["b"].as_str()?)?))).collect();
     kernel::map_with_local_pools(&pairs, usize::MAX, |&(a, b)| {
@@ -1593,7 +1590,7 @@ fn interference_rows(app: &SolveApp, ui: &mut egui::Ui, r: &Value) {
     }
     let hits = r["overlaps"].as_array().cloned().unwrap_or_default();
     form_row(ui, "Checked", |ui| {
-        ui.label(solidcraft_ui_text::format("dialog.bodies_count", &[("count", &r["bodies"].as_u64().unwrap_or(0).to_string())]));
+        ui.label(torno_ui_text::format("dialog.bodies_count", &[("count", &r["bodies"].as_u64().unwrap_or(0).to_string())]));
     });
     let unchecked = r["unchecked"].as_array().cloned().unwrap_or_default();
     let near = r["near"].as_array().cloned().unwrap_or_default();
@@ -1604,7 +1601,7 @@ fn interference_rows(app: &SolveApp, ui: &mut egui::Ui, r: &Value) {
     // Pairs closer than the clearance, nearest first.
     if !near.is_empty() {
         form_row(ui, "Too close", |ui| {
-            ui.label(RichText::new(solidcraft_ui_text::tr("ui.distance")).semibold().color(solidcraft_theme::Tokens::get().text));
+            ui.label(RichText::new(torno_ui_text::tr("ui.distance")).semibold().color(torno_theme::Tokens::get().text));
         });
     }
     for h in &near {
@@ -1616,7 +1613,7 @@ fn interference_rows(app: &SolveApp, ui: &mut egui::Ui, r: &Value) {
     let nearest = r["nearest"].as_object().cloned().unwrap_or_default();
     if !nearest.is_empty() {
         form_row(ui, "Nearest", |ui| {
-            ui.label(RichText::new(solidcraft_ui_text::tr("ui.distance")).semibold().color(solidcraft_theme::Tokens::get().text));
+            ui.label(RichText::new(torno_ui_text::tr("ui.distance")).semibold().color(torno_theme::Tokens::get().text));
         });
     }
     for (body, list) in &nearest {
@@ -1630,7 +1627,7 @@ fn interference_rows(app: &SolveApp, ui: &mut egui::Ui, r: &Value) {
     }
     if !hits.is_empty() {
         form_row(ui, "Interferes", |ui| {
-            ui.label(RichText::new(solidcraft_ui_text::tr_label("Volume")).semibold().color(solidcraft_theme::Tokens::get().text));
+            ui.label(RichText::new(torno_ui_text::tr_label("Volume")).semibold().color(torno_theme::Tokens::get().text));
         });
     }
     for h in hits {
@@ -1641,7 +1638,7 @@ fn interference_rows(app: &SolveApp, ui: &mut egui::Ui, r: &Value) {
     // Pairs the check could not work out: not clear, not known to interfere.
     for u in unchecked {
         form_row(ui, &format!("{} · {}", u["a"].as_str().unwrap_or(""), u["b"].as_str().unwrap_or("")), |ui| {
-            ui.label(RichText::new(solidcraft_ui_text::tr("dialog.could_not_be_checked")).color(t.warning))
+            ui.label(RichText::new(torno_ui_text::tr("dialog.could_not_be_checked")).color(t.warning))
                 .backing_on_hover_text(u["reason"].as_str().unwrap_or(""));
         });
     }
@@ -1679,14 +1676,14 @@ fn joint_problem(app: &SolveApp, k: &Asm, inputs: &[SelInput]) -> Option<(String
     // held through that copy, so picks on the same part in two copies are two sides (#11426).
     let doc = &app.session.doc;
     let occs: Vec<Option<u64>> =
-        bodies.iter().map(|b| placement_of_body(&app.session, b).map(|path| solidcraft_engine::doc::joints::origin_anchor(doc, &path).0)).collect();
+        bodies.iter().map(|b| placement_of_body(&app.session, b).map(|path| torno_engine::doc::joints::origin_anchor(doc, &path).0)).collect();
     // Only every pick naming a body makes the one-component case a problem: a datum plane or axis
     // side names its placement's origin, not a body, so a datum of one part against a face of
     // another is still a two-part joint.
     if picks.iter().all(|p| body_of(p).is_some()) && occs.first().is_some_and(|first| first.is_some() && occs.iter().all(|o| o == first)) {
         return Some(match bodies.as_slice() {
-            [body] => (solidcraft_ui_text::format("joint.one_body", &[("body", body.as_str())]), Vec::new()),
-            _ => (solidcraft_ui_text::format("joint.one_component", &[("bodies", &bodies.join(", "))]), bodies),
+            [body] => (torno_ui_text::format("joint.one_body", &[("body", body.as_str())]), Vec::new()),
+            _ => (torno_ui_text::format("joint.one_component", &[("bodies", &bodies.join(", "))]), bodies),
         });
     }
     commands(app, k, inputs).err().map(|e| (e, Vec::new()))
@@ -1720,7 +1717,7 @@ pub fn commands(app: &SolveApp, k: &Asm, inputs: &[SelInput]) -> Result<Vec<(Str
         Asm::FromBodies => {
             let bodies = sel_items(inputs, 0).body_names();
             if bodies.is_empty() {
-                return Err(solidcraft_ui_text::tr("ui.components_from_bodies_required").into());
+                return Err(torno_ui_text::tr("ui.components_from_bodies_required").into());
             }
             cmd("component.from_bodies", json!({ "bodies": bodies }))
         }
@@ -1811,12 +1808,12 @@ pub fn commands(app: &SolveApp, k: &Asm, inputs: &[SelInput]) -> Result<Vec<(Str
             let occs = occurrences(s, items);
             if occs.len() < 2 {
                 if occs.len() == 1 && items.len() > 1 && items.iter().all(|x| matches!(x, Sel::Body { .. })) {
-                    return Err(solidcraft_ui_text::format(
+                    return Err(torno_ui_text::format(
                         "joint.rigid_group_one_component",
-                        &[("count", &items.len().to_string()), ("command", solidcraft_ui_text::tr("cmd.component_from_bodies"))],
+                        &[("count", &items.len().to_string()), ("command", torno_ui_text::tr("cmd.component_from_bodies"))],
                     ));
                 }
-                return Err(solidcraft_ui_text::tr("joint.rigid_group_select_components").into());
+                return Err(torno_ui_text::tr("joint.rigid_group_select_components").into());
             }
             cmd("joint.rigid_group", json!({ "occurrences": occs }))
         }
@@ -1824,7 +1821,7 @@ pub fn commands(app: &SolveApp, k: &Asm, inputs: &[SelInput]) -> Result<Vec<(Str
             let j = s.doc.assembly.joints.get(*joint).ok_or("no joint that moves yet")?;
             // A rigid joint has nothing to drive: the dialog says why and offers Edit Joint (#6981).
             if j.kind == JointKind::Rigid {
-                return Err(solidcraft_ui_text::format("drive.rigid", &[("joint", &j.name)]));
+                return Err(torno_ui_text::format("drive.rigid", &[("joint", &j.name)]));
             }
             cmd("joint.drive", json!({"joint": j.id, "values": values}))
         }
@@ -1901,7 +1898,7 @@ pub fn world_preview(s: &Session, cmds: &[(String, Value)], colors: Colors) -> O
     // Any feature, when components are placed away from their frames: the preview must show
     // the world the viewport shows.
     let moves = cmds.iter().all(|(c, _)| MOVES.contains(&c.as_str()));
-    if cmds.is_empty() || !(moves || solidcraft_engine::frames::placed(s)) {
+    if cmds.is_empty() || !(moves || torno_engine::frames::placed(s)) {
         return None;
     }
     let preview = match s.preview_visible_world(cmds) {
@@ -1937,7 +1934,7 @@ pub fn world_preview(s: &Session, cmds: &[(String, Value)], colors: Colors) -> O
 /// joined to nothing grounded moves nothing, and says which part that is.
 pub fn drive_stop(reply: &Value) -> Option<String> {
     if let Some(part) = reply.get("unconnected").and_then(Value::as_str) {
-        return Some(solidcraft_ui_text::format("drive.unconnected", &[("part", part)]));
+        return Some(torno_ui_text::format("drive.unconnected", &[("part", part)]));
     }
     // The values come as joint.list gives them: degrees and millimetres.
     let at: Vec<String> = reply
@@ -1951,10 +1948,10 @@ pub fn drive_stop(reply: &Value) -> Option<String> {
     let at = at.join(", ");
     let name = |v: &Value| v.as_str().unwrap_or_default().to_string();
     if let Some(l) = reply.get("stopped_by_loop").filter(|v| v.is_object()) {
-        return Some(solidcraft_ui_text::format("drive.stopped_by_loop", &[("value", &at), ("joint", &name(&l["joint"]))]));
+        return Some(torno_ui_text::format("drive.stopped_by_loop", &[("value", &at), ("joint", &name(&l["joint"]))]));
     }
     let c = reply.get("stopped_by_contact").filter(|v| v.is_object())?;
-    Some(solidcraft_ui_text::format("drive.stopped_by_contact", &[("value", &at), ("a", &name(&c["a"])), ("b", &name(&c["b"]))]))
+    Some(torno_ui_text::format("drive.stopped_by_contact", &[("value", &at), ("a", &name(&c["a"])), ("b", &name(&c["b"]))]))
 }
 
 // ---- overlay ----
@@ -2060,22 +2057,21 @@ fn joint_menu(
     open: &mut Option<Dialog>,
     run: &mut Option<(&'static str, Value)>,
 ) {
-    if crate::ui_kit::button(ui, solidcraft_ui_text::tr_label("Edit Joint"), crate::ui_kit::Button::Normal).clicked() {
+    if crate::ui_kit::button(ui, torno_ui_text::tr_label("Edit Joint"), crate::ui_kit::Button::Normal).clicked() {
         *open = edit_joint(app, id);
         ui.close();
     }
-    if kind != JointKind::Rigid && crate::ui_kit::button(ui, solidcraft_ui_text::tr_label("Drive Joint"), crate::ui_kit::Button::Normal).clicked() {
+    if kind != JointKind::Rigid && crate::ui_kit::button(ui, torno_ui_text::tr_label("Drive Joint"), crate::ui_kit::Button::Normal).clicked() {
         *open = drive_joint(app, id);
         ui.close();
     }
-    if crate::ui_kit::button(ui, solidcraft_ui_text::tr_label(if suppressed { "Unsuppress" } else { "Suppress" }), crate::ui_kit::Button::Normal)
-        .clicked()
+    if crate::ui_kit::button(ui, torno_ui_text::tr_label(if suppressed { "Unsuppress" } else { "Suppress" }), crate::ui_kit::Button::Normal).clicked()
     {
         *run = Some(("joint.edit", json!({"joint": id, "suppressed": !suppressed})));
         ui.close();
     }
     ui.separator();
-    if crate::ui_kit::button(ui, solidcraft_ui_text::tr_label("Delete"), crate::ui_kit::Button::Normal).clicked() {
+    if crate::ui_kit::button(ui, torno_ui_text::tr_label("Delete"), crate::ui_kit::Button::Normal).clicked() {
         *run = Some(("selection.delete", json!({ "joints": [id] })));
         ui.close();
     }
@@ -2166,7 +2162,7 @@ fn joint_group_button(
     at: egui::Pos2,
     count: usize,
     open: bool,
-    accent: solidcraft_theme::TabAccent,
+    accent: torno_theme::TabAccent,
     run: JointRun,
 ) -> (f32, bool) {
     let chip = crate::ui_kit::HistoryGroupChip {
@@ -2292,7 +2288,7 @@ pub(crate) fn timeline_joint_rows(app: &mut SolveApp, ui: &mut egui::Ui, ids: Op
                     let (rect, _) = ui.allocate_exact_size(vec2(t.form_section_icon_size, t.form_section_icon_size), egui::Sense::hover());
                     let fold = crate::ui_kit::disclosure_button_at(ui, rect, shown, &header);
                     let response = ui.add(
-                        egui::Label::new(egui::RichText::new(&header).size(solidcraft_theme::Tokens::get().font_micro).semibold().color(t.text_dim))
+                        egui::Label::new(egui::RichText::new(&header).size(torno_theme::Tokens::get().font_micro).semibold().color(t.text_dim))
                             .sense(egui::Sense::click()),
                     );
                     crate::scenario::publish_handle("timeline:joints", response.rect.center());
@@ -2306,7 +2302,7 @@ pub(crate) fn timeline_joint_rows(app: &mut SolveApp, ui: &mut egui::Ui, ids: Op
                 return;
             }
         } else {
-            ui.label(egui::RichText::new("JOINTS").size(solidcraft_theme::Tokens::get().font_micro).semibold().color(t.text_dim));
+            ui.label(egui::RichText::new("JOINTS").size(torno_theme::Tokens::get().font_micro).semibold().color(t.text_dim));
         }
     }
     let mut open = None;
@@ -2333,7 +2329,7 @@ pub(crate) fn timeline_joint_rows(app: &mut SolveApp, ui: &mut egui::Ui, ids: Op
             egui::pos2(icon.right() + 7.0, rect.center().y),
             egui::Align2::LEFT_CENTER,
             &name,
-            egui::FontId::proportional(solidcraft_theme::Tokens::get().font_body),
+            egui::FontId::proportional(torno_theme::Tokens::get().font_body),
             if suppressed { t.text_dim } else { t.text },
         );
         let response = response.backing_on_hover_text(format!("{name}  ({kind:?} joint)\nDouble-click to edit · right-click for more"));
@@ -2545,7 +2541,7 @@ pub(crate) struct PlacementJoint {
 
 /// The joints that attach the placement at `path` (its last occurrence is one of the two a
 /// joint joins), in the design's joint order.
-pub(crate) fn placement_joints(doc: &solidcraft_engine::doc::Document, path: &[u64]) -> Vec<PlacementJoint> {
+pub(crate) fn placement_joints(doc: &torno_engine::doc::Document, path: &[u64]) -> Vec<PlacementJoint> {
     let Some(&occ) = path.last() else { return Vec::new() };
     let name_of = |o: u64| doc.occurrences.iter().find(|x| x.id == o).map(|x| x.name.clone()).unwrap_or_default();
     doc.assembly
@@ -2570,12 +2566,12 @@ mod tests;
 
 thread_local! {
     /// Named joint origins in the world, for the design state they were found in.
-    static ORIGINS: std::cell::RefCell<Option<(String, Vec<(String, solidcraft_engine::doc::Mat)>)>> = const { std::cell::RefCell::new(None) };
+    static ORIGINS: std::cell::RefCell<Option<(String, Vec<(String, torno_engine::doc::Mat)>)>> = const { std::cell::RefCell::new(None) };
 }
 
 /// Named joint origins in the world: on their occurrence's component, so they move with it
 /// (joint drives, free moves not captured yet, Capture Position).
-pub fn origins_world(s: &Session) -> Vec<(String, solidcraft_engine::doc::Mat)> {
+pub fn origins_world(s: &Session) -> Vec<(String, torno_engine::doc::Mat)> {
     if s.doc.assembly.origins.is_empty() {
         return Vec::new();
     }
@@ -2583,7 +2579,7 @@ pub fn origins_world(s: &Session) -> Vec<(String, solidcraft_engine::doc::Mat)> 
     if let Some(v) = ORIGINS.with(|o| o.borrow().as_ref().filter(|(k, _)| *k == key).map(|(_, v)| v.clone())) {
         return v;
     }
-    let doc: std::borrow::Cow<solidcraft_engine::doc::Document> = if s.pending_moves.is_empty() {
+    let doc: std::borrow::Cow<torno_engine::doc::Document> = if s.pending_moves.is_empty() {
         std::borrow::Cow::Borrowed(&*s.doc)
     } else {
         let mut d = (*s.doc).clone();
@@ -2625,10 +2621,10 @@ pub fn origins(app: &SolveApp, painter: &egui::Painter, proj: &Proj) {
         if !origin_drawn(&app.session, &name) {
             continue;
         }
-        let at = solidcraft_engine::doc::apply_point(&m, Vec3::ZERO);
+        let at = torno_engine::doc::apply_point(&m, Vec3::ZERO);
         let Some(c) = proj.to_screen(at) else { continue };
         for (axis, col) in [(Vec3::X, t.axis_x), (Vec3::Y, t.axis_y), (Vec3::Z, t.axis_z)] {
-            if let Some(tip) = proj.to_screen(at + solidcraft_engine::doc::apply_vector(&m, axis) * len) {
+            if let Some(tip) = proj.to_screen(at + torno_engine::doc::apply_vector(&m, axis) * len) {
                 painter.line_segment([c, tip], Stroke::new(2.0, col));
             }
         }
@@ -2638,12 +2634,12 @@ pub fn origins(app: &SolveApp, painter: &egui::Painter, proj: &Proj) {
 
 thread_local! {
     /// Joint frames in the world (joint id → A's frame), for the design state they were found in.
-    static JOINT_FRAMES: std::cell::RefCell<Option<(String, Vec<(u64, solidcraft_engine::doc::Mat)>)>> = const { std::cell::RefCell::new(None) };
+    static JOINT_FRAMES: std::cell::RefCell<Option<(String, Vec<(u64, torno_engine::doc::Mat)>)>> = const { std::cell::RefCell::new(None) };
 }
 
 /// Each joint's frame in the world (where its glyph sits): the frame of its first origin, on
 /// its occurrence as placed (including moves not captured yet).
-pub fn joint_frames_world(s: &Session) -> Vec<(u64, solidcraft_engine::doc::Mat)> {
+pub fn joint_frames_world(s: &Session) -> Vec<(u64, torno_engine::doc::Mat)> {
     if s.doc.assembly.joints.is_empty() {
         return Vec::new();
     }
@@ -2651,7 +2647,7 @@ pub fn joint_frames_world(s: &Session) -> Vec<(u64, solidcraft_engine::doc::Mat)
     if let Some(v) = JOINT_FRAMES.with(|o| o.borrow().as_ref().filter(|(k, _)| *k == key).map(|(_, v)| v.clone())) {
         return v;
     }
-    let doc: std::borrow::Cow<solidcraft_engine::doc::Document> = if s.pending_moves.is_empty() {
+    let doc: std::borrow::Cow<torno_engine::doc::Document> = if s.pending_moves.is_empty() {
         std::borrow::Cow::Borrowed(&*s.doc)
     } else {
         let mut d = (*s.doc).clone();
@@ -2747,7 +2743,7 @@ pub(crate) fn joint_glyph_plan(app: &SolveApp, proj: &Proj) -> Vec<JointGlyph> {
     let frames = joint_frames_world(&app.session);
     let sizes = occurrence_sizes(&app.session);
     let view_len = app.cam.half_height() * 2.0 * GLYPH_VIEW_SHARE;
-    let at = |m: &solidcraft_engine::doc::Mat, x: f64, y: f64, z: f64| solidcraft_engine::doc::apply_point(m, Vec3::new(x, y, z));
+    let at = |m: &torno_engine::doc::Mat, x: f64, y: f64, z: f64| torno_engine::doc::apply_point(m, Vec3::new(x, y, z));
     let mut plan = Vec::new();
     for (id, picked) in drawn {
         let Some(j) = app.session.doc.assembly.joints.iter().find(|j| j.id == id) else { continue };
@@ -2763,7 +2759,7 @@ pub(crate) fn joint_glyph_plan(app: &SolveApp, proj: &Proj) -> Vec<JointGlyph> {
     }
     plan.sort_by_key(|(g, _)| (!g.picked, g.rigid));
     // Screen reach of each glyph: its ring (or a rigid mark), for the overlap test.
-    let reach = |g: &JointGlyph, m: &solidcraft_engine::doc::Mat| -> f32 {
+    let reach = |g: &JointGlyph, m: &torno_engine::doc::Mat| -> f32 {
         if g.rigid {
             return RIGID_MARK;
         }
@@ -2829,7 +2825,7 @@ pub fn joint_glyphs(app: &SolveApp, painter: &egui::Painter, proj: &Proj) {
     }
     let t = Tokens::get();
     let frames = joint_frames_world(&app.session);
-    let at = |m: &solidcraft_engine::doc::Mat, x: f64, y: f64, z: f64| solidcraft_engine::doc::apply_point(m, Vec3::new(x, y, z));
+    let at = |m: &torno_engine::doc::Mat, x: f64, y: f64, z: f64| torno_engine::doc::apply_point(m, Vec3::new(x, y, z));
     // Back to front, so the glyphs drawn first in the plan end up on top.
     for g in plan.iter().rev() {
         let Some(j) = app.session.doc.assembly.joints.iter().find(|j| j.id == g.id) else { continue };

@@ -2,8 +2,8 @@
 
 use serde_json::{Value, json};
 use solidcore_record::Vec2;
-use solidcraft_engine::geom::prelude::*;
-use solidcraft_engine::{
+use torno_engine::geom::prelude::*;
+use torno_engine::{
     Sel,
     doc::{FeatureKind, PlaneRef},
 };
@@ -153,7 +153,7 @@ fn copy_leaves_text_on_the_system_clipboard_so_paste_can_follow() {
             _ => None,
         }));
     }
-    assert!(copied.iter().any(|t| t.starts_with("SolidCraft sketch geometry")), "{copied:?}");
+    assert!(copied.iter().any(|t| t.starts_with("Torno sketch geometry")), "{copied:?}");
 }
 
 #[test]
@@ -218,7 +218,7 @@ fn completed_sketch_copies_and_pastes_into_a_new_design() {
     select(&mut h.app, json!({"type": "feature", "id": id}));
     clipboard_event(&mut h, egui::Event::Copy, None);
     crate::documents::new_tab(&mut h.app);
-    clipboard_event(&mut h, egui::Event::Paste("SolidCraft features".into()), None);
+    clipboard_event(&mut h, egui::Event::Paste("Torno features".into()), None);
     assert_eq!(h.app.session.doc.features.len(), 1, "{:?}", h.app.status);
     let copied = &h.app.session.doc.features[0];
     let sketch = h.app.session.doc.sketch(copied.id).unwrap();
@@ -243,7 +243,7 @@ fn sketch_geometry_copies_into_a_sketch_of_another_design() {
     let menu = crate::context_menu::items(&h.app, &crate::context_menu::Target::Viewport);
     assert!(menu.iter().any(|i| i.id == "ui.paste" && i.enabled), "the sketch menu's Paste is on");
     let undo = h.app.session.undo.len();
-    clipboard_event(&mut h, egui::Event::Paste("SolidCraft sketch geometry".into()), Some([60.0, 40.0]));
+    clipboard_event(&mut h, egui::Event::Paste("Torno sketch geometry".into()), Some([60.0, 40.0]));
     let pasted = curves(&h);
     assert_eq!(pasted.len(), 4, "{:?}", h.app.status);
     let corner = start(&h, &pasted[0]);
@@ -307,7 +307,7 @@ struct ContributionPart(std::path::PathBuf);
 impl ContributionPart {
     fn new() -> Self {
         let stamp = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos();
-        Self(std::env::temp_dir().join(format!("solidcraft-linked-clipboard-{}-{stamp}.solidcraft", std::process::id())))
+        Self(std::env::temp_dir().join(format!("torno-linked-clipboard-{}-{stamp}.solidcraft", std::process::id())))
     }
 }
 impl Drop for ContributionPart {
@@ -316,7 +316,7 @@ impl Drop for ContributionPart {
     }
 }
 fn contribution_saved_part(file: &ContributionPart) -> crate::SolveApp {
-    let mut app = crate::SolveApp::new(solidcraft_engine::Session::default(), crate::Services::default());
+    let mut app = crate::SolveApp::new(torno_engine::Session::default(), crate::Services::default());
     app.run("solid.box", json!({"length":20,"width":10,"height":5,"body_name":"Plate"})).unwrap();
     app.run("file.save", json!({"path":file.0.to_string_lossy()})).unwrap();
     app.tree.picked_components = vec![0];
@@ -328,7 +328,7 @@ fn contribution_linked_design_clipboard_crosses_tabs_reuses_links_and_undoes_onc
     let file = ContributionPart::new();
     let mut app = contribution_saved_part(&file);
     assert!(super::copy(&mut app));
-    crate::documents::open_tab(&mut app, solidcraft_engine::Session::default()).unwrap();
+    crate::documents::open_tab(&mut app, torno_engine::Session::default()).unwrap();
     assert!(super::can_paste(&app));
     for n in 1..=2 {
         assert!(super::paste(&mut app, None), "{:?}", app.status);
@@ -357,7 +357,7 @@ fn contribution_occurrence_move_panel_belongs_to_its_document() {
     let file = ContributionPart::new();
     let mut app = contribution_saved_part(&file);
     assert!(super::copy(&mut app));
-    crate::documents::open_tab(&mut app, solidcraft_engine::Session::default()).unwrap();
+    crate::documents::open_tab(&mut app, torno_engine::Session::default()).unwrap();
     assert!(super::paste(&mut app, None));
     let id = app.tree.occurrence_move.as_ref().unwrap().occurrence;
     app.run("occurrence.move", json!({"occurrence":id,"translate":[10,0,0],"capture":false})).unwrap();
@@ -377,7 +377,7 @@ fn contribution_linked_paste_uses_the_pointer_and_pending_numeric_move() {
     let mut h = crate::scenario::Harness::new();
     h.app = contribution_saved_part(&file);
     assert!(super::copy(&mut h.app));
-    crate::documents::open_tab(&mut h.app, solidcraft_engine::Session::default()).unwrap();
+    crate::documents::open_tab(&mut h.app, torno_engine::Session::default()).unwrap();
     h.app.run("solid.box", json!({"length":80,"width":50,"height":8,"body_name":"Destination"})).unwrap();
     h.app.fit_view();
     h.frames(3);
@@ -388,7 +388,7 @@ fn contribution_linked_paste_uses_the_pointer_and_pending_numeric_move() {
     assert!(super::paste(&mut h.app, Some(at)));
     h.frames(3);
     let path = h.app.tree.occurrence_move.as_ref().unwrap().path.clone();
-    let initial = solidcraft_engine::doc::apply_point(&h.app.session.occurrence_placement(&path).unwrap().world, Vec3::ZERO);
+    let initial = torno_engine::doc::apply_point(&h.app.session.occurrence_placement(&path).unwrap().world, Vec3::ZERO);
     assert!((initial - pointed).len() < 1e-5, "{initial:?}");
     assert_eq!(h.app.session.undo.len(), undo + 1);
     let camera = h.app.cam;
@@ -399,7 +399,7 @@ fn contribution_linked_paste_uses_the_pointer_and_pending_numeric_move() {
     h.step(&json!({"text":"12"})).unwrap();
     h.step(&json!({"key":"Enter"})).unwrap();
     h.frames(3);
-    let moved = solidcraft_engine::doc::apply_point(&h.app.session.occurrence_placement(&path).unwrap().world, Vec3::ZERO);
+    let moved = torno_engine::doc::apply_point(&h.app.session.occurrence_placement(&path).unwrap().world, Vec3::ZERO);
     assert!(moved.x > initial.x + 10., "numeric move must retain the pasted occurrence: {initial:?} -> {moved:?}");
     assert_eq!(h.app.cam, camera, "numeric editing does not move the camera");
     let movement = h.app.tree.occurrence_move.as_ref().unwrap();
@@ -416,7 +416,7 @@ fn contribution_linked_paste_uses_the_pointer_and_pending_numeric_move() {
 #[test]
 fn contribution_paste_pointer_uses_parent_coordinates_and_safe_fallbacks() {
     use solidcore_record::Vec3;
-    use solidcraft_engine::doc;
+    use torno_engine::doc;
     let mut h = crate::scenario::Harness::new();
     let parent = h.app.run("component.create", json!({"name":"Parent","grounded":false})).unwrap();
     h.app
@@ -443,7 +443,7 @@ fn contribution_paste_pointer_uses_parent_coordinates_and_safe_fallbacks() {
 #[test]
 fn contribution_linked_clipboard_refuses_unsaved_dirty_self_and_missing_sources() {
     let file = ContributionPart::new();
-    let mut app = crate::SolveApp::new(solidcraft_engine::Session::default(), crate::Services::default());
+    let mut app = crate::SolveApp::new(torno_engine::Session::default(), crate::Services::default());
     assert!(!super::copy_design(&mut app));
     app = contribution_saved_part(&file);
     assert!(super::copy_design(&mut app));
@@ -453,7 +453,7 @@ fn contribution_linked_clipboard_refuses_unsaved_dirty_self_and_missing_sources(
     assert_eq!(app.session.doc, doc);
     app.run("solid.box", json!({"length":2,"width":2,"height":2,"corner":[30,0,0]})).unwrap();
     assert!(!super::copy_design(&mut app));
-    crate::documents::open_tab(&mut app, solidcraft_engine::Session::default()).unwrap();
+    crate::documents::open_tab(&mut app, torno_engine::Session::default()).unwrap();
     std::fs::remove_file(&file.0).unwrap();
     assert!(!super::paste(&mut app, None));
     assert!(app.session.doc.features.is_empty());
@@ -480,8 +480,8 @@ fn contribution_native_copy_paste_events_insert_the_saved_design_in_another_tab(
     h.frames(3);
     clipboard_event(&mut h, egui::Event::Copy, None);
     assert!(h.app.linked_design_clipboard.is_some());
-    crate::documents::open_tab(&mut h.app, solidcraft_engine::Session::default()).unwrap();
-    clipboard_event(&mut h, egui::Event::Paste("SolidCraft linked design".into()), None);
+    crate::documents::open_tab(&mut h.app, torno_engine::Session::default()).unwrap();
+    clipboard_event(&mut h, egui::Event::Paste("Torno linked design".into()), None);
     assert_eq!(h.app.session.doc.links.len(), 1, "{:?}", h.app.status);
     assert_eq!(h.app.session.undo.len(), 1);
 }
@@ -490,7 +490,7 @@ fn contribution_native_copy_paste_events_insert_the_saved_design_in_another_tab(
 /// what was copied before is not pasted.
 #[test]
 fn a_failed_copy_empties_the_clipboard() {
-    let mut app = crate::SolveApp::new(solidcraft_engine::Session::default(), crate::Services::default());
+    let mut app = crate::SolveApp::new(torno_engine::Session::default(), crate::Services::default());
     app.run("solid.box", json!({"length":2,"width":2,"height":2,"body_name":"Cube"})).unwrap();
     app.run("select.set", json!({"items": [{"type": "body", "name": "Cube"}]})).unwrap();
     assert!(super::copy(&mut app));
@@ -507,7 +507,7 @@ fn a_failed_copy_empties_the_clipboard() {
 /// clipboard empties. Esc before that leaves it where it was; a locked body is not cut.
 #[test]
 fn a_cut_body_moves_into_the_component_it_is_pasted_in() {
-    let mut app = crate::SolveApp::new(solidcraft_engine::Session::default(), crate::Services::default());
+    let mut app = crate::SolveApp::new(torno_engine::Session::default(), crate::Services::default());
     app.run("solid.box", json!({"length":2,"width":2,"height":2,"body_name":"Cube"})).unwrap();
     let part = app.run("component.create", json!({"name":"Part","activate":false})).unwrap()["component"].as_u64().unwrap();
     let owner = |app: &crate::SolveApp| {
@@ -536,7 +536,7 @@ fn a_cut_body_moves_into_the_component_it_is_pasted_in() {
 /// into itself, and an instance (a component placed more than once) isn't cut.
 #[test]
 fn a_cut_component_moves_into_the_component_it_is_pasted_in() {
-    let mut app = crate::SolveApp::new(solidcraft_engine::Session::default(), crate::Services::default());
+    let mut app = crate::SolveApp::new(torno_engine::Session::default(), crate::Services::default());
     let made = |app: &mut crate::SolveApp, name: &str| {
         let out = app.run("component.create", json!({"name": name, "activate": false})).unwrap();
         (out["component"].as_u64().unwrap(), out["occurrence"].as_u64().unwrap())
@@ -550,7 +550,7 @@ fn a_cut_component_moves_into_the_component_it_is_pasted_in() {
     assert!(super::can_paste_into(&app, holder));
     assert!(super::paste_into(&mut app, None, false, Some((holder, vec![holder_at]))));
     assert_eq!(app.session.doc.occurrences.iter().find(|o| o.id == part_at).unwrap().parent, holder);
-    assert_eq!(app.session.selection, vec![solidcraft_engine::Sel::Occurrence { path: vec![holder_at, part_at] }]);
+    assert_eq!(app.session.selection, vec![torno_engine::Sel::Occurrence { path: vec![holder_at, part_at] }]);
     assert!(!crate::browser::is_open(&app, &format!("o:{holder_at}/{part_at}"), true), "it arrives folded");
     assert!(app.cut.is_empty() && !super::can_paste(&app));
     app.run("occurrence.copy", json!({"component": holder})).unwrap();
@@ -563,7 +563,7 @@ fn a_cut_component_moves_into_the_component_it_is_pasted_in() {
 /// step.
 #[test]
 fn cut_features_and_their_body_move_in_one_step() {
-    let mut app = crate::SolveApp::new(solidcraft_engine::Session::default(), crate::Services::default());
+    let mut app = crate::SolveApp::new(torno_engine::Session::default(), crate::Services::default());
     app.run("sketch.create", json!({"plane": "XY", "name": "S"})).unwrap();
     app.run("sketch.rectangle.two_point", json!({"p0": [0, 0], "p1": [10, 10]})).unwrap();
     app.run("sketch.finish", json!({})).unwrap();
@@ -589,7 +589,7 @@ fn cut_features_and_their_body_move_in_one_step() {
 /// are not outlined and the user need not select them.
 #[test]
 fn a_cut_component_leaves_what_it_holds_unmarked() {
-    let mut app = crate::SolveApp::new(solidcraft_engine::Session::default(), crate::Services::default());
+    let mut app = crate::SolveApp::new(torno_engine::Session::default(), crate::Services::default());
     let made = app.run("component.create", json!({"name": "Part"})).unwrap();
     let (part, at) = (made["component"].as_u64().unwrap(), made["occurrence"].as_u64().unwrap());
     app.run("solid.box", json!({"length": 5, "width": 5, "height": 5, "body_name": "Inner", "name": "InnerBox"})).unwrap();
@@ -608,7 +608,7 @@ fn a_cut_component_leaves_what_it_holds_unmarked() {
 /// A paste that can't be done says so and keeps the cut, to paste somewhere else.
 #[test]
 fn a_cut_that_cannot_move_stays_cut() {
-    let mut app = crate::SolveApp::new(solidcraft_engine::Session::default(), crate::Services::default());
+    let mut app = crate::SolveApp::new(torno_engine::Session::default(), crate::Services::default());
     app.run("sketch.create", json!({"plane": "XY", "name": "S1"})).unwrap();
     app.run("sketch.rectangle.two_point", json!({"p0": [0, 0], "p1": [20, 20]})).unwrap();
     app.run("sketch.finish", json!({})).unwrap();
@@ -633,7 +633,7 @@ fn a_cut_that_cannot_move_stays_cut() {
 #[test]
 fn a_copied_body_pastes_into_a_bodies_folder() {
     use crate::context_menu::{Target, items, run_item};
-    let mut app = crate::SolveApp::new(solidcraft_engine::Session::default(), crate::Services::default());
+    let mut app = crate::SolveApp::new(torno_engine::Session::default(), crate::Services::default());
     app.run("solid.box", json!({"length":2,"width":2,"height":2,"body_name":"Cube"})).unwrap();
     let out = app.run("component.create", json!({"name":"Part","activate":false})).unwrap();
     let (part, at) = (out["component"].as_u64().unwrap(), out["occurrence"].as_u64().unwrap());
@@ -655,7 +655,7 @@ fn a_copied_body_pastes_into_a_bodies_folder() {
 #[test]
 fn a_copied_sketch_pastes_into_a_sketches_folder() {
     use crate::context_menu::{Target, items, run_item};
-    let mut app = crate::SolveApp::new(solidcraft_engine::Session::default(), crate::Services::default());
+    let mut app = crate::SolveApp::new(torno_engine::Session::default(), crate::Services::default());
     app.run("sketch.create", json!({"plane": "XY", "name": "S"})).unwrap();
     app.run("sketch.rectangle.two_point", json!({"p0": [0, 0], "p1": [10, 10]})).unwrap();
     app.run("sketch.finish", json!({})).unwrap();
@@ -674,7 +674,7 @@ fn a_copied_sketch_pastes_into_a_sketches_folder() {
 }
 
 fn plain_app() -> crate::SolveApp {
-    crate::SolveApp::new(solidcraft_engine::Session::default(), crate::Services::default())
+    crate::SolveApp::new(torno_engine::Session::default(), crate::Services::default())
 }
 
 fn select(app: &mut crate::SolveApp, item: Value) {
@@ -682,8 +682,8 @@ fn select(app: &mut crate::SolveApp, item: Value) {
 }
 
 /// A session named `name` with a 2 mm cube "Cube", raised 10 mm.
-fn design_with_cube(name: &str) -> solidcraft_engine::Session {
-    let mut s = solidcraft_engine::Session::default();
+fn design_with_cube(name: &str) -> torno_engine::Session {
+    let mut s = torno_engine::Session::default();
     s.doc_mut().name = name.into();
     s.execute("solid.box", &json!({"length":2,"width":2,"height":2,"body_name":"Cube","translate":[0,0,10]})).unwrap();
     s
@@ -704,7 +704,7 @@ fn copied_bodies_paste_into_another_design_as_imported_bodies() {
     let is = crate::open_meshing::session_world(&app.session).body("Cube (2)").unwrap().mesh().bounds();
     assert!(was.min.dist(is.min) < 1e-6 && was.max.dist(is.max) < 1e-6, "{was:?} vs {is:?}");
     let feature = app.session.doc.find_feature("Import1").expect("one Import feature");
-    assert!(matches!(feature.kind, solidcraft_engine::doc::FeatureKind::Import { .. }));
+    assert!(matches!(feature.kind, torno_engine::doc::FeatureKind::Import { .. }));
     assert!(app.session.selection.contains(&Sel::Body { name: "Cube (2)".into() }));
     crate::documents::switch(&mut app, 0);
     assert!(super::paste(&mut app, None));
@@ -718,7 +718,7 @@ fn the_last_copy_in_any_design_is_what_pastes() {
     let mut app = crate::SolveApp::new(design_with_cube("Bracket"), crate::Services::default());
     select(&mut app, json!({"type": "body", "name": "Cube"}));
     assert!(super::copy(&mut app));
-    let mut frame = solidcraft_engine::Session::default();
+    let mut frame = torno_engine::Session::default();
     frame.doc_mut().name = "Frame".into();
     frame.execute("solid.box", &json!({"length":1,"width":1,"height":1,"body_name":"Pin"})).unwrap();
     crate::documents::open_tab(&mut app, frame).unwrap();
@@ -743,7 +743,7 @@ fn bodies_cut_in_another_design_paste_as_copies() {
     let mut app = crate::SolveApp::new(design_with_cube("Bracket"), crate::Services::default());
     select(&mut app, json!({"type": "body", "name": "Cube"}));
     assert!(super::cut(&mut app));
-    crate::documents::open_tab(&mut app, solidcraft_engine::Session::default()).unwrap();
+    crate::documents::open_tab(&mut app, torno_engine::Session::default()).unwrap();
     assert!(super::paste(&mut app, None));
     assert!(app.session.model.state().body("Cube").is_some());
     crate::documents::switch(&mut app, 0);
@@ -763,7 +763,7 @@ fn a_cut_with_a_feature_leaves_another_design_nothing_to_paste() {
     app.run("select.set", json!({"items": [Sel::Feature { id: first }, Sel::Body { name: "Pin".into() }]})).unwrap();
     assert!(super::cut(&mut app));
     assert_eq!((app.cut.features.clone(), app.cut.bodies.clone()), (vec![first], vec!["Pin".to_string()]));
-    crate::documents::open_tab(&mut app, solidcraft_engine::Session::default()).unwrap();
+    crate::documents::open_tab(&mut app, torno_engine::Session::default()).unwrap();
     assert!(!super::can_paste(&app), "a feature stays in its design");
     crate::documents::switch(&mut app, 0);
     assert!(super::can_paste(&app), "its own design still pastes the cut");
@@ -780,7 +780,7 @@ fn components_copied_in_another_design_paste_as_independent_copies() {
     app.run("component.activate", json!({"component": 0})).unwrap();
     select(&mut app, json!({"type": "occurrence", "path": [at]}));
     assert!(super::copy(&mut app));
-    crate::documents::open_tab(&mut app, solidcraft_engine::Session::default()).unwrap();
+    crate::documents::open_tab(&mut app, torno_engine::Session::default()).unwrap();
     assert!(super::can_paste(&app) && super::pasting_components(&app));
     let features = app.session.doc.features.len();
     assert!(super::paste_as(&mut app, None, true));

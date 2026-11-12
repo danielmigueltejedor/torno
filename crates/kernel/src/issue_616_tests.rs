@@ -2,8 +2,8 @@
 //! from the box, and a retry that would is refused.
 
 use solidcore_record::Vec3;
-use solidcraft_geom::prelude::*;
-use solidcraft_geom::{Aabb3, Mesh};
+use torno_geom::prelude::*;
+use torno_geom::{Aabb3, Mesh};
 
 use crate::*;
 

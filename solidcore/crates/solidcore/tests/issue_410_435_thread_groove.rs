@@ -11,7 +11,7 @@
 //!
 //! The groove is a 60-degree trapezoid under a screw motion about the shaft's axis (sections
 //! in meridian planes, sixteen a turn, skinned cubically and capped), run a pitch past each
-//! end of the shaft, as the SolidCraft rig's M33x3.5 (case 2193) and M44x1 (case 2209)
+//! end of the shaft, as the Torno rig's M33x3.5 (case 2193) and M44x1 (case 2209)
 //! threads; the construction is that of `issue_435_screw_thread_groove.rs` (#1626). (`create_curve_sweep`
 //! along a helix is not a thread: its frame twists about 21 degrees a turn.) `SmFace`
 //! test #34 is not measured here; the symptom measured is its cause: how far each edge's
@@ -125,7 +125,7 @@ fn issue_435_edge_end_fixes_are_off_by_default() {
     assert!(!k.fixes.imprint_extends_edge_to_proto_vertex);
 }
 
-/// M44x1 on 4 mm (SolidCraft case 2209). On the helix-swept groove an edge ended 9.8e-6
+/// M44x1 on 4 mm (Torno case 2209). On the helix-swept groove an edge ended 9.8e-6
 /// from its vertex; on the screw-motion groove the worst edge ends 3.54e-6 from its vertex,
 /// under half the vertex's tolerance, as the C++ reference gives on the same body (which
 /// passes SMLib's check there). The fixes leave that edge as it is.
@@ -146,7 +146,7 @@ fn issue_435_m44x1_edges_end_at_their_vertices() {
     }
 }
 
-/// M33x3.5 on 14 mm (SolidCraft case 2193): the flank/end-face curves cross the rim at a
+/// M33x3.5 on 14 mm (Torno case 2193): the flank/end-face curves cross the rim at a
 /// grazing angle and an edge ends 1.52e-5 from its vertex, over the vertex's tolerance (the
 /// C++ reference gives 1.52342e-5 on the same body and fails `SmBrep` test #0 and `SmFace`
 /// test #34 twice each); with the fixes every edge ends within 2e-6 of its vertex.

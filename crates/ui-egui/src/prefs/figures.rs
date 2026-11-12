@@ -1,9 +1,9 @@
-//! SolidCraft's own Preferences specimens: figures drawn from SolidCraft's content (a feature row,
+//! Torno's own Preferences specimens: figures drawn from Torno's content (a feature row,
 //! its status colours, what the colour vision modes recolour, the autosave interval, the agent
 //! pointer) with the kit's painters. Every colour and metric comes from tokens.
 use crate::ui_kit::{self, BackingTooltipExt as _, dimension};
 use egui::{FontId, Rect, Sense, Stroke, Ui, pos2, vec2};
-use solidcraft_theme::{ColorVision, Tokens};
+use torno_theme::{ColorVision, Tokens};
 
 /// The interface scale's live preview: a field, OK and a feature row, at `scale`.
 pub(crate) fn scale_specimen(ui: &mut Ui, scale: f32) {
@@ -16,13 +16,13 @@ pub(crate) fn scale_specimen(ui: &mut Ui, scale: f32) {
     p.text(
         r.right_top() + vec2(-t.space_8, t.space_8),
         egui::Align2::RIGHT_TOP,
-        solidcraft_ui_text::tr("prefs.live_preview").to_uppercase(),
+        torno_ui_text::tr("prefs.live_preview").to_uppercase(),
         FontId::proportional(t.font_micro),
         t.form_dim,
     );
     let origin = r.min + vec2(t.space_10, t.space_24);
     let line_h = t.control_height * scale;
-    let distance = solidcraft_ui_text::tr_label("Distance");
+    let distance = torno_ui_text::tr_label("Distance");
     let label = p.layout_no_wrap(distance.to_owned(), font.clone(), t.form_dim);
     p.galley(origin + vec2(0.0, (line_h - label.size().y) / 2.0), label.clone(), t.form_dim);
     let field = Rect::from_min_size(origin + vec2(label.size().x + t.space_8 * scale, 0.0), vec2((t.form_label_width + t.space_6) * scale, line_h));
@@ -39,7 +39,7 @@ pub(crate) fn scale_specimen(ui: &mut Ui, scale: f32) {
     ui_kit::centred_text(
         &p,
         button,
-        solidcraft_ui_text::tr_label("OK"),
+        torno_ui_text::tr_label("OK"),
         ui_kit::type_face::semibold(t.font_label * scale),
         if t.borders.bevel.is_some() { t.form_ink } else { t.on_accent },
     );
@@ -63,7 +63,7 @@ pub(crate) fn status_palette_sample(ui: &mut Ui, mode: ColorVision) {
         return;
     }
     let t = Tokens::get();
-    let colours = Tokens::themed(solidcraft_theme::is_dark(), mode);
+    let colours = Tokens::themed(torno_theme::is_dark(), mode);
     ui.horizontal_wrapped(|ui| {
         for (label, icon, fill) in [
             ("prefs.status_selected", "finish", colours.form_primary),
@@ -71,11 +71,11 @@ pub(crate) fn status_palette_sample(ui: &mut Ui, mode: ColorVision) {
             ("prefs.status_error", "close", colours.error),
             ("prefs.status_done", "finish", colours.form_success),
         ] {
-            let ink = if solidcraft_theme::contrast_ratio(t.on_accent, fill) >= 4.5 { t.on_accent } else { t.tab_on_fill_dark };
-            let label = solidcraft_ui_text::tr(label);
+            let ink = if torno_theme::contrast_ratio(t.on_accent, fill) >= 4.5 { t.on_accent } else { t.tab_on_fill_dark };
+            let label = torno_ui_text::tr(label);
             let galley = ui.painter().layout_no_wrap(label.to_owned(), ui_kit::type_face::semibold(t.font_small), ink);
             let (r, _) = ui.allocate_exact_size(vec2(galley.size().x + t.space_24 + t.space_16, t.space_24), Sense::hover());
-            solidcraft_ui_registry::publish_rect(&format!("prefs:status_sample:{label}"), r);
+            torno_ui_registry::publish_rect(&format!("prefs:status_sample:{label}"), r);
             ui.painter().rect_filled(r, t.radius_xl, fill);
             ui_kit::icons::paint_ink(
                 ui.painter(),
@@ -106,16 +106,16 @@ pub(crate) fn colour_vision_sample(ui: &mut Ui, t: &Tokens) {
     let width = ((dimension(ui.available_width()) - gap * (count - 1.0)) / count).min(t.space_24 * 3.0 + t.space_12);
     let figure_height = t.space_24 + t.space_16 + t.space_4;
     let (area, _) = ui.allocate_exact_size(vec2(width * count + gap * (count - 1.0), figure_height + t.space_3 + t.space_16), Sense::hover());
-    solidcraft_ui_registry::publish_rect("prefs:colour_vision_samples", area);
+    torno_ui_registry::publish_rect("prefs:colour_vision_samples", area);
     let p = ui.painter_at(area);
     for (i, name) in COLOUR_VISION_SAMPLE.iter().enumerate() {
         let cell = Rect::from_min_size(area.min + vec2((width + gap) * i as f32, 0.0), vec2(width, figure_height));
-        solidcraft_ui_registry::publish_rect(&format!("prefs:colour_vision_sample:{i}"), cell);
+        torno_ui_registry::publish_rect(&format!("prefs:colour_vision_sample:{i}"), cell);
         ui_kit::paint_colour_vision(&p, cell, i, t);
         ui_kit::centred_text(
             &p,
             Rect::from_min_size(cell.left_bottom() + vec2(0.0, t.space_3), vec2(cell.width(), t.space_16)),
-            solidcraft_ui_text::tr(name),
+            torno_ui_text::tr(name),
             FontId::proportional(t.font_small),
             t.text_dim,
         );
@@ -129,7 +129,7 @@ pub(crate) fn autosave_timeline(ui: &mut Ui, minutes: f64) {
     let line = r;
     let page = ui_kit::settings_page_active(ui);
     if page {
-        solidcraft_ui_registry::publish_rect("prefs:autosave_timeline", r);
+        torno_ui_registry::publish_rect("prefs:autosave_timeline", r);
     }
     ui.painter().hline(line.x_range(), r.top() + t.space_10, Stroke::new(2.0, t.dialog_rule));
     if minutes.is_finite() && minutes > 0.0 {
@@ -152,7 +152,7 @@ pub(crate) fn autosave_timeline(ui: &mut Ui, minutes: f64) {
             } else {
                 egui::Align2::CENTER_TOP
             },
-            solidcraft_ui_text::tr(key),
+            torno_ui_text::tr(key),
             FontId::proportional(t.font_small),
             t.form_dim,
         );
@@ -174,12 +174,12 @@ pub(crate) fn pointer_preview(ui: &mut Ui, visible: bool, speed: &str, follows_c
         ui_kit::icons::glyphs::pointer(&ui.painter().with_clip_rect(rect.shrink(t.space_4)), path.get(1).copied().unwrap_or(rect.center()));
     }
     let caption = if visible {
-        solidcraft_ui_text::format("ai.prefs.pointer_preview_speed", &[("speed", speed)])
+        torno_ui_text::format("ai.prefs.pointer_preview_speed", &[("speed", speed)])
     } else {
-        solidcraft_ui_text::tr("ai.prefs.pointer_preview_hidden").to_owned()
+        torno_ui_text::tr("ai.prefs.pointer_preview_hidden").to_owned()
     };
     let caption_rect = Rect::from_min_max(rect.min + vec2(t.space_8, t.space_4), pos2(rect.right() - t.space_8, rect.top() + t.space_24));
     ui_kit::paint_text(ui, caption_rect, &caption, FontId::proportional(t.font_small), t.form_dim, false);
     response.widget_info(|| egui::WidgetInfo::labeled(egui::Role::Label, ui.is_enabled(), &caption));
-    response.backing_on_hover_text(solidcraft_ui_text::tr(if follows_camera { "ai.prefs.follow_camera_on" } else { "ai.prefs.follow_camera_off" }));
+    response.backing_on_hover_text(torno_ui_text::tr(if follows_camera { "ai.prefs.follow_camera_on" } else { "ai.prefs.follow_camera_off" }));
 }

@@ -71,7 +71,7 @@
 //!   edge uses, the G1 knots and points, ten trace passes, twenty cusp skips, three
 //!   drop tolerances.
 //! - **Exact round classes (WR-669, #2085).** With `fixes.fillet_exact_round_classes`, the
-//!   try-chain (`c3_try_analytic`) is replaced by the SolidCraft fork's classification
+//!   try-chain (`c3_try_analytic`) is replaced by the Torno fork's classification
 //!   (tangency-labs/smlib@b5f2867, 7ac037e): `ClassifyExactBlend` and
 //!   `CalcExactFilletGeom` (`blend::fillet_exact`), whose failures are errors.
 
@@ -791,7 +791,7 @@ fn c1_collect_points(
 
     // Now, compute 'through points' from all internal G1 knots
     // (the size is re-read every iteration, as upstream's GetSize())
-    // SolidCraft (the fork's 6eecf04): the corners of
+    // Torno (the fork's 6eecf04): the corners of
     // the radius law are through points too, after the G1 knots, so the trace has a point
     // where the fillet turns (a failed one fails the trace, as a G1 knot's does).
     let corner_knots = ops.radius_corner_parameters()?;
@@ -1966,7 +1966,7 @@ fn c3_try_analytic(
     }
 }
 
-/// Not upstream (WR-669, the SolidCraft fork's tangency-labs/smlib@b5f2867 and 7ac037e,
+/// Not upstream (WR-669, the Torno fork's tangency-labs/smlib@b5f2867 and 7ac037e,
 /// opt-in `fixes.fillet_exact_round_classes`): in place of the try-chain, the round's exact
 /// class from its faces' kinds and placement at the first point
 /// (`ClassifyExactBlend(*sTsectPnts[0])`), and its exact surface by that class

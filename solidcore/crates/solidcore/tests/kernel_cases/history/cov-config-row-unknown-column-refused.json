@@ -40,6 +40,6 @@
   "ungraded": [],
   "what": "config.row with a value for a column the table does not have",
   "why_not": [
-    "the failure is SolidCraft's, not a kernel operation's: step 6 (config.row): invalid parameters for `config.row`: `Depth` is not a column (config.column adds one)"
+    "the failure is Torno's, not a kernel operation's: step 6 (config.row): invalid parameters for `config.row`: `Depth` is not a column (config.column adds one)"
   ]
 }

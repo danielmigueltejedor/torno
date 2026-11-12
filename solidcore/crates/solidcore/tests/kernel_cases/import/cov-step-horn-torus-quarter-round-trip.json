@@ -43,6 +43,6 @@
   "ungraded": [],
   "what": "a quarter horn torus (a circle r5 touching its axis, revolved 90 deg) written to STEP and read back: the same solid",
   "why_not": [
-    "body \"Horn\" is no kernel operation's output nor an operand: SolidCraft built it or changed the kernel's record"
+    "body \"Horn\" is no kernel operation's output nor an operand: Torno built it or changed the kernel's record"
   ]
 }

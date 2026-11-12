@@ -11,9 +11,9 @@
 //! subclass markers of each entity; the root dictionary and its group dictionary. Layers can be dashed and a drawing can carry TEXT (for annotations). Group
 //! codes follow Autodesk's public DXF reference.
 
-use solidcraft_geom::prelude::*;
 use std::f64::consts::TAU;
 use std::fmt::Write as _;
+use torno_geom::prelude::*;
 
 use solidcore_record::{Loop2, MAX_BEZIER_DEGREE, Seg2, Vec2};
 
@@ -1209,7 +1209,7 @@ mod tests {
             let h = u64::from_str_radix(v, 16).unwrap();
             assert!(h == 0 || handles.binary_search(&h).is_ok(), "owner {v}");
         }
-        // SolidCraft's own reader still reads it.
+        // Torno's own reader still reads it.
         assert_eq!(read_dxf(&dxf).unwrap().len(), 2);
     }
 

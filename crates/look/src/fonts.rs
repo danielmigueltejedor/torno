@@ -1,5 +1,5 @@
-//! SolidCraft's interface faces: IBM Plex Sans (one variable face at 400, 500, 600 and 700) and
-//! Plex Mono, bound to the kit's weight families (`solidcraft_ui_kit::type_face`) ahead of egui's
+//! Torno's interface faces: IBM Plex Sans (one variable face at 400, 500, 600 and 700) and
+//! Plex Mono, bound to the kit's weight families (`torno_ui_kit::type_face`) ahead of egui's
 //! own faces, with egui's Hack last for the symbols the others lack.
 //!
 //! A host that adds faces of its own (a chosen interface font, script fallbacks) builds on
@@ -8,7 +8,7 @@
 use std::sync::Arc;
 
 use egui::{FontDefinitions, FontFamily};
-use solidcraft_ui_kit::type_face::{BOLD_FAMILY, MEDIUM_FAMILY, SEMIBOLD_FAMILY, SYMBOL_FALLBACK, sans_families, semibold};
+use torno_ui_kit::type_face::{BOLD_FAMILY, MEDIUM_FAMILY, SEMIBOLD_FAMILY, SYMBOL_FALLBACK, sans_families, semibold};
 
 /// IBM Plex Sans, variable in width and weight (SIL OFL 1.1, `fonts/ibm-plex-sans/OFL.txt`).
 pub const PLEX_SANS: &[u8] = include_bytes!(concat!(env!("CARGO_MANIFEST_DIR"), "/fonts/ibm-plex-sans/IBMPlexSans-Variable.ttf"));

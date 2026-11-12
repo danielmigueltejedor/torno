@@ -129,8 +129,8 @@
     "blend_dropping"
   ],
   "ungraded": [
-    "continuity: SolidCraft computes it",
-    "refusal \"continues tangentially\": SolidCraft's wording of the kernel's error"
+    "continuity: Torno computes it",
+    "refusal \"continues tangentially\": Torno's wording of the kernel's error"
   ],
   "what": "the concave half circle where a block as wide as the cylinder's diameter meets the cylinder's wall above its top, rounded r2 alone (Tangent chain off)",
   "why_not": []

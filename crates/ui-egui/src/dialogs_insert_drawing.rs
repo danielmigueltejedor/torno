@@ -98,7 +98,7 @@ mod tests {
     use crate::scenario::{Harness, handle_at};
 
     fn svg_file(name: &str) -> String {
-        let dir = std::env::temp_dir().join(format!("solidcraft-insert-place-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("torno-insert-place-{}", std::process::id()));
         let _ = std::fs::create_dir_all(&dir);
         let path = dir.join(name);
         std::fs::write(&path, r#"<svg xmlns="http://www.w3.org/2000/svg" width="20mm" height="10mm" viewBox="0 0 20 10"><rect x="0" y="0" width="20" height="10"/></svg>"#).unwrap();
@@ -110,7 +110,7 @@ mod tests {
         let sk = &st.sketch(h.app.session.active_sketch.unwrap()).unwrap().sketch;
         (0..sk.curves.len())
             .filter_map(|i| match sk.shape(i) {
-                Some(solidcraft_engine::sketch::Shape::Line { a, b }) => Some((a, b)),
+                Some(torno_engine::sketch::Shape::Line { a, b }) => Some((a, b)),
                 _ => None,
             })
             .collect()

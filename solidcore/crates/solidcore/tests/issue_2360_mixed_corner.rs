@@ -75,7 +75,7 @@ fn key_of(e: EntityRef) -> ObjectRef {
     }
 }
 
-/// Every opt-in fix on (SolidCraft's set, WR-710's refusal among them).
+/// Every opt-in fix on (Torno's set, WR-710's refusal among them).
 fn kernel() -> Kernel {
     let mut k = Kernel::new(&KernelOptions::default());
     k.fixes = UpstreamFixes::all();

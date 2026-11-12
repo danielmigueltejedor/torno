@@ -1,6 +1,6 @@
 use super::*;
 use crate::scenario::Harness;
-use solidcraft_theme::Tokens;
+use torno_theme::Tokens;
 fn fixture() -> Harness {
     let mut h = Harness::new();
     h.call("ui.resize", json!({"width":1440,"height":1000}));
@@ -67,7 +67,7 @@ fn render_workspace_shot_and_scene_widgets_fit_inspector_content_width() {
                 crate::scenario::clear_handles();
                 let mut output = ctx.run_ui(egui::RawInput { screen_rect: Some(content.expand(8.0)), ..Default::default() }, |ui| {
                     ui.scope_builder(egui::UiBuilder::new().max_rect(content), |ui| {
-                        ui.painter().rect_filled(content, 0.0, solidcraft_theme::Tokens::get().dialog_body);
+                        ui.painter().rect_filled(content, 0.0, torno_theme::Tokens::get().dialog_body);
                         ui_kit::scope(ui, |ui| {
                             let preceding: std::collections::HashSet<_> = ctx.viewport(|vp| {
                                 vp.this_pass.widgets.layers().flat_map(|(_, widgets)| widgets.iter().map(|widget| widget.id)).collect()
@@ -101,7 +101,7 @@ fn render_workspace_shot_and_scene_widgets_fit_inspector_content_width() {
                 }
                 if frame == 2
                     && width == 350.0
-                    && let Some(dir) = std::env::var_os("SOLIDCRAFT_SHOT_LAYOUT_EVIDENCE")
+                    && let Some(dir) = std::env::var_os("TORNO_SHOT_LAYOUT_EVIDENCE")
                 {
                     std::fs::create_dir_all(&dir).unwrap();
                     ui_kit::test_raster(&ctx, output.shapes, output.pixels_per_point, content, &textures)
@@ -211,14 +211,14 @@ fn render_workspace_shot_camera_controls_save_undo_and_refuse_hostile_values() {
     setups::save(&mut h.app).unwrap();
     let name = h.app.render_workspace.view.name.clone();
     let before = h.app.session.doc.to_json();
-    let camera = solidcraft_viewport::Camera { yaw: 0.7, roll: 0.2, distance: 123.0, ..h.app.cam };
+    let camera = torno_viewport::Camera { yaw: 0.7, roll: 0.2, distance: 123.0, ..h.app.cam };
     super::super::shot::set_camera(&mut h.app, &name, camera).unwrap();
     assert_eq!(h.app.cam, camera);
     assert_eq!(h.app.session.doc.render.setups[&name].camera, camera);
     h.app.run("edit.undo", json!({})).unwrap();
     assert_eq!(h.app.session.doc.to_json(), before);
     for value in [f64::NAN, f64::INFINITY, f64::NEG_INFINITY, -1.0, 0.0, f64::MAX] {
-        let camera = solidcraft_viewport::Camera { distance: value, ..camera };
+        let camera = torno_viewport::Camera { distance: value, ..camera };
         assert!(super::super::shot::set_camera(&mut h.app, &name, camera).is_err());
         assert_eq!(h.app.session.doc.to_json(), before);
     }
@@ -226,11 +226,11 @@ fn render_workspace_shot_camera_controls_save_undo_and_refuse_hostile_values() {
 
 #[test]
 fn render_workspace_shot_lens_saves_only_lens_and_orthographic_keeps_faded_controls() {
-    use solidcraft_engine::doc::render_settings::RenderJob;
+    use torno_engine::doc::render_settings::RenderJob;
     let mut h = fixture();
     h.call("ui.resize", json!({"width":1600,"height":1800}));
     let name = "Lens shot";
-    let camera = solidcraft_viewport::Camera { fov: 0.6, ..h.app.cam };
+    let camera = torno_viewport::Camera { fov: 0.6, ..h.app.cam };
     h.app
         .run("render.settings.set", json!({"name":name,"set":{"camera":camera,"job":{"method":"gpu_path","options":{"samples":128,"seed":42}}}}))
         .unwrap();
@@ -273,7 +273,7 @@ fn inspector_dispatch_has_one_editor_per_selection_independent_of_every_stage() 
             let undo = (h.app.session.undo.len(), h.app.session.redo.len());
             for (selection, kind) in [
                 (RenderSelection::Nothing, "scene"),
-                (RenderSelection::Object(vec![solidcraft_engine::Sel::Body { name: "Subject".into() }]), "appearance"),
+                (RenderSelection::Object(vec![torno_engine::Sel::Body { name: "Subject".into() }]), "appearance"),
                 (RenderSelection::Environment, "environment"),
                 (RenderSelection::Lighting, "lighting"),
                 (RenderSelection::Light(light.clone()), "light"),
@@ -285,7 +285,7 @@ fn inspector_dispatch_has_one_editor_per_selection_independent_of_every_stage() 
                 (RenderSelection::Wear, "wear"),
             ] {
                 if let RenderSelection::Object(_) = &selection {
-                    h.app.run("select.set", json!({"items":[solidcraft_engine::Sel::Body { name: "Subject".into() }]})).unwrap();
+                    h.app.run("select.set", json!({"items":[torno_engine::Sel::Body { name: "Subject".into() }]})).unwrap();
                 } else {
                     let mut params = json!({"kind":if kind == "scene" { "nothing" } else { kind }});
                     if let RenderSelection::Light(id) | RenderSelection::Shot(id) = &selection {
@@ -364,7 +364,7 @@ fn numerical_editor_saves_before_switch_and_keeps_navigation_camera_explicit() {
 
 #[test]
 fn legacy_shot_switch_confirms_transient_inputs_and_current_shot_focus_preserves_them() {
-    use solidcraft_engine::render::job::ReflectionMode;
+    use torno_engine::render::job::ReflectionMode;
     for kind in ["glass", "maps", "cpu", "camera"] {
         let mut h = fixture();
         h.app.preferences.render_legacy_image_defaults = true;
@@ -474,7 +474,7 @@ fn complete_native_studio_can_be_reviewed_and_applied_from_real_ui_controls() {
 fn surface_stage_contains_preview_target_plane_repeat_angle_and_method_reason_in_order() {
     let mut h = fixture();
     h.call("ui.resize", json!({"width":1600,"height":1800}));
-    h.app.run("select.set", json!({"items":[solidcraft_engine::Sel::Body { name:"Subject".into() }]})).unwrap();
+    h.app.run("select.set", json!({"items":[torno_engine::Sel::Body { name:"Subject".into() }]})).unwrap();
     library::open_category(&mut h.app, "surfaces");
     h.frames(3);
     let before = h.app.session.doc.to_json();
@@ -499,7 +499,7 @@ fn surface_stage_contains_preview_target_plane_repeat_angle_and_method_reason_in
 fn stage_catalogs_fill_a_290_by_530_panel_and_keep_two_line_labels_inside_tiles() {
     use crate::{scenario, ui_kit};
     use egui::{Pos2, RawInput, Rect, vec2};
-    let previous_theme = solidcraft_theme::is_dark();
+    let previous_theme = torno_theme::is_dark();
     for dark in [false, true] {
         for (kind, selected, method, key) in [
             ("appearances", None, ImageMethod::Raster, "render:library:catalog"),
@@ -512,7 +512,7 @@ fn stage_catalogs_fill_a_290_by_530_panel_and_keep_two_line_labels_inside_tiles(
             let mut h = fixture();
             // Capture the font atlas from its first upload along with panel textures.
             h.ctx = crate::fonts::test_context();
-            solidcraft_theme::set_dark(dark);
+            torno_theme::set_dark(dark);
             h.ctx.set_visuals(if dark { egui::Visuals::dark() } else { egui::Visuals::light() });
             // A resizable 290 pt card needs the floating, wide-screen policy.
             h.app.ui.layout = crate::ui_kit::LayoutMode::Floating;
@@ -579,7 +579,7 @@ fn stage_catalogs_fill_a_290_by_530_panel_and_keep_two_line_labels_inside_tiles(
             }
             assert_eq!(h.app.session.doc.to_json(), document);
             assert_eq!((h.app.session.undo.len(), h.app.session.redo.len()), history);
-            if let Some(dir) = std::env::var_os("SOLIDCRAFT_STAGE_LAYOUT_EVIDENCE") {
+            if let Some(dir) = std::env::var_os("TORNO_STAGE_LAYOUT_EVIDENCE") {
                 std::fs::create_dir_all(&dir).unwrap();
                 let frame = output.unwrap();
                 let image = ui_kit::test_raster(&h.ctx, frame.shapes, frame.pixels_per_point, panel, &textures);
@@ -594,7 +594,7 @@ fn stage_catalogs_fill_a_290_by_530_panel_and_keep_two_line_labels_inside_tiles(
             }
         }
     }
-    solidcraft_theme::set_dark(previous_theme);
+    torno_theme::set_dark(previous_theme);
 }
 
 #[test]
@@ -785,7 +785,7 @@ fn surface_target_dropdown_keeps_the_chosen_body_through_review() {
     let mut h = fixture();
     h.call("ui.resize", json!({"width":1600,"height":1800}));
     h.app.run("solid.box", json!({"length":5,"width":5,"height":5,"body_name":"Other"})).unwrap();
-    h.app.run("select.set", json!({"items":[solidcraft_engine::Sel::Body { name:"Subject".into() }]})).unwrap();
+    h.app.run("select.set", json!({"items":[torno_engine::Sel::Body { name:"Subject".into() }]})).unwrap();
     library::open_category(&mut h.app, "surfaces");
     h.frames(3);
     h.step(&json!({"click":{"handle":"render:library:SURF-001"}})).unwrap();
@@ -857,7 +857,7 @@ fn resolution_lock_reanchors_for_explicit_presets_and_does_not_affect_other_inte
 
 #[test]
 fn output_dimensions_preserve_legacy_size_until_an_explicit_bounded_edit() {
-    use solidcraft_engine::render::job::CpuBudget;
+    use torno_engine::render::job::CpuBudget;
     for (width, height, field) in [(16384, 1, "render:output-width"), (1, 16384, "render:output-height")] {
         let mut h = fixture();
         h.call("ui.resize", json!({"width":1440,"height":1600}));
@@ -933,7 +933,7 @@ fn output_dimensions_preserve_legacy_size_until_an_explicit_bounded_edit() {
 #[cfg(not(target_arch = "wasm32"))]
 #[test]
 fn native_cpu_legacy_dimensions_remain_checkable_renderable_and_saveable_with_bounded_new_choices() {
-    use solidcraft_engine::render::job::{CpuBudget, CpuHost, MAX_OUTPUT_DIMENSION, MAX_OUTPUT_PIXELS};
+    use torno_engine::render::job::{CpuBudget, CpuHost, MAX_OUTPUT_DIMENSION, MAX_OUTPUT_PIXELS};
     // Exercise both legacy side limits and a native pixel count above the new
     // output envelope, including progressive sampling and explicit identity output.
     for (width, height, progressive, identity_output) in [(16384, 1, false, false), (1, 16384, true, true), (8192, 8192, true, false)] {
@@ -1209,7 +1209,7 @@ fn ribbon_navigation_reuses_inspector_and_preserves_exact_unsaved_intent() {
         assert_eq!((h.app.session.revision, h.app.session.undo.len(), h.app.session.redo.len()), history);
         assert!(h.app.render_workspace.view.job.is_none());
         assert!(h.app.render_workspace.view.completed.is_none());
-        assert!(!crate::icon_svg::resolve(solidcraft_engine::find_command(id).unwrap().icon).placeholder);
+        assert!(!crate::icon_svg::resolve(torno_engine::find_command(id).unwrap().icon).placeholder);
     }
 }
 
@@ -1248,7 +1248,7 @@ fn ribbon_and_sticky_footer_submit_the_current_draft_not_defaults_or_saved_shot(
     h.app.render_workspace.view.draft.height = 24;
     h.app.render_workspace.view.draft.background = [24, 63, 107];
     let before = h.app.session.doc.to_json();
-    let export = solidcraft_engine::find_command("render.export").unwrap();
+    let export = torno_engine::find_command("render.export").unwrap();
     assert!(!super::super::interactive_command_info(&h.app, export).enabled);
     assert!(export.info(&h.app.session).enabled, "UI state must not alter direct engine API semantics");
     h.app.start("render.preflight");
@@ -1273,7 +1273,7 @@ fn ribbon_and_sticky_footer_submit_the_current_draft_not_defaults_or_saved_shot(
 
 #[test]
 fn saved_bloom_intent_roundtrips_and_rejects_unsupported_transparent_output() {
-    use solidcraft_engine::render::job::bloom::Bloom;
+    use torno_engine::render::job::bloom::Bloom;
     let mut h = fixture();
     super::super::select_image_method(&mut h.app, ImageMethod::GpuRaytrace);
     h.app.render_workspace.view.studio.finishing.bloom = Some(Bloom { strength: 0.25, threshold: 2.5, radius: 12 });
@@ -1282,7 +1282,7 @@ fn saved_bloom_intent_roundtrips_and_rejects_unsupported_transparent_output() {
     h.app.render_workspace.view.studio.finishing.bloom = None;
     setups::load(&mut h.app);
     assert_eq!(setups::snapshot(&h.app).unwrap(), expected);
-    let reopened = solidcraft_engine::doc::Document::from_json(&h.app.session.doc.to_json()).unwrap();
+    let reopened = torno_engine::doc::Document::from_json(&h.app.session.doc.to_json()).unwrap();
     assert_eq!(reopened.render.setups[&h.app.render_workspace.view.name], expected);
     h.app.render_workspace.view.transparent = true;
     assert!(setups::snapshot(&h.app).is_err());
@@ -1297,7 +1297,7 @@ fn ribbon_frame_preserves_explicit_roll_world_up_and_saved_view_authority() {
     h.app.cam.roll = 0.37;
     h.app.cam.yaw = 0.21;
     h.app.cam.pitch = 0.43;
-    h.app.cam.up = solidcraft_viewport::UpAxis::Y;
+    h.app.cam.up = torno_viewport::UpAxis::Y;
     let orientation = (h.app.cam.roll, h.app.cam.yaw, h.app.cam.pitch, h.app.cam.up);
     let document = h.app.session.doc.to_json();
     let undo = h.app.session.undo.len();
@@ -1311,7 +1311,7 @@ fn ribbon_frame_preserves_explicit_roll_world_up_and_saved_view_authority() {
 
 #[test]
 fn independent_sampling_and_volume_intent_roundtrip_offline_without_silent_conflict_repairs() {
-    use solidcraft_engine::render::job::{adaptive::AdaptiveSampling, volume::HomogeneousVolume};
+    use torno_engine::render::job::{adaptive::AdaptiveSampling, volume::HomogeneousVolume};
     let mut h = fixture();
     super::super::select_image_method(&mut h.app, ImageMethod::GpuRaytrace);
     h.app.render_workspace.view.samples = 64;
@@ -1331,7 +1331,7 @@ fn independent_sampling_and_volume_intent_roundtrip_offline_without_silent_confl
     h.app.render_workspace.view.studio.volume = None;
     setups::load(&mut h.app);
     assert_eq!(setups::snapshot(&h.app).unwrap(), expected);
-    let reopened = solidcraft_engine::doc::Document::from_json(&h.app.session.doc.to_json()).unwrap();
+    let reopened = torno_engine::doc::Document::from_json(&h.app.session.doc.to_json()).unwrap();
     assert_eq!(reopened.render.setups[&h.app.render_workspace.view.name], expected);
     let original = h.app.session.doc.to_json();
     h.app.render_workspace.view.studio.denoise = true;
@@ -1355,7 +1355,7 @@ fn independent_sampling_and_volume_intent_roundtrip_offline_without_silent_confl
 #[test]
 fn master_regrade_requires_a_retained_master_instead_of_reconstructing_a_png() {
     let mut h = fixture();
-    let spec = solidcraft_engine::find_command("render.result.regrade").unwrap();
+    let spec = torno_engine::find_command("render.result.regrade").unwrap();
     assert!(spec.info(&h.app.session).enabled, "direct API is validated by exact explicit source identity");
     assert!(!super::super::interactive_command_info(&h.app, spec).enabled);
     let document = h.app.session.doc.to_json();
@@ -1401,7 +1401,7 @@ fn public_render_inspection_exposes_exact_identities_without_execution_or_docume
 
 #[test]
 fn aging_tab_adds_reorders_disables_and_persists_layers_without_engineering_edits() {
-    use solidcraft_engine::render::job::aging::AgingKind;
+    use torno_engine::render::job::aging::AgingKind;
     for method in [ImageMethod::CpuRaytrace, ImageMethod::GpuRaytrace] {
         let mut h = fixture();
         super::super::select_image_method(&mut h.app, method);
@@ -1409,7 +1409,7 @@ fn aging_tab_adds_reorders_disables_and_persists_layers_without_engineering_edit
         h.app.start("render.aging.describe");
         h.frames(3);
         assert_eq!(selected_editor(&h.app), Editor::Wear);
-        assert!(!crate::icon_svg::resolve(solidcraft_engine::find_command("render.aging.describe").unwrap().icon).placeholder);
+        assert!(!crate::icon_svg::resolve(torno_engine::find_command("render.aging.describe").unwrap().icon).placeholder);
         for code in [1, 3] {
             h.step(&json!({"click":{"handle":"render:aging-add"}})).unwrap();
             h.frames(2);
@@ -1437,7 +1437,7 @@ fn aging_tab_adds_reorders_disables_and_persists_layers_without_engineering_edit
         h.app.render_workspace.view.studio.aging = Default::default();
         setups::load(&mut h.app);
         assert_eq!(setups::snapshot(&h.app).unwrap(), expected);
-        let reopened = solidcraft_engine::doc::Document::from_json(&h.app.session.doc.to_json()).unwrap();
+        let reopened = torno_engine::doc::Document::from_json(&h.app.session.doc.to_json()).unwrap();
         assert_eq!(reopened.render.setups[&h.app.render_workspace.view.name], expected);
         assert_eq!(h.app.render_workspace.view.studio.aging.get(0).unwrap().target.as_ref(), Some(&identity));
         h.step(&json!({"click":{"handle":"render:aging-remove"}})).unwrap();
@@ -1486,7 +1486,7 @@ fn wear_selection_precedes_output_page_and_appearance_selection_chrome() {
     for layout in [crate::ui_kit::LayoutMode::Docked, crate::ui_kit::LayoutMode::Floating] {
         let mut h = fixture();
         h.app.ui.layout = layout;
-        h.app.session.selection = vec![solidcraft_engine::Sel::Body { name: "Subject".into() }];
+        h.app.session.selection = vec![torno_engine::Sel::Body { name: "Subject".into() }];
         {
             let selection = super::super::object_selection(&h.app);
             super::super::selection_editor(&mut h.app, &selection);
@@ -1520,7 +1520,7 @@ fn wear_selection_precedes_output_page_and_appearance_selection_chrome() {
         h.app.run("view.render_select", json!({"kind":"nothing"})).unwrap();
         // Clearing semantic focus opens Scene; choose Appearance to test its header recovery.
         assert_eq!(selected_editor(&h.app), Editor::Scene);
-        h.app.session.selection = vec![solidcraft_engine::Sel::Body { name: "Subject".into() }];
+        h.app.session.selection = vec![torno_engine::Sel::Body { name: "Subject".into() }];
         {
             let selection = super::super::object_selection(&h.app);
             super::super::selection_editor(&mut h.app, &selection);
@@ -1538,7 +1538,7 @@ fn wear_selection_precedes_output_page_and_appearance_selection_chrome() {
 
 #[test]
 fn wear_selection_shows_disabled_controls_with_reason_and_never_changes_method() {
-    use solidcraft_engine::render::job::aging::{AgingKind, AgingLayer};
+    use torno_engine::render::job::aging::{AgingKind, AgingLayer};
     fn text_color(shape: &egui::Shape, label: &str) -> Option<egui::Color32> {
         match shape {
             egui::Shape::Text(text) if text.galley.text().to_lowercase().contains(&label.to_lowercase()) => Some(text.fallback_color),
@@ -1585,7 +1585,7 @@ fn wear_selection_shows_disabled_controls_with_reason_and_never_changes_method()
 
 #[test]
 fn wear_editor_bounds_stale_selection_and_hostile_layer_values_never_panic() {
-    use solidcraft_engine::render::job::aging::{AgingKind, AgingLayer};
+    use torno_engine::render::job::aging::{AgingKind, AgingLayer};
     let mut h = fixture();
     h.app.render_workspace.view.method = ImageMethod::GpuRaytrace;
     h.app.run("view.render_select", json!({"kind":"wear"})).unwrap();
@@ -1613,7 +1613,7 @@ fn wear_editor_bounds_stale_selection_and_hostile_layer_values_never_panic() {
     h.step(&json!({"click":{"handle":"render:aging-remove"}})).unwrap();
     assert!(h.app.render_workspace.view.studio.aging.is_empty());
     let saved = &h.app.session.doc.render.setups[&h.app.render_workspace.view.name];
-    assert!(matches!(&saved.job, Some(solidcraft_engine::doc::render_settings::RenderJob::GpuPath { options, .. }) if options.aging.is_empty()));
+    assert!(matches!(&saved.job, Some(torno_engine::doc::render_settings::RenderJob::GpuPath { options, .. }) if options.aging.is_empty()));
     assert_eq!(h.app.session.doc.features, model);
     assert_eq!(h.app.session.undo.len(), undo + 1, "removing an invalid layer saves one corrective command");
     h.frames(3);
@@ -1622,7 +1622,7 @@ fn wear_editor_bounds_stale_selection_and_hostile_layer_values_never_panic() {
 
 #[test]
 fn output_effects_retains_ordered_looks_and_photographic_intent_across_save_and_reload() {
-    use solidcraft_engine::render::job::looks::LookKind;
+    use torno_engine::render::job::looks::LookKind;
     let mut h = fixture();
     super::super::select_image_method(&mut h.app, ImageMethod::GpuRaytrace);
     let before = h.app.session.doc.to_json();
@@ -1699,7 +1699,7 @@ fn clearing_physical_stage_preserves_unsaved_camera_background_and_output_intent
     h.app.render_workspace.view.draft.height = 239;
     h.app.render_workspace.view.draft.exposure_ev = 1.25;
     h.app.render_workspace.view.studio.backdrop_enabled = true;
-    h.app.render_workspace.view.studio.backdrop.mode = solidcraft_engine::render::job::finishing::BackdropMode::Radial;
+    h.app.render_workspace.view.studio.backdrop.mode = torno_engine::render::job::finishing::BackdropMode::Radial;
     h.app.render_workspace.view.studio.backdrop.center = [0.3, 0.6];
     h.app.render_workspace.view.dirty = true;
     let mut expected = setups::snapshot(&h.app).unwrap();
@@ -1718,22 +1718,22 @@ fn clearing_physical_stage_preserves_unsaved_camera_background_and_output_intent
     assert_eq!(h.app.session.doc.render.setups[&name], expected);
     assert_eq!(h.app.session.doc.features, geometry);
     assert_eq!(h.app.session.doc.materials, materials);
-    let reopened = solidcraft_engine::doc::Document::from_json(&h.app.session.doc.to_json()).unwrap();
+    let reopened = torno_engine::doc::Document::from_json(&h.app.session.doc.to_json()).unwrap();
     assert_eq!(reopened.render.setups[&name], expected);
 }
 
 #[test]
 fn render_camera_labels_do_not_shadow_mechanical_pitch_and_axes_remain_explicit() {
     crate::i18n::install();
-    let en = solidcraft_ui_text::Locale::for_language("en");
-    let de = solidcraft_ui_text::Locale::for_language("de");
+    let en = torno_ui_text::Locale::for_language("en");
+    let de = torno_ui_text::Locale::for_language("de");
     assert_eq!(de.label("Pitch"), "Steigung");
     assert_eq!(de.text("coupling.pitch"), "Steigung");
     assert_eq!(en.text("render.camera_pitch"), "Camera pitch");
     assert_ne!(en.text("render.camera_pitch"), en.text("coupling.pitch"));
     assert_eq!(de.text("render.camera_pitch"), "Kameraneigung");
     for locale in ["en", "de", "es", "ja", "zh"] {
-        let locale = solidcraft_ui_text::Locale::for_language(locale);
+        let locale = torno_ui_text::Locale::for_language(locale);
         assert_eq!(locale.text("material.editor.axes_numeric"), "1 / 2 / 3");
         assert_eq!(locale.text("material.editor.axes_wood"), "L / R / T");
     }
@@ -1744,7 +1744,7 @@ fn camera_draft_uses_render_command_and_keeps_saved_design_unchanged() {
     let mut h = fixture();
     let document = h.app.session.doc.to_json();
     let undo = h.app.session.undo.len();
-    for up in [solidcraft_viewport::UpAxis::Z, solidcraft_viewport::UpAxis::Y] {
+    for up in [torno_viewport::UpAxis::Z, torno_viewport::UpAxis::Y] {
         let mut camera = h.app.cam;
         camera.up = up;
         camera.roll = 0.41;
@@ -1783,7 +1783,7 @@ fn shots_strip_switch_keeps_numeric_edits_saved_and_opens_the_selected_shot() {
 
 #[test]
 fn output_sections_bloom_tone_and_grading_save_one_command_per_edit_without_starting() {
-    use solidcraft_engine::render::job::ToneMap;
+    use torno_engine::render::job::ToneMap;
     let mut h = fixture();
     h.call("ui.resize", json!({"width":1440,"height":3000}));
     super::super::select_image_method(&mut h.app, ImageMethod::GpuRaytrace);
@@ -1827,7 +1827,7 @@ fn output_sections_bloom_tone_and_grading_save_one_command_per_edit_without_star
 #[test]
 fn output_sections_check_report_copies_success_staleness_and_errors_through_platform_queue() {
     let mut h = fixture();
-    h.app.session.set_render_job_host(Some(solidcraft_engine::render::job::CpuHost::cooperative())).unwrap();
+    h.app.session.set_render_job_host(Some(torno_engine::render::job::CpuHost::cooperative())).unwrap();
     let doc = h.app.session.doc.clone();
     let state = (h.app.session.revision, h.app.session.undo.len(), h.app.session.redo.len(), h.app.session.is_dirty());
     super::super::ribbon::perform_job(&mut h.app, "render.preflight").unwrap();
@@ -1882,7 +1882,7 @@ fn output_sections_sizes_refuse_hostile_input_and_4k_follows_the_selected_budget
     assert!(reason.contains("4194304"));
     assert!(reason.contains("2730 × 1536"));
     super::super::select_image_method(&mut h.app, ImageMethod::CpuRaytrace);
-    h.app.render_workspace.view.raytrace.budget = solidcraft_engine::render::job::CpuBudget::Studio;
+    h.app.render_workspace.view.raytrace.budget = torno_engine::render::job::CpuBudget::Studio;
     h.frames(3);
     h.step(&json!({"click":{"handle":"render:preset:4k"}})).unwrap();
     assert_eq!((h.app.render_workspace.view.draft.width, h.app.render_workspace.view.draft.height), (3840, 2160));
@@ -1894,7 +1894,7 @@ fn output_sections_sizes_refuse_hostile_input_and_4k_follows_the_selected_budget
 /// has no profiles, the list and the refusal name CPU ray tracing with Studio; neither is selected.
 #[test]
 fn cpu_raster_refusing_a_size_names_the_method_and_profile_that_render_it() {
-    use solidcraft_engine::render::job::CpuBudget;
+    use torno_engine::render::job::CpuBudget;
     let mut h = fixture();
     assert_eq!(h.app.render_workspace.view.method, ImageMethod::Raster, "the default method is unchanged");
     let doc = h.app.session.doc.clone();
@@ -1917,7 +1917,7 @@ fn cpu_raster_refusing_a_size_names_the_method_and_profile_that_render_it() {
     assert!(!size_limit_reason(&h.app, 16384, 16384).contains("CPU resource profile"), "past Workstation no profile is named");
     assert_eq!(size_mark(&h.app, "fits", Some((2048, 2048))), None);
     h.app.preferences.language = "de".into();
-    let _language = solidcraft_ui_text::scope("de");
+    let _language = torno_ui_text::scope("de");
     assert!(super::super::image_request(&h.app).unwrap_err().contains("CPU-Ressourcenprofil Studio"));
 }
 
@@ -1926,7 +1926,7 @@ fn cpu_raster_refusing_a_size_names_the_method_and_profile_that_render_it() {
 /// Nothing switches the profile or the size; GPU path tracing shows no CPU profile.
 #[test]
 fn a_size_the_cpu_profile_refuses_names_the_profile_that_renders_it() {
-    use solidcraft_engine::render::job::CpuBudget;
+    use torno_engine::render::job::CpuBudget;
     let mut h = fixture();
     // This checks fixed CPU image limits; progressive has its separate camera-sample bound.
     h.app.preferences.render_legacy_image_defaults = true;
@@ -1979,14 +1979,14 @@ fn a_size_the_cpu_profile_refuses_names_the_profile_that_renders_it() {
 
     // Progressive sampling's camera-sample budget counts: 4K at 64 spp needs Studio too.
     h.app.render_workspace.view.raytrace.budget = CpuBudget::Compact;
-    h.app.render_workspace.view.raytrace.progressive = Some(solidcraft_engine::render::job::CpuProgressiveOptions { samples_per_pixel: 64, seed: 0 });
+    h.app.render_workspace.view.raytrace.progressive = Some(torno_engine::render::job::CpuProgressiveOptions { samples_per_pixel: 64, seed: 0 });
     assert_eq!(cpu::profile_for_size(&h.app, 3840, 2160), Some(CpuBudget::Studio));
     h.app.render_workspace.view.raytrace.progressive = None;
 
     // Translated: the profile is named as the profile selector names it.
     h.app.preferences.language = "ja".into();
     {
-        let _language = solidcraft_ui_text::scope("ja");
+        let _language = torno_ui_text::scope("ja");
         let reason = size_limit_reason(&h.app, 3840, 2160);
         assert!(reason.contains("CPUリソースプロファイル「スタジオ」"), "{reason}");
         assert_eq!(size_mark(&h.app, "4K UHD", Some((3840, 2160))).as_deref(), Some("4K UHD・「スタジオ」が必要"));
@@ -2045,7 +2045,7 @@ fn browser_shot_remove_keeps_confirmation_and_rejects_stale_actions() {
 fn appearance_inspector_targets_and_chain_follow_body_face_and_component() {
     use super::selection_appearance::{chains, inspected_look, targets};
     use solidcore_record::Vec3;
-    use solidcraft_engine::Sel;
+    use torno_engine::Sel;
     let mut h = Harness::new();
     h.app.run("component.create", json!({"name":"Part"})).unwrap();
     h.app.run("solid.box", json!({"body_name":"Subject","length":20,"width":15,"height":10})).unwrap();
@@ -2088,7 +2088,7 @@ fn appearance_inspector_targets_and_chain_follow_body_face_and_component() {
 #[test]
 fn appearance_inspector_all_users_replaces_exact_look_once_without_changing_mass() {
     use super::selection_appearance::{assign, chains, targets, users};
-    use solidcraft_engine::Sel;
+    use torno_engine::Sel;
     let mut h = fixture();
     h.app.run("solid.box", json!({"body_name":"Other","length":5,"width":5,"height":5,"corner":[30,0,0]})).unwrap();
     h.app.run("material.assign", json!({"bodies":["Subject","Other"],"material":"Steel"})).unwrap();
@@ -2122,7 +2122,7 @@ fn appearance_inspector_all_users_replaces_exact_look_once_without_changing_mass
     h.step(&json!({"click":{"handle":"render:stage:look"}})).unwrap();
     assert_eq!(selected_editor(&h.app), Editor::Appearance);
     let undo = h.app.session.undo.len();
-    h.step(&json!({"click":{"handle":format!("dialog:{}:{}", h.app.tr("render.inspector_applies_to"), solidcraft_ui_text::format("render.inspector_all_users", &[("count", "2")]))}}))
+    h.step(&json!({"click":{"handle":format!("dialog:{}:{}", h.app.tr("render.inspector_applies_to"), torno_ui_text::format("render.inspector_all_users", &[("count", "2")]))}}))
         .unwrap();
     h.step(&json!({"click":{"handle":"render:appearance:preview:replace"}})).unwrap();
     h.step(&json!({"click":{"handle":"dialog: search"}})).unwrap();
@@ -2145,7 +2145,7 @@ fn appearance_inspector_all_users_replaces_exact_look_once_without_changing_mass
 #[test]
 fn appearance_inspector_finish_presets_mixed_set_all_and_clear_use_existing_assignments() {
     use super::selection_appearance::{assign, chains, clear, finish, mixed, targets};
-    use solidcraft_engine::{Sel, doc::appearance::Look};
+    use torno_engine::{Sel, doc::appearance::Look};
     let mut h = fixture();
     h.app.run("solid.box", json!({"body_name":"Other","length":5,"width":5,"height":5,"corner":[30,0,0]})).unwrap();
     h.app.run("material.assign", json!({"bodies":["Subject","Other"],"material":"Steel"})).unwrap();
@@ -2185,7 +2185,7 @@ fn appearance_inspector_finish_presets_mixed_set_all_and_clear_use_existing_assi
 #[test]
 fn appearance_inspector_real_controls_switch_targets_inspect_chain_and_edit_finish() {
     use solidcore_record::Vec3;
-    use solidcraft_engine::Sel;
+    use torno_engine::Sel;
     let mut h = fixture();
     h.app.run("appearance.assign", json!({"bodies":["Subject"],"appearance":"ABS - Red"})).unwrap();
     let face = h.app.run("model.faces", json!({"body":"Subject"})).unwrap()["faces"]
@@ -2239,7 +2239,7 @@ fn appearance_inspector_real_controls_switch_targets_inspect_chain_and_edit_fini
 
 #[test]
 fn appearance_inspector_mixed_fields_are_inert_until_edited_and_accept_the_first_value() {
-    use solidcraft_engine::Sel;
+    use torno_engine::Sel;
     let mut h = fixture();
     h.app.run("solid.box", json!({"body_name":"Other","length":5,"width":5,"height":5,"corner":[30,0,0]})).unwrap();
     for (name, opacity) in [("Subject", 0.25), ("Other", 0.75)] {
@@ -2279,7 +2279,7 @@ fn appearance_inspector_mixed_fields_are_inert_until_edited_and_accept_the_first
 
 #[test]
 fn appearance_inspector_optical_colour_and_opacity_edits_commit_once_with_shared_bounds() {
-    use solidcraft_engine::Sel;
+    use torno_engine::Sel;
     let mut h = fixture();
     h.app
         .run(
@@ -2331,7 +2331,7 @@ fn appearance_inspector_optical_colour_and_opacity_edits_commit_once_with_shared
 
 #[test]
 fn appearance_inspector_hex_edits_validate_and_commit_once() {
-    use solidcraft_engine::Sel;
+    use torno_engine::Sel;
     let mut h = fixture();
     h.app.run("appearance.assign", json!({"bodies":["Subject"],"appearance":"ABS - Red"})).unwrap();
     h.app.session.selection = vec![Sel::Body { name: "Subject".into() }];
@@ -2389,7 +2389,7 @@ fn appearance_picker_paste(h: &mut Harness, text: &str) {
 
 #[test]
 fn appearance_inspector_shared_picker_preserves_exact_opacity_and_commits_alpha() {
-    use solidcraft_engine::Sel;
+    use torno_engine::Sel;
     let mut h = fixture();
     h.app.run("appearance.assign", json!({"bodies":["Subject"],"color":"#abcdef","opacity":0.123456,"appearance":"Tint"})).unwrap();
     h.app.session.selection = vec![Sel::Body { name: "Subject".into() }];
@@ -2441,7 +2441,7 @@ fn appearance_inspector_shared_picker_preserves_exact_opacity_and_commits_alpha(
 
 #[test]
 fn appearance_inspector_shared_picker_pbr_rejects_nonopaque_alpha() {
-    use solidcraft_engine::Sel;
+    use torno_engine::Sel;
     let mut h = fixture();
     h.app
         .run("appearance.assign", json!({"bodies":["Subject"],"color":"#123456", "pbr":{"metallic":0.2,"roughness":0.4,"dielectric_ior":1.6}}))
@@ -2475,7 +2475,7 @@ fn appearance_inspector_shared_picker_pbr_rejects_nonopaque_alpha() {
 
 #[test]
 fn appearance_inspector_shared_picker_has_no_outer_hex_editor_and_keeps_mixed_values_visible() {
-    use solidcraft_engine::Sel;
+    use torno_engine::Sel;
     let mut h = fixture();
     h.app.run("solid.box", json!({"body_name":"Other","length":5,"width":5,"height":5,"corner":[30,0,0]})).unwrap();
     for (body, color) in [("Subject", "#123456"), ("Other", "#abcdef")] {
@@ -2512,7 +2512,7 @@ fn appearance_inspector_shared_picker_has_no_outer_hex_editor_and_keeps_mixed_va
 #[test]
 fn appearance_inspector_component_and_face_overrides_remove_to_material_from_real_controls() {
     use solidcore_record::Vec3;
-    use solidcraft_engine::Sel;
+    use torno_engine::Sel;
     let mut h = Harness::new();
     h.call("ui.resize", json!({"width":1440,"height":1000}));
     h.app.run("component.create", json!({"name":"Part"})).unwrap();
@@ -2566,7 +2566,7 @@ fn appearance_inspector_component_and_face_overrides_remove_to_material_from_rea
 
 // Opt-in evidence from the actual application UI, without requiring a window server.
 fn appearance_inspector_capture(h: &mut Harness, name: &str) {
-    let Some(dir) = std::env::var_os("SOLIDCRAFT_INSPECTOR_EVIDENCE") else { return };
+    let Some(dir) = std::env::var_os("TORNO_INSPECTOR_EVIDENCE") else { return };
     std::fs::create_dir_all(&dir).unwrap();
     for dark in [false, true] {
         h.app.preferences.theme = if dark { "dark" } else { "light" }.into();
@@ -2612,7 +2612,7 @@ fn appearance_inspector_capture(h: &mut Harness, name: &str) {
 
 #[test]
 fn appearance_inspector_approved_layout_is_305_wide_and_preserves_stage_bounds() {
-    use solidcraft_engine::Sel;
+    use torno_engine::Sel;
     let mut h = fixture();
     h.app.run("solid.box", json!({"body_name":"Boss","length":10,"width":10,"height":10,"corner":[30,0,0]})).unwrap();
     h.app.run("appearance.assign", json!({"bodies":["Boss","Subject"],"appearance":"Aluminum - Anodized Blue"})).unwrap();
@@ -2636,7 +2636,7 @@ fn appearance_inspector_approved_layout_is_305_wide_and_preserves_stage_bounds()
     assert!((inspector.width() - 305.0).abs() <= 1.0, "{inspector:?}");
     assert!((inspector.top() - browser.top()).abs() <= 1.0);
     assert!(inspector.bottom() < shots.top());
-    assert!(h.widget(&solidcraft_ui_text::format("render.inspector_all_users", &[("count", "2")])).is_some());
+    assert!(h.widget(&torno_ui_text::format("render.inspector_all_users", &[("count", "2")])).is_some());
     assert!(h.widget(h.app.tr("render.inspector_save_library")).is_some());
     assert_eq!(h.app.session.doc.to_json(), before);
     assert_eq!(h.app.session.undo.len(), undo);
@@ -2654,7 +2654,7 @@ fn appearance_inspector_approved_layout_is_305_wide_and_preserves_stage_bounds()
 
 #[test]
 fn appearance_editor_e2_sections_are_ordered_collapsed_and_expand_for_each_method() {
-    use solidcraft_engine::Sel;
+    use torno_engine::Sel;
     let mut h = fixture();
     h.call("ui.resize", json!({"width":1440,"height":4000}));
     h.app.preferences.render_inspector_width = 308.0;
@@ -2861,7 +2861,7 @@ fn output_children_select_their_editor_with_all_sections_in_design_order() {
 
 #[test]
 fn appearance_editor_reset_restores_each_picked_saved_look() {
-    use solidcraft_engine::Sel;
+    use torno_engine::Sel;
     let mut h = fixture();
     h.app.run("appearance.assign", json!({"bodies":["Subject"],"appearance":"ABS - Red"})).unwrap();
     h.app.session.selection = vec![Sel::Body { name: "Subject".into() }];
@@ -2873,7 +2873,7 @@ fn appearance_editor_reset_restores_each_picked_saved_look() {
     h.frames(3);
     let saved = h.app.session.doc.appearances.bodies["Subject"].clone();
     let target = selection_appearance::targets(&h.app, ui_kit::LookStep::Body);
-    let changed = solidcraft_engine::doc::appearance::Look::custom([10, 20, 30], 0.3);
+    let changed = torno_engine::doc::appearance::Look::custom([10, 20, 30], 0.3);
     selection_appearance::assign(&mut h.app, &target, &saved, &changed, false).unwrap();
     h.frames(3);
     selection_appearance::reset(&mut h.app);
@@ -2882,7 +2882,7 @@ fn appearance_editor_reset_restores_each_picked_saved_look() {
 
 #[test]
 fn appearance_editor_saved_optics_removal_confirms_and_preserves_other_drafts() {
-    use solidcraft_engine::Sel;
+    use torno_engine::Sel;
     let mut h = fixture();
     h.call("ui.resize", json!({"width":1440,"height":2200}));
     h.app.render_workspace.view.method = ImageMethod::GpuRaytrace;
@@ -2930,7 +2930,7 @@ fn appearance_editor_saved_optics_removal_confirms_and_preserves_other_drafts() 
 
 #[test]
 fn appearance_editor_save_optics_keeps_other_temporary_bindings() {
-    use solidcraft_engine::Sel;
+    use torno_engine::Sel;
     let mut h = fixture();
     h.call("ui.resize", json!({"width":1440,"height":2600}));
     h.app.run("solid.box", json!({"body_name":"Other","length":5,"width":5,"height":5,"corner":[30,0,0]})).unwrap();
@@ -3020,7 +3020,7 @@ fn output_children_check_diagnostics_are_collapsed_and_copy_the_current_request(
     let mut h = fixture();
     setups::save(&mut h.app).unwrap();
     h.call("ui.resize", json!({"width":1440,"height":3000}));
-    h.app.session.set_render_job_host(Some(solidcraft_engine::render::job::CpuHost::cooperative())).unwrap();
+    h.app.session.set_render_job_host(Some(torno_engine::render::job::CpuHost::cooperative())).unwrap();
     h.app.pending_fit = None;
     h.app.cancel_view_animation();
     h.app.run("view.render_select", json!({"kind":"check"})).unwrap();
@@ -3102,12 +3102,12 @@ mod quality_button_contract {
             assert_eq!((h.app.session.revision, h.app.session.undo.len()), (history.0 + 1, history.1 + 1));
             let mut after = setups::snapshot(&h.app).unwrap();
             assert_eq!((after.width, after.height), (width, height));
-            let solidcraft_engine::doc::render_settings::RenderJob::GpuPath { options, .. } = after.job.as_mut().unwrap() else {
+            let torno_engine::doc::render_settings::RenderJob::GpuPath { options, .. } = after.job.as_mut().unwrap() else {
                 panic!("GPU budget must keep its method")
             };
             assert_eq!((options.samples, options.max_depth, options.seed, options.denoise), (samples, depth, 21026, denoise));
             // Normalise only the advertised fields: every other authored setting must survive.
-            let solidcraft_engine::doc::render_settings::RenderJob::GpuPath { options: old, .. } = before.job.as_ref().unwrap() else {
+            let torno_engine::doc::render_settings::RenderJob::GpuPath { options: old, .. } = before.job.as_ref().unwrap() else {
                 panic!("GPU fixture")
             };
             (options.samples, options.max_depth, options.seed, options.denoise) = (old.samples, old.max_depth, old.seed, old.denoise);
@@ -3329,7 +3329,7 @@ mod quality_button_contract {
 
     #[test]
     fn incompatible_quality_budget_restores_the_entire_valid_draft_and_saved_baseline() {
-        use solidcraft_engine::render::job::adaptive::AdaptiveSampling;
+        use torno_engine::render::job::adaptive::AdaptiveSampling;
         let mut h = gpu_fixture();
         h.app.render_workspace.view.samples = 512;
         h.app.render_workspace.view.studio.adaptive = Some(AdaptiveSampling { min_samples: 128, ..Default::default() });
@@ -3361,14 +3361,14 @@ fn explicit_shot_thumbnail_restores_saved_cameras_and_keeps_dirty_current_shot_c
     h.app.render_workspace.view.live_paused = true;
     super::super::select_image_method(&mut h.app, ImageMethod::GpuRaytrace);
     h.app.render_workspace.view.name = "A".into();
-    let saved_a = solidcraft_viewport::Camera { fov: 0.6, distance: 123.0, yaw: 0.7, roll: 0.2, ..h.app.cam };
+    let saved_a = torno_viewport::Camera { fov: 0.6, distance: 123.0, yaw: 0.7, roll: 0.2, ..h.app.cam };
     apply_camera_draft(&mut h.app, saved_a).unwrap();
     setups::save(&mut h.app).unwrap();
-    let saved_b = solidcraft_viewport::Camera { fov: 0.8, distance: 170.0, yaw: -0.2, up: solidcraft_viewport::UpAxis::Y, ..saved_a };
+    let saved_b = torno_viewport::Camera { fov: 0.8, distance: 170.0, yaw: -0.2, up: torno_viewport::UpAxis::Y, ..saved_a };
     h.app.run("render.settings.set", json!({"name":"B","set":{"camera":saved_b,"width":321,"job":{"method":"gpu_path"}}})).unwrap();
     let document = h.app.session.doc.clone();
     let history = (h.app.session.revision, h.app.session.undo.len(), h.app.session.redo.len());
-    let navigated = solidcraft_viewport::Camera { yaw: saved_a.yaw + 0.25, ..saved_a };
+    let navigated = torno_viewport::Camera { yaw: saved_a.yaw + 0.25, ..saved_a };
     apply_camera_draft(&mut h.app, navigated).unwrap();
     h.frames(3);
     h.app.run("view.render_select", json!({"kind":"shot","id":"A"})).unwrap();
@@ -3412,7 +3412,7 @@ fn saved_numeric_reload_and_undo_do_not_activate_a_shot_camera() {
     setups::save(&mut h.app).unwrap();
     let name = h.app.render_workspace.view.name.clone();
     let saved = h.app.session.doc.render.setups[&name].clone();
-    let navigation = solidcraft_viewport::Camera { yaw: h.app.cam.yaw + 0.4, distance: h.app.cam.distance * 1.2, ..h.app.cam };
+    let navigation = torno_viewport::Camera { yaw: h.app.cam.yaw + 0.4, distance: h.app.cam.distance * 1.2, ..h.app.cam };
     apply_camera_draft(&mut h.app, navigation).unwrap();
     let before = setups::draft(&h.app).unwrap();
     h.app.render_workspace.view.draft.width = 513;
@@ -3430,15 +3430,15 @@ fn saved_numeric_reload_and_undo_do_not_activate_a_shot_camera() {
 
 #[test]
 fn physical_tree_shot_activation_pairs_saved_cpu_lens_with_its_perspective_camera() {
-    use solidcraft_engine::render::job::ThinLens;
+    use torno_engine::render::job::ThinLens;
     let mut h = fixture();
     h.call("ui.resize", json!({"width":1600,"height":1800}));
     h.app.render_workspace.view.live_paused = true;
     super::super::select_image_method(&mut h.app, ImageMethod::Raster);
     h.app.render_workspace.view.name = "A".into();
-    apply_camera_draft(&mut h.app, solidcraft_viewport::Camera::default()).unwrap();
+    apply_camera_draft(&mut h.app, torno_viewport::Camera::default()).unwrap();
     setups::save(&mut h.app).unwrap();
-    let camera = solidcraft_viewport::Camera { fov: 35f64.to_radians(), distance: 168.6, ..h.app.cam };
+    let camera = torno_viewport::Camera { fov: 35f64.to_radians(), distance: 168.6, ..h.app.cam };
     let lens = ThinLens { aperture_radius_mm: 1.0, focus_distance_mm: 168.6 };
     h.app
         .run(
@@ -3468,14 +3468,14 @@ fn physical_tree_shot_activation_pairs_saved_cpu_lens_with_its_perspective_camer
 
 #[test]
 fn explicit_revert_and_restore_clean_only_the_saved_camera_and_keep_real_numeric_and_runtime_edits() {
-    use solidcraft_engine::render::job::ReflectionMode;
+    use torno_engine::render::job::ReflectionMode;
     for through_shot in [false, true] {
         for kind in ["clean", "numeric", "runtime"] {
             let mut h = fixture();
             h.app.render_workspace.view.live_paused = true;
             super::super::select_image_method(&mut h.app, ImageMethod::CpuRaytrace);
             h.app.render_workspace.view.name = "A".into();
-            let camera = solidcraft_viewport::Camera { fov: 0.6, distance: 168.6, ..h.app.cam };
+            let camera = torno_viewport::Camera { fov: 0.6, distance: 168.6, ..h.app.cam };
             apply_camera_draft(&mut h.app, camera).unwrap();
             setups::save(&mut h.app).unwrap();
             h.app.run("render.settings.set", json!({"name":"B","set":{"job":{"method":"raster"}}})).unwrap();
@@ -3522,7 +3522,7 @@ fn explicit_revert_and_restore_clean_only_the_saved_camera_and_keep_real_numeric
 fn scene_all_shots_readiness_uses_saved_shot_and_limit_reasons_without_starting_on_paint() {
     let mut h = fixture();
     h.app.render_workspace.view.live_paused = true;
-    let host = solidcraft_engine::render::job::CpuHost::cooperative();
+    let host = torno_engine::render::job::CpuHost::cooperative();
     h.app.session.set_render_job_host(Some(host.clone())).unwrap();
     super::super::select_image_method(&mut h.app, ImageMethod::Raster);
     h.call("ui.resize", json!({"width":1600,"height":2200}));
@@ -3582,8 +3582,8 @@ fn scene_all_shots_readiness_uses_saved_shot_and_limit_reasons_without_starting_
 
 #[test]
 fn composed_cpu_environment_and_output_alpha_edits_preserve_gi_filter_and_master_flags() {
-    use solidcraft_engine::doc::render_settings::RenderJob;
-    use solidcraft_engine::render::job::CpuPathOptions;
+    use torno_engine::doc::render_settings::RenderJob;
+    use torno_engine::render::job::CpuPathOptions;
     let mut h = fixture();
     h.call("ui.resize", json!({"width":1440,"height":1600}));
     h.app.render_workspace.view.live_paused = true;
@@ -3630,8 +3630,8 @@ fn composed_cpu_environment_and_output_alpha_edits_preserve_gi_filter_and_master
 
 mod cpu_quality_button_contract {
     use super::*;
-    use solidcraft_engine::doc::render_settings::{RenderJob, RenderSetup};
-    use solidcraft_engine::render::job::{CpuBudget, CpuProgressiveOptions, adaptive::AdaptiveSampling};
+    use torno_engine::doc::render_settings::{RenderJob, RenderSetup};
+    use torno_engine::render::job::{CpuBudget, CpuProgressiveOptions, adaptive::AdaptiveSampling};
 
     fn cpu_fixture(indirect: bool) -> Harness {
         let mut h = fixture();
@@ -3743,10 +3743,10 @@ mod cpu_quality_button_contract {
             h.app.run("edit.redo", json!({})).unwrap();
             setups::sync_revision(&mut h.app);
             assert_eq!(h.app.session.doc.render.setups["CPU costs"], expected);
-            let bytes = solidcraft_engine::io::write_design_container(&h.app.session.doc).unwrap();
-            let reopened = solidcraft_engine::io::read_design(&bytes).unwrap();
+            let bytes = torno_engine::io::write_design_container(&h.app.session.doc).unwrap();
+            let reopened = torno_engine::io::read_design(&bytes).unwrap();
             assert_eq!(reopened.render.setups["CPU costs"], expected);
-            h.app.session = solidcraft_engine::Session::new(reopened);
+            h.app.session = torno_engine::Session::new(reopened);
             crate::render_workspace::reset_document(&mut h.app);
             h.app.render_workspace.view.name = "CPU costs".into();
             h.app.render_workspace.view.live_paused = true;
@@ -3776,8 +3776,8 @@ mod cpu_quality_button_contract {
         assert_eq!(h.app.cam, camera);
         assert_eq!(h.app.session.undo.len(), undo + 1);
         assert!(h.app.render_workspace.view.job.is_none());
-        let bytes = solidcraft_engine::io::write_design_container(&h.app.session.doc).unwrap();
-        assert_eq!(solidcraft_engine::io::read_design(&bytes).unwrap().render.setups["CPU costs"], expected);
+        let bytes = torno_engine::io::write_design_container(&h.app.session.doc).unwrap();
+        assert_eq!(torno_engine::io::read_design(&bytes).unwrap().render.setups["CPU costs"], expected);
     }
 
     #[test]
@@ -3929,7 +3929,7 @@ fn cpu_glass_transport_offers_explicit_path_adoption_and_never_shows_gpu_strata_
         assert_eq!(h.app.render_workspace.view.raytrace.primary_samples, 1);
         let adopted = h.app.session.doc.clone();
         let saved = &adopted.render.setups[&h.app.render_workspace.view.name];
-        let Some(solidcraft_engine::doc::render_settings::RenderJob::CpuRaytrace { options, .. }) = &mut expected.job else {
+        let Some(torno_engine::doc::render_settings::RenderJob::CpuRaytrace { options, .. }) = &mut expected.job else {
             panic!("CPU intent missing")
         };
         options.progressive = Some(Default::default());
@@ -3944,7 +3944,7 @@ fn cpu_glass_transport_offers_explicit_path_adoption_and_never_shows_gpu_strata_
         assert!(h.app.render_workspace.view.job.is_none());
         let completed = h.app.session.doc.clone();
         let saved = &completed.render.setups[&h.app.render_workspace.view.name];
-        let Some(solidcraft_engine::doc::render_settings::RenderJob::CpuRaytrace { options, .. }) = &mut expected.job else {
+        let Some(torno_engine::doc::render_settings::RenderJob::CpuRaytrace { options, .. }) = &mut expected.job else {
             panic!("CPU intent missing")
         };
         options.path = Some(Default::default());
@@ -3965,7 +3965,7 @@ fn cpu_glass_transport_offers_explicit_path_adoption_and_never_shows_gpu_strata_
 
 mod saved_clear_coat_contract {
     use super::*;
-    use solidcraft_engine::{Sel, doc::render_coat::CoatMaterial};
+    use torno_engine::{Sel, doc::render_coat::CoatMaterial};
 
     fn body_editor(gpu: bool, rich: bool) -> Harness {
         let mut h = fixture();
@@ -4072,8 +4072,8 @@ mod saved_clear_coat_contract {
             click(&mut h, "render:coat:save");
             assert!(Arc::ptr_eq(&saved, &h.app.session.doc), "repeating the exact saved coat is a no-op");
             assert_eq!(h.app.session.undo.len(), history.1 + 1);
-            let bytes = solidcraft_engine::io::write_design_container(&saved).unwrap();
-            let loaded = solidcraft_engine::io::read_design(&bytes).unwrap();
+            let bytes = torno_engine::io::write_design_container(&saved).unwrap();
+            let loaded = torno_engine::io::read_design(&bytes).unwrap();
             assert_eq!(loaded.render, saved.render);
             h.app.run("edit.undo", json!({})).unwrap();
             h.frames(3);
@@ -4083,7 +4083,7 @@ mod saved_clear_coat_contract {
             h.app.run("edit.redo", json!({})).unwrap();
             h.frames(3);
             assert_eq!(h.app.session.doc, saved);
-            h.app.session = solidcraft_engine::Session::new(loaded);
+            h.app.session = torno_engine::Session::new(loaded);
             setups::load(&mut h.app);
             h.frames(3);
             let reopened = h.app.session.doc.clone();
@@ -4347,7 +4347,7 @@ fn gpu_check_keeps_pending_setup_distinct_from_a_failed_device_without_starting_
         }
     }
     let mut h = fixture();
-    h.app.session.set_render_job_host(Some(solidcraft_engine::render::job::CpuHost::cooperative())).unwrap();
+    h.app.session.set_render_job_host(Some(torno_engine::render::job::CpuHost::cooperative())).unwrap();
     h.app.render_workspace.view.method = ImageMethod::GpuRaytrace;
     h.app.pending_fit = None;
     h.app.cancel_view_animation();
@@ -4393,7 +4393,7 @@ fn gpu_check_keeps_pending_setup_distinct_from_a_failed_device_without_starting_
         assert!(!report.contains(h.app.tr("render.gpu_unavailable")), "pending/failed setup must keep its precise lifecycle reason");
         for action in ["render.preflight", "render.start"] {
             assert_eq!(super::super::ribbon::action_ready(&h.app, action).unwrap_err(), label);
-            assert!(!super::super::interactive_command_info(&h.app, solidcraft_engine::find_command(action).unwrap()).enabled);
+            assert!(!super::super::interactive_command_info(&h.app, torno_engine::find_command(action).unwrap()).enabled);
         }
         if phase != "failed" {
             assert!(crate::scenario::rect_of("render:check:go-to:0").is_none(), "waiting for setup has no corrective settings action");
@@ -4564,7 +4564,7 @@ fn output_children_focus_survives_clearing_an_object_pick() {
         ("effects", super::super::RenderSelection::Effects),
         ("check", super::super::RenderSelection::Check),
     ] {
-        h.app.run("select.set", json!({"items":[solidcraft_engine::Sel::Body { name: "Subject".into() }]})).unwrap();
+        h.app.run("select.set", json!({"items":[torno_engine::Sel::Body { name: "Subject".into() }]})).unwrap();
         h.app.run("view.render_select", json!({"kind":kind})).unwrap();
         assert_eq!(h.app.render_workspace.view.selection, selection);
         assert!(h.app.session.selection.is_empty());

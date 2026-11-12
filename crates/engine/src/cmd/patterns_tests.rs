@@ -1,5 +1,5 @@
-use solidcraft_geom::MeshGeom;
 use std::f64::consts::PI;
+use torno_geom::MeshGeom;
 
 use serde_json::{Value, json};
 
@@ -64,7 +64,7 @@ fn rectangular_hole_pattern_warns_for_copies_that_miss_and_clears_after_edit() {
     assert_eq!(reply["warning"], "3 of 3 cut copies remove no material");
     // The remaining copy lands in the existing through hole, so the plate stays intact.
     assert!(rel(volume(&mut s), before) < 1e-8);
-    let reopened = Session::new(solidcraft_doc::Document::from_json(&s.doc.to_json()).unwrap());
+    let reopened = Session::new(torno_doc::Document::from_json(&s.doc.to_json()).unwrap());
     check(&reopened);
     run(
         &mut s,
@@ -96,10 +96,10 @@ fn rectangular_cut_pattern_counts_only_target_contacts_and_keeps_landing_copies(
     assert_eq!(reply["warning"], "2 of 3 cut copies remove no material");
     let state = s.world_state().unwrap();
     let plate = &state.body("Plate").unwrap().body;
-    assert_eq!(plate.classify_point(solidcore_record::Vec3::new(30., 15., 5.)).unwrap(), solidcraft_kernel::PointClass::Outside);
+    assert_eq!(plate.classify_point(solidcore_record::Vec3::new(30., 15., 5.)).unwrap(), torno_kernel::PointClass::Outside);
     assert_eq!(
         state.body("Neighbor").unwrap().body.classify_point(solidcore_record::Vec3::new(50., 15., 5.)).unwrap(),
-        solidcraft_kernel::PointClass::Inside
+        torno_kernel::PointClass::Inside
     );
     assert!(rel(volume(&mut s), 24000.0 - 2.0 * PI * 4.0 * 10.0) < 1e-3);
 }
@@ -126,8 +126,8 @@ fn feature_rectangular_center_flip_and_oblique_direction_keep_source_and_recompu
         for i in [0.0, 1.0, -1.0, 2.0] {
             for j in [0.0, 1.0] {
                 let p = Vec3::new(60.0 + sign * (15.0 * i + 12.0 * j), 60.0 + sign * 16.0 * j, 2.5);
-                assert_eq!(body.classify_point(p).unwrap(), solidcraft_kernel::PointClass::Outside, "hole at {p:?}");
-                assert_eq!(body.classify_point(p + Vec3::new(0.0, 2.0, 0.0)).unwrap(), solidcraft_kernel::PointClass::Inside);
+                assert_eq!(body.classify_point(p).unwrap(), torno_kernel::PointClass::Outside, "hole at {p:?}");
+                assert_eq!(body.classify_point(p + Vec3::new(0.0, 2.0, 0.0)).unwrap(), torno_kernel::PointClass::Inside);
             }
         }
         assert!(rel(volume(&mut s), 120.0 * 120.0 * 5.0 - 8.0 * PI * 5.0) < 1e-5);
@@ -136,7 +136,7 @@ fn feature_rectangular_center_flip_and_oblique_direction_keep_source_and_recompu
         assert_eq!(s.doc.to_json(), before);
         run(&mut s, "edit.redo", json!({}));
         assert_eq!(s.doc.to_json(), saved);
-        let mut reopened = Session::new(solidcraft_doc::Document::from_json(&saved).unwrap());
+        let mut reopened = Session::new(torno_doc::Document::from_json(&saved).unwrap());
         assert!(rel(volume(&mut reopened), volume(&mut s)) < 1e-8);
         // The copies replay the edited feature rather than freezing its original tool.
         run(&mut reopened, "timeline.redefine", json!({"feature":"Hole","command":"solid.hole","params":{"position":[60,60,5],"diameter":3}}));
@@ -163,15 +163,15 @@ fn feature_circular_center_flip_uses_partial_arc_endpoints_and_full_circle_spaci
             for slot in [0.0, 1.0, -1.0, 2.0, -2.0, 3.0] {
                 let a = (step * slot * if flipped { -1.0 } else { 1.0 }).to_radians();
                 let p = Vec3::new(40.0 + 20.0 * a.cos(), 60.0 + 20.0 * a.sin(), 2.5);
-                assert_eq!(st.bodies[0].body.classify_point(p).unwrap(), solidcraft_kernel::PointClass::Outside, "hole at {p:?}");
+                assert_eq!(st.bodies[0].body.classify_point(p).unwrap(), torno_kernel::PointClass::Outside, "hole at {p:?}");
                 assert_eq!(
                     st.bodies[0].body.classify_point(p + Vec3::new(2.0 * a.cos(), 2.0 * a.sin(), 0.0)).unwrap(),
-                    solidcraft_kernel::PointClass::Inside
+                    torno_kernel::PointClass::Inside
                 );
             }
             assert!(rel(volume(&mut s), 120.0 * 120.0 * 5.0 - 6.0 * PI * 5.0) < 1e-5);
             let saved = s.doc.to_json();
-            let mut reopened = Session::new(solidcraft_doc::Document::from_json(&saved).unwrap());
+            let mut reopened = Session::new(torno_doc::Document::from_json(&saved).unwrap());
             assert!(rel(volume(&mut reopened), volume(&mut s)) < 1e-8);
         }
     }
@@ -188,11 +188,11 @@ fn a_pattern_before_the_feature_it_copies_follows_that_features_parameter() {
     run(&mut s, "solid.box", json!({"length": "w", "width": 10, "height": 10}));
     run(&mut s, "timeline.rollback", json!({"position": 0}));
     run(&mut s, "solid.pattern.rectangular", json!({"features": ["Box1"], "dir1": [1, 0, 0], "count1": 2, "spacing1": 30}));
-    let lengths = |st: &solidcraft_doc::ModelState| {
+    let lengths = |st: &torno_doc::ModelState| {
         st.bodies.iter().map(|b| (b.name.clone(), b.body.outline_bounds())).map(|(n, bb)| (n, bb.max.x - bb.min.x)).collect::<Vec<_>>()
     };
     let fresh = |s: &Session| {
-        let mut m = solidcraft_doc::Model::new();
+        let mut m = torno_doc::Model::new();
         m.no_cache = true;
         m.evaluate(&s.doc);
         lengths(&m.state())
@@ -219,8 +219,8 @@ fn a_pattern_finds_a_later_feature_that_takes_its_deleted_sources_name() {
     run(&mut s, "solid.pattern.rectangular", json!({"features": ["Cylinder1"], "dir1": [1, 0, 0], "count1": 2, "spacing1": 19}));
     run(&mut s, "timeline.delete", json!({"feature": "Cylinder1"}));
     run(&mut s, "solid.cylinder", json!({"radius": 5, "height": 19, "base": [-3, -7, -1]}));
-    let bodies = |st: &solidcraft_doc::ModelState| st.bodies.iter().map(|b| (b.name.clone(), b.body.outline_bounds().min.x)).collect::<Vec<_>>();
-    let mut fresh = solidcraft_doc::Model::new();
+    let bodies = |st: &torno_doc::ModelState| st.bodies.iter().map(|b| (b.name.clone(), b.body.outline_bounds().min.x)).collect::<Vec<_>>();
+    let mut fresh = torno_doc::Model::new();
     fresh.no_cache = true;
     fresh.evaluate(&s.doc);
     assert_eq!(bodies(&s.model.state()), bodies(&fresh.state()));
@@ -281,7 +281,7 @@ fn circular_axis_origin_expressions_follow_their_parameters() {
         let st = s.model.state();
         assert_eq!(st.bodies.len(), 4);
         let mut out = [f64::INFINITY, f64::NEG_INFINITY, f64::INFINITY, f64::NEG_INFINITY];
-        for b in st.bodies.iter().filter_map(|mb| solidcraft_kernel::measure(&mb.body).ok()).map(|m| m.bbox) {
+        for b in st.bodies.iter().filter_map(|mb| torno_kernel::measure(&mb.body).ok()).map(|m| m.bbox) {
             out = [out[0].min(b.min.x), out[1].max(b.max.x), out[2].min(b.min.y), out[3].max(b.max.y)];
         }
         out
@@ -294,7 +294,7 @@ fn circular_axis_origin_expressions_follow_their_parameters() {
     let about = |s: &Session, x: f64, y: f64| about_at(s, x, y, 22.0);
     // The origin as the pattern saves it.
     let saved_origin = |s: &Session| match s.doc.features.last().map(|f| &f.kind) {
-        Some(solidcraft_doc::FeatureKind::Pattern { pattern, .. }) => serde_json::to_value(pattern).unwrap_or_default()["origin"].clone(),
+        Some(torno_doc::FeatureKind::Pattern { pattern, .. }) => serde_json::to_value(pattern).unwrap_or_default()["origin"].clone(),
         other => panic!("not a pattern: {other:?}"),
     };
     about(&s, 50.0, 40.0);
@@ -306,7 +306,7 @@ fn circular_axis_origin_expressions_follow_their_parameters() {
     run(&mut s, "parameters.change", json!({"name":"py","expression":"45 mm"}));
     about(&s, 60.0, 45.0);
     assert_eq!(saved_origin(&s), json!(["cx", "py", 0.0]));
-    let reopened = Session::new(solidcraft_doc::Document::from_json(&s.doc.to_json()).unwrap_or_else(|e| panic!("{e}")));
+    let reopened = Session::new(torno_doc::Document::from_json(&s.doc.to_json()).unwrap_or_else(|e| panic!("{e}")));
     about(&reopened, 60.0, 45.0);
     // timeline.edit sets the origin as expressions too: 10 mm back, so the cube is 30 mm away.
     let pattern = s.doc.features.last().map(|f| f.id).unwrap_or_default();
@@ -343,7 +343,7 @@ fn circular_numeric_axis_origin_preserves_hole_geometry_and_reopens() {
         assert_eq!(s.doc.to_json(), before);
         run(&mut s, "edit.redo", json!({}));
         assert_eq!(s.doc.to_json(), saved);
-        let mut reopened = Session::new(solidcraft_doc::Document::from_json(&saved).unwrap());
+        let mut reopened = Session::new(torno_doc::Document::from_json(&saved).unwrap());
         assert!(rel(volume(&mut reopened), expected) < 1e-4);
     }
     // The documented omission of origin still means zero.
@@ -352,7 +352,7 @@ fn circular_numeric_axis_origin_preserves_hole_geometry_and_reopens() {
     let before = s.doc.to_json();
     run(&mut s, "solid.pattern.circular", json!({"bodies":["Cube"],"axis":{"dir":[0,0,1]},"count":4}));
     let implicit = s.doc.to_json();
-    let mut explicit = Session::new(solidcraft_doc::Document::from_json(&before).unwrap());
+    let mut explicit = Session::new(torno_doc::Document::from_json(&before).unwrap());
     run(&mut explicit, "solid.pattern.circular", json!({"bodies":["Cube"],"axis":{"origin":[0,0,0],"dir":[0,0,1]},"count":4}));
     assert_eq!(implicit, explicit.doc.to_json());
 }
@@ -411,7 +411,7 @@ fn circular_pattern_about_a_construction_axis_follows_it() {
         let st = s.model.state();
         assert_eq!(st.bodies.len(), 4);
         let mut out = [f64::INFINITY, f64::NEG_INFINITY, f64::INFINITY, f64::NEG_INFINITY];
-        for b in st.bodies.iter().filter_map(|mb| solidcraft_kernel::measure(&mb.body).ok()).map(|m| m.bbox) {
+        for b in st.bodies.iter().filter_map(|mb| torno_kernel::measure(&mb.body).ok()).map(|m| m.bbox) {
             out = [out[0].min(b.min.x), out[1].max(b.max.x), out[2].min(b.min.y), out[3].max(b.max.y)];
         }
         out
@@ -885,10 +885,10 @@ fn patterns_and_mirrors_of_a_rib() {
         assert_eq!(st.bodies.len(), 1);
         let body = &st.bodies[0].body;
         for p in inside {
-            assert_eq!(body.classify_point(*p).unwrap(), solidcraft_kernel::PointClass::Inside, "a rib at {p:?}");
+            assert_eq!(body.classify_point(*p).unwrap(), torno_kernel::PointClass::Inside, "a rib at {p:?}");
             // Beside it, across its thickness: no material (clear of the boss too).
             let side = if p.y == 0.0 { Vec3::new(0.0, 3.0, 0.0) } else { Vec3::new(3.0, 0.0, 0.0) };
-            assert_eq!(body.classify_point(*p + side).unwrap(), solidcraft_kernel::PointClass::Outside, "nothing beside the rib at {p:?}");
+            assert_eq!(body.classify_point(*p + side).unwrap(), torno_kernel::PointClass::Outside, "nothing beside the rib at {p:?}");
         }
     };
     check(&s, &ribs);
@@ -981,15 +981,15 @@ fn patterns_and_mirrors_of_patterns_and_mirrors() {
         assert_eq!(st.bodies.len(), 1, "{what}");
         let body = &st.bodies[0].body;
         for [x, y] in &holes {
-            assert_eq!(body.classify_point(Vec3::new(*x, *y, 10.0)).unwrap(), solidcraft_kernel::PointClass::Outside, "{what}: a hole at ({x}, {y})");
+            assert_eq!(body.classify_point(Vec3::new(*x, *y, 10.0)).unwrap(), torno_kernel::PointClass::Outside, "{what}: a hole at ({x}, {y})");
             assert_eq!(
                 body.classify_point(Vec3::new(*x, *y + 2.5, 10.0)).unwrap(),
-                solidcraft_kernel::PointClass::Inside,
+                torno_kernel::PointClass::Inside,
                 "{what}: material beside ({x}, {y})"
             );
         }
         for [x, y] in &material {
-            assert_eq!(body.classify_point(Vec3::new(*x, *y, 10.0)).unwrap(), solidcraft_kernel::PointClass::Inside, "{what}: no hole at ({x}, {y})");
+            assert_eq!(body.classify_point(Vec3::new(*x, *y, 10.0)).unwrap(), torno_kernel::PointClass::Inside, "{what}: no hole at ({x}, {y})");
         }
         // The listed holes the steps added (in the last two cases `Mir` made the first of them).
         let added = holes.len();
@@ -1036,7 +1036,7 @@ fn mirror_of_a_boss_and_a_cut_from_its_face_makes_both_copies() {
         if let Some(features) = value.get_mut("features").and_then(Value::as_array_mut) {
             features.retain(|f| f.get("id").and_then(Value::as_i64).is_some_and(|id| id <= through));
         }
-        let doc = solidcraft_doc::Document::from_json(&value.to_string()).unwrap_or_else(|e| panic!("{e}"));
+        let doc = torno_doc::Document::from_json(&value.to_string()).unwrap_or_else(|e| panic!("{e}"));
         Session::opened(doc, None)
     };
     let ring = volume(&mut open(4));
@@ -1169,7 +1169,7 @@ fn pattern_count_integer_parameters_survive_save_and_reject_fractional_edits() -
     run(&mut s, "parameters.add", json!({"name": "n", "expression": "3", "unit": ""}));
     run(&mut s, "solid.pattern.rectangular", json!({"bodies": ["Seed"], "dir1": [1, 0, 0], "count1": "n", "spacing1": 10, "name": "Copies"}));
     assert_eq!(s.model.state().bodies.len(), 3);
-    let mut reopened = Session::new(solidcraft_doc::Document::from_json(&s.doc.to_json())?);
+    let mut reopened = Session::new(torno_doc::Document::from_json(&s.doc.to_json())?);
     assert!(reopened.model.results.iter().all(|r| r.error.is_none()));
     assert_eq!(reopened.model.state().bodies.len(), 3);
     let error = reopened
@@ -1178,13 +1178,13 @@ fn pattern_count_integer_parameters_survive_save_and_reject_fractional_edits() -
         .ok_or("fractional edit was accepted")?
         .to_string();
     assert!(error.contains("a count must be a whole number;"), "{error}");
-    let mut saved = solidcraft_doc::Document::from_json(&s.doc.to_json())?;
+    let mut saved = torno_doc::Document::from_json(&s.doc.to_json())?;
     for feature in &mut saved.features {
-        if let solidcraft_doc::FeatureKind::Pattern { pattern: solidcraft_doc::PatternKind::Rectangular { count1, .. }, .. } = &mut feature.kind {
+        if let torno_doc::FeatureKind::Pattern { pattern: torno_doc::PatternKind::Rectangular { count1, .. }, .. } = &mut feature.kind {
             *count1 = "n / 2".into();
         }
     }
-    let invalid = Session::new(solidcraft_doc::Document::from_json(&saved.to_json())?);
+    let invalid = Session::new(torno_doc::Document::from_json(&saved.to_json())?);
     assert!(invalid.model.results.iter().any(|r| r.error.as_ref().is_some_and(|e| e.contains("a count must be a whole number;"))));
     Ok(())
 }

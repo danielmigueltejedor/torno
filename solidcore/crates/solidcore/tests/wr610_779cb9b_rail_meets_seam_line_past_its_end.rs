@@ -1,7 +1,7 @@
-//! The SolidCraft fork's tangency-labs/smlib@779cb9b (`fillet_trace_reaches_rails`,
+//! The Torno fork's tangency-labs/smlib@779cb9b (`fillet_trace_reaches_rails`,
 //! WR-610): `RailEdgeuseIntersect` runs a straight side edge on along its line on a
 //! cylinder or cone too (a ruling of it), not only on a plane. A disc R13 x 2 with its top
-//! rim rounded R2.5 (solidcraft#190): the wall's rail runs round the cylinder 0.5 below the
+//! rim rounded R2.5 (torno#190): the wall's rail runs round the cylinder 0.5 below the
 //! bottom, and the closed corner's vertex is where it meets the seam's line there. Without
 //! the run-on the corner fails (error 3, "Fillet Corner Error: Unable to Compute Geometry",
 //! status 1001, the fork's report); with it the corner is computed and the blend goes on to

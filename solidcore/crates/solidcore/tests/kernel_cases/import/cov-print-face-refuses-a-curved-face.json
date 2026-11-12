@@ -32,6 +32,6 @@
   "ungraded": [],
   "what": "a cylinder's side picked as the face a slicer export lays it on",
   "why_not": [
-    "the failure is SolidCraft's, not a kernel operation's: step 2 (body.print_face): invalid parameters for `body.print_face`: only a flat face can be the print face"
+    "the failure is Torno's, not a kernel operation's: step 2 (body.print_face): invalid parameters for `body.print_face`: only a flat face can be the print face"
   ]
 }

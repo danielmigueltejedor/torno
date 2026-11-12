@@ -1,4 +1,4 @@
-//! The solver core of the SolidCraft fork's tangential surface/surface intersection
+//! The solver core of the Torno fork's tangential surface/surface intersection
 //! curve tracer: contact points (the surfaces meet with parallel normals) solved by
 //! Levenberg-Marquardt, marched along tangential curves and along crossing branches
 //! through tangent contact nodes, and probed for the directions a contact continues in.

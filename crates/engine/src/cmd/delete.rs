@@ -6,7 +6,7 @@
 
 use serde_json::{Value, json};
 use solidcore_record::Vec3;
-use solidcraft_doc::FeatureKind;
+use torno_doc::FeatureKind;
 
 use super::{CommandSpec, sketch_store};
 use crate::params::{bad, bool_};
@@ -134,10 +134,10 @@ fn apply(s: &mut Session, p: &Value) -> Result<Value> {
                     skip("nothing around that profile can be deleted".into());
                     continue;
                 };
-                let outer = ss.profiles.get(*index).map(|pr| solidcraft_sketch::distinct_curves(&pr.outer_curves)).unwrap_or_default();
+                let outer = ss.profiles.get(*index).map(|pr| torno_sketch::distinct_curves(&pr.outer_curves)).unwrap_or_default();
                 let before = entities.len();
                 for c in outer.iter().filter_map(|id| sk.curves.iter().find(|c| &c.id == id)) {
-                    let text = c.link.as_ref().filter(|l| sk.link(l).is_some_and(|l| l.kind == solidcraft_sketch::LinkKind::Text));
+                    let text = c.link.as_ref().filter(|l| sk.link(l).is_some_and(|l| l.kind == torno_sketch::LinkKind::Text));
                     let id = text.unwrap_or(&c.id);
                     if !entities.contains(id) {
                         entities.push(id.clone());
@@ -374,7 +374,7 @@ mod tests {
         }
         run(&mut s, "timeline.roll_to", json!({"position": 1}));
         run(&mut s, "sketch.edit", json!({"sketch": sk}));
-        *s.model.cache.lock().unwrap() = solidcraft_doc::EvalCache::with_budget(1);
+        *s.model.cache.lock().unwrap() = torno_doc::EvalCache::with_budget(1);
         let doc = s.doc.clone();
         let dry = run(&mut s, "selection.delete", json!({"items": [{"type": "sketch_curve", "id": hole}], "dry_run": true}));
         assert_eq!(dry["would_fail"], json!([]), "{dry}");
@@ -401,7 +401,7 @@ mod tests {
         run(&mut s, "timeline.roll_to", json!({"position": 1}));
         run(&mut s, "sketch.edit", json!({"sketch": sk}));
         // A cache too small to keep a state, as on a large design: only what is kept carries over.
-        *s.model.cache.lock().unwrap() = solidcraft_doc::EvalCache::with_budget(1);
+        *s.model.cache.lock().unwrap() = torno_doc::EvalCache::with_budget(1);
         let items = json!([{"type": "sketch_curve", "id": hole}]);
         let ahead = s.ahead();
         let kept = ahead.kept();
@@ -611,7 +611,7 @@ mod tests {
         run(&mut s, "sketch.circle.center", json!({"center": [10, 10], "radius": 3, "id": "hole"}));
         let index = {
             let st = s.model.state();
-            solidcraft_sketch::profile_at_point(&st.sketch(sk).unwrap().profiles, solidcore_record::Vec2::new(30.0, 10.0)).unwrap()
+            torno_sketch::profile_at_point(&st.sketch(sk).unwrap().profiles, solidcore_record::Vec2::new(30.0, 10.0)).unwrap()
         };
         let before = curves(&s, sk);
         assert_eq!(before.len(), 5, "four lines and a circle: {before:?}");

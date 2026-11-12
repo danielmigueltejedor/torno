@@ -90,10 +90,10 @@
     "extrude"
   ],
   "ungraded": [
-    "results: SolidCraft computes it"
+    "results: Torno computes it"
   ],
   "what": "a hand-written design (one 30x20x10 box) inserted 100 mm along x",
   "why_not": [
-    "body \"Plate\" is no kernel operation's output nor an operand: SolidCraft built it or changed the kernel's record"
+    "body \"Plate\" is no kernel operation's output nor an operand: Torno built it or changed the kernel's record"
   ]
 }

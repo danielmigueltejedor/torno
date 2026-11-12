@@ -2,7 +2,7 @@ use crate::test_support::*;
 use crate::*;
 
 use egui::Ui;
-use solidcraft_ui_registry as registry;
+use torno_ui_registry as registry;
 
 #[test]
 fn segmented_allocates_only_its_reserved_row() {
@@ -166,17 +166,17 @@ fn segments_stay_segments_when_a_scrollbar_appears_and_disappears() {
 #[test]
 fn beveled_segments_share_fill_corners_at_internal_joins() {
     use egui::{Color32, Shape};
-    use solidcraft_theme::Tokens;
+    use torno_theme::Tokens;
     let mut t = Tokens::light();
     t.control_radius = 8;
-    t.borders.bevel = Some(solidcraft_theme::Bevel {
+    t.borders.bevel = Some(torno_theme::Bevel {
         width: 0.5,
         highlight: Color32::WHITE,
         light: Color32::LIGHT_GRAY,
         shadow: Color32::GRAY,
         dark_shadow: Color32::BLACK,
     });
-    let _restore = solidcraft_theme::scoped_tokens(t);
+    let _restore = torno_theme::scoped_tokens(t);
     for selected in 0..3 {
         let ctx = crate::test_support::context();
         let mut selected = selected;
@@ -212,7 +212,7 @@ fn stage_chips_reserve_the_selected_weight_for_complete_labels_in_all_five_catal
     let ctx = crate::test_support::context();
     let bounds = egui::Rect::from_min_size(egui::Pos2::ZERO, egui::vec2(1600.0, 120.0));
     for language in ["en", "ja", "zh", "de", "ko"] {
-        let locale = solidcraft_ui_text::Locale::for_language(language);
+        let locale = torno_ui_text::Locale::for_language(language);
         let labels: Vec<_> = ["render.stage_look", "render.stage_light", "render.stage_frame", "render.stage_output"]
             .iter()
             .map(|key| locale.text(key).to_string())
@@ -223,7 +223,7 @@ fn stage_chips_reserve_the_selected_weight_for_complete_labels_in_all_five_catal
             });
             output.textures_delta.clear();
             let search = ctx.data(|d| d.get_temp::<egui::Rect>(egui::Id::unique("sc_ribbon_search"))).unwrap();
-            assert!((search.right() - (bounds.right() - solidcraft_theme::Tokens::get().space_6)).abs() < 1.0);
+            assert!((search.right() - (bounds.right() - torno_theme::Tokens::get().space_6)).abs() < 1.0);
             for label in &labels {
                 assert!(
                     output
@@ -240,10 +240,10 @@ fn stage_chips_reserve_the_selected_weight_for_complete_labels_in_all_five_catal
 #[test]
 fn thumbnail_choice_states_share_geometry_and_publish_modified_and_running_indicators() {
     let ctx = crate::test_support::context();
-    let previous = solidcraft_theme::is_dark();
+    let previous = torno_theme::is_dark();
     for dark in [false, true] {
-        solidcraft_theme::set_dark(dark);
-        solidcraft_theme::apply(&ctx);
+        torno_theme::set_dark(dark);
+        torno_theme::apply(&ctx);
         let mut dimensions = Vec::new();
         for (selected, modified, progress) in [(false, false, None), (true, false, None), (true, true, Some(0.4))] {
             registry::clear_handles();
@@ -257,7 +257,7 @@ fn thumbnail_choice_states_share_geometry_and_publish_modified_and_running_indic
         assert!(dimensions.iter().all(|size| *size == dimensions[0]));
         assert_eq!(dimensions[0].y, 38.0);
     }
-    solidcraft_theme::set_dark(previous);
+    torno_theme::set_dark(previous);
 }
 
 #[test]
@@ -295,7 +295,7 @@ fn save_shot_dashes_leave_rounded_corners_at_the_chip_radius() {
     let mut output = ctx.run_ui(egui::RawInput::default(), |ui| {
         rect = add_choice(ui, "Save Shot").rect;
     });
-    let t = solidcraft_theme::Tokens::get();
+    let t = torno_theme::Tokens::get();
     let mut points = Vec::new();
     for shape in &output.shapes {
         endpoints(&shape.shape, t.control_border, &mut points);
@@ -333,10 +333,10 @@ fn segmented_unavailable_choices_remain_visible_and_cannot_change_selection() {
 #[test]
 fn output_radio_rows_keep_titles_summaries_and_disabled_choices_in_both_themes() {
     for dark in [false, true] {
-        let tokens = if dark { solidcraft_theme::Tokens::dark() } else { solidcraft_theme::Tokens::light() };
-        let _restore = solidcraft_theme::scoped_tokens(tokens);
+        let tokens = if dark { torno_theme::Tokens::dark() } else { torno_theme::Tokens::light() };
+        let _restore = torno_theme::scoped_tokens(tokens);
         for language in ["en", "ja", "zh", "de", "ko"] {
-            let locale = solidcraft_ui_text::Locale::for_language(language);
+            let locale = torno_ui_text::Locale::for_language(language);
             let ctx = crate::test_support::context();
             let mut enabled = true;
             let mut clicked = false;

@@ -12,7 +12,7 @@ use crate::schema::ParamCheck;
 use crate::schema::check::MAX_KEYS;
 
 /// Whether a command without schemas fails the test. Off for now: the test warns instead. The
-/// owner will flip this to `true` when the PR backlog is down. `SOLIDCRAFT_SCHEMA_RULE_STRICT=1`
+/// owner will flip this to `true` when the PR backlog is down. `TORNO_SCHEMA_RULE_STRICT=1`
 /// turns it on for one run.
 const SCHEMA_RULE_STRICT: bool = false;
 
@@ -54,7 +54,7 @@ fn every_command_has_input_and_output_schemas() {
     }
     assert!(problems.is_empty(), "{}", problems.join("\n"));
     if !missing.is_empty() {
-        let strict = SCHEMA_RULE_STRICT || std::env::var_os("SOLIDCRAFT_SCHEMA_RULE_STRICT").is_some_and(|v| v != "0");
+        let strict = SCHEMA_RULE_STRICT || std::env::var_os("TORNO_SCHEMA_RULE_STRICT").is_some_and(|v| v != "0");
         let report = format!(
             "{} command(s) lack an input or output schema. This is a warning for now; it will become required:\n{}",
             missing.len(),

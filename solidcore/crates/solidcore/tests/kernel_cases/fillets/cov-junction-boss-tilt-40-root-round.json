@@ -129,7 +129,7 @@
     "blend_dropping"
   ],
   "ungraded": [
-    "continuity: SolidCraft computes it"
+    "continuity: Torno computes it"
   ],
   "what": "cylinder R6 tilted 40 degrees joined into a plate, its root edge rounded 1.5",
   "why_not": []

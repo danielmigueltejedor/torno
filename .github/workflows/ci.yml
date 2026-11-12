@@ -195,7 +195,7 @@ jobs:
           windows_paths() {
             while IFS= read -r -d '' path; do
               case "$path" in
-                crates/gpu/*|apps/solidcraft/*|crates/ui-egui/src/gpu.rs|vendor/egui-wgpu/*|solidcore/*) windows=true ;;
+                crates/gpu/*|apps/torno/*|crates/ui-egui/src/gpu.rs|vendor/egui-wgpu/*|solidcore/*) windows=true ;;
                 tools/windows-*.ps1|.github/workflows/ci.yml|rust-toolchain*|.cargo/*) windows=true ;;
               esac
             done < "$1"
@@ -228,7 +228,7 @@ jobs:
                 Cargo.lock|Cargo.toml|*/Cargo.toml) deps=true ;;
               esac
               case "$path" in
-                crates/*|apps/solidcraft-web/*|vendor/*|solidcore/*|Cargo.lock|Cargo.toml|rust-toolchain*|.cargo/*|.github/workflows/ci.yml) wasm=true ;;
+                crates/*|apps/torno-web/*|vendor/*|solidcore/*|Cargo.lock|Cargo.toml|rust-toolchain*|.cargo/*|.github/workflows/ci.yml) wasm=true ;;
               esac
             done < "$1"
           }
@@ -326,11 +326,11 @@ jobs:
             select_packages "$RUNNER_TEMP/ci-paths"
             if [ "$full" = true ] || [ -n "$packages" ]; then native=true; fi
           fi
-          # The reference tests replay recipes through solidcraft-cli: needed when it, or anything
+          # The reference tests replay recipes through torno-cli: needed when it, or anything
           # it depends on, is selected.
           oracle=$native
           if [ "$EVENT_NAME" = pull_request ] && [ "$full" != true ]; then
-            case " $packages " in *" solidcraft-cli "*) ;; *) oracle=false ;; esac
+            case " $packages " in *" torno-cli "*) ;; *) oracle=false ;; esac
           fi
           # The pull request fast lane: Windows, the reference tests and the doc tests run on main
           # (and the nightly), not on every pull request push; a break there is fixed forward on
@@ -565,9 +565,9 @@ jobs:
       # Pictures (snapshots, screenshots, ui.render, the viewport's offscreen tests) are drawn on
       # the GPU. The runner has none: Mesa's lavapipe (software Vulkan) draws them, and a test that
       # would skip for want of an adapter fails instead.
-      SOLIDCRAFT_GPU: software
-      SOLIDCRAFT_REQUIRE_GPU: "1"
-      # The same for the shared viewport crate's own GPU tests, which read no SolidCraft variable.
+      TORNO_GPU: software
+      TORNO_REQUIRE_GPU: "1"
+      # The same for the shared viewport crate's own GPU tests, which read no Torno variable.
       VIEWPORT_TEST_GPU: software
       VIEWPORT_TEST_REQUIRE_GPU: "1"
       ACTION_MATRIX_JOBS: "12"
@@ -619,7 +619,7 @@ jobs:
           if [ "$EVENT_NAME" != pull_request ]; then
             # The boolean property tests draw new random inputs every run; they run only in the
             # nightly property-tests job, so a known kernel bug cannot turn main red at random.
-            base='not (package(solidcraft-kernel) & binary(boolean_props))'
+            base='not (package(torno-kernel) & binary(boolean_props))'
           fi
           junit=${CARGO_TARGET_DIR:-target}/nextest/ci/junit.xml
           rm -f "$junit"
@@ -634,7 +634,7 @@ jobs:
           # (a build error, a bad filter) and fails the step at once.
           status=0
           cargo nextest run "${scope[@]}" --cargo-profile ci --locked --profile ci --no-tests=pass \
-            --ignore-default-filter -E "($base) & not (package(=solidcraft-gpu) & test(/^path::/))" || status=$?
+            --ignore-default-filter -E "($base) & not (package(=torno-gpu) & test(/^path::/))" || status=$?
           if [ "$status" -ne 0 ] && [ "$status" -ne 100 ]; then exit "$status"; fi
           cargo xtask known-failing --junit "$junit"
       # Every command label needs an English catalog entry (#8542). The label table is the CLI's
@@ -646,11 +646,11 @@ jobs:
           PACKAGES: ${{ needs.changes.outputs.packages }}
         run: |
           case "$FULL $PACKAGES " in
-            true*|*" solidcraft-cli "*|*" solidcraft-ui-egui "*|*" xtask "*) ;;
+            true*|*" torno-cli "*|*" torno-ui-egui "*|*" xtask "*) ;;
             *) echo "No package that feeds the command table changed."; exit 0 ;;
           esac
-          cargo build -p solidcraft-cli --profile ci --locked
-          cargo xtask i18n --check --cli "${CARGO_TARGET_DIR:-target}/ci/solidcraft-cli"
+          cargo build -p torno-cli --profile ci --locked
+          cargo xtask i18n --check --cli "${CARGO_TARGET_DIR:-target}/ci/torno-cli"
       - name: Compiler cache statistics
         if: always()
         run: if command -v sccache >/dev/null; then sccache --show-stats; else echo "sccache was not set up; built without it"; fi
@@ -681,9 +681,9 @@ jobs:
         shard: [1, 2, 3, 4]
     env:
       # As in Native Linux tests: lavapipe draws, and a test without an adapter fails.
-      SOLIDCRAFT_GPU: software
-      SOLIDCRAFT_REQUIRE_GPU: "1"
-      # The same for the shared viewport crate's own GPU tests, which read no SolidCraft variable.
+      TORNO_GPU: software
+      TORNO_REQUIRE_GPU: "1"
+      # The same for the shared viewport crate's own GPU tests, which read no Torno variable.
       VIEWPORT_TEST_GPU: software
       VIEWPORT_TEST_REQUIRE_GPU: "1"
       # lavapipe's own shader cache (below).
@@ -730,7 +730,7 @@ jobs:
           junit=${CARGO_TARGET_DIR:-target}/nextest/ci/junit.xml
           rm -f "$junit"
           status=0
-          cargo nextest run -p solidcraft-gpu --cargo-profile ci --locked --profile ci --no-tests=pass \
+          cargo nextest run -p torno-gpu --cargo-profile ci --locked --profile ci --no-tests=pass \
             --ignore-default-filter -E 'test(/^path::/)' --partition "count:$SHARD/4" || status=$?
           if [ "$status" -ne 0 ] && [ "$status" -ne 100 ]; then exit "$status"; fi
           cargo xtask known-failing --junit "$junit"
@@ -923,9 +923,9 @@ jobs:
         if: steps.sccache.outcome == 'failure'
         run: echo "RUSTC_WRAPPER=" >> "$GITHUB_ENV"
       - name: Build the command line
-        run: cargo build -p solidcraft-cli --profile ci --locked
+        run: cargo build -p torno-cli --profile ci --locked
       - name: Replay tests/oracle and compare with expected.json
-        run: cargo xtask oracle --cli "${CARGO_TARGET_DIR:-target}/ci/solidcraft-cli"
+        run: cargo xtask oracle --cli "${CARGO_TARGET_DIR:-target}/ci/torno-cli"
       - name: Upload the report
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
@@ -948,9 +948,9 @@ jobs:
       WGPU_BACKEND: dx12
       WGPU_DX12_COMPILER: fxc
       # WARP is a software (Cpu) adapter.
-      SOLIDCRAFT_GPU: software
-      SOLIDCRAFT_REQUIRE_GPU: "1"
-      # The same for the shared viewport crate's own GPU tests, which read no SolidCraft variable.
+      TORNO_GPU: software
+      TORNO_REQUIRE_GPU: "1"
+      # The same for the shared viewport crate's own GPU tests, which read no Torno variable.
       VIEWPORT_TEST_GPU: software
       VIEWPORT_TEST_REQUIRE_GPU: "1"
     steps:
@@ -963,8 +963,8 @@ jobs:
       # One test at a time: WARP's shader JIT crashes now and then (a null read in
       # d3d10warp.dll's JIT optimizer, about 1 run in 60) when several devices compile compute
       # pipelines at once, which the parallel tests do. Minidumps showed it in WARP itself, not
-      # in SolidCraft or FXC; serial runs never hit it.
-      - run: cargo test -p solidcraft-gpu --profile ci --locked -- --test-threads=1
+      # in Torno or FXC; serial runs never hit it.
+      - run: cargo test -p torno-gpu --profile ci --locked -- --test-threads=1
 
   # The Windows app starts D3D12 first and only the backend it uses (a Vulkan driver crashed the
   # app at startup on Intel). Start the real app on the runner (its D3D12 adapter is WARP) with
@@ -984,15 +984,15 @@ jobs:
           key: windows-startup
           save-if: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' }}
       - name: Backend order and probing on Windows
-        run: cargo test -p solidcraft --profile ci --locked -- startup::tests native_crash::tests native_frame::tests
+        run: cargo test -p torno --profile ci --locked -- startup::tests native_crash::tests native_frame::tests
       - name: Build the app
-        run: cargo build -p solidcraft --profile ci --locked
+        run: cargo build -p torno --profile ci --locked
       - name: Start the app under different settings
         shell: pwsh
-        run: tools/windows-startup-smoke.ps1 -Exe target/ci/solidcraft.exe
+        run: tools/windows-startup-smoke.ps1 -Exe target/ci/torno.exe
       - name: Resize border from the first frame
         shell: pwsh
-        run: tools/windows-resize-smoke.ps1 -Exe target/ci/solidcraft.exe
+        run: tools/windows-resize-smoke.ps1 -Exe target/ci/torno.exe
 
   # Preserve the existing check name for branch protection, including docs-only PRs.
   ci:
@@ -1233,7 +1233,7 @@ jobs:
         if: matrix.check == 'fmt and clippy'
         run: cargo fmt --all --check
       # scripts/ci/check-frozen-archives.sh reads HEAD:<path> from the repository root, which here
-      # is SolidCraft's, so the same check runs on the solidcore/ paths.
+      # is Torno's, so the same check runs on the solidcore/ paths.
       - name: No new entries in frozen archives (one file per finding / upstream issue)
         if: matrix.check == 'fmt and clippy'
         run: |

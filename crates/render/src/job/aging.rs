@@ -4,9 +4,9 @@
 use super::{ErrorCode, JobError, Result};
 use crate::ProductScene;
 use serde::{Deserialize, Serialize, de, ser::SerializeSeq};
-use solidcraft_geom::MeshGeom;
-use solidcraft_viewport::surface::srgb8_to_linear;
 use std::fmt;
+use torno_geom::MeshGeom;
+use torno_viewport::surface::srgb8_to_linear;
 
 pub const MAX_AGING_LAYERS: usize = 8;
 const NAME_BYTES: usize = 256;

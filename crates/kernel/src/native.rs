@@ -1,4 +1,4 @@
-//! SolidCraft native, versioned binary geometry. No STEP conversion or display meshes.
+//! Torno native, versioned binary geometry. No STEP conversion or display meshes.
 //! Exact: a decoded body is the encoded one, number for number, for the same producer.
 use crate::{Body, KernelError, Result, guard};
 use solidcore_record::native::{self as file, Runtime, Saved};
@@ -19,7 +19,7 @@ fn refused(e: file::Error) -> KernelError {
 /// body's own record and what it carries. Failure is a cache miss at the IO boundary, never a
 /// failed document save.
 pub fn encode_native_body(body: &Body) -> Result<Vec<u8>> {
-    let _span = solidcraft_profile::span("kernel", "encode_native_body");
+    let _span = torno_profile::span("kernel", "encode_native_body");
     guard("encode native B-rep", || {
         for source in body.face_sources.iter().flat_map(|s| s.iter()).flatten() {
             let mut at = source;
@@ -49,7 +49,7 @@ pub fn encode_native_body(body: &Body) -> Result<Vec<u8>> {
 /// The schema 4 record of a solid body, in canonical order with its pcurves: the body itself.
 /// Mesh bodies have none.
 pub fn brep_record(body: &Body) -> Result<solidcore_record::brep::Brep> {
-    let _span = solidcraft_profile::span("kernel", "brep_record");
+    let _span = torno_profile::span("kernel", "brep_record");
     if body.mesh.is_some() {
         return Err(invalid("mesh bodies are source blobs, not B-rep"));
     }
@@ -57,15 +57,15 @@ pub fn brep_record(body: &Body) -> Result<solidcore_record::brep::Brep> {
 }
 
 /// The body in SMLib (see [`Body::smlib`]), as an owned copy.
-pub fn smlib_body(body: &Body) -> Result<solidcraft_smlib::Brep> {
-    let _span = solidcraft_profile::span("kernel", "smlib_body");
+pub fn smlib_body(body: &Body) -> Result<torno_smlib::Brep> {
+    let _span = torno_profile::span("kernel", "smlib_body");
     body.smlib()?.try_clone().map_err(|e| KernelError::smlib("SMLib", e))
 }
 
 /// Decode bounded untrusted data. Validate indices before topology extraction.
 /// Only a caller that has checked who produced the data may treat it as evaluated geometry.
 pub fn decode_native_body(bytes: &[u8]) -> Result<Body> {
-    let _span = solidcraft_profile::span("kernel", "decode_native_body");
+    let _span = torno_profile::span("kernel", "decode_native_body");
     guard("decode native B-rep", || {
         let saved = file::decode(bytes).map_err(refused)?;
         check(&saved)?;
@@ -79,17 +79,17 @@ pub fn decode_native_body(bytes: &[u8]) -> Result<Body> {
     })
 }
 
-/// An SMLib body as a kernel body: SMLib's export mapped by `solidcraft_smlib` (canonical order,
+/// An SMLib body as a kernel body: SMLib's export mapped by `torno_smlib` (canonical order,
 /// radians, pcurves) is the body's record ([`Body::from_smlib_record`]).
-pub fn body_from_smlib(brep: &solidcraft_smlib::Brep) -> Result<Body> {
-    let _span = solidcraft_profile::span("kernel", "body_from_smlib");
+pub fn body_from_smlib(brep: &torno_smlib::Brep) -> Result<Body> {
+    let _span = torno_profile::span("kernel", "body_from_smlib");
     body_from_smlib_ordered(brep).map(|(body, _)| body)
 }
 
 /// [`body_from_smlib`], with where each of SMLib's faces and edges is in the body's face and
 /// edge order ([`crate::history`]).
-pub(crate) fn body_from_smlib_ordered(brep: &solidcraft_smlib::Brep) -> Result<(Body, Option<solidcraft_smlib::history::Order>)> {
-    let _span = solidcraft_profile::span("kernel", "body_from_smlib_ordered");
+pub(crate) fn body_from_smlib_ordered(brep: &torno_smlib::Brep) -> Result<(Body, Option<torno_smlib::history::Order>)> {
+    let _span = torno_profile::span("kernel", "body_from_smlib_ordered");
     let (record, order) = brep.to_native_ordered().map_err(|e| KernelError::Failed(e.to_string()))?;
     Ok((Body::from_smlib_record(record)?, Some(order)))
 }
@@ -97,18 +97,16 @@ pub(crate) fn body_from_smlib_ordered(brep: &solidcraft_smlib::Brep) -> Result<(
 /// `body` in SMLib, with where each of SMLib's faces and edges is in the body's face and edge
 /// order: SMLib's export of the imported body, checked to number every face, edge and vertex as
 /// the body's record does. `None` where it does not.
-pub(crate) fn smlib_body_ordered(body: &Body) -> Result<(solidcraft_smlib::Brep, Option<solidcraft_smlib::history::Order>)> {
+pub(crate) fn smlib_body_ordered(body: &Body) -> Result<(torno_smlib::Brep, Option<torno_smlib::history::Order>)> {
     let brep = smlib_body(body)?;
     Ok((brep.try_clone().map_err(|e| KernelError::smlib("SMLib", e))?, numbering(body.record(), &brep)))
 }
 
 /// `record` in SMLib, imported as given (SMLib's own form; a record it refuses is an error that
 /// names why), with where each of SMLib's faces and edges is in the record's order.
-pub(crate) fn smlib_record_ordered(
-    record: &solidcore_record::brep::Brep,
-) -> Result<(solidcraft_smlib::Brep, Option<solidcraft_smlib::history::Order>)> {
-    let _span = solidcraft_profile::span("kernel", "smlib_record_ordered");
-    let brep = solidcraft_smlib::Brep::from_record(record, true).map_err(|e| KernelError::smlib("SMLib", e))?;
+pub(crate) fn smlib_record_ordered(record: &solidcore_record::brep::Brep) -> Result<(torno_smlib::Brep, Option<torno_smlib::history::Order>)> {
+    let _span = torno_profile::span("kernel", "smlib_record_ordered");
+    let brep = torno_smlib::Brep::from_record(record, true).map_err(|e| KernelError::smlib("SMLib", e))?;
     let order = numbering(record, &brep);
     Ok((brep, order))
 }
@@ -122,14 +120,14 @@ pub(crate) fn smlib_record_ordered(
 /// SMLib's faces and edges in the record's order, and canonical order can list them otherwise,
 /// a tube's seam edges among them): the export put back in SMLib's order then numbers them as
 /// `record` does, and SMLib's face and edge `i` are the record's `i`.
-fn numbering(record: &solidcore_record::brep::Brep, brep: &solidcraft_smlib::Brep) -> Option<solidcraft_smlib::history::Order> {
+fn numbering(record: &solidcore_record::brep::Brep, brep: &torno_smlib::Brep) -> Option<torno_smlib::history::Order> {
     match brep.to_native_ordered() {
         Ok((back, order)) => {
             if same_numbering(record, &back) {
                 return Some(order);
             }
             let in_smlib_order = in_smlib_order(&back, &order)?;
-            same_numbering(record, &in_smlib_order).then(solidcraft_smlib::history::Order::default)
+            same_numbering(record, &in_smlib_order).then(torno_smlib::history::Order::default)
         }
         Err(e) => {
             log::debug!(target: "smlib", "no order for an operand: {e}");
@@ -142,7 +140,7 @@ fn numbering(record: &solidcore_record::brep::Brep, brep: &solidcraft_smlib::Bre
 /// SMLib's face and edge `i` are in `back`), each loop naming its edges by SMLib's numbers.
 /// `None` where `order` is not a renumbering of `back`'s faces and edges (an edge split into
 /// pieces where solids touch along it is more than one record edge).
-fn in_smlib_order(back: &solidcore_record::brep::Brep, order: &solidcraft_smlib::history::Order) -> Option<solidcore_record::brep::Brep> {
+fn in_smlib_order(back: &solidcore_record::brep::Brep, order: &torno_smlib::history::Order) -> Option<solidcore_record::brep::Brep> {
     use solidcore_record::brep::Loop;
     let permutation = |to: &[usize], n: usize| -> Option<Vec<usize>> {
         if to.is_empty() {
@@ -247,8 +245,8 @@ mod tests {
     use super::*;
     use serde_json::Value;
     use solidcore_record::Vec3;
-    use solidcraft_geom::prelude::*;
     use std::sync::Arc;
+    use torno_geom::prelude::*;
     fn equal(a: &Body, b: &Body) {
         assert_eq!(a.face_count(), b.face_count());
         assert_eq!(a.face_sources, b.face_sources);

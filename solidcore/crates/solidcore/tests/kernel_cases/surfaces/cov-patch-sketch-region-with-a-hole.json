@@ -59,6 +59,6 @@
   "ungraded": [],
   "what": "a planar patch of the region between a 20 x 20 square and a circle r 4 inside it (picked by a point in the ring): a square with a hole",
   "why_not": [
-    "body \"Holed\" is no kernel operation's output nor an operand: SolidCraft built it or changed the kernel's record"
+    "body \"Holed\" is no kernel operation's output nor an operand: Torno built it or changed the kernel's record"
   ]
 }

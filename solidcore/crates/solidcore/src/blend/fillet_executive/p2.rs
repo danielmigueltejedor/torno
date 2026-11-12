@@ -1310,7 +1310,7 @@ impl<O: ClassObject + SolutionObject + Ord> FilletExecutive<O> {
 
             // Traverse forwards.
             if let Some(edge) = start_edge {
-                // fork 873c7c9 (SolidCraft change): GetFilletSolverOfEdge returns NULL
+                // fork 873c7c9 (Torno change): GetFilletSolverOfEdge returns NULL
                 // when GetEdgeuses fails
                 let pass_on = k.fixes.fillet_statuses_pass_on;
                 fs = self

@@ -22,7 +22,7 @@
 //! - `{"choose_file": "part.step"}`: the next Open picker returns that file of the scenario's
 //!   folder (Save pickers save there)
 //! - `{"shot": "name"}`: a screenshot when run in a window; headless, a render of the model
-//!   into `$SOLIDCRAFT_SCENARIO_SHOTS` when that is set; `{"debug": 1}`
+//!   into `$TORNO_SCENARIO_SHOTS` when that is set; `{"debug": 1}`
 //!   prints the UI state (`"widgets"`: also every widget's text; `"handles"`: every published
 //!   handle, browser rows as `row:<label>` and their fold arrows as `fold:<label>`)
 //! - `{"camera": {"yaw": rad, "pitch": rad}}` puts the camera at an orbit; `{"view_anim": "top",
@@ -42,20 +42,20 @@
 //!
 //! The same files drive the live app over the control channel for screenshots.
 
-use solidcraft_engine::geom::prelude::*;
 use std::cell::RefCell;
 use std::path::PathBuf;
 use std::rc::Rc;
+use torno_engine::geom::prelude::*;
 
 use serde_json::{Value, json};
-use solidcraft_engine::Session;
+use torno_engine::Session;
 
 use crate::control::{ControlRequest, Outcome, handle};
 use crate::{Services, SolveApp};
 
 // The widget registry (handles, rects and counts drawn this frame) lives in its own crate so UI
 // components can publish without depending on the app; re-exported here for the scenario runner.
-pub use solidcraft_ui_registry::{
+pub use torno_ui_registry::{
     clear_handles, count_of, handle_at, handles, publish_count, publish_handle, publish_rect, publish_target, publish_target_as, rect_of, rects,
 };
 
@@ -79,7 +79,7 @@ fn with_dir(v: Value, dir: &str) -> Value {
 fn scratch_dir() -> PathBuf {
     use std::sync::atomic::{AtomicUsize, Ordering};
     static N: AtomicUsize = AtomicUsize::new(0);
-    let d = solidcraft_engine::io::vfs::temp_dir().join(format!("solidcraft-scenario-{}-{}", std::process::id(), N.fetch_add(1, Ordering::Relaxed)));
+    let d = torno_engine::io::vfs::temp_dir().join(format!("torno-scenario-{}-{}", std::process::id(), N.fetch_add(1, Ordering::Relaxed)));
     let _ = std::fs::create_dir_all(&d);
     d
 }
@@ -102,7 +102,7 @@ pub struct Harness {
     time: f64,
     size: egui::Vec2,
     /// The camera as the last `camera` step left it.
-    cam_mark: Option<solidcraft_viewport::Camera>,
+    cam_mark: Option<torno_viewport::Camera>,
 }
 
 impl Default for Harness {
@@ -112,9 +112,9 @@ impl Default for Harness {
 }
 
 impl Drop for Harness {
-    /// The scenario's files go with it (kept with SOLIDCRAFT_SCENARIO_KEEP set).
+    /// The scenario's files go with it (kept with TORNO_SCENARIO_KEEP set).
     fn drop(&mut self) {
-        if solidcraft_engine::geom::env::var_os("SCENARIO_KEEP").is_none() {
+        if torno_engine::geom::env::var_os("SCENARIO_KEEP").is_none() {
             let _ = std::fs::remove_dir_all(&self.dir);
         }
     }
@@ -122,7 +122,7 @@ impl Drop for Harness {
 
 impl Harness {
     pub fn new() -> Harness {
-        solidcraft_ui_text::pin_system_language();
+        torno_ui_text::pin_system_language();
         let mut h = Harness {
             app: SolveApp::new(Session::default(), Services::default()),
             ctx: {
@@ -375,7 +375,7 @@ impl Harness {
     /// frame may turn the view (its right or back vector) by more than `max_deg`, the last
     /// included, so the move ends without a jump.
     fn view_anim(&mut self, v: &str, max_deg: f64) -> Result<(), String> {
-        let basis = |c: &solidcraft_viewport::Camera| c.basis();
+        let basis = |c: &torno_viewport::Camera| c.basis();
         let mut prev = basis(&self.app.cam);
         self.app.animate_view(v);
         if self.app.cam_anim.is_none() {
@@ -491,7 +491,7 @@ impl Harness {
                 v
             } else if let Some(f) = s.get("script").and_then(Value::as_str) {
                 // A command script (`{"commands": [{command, params}]}`, path from the repository
-                // root) run through the engine, as `solidcraft-cli run` does.
+                // root) run through the engine, as `torno-cli run` does.
                 let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../..").join(f);
                 let text = std::fs::read_to_string(&path).map_err(|e| format!("{f}: {e}"))?;
                 let v: Value = serde_json::from_str(&text).map_err(|e| format!("{f}: {e}"))?;
@@ -510,14 +510,14 @@ impl Harness {
             } else if s.get("note").is_some() || s.get("pending").is_some() {
                 return Ok(());
             } else if let Some(name) = s.get("shot").and_then(Value::as_str) {
-                // With SOLIDCRAFT_SCENARIO_SHOTS set: a render of the model as the camera sees it.
-                if let Ok(dir) = solidcraft_engine::geom::env::var("SCENARIO_SHOTS").ok_or(()) {
+                // With TORNO_SCENARIO_SHOTS set: a render of the model as the camera sees it.
+                if let Ok(dir) = torno_engine::geom::env::var("SCENARIO_SHOTS").ok_or(()) {
                     // Drawn on the GPU: the headless device, as the CLI draws.
                     #[cfg(not(target_arch = "wasm32"))]
-                    if solidcraft_engine::capture::installed().is_none() {
-                        solidcraft_engine::capture::install(std::sync::Arc::new(|scene, cam, w, h| {
-                            let (rgba, renderer) = solidcraft_gpu::env::headless_rgba(scene, cam, w, h)?;
-                            Ok(solidcraft_engine::capture::Picture { rgba, renderer })
+                    if torno_engine::capture::installed().is_none() {
+                        torno_engine::capture::install(std::sync::Arc::new(|scene, cam, w, h| {
+                            let (rgba, renderer) = torno_gpu::env::headless_rgba(scene, cam, w, h)?;
+                            Ok(torno_engine::capture::Picture { rgba, renderer })
                         }));
                     }
                     let path = std::path::Path::new(&dir).join(format!("{name}.png"));
@@ -835,7 +835,7 @@ pub fn check(h: &mut Harness, e: &Value) -> Result<(), String> {
                 if r.width() < lo - 0.5 || r.width() > hi + 0.5 {
                     return Err(format!("dialog width {:.0}, want {lo}..{hi}", r.width()));
                 }
-                let clearance = if rect_of("dialog:header").is_some() { solidcraft_theme::Tokens::get().space_8 } else { 0.0 };
+                let clearance = if rect_of("dialog:header").is_some() { torno_theme::Tokens::get().space_8 } else { 0.0 };
                 if (r.right() - (vp.right() - clearance)).abs() > 0.5 || r.top() < vp.top() || r.bottom() > vp.bottom() + 1.0 {
                     return Err(format!("dialog {r:?} is not docked right inside the viewport {vp:?}"));
                 }
@@ -1082,7 +1082,7 @@ pub fn check(h: &mut Harness, e: &Value) -> Result<(), String> {
             }
             "theme_colors" => {
                 // Read the applied tokens after the scenario frame, not the source theme file.
-                let tokens = solidcraft_theme::Tokens::get();
+                let tokens = torno_theme::Tokens::get();
                 let resolved = crate::theme_files::export("Scenario", crate::theme_files::Base::Dark, &tokens, None);
                 for (key, want) in v.as_object().into_iter().flatten() {
                     if resolved["colors"][key] != *want {

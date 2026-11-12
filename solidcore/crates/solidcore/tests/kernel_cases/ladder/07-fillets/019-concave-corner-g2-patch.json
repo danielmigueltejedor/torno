@@ -125,7 +125,7 @@
     "stitch"
   ],
   "ungraded": [
-    "continuity: SolidCraft computes it"
+    "continuity: Torno computes it"
   ],
   "what": "three concave r5 rounds at the inner corner of a 20x20x10 notch, with the g2 corner patch",
   "why_not": []

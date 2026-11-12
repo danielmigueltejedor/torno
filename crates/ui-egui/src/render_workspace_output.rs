@@ -4,8 +4,8 @@ use super::{ImageMethod, cpu, library, materials, setups, studio};
 use crate::ui_kit::BackingTooltipExt as _;
 use crate::{SolveApp, ui_kit};
 use serde_json::{Value, json};
-use solidcraft_engine::doc::Document;
 use std::sync::{Arc, Weak};
+use torno_engine::doc::Document;
 
 #[path = "render_ui/appearance.rs"]
 pub(super) mod selection_appearance;
@@ -257,8 +257,8 @@ pub(super) fn scene_controls(app: &mut SolveApp, ui: &mut egui::Ui) {
         let view = &app.render_workspace.view;
         let overrides = app.session.doc.render.setups.get(&view.name).map_or(0, |s| s.optics.len().saturating_add(s.surfaces.len()));
         let looks = super::scene::groups(app).iter().filter(|g| g.look.is_some()).count();
-        let look = solidcraft_ui_text::format("render.scene_look_summary", &[("looks", &looks.to_string()), ("overrides", &overrides.to_string())]);
-        let light = solidcraft_ui_text::format(
+        let look = torno_ui_text::format("render.scene_look_summary", &[("looks", &looks.to_string()), ("overrides", &overrides.to_string())]);
+        let light = torno_ui_text::format(
             "render.scene_light_summary",
             &[("environment", &super::scene::environment(app).0), ("lights", &super::scene::light_types(app).len().to_string())],
         );
@@ -289,7 +289,7 @@ pub(super) fn scene_controls(app: &mut SolveApp, ui: &mut egui::Ui) {
     let title = app.tr("render.scene_ready").to_string();
     ui_kit::section(ui, "render_scene_ready", &title, true, |ui| {
         let state = match &app.render_workspace.view.inspector.checked {
-            Some(check) if check.current(app) && super::image_params(app).as_ref().ok() == Some(&check.request) => solidcraft_ui_text::format(
+            Some(check) if check.current(app) && super::image_params(app).as_ref().ok() == Some(&check.request) => torno_ui_text::format(
                 "render.scene_check_passed",
                 &[("notes", &check.reply.get("warnings").and_then(Value::as_array).map_or(0, Vec::len).to_string())],
             ),
@@ -309,7 +309,7 @@ pub(super) fn scene_controls(app: &mut SolveApp, ui: &mut egui::Ui) {
         } else {
             let state = super::ribbon::action_ready(app, "render.start");
             let text = state.err().unwrap_or_else(|| {
-                solidcraft_ui_text::format("render.scene_renderer_ready", &[("renderer", app.tr(app.render_workspace.view.method.label()))])
+                torno_ui_text::format("render.scene_renderer_ready", &[("renderer", app.tr(app.render_workspace.view.method.label()))])
             });
             ui_kit::text(ui, &text, ui_kit::Text::Note("render:scene:renderer"));
         }
@@ -330,7 +330,7 @@ pub(super) fn scene_controls(app: &mut SolveApp, ui: &mut egui::Ui) {
                 }
             }
         });
-        let label = solidcraft_ui_text::format("render.scene_all_shots", &[("count", &app.session.doc.render.setups.len().to_string())]);
+        let label = torno_ui_text::format("render.scene_all_shots", &[("count", &app.session.doc.render.setups.len().to_string())]);
         let reason = all_shots_button(app, ui, &label, "render:scene:all-shots");
         batch_explanation(app, ui, reason.as_deref());
     });
@@ -352,7 +352,7 @@ fn scene_stage(app: &mut SolveApp, stage: super::Stage) {
     };
     let _ = app.run("view.render_select", params);
 }
-pub(super) fn apply_camera_draft(app: &mut SolveApp, camera: solidcraft_viewport::Camera) -> Result<(), String> {
+pub(super) fn apply_camera_draft(app: &mut SolveApp, camera: torno_viewport::Camera) -> Result<(), String> {
     app.run("render.camera.set", json!({"camera":camera}))?;
     app.follow_view_request(false);
     app.render_workspace.view.dirty = true;
@@ -386,7 +386,7 @@ pub(super) fn select_editor(app: &mut SolveApp, editor: Editor) {
             {
                 app.run(
                     "select.set",
-                    json!({"items":group.objects.iter().map(|name| solidcraft_engine::Sel::Body { name: name.clone() }).collect::<Vec<_>>()}),
+                    json!({"items":group.objects.iter().map(|name| torno_engine::Sel::Body { name: name.clone() }).collect::<Vec<_>>()}),
                 )
                 .unwrap();
             }
@@ -469,7 +469,7 @@ fn renderer_controls(app: &mut SolveApp, ui: &mut egui::Ui) {
 }
 fn output_controls(app: &mut SolveApp, ui: &mut egui::Ui) {
     let side = match app.render_workspace.view.method {
-        ImageMethod::CpuRaytrace | ImageMethod::GpuRaytrace => solidcraft_engine::render::job::MAX_OUTPUT_DIMENSION,
+        ImageMethod::CpuRaytrace | ImageMethod::GpuRaytrace => torno_engine::render::job::MAX_OUTPUT_DIMENSION,
         ImageMethod::Raster => 4096,
     };
     let before = [app.render_workspace.view.draft.width, app.render_workspace.view.draft.height];
@@ -499,12 +499,12 @@ fn output_controls(app: &mut SolveApp, ui: &mut egui::Ui) {
     }
     let largest = largest_output(app);
     let (w, h) = largest.map_or_else(|| ("—".to_string(), "—".to_string()), |(w, h)| (w.to_string(), h.to_string()));
-    let largest_label = solidcraft_ui_text::format("render.output_largest", &[("width", &w), ("height", &h)]);
+    let largest_label = torno_ui_text::format("render.output_largest", &[("width", &w), ("height", &h)]);
     for choices in [
-        ("720", solidcraft_ui_text::tr("render.size_hd").to_string(), Some((1280, 720))),
-        ("1080", solidcraft_ui_text::tr("render.size_full_hd").to_string(), Some((1920, 1080))),
-        ("4k", solidcraft_ui_text::tr("render.size_4k_uhd").to_string(), Some((3840, 2160))),
-        ("8k", solidcraft_ui_text::tr("render.size_8k_uhd").to_string(), Some((7680, 4320))),
+        ("720", torno_ui_text::tr("render.size_hd").to_string(), Some((1280, 720))),
+        ("1080", torno_ui_text::tr("render.size_full_hd").to_string(), Some((1920, 1080))),
+        ("4k", torno_ui_text::tr("render.size_4k_uhd").to_string(), Some((3840, 2160))),
+        ("8k", torno_ui_text::tr("render.size_8k_uhd").to_string(), Some((7680, 4320))),
         ("largest", largest_label, largest),
     ]
     .chunks(2)
@@ -604,7 +604,7 @@ fn render_controls(app: &mut SolveApp, ui: &mut egui::Ui) {
     let text = last.map_or_else(
         || app.tr("render.shots_no_result").to_string(),
         |s| {
-            solidcraft_ui_text::format(
+            torno_ui_text::format(
                 "render.children.last_result",
                 &[
                     ("number", &s.job.serial.to_string()),
@@ -717,9 +717,9 @@ fn path_controls(app: &mut SolveApp, ui: &mut egui::Ui) {
     }
     super::quality::legacy_samples_note(app, ui, app.render_workspace.view.samples);
     let label = app.tr("render.children.depth").to_string();
-    let mut depth = app.render_workspace.view.max_depth.clamp(1, u32::from(solidcraft_engine::render::job::MAX_PATH_DEPTH));
+    let mut depth = app.render_workspace.view.max_depth.clamp(1, u32::from(torno_engine::render::job::MAX_PATH_DEPTH));
     let response =
-        ui_kit::row(ui, &label, |ui| ui_kit::number_field(ui, &mut depth, 1..=u32::from(solidcraft_engine::render::job::MAX_PATH_DEPTH), 1.0, ""));
+        ui_kit::row(ui, &label, |ui| ui_kit::number_field(ui, &mut depth, 1..=u32::from(torno_engine::render::job::MAX_PATH_DEPTH), 1.0, ""));
     crate::scenario::publish_target("render:gpu-depth", response.rect);
     if response.changed() {
         app.render_workspace.view.max_depth = depth;
@@ -799,7 +799,7 @@ fn check_note_link(app: &mut SolveApp, ui: &mut egui::Ui, index: usize, line: &C
         _ if ["glass", "optic", "material", "texture", "coat"].iter().any(|word| message.contains(word)) => ("nothing", "render.page_appearance"),
         _ => ("output", "render.page_output"),
     };
-    let label = solidcraft_ui_text::format("render.children.go_to", &[("editor", app.tr(key))]);
+    let label = torno_ui_text::format("render.children.go_to", &[("editor", app.tr(key))]);
     let response = ui_kit::button(ui, &label, ui_kit::Button::Normal);
     crate::scenario::publish_target(&format!("render:check:go-to:{index}"), response.rect);
     if response.clicked() {
@@ -835,7 +835,7 @@ fn request_controls(app: &mut SolveApp, ui: &mut egui::Ui) {
         |s| {
             let bodies = s.reply["bodies"].as_array();
             let triangles = bodies.map_or(0, |b| b.iter().filter_map(|v| v["triangles"].as_u64()).fold(0u64, u64::saturating_add));
-            solidcraft_ui_text::format(
+            torno_ui_text::format(
                 "render.children.scene_summary",
                 &[("bodies", &bodies.map_or(0, Vec::len).to_string()), ("triangles", &triangles.to_string())],
             )
@@ -901,7 +901,7 @@ const QUALITY_IDS: [&str; 3] = ["Q-001", "Q-002", "Q-003"];
 struct QualitySource {
     method: ImageMethod,
     progressive: bool,
-    budget: solidcraft_engine::render::job::CpuBudget,
+    budget: torno_engine::render::job::CpuBudget,
     adaptive: Option<(u32, u32, [u64; 3])>,
 }
 fn quality_source(app: &SolveApp) -> QualitySource {
@@ -1024,7 +1024,7 @@ fn choose_quality(app: &mut SolveApp, index: usize) -> Result<(), String> {
 }
 
 fn quality_summary(app: &SolveApp, width: u32, height: u32, samples: u32, depth: u32, seed: u32, denoise: bool) -> String {
-    solidcraft_ui_text::format(
+    torno_ui_text::format(
         "render.quality_summary",
         &[
             ("width", &width.to_string()),
@@ -1037,15 +1037,8 @@ fn quality_summary(app: &SolveApp, width: u32, height: u32, samples: u32, depth:
     )
 }
 
-fn cpu_quality_summary(
-    app: &SolveApp,
-    width: u32,
-    height: u32,
-    samples: u32,
-    seed: u32,
-    budget: solidcraft_engine::render::job::CpuBudget,
-) -> String {
-    solidcraft_ui_text::format(
+fn cpu_quality_summary(app: &SolveApp, width: u32, height: u32, samples: u32, seed: u32, budget: torno_engine::render::job::CpuBudget) -> String {
+    torno_ui_text::format(
         "render.cpu_quality_summary",
         &[
             ("width", &width.to_string()),
@@ -1127,7 +1120,7 @@ pub(super) fn check_summary(app: &SolveApp) -> String {
             }
             let count = check.reply["warnings"].as_array().map_or(0, Vec::len)
                 + usize::from(check.reply["transparency"].as_str() == Some("sorted_alpha_approximation"));
-            return solidcraft_ui_text::format("render.output_check_summary", &[("count", &count.to_string())]);
+            return torno_ui_text::format("render.output_check_summary", &[("count", &count.to_string())]);
         }
         Some(_) => "render.studio_needs_review",
         None => return app.tr("render.children.not_checked").into(),
@@ -1184,7 +1177,7 @@ pub(super) fn size_limit_reason(app: &SolveApp, width: u32, height: u32) -> Stri
 }
 
 fn size_selection_limit_reason(app: &SolveApp, width: u32, height: u32) -> String {
-    let profile = solidcraft_engine::render::job::supersampled_dimensions(width, height, 1)
+    let profile = torno_engine::render::job::supersampled_dimensions(width, height, 1)
         .ok()
         .and_then(|_| cpu::profile_for_size(app, u64::from(width), u64::from(height)));
     size_limit_reason_with(app, width, height, cpu::size_selection_limits(app), profile)
@@ -1194,11 +1187,11 @@ fn size_limit_reason_with(
     app: &SolveApp,
     width: u32,
     height: u32,
-    limits: solidcraft_engine::render::RenderLimits,
-    profile: Option<solidcraft_engine::render::job::CpuBudget>,
+    limits: torno_engine::render::RenderLimits,
+    profile: Option<torno_engine::render::job::CpuBudget>,
 ) -> String {
     let (w, h) = limits.fit(u64::from(width), u64::from(height), None).unwrap_or((0, 0));
-    let reason = solidcraft_ui_text::format(
+    let reason = torno_ui_text::format(
         "render.output_size_limit",
         &[
             ("method", app.tr(app.render_workspace.view.method.label())),
@@ -1217,16 +1210,16 @@ fn size_limit_reason_with(
     // CPU raster has no profile selector: the way out includes changing the method.
     let key =
         if app.render_workspace.view.method == ImageMethod::Raster { "render.output_size_method_profile" } else { "render.output_size_profile" };
-    format!("{reason} {}", solidcraft_ui_text::format(key, &args))
+    format!("{reason} {}", torno_ui_text::format(key, &args))
 }
 /// A preset a CPU method refuses carries the profile that renders it (#8941). Kept short for the
 /// narrow size lists; the reason in its tooltip says what to choose, method included.
 pub(super) fn size_mark(app: &SolveApp, text: &str, size: Option<(u64, u64)>) -> Option<String> {
     let (width, height) = size?;
     // A profile hint must not advertise a size that no new UI selection accepts.
-    solidcraft_engine::render::job::supersampled_dimensions(u32::try_from(width).ok()?, u32::try_from(height).ok()?, 1).ok()?;
+    torno_engine::render::job::supersampled_dimensions(u32::try_from(width).ok()?, u32::try_from(height).ok()?, 1).ok()?;
     let profile = cpu::budget_name(app, cpu::profile_for_size(app, width, height)?);
-    Some(solidcraft_ui_text::format("render.size_needs_profile", &[("size", text), ("profile", profile)]))
+    Some(torno_ui_text::format("render.size_needs_profile", &[("size", text), ("profile", profile)]))
 }
 pub(super) fn size_presets(app: &mut SolveApp, ui: &mut egui::Ui) {
     ui_kit::scope(ui, |ui| {
@@ -1313,7 +1306,7 @@ fn check_lines(app: &SolveApp) -> Vec<CheckLine> {
     }
     let mut lines = vec![CheckLine { key: "ready", label: app.tr("render.output_ready").into(), status: Ok }];
     if let (Some(w), Some(h)) = (check.reply["request"]["width"].as_u64(), check.reply["request"]["height"].as_u64()) {
-        let label = solidcraft_ui_text::format("render.output_size_ok", &[("width", &w.to_string()), ("height", &h.to_string())]);
+        let label = torno_ui_text::format("render.output_size_ok", &[("width", &w.to_string()), ("height", &h.to_string())]);
         lines.push(CheckLine { key: "size", label, status: Ok });
     }
     if let Some(transparency) = check.reply["transparency"].as_str() {
@@ -1424,13 +1417,13 @@ pub(super) fn apply_quality(app: &mut SolveApp, plan: &Value) -> Result<(), Stri
         return apply_cpu_quality(app, plan);
     }
     if app.render_workspace.view.method != ImageMethod::GpuRaytrace || plan["variant"] != "fixed_samples_png" {
-        return Err(solidcraft_ui_text::tr("render.error_quality_method").into());
+        return Err(torno_ui_text::tr("render.error_quality_method").into());
     }
     let u32_at = |section: &str, key: &str| {
         plan[section][key]
             .as_u64()
             .and_then(|n| u32::try_from(n).ok())
-            .ok_or_else(|| solidcraft_ui_text::tr("render.error_quality_projection").to_string())
+            .ok_or_else(|| torno_ui_text::tr("render.error_quality_projection").to_string())
     };
     let (width, height, samples, depth, seed) = (
         u32_at("settings", "width")?,
@@ -1439,13 +1432,12 @@ pub(super) fn apply_quality(app: &mut SolveApp, plan: &Value) -> Result<(), Stri
         u32_at("gpu_options", "max_depth")?,
         u32_at("gpu_options", "seed")?,
     );
-    let denoise = plan["gpu_options"]["denoise"].as_bool().ok_or(solidcraft_ui_text::tr("render.error_denoise_setting"))?;
-    if !(1..=solidcraft_engine::render::job::MAX_SAMPLES_PER_PIXEL).contains(&samples)
-        || !(1..=u32::from(solidcraft_engine::render::job::MAX_PATH_DEPTH)).contains(&depth)
-        || solidcraft_engine::render::job::GPU_PATH_LIMITS.fit(u64::from(width), u64::from(height), None)
-            != Some((u64::from(width), u64::from(height)))
+    let denoise = plan["gpu_options"]["denoise"].as_bool().ok_or(torno_ui_text::tr("render.error_denoise_setting"))?;
+    if !(1..=torno_engine::render::job::MAX_SAMPLES_PER_PIXEL).contains(&samples)
+        || !(1..=u32::from(torno_engine::render::job::MAX_PATH_DEPTH)).contains(&depth)
+        || torno_engine::render::job::GPU_PATH_LIMITS.fit(u64::from(width), u64::from(height), None) != Some((u64::from(width), u64::from(height)))
     {
-        return Err(solidcraft_ui_text::tr("render.error_quality_bounds").into());
+        return Err(torno_ui_text::tr("render.error_quality_bounds").into());
     }
     let view = &mut app.render_workspace.view;
     view.draft.width = width;
@@ -1458,7 +1450,7 @@ pub(super) fn apply_quality(app: &mut SolveApp, plan: &Value) -> Result<(), Stri
     Ok(())
 }
 fn apply_cpu_quality(app: &mut SolveApp, plan: &Value) -> Result<(), String> {
-    use solidcraft_engine::render::job::{CpuBudget, CpuProgressiveOptions, cpu_camera_sampling};
+    use torno_engine::render::job::{CpuBudget, CpuProgressiveOptions, cpu_camera_sampling};
     let view = &app.render_workspace.view;
     if view.raytrace.progressive.is_none() {
         return Err(app.tr("render.cpu_quality_progressive_required").to_string());
@@ -1478,10 +1470,10 @@ fn apply_cpu_quality(app: &mut SolveApp, plan: &Value) -> Result<(), String> {
     }
     let sampling = cpu_camera_sampling(Some(progressive), view.studio.adaptive, budget).map_err(|error| error.to_string())?;
     let (trace_width, trace_height) =
-        solidcraft_engine::render::job::supersampled_dimensions(width, height, view.studio.supersampling).map_err(|error| error.to_string())?;
+        torno_engine::render::job::supersampled_dimensions(width, height, view.studio.supersampling).map_err(|error| error.to_string())?;
     budget.validate_image(trace_width, trace_height, sampling).map_err(|error| error.to_string())?;
     if view.studio.denoise {
-        solidcraft_engine::render::job::validate_cpu_denoise_image(trace_width, trace_height).map_err(|error| error.to_string())?;
+        torno_engine::render::job::validate_cpu_denoise_image(trace_width, trace_height).map_err(|error| error.to_string())?;
     }
     let view = &mut app.render_workspace.view;
     view.draft.width = width;

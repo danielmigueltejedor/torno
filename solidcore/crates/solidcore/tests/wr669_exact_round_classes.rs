@@ -1,4 +1,4 @@
-//! WR-669 (`fixes.fillet_exact_round_classes`, the SolidCraft fork's tangency-labs/smlib@b5f2867
+//! WR-669 (`fixes.fillet_exact_round_classes`, the Torno fork's tangency-labs/smlib@b5f2867
 //! and 7ac037e): a constant round is exact by one classification of its spine from its
 //! faces' kinds and placement, in place of upstream's try-chain (planes and cones only,
 //! cylinder then torus, each gated on the edge's shape).

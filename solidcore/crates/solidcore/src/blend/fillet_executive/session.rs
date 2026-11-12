@@ -1847,7 +1847,7 @@ impl<'target> FilletSession<'target> {
 
     /// The per-edge `SetFilletParameters` overload (`SmFilletExecutive.cpp:865`) with a
     /// solver type per edge (`radius_types`, one per edge or one for all): what the
-    /// SolidCraft fork's `SmOffsetFacesExecutive` calls on a bare `SmFilletExecutive`
+    /// Torno fork's `SmOffsetFacesExecutive` calls on a bare `SmFilletExecutive`
     /// (not upstream's API wrappers: no `SetDoGlobalMerge`), default tolerances and no
     /// laws.
     ///
@@ -2726,7 +2726,7 @@ impl<'target> FilletSession<'target> {
     /// its vertex's fill. The setback is not known when [`Self::create_corners`] classifies the
     /// corners: it is set on a made corner, by its identity (the fork's `SetSetBackDist`), and
     /// every caller sets it after the corners are made: `solidcore-ops`' `blend::pass` makes
-    /// them and `blend::corners` sets it, SolidCraft's `smlib::core::blend` likewise
+    /// them and `blend::corners` sets it, Torno's `smlib::core::blend` likewise
     /// (`blend_edges_stopping`, then `corners`), and the goldens runner's
     /// `setback_fillet_edges`. Where the corner is the Setback it takes the N x N
     /// corner's place, with its fill asked as [`Self::set_set_back_fill`] asks one; elsewhere

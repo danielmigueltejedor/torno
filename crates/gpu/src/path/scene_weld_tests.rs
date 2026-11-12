@@ -1,11 +1,11 @@
-use solidcraft_geom::prelude::*;
 use std::sync::Arc;
+use torno_geom::prelude::*;
 
 use super::{MediumWeld, Triangle, flatten, medium_preparation_bytes};
 use solidcore_record::Vec3;
-use solidcraft_geom::Mesh;
-use solidcraft_render::{ProductMesh, ProductScene, job::CancelToken, transmission::Transmission};
-use solidcraft_viewport::surface::OpaqueSurface;
+use torno_geom::Mesh;
+use torno_render::{ProductMesh, ProductScene, job::CancelToken, transmission::Transmission};
+use torno_viewport::surface::OpaqueSurface;
 
 fn seam_tetra(offset: Vec3) -> ProductScene {
     // Original outward tetrahedron. Only one face has a duplicated CAD seam
@@ -166,7 +166,7 @@ fn closed_glass_refuses_a_pinched_vertex_even_when_edges_and_global_connectivity
 
 #[test]
 fn optional_glass_material_lane_grows_only_authored_uploads() {
-    use solidcraft_render::glass_model::{Dispersion, GlassModel, ThinFilm};
+    use torno_render::glass_model::{Dispersion, GlassModel, ThinFilm};
     let cancel = CancelToken::default();
     let plain = seam_tetra(Vec3::ZERO);
     let original = flatten(&plain, Vec3::ZERO, &cancel).unwrap();

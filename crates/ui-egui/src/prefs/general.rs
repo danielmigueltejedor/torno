@@ -14,21 +14,21 @@ pub(super) fn show(app: &mut SolveApp, ui: &mut egui::Ui) {
                         ui_kit::dropdown_menu(
                             ui,
                             "pref_language",
-                            &if app.preferences.language == solidcraft_ui_text::SYSTEM {
+                            &if app.preferences.language == torno_ui_text::SYSTEM {
                                 app.tr("prefs.language_system").to_owned()
                             } else {
-                                solidcraft_ui_text::Locale::for_language(&app.preferences.language).display_name().into_owned()
+                                torno_ui_text::Locale::for_language(&app.preferences.language).display_name().into_owned()
                             },
                             |ui| {
                                 if ui_kit::list_picker(
                                     ui,
-                                    solidcraft_ui_text::SYSTEM,
+                                    torno_ui_text::SYSTEM,
                                     app.tr("prefs.language_system"),
-                                    app.preferences.language == solidcraft_ui_text::SYSTEM,
+                                    app.preferences.language == torno_ui_text::SYSTEM,
                                 )
                                 .clicked()
                                 {
-                                    app.preferences.language = solidcraft_ui_text::SYSTEM.into();
+                                    app.preferences.language = torno_ui_text::SYSTEM.into();
                                 }
                                 for locale in crate::i18n::LOCALES {
                                     if ui_kit::list_picker(ui, locale.id, &locale.display_name(), app.preferences.language == locale.id).clicked() {
@@ -42,7 +42,7 @@ pub(super) fn show(app: &mut SolveApp, ui: &mut egui::Ui) {
             });
         });
         ui_kit::settings_section(ui, "saving", app.tr("prefs.saving"), |ui| {
-            ui_kit::checkbox(ui, app.tr("Reopen the designs that were open when SolidCraft was last closed"), &mut app.preferences.reopen_designs);
+            ui_kit::checkbox(ui, app.tr("Reopen the designs that were open when Torno was last closed"), &mut app.preferences.reopen_designs);
             // Only the web app keeps designs in the browser (#10220).
             if app.services.browser_files.is_some() {
                 let tip = app.tr("prefs.keep_unsaved_in_browser_tip").to_string();
@@ -56,7 +56,7 @@ pub(super) fn show(app: &mut SolveApp, ui: &mut egui::Ui) {
             }
             setting::save_prompt_one_at_a_time(app, ui).on_hover_text(app.tr("prefs.save_prompt_one_at_a_time_help"));
             ui_kit::settings_form(ui, labels, |ui| {
-                let shown = ui_kit::settings_row_help(ui, app.tr("ui.autosave_every"), solidcraft_ui_text::tr_label("0 turns it off"), |ui| {
+                let shown = ui_kit::settings_row_help(ui, app.tr("ui.autosave_every"), torno_ui_text::tr_label("0 turns it off"), |ui| {
                     let number = ui_kit::settings_number(ui, &mut app.autosave_minutes, 0.0..=120.0, 0.5);
                     number.widget_info(|| {
                         let mut info = egui::WidgetInfo::drag_value(ui.is_enabled(), app.autosave_minutes);
@@ -154,7 +154,7 @@ pub(super) fn show(app: &mut SolveApp, ui: &mut egui::Ui) {
         ui_kit::settings_section(ui, "crash_reports", app.tr("prefs.general.crash_reports"), |ui| {
             ui.horizontal(|ui| {
                 let count = app.crashes.saved_count();
-                let label = solidcraft_ui_text::format("prefs.reports_saved", &[("n", &count.to_string())]);
+                let label = torno_ui_text::format("prefs.reports_saved", &[("n", &count.to_string())]);
                 let tone = if count == 0 { ui_kit::SettingsBadgeTone::Neutral } else { ui_kit::SettingsBadgeTone::Warning };
                 let badge = ui_kit::settings_state_badge(ui, &label, tone);
                 crate::scenario::publish_rect("prefs:crash_count", badge.rect);
@@ -172,7 +172,7 @@ pub(super) fn show(app: &mut SolveApp, ui: &mut egui::Ui) {
 /// Preferences › General › Largest file to open (#4086): the STEP/import and design file limits,
 /// in MB. The browser keeps its limits, so there it is a note instead.
 fn file_size_rows(app: &mut SolveApp, ui: &mut egui::Ui, labels: f32) {
-    use solidcraft_engine::io::limits;
+    use torno_engine::io::limits;
     if !limits::ADJUSTABLE {
         ui.horizontal(|ui| {
             ui_kit::text(ui, app.tr("prefs.max_file_size"), ui_kit::Text::Inline);
@@ -186,7 +186,7 @@ fn file_size_rows(app: &mut SolveApp, ui: &mut egui::Ui, labels: f32) {
     let mut help = app.tr("prefs.max_file_size_note").to_string();
     if let Some(bytes) = limits::override_bytes() {
         help.push('\n');
-        help.push_str(&solidcraft_ui_text::format("prefs.max_file_size_flag", &[("size", &limits::describe(bytes))]));
+        help.push_str(&torno_ui_text::format("prefs.max_file_size_flag", &[("size", &limits::describe(bytes))]));
     }
     let t = Tokens::get();
     let rows = [
@@ -198,7 +198,7 @@ fn file_size_rows(app: &mut SolveApp, ui: &mut egui::Ui, labels: f32) {
             ui.spacing_mut().item_spacing.x = t.space_16 + t.space_4;
             for (label, caption, handle, default, value) in rows {
                 let size = limits::describe(value.saturating_mul(limits::MB));
-                let unit = solidcraft_ui_text::tr("prefs.megabytes");
+                let unit = torno_ui_text::tr("prefs.megabytes");
                 let note = if *value >= 1024 { format!("{unit} ({size})") } else { unit.to_owned() };
                 let number_width = t.space_24 * 3.0;
                 let width = (number_width + t.space_4 + ui_kit::ContentWidth::label(ui, &note))

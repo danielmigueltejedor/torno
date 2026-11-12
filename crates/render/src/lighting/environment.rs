@@ -109,7 +109,7 @@ impl EnvironmentSource {
     pub fn sky(sky: SkyGradient, rotation_rad: f64, intensity: f64) -> Result<Self> {
         sky.validate()?;
         let mut hash = Sha256::new();
-        hash.update(b"solidcraft.original-gradient-sky/1");
+        hash.update(b"torno.original-gradient-sky/1");
         for v in sky.zenith.into_iter().chain(sky.horizon).chain(sky.ground) {
             hash.update(v.to_le_bytes());
         }
@@ -467,7 +467,7 @@ impl PreparedEnvironment {
         self.texels.get(row * self.width as usize + column).map(|texel| texel.pdf).ok_or_else(|| invalid("environment PDF index"))
     }
     pub fn evaluate(&self, direction: Vec3) -> Result<([f32; 3], f32)> {
-        let d = solidcraft_viewport::surface::unit_direction(direction).map_err(|_| invalid("invalid environment direction"))?;
+        let d = torno_viewport::surface::unit_direction(direction).map_err(|_| invalid("invalid environment direction"))?;
         let column = ((d.y.atan2(d.x).rem_euclid(TAU) / TAU * f64::from(self.width)) as usize).min(self.width as usize - 1);
         let row = ((d.z.clamp(-1.0, 1.0).acos() / PI * f64::from(self.height)) as usize).min(self.height as usize - 1);
         let texel = self.texels.get(row * self.width as usize + column).ok_or_else(|| invalid("environment lookup index"))?;

@@ -1,9 +1,9 @@
 # SPDX-License-Identifier: MIT OR Apache-2.0
-"""scx: a prototype "hybrid" MCP server for SolidCraft.
+"""scx: a prototype "hybrid" MCP server for Torno.
 
-The model writes a short Python script using SolidCraft's own vocabulary (box, cylinder, sketch,
-extrude, hole, fillet, part...). Each call runs immediately in SolidCraft through the official
-`solidcraft-cli mcp` bridge. Every `run` ends with a compact numeric summary of what changed, so the
+The model writes a short Python script using Torno's own vocabulary (box, cylinder, sketch,
+extrude, hole, fillet, part...). Each call runs immediately in Torno through the official
+`torno-cli mcp` bridge. Every `run` ends with a compact numeric summary of what changed, so the
 check is automatic, and can add a small picture.
 
 Prototype for benchmarking only: the script runs with a restricted set of builtins in this process
@@ -11,15 +11,15 @@ Prototype for benchmarking only: the script runs with a restricted set of builti
 with models and prompts you trust. A real integration would use a sandboxed interpreter.
 
 usage:
-  python scx.py [--port 7879] [--look-default]        connect to a running SolidCraft (solidcraft --control 7879)
-  python scx.py --headless [--in FILE] [--text-only]  start its own headless SolidCraft through solidcraft-cli
+  python scx.py [--port 7879] [--look-default]        connect to a running Torno (torno --control 7879)
+  python scx.py --headless [--in FILE] [--text-only]  start its own headless Torno through torno-cli
     --text-only   for clients that cannot show images: no pictures, no `look` tool
-  SCX_CLI=path/to/solidcraft-cli   if solidcraft-cli is not on PATH
+  SCX_CLI=path/to/torno-cli   if torno-cli is not on PATH
 """
 import ast, json, math, subprocess, sys, traceback
 
 import os
-CLI = os.environ.get("SCX_CLI") or "solidcraft-cli"
+CLI = os.environ.get("SCX_CLI") or "torno-cli"
 PORT = 7879
 HEADLESS = "--headless" in sys.argv
 START_FILE = next((sys.argv[i + 1] for i, a in enumerate(sys.argv) if a == "--in" and i + 1 < len(sys.argv)), None)
@@ -29,7 +29,7 @@ for i, a in enumerate(sys.argv):
 LOOK_DEFAULT = "--look-default" in sys.argv
 TEXT_ONLY = "--text-only" in sys.argv
 
-# ---------------------------------------------------------------- SolidCraft bridge (child MCP)
+# ---------------------------------------------------------------- Torno bridge (child MCP)
 
 
 class Bridge:
@@ -51,7 +51,7 @@ class Bridge:
         while True:
             line = self.p.stdout.readline()
             if not line:
-                raise RuntimeError("SolidCraft bridge closed")
+                raise RuntimeError("Torno bridge closed")
             m = json.loads(line)
             if m.get("id") == self.n:
                 return m
@@ -492,7 +492,7 @@ def _cmd_line(c, cap=500):
 
 
 def commands(word=""):
-    """SolidCraft command ids whose id or label contains `word`, with their parameters."""
+    """Torno command ids whose id or label contains `word`, with their parameters."""
     w = word.lower()
     hits = [c for c in _command_list() if w in c["id"].lower() or w in str(c.get("label", "")).lower()]
     if not hits:
@@ -502,7 +502,7 @@ def commands(word=""):
 
 
 def cmd(command_id, **params):
-    """Any SolidCraft command by id, e.g. cmd('solid.pattern.circular', features=['Hole1'], axis='Z', count=6)."""
+    """Any Torno command by id, e.g. cmd('solid.pattern.circular', features=['Hole1'], axis='Z', count=6)."""
     try:
         return bridge().cmd(command_id, params)
     except SCError as e:
@@ -540,7 +540,7 @@ LOG = []
 
 
 def _size(a):
-    if a["bbox"][0] is None:  # a body SolidCraft could not measure
+    if a["bbox"][0] is None:  # a body Torno could not measure
         return ()
     return num([round(q - p, 4) for p, q in zip(*a["bbox"])])
 
@@ -710,7 +710,7 @@ def tool_look(args):
     return imgs or [{"type": "text", "text": "no picture"}], not imgs
 
 
-INSTRUCTIONS = """SolidCraft CAD. Units mm, Z up. Send Python scripts to `run` as {"code": "..."}; do the whole part in one script when you can; each line acts at once. Every reply ends with what changed: + new body, ~ changed body (volume before -> after, bbox), - removed. Check them; fix with another `run` (steps before an error stay). A bare last-line expression is printed.
+INSTRUCTIONS = """Torno CAD. Units mm, Z up. Send Python scripts to `run` as {"code": "..."}; do the whole part in one script when you can; each line acts at once. Every reply ends with what changed: + new body, ~ changed body (volume before -> after, bbox), - removed. Check them; fix with another `run` (steps before an error stay). A bare last-line expression is printed.
 op='new' makes a separate body; 'join'/'cut'/'intersect' act on the last body made or changed (into='Body' picks another). Name bodies (name=). Use loops for repeats.
 
 Vocabulary (math, pi, sqrt, sin, cos ready):
@@ -737,7 +737,7 @@ Example:
 """
 
 TOOLS = [
-    {"name": "run", "description": "Run a Python build script in SolidCraft (vocabulary in the server instructions). Returns printed output, errors with line numbers and hints, and what changed (bodies, volumes, bboxes).",
+    {"name": "run", "description": "Run a Python build script in Torno (vocabulary in the server instructions). Returns printed output, errors with line numbers and hints, and what changed (bodies, volumes, bboxes).",
      "inputSchema": {"type": "object", "properties": {"code": {"type": "string", "description": "Python script"},
                                                        "look": {"type": "boolean", "description": "Add a small picture after it runs"},
                                                        "new": {"type": ["boolean", "string"], "description": "true (or a name): start a new, empty design before the script runs"}},

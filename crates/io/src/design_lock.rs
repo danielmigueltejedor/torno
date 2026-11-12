@@ -70,7 +70,7 @@ pub struct Lock {
     /// The computer's name.
     pub host: String,
     pub user: String,
-    /// The SolidCraft version that wrote it.
+    /// The Torno version that wrote it.
     pub app: String,
     pub pid: u32,
     /// When the design was opened, and when the lock was last written (Unix seconds).

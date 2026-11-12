@@ -11,7 +11,7 @@ fn run(s: &mut Session, id: &str, p: Value) -> Value {
 
 /// A folder of its own for one test's files.
 fn scratch(name: &str) -> std::path::PathBuf {
-    let dir = std::env::temp_dir().join(format!("solidcraft-bom-{}-{name}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("torno-bom-{}-{name}", std::process::id()));
     let _ = std::fs::remove_dir_all(&dir);
     std::fs::create_dir_all(&dir).unwrap();
     dir
@@ -280,7 +280,7 @@ fn a_components_refusals_speak_of_part_properties() {
     let bogus = refusal(&mut s, json!({"component": "Pin", "values": {"bogus": "x"}}));
     assert!(
         bogus.ends_with(
-            "`bogus` is not a part property: SolidCraft's are project, part_number, revision, author, organization, description, \
+            "`bogus` is not a part property: Torno's are project, part_number, revision, author, organization, description, \
              license, bom_type; another tool's data goes under a reverse-DNS key such as `com.example.tool`"
         ),
         "{bogus}"
@@ -332,7 +332,7 @@ fn every_key_a_component_took_before_is_still_taken() {
 fn a_component_refused_past_its_limits_says_part_properties() {
     let mut s = assembly();
     // The pin holds a part number and a description: room for this many more keys.
-    let room = solidcraft_doc::metadata::MAX_KEYS - 2;
+    let room = torno_doc::metadata::MAX_KEYS - 2;
     let values: serde_json::Map<String, Value> = (0..room).map(|i| (format!("org.k{i}"), json!({}))).collect();
     run(&mut s, "component.metadata.set", json!({"component": "Pin", "values": values}));
     let over = s.execute("component.metadata.set", &json!({"component": "Pin", "values": {"org.one_more": {}}})).unwrap_err().to_string();

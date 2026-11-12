@@ -1,15 +1,15 @@
 //! tangency-labs/solidcore#2089: with `Kernel::fixes.ssi_tangent_curve_tracer` (WR-75)
 //! on, an r 1 crease round fails with fillet code 3 ("Fillet Corner Error: Corner Edge
-//! Computation Failure"). SolidCraft hit it once the r 2 round it runs onto is a plain
-//! B-spline surface; with only the two fillet fixes below (not SolidCraft's whole
+//! Computation Failure"). Torno hit it once the r 2 round it runs onto is a plain
+//! B-spline surface; with only the two fillet fixes below (not Torno's whole
 //! preset) the round fails as built too.
 //!
 //! A block x 0..40, y -5..5, z 0..15 and a cylinder r 10, height 30 on the Z axis (both
-//! extruded, the circle's seam at 0.6131 rad as SolidCraft's), joined; the concave arc
+//! extruded, the circle's seam at 0.6131 rad as Torno's), joined; the concave arc
 //! where the block's top meets the cylinder is rounded r 2. Then the block's top edge
 //! along y = 5 and the crease running up from it between the side face and the arc
 //! round are rounded r 1, with that round's surface replaced by its NURBS form
-//! (`turn_to_nurbs`; SolidCraft's flat conversion writes it that way).
+//! (`turn_to_nurbs`; Torno's flat conversion writes it that way).
 //!
 //! At the crease's upper end the r 1 round's surface runs on tangent to the cylinder.
 //! There the tracer traced a crossing branch through the contact points along that
@@ -82,7 +82,7 @@ fn pick(k: &Kernel, b: &Brep, points: &[[f64; 3]]) -> Vec<EdgeId> {
         .collect()
 }
 
-/// SolidCraft's round: the per-edge constant-radius setup, corners, then filleting;
+/// Torno's round: the per-edge constant-radius setup, corners, then filleting;
 /// the executive's error code (0 on success, after `StitchAndOrient`).
 fn round(k: &mut Kernel, b: &mut Brep, points: &[[f64; 3]], r: f64) -> i32 {
     let edges = pick(k, b, points);
@@ -262,7 +262,7 @@ struct Built {
     definition: [(f64, usize); 2],
 }
 
-/// The crease round's error code and, when it builds, what it gives. SolidCraft's fixes
+/// The crease round's error code and, when it builds, what it gives. Torno's fixes
 /// (every `UpstreamFixes` field but `geometric_g2_continuity`), so both rounds are built
 /// by the blend corner, the construction kept since WR-641's
 /// `fillet_through_extended_rail_end` was removed (#2500); the tangent tracer as `tracer`.

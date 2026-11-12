@@ -1371,7 +1371,7 @@ impl FilletBrep {
             let the_corner = corners.corner(corner)?;
             let (surface, surface2_id): (Option<Surface>, Option<ExecutiveErrorObject>) =
                 if let Some(cap) = the_corner.end_cap.as_ref() {
-                    // SolidCraft change (the fork's 41a39ec): an End at a smooth vertex is
+                    // Torno change (the fork's 41a39ec): an End at a smooth vertex is
                     // cut by its plane square to its edge there
                     (
                         Some(exact_surface(cap)?),
@@ -3432,7 +3432,7 @@ mod tests {
     }
 
     /// Fork tangency-labs/smlib@7d79866 (`sm_SnapRailEndToKnot`, WR-664): a vertex that
-    /// drops 1e-8 before the rail's knot (SolidCraft's fillets/1207 r0.5 drop) trims at
+    /// drops 1e-8 before the rail's knot (Torno's fillets/1207 r0.5 drop) trims at
     /// the knot, as one that drops 1e-8 after it from the other end does; 1e-3 away (more
     /// than the zone tolerance 1e-6) the drop stays, as does one with the knot outside
     /// the trim.

@@ -2,7 +2,7 @@
 
 use serde::{Deserialize, Serialize};
 use solidcore_record::Vec3;
-use solidcraft_geom::prelude::*;
+use torno_geom::prelude::*;
 
 /// A 3×3 matrix, row-major (`m[row][col]`); acts on column vectors.
 #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]

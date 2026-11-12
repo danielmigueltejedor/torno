@@ -6,7 +6,7 @@
 //! It's a generic cap on a round base, drawn in code, not any maker's device.
 
 use egui::{Pos2, Shape, Stroke};
-use solidcraft_space_mouse::{Calibration, Kind, Step};
+use torno_space_mouse::{Calibration, Kind, Step};
 
 #[cfg(test)]
 #[path = "space_mouse_model_tests.rs"]
@@ -95,7 +95,7 @@ pub(crate) fn paint(ui: &egui::Ui, rect: egui::Rect, pose: &Pose, moving: [bool;
     let painter = ui.painter_at(rect);
     let visuals = ui.visuals();
     let (_, at) = view(rect);
-    let (faint, accent) = (solidcraft_theme::Tokens::get().text_dim, visuals.selection.stroke.color);
+    let (faint, accent) = (torno_theme::Tokens::get().text_dim, visuals.selection.stroke.color);
     let marker = |live: bool| Stroke::new(if live { 2.5 } else { 1.5 }, if live { accent } else { faint });
     let outline = Stroke::new(1.0, faint);
     let (base_side, base_top) = (visuals.widgets.noninteractive.bg_stroke.color, visuals.widgets.inactive.bg_fill);
@@ -231,7 +231,7 @@ pub(crate) fn corner(ui: &mut egui::Ui, rect: egui::Rect, calibration: Option<&C
     let (kind, travel, moving) = match calibration {
         Some(calibration) => (calibration.kind, calibration.travel(raw), calibration.apply(raw).map(|value| value != 0)),
         None => {
-            let travel = raw.map(|value| f32::from(value) / f32::from(solidcraft_space_mouse::FULL_SCALE));
+            let travel = raw.map(|value| f32::from(value) / f32::from(torno_space_mouse::FULL_SCALE));
             (Kind::ReturnToCenter, travel, travel.map(|value| value.abs() > 0.05))
         }
     };
@@ -397,7 +397,7 @@ pub(crate) mod ball {
         let painter = ui.painter_at(rect);
         let visuals = ui.visuals();
         let (scale, at) = view(rect);
-        let (faint, accent) = (solidcraft_theme::Tokens::get().text_dim, visuals.selection.stroke.color);
+        let (faint, accent) = (torno_theme::Tokens::get().text_dim, visuals.selection.stroke.color);
         let outline = Stroke::new(1.0, faint);
         let flat = |radius: f32, height: f32| ring(radius, height).into_iter().map(at).collect::<Vec<Pos2>>();
         let base: Vec<Pos2> = ring(BASE_RADIUS, 0.0).into_iter().chain(ring(BASE_RADIUS, BASE_HEIGHT)).map(at).collect();

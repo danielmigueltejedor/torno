@@ -1,7 +1,7 @@
 //! #2406 (from tangency-labs/smlib#98): a round ending at a smooth vertex while its rail
 //! has already rolled over its side face's tangent edge onto the next face.
 //!
-//! The part is SolidCraft #851's plate with its concave R21 corner wall (the fork's capi
+//! The part is Torno #851's plate with its concave R21 corner wall (the fork's capi
 //! `arc_wall_plate`): the plate x 0..41 1/6, y -21..0, z 0..10 and the corner
 //! x 41 1/6..62 1/6 less the cylinder r 21 about the axis A = (62 1/6, -21). Its top front
 //! edge (y = -21, z = 10) is rounded R2, then the middle edge of the arc top edge's tangent
@@ -148,7 +148,7 @@ const FRONT_R: f64 = 2.0;
 const FRONT: [f64; 3] = [20.583333333333332, -21.0, 10.0];
 const MIDDLE: [f64; 3] = [41.17486688363082, -20.413218067968561, 9.415188112149071];
 
-/// SolidCraft #851's plate with its concave R21 corner wall.
+/// Torno #851's plate with its concave R21 corner wall.
 fn arc_wall_plate(k: &mut Kernel) -> Brep {
     let corner0 = create_box(k, Point3::new(W, -21.0, 0.0), 21.0, 21.0, 10.0).unwrap();
     let disc = create_cylinder(k, Point3::new(W + 21.0, -21.0, 0.0), WALL, 10.0).unwrap();

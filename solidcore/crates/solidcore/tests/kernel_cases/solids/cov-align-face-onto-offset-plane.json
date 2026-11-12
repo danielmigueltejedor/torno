@@ -55,6 +55,6 @@
   "ungraded": [],
   "what": "a post's bottom face aligned onto a plane z=50 away from the picked point in X and Y: it moves along the plane's normal only",
   "why_not": [
-    "body \"Post\" is no kernel operation's output nor an operand: SolidCraft built it or changed the kernel's record"
+    "body \"Post\" is no kernel operation's output nor an operand: Torno built it or changed the kernel's record"
   ]
 }

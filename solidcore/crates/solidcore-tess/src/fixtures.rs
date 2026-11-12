@@ -1,5 +1,5 @@
 //! Frozen B-rep records of the bodies the tests mesh (`tests/data`, made by
-//! `tests/data/generate_fixtures.rs.txt` from SolidCraft's kernel) and the sizes they were made at.
+//! `tests/data/generate_fixtures.rs.txt` from Torno's kernel) and the sizes they were made at.
 
 use std::collections::HashMap;
 
@@ -17,7 +17,7 @@ pub(crate) fn fixture(name: &str) -> brep::Brep {
     serde_json::from_str(&json).unwrap_or_else(|e| panic!("{path}: {e}"))
 }
 
-/// The size of the body `name` was frozen from: its box diagonal as SolidCraft measured it when
+/// The size of the body `name` was frozen from: its box diagonal as Torno measured it when
 /// it was made, which its mesh tolerance rules ([`MeshTolerance::rules`]) take.
 pub(crate) fn size_of(name: &str) -> f64 {
     let path = format!("{}/tests/data/sizes.json", env!("CARGO_MANIFEST_DIR"));

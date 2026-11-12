@@ -61,6 +61,6 @@
   "ungraded": [],
   "what": "a 20 x 12 ellipse cut through a 100 x 60 x 2.5 sheet: it became 0.001 mm chords, one face each",
   "why_not": [
-    "body \"Body1\" is no kernel operation's output nor an operand: SolidCraft built it or changed the kernel's record"
+    "body \"Body1\" is no kernel operation's output nor an operand: Torno built it or changed the kernel's record"
   ]
 }

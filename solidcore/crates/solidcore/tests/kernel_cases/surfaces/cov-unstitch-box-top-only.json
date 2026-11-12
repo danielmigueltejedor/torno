@@ -49,7 +49,7 @@
   "ungraded": [],
   "what": "the top of a box unstitched: the top a surface body, the open box the other",
   "why_not": [
-    "body \"Box\" is no kernel operation's output nor an operand: SolidCraft built it or changed the kernel's record",
-    "body \"Top\" is no kernel operation's output nor an operand: SolidCraft built it or changed the kernel's record"
+    "body \"Box\" is no kernel operation's output nor an operand: Torno built it or changed the kernel's record",
+    "body \"Top\" is no kernel operation's output nor an operand: Torno built it or changed the kernel's record"
   ]
 }

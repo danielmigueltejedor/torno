@@ -7,8 +7,8 @@ use crate::dialogs_surface::Surf;
 use crate::scenario::Harness;
 use crate::viewport::Hit;
 use serde_json::json;
-use solidcraft_engine::Sel;
-use solidcraft_engine::doc::{FeatureKind, RailFit, SketchId, SweepRail};
+use torno_engine::Sel;
+use torno_engine::doc::{FeatureKind, RailFit, SketchId, SweepRail};
 
 /// Circles `Base` (z = 0) and `Top` (z = 40) and in `R` on XZ a rail `out` from (10, 0, 0) out to
 /// x = 15 halfway and back to (10, 0, 40); the circles' and the rail's sketch ids.
@@ -245,7 +245,7 @@ fn loft_profiles_picked_together_in_one_sketch_are_one_section() {
     let ws = h.app.session.world_state().unwrap();
     assert_eq!(ws.bodies.len(), 1, "{:?}", h.app.session.log);
     // Frustum of a 40 mm square to a 30 mm one, 30 mm tall: h/3 (A + B + sqrt(AB)) = 37000 mm³.
-    let volume = solidcraft_engine::doc::kernel::measure(&ws.bodies[0].body).unwrap().volume;
+    let volume = torno_engine::doc::kernel::measure(&ws.bodies[0].body).unwrap().volume;
     assert!((volume - 37000.0).abs() < 1.0, "{volume}");
     let name = h.app.session.doc.features.last().unwrap().name.clone();
     h.step(&json!({"call":"ui.editFeature","params":{"feature":name}})).unwrap();
@@ -271,7 +271,7 @@ fn an_unchanged_loft_edit_keeps_a_section_of_all_profiles() {
         k => panic!("{k:?}"),
     };
     let stored = sections(&h);
-    assert_eq!(stored[0], solidcraft_engine::doc::ProfileSel::All);
+    assert_eq!(stored[0], torno_engine::doc::ProfileSel::All);
     h.step(&json!({"call":"ui.editFeature","params":{"feature":name}})).unwrap();
     h.frames(8);
     let commands = crate::dialogs::apply_commands(&h.app, h.app.dialog.as_ref().unwrap()).unwrap();

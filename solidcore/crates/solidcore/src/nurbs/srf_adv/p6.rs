@@ -232,14 +232,14 @@ pub fn create_sweep_scale_traced(
     Ok((surface, trace))
 }
 
-/// The local systems a sweep placed its cross section on (the SolidCraft fork's
+/// The local systems a sweep placed its cross section on (the Torno fork's
 /// `placed` output of `N_CreateSweepScale`, tangency-labs/smlib 5d3939e): the frames
 /// `(OL, XL, YL, ZL)` of the first, the middle (of all placed, in order: index
 /// `n / 2` of `n`) and the last section.
 pub type SweepPlacements = [Frame; 3];
 
 /// [`create_sweep_scale`] that also reports where it placed the cross section
-/// ([`SweepPlacements`]; the SolidCraft fork's `placed` output, tangency-labs/smlib
+/// ([`SweepPlacements`]; the Torno fork's `placed` output, tangency-labs/smlib
 /// 5d3939e, #1450). The surface is the same as [`create_sweep_scale`]'s.
 ///
 /// # Errors
@@ -456,7 +456,7 @@ fn sweep_scale(
 
     let mut result: Option<Surface> = None;
 
-    // SolidCraft fork (5d3939e): the sections placed so far, and in all (see `placed`).
+    // Torno fork (5d3939e): the sections placed so far, and in all (see `placed`).
     let mut placed_at = 0usize;
     let n_placed: usize = seg_pars.iter().map(Vec::len).sum();
 
@@ -502,7 +502,7 @@ fn sweep_scale(
             let yl = zl.cross(xl);
             let rma = transform_matrix_from_axes(world, Frame::new(ol, xl, yl, zl))?;
 
-            // SolidCraft fork (5d3939e): the local systems of the first, middle and last
+            // Torno fork (5d3939e): the local systems of the first, middle and last
             // sections.
             if let Some(placed) = placed.as_deref_mut() {
                 let slots = [0, n_placed / 2, n_placed.saturating_sub(1)];

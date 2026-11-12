@@ -1,5 +1,5 @@
 //! STEP topology (ISO 10303-42 topology and geometric model entities) into the kernel-neutral
-//! B-rep, schema 4 ([`solidcraft_geom::brep`], docs/native-brep.md). Written from the public
+//! B-rep, schema 4 ([`torno_geom::brep`], docs/native-brep.md). Written from the public
 //! ISO 10303-42 specification.
 //!
 //! Each MANIFOLD_SOLID_BREP, BREP_WITH_VOIDS and SHELL_BASED_SURFACE_MODEL becomes one
@@ -80,7 +80,7 @@ const MAX_SPLINE_DEGREE: usize = 16;
 /// Samples along a curve when projecting a vertex onto it.
 const MAX_SAMPLES: usize = 4096;
 /// The largest tolerance (mm) an edge or vertex is given: SMLib takes none larger (smlib.h's
-/// EDGE_TOLERANCE and VERTEX_TOLERANCE, `solidcraft_smlib::flat::MAX_TOLERANCE`). Geometry that
+/// EDGE_TOLERANCE and VERTEX_TOLERANCE, `torno_smlib::flat::MAX_TOLERANCE`). Geometry that
 /// would need more is refused, with how far off it lies.
 const MAX_TOLERANCE: f64 = 1.0;
 /// A vertex's tolerance over its largest gap from its curves and surfaces.
@@ -1046,7 +1046,7 @@ impl<'b, 'a> Builder<'b, 'a> {
         // A void's faces face into the cavity, out of the material: it encloses volume of the
         // opposite sign to the outer shell's. The ORIENTED_CLOSED_SHELL flag alone doesn't say
         // so: some exporters write .F. over a shell already facing into the cavity (#3730),
-        // SolidCraft .T.; read by the flag, such a void added its cavity's volume to the solid's.
+        // Torno .T.; read by the flag, such a void added its cavity's volume to the solid's.
         // A void enclosing volume of the outer shell's sign is turned inside out, the signs the
         // faces' own surfaces and pcurves give (`face_flux` of p / 3, the divergence theorem).
         let shells = if kind == Kind::Voids && closed.iter().all(|c| *c) {

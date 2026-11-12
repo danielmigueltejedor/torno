@@ -261,7 +261,7 @@ pub enum MeshQualityParam {
 impl<'de> Deserialize<'de> for MeshQualityParam {
     fn deserialize<D: Deserializer<'de>>(d: D) -> Result<Self, D::Error> {
         let v = Value::deserialize(d)?;
-        let named = v.as_str().filter(|s| solidcraft_io::MeshQuality::from_name(s).is_some()).map(|s| s.trim().to_ascii_lowercase());
+        let named = v.as_str().filter(|s| torno_io::MeshQuality::from_name(s).is_some()).map(|s| s.trim().to_ascii_lowercase());
         match named.as_deref() {
             Some("standard") => Ok(MeshQualityParam::Standard),
             Some("fine") => Ok(MeshQualityParam::Fine),

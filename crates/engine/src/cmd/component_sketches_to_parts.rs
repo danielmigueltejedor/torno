@@ -3,8 +3,8 @@
 //! to the part whose face they are drawn on.
 use serde_json::{Value, json};
 use solidcore_record::Plane;
-use solidcraft_doc::{EmbossFace, FeatureKind, PlaneRef, apply_point, apply_vector, mat_inverse, mat_mul};
-use solidcraft_geom::prelude::*;
+use torno_doc::{EmbossFace, FeatureKind, PlaneRef, apply_point, apply_vector, mat_inverse, mat_mul};
+use torno_geom::prelude::*;
 
 use crate::params::{bad, name_or_id_values};
 use crate::schema::component::{MoveSketchesToPartsResult, SketchKeptInPlace, SketchMovedToPart};
@@ -32,7 +32,7 @@ pub(super) fn reauthor(s: &mut Session, id: u64, to: u64, cmd: &str) -> Result<(
     let Some(feature) = s.doc.feature(id) else { return Ok(()) };
     let from = feature.component;
     let FeatureKind::Sketch { plane, .. } = &feature.kind else { return Ok(()) };
-    let Some(anchor) = solidcraft_doc::face_anchor::plane_face_anchor(plane) else { return Ok(()) };
+    let Some(anchor) = torno_doc::face_anchor::plane_face_anchor(plane) else { return Ok(()) };
     if from == to {
         return Ok(());
     }

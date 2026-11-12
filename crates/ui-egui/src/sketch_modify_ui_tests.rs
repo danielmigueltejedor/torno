@@ -9,8 +9,8 @@
 //! spacing.
 
 use serde_json::json;
-use solidcraft_engine::Sel;
-use solidcraft_engine::geom::prelude::*;
+use torno_engine::Sel;
+use torno_engine::geom::prelude::*;
 
 use crate::dialogs::{Kind, apply_commands};
 use crate::scenario::Harness;
@@ -232,7 +232,7 @@ fn mirror_uses_the_only_preselected_construction_line_among_multiple_lines() {
         let state = h.app.session.model.state();
         let sketch = &state.sketch(h.app.session.active_sketch.unwrap()).unwrap().sketch;
         assert_eq!(sketch.curves.len(), 4, "neither the reference nor the unselected construction line is copied");
-        let solidcraft_engine::sketch::CurveKind::Circle { c, r } = &sketch.curves.last().unwrap().kind else { panic!("expected mirrored circle") };
+        let torno_engine::sketch::CurveKind::Circle { c, r } = &sketch.curves.last().unwrap().kind else { panic!("expected mirrored circle") };
         let at = sketch.point(*c).unwrap();
         let expected_x = if second_axis { 0.0 } else { -10.0 };
         assert!((at.x - expected_x).abs() < 1e-6 && at.y.abs() < 1e-6);
@@ -280,7 +280,7 @@ fn mirror_takes_a_circle_clicked_while_the_mirror_line_is_active_into_the_entiti
         .curves
         .iter()
         .filter_map(|c| match c.kind {
-            solidcraft_engine::sketch::CurveKind::Circle { c, .. } => sketch.point(c),
+            torno_engine::sketch::CurveKind::Circle { c, .. } => sketch.point(c),
             _ => None,
         })
         .filter(|p| p.x < 0.0)
@@ -411,7 +411,7 @@ fn the_window_reflects_the_picked_circle_across_the_line() {
     assert_eq!(sk.curves.len(), 3, "{:?}", h.app.status);
     let made = sk.curves.last().unwrap();
     // `CurveKind` is not Copy: match the field behind its reference.
-    let solidcraft_engine::sketch::CurveKind::Circle { c, r } = &made.kind else { panic!("{:?}", made.kind) };
+    let torno_engine::sketch::CurveKind::Circle { c, r } = &made.kind else { panic!("{:?}", made.kind) };
     let at = sk.point(*c).unwrap();
     assert!((at.x + 10.0).abs() < 1e-6 && at.y.abs() < 1e-6, "{at:?}");
     assert!((*r - 3.0).abs() < 1e-6, "{r}");
@@ -431,7 +431,7 @@ fn moved(x: &str, y: &str, angle: &str) -> Mod {
 
 #[test]
 fn the_command_now_has_a_toolbar_placement_and_opens_a_window() {
-    let spec = solidcraft_engine::find_command("sketch.move").expect("sketch.move is registered");
+    let spec = torno_engine::find_command("sketch.move").expect("sketch.move is registered");
     assert_eq!((spec.tab, spec.panel), ("SKETCH", "MODIFY"));
     assert_eq!(spec.icon, "sketch_move");
     assert_eq!(crate::icon_svg::resolve(spec.icon).master, "move", "reuse the finished Move drawing");
@@ -652,7 +652,7 @@ fn rectangular_pattern_window_opens_instead_of_a_click_tool() {
 
 #[test]
 fn rectangular_sections_flip_and_center_independently_and_restore_even_counts_when_editing() {
-    use solidcraft_engine::sketch::PatternAlignment;
+    use torno_engine::sketch::PatternAlignment;
     let (mut h, id) = open("sketch.pattern.rectangular");
     h.app.dialog.as_mut().unwrap().inputs[0].items = vec![Sel::SketchCurve { id, sketch: None }];
     rect(&mut h, "4", "20", "2", "10");
@@ -835,7 +835,7 @@ fn dragging_a_spacing_arrow_past_zero_gives_a_negative_spacing() {
         let Some(Kind::SketchModify(Mod::PatternRect { spacing, spacing2, .. })) = h.app.dialog.as_ref().map(|d| &d.kind) else {
             panic!("the pattern window")
         };
-        h.app.session.doc.eval(if second { spacing2 } else { spacing }, solidcraft_engine::doc::expr::Kind::Length).unwrap()
+        h.app.session.doc.eval(if second { spacing2 } else { spacing }, torno_engine::doc::expr::Kind::Length).unwrap()
     };
     let (at, dir) = crate::canvas::anchor(&h.app, h.app.dialog.as_ref().unwrap()).expect("an anchor");
     let dir = dir.expect("a direction");
@@ -875,16 +875,13 @@ fn dragging_an_offset_arrow_across_its_curve_offsets_the_other_way() {
             h.step(&json!({"drag": [{"handle": "arrow"}, {"world": [to.x, to.y, to.z]}], "ctrl": true})).unwrap();
         }
         let Some(Kind::SketchModify(Mod::Offset { distance, .. })) = h.app.dialog.as_ref().map(|d| &d.kind) else { panic!("the offset window") };
-        let value = h.app.session.doc.eval(distance, solidcraft_engine::doc::expr::Kind::Length).unwrap();
+        let value = h.app.session.doc.eval(distance, torno_engine::doc::expr::Kind::Length).unwrap();
         h.step(&json!({"widget": "OK"})).unwrap();
         assert!(h.app.dialog.is_none(), "{:?}", h.app.status);
         let st = h.app.session.model.state();
         let sk = &st.sketch(h.app.session.active_sketch.unwrap()).unwrap().sketch;
-        let radii: Vec<f64> = sk
-            .curves
-            .iter()
-            .filter_map(|c| if let solidcraft_engine::sketch::CurveKind::Circle { r, .. } = c.kind { Some(r) } else { None })
-            .collect();
+        let radii: Vec<f64> =
+            sk.curves.iter().filter_map(|c| if let torno_engine::sketch::CurveKind::Circle { r, .. } = c.kind { Some(r) } else { None }).collect();
         (value, radii)
     };
     // The circle's offset to the left of its curve is inside it; the other way is outside.
@@ -963,7 +960,7 @@ fn the_typed_count_and_total_angle_reach_the_command() {
 
 #[test]
 fn circular_flip_and_center_buttons_apply_and_reopen_the_saved_placement() {
-    use solidcraft_engine::sketch::{PatternAlignment, SketchPatternKind};
+    use torno_engine::sketch::{PatternAlignment, SketchPatternKind};
     let (mut h, _) = open_circ();
     circ(&mut h, "6", "90 deg");
     h.frames(3);
@@ -1081,7 +1078,7 @@ fn mirror_origin_axis_picks_use_the_same_reference_as_symmetry() {
         let st = h.app.session.model.state();
         let sk = &st.sketch(h.app.session.active_sketch.unwrap()).unwrap().sketch;
         assert!(sk.sketch_axis_curve(expected).is_some());
-        assert_eq!(sk.constraints.iter().filter(|c| matches!(c.kind, solidcraft_engine::sketch::ConstraintKind::Symmetric { .. })).count(), 2);
+        assert_eq!(sk.constraints.iter().filter(|c| matches!(c.kind, torno_engine::sketch::ConstraintKind::Symmetric { .. })).count(), 2);
     }
     let mut h = Harness::new();
     h.app.run("sketch.create", json!({"plane":{"origin":[0,5,0],"x_dir":[1,1,0],"y_dir":[-1,1,0]}})).unwrap();

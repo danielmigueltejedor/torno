@@ -1,4 +1,4 @@
-//! Geometry foundation for SolidCraft: 2D/3D vectors, sketch planes, axis-aligned boxes,
+//! Geometry foundation for Torno: 2D/3D vectors, sketch planes, axis-aligned boxes,
 //! triangle meshes with their measures (volume, area, centroid), and freeform surface maths
 //! (B-spline basis and NURBS surfaces in [`bspline`], spline spaces and the operators that make
 //! splines compatible in [`spline_space`], one-surface fills of closed loops in [`fill`],
@@ -50,22 +50,22 @@ pub mod tess {
 
     use solidcore_record::Vec3;
 
-    /// A vector of SolidCraft's as the kernel's.
+    /// A vector of Torno's as the kernel's.
     pub fn to_kernel(v: Vec3) -> solidcore::Vec3 {
         solidcore::Vec3::new(v.x, v.y, v.z)
     }
 
-    /// A vector of the kernel's as SolidCraft's.
+    /// A vector of the kernel's as Torno's.
     pub fn from_kernel(v: solidcore::Vec3) -> Vec3 {
         Vec3::new(v.x, v.y, v.z)
     }
 
-    /// A point and two derivatives of the kernel's as SolidCraft's.
+    /// A point and two derivatives of the kernel's as Torno's.
     pub fn from_kernel3((a, b, c): (solidcore::Vec3, solidcore::Vec3, solidcore::Vec3)) -> (Vec3, Vec3, Vec3) {
         (from_kernel(a), from_kernel(b), from_kernel(c))
     }
 
-    /// The kernel's partial derivatives ([`solidcore::eval::plan::partials`]) in SolidCraft's
+    /// The kernel's partial derivatives ([`solidcore::eval::plan::partials`]) in Torno's
     /// vectors.
     pub mod partials {
         pub use solidcore::eval::plan::partials::{MAX_PARTIAL_ORDER, orders, trig_derivative};
@@ -85,15 +85,15 @@ pub mod tess {
             Some(d)
         }
 
-        /// The kernel's table in SolidCraft's vectors.
+        /// The kernel's table in Torno's vectors.
         pub fn from_kernel(d: solidcore::eval::plan::partials::Partials) -> Partials {
             d.map(|row| row.map(super::from_kernel))
         }
     }
 
-    /// A plan evaluated into SolidCraft's [`crate::Mesh`].
+    /// A plan evaluated into Torno's [`crate::Mesh`].
     pub trait EvaluateMesh {
-        /// The plan's mesh ([`TessPlan::evaluate`]), as SolidCraft's mesh.
+        /// The plan's mesh ([`TessPlan::evaluate`]), as Torno's mesh.
         fn evaluate_mesh(&self) -> crate::Mesh;
     }
 
@@ -122,7 +122,7 @@ pub use unit_vec3::UnitVec3;
 pub use vec::{Vec2Geom, Vec3Geom};
 
 /// The geometry traits of the record's plain data ([`solidcore_record::Vec3`],
-/// [`solidcore_record::Plane`], the profile types), in scope with `use solidcraft_geom::prelude::*`.
+/// [`solidcore_record::Plane`], the profile types), in scope with `use torno_geom::prelude::*`.
 pub mod prelude {
     pub use crate::{
         Loop2ArcFit as _, Loop2Geom as _, MeshGeom as _, PlaneGeom as _, Region2ArcFit as _, Region2Geom as _, Seg2ArcFit as _, Seg2Geom as _,

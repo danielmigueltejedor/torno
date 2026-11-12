@@ -2,7 +2,7 @@
 
 use serde::{Deserialize, Serialize};
 use solidcore_record::Vec2;
-use solidcraft_geom::prelude::*;
+use torno_geom::prelude::*;
 
 use crate::{ConstraintKind, Curve, CurveKind, Sketch, SketchError};
 

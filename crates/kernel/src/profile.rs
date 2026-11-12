@@ -77,7 +77,7 @@ pub fn credit(times: KernelTimes) {
 /// Time `f` as `kind` when a capture is running and no timed call is; it is also the
 /// profiler's span `name` (category `kernel`) whenever the profiler records.
 pub(crate) fn timed<T>(kind: Kind, name: &'static str, f: impl FnOnce() -> T) -> T {
-    let _span = solidcraft_profile::span("kernel", name);
+    let _span = torno_profile::span("kernel", name);
     let st = STATE.with(Cell::get);
     if !st.on || st.busy {
         return f();
@@ -182,8 +182,8 @@ mod tests {
     fn kernel_operations_are_profiler_spans_with_smlib_calls_inside() {
         use crate::{BoolOp, boolean, box_solid};
         use solidcore_record::Vec3;
-        solidcraft_profile::set_enabled(true);
-        let mark = solidcraft_profile::mark();
+        torno_profile::set_enabled(true);
+        let mark = torno_profile::mark();
         let a = box_solid(Vec3::ZERO, Vec3::new(10.0, 10.0, 10.0)).unwrap();
         let b = box_solid(Vec3::new(5.0, 5.0, 5.0), Vec3::new(15.0, 15.0, 15.0)).unwrap();
         let r = boolean(&a, &b, BoolOp::Cut);

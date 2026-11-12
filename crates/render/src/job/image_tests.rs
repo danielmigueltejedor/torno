@@ -1,8 +1,8 @@
 use super::*;
 use crate::ProductMesh;
-use solidcraft_geom::{Aabb3, Mesh};
-use solidcraft_viewport::{Camera, StandardView};
 use std::sync::Arc;
+use torno_geom::{Aabb3, Mesh};
+use torno_viewport::{Camera, StandardView};
 
 fn request() -> ImageRequest {
     let mut camera = Camera { distance: 50.0, ..Default::default() };
@@ -99,7 +99,7 @@ fn glass_is_sorted_back_to_front_independently_of_body_order() {
 fn physical_transmission_keeps_the_exact_scalar_cpu_preview() {
     let original = square("Glass", [80, 180, 140], 0.25, Vec3::ZERO);
     let mut glass = original.clone();
-    glass.surface = Some(solidcraft_viewport::surface::OpaqueSurface::new(Vec3::new(0.2, 0.4, 0.3), 0.0, 0.1, 1.5).unwrap());
+    glass.surface = Some(torno_viewport::surface::OpaqueSurface::new(Vec3::new(0.2, 0.4, 0.3), 0.0, 0.1, 1.5).unwrap());
     glass.transmission = Some(crate::transmission::Transmission::new(Vec3::new(-0.7_f64.ln(), -0.9_f64.ln(), 0.0) / 10.0, None).unwrap());
     let expected = finish(ImageTask::new(scene(vec![original]), request(), CancelToken::default()).unwrap());
     let actual = finish(ImageTask::new(scene(vec![glass]), request(), CancelToken::default()).unwrap());
@@ -348,7 +348,7 @@ fn product_render_output_is_pinned() {
         ])
     };
     let mut glossy = opaque();
-    glossy.meshes[0].surface = Some(solidcraft_viewport::surface::OpaqueSurface::new(Vec3::new(0.6, 0.3, 0.1), 1.0, 0.3, 1.5).unwrap());
+    glossy.meshes[0].surface = Some(torno_viewport::surface::OpaqueSurface::new(Vec3::new(0.6, 0.3, 0.1), 1.0, 0.3, 1.5).unwrap());
     let front = request().camera;
     let glass = scene(vec![square("Far", [240, 20, 20], 0.5, front.back() * -5.0), square("Near", [20, 20, 240], 0.5, front.back() * 5.0)]);
     // Larger than the view: triangles cross every edge of the picture.

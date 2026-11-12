@@ -8,7 +8,7 @@
 //! constraint manifold, and the rank analysis may not hide `l1`'s coupling below its tolerance.
 
 use solidcore_record::Vec2;
-use solidcraft_geom::prelude::*;
+use torno_geom::prelude::*;
 
 use crate::{Analysis, ConstraintKind, Hold, Sketch, move_point_towards, solve_with};
 

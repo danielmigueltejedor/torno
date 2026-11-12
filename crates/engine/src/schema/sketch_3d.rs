@@ -121,7 +121,7 @@ pub struct DrawnPoints(pub Vec<Vec3>);
 
 impl<'de> Deserialize<'de> for DrawnPoints {
     fn deserialize<D: Deserializer<'de>>(d: D) -> Result<Self, D::Error> {
-        let max = solidcraft_sketch::MAX_FIT_POINTS;
+        let max = torno_sketch::MAX_FIT_POINTS;
         let Value::Array(a) = Value::deserialize(d)? else {
             return Err(D::Error::custom(whole("`points` must list [x,y,z] points")));
         };
@@ -146,7 +146,7 @@ impl JsonSchema for DrawnPoints {
             "type": "array",
             "items": point,
             "minItems": 2,
-            "maxItems": solidcraft_sketch::MAX_FIT_POINTS
+            "maxItems": torno_sketch::MAX_FIT_POINTS
         })
     }
 }
@@ -230,7 +230,7 @@ impl<'de> Deserialize<'de> for FitIndex {
         Value::deserialize(d)?
             .as_u64()
             .and_then(|v| usize::try_from(v).ok())
-            .filter(|v| *v < solidcraft_sketch::MAX_FIT_POINTS)
+            .filter(|v| *v < torno_sketch::MAX_FIT_POINTS)
             .map(FitIndex)
             .ok_or_else(|| D::Error::custom("must be a fit point index below 500"))
     }
@@ -244,7 +244,7 @@ impl JsonSchema for FitIndex {
         true
     }
     fn json_schema(_: &mut SchemaGenerator) -> Schema {
-        json_schema!({"type": "integer", "minimum": 0, "maximum": solidcraft_sketch::MAX_FIT_POINTS - 1})
+        json_schema!({"type": "integer", "minimum": 0, "maximum": torno_sketch::MAX_FIT_POINTS - 1})
     }
 }
 

@@ -407,8 +407,8 @@ mod tests {
             edition = "2024"
             [workspace.dependencies]
             serde = "1"
-            solidcraft-ui-registry = { path = "crates/ui-registry" }
-            solidcraft-engine = { path = "crates/engine" }
+            torno-ui-registry = { path = "crates/ui-registry" }
+            torno-engine = { path = "crates/engine" }
             solidcore-tess = { path = "solidcore/crates/solidcore-tess" }
             [workspace.lints.rust]
             unsafe_code = "forbid"
@@ -419,14 +419,14 @@ mod tests {
             "#,
         )
         .unwrap();
-        let shared_dirs = BTreeMap::from([(std::fs::canonicalize(&shared_dir).unwrap(), "solidcraft-ui-registry")]);
+        let shared_dirs = BTreeMap::from([(std::fs::canonicalize(&shared_dir).unwrap(), "torno-ui-registry")]);
         let m = scratch_manifest(&root, &src, &["ui-registry".into()], &shared_dirs).unwrap();
         let _ = std::fs::remove_dir_all(&root);
         let ws = m["workspace"].as_table().unwrap();
         assert_eq!(ws["resolver"].as_str(), Some("3"));
         let deps = ws["dependencies"].as_table().unwrap();
-        assert!(deps.contains_key("serde") && !deps.contains_key("solidcraft-engine"));
-        assert_eq!(path_of(&deps["solidcraft-ui-registry"]), Some("ui-registry"));
+        assert!(deps.contains_key("serde") && !deps.contains_key("torno-engine"));
+        assert_eq!(path_of(&deps["torno-ui-registry"]), Some("ui-registry"));
         let tess = path_of(&deps["solidcore-tess"]).unwrap();
         assert!(Path::new(tess).is_absolute() && tess.ends_with("solidcore/crates/solidcore-tess"), "{tess}");
         assert!(ws.contains_key("package") && ws.contains_key("lints") && m.contains_key("profile"));

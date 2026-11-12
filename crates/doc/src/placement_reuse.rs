@@ -71,7 +71,7 @@ pub(super) fn local_plane(plane: &PlaneRef, depth: usize) -> bool {
 /// Whether no feature after the mirror `f` can cut, join or otherwise build on bodies: only
 /// features that read none, and further mirrors, which copy them. A boolean depends on how a
 /// copy's revolved faces are turned, so a copy it may reach is made with
-/// [`solidcraft_kernel::transform_matrix`]; one that is only shown needs no search for that. It
+/// [`torno_kernel::transform_matrix`]; one that is only shown needs no search for that. It
 /// depends on the design alone, so a design evaluates the same however it was reached.
 pub(super) fn copies_only_shown(doc: &Document, f: &Feature) -> bool {
     let mut later = doc.features.iter().skip_while(|g| g.id != f.id).skip(1);

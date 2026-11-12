@@ -11,8 +11,8 @@ use schemars::{JsonSchema, Schema, SchemaGenerator, json_schema};
 use serde::de::Error as _;
 use serde::{Deserialize, Deserializer, Serialize};
 use serde_json::{Map, Value};
-use solidcraft_doc::point_cloud::{MAX_POINTS, UNITS};
-use solidcraft_io::Format;
+use torno_doc::point_cloud::{MAX_POINTS, UNITS};
+use torno_io::Format;
 
 use super::check::whole;
 use super::types::{StringList, not_blank_pattern};
@@ -214,10 +214,10 @@ impl<'de> Deserialize<'de> for ExportParams {
         // `mesh_prefix`, `effort` and `velocity` are not read for the other formats.
         out.quality = match m.get("quality") {
             None | Some(Value::Null) => None,
-            Some(v) => Some(match v.as_str().and_then(solidcraft_io::MeshQuality::from_name) {
-                Some(solidcraft_io::MeshQuality::Standard) => MeshQualityParam::Standard,
-                Some(solidcraft_io::MeshQuality::Fine) => MeshQualityParam::Fine,
-                Some(solidcraft_io::MeshQuality::Finest) => MeshQualityParam::Finest,
+            Some(v) => Some(match v.as_str().and_then(torno_io::MeshQuality::from_name) {
+                Some(torno_io::MeshQuality::Standard) => MeshQualityParam::Standard,
+                Some(torno_io::MeshQuality::Fine) => MeshQualityParam::Fine,
+                Some(torno_io::MeshQuality::Finest) => MeshQualityParam::Finest,
                 None => return Err(refuse(format!("`quality` must be standard, fine or finest, not {v}"))),
             }),
         };
@@ -325,7 +325,7 @@ impl JsonSchema for UpParam {
 
 /// What the bodies of a STEP, IGES, FreeCAD or Rhino file are named after.
 #[derive(Clone, Copy, Debug, PartialEq)]
-pub struct NamesParam(pub solidcraft_io::StepNames);
+pub struct NamesParam(pub torno_io::StepNames);
 
 impl<'de> Deserialize<'de> for NamesParam {
     fn deserialize<D: Deserializer<'de>>(d: D) -> Result<Self, D::Error> {
@@ -402,7 +402,7 @@ impl JsonSchema for MaxPoints {
     }
 }
 
-/// Open a file as the design: a SolidCraft design (`.sc`, or a `.solidcraft` design from an
+/// Open a file as the design: a Torno design (`.sc`, or a `.solidcraft` design from an
 /// earlier release), a `.dxf` or `.svg` drawing (a new, unsaved design with an XY sketch, with
 /// the units and defaults of `sketch.insert_dxf` and `sketch.insert_svg`), a STEP, IGES,
 /// FreeCAD, Rhino, 3MF, STL, OBJ or glTF file (a new design holding the file as a component
@@ -446,14 +446,14 @@ pub struct OpenParams {
     pub max_points: Option<MaxPoints>,
 }
 
-/// Another SolidCraft that has the design open, from its lock file.
+/// Another Torno that has the design open, from its lock file.
 #[derive(Debug, Serialize, JsonSchema)]
 pub struct OpenElsewhere {
     /// The computer's name.
     pub host: String,
     /// The user's name.
     pub user: String,
-    /// The SolidCraft version that holds the lock.
+    /// The Torno version that holds the lock.
     pub app: String,
     /// When it opened the design (Unix seconds).
     pub opened: u64,
@@ -473,10 +473,10 @@ pub struct OpenedDesign {
     /// Only with `read_only`: true.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub read_only: Option<bool>,
-    /// Only when another SolidCraft has the design open (its lock file is fresh).
+    /// Only when another Torno has the design open (its lock file is fresh).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub open_elsewhere: Option<OpenElsewhere>,
-    /// Only when a newer SolidCraft saved the design: it opened all the same, and what this
+    /// Only when a newer Torno saved the design: it opened all the same, and what this
     /// version can't read is named here and kept by saving.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub newer_file: Option<NewerFileReport>,
@@ -488,7 +488,7 @@ pub struct OpenedDesign {
     pub param_warnings: Vec<String>,
 }
 
-/// What `doc.open` says about a design a newer SolidCraft saved.
+/// What `doc.open` says about a design a newer Torno saved.
 #[derive(Debug, Serialize, JsonSchema)]
 pub struct NewerFileReport {
     /// The design file format it was saved in.
@@ -605,7 +605,7 @@ pub struct OpenedFile {
 #[derive(Debug, Serialize, JsonSchema)]
 #[serde(untagged)]
 pub enum OpenResult {
-    /// A SolidCraft design.
+    /// A Torno design.
     Design(OpenedDesign),
     /// A `.dxf` or `.svg` drawing.
     Drawing(OpenedDrawing),

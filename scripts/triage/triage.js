@@ -19,7 +19,7 @@ const PATH_AREAS = [
   [/^crates\/doc\//, 'area:doc'],
   [/^crates\/io\//, 'area:io'],
   [/^crates\/(render|gpu)\//, 'area:render'],
-  [/^(crates\/(ui-egui|space-mouse|threedx-client)|apps\/(solidcraft|solidcraft-web))\//, 'area:ui'],
+  [/^(crates\/(ui-egui|space-mouse|threedx-client)|apps\/(torno|torno-web))\//, 'area:ui'],
   [/^(\.github\/|xtask\/|scripts\/|tools\/|docs\/|packaging\/|[^/]+\.md$)/, 'area:infra'],
 ];
 

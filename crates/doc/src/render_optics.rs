@@ -6,9 +6,9 @@ use crate::{
 };
 use serde::{Deserialize, Serialize};
 use solidcore_record::Vec3;
-use solidcraft_render::transmission::{Transmission, subsurface::Subsurface};
-use solidcraft_viewport::surface::OpaqueSurface;
 use std::collections::BTreeSet;
+use torno_render::transmission::{Transmission, subsurface::Subsurface};
+use torno_viewport::surface::OpaqueSurface;
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
@@ -22,7 +22,7 @@ pub enum OpticalBoundary {
 #[serde(default, deny_unknown_fields)]
 pub struct OpticalMaterial {
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub model: Option<solidcraft_render::glass_model::GlassModel>,
+    pub model: Option<torno_render::glass_model::GlassModel>,
     pub ior: f64,
     pub absorption_per_mm: [f64; 3],
     pub boundary: OpticalBoundary,
@@ -72,24 +72,24 @@ impl OpticalMaterial {
     /// A closed optical boundary is accepted only if the CPU producer subsequently
     /// certifies the captured mesh as its exact axis-aligned-box subset. The saved
     /// boundary is not rewritten and no arbitrary closed-mesh support is implied.
-    pub fn to_cpu(self, body_index: usize, body_name: &str) -> Result<solidcraft_render::job::DielectricOptions> {
+    pub fn to_cpu(self, body_index: usize, body_name: &str) -> Result<torno_render::job::DielectricOptions> {
         self.to_cpu_for_path(body_index, body_name, false)
     }
-    pub fn to_cpu_for_path(self, body_index: usize, body_name: &str, path: bool) -> Result<solidcraft_render::job::DielectricOptions> {
+    pub fn to_cpu_for_path(self, body_index: usize, body_name: &str, path: bool) -> Result<torno_render::job::DielectricOptions> {
         self.validate_for_cpu_path(path)?;
         if body_name.is_empty() || body_name.len() > 1024 || body_name.chars().any(char::is_control) {
             return Err(DocError::Invalid("CPU optical target requires a bounded captured body name".into()));
         }
-        Ok(solidcraft_render::job::DielectricOptions {
+        Ok(torno_render::job::DielectricOptions {
             model: self.model,
             subsurface: self.subsurface,
             shadow_transmission: self.shadow_transmission,
             body_index,
             body_name: body_name.into(),
             boundary: match self.boundary {
-                OpticalBoundary::ThinSheet => solidcraft_render::job::DielectricBoundary::ThinSheet,
-                OpticalBoundary::ClosedMesh if path => solidcraft_render::job::DielectricBoundary::ClosedMesh,
-                OpticalBoundary::ClosedBox | OpticalBoundary::ClosedMesh => solidcraft_render::job::DielectricBoundary::ClosedBox,
+                OpticalBoundary::ThinSheet => torno_render::job::DielectricBoundary::ThinSheet,
+                OpticalBoundary::ClosedMesh if path => torno_render::job::DielectricBoundary::ClosedMesh,
+                OpticalBoundary::ClosedBox | OpticalBoundary::ClosedMesh => torno_render::job::DielectricBoundary::ClosedBox,
             },
             ior: self.ior,
             absorption_per_mm: self.absorption_per_mm,
@@ -145,7 +145,7 @@ impl OpticalBindings {
         self.0.iter()
     }
     pub fn validate(&self) -> Result<()> {
-        if self.0.len() > solidcraft_render::job::MAX_OPTICAL_TARGETS || self.0.capacity() > solidcraft_render::job::MAX_OPTICAL_TARGETS {
+        if self.0.len() > torno_render::job::MAX_OPTICAL_TARGETS || self.0.capacity() > torno_render::job::MAX_OPTICAL_TARGETS {
             return Err(DocError::Invalid("at most 128 portable optical targets".into()));
         }
         let mut seen = BTreeSet::new();
@@ -181,11 +181,11 @@ impl OpticalBindings {
             }
             *old = binding;
         } else {
-            if self.0.len() >= solidcraft_render::job::MAX_OPTICAL_TARGETS {
+            if self.0.len() >= torno_render::job::MAX_OPTICAL_TARGETS {
                 return Err(DocError::Invalid("at most 128 portable optical targets".into()));
             }
             self.0.try_reserve_exact(1).map_err(|_| DocError::Invalid("optical binding reservation failed".into()))?;
-            if self.0.capacity() > solidcraft_render::job::MAX_OPTICAL_TARGETS {
+            if self.0.capacity() > torno_render::job::MAX_OPTICAL_TARGETS {
                 return Err(DocError::Invalid("optical capacity exceeds its bound".into()));
             }
             self.0.push(binding);
@@ -200,7 +200,7 @@ impl OpticalBindings {
 }
 impl<'de> Deserialize<'de> for OpticalBindings {
     fn deserialize<D: serde::Deserializer<'de>>(d: D) -> std::result::Result<Self, D::Error> {
-        let result = Self(bounded_sequence::<D, SavedOptics, { solidcraft_render::job::MAX_OPTICAL_TARGETS }>(d)?);
+        let result = Self(bounded_sequence::<D, SavedOptics, { torno_render::job::MAX_OPTICAL_TARGETS }>(d)?);
         result.validate().map_err(serde::de::Error::custom)?;
         Ok(result)
     }
@@ -209,11 +209,11 @@ impl<'de> Deserialize<'de> for OpticalBindings {
 #[cfg(test)]
 mod advanced_model_contract_tests {
     use super::*;
-    use solidcraft_render::glass_model::{Dispersion, GlassModel, ThinFilm};
+    use torno_render::glass_model::{Dispersion, GlassModel, ThinFilm};
     #[test]
     fn portable_optics_keep_128_targets_and_legacy_cpu_keeps_its_explicit_limit() {
         let mut bindings = OpticalBindings::default();
-        for feature in 1..=solidcraft_render::job::MAX_OPTICAL_TARGETS {
+        for feature in 1..=torno_render::job::MAX_OPTICAL_TARGETS {
             let binding = SavedOptics {
                 target: RenderBodyTarget { definition: "OPUS".into(), feature: feature as u64, component: 0, occurrence_path: Vec::new() },
                 optics: OpticalMaterial::default(),
@@ -255,7 +255,7 @@ mod advanced_model_contract_tests {
     #[test]
     fn caustic_quality_is_portable_between_both_saved_jobs_and_runtime_requests() {
         use crate::render_job::{CpuJob, GpuJob};
-        let caustics = Some(solidcraft_render::job::CausticOptions {
+        let caustics = Some(torno_render::job::CausticOptions {
             photons: 8192,
             radius_mm: 0.4,
             max_depth: 12,
@@ -331,12 +331,12 @@ mod tests {
         let closed = OpticalMaterial { ior: 1.51, absorption_per_mm: [0.1, 0.02, 0.0], ..Default::default() };
         let original = serde_json::to_value(closed).unwrap();
         let cpu = closed.to_cpu(3, "Glass@part-2").unwrap();
-        assert_eq!(cpu.boundary, solidcraft_render::job::DielectricBoundary::ClosedBox);
+        assert_eq!(cpu.boundary, torno_render::job::DielectricBoundary::ClosedBox);
         assert_eq!((cpu.body_index, cpu.body_name.as_str()), (3, "Glass@part-2"));
         assert_eq!((cpu.ior, cpu.absorption_per_mm), (1.51, [0.1, 0.02, 0.0]));
         assert_eq!(serde_json::to_value(closed).unwrap(), original, "CPU specialization never rewrites the authored closed boundary");
         let thin = OpticalMaterial { boundary: OpticalBoundary::ThinSheet, thickness_mm: 2.0, ..closed };
-        assert_eq!(thin.to_cpu(0, "Sheet").unwrap().boundary, solidcraft_render::job::DielectricBoundary::ThinSheet);
+        assert_eq!(thin.to_cpu(0, "Sheet").unwrap().boundary, torno_render::job::DielectricBoundary::ThinSheet);
         for (value, reason) in [
             (OpticalMaterial { shadow_transmission: true, ..thin }, "transmissive shadows"),
             (OpticalMaterial { subsurface: Some(Subsurface { scattering_per_mm: 0.0, anisotropy: 0.0 }), ..closed }, "subsurface"),
@@ -379,9 +379,9 @@ mod cpu_general_glass_contract_tests {
     #[test]
     fn saved_general_glass_requires_explicit_path_and_preserves_unsupported_choices_and_old_wire() {
         let optics = OpticalMaterial { ior: 1.51, absorption_per_mm: [0.1, 0.2, 0.3], boundary: OpticalBoundary::ClosedMesh, ..Default::default() };
-        assert_eq!(optics.to_cpu(0, "Glass").unwrap().boundary, solidcraft_render::job::DielectricBoundary::ClosedBox);
+        assert_eq!(optics.to_cpu(0, "Glass").unwrap().boundary, torno_render::job::DielectricBoundary::ClosedBox);
         let general = optics.to_cpu_for_path(0, "Glass", true).unwrap();
-        assert_eq!(general.boundary, solidcraft_render::job::DielectricBoundary::ClosedMesh);
+        assert_eq!(general.boundary, torno_render::job::DielectricBoundary::ClosedMesh);
         assert_eq!((general.ior, general.absorption_per_mm), (optics.ior, optics.absorption_per_mm));
         let scattering = OpticalMaterial { subsurface: Some(Subsurface { scattering_per_mm: 0.1, anisotropy: 0.3 }), ..optics };
         let before = serde_json::to_value(scattering).unwrap();
@@ -390,7 +390,7 @@ mod cpu_general_glass_contract_tests {
         assert_eq!(serde_json::to_value(scattering).unwrap(), before);
         let encoded = serde_json::to_value(&general).unwrap();
         assert!(encoded.get("shadow_transmission").is_none());
-        assert_eq!(serde_json::from_value::<solidcraft_render::job::DielectricOptions>(encoded).unwrap(), general);
+        assert_eq!(serde_json::from_value::<torno_render::job::DielectricOptions>(encoded).unwrap(), general);
         let thin = OpticalMaterial { boundary: OpticalBoundary::ThinSheet, shadow_transmission: true, ..optics };
         assert!(thin.to_cpu(0, "Glass").is_err());
         assert!(thin.to_cpu_for_path(0, "Glass", true).unwrap().shadow_transmission);

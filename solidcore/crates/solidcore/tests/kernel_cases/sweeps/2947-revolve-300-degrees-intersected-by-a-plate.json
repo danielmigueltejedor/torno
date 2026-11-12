@@ -57,7 +57,7 @@
   "ungraded": [],
   "what": "a rectangle section revolved 300 degrees about Z, then intersected with a plate (slab |y| <= 5) crossing the ring at the start/end gap side and the far side (boolean gave up: \"loop not inside any face piece\")",
   "why_not": [
-    "body \"Ring\" is no kernel operation's output nor an operand: SolidCraft built it or changed the kernel's record",
-    "body \"Ring (1)\" is no kernel operation's output nor an operand: SolidCraft built it or changed the kernel's record"
+    "body \"Ring\" is no kernel operation's output nor an operand: Torno built it or changed the kernel's record",
+    "body \"Ring (1)\" is no kernel operation's output nor an operand: Torno built it or changed the kernel's record"
   ]
 }

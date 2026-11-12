@@ -1,6 +1,6 @@
 //! WR-593 (tangency-labs/smlib@1ff7353): a stadium bar 10 high whose top meets a
 //! cylinder of the bar's end radius standing on its round end, the bar's flat sides
-//! running tangent into the cylinder (SolidCraft's test-peg part). Rounding the concave
+//! running tangent into the cylinder (Torno's test-peg part). Rounding the concave
 //! arc where the top meets the cylinder's wall with r 2 needs WR-457's
 //! `fillet_nx1_tangent_side_edge`: at each end of the arc
 //! `SmFilletNx1Corner::MakeCornerTopology` skips the tangent side edge (the cylinder's

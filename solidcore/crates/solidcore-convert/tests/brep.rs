@@ -1,5 +1,5 @@
 //! The record's B-rep and the kernel's, both ways ([`solidcore_convert::brep`]). These are the
-//! tests of the conversion that SolidCraft's flat-array hop had (crates/smlib `import/tests.rs`,
+//! tests of the conversion that Torno's flat-array hop had (crates/smlib `import/tests.rs`,
 //! `export/tests.rs`, `core/convert_tests.rs`), on the direct conversion.
 
 #![allow(

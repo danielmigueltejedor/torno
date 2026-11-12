@@ -1,4 +1,4 @@
-//! The SolidCraft fork's tangency-labs/smlib@ea59e9c (the first commit of smlib#78, #2250):
+//! The Torno fork's tangency-labs/smlib@ea59e9c (the first commit of smlib#78, #2250):
 //! a blend's cross-section of a given order of contact with its faces: 0 the chord, 1 the
 //! ball's circle, 2 the G^n section, between the rolling ball's contact lines.
 //!
@@ -753,7 +753,7 @@ fn grade(case: &Case, k: &mut Kernel) -> Graded {
     g
 }
 
-fn solidcraft_kernel() -> Kernel {
+fn torno_kernel() -> Kernel {
     let mut k = Kernel::new(&KernelOptions::default());
     let mut f = UpstreamFixes::default();
     for &name in UpstreamFixes::NAMES {
@@ -794,9 +794,9 @@ fn assert_passes(case: &Case, k: &mut Kernel) {
 }
 
 #[test]
-fn with_solidcraft_s_fixes_the_chords_and_circles_have_the_fork_s_marks() {
+fn with_torno_s_fixes_the_chords_and_circles_have_the_fork_s_marks() {
     for case in running_cases().iter().filter(|c| c.name != VARIABLE) {
-        assert_passes(case, &mut solidcraft_kernel());
+        assert_passes(case, &mut torno_kernel());
     }
 }
 
@@ -1039,10 +1039,10 @@ fn boss_g2() -> Case {
     }
 }
 
-/// Each order-2 case on the G^n section's own flags and with SolidCraft's fixes.
+/// Each order-2 case on the G^n section's own flags and with Torno's fixes.
 fn assert_order_2(case: &Case) {
     assert_passes(case, &mut Kernel::default());
-    assert_passes(case, &mut solidcraft_kernel());
+    assert_passes(case, &mut torno_kernel());
 }
 
 #[test]
@@ -1157,7 +1157,7 @@ fn the_box_edge_at_gn_equal_area_default_is_g2_and_at_most_g3_with_its_planes() 
 fn the_linear_variable_round_lies_on_its_cone_and_is_g1() {
     let case = named(VARIABLE);
     assert_passes(&case, &mut Kernel::default());
-    assert_passes(&case, &mut solidcraft_kernel());
+    assert_passes(&case, &mut torno_kernel());
 }
 
 /// The progressive cubic law of `cf1c08b` / `0389af2`.
@@ -1292,7 +1292,7 @@ fn the_progressive_cubic_variable_round_lies_on_its_balls_union_and_is_g1() {
     let mut k = Kernel::default();
     k.fixes.fillet_variable_span_follows_fillet = true;
     assert_passes(&case, &mut k);
-    assert_passes(&case, &mut solidcraft_kernel());
+    assert_passes(&case, &mut torno_kernel());
 }
 
 /// WR-711: the progressive cubic round's exact circles take one arc count: 8.2e-5 off its
@@ -1301,7 +1301,7 @@ fn the_progressive_cubic_variable_round_lies_on_its_balls_union_and_is_g1() {
 #[test]
 fn wr711_exact_circles_of_one_arc_count_keep_the_progressive_round_on_its_balls() {
     let case = holds_case();
-    let g_on = grade(&case, &mut solidcraft_kernel());
+    let g_on = grade(&case, &mut torno_kernel());
     println!("spans on: {g_on:?}");
     assert!(
         g_on.failed.is_none() && g_on.problems.is_empty(),
@@ -1337,7 +1337,7 @@ fn the_folded_cubic_variable_round_is_refused() {
         fitted: true,
         size: 1.0,
     };
-    let g_on = grade(&case, &mut solidcraft_kernel());
+    let g_on = grade(&case, &mut torno_kernel());
     assert!(
         g_on.failed.is_some(),
         "expected folded law to be refused: {g_on:?}"

@@ -1,6 +1,6 @@
 //! tangency-labs/solidcore#2621: a modelled thread's groove cut down to a filleted shoulder.
 //!
-//! SolidCraft cuts an external ISO metric thread into a boss as a screw sweep of the
+//! Torno cuts an external ISO metric thread into a boss as a screw sweep of the
 //! groove's section, run past the plane where the boss's cylinder ends (`z = 21`, where a
 //! fillet of radius 1 meets it) and intersected with the half-space above that plane,
 //! then subtracted from the body. The fillet's top circle lies in the plane, so the
@@ -9,19 +9,19 @@
 //! is known only to an edge's accuracy over the angle's sine. The imprint split the
 //! body's circle where it meets the flank, and the tool's edge between end face and flank
 //! where it meets the circle, each at its own intersection's parameter: 2.9e-5 apart for
-//! SolidCraft's M16. The merge joins the two vertices at the body's, so the tool edge
+//! Torno's M16. The merge joins the two vertices at the body's, so the tool edge
 //! ended 2.9e-5 from its vertex, over half the vertex's tolerance, and SMLib's check
 //! refused the body (`SmBrep` tests #0 and #2, `SmLoopuse` test #5), though the edge's
 //! curve passes 2.7e-6 from the vertex. `MergeIntoObject` now splits an edge where its
 //! curve passes nearest the classified point (WR-751).
 //!
-//! The bodies are SolidCraft's, the operands of its Cut (`tests/data/issue_2621_*`): a
+//! The bodies are Torno's, the operands of its Cut (`tests/data/issue_2621_*`): a
 //! 60 x 40 x 20 box with a boss of the thread's radius `R` about `(15, 15)` from `z = 20`
-//! to `30`, its foot rounded with radius 1. The grooves are SolidCraft's (its
+//! to `30`, its foot rounded with radius 1. The grooves are Torno's (its
 //! `thread_grooves`): the section's root at `d/2 - 5/8 H`, `P/8` wide each side, out to
 //! `d/2 + P/20` at 30 degrees a flank, from `0.566 P` below the shoulder plane to `P`
-//! above the top, swept to SolidCraft's tolerance `P * 1e-4`, here by solidcore's screw
-//! sweep (M16's gives SolidCraft's gap exactly), and trimmed by a box above the shoulder.
+//! above the top, swept to Torno's tolerance `P * 1e-4`, here by solidcore's screw
+//! sweep (M16's gives Torno's gap exactly), and trimmed by a box above the shoulder.
 //!
 //! The volume is checked against the closed form: the box, the boss's cylinder, the
 //! fillet's ring (by Pappus: `2 pi` times the first moment about the axis of the unit
@@ -29,7 +29,7 @@
 //! slice of a screw sweep across its axis is the same, so between the shoulder plane and
 //! the top, where the groove covers every slice, that is the height times `2 pi / P`
 //! times the first moment `int r dA` of the section's part inside `R` (Pappus again).
-//! SolidCraft measures the same cuts, its fallback forced off, within 0.01 mm^3 of it.
+//! Torno measures the same cuts, its fallback forced off, within 0.01 mm^3 of it.
 #![allow(
     clippy::unwrap_used,
     clippy::expect_used,
@@ -55,7 +55,7 @@ use solidcore::topology::brep::validation::{check_brep, CheckLevel};
 use solidcore::topology::topology::NotifyRecords;
 use solidcore::{Brep, Kernel};
 
-/// SolidCraft's fix list (`tests/kernel_cases/fixes.json`).
+/// Torno's fix list (`tests/kernel_cases/fixes.json`).
 fn kernel() -> Kernel {
     let names: Vec<String> = serde_json::from_str(include_str!("kernel_cases/fixes.json")).unwrap();
     let mut f = UpstreamFixes::default();
@@ -82,10 +82,10 @@ struct Thread {
 }
 
 impl Thread {
-    /// SolidCraft's body before the cut, read from its binary `.smb`.
+    /// Torno's body before the cut, read from its binary `.smb`.
     fn body(&self, k: &mut Kernel) -> Brep {
         let path = format!(
-            "{}/tests/data/issue_2621_solidcraft_m{}_filleted_boss.smb",
+            "{}/tests/data/issue_2621_torno_m{}_filleted_boss.smb",
             env!("CARGO_MANIFEST_DIR"),
             self.d
         );
@@ -121,8 +121,8 @@ impl Thread {
 
     /// The groove: the section in the meridian half-plane `x = 15, y > 15` screw-swept
     /// about the boss's axis, right-handed, from `0.566 P` below the shoulder plane to `P`
-    /// above the top, to SolidCraft's tolerance; `phi` turns the half-plane about the axis
-    /// (the screw's phase: SolidCraft's is 0).
+    /// above the top, to Torno's tolerance; `phi` turns the half-plane about the axis
+    /// (the screw's phase: Torno's is 0).
     fn groove(&self, k: &mut Kernel, phi: f64) -> Brep {
         const BELOW: f64 = 0.566_367_513_459_481_3;
         let base = SHOULDER - BELOW * self.p;

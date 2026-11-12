@@ -196,7 +196,7 @@ fn the_patterns_are_pinned() {
 }
 
 fn folder(name: &str) -> PathBuf {
-    let dir = std::env::temp_dir().join(format!("solidcraft-insert-mesh-schema-{name}-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("torno-insert-mesh-schema-{name}-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&dir);
     std::fs::create_dir_all(&dir).unwrap_or_else(|e| panic!("{e}"));
     dir
@@ -244,7 +244,7 @@ fn glb(dir: &Path) -> String {
         "buffers": [{"byteLength": bin.len()}],
     });
     let path = dir.join("robot.glb");
-    std::fs::write(&path, solidcraft_io::glb_container(json.to_string().as_bytes(), &bin)).unwrap_or_else(|e| panic!("{e}"));
+    std::fs::write(&path, torno_io::glb_container(json.to_string().as_bytes(), &bin)).unwrap_or_else(|e| panic!("{e}"));
     path.to_string_lossy().to_string()
 }
 

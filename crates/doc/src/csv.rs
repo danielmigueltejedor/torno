@@ -1,9 +1,9 @@
-//! CSV text fields, as every SolidCraft export writes them and the parameter import reads them.
+//! CSV text fields, as every Torno export writes them and the parameter import reads them.
 //!
 //! A spreadsheet reads a field that starts with `=`, `+`, `-` or `@` as a formula, so a part
 //! numbered `=1+1` would show `2`. A field like that is written with a `'` first, which
 //! spreadsheets show as text (OWASP's CSV Injection page). [`unguard`] takes the `'` off again
-//! when SolidCraft reads its own file back.
+//! when Torno reads its own file back.
 
 use std::borrow::Cow;
 
@@ -26,7 +26,7 @@ pub fn quoted(text: &str) -> String {
     quote(&guard(text))
 }
 
-/// A field as SolidCraft wrote it, with the `'` that [`field`] or [`quoted`] put first taken off.
+/// A field as Torno wrote it, with the `'` that [`field`] or [`quoted`] put first taken off.
 /// A field without one is returned as it is.
 pub fn unguard(text: &str) -> &str {
     match text.strip_prefix('\'') {

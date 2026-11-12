@@ -3,7 +3,7 @@ use super::*;
 #[test]
 fn interactive_preview_keeps_source_usage_and_replace_inside_the_card() {
     for dark in [false, true] {
-        solidcraft_theme::set_dark(dark);
+        torno_theme::set_dark(dark);
         for width in [280.0, 305.0, 308.0, 356.0] {
             let ctx = crate::test_support::context();
             crate::test_support::raw_frame(&ctx, egui::RawInput::default(), |ui| {
@@ -20,10 +20,10 @@ fn interactive_preview_keeps_source_usage_and_replace_inside_the_card() {
                     );
                 });
             });
-            let card = solidcraft_ui_registry::rect_of("dialog:list:preview").unwrap();
+            let card = torno_ui_registry::rect_of("dialog:list:preview").unwrap();
             assert!(card.width() <= width + 1.0, "{card:?}");
             for child in ["preview", "preview:replace", "preview:chip:0", "preview:chip:1"] {
-                assert!(card.contains_rect(solidcraft_ui_registry::rect_of(child).unwrap()), "{child}");
+                assert!(card.contains_rect(torno_ui_registry::rect_of(child).unwrap()), "{child}");
             }
         }
     }
@@ -32,7 +32,7 @@ fn interactive_preview_keeps_source_usage_and_replace_inside_the_card() {
 #[test]
 fn preview_keeps_sample_chips_and_replace_inside_the_shared_card() {
     for dark in [false, true] {
-        solidcraft_theme::set_dark(dark);
+        torno_theme::set_dark(dark);
         for width in [280.0, 356.0] {
             let ctx = crate::test_support::context();
             crate::test_support::raw_frame(&ctx, egui::RawInput::default(), |ui| {
@@ -48,14 +48,14 @@ fn preview_keeps_sample_chips_and_replace_inside_the_shared_card() {
                     );
                 });
             });
-            let card = solidcraft_ui_registry::rect_of("dialog:list:preview").unwrap();
-            let sample = solidcraft_ui_registry::rect_of("preview").unwrap();
-            let replace = solidcraft_ui_registry::rect_of("preview:replace").unwrap();
+            let card = torno_ui_registry::rect_of("dialog:list:preview").unwrap();
+            let sample = torno_ui_registry::rect_of("preview").unwrap();
+            let replace = torno_ui_registry::rect_of("preview:replace").unwrap();
             assert!(card.width() <= width + 1.0, "{card:?}");
             assert!(card.contains_rect(sample) && card.contains_rect(replace));
             assert!(replace.left() > sample.right());
             for chip in ["preview:chip:0", "preview:chip:1"] {
-                assert!(card.contains_rect(solidcraft_ui_registry::rect_of(chip).unwrap()));
+                assert!(card.contains_rect(torno_ui_registry::rect_of(chip).unwrap()));
             }
         }
     }
@@ -64,7 +64,7 @@ fn preview_keeps_sample_chips_and_replace_inside_the_shared_card() {
 #[test]
 fn tiles_keep_three_columns_cell_sphere_badge_and_selection_in_both_themes() {
     for dark in [false, true] {
-        solidcraft_theme::set_dark(dark);
+        torno_theme::set_dark(dark);
         let ctx = crate::test_support::context();
         let t = Tokens::get();
         let output = crate::test_support::raw_frame(
@@ -95,9 +95,9 @@ fn tiles_keep_three_columns_cell_sphere_badge_and_selection_in_both_themes() {
             !output.shapes.iter().any(|shape| matches!(&shape.shape,egui::Shape::Text(text) if text.galley.job.text.contains("Hover details"))),
             "hover cards must stay closed without a pointer"
         );
-        let a = solidcraft_ui_registry::rect_of("a").unwrap();
-        let b = solidcraft_ui_registry::rect_of("b").unwrap();
-        let c = solidcraft_ui_registry::rect_of("c").unwrap();
+        let a = torno_ui_registry::rect_of("a").unwrap();
+        let b = torno_ui_registry::rect_of("b").unwrap();
+        let c = torno_ui_registry::rect_of("c").unwrap();
         assert_eq!(a.top(), b.top());
         assert_eq!(b.top(), c.top());
         assert!(a.right() < b.left() && b.right() < c.left());
@@ -109,14 +109,14 @@ fn tiles_keep_three_columns_cell_sphere_badge_and_selection_in_both_themes() {
             }
         }
         assert_eq!(output.shapes.iter().map(|shape| meshes(&shape.shape)).sum::<usize>(), 3);
-        let accent = solidcraft_theme::TabAccent::current(&ctx);
+        let accent = torno_theme::TabAccent::current(&ctx);
         assert!(
             output.shapes.iter().any(|shape| matches!(&shape.shape,egui::Shape::Rect(r) if r.stroke.color==accent.ink && r.rect.width()==b.width()))
         );
         for id in ["a", "b", "c"] {
-            let tile = solidcraft_ui_registry::rect_of(id).unwrap();
-            let label = solidcraft_ui_registry::rect_of(&format!("{id}:label")).unwrap();
-            let galley = solidcraft_ui_registry::rect_of(&format!("{id}:galley")).unwrap();
+            let tile = torno_ui_registry::rect_of(id).unwrap();
+            let label = torno_ui_registry::rect_of(&format!("{id}:label")).unwrap();
+            let galley = torno_ui_registry::rect_of(&format!("{id}:galley")).unwrap();
             assert!(tile.contains_rect(label) && label.expand(0.1).contains_rect(galley), "{id}: tile {tile:?}, label {label:?}, galley {galley:?}");
         }
         let long_caption = crate::test_support::text_shapes(&output).find(|text| text.galley.job.text.starts_with("Neutral product")).unwrap();

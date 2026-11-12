@@ -41,7 +41,7 @@ def package(output: Path) -> dict:
         sums.append(digest(destination)+'  '+name)
     readme = '''# SELENE native studio render
 
-This package contains the exact completed SolidCraft GPU-path PNG and its source,
+This package contains the exact completed Torno GPU-path PNG and its source,
 renderer, resource and request manifest. It is a 3840 x 2400 native render with
 1,024 samples per pixel, maximum path depth 16, ACES-fitted tone mapping and
 edge-aware a-trous denoising. The functional master is unchanged: 2,116 native
@@ -55,14 +55,14 @@ scale. No image generation, painting, resampling, geometry simplification or
 engineering-property reassignment was used. This is not a dynamics certificate
 or complete GUI/CI release approval.
 
-The manifest's repository-relative paths refer to 0xlillith/solidcraft, branch
+The manifest's repository-relative paths refer to 0xlillith/torno, branch
 lab/render-scale-resources. Reproduction tools are in tools/render-library and
 the native master/provenance in assets/render/selene. The manifest pins the exact
 renderer executable source and bytes used for this image; packaging does not
 rerender it or imply validation of later code changes.
 
 Credits: 0xlillith (original rover), SychPL / Mateusz Sych (showcase assembly),
-SolidCraft contributors (native enhancements, rendering and studio authoring),
+Torno contributors (native enhancements, rendering and studio authoring),
 and Canonical Ltd. (modeled lettering). New contributions use MIT OR Apache-2.0;
 underlying source and Ubuntu Font Licence provenance remains in
 assets/render/selene/SOURCE.md. No font files are included in this package.

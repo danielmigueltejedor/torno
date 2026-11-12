@@ -330,7 +330,7 @@ pub fn help(command: &str) -> Option<String> {
         return None;
     }
     let key = format!("help.{command}");
-    let text = solidcraft_ui_text::tr(&key);
+    let text = torno_ui_text::tr(&key);
     (text != key).then(|| text.to_owned())
 }
 
@@ -377,7 +377,7 @@ mod tests {
     /// Every command the ribbon offers people, gathered the way the toolbar lays out its panels. A
     /// planned command only says "not supported yet"; it gets its help when it is built.
     fn toolbar_commands() -> BTreeSet<&'static str> {
-        let specs = solidcraft_engine::command_specs();
+        let specs = torno_engine::command_specs();
         let mut ids = BTreeSet::new();
         for section in crate::workspace::SECTIONS {
             if let Some((commands, _)) = crate::workspace::layout(section.tab, section.panel, &specs) {
@@ -400,7 +400,7 @@ mod tests {
     #[test]
     fn every_documented_id_is_a_real_command() {
         for id in DOCUMENTED {
-            assert!(solidcraft_engine::find_command(id).is_some(), "{id} is not a command");
+            assert!(torno_engine::find_command(id).is_some(), "{id} is not a command");
         }
         assert!(DOCUMENTED.is_sorted());
     }
@@ -412,7 +412,7 @@ mod tests {
         assert_eq!(english, wanted);
         for key in &english {
             let id = key.trim_start_matches("help.");
-            assert!(solidcraft_engine::find_command(id).is_some(), "{key} names no command");
+            assert!(torno_engine::find_command(id).is_some(), "{key} names no command");
         }
     }
 

@@ -1,5 +1,5 @@
-use solidcraft_engine::Session;
-use solidcraft_engine::panels::*;
+use torno_engine::Session;
+use torno_engine::panels::*;
 
 use super::runtime::standalone_header_action;
 use super::*;
@@ -856,9 +856,9 @@ impl crate::SolveApp {
             .as_ref()
             .ok_or_else(|| error(Rule::Availability, "shared panel host unavailable"))
             .and_then(|integration| integration.contextual_availability(&self.session, action));
-        eligibility.err().map(|reason| {
-            solidcraft_ui_text::Locale::for_language(&self.preferences.language).text(super::workspace::rule_key(reason.rule)).to_owned()
-        })
+        eligibility
+            .err()
+            .map(|reason| torno_ui_text::Locale::for_language(&self.preferences.language).text(super::workspace::rule_key(reason.rule)).to_owned())
     }
 
     pub fn run_panel_command(&mut self, id: &str, params: &serde_json::Value) -> PanelResult<serde_json::Value> {
@@ -968,7 +968,7 @@ pub(crate) fn tick_app(app: &mut crate::SolveApp, ctx: &egui::Context) {
     if !app.prefs_window.shell.open
         && let Err(reason) = sync_production_setting(app)
     {
-        app.set_status(solidcraft_ui_text::tr(super::workspace::rule_key(reason.rule)).to_owned(), true);
+        app.set_status(torno_ui_text::tr(super::workspace::rule_key(reason.rule)).to_owned(), true);
         if let Some(integration) = &mut app.panel_runtime {
             integration.last_error = Some(reason);
         }
@@ -1083,11 +1083,7 @@ impl crate::SolveApp {
         // not panel paint/input regions. Cover the native GPU clear through the
         // shared viewport surface without changing any declared panel geometry.
         let backdrop = crate::ui_kit::Container::new(ui.ctx(), crate::ui_kit::Surface::Viewport);
-        crate::ui_kit::Container::paint_frame(
-            ui.painter(),
-            backdrop.edge_frame(solidcraft_theme::Tokens::get().panel),
-            ui.available_rect_before_wrap(),
-        );
+        crate::ui_kit::Container::paint_frame(ui.painter(), backdrop.edge_frame(torno_theme::Tokens::get().panel), ui.available_rect_before_wrap());
         crate::timeline::follow_view_pick(self);
         crate::render_ui::focus_shortcut(self, ui);
         crate::dialogs::sync_feature_edit(self);

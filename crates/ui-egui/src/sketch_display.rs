@@ -1,13 +1,13 @@
 //! Display-only sampling. CAD curves, profiles and constraints are never changed here.
-use solidcraft_engine::geom::prelude::*;
 use std::collections::HashMap;
 use std::hash::{Hash, Hasher};
 use std::sync::Arc;
+use torno_engine::geom::prelude::*;
 
 use solidcore_record::{Loop2, Plane, Region2, Vec2, Vec3};
-use solidcraft_engine::doc::ModelState;
-use solidcraft_engine::render::{PixelCurveView, SampledPath, SamplingBudget, SamplingQuality, sample_segment, sample_segment_unclipped};
-use solidcraft_engine::sketch::Sketch;
+use torno_engine::doc::ModelState;
+use torno_engine::render::{PixelCurveView, SampledPath, SamplingBudget, SamplingQuality, sample_segment, sample_segment_unclipped};
+use torno_engine::sketch::Sketch;
 
 use crate::SolveApp;
 use crate::viewport::Proj;

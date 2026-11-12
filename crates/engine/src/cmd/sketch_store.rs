@@ -5,8 +5,8 @@
 //! commands here, apart from the design's own, each marked `// design-only:`.
 
 use serde_json::Value;
-use solidcraft_doc::{Document, FeatureKind};
-use solidcraft_sketch::Sketch;
+use torno_doc::{Document, FeatureKind};
+use torno_sketch::Sketch;
 
 use crate::params::bad;
 use crate::{EngineError, Result, Session};

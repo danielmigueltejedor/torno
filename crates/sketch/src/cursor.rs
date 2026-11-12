@@ -10,7 +10,7 @@ use crate::{
     union_find::{find, union},
 };
 use solidcore_record::Vec2;
-use solidcraft_geom::prelude::*;
+use torno_geom::prelude::*;
 
 const MAX_VARIABLES: usize = 400;
 const MAX_STEPS: usize = 96;

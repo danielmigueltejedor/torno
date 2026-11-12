@@ -7,8 +7,8 @@ use schemars::{JsonSchema, Schema, SchemaGenerator, json_schema};
 use serde::de::Error as _;
 use serde::{Deserialize, Deserializer};
 use serde_json::{Value, json};
-use solidcraft_geom::fill::{MAX_CROWN, MIN_CROWN};
-use solidcraft_kernel::{Continuity, MAX_CHAIN_CURVES, MAX_EDGE_PICKS};
+use torno_geom::fill::{MAX_CROWN, MIN_CROWN};
+use torno_kernel::{Continuity, MAX_CHAIN_CURVES, MAX_EDGE_PICKS};
 
 use super::check::whole;
 use super::types::{FeatureCommon, IdOrName, OperationParam, Point3, feature_common, present};
@@ -20,7 +20,7 @@ pub const MIN_SAMPLES: usize = 8;
 /// The most stations a boundary may carry (the kernel's own cap).
 pub const MAX_SAMPLES: usize = 512;
 /// The most curves one direction of a network may list (the kernel's own cap).
-pub const MAX_NETWORK_CURVES: usize = solidcraft_geom::network::MAX_NETWORK_CURVES;
+pub const MAX_NETWORK_CURVES: usize = torno_geom::network::MAX_NETWORK_CURVES;
 
 const CMD: &str = "surface.boundary";
 
@@ -191,7 +191,7 @@ fn network(key: &str, v: Value) -> Result<(), String> {
                 curves = params::string_list(CMD, item, "curves").map_err(message)?.len();
             }
             if let Some(g) = o.get("continuity").filter(|v| !v.is_null()) {
-                let g = params::continuity(CMD, Some(g), &format!("{name}.continuity"), solidcraft_kernel::Construction::Network).map_err(message)?;
+                let g = params::continuity(CMD, Some(g), &format!("{name}.continuity"), torno_kernel::Construction::Network).map_err(message)?;
                 if g != Continuity::G0 && !on_body {
                     return Err(format!("{name}: g1 and g2 apply to a curve on a body's edges (a surface's open edges)"));
                 }

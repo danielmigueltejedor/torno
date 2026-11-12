@@ -117,7 +117,7 @@
   "case": "12034-round-loft-square-to-circle-circular-rim",
   "expected": {
     "body_count": 1,
-    "method": "the rim is the circle r10 at z = 30; the walls meet the top disc at 99.5 degrees over the middle of a square side (atan(5/30) off square) to 110.5 degrees over a corner (atan(11.213/30)). SolidCraft's reporter expects the round to build; a round of a ruled wall has no closed-form volume, so the case asks one closed valid solid. body_count 1",
+    "method": "the rim is the circle r10 at z = 30; the walls meet the top disc at 99.5 degrees over the middle of a square side (atan(5/30) off square) to 110.5 degrees over a corner (atan(11.213/30)). Torno's reporter expects the round to build; a round of a ruled wall has no closed-form volume, so the case asks one closed valid solid. body_count 1",
     "outcome": "solid",
     "source": "invariants",
     "sources": [

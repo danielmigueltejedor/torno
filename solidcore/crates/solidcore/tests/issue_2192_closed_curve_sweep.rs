@@ -1,8 +1,8 @@
 //! tangency-labs/solidcore#2192: a curve sweep along a closed path capped both ends,
 //! so the two caps coincided where the end met the start. The body had a second region
-//! and cutting it from the torus it lay inside came out empty. SolidCraft #2005 (fixed
+//! and cutting it from the torus it lay inside came out empty. Torno #2005 (fixed
 //! there in tangency-labs/solidcraft#2010); the cases are
-//! `fixtures/solidcraft/2005-closed-sweep-cuts-torus.json`.
+//! `fixtures/torno/2005-closed-sweep-cuts-torus.json`.
 //!
 //! An 8 mm square in the XZ plane, starting at the middle of its inner side, swept with
 //! the follow frame along the full circle of radius 30 about Z. The sweep puts that

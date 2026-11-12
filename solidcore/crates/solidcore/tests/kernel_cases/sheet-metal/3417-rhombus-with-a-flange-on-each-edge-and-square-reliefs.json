@@ -108,6 +108,6 @@
   "ungraded": [],
   "what": "a 60 mm rhombus (120 and 60 degree corners) with a 90 degree flange on each of its four edges and a square corner relief 8 mm across at each corner: at this size the four reliefs stay apart and all are cut",
   "why_not": [
-    "body \"Body1\" is no kernel operation's output nor an operand: SolidCraft built it or changed the kernel's record"
+    "body \"Body1\" is no kernel operation's output nor an operand: Torno built it or changed the kernel's record"
   ]
 }

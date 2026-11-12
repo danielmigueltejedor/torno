@@ -2,10 +2,10 @@
 //! sketch, where a pick by point can land in another region.
 
 use serde_json::{Value, json};
-use solidcraft_geom::MeshGeom;
+use torno_geom::MeshGeom;
 
 use crate::Session;
-use solidcraft_doc::{FeatureKind, ProfileSel};
+use torno_doc::{FeatureKind, ProfileSel};
 
 fn run(s: &mut Session, id: &str, p: Value) -> Value {
     match s.execute(id, &p) {
@@ -15,7 +15,7 @@ fn run(s: &mut Session, id: &str, p: Value) -> Value {
 }
 
 fn volumes(s: &Session) -> Vec<f64> {
-    s.model.state().bodies.iter().map(|b| b.body.mesh(&solidcraft_kernel::MeshTolerance::chord(1e-2)).unwrap().measure().volume).collect()
+    s.model.state().bodies.iter().map(|b| b.body.mesh(&torno_kernel::MeshTolerance::chord(1e-2)).unwrap().measure().volume).collect()
 }
 
 fn last_error(s: &Session) -> Option<String> {
@@ -100,7 +100,7 @@ fn explicit_curve_pick_normalizes_repeats_before_save_and_parameter_edit() {
     run(&mut s, "solid.extrude", json!({"sketch":"Tray","profiles":[{"curves":["top","bottom","div","left","bottom","top"]}],"distance":10}));
     let ProfileSel::Curves { loops } = extrude_kind(&s) else { panic!("{:?}", extrude_kind(&s)) };
     assert_eq!(loops, vec![vec!["top", "bottom", "div", "left"]]);
-    let mut reopened = Session::new(solidcraft_doc::format::read(&s.doc.to_json()).unwrap());
+    let mut reopened = Session::new(torno_doc::format::read(&s.doc.to_json()).unwrap());
     run(&mut reopened, "parameters.change", json!({"name":"split","expression":"20 mm"}));
     assert_eq!(last_error(&reopened), None);
     assert!((volumes(&reopened)[0] - 4000.0).abs() < 1.0);
@@ -117,7 +117,7 @@ fn repeated_explicit_curve_ids_do_not_count_split_graph_spans() {
     run(&mut s, "solid.extrude", json!({"sketch":"S","profiles":[{"curves":["d","a","a","a","c","b"]}],"distance":2}));
     let ProfileSel::Curves { loops } = extrude_kind(&s) else { panic!("{:?}", extrude_kind(&s)) };
     assert_eq!(loops, vec![vec!["d", "a", "c", "b"]]);
-    let reopened = Session::new(solidcraft_doc::format::read(&s.doc.to_json()).unwrap());
+    let reopened = Session::new(torno_doc::format::read(&s.doc.to_json()).unwrap());
     assert_eq!(last_error(&reopened), None);
     assert!((volumes(&reopened)[0] - 200.0).abs() < 1e-3);
 }
@@ -188,7 +188,7 @@ fn curve_picks_save_load_and_edit() {
         json!({"sketch": "Tray", "profiles": [{"curves": ["left", "bottom", "div", "top"]}], "distance": 10, "name": "Bay"}),
     );
     let text = serde_json::to_string(&*s.doc).unwrap();
-    let doc = solidcraft_doc::format::read(&text).unwrap();
+    let doc = torno_doc::format::read(&text).unwrap();
     let mut t = Session::new(doc);
     assert_eq!(extrude_kind(&t), extrude_kind(&s));
     run(&mut t, "parameters.change", json!({"name": "split", "expression": "20 mm"}));
@@ -202,6 +202,6 @@ fn curve_picks_save_load_and_edit() {
     // An old design's point pick still loads and evaluates.
     let old = text.replace(r#"{"type":"curves","loops":[["left","bottom","div","top"]]}"#, r#"{"type":"points","points":[[25.0,10.0]]}"#);
     assert_ne!(old, text);
-    let t = Session::new(solidcraft_doc::format::read(&old).unwrap());
+    let t = Session::new(torno_doc::format::read(&old).unwrap());
     assert!((volumes(&t)[0] - 6000.0).abs() < 1.0, "{:?}", volumes(&t));
 }

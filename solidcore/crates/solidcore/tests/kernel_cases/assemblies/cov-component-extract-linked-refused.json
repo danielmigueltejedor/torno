@@ -34,6 +34,6 @@
   "ungraded": [],
   "what": "component.extract of a component that is already linked",
   "why_not": [
-    "the failure is SolidCraft's, not a kernel operation's: step 9 (component.extract): invalid parameters for `component.extract`: Arm is linked to a design file already"
+    "the failure is Torno's, not a kernel operation's: step 9 (component.extract): invalid parameters for `component.extract`: Arm is linked to a design file already"
   ]
 }

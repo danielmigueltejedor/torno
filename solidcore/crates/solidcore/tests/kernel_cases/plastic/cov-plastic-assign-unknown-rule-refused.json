@@ -32,6 +32,6 @@
   "ungraded": [],
   "what": "plastic.assign_rule with a rule name that is neither a library nor a design rule",
   "why_not": [
-    "the failure is SolidCraft's, not a kernel operation's: step 2 (plastic.assign_rule): invalid parameters for `plastic.assign_rule`: no plastic rule `Nope` (plastic.rules lists them)"
+    "the failure is Torno's, not a kernel operation's: step 2 (plastic.assign_rule): invalid parameters for `plastic.assign_rule`: no plastic rule `Nope` (plastic.rules lists them)"
   ]
 }

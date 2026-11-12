@@ -1,6 +1,6 @@
 Updates: WR-636
 
-The Torno fork's tangency-labs/smlib@db4a655 extends the cliff overflow (WR-631, WR-635, WR-636) to a closed rim blended past the far end of its wall (solidcraft#190's disc R13 x 2 rounded R2.5, a hole's top rim through a plate, a cylinder's top rim chamfered), which was not closed three ways:
+The Torno fork's tangency-labs/smlib@db4a655 extends the cliff overflow (WR-631, WR-635, WR-636) to a closed rim blended past the far end of its wall (torno#190's disc R13 x 2 rounded R2.5, a hole's top rim through a plate, a cylinder's top rim chamfered), which was not closed three ways:
 
 - The rail on the wall lies past the wall's own domain, and a host surface other than a plane was taken only within its domain ("lies on no face's exact continuation", `NotExact`). A cylinder, cone, sphere or torus now continues as itself (`SmOffsetSurface::ContinueAsItself`, new and public: `sm_ExtendAsItself` with the analytic kind given back) as far as the points it must hold reach (`sm_ContinuedSurface`), for the distance to a host's surface and for the closing face's surface.
 - A chain of the sheet's boundary that is one closed edge (a closed rim's rail, one circle) was taken as open and its ends found no side edge: it is closed at once.

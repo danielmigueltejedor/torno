@@ -1,6 +1,6 @@
 //! tangency-labs/solidcore#1073 (WR-460): rounds on the four vertical edges of a
 //! 14 x 6 x 10 post, each 6 mm face carrying two of them. Past r = 3 the two rails on a
-//! face have crossed and SMLib builds an open body. With SolidCraft's fix list the band
+//! face have crossed and SMLib builds an open body. With Torno's fix list the band
 //! test (`fixes.fillet_refuse_overlapping_bands`, WR-542) refuses it before the post is
 //! edited, naming the largest radius that builds. (The crossing-rails refusal
 //! `fillet_refuse_crossing_rails`, which refused it with a bare 1001 after the fillet's
@@ -15,7 +15,7 @@ use solidcore::topology::brep::p2::is_manifold_solid;
 use solidcore::topology::{edge, vertex};
 use solidcore::{Brep, Kernel, Result, SolidError};
 
-/// SolidCraft's fix list (`tests/kernel_cases/fixes.json`), or the pinned SMLib's
+/// Torno's fix list (`tests/kernel_cases/fixes.json`), or the pinned SMLib's
 /// (`Kernel::default`).
 fn kernel(fixed: bool) -> Kernel {
     if !fixed {

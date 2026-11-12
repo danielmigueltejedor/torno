@@ -1,4 +1,4 @@
-//! WR-669 (`fixes.fillet_exact_round_classes`), the SolidCraft fork's tangency-labs/smlib@0061c41
+//! WR-669 (`fixes.fillet_exact_round_classes`), the Torno fork's tangency-labs/smlib@0061c41
 //! and 1b5f1e7: a constant round whose spine is a plane conic is the exact rational surface
 //! of the ball's arcs, where upstream (and the flag before these commits) traces and fits it.
 //!

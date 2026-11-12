@@ -292,7 +292,7 @@ mod light_union_lease_tests {
         })
     }
     fn scene() -> ProductScene {
-        ProductScene { meshes: Vec::new(), bounds: solidcraft_geom::Aabb3::EMPTY }
+        ProductScene { meshes: Vec::new(), bounds: torno_geom::Aabb3::EMPTY }
     }
     #[test]
     fn normalized_union_uses_one_pool_and_keeps_record_lease_after_frame_eviction() {
@@ -1823,7 +1823,7 @@ impl ImageHost {
             let shared = Self::shared_with_memory(pool, Some(super::host_memory::shared_native_memory()));
             let worker_shared = shared.clone();
             let worker = std::thread::Builder::new()
-                .name("solidcraft-render".into())
+                .name("torno-render".into())
                 .spawn(move || native_worker(worker_shared))
                 .map_err(|e| JobError::new(ErrorCode::HostUnavailable, format!("could not start CPU image worker: {e}")))?;
             Ok(Self(Arc::new(Owner { executor: None, shared, kind: HostKind::NativeWorker, running: Mutex::new(None), _worker: Some(worker) })))
@@ -1843,7 +1843,7 @@ impl ImageHost {
         let shared = Self::shared_with_memory(limit, Some(super::host_memory::shared_native_memory()));
         let worker_shared = shared.clone();
         let worker = std::thread::Builder::new()
-            .name("solidcraft-render".into())
+            .name("torno-render".into())
             .spawn(move || native_worker(worker_shared))
             .map_err(|e| JobError::new(ErrorCode::HostUnavailable, format!("could not start image worker: {e}")))?;
         Ok(Self(Arc::new(Owner { executor: Some(executor), shared, kind: HostKind::NativeWorker, running: Mutex::new(None), _worker: Some(worker) })))
@@ -2683,7 +2683,7 @@ impl ImageHost {
             request: None,
             executor: None,
             environment: None,
-            scene: ProductScene { meshes: Vec::new(), bounds: solidcraft_geom::Aabb3::EMPTY },
+            scene: ProductScene { meshes: Vec::new(), bounds: torno_geom::Aabb3::EMPTY },
             handle: handle.clone(),
             // Regrades are final-only and never create checkpoint slots.
             encoded_limit: 0,
@@ -2772,7 +2772,7 @@ fn native_worker(shared: Arc<Shared>) {
 mod retained_request_tests {
     use super::*;
     #[cfg(all(feature = "raytrace-cpu", not(target_arch = "wasm32")))]
-    use solidcraft_geom::MeshGeom;
+    use torno_geom::MeshGeom;
 
     #[test]
     fn retained_native_options_charge_actual_single_capacity_only_for_structural_nondefaults() {
@@ -2828,7 +2828,7 @@ mod retained_request_tests {
                 .submit_with_options(
                     JobId { session: 901, serial: 1, generation: 1 },
                     1,
-                    ProductScene { meshes: Vec::new(), bounds: solidcraft_geom::Aabb3::EMPTY },
+                    ProductScene { meshes: Vec::new(), bounds: torno_geom::Aabb3::EMPTY },
                     image,
                     options,
                 )
@@ -2899,7 +2899,7 @@ mod retained_request_tests {
             .submit_with_options(
                 JobId { session: 902, serial: 1, generation: 1 },
                 1,
-                ProductScene { meshes: Vec::new(), bounds: solidcraft_geom::Aabb3::EMPTY },
+                ProductScene { meshes: Vec::new(), bounds: torno_geom::Aabb3::EMPTY },
                 image,
                 options,
             )
@@ -2931,12 +2931,7 @@ mod retained_request_tests {
         let mut image = request();
         image.raytrace.as_mut().unwrap().output = Some(Box::new(super::super::OutputOptions { linear_exr: true, ..Default::default() }));
         let original = host
-            .submit(
-                JobId { session: 903, serial: 1, generation: 1 },
-                1,
-                ProductScene { meshes: Vec::new(), bounds: solidcraft_geom::Aabb3::EMPTY },
-                image,
-            )
+            .submit(JobId { session: 903, serial: 1, generation: 1 }, 1, ProductScene { meshes: Vec::new(), bounds: torno_geom::Aabb3::EMPTY }, image)
             .unwrap();
         assert_eq!(original.wait_timeout(std::time::Duration::from_secs(60)).unwrap().progress.phase, Phase::Completed);
         assert!(original.0.options.is_none(), "CPU transport options retain their existing request lease, not a second native options slot");
@@ -3017,7 +3012,7 @@ mod retained_request_tests {
         });
         request.raytrace.as_mut().unwrap().emissions = Some(values);
         let expected = retained_request_bytes(&request).unwrap() + request.retained_resource_metadata_bytes();
-        let mesh = solidcraft_geom::Mesh {
+        let mesh = torno_geom::Mesh {
             positions: vec![solidcore_record::Vec3::ZERO, solidcore_record::Vec3::X, solidcore_record::Vec3::Y],
             normals: vec![solidcore_record::Vec3::Z; 3],
             triangles: vec![[0, 1, 2]],
@@ -3059,7 +3054,7 @@ mod retained_request_tests {
         use super::super::textures::{BaseColorMode, PlanarFrame, RuntimeTextures, TextureBinding, TextureMap};
         use image::ImageEncoder;
         use solidcore_record::Vec3;
-        use solidcraft_geom::Mesh;
+        use torno_geom::Mesh;
         let mut encoded = Vec::new();
         image::codecs::png::PngEncoder::new(&mut encoded).write_image(&[128, 64, 255, 255], 1, 1, image::ExtendedColorType::Rgba8).unwrap();
         if corrupt {
@@ -3071,7 +3066,7 @@ mod retained_request_tests {
         let surface = if mapped {
             Vec3::new(0.5, 0.5, 0.5)
         } else {
-            let v = [128, 64, 255].map(|v| solidcraft_viewport::surface::srgb8_to_linear(v) as f32 as f64);
+            let v = [128, 64, 255].map(|v| torno_viewport::surface::srgb8_to_linear(v) as f32 as f64);
             Vec3::new(v[0], v[1], v[2])
         };
         let mesh = Arc::new(Mesh {
@@ -3089,7 +3084,7 @@ mod retained_request_tests {
                 color: [255; 3],
                 opacity: 1.0,
                 transmission: None,
-                surface: Some(solidcraft_viewport::surface::OpaqueSurface::new(surface, 0.0, 1.0, 1.0).unwrap()),
+                surface: Some(torno_viewport::surface::OpaqueSurface::new(surface, 0.0, 1.0, 1.0).unwrap()),
                 faces: vec![],
             }],
         };
@@ -3106,7 +3101,7 @@ mod retained_request_tests {
         let request = ImageRequest {
             width: 1,
             height: 1,
-            camera: solidcraft_viewport::Camera { distance: 1.0, fov: 0.0, yaw: 0.0, pitch: std::f64::consts::FRAC_PI_2, ..Default::default() },
+            camera: torno_viewport::Camera { distance: 1.0, fov: 0.0, yaw: 0.0, pitch: std::f64::consts::FRAC_PI_2, ..Default::default() },
             background: [0; 3],
             transparent_background: false,
             integrator: Integrator::Raytrace,
@@ -3169,8 +3164,8 @@ mod retained_request_tests {
         assert_eq!(frame.linear_exr(), expected.linear_exr());
         assert!(frame.linear_exr().is_some());
         let color = [128, 64, 255].map(|v| {
-            let x = solidcraft_viewport::surface::srgb8_to_linear(v) as f32 as f64;
-            solidcraft_color::srgb::encode8(x / (1.0 + x))
+            let x = torno_viewport::surface::srgb8_to_linear(v) as f32 as f64;
+            torno_color::srgb::encode8(x / (1.0 + x))
         });
         assert_eq!(image::load_from_memory(frame.png()).unwrap().to_rgba8().get_pixel(0, 0).0, [color[0], color[1], color[2], 255]);
         let held = job.clone();
@@ -3284,7 +3279,7 @@ mod retained_request_tests {
             .submit(
                 JobId { session: 99, serial: 1, generation: 1 },
                 1,
-                ProductScene { meshes: Vec::new(), bounds: solidcraft_geom::Aabb3::EMPTY },
+                ProductScene { meshes: Vec::new(), bounds: torno_geom::Aabb3::EMPTY },
                 request,
             )
             .unwrap();
@@ -3337,7 +3332,7 @@ mod environment_metadata_lease_tests {
             .submit_with_environment(
                 JobId { session: 1693, serial: 7, generation: 1 },
                 1,
-                ProductScene { meshes: Vec::new(), bounds: solidcraft_geom::Aabb3::EMPTY },
+                ProductScene { meshes: Vec::new(), bounds: torno_geom::Aabb3::EMPTY },
                 request,
                 Some(input),
             )
@@ -3360,7 +3355,7 @@ mod environment_metadata_lease_tests {
 #[cfg(all(test, feature = "raytrace-cpu", not(target_arch = "wasm32")))]
 mod surface_request_metadata_tests {
     use super::*;
-    use solidcraft_geom::{Aabb3, Mesh};
+    use torno_geom::{Aabb3, Mesh};
     #[cfg(all(feature = "raytrace-cpu", not(target_arch = "wasm32")))]
     #[test]
     fn surface_request_lease_survives_completion_frame_eviction_and_held_handles() {

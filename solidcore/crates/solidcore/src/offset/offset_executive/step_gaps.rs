@@ -1,7 +1,7 @@
 //! The loop gaps an extended offset leaves and their closing edges (fork
 //! tangency-labs/smlib 5d428ae, 7ff0a94, 34318f4, ccbf77a; the only path since #2981).
 //!
-//! Upstream: the SolidCraft fork's `source/SMLib/src/SmOffsetExecutive.cpp` (not in the
+//! Upstream: the Torno fork's `source/SMLib/src/SmOffsetExecutive.cpp` (not in the
 //! pinned SMLib).
 //!
 //! | Rust                                               | Upstream (fork)                                    |

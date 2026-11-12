@@ -1,10 +1,10 @@
 use std::collections::BTreeMap;
 use std::io::Write;
 
-use solidcraft_doc::Document;
-use solidcraft_doc::drawing::Source;
-use solidcraft_doc::ids::IdSource;
-use solidcraft_geom::drawing_sheet::{self, DrawingBorderProfile, Orientation, PaperSize};
+use torno_doc::Document;
+use torno_doc::drawing::Source;
+use torno_doc::ids::IdSource;
+use torno_geom::drawing_sheet::{self, DrawingBorderProfile, Orientation, PaperSize};
 
 use super::*;
 use crate::{is_drawing_path, read_design, write_design, write_design_container};
@@ -91,11 +91,11 @@ fn file_kind_tells_designs_and_drawings_apart() {
 fn a_design_is_never_read_as_a_drawing_nor_a_drawing_as_a_design() {
     let d = drawing();
     for bytes in [write_drawing_container(&d).unwrap(), d.to_json().unwrap().into_bytes()] {
-        assert!(error(read_design(&bytes)).contains("is a SolidCraft drawing, not a design"));
+        assert!(error(read_design(&bytes)).contains("is a Torno drawing, not a design"));
     }
     let doc = Document::new("Plate");
     for bytes in [write_design_container(&doc).unwrap(), write_design(&doc)] {
-        assert!(error(read_drawing(&bytes)).contains("is a SolidCraft design, not a drawing"));
+        assert!(error(read_drawing(&bytes)).contains("is a Torno design, not a drawing"));
     }
 }
 
@@ -144,7 +144,7 @@ fn drawing_files_open_from_disk_in_either_form() {
         assert_eq!(is_drawing_path(path), drawing, "{path}");
     }
     let d = drawing();
-    let dir = std::env::temp_dir().join(format!("solidcraft-drawing-files-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("torno-drawing-files-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
     for (name, bytes) in [("container.scdwg", write_drawing_container(&d).unwrap()), ("plain.scdwg", d.to_json().unwrap().into_bytes())] {
         let path = dir.join(name);

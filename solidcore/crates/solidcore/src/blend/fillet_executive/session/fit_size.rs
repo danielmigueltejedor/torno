@@ -2,7 +2,7 @@
 //! through a boundary point, the size at which rails stay on their faces, where two bands
 //! on a face meet, and the size that leaves some of a face the blends take whole.
 //!
-//! Upstream: not in SMLib at the pinned commit. SolidCraft's fork (tangency-labs/smlib#79,
+//! Upstream: not in SMLib at the pinned commit. Torno's fork (tangency-labs/smlib#79,
 //! merged at 5e8c9c1) adds `sm_BallThrough`, `SmFilletSolver::BallThrough`,
 //! `LargestSizeOnItsFaces` and `BandsMeetAt` (`SmFilletSolver.cpp`, `SmFilletSolver.h`) and
 //! the executive's `NoteFitOfPolygonsTakenWhole` and the circle-top fit of

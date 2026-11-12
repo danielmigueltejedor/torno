@@ -152,7 +152,7 @@ fn plain(text: &str) -> Option<Plain> {
         len = i + c.len_utf8();
     }
     let unit = body.get(len..)?.trim();
-    let unit_ok = unit.is_empty() || matches!(unit, "\"" | "″" | "'" | "′") || solidcraft_engine::doc::expr::unit_info(unit).is_some();
+    let unit_ok = unit.is_empty() || matches!(unit, "\"" | "″" | "'" | "′") || torno_engine::doc::expr::unit_info(unit).is_some();
     // A comma reads as a decimal mark only between digits.
     if digits == 0 || !unit_ok || (mark == Some(',') && places == 0) {
         return None;

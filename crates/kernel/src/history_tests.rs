@@ -1,5 +1,5 @@
 use solidcore_record::Vec3;
-use solidcraft_geom::prelude::*;
+use torno_geom::prelude::*;
 
 use super::{Change, EdgeOrigin, EdgeProv, FaceOrigin, FaceProv, History, Side};
 use crate::history::BodyHistory;

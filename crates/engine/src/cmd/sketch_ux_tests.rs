@@ -2,8 +2,8 @@
 //! which entity moves when a two-entity constraint is applied.
 
 use serde_json::{Value, json};
-use solidcraft_geom::prelude::*;
-use solidcraft_sketch::{DimFrame, Sketch, dim_frame, dim_layout};
+use torno_geom::prelude::*;
+use torno_sketch::{DimFrame, Sketch, dim_frame, dim_layout};
 
 use crate::Session;
 
@@ -613,7 +613,7 @@ fn palette_options_are_kept_with_each_sketch() {
     let first = s.active_sketch.expect("sketch");
     run(&mut s, "sketch.finish", json!({}));
     run(&mut s, "sketch.create", json!({"plane": "XZ"}));
-    assert_eq!(sketch(&s).view, solidcraft_sketch::SketchView::default());
+    assert_eq!(sketch(&s).view, torno_sketch::SketchView::default());
     let o = run(&mut s, "sketch.options", json!({"sketch": first}));
     assert_eq!(o["options"]["show_dimensions"], false);
     // Saved with the design.
@@ -697,7 +697,7 @@ fn v(x: f64, y: f64) -> solidcore_record::Vec2 {
 
 /// The corners of the polygon drawn by `out`, in order, and its support circle's centre and radius.
 fn polygon_shape(s: &Session, out: &Value) -> (Vec<solidcore_record::Vec2>, solidcore_record::Vec2, f64) {
-    use solidcraft_sketch::CurveKind;
+    use torno_sketch::CurveKind;
     let sk = sketch(s);
     let corners = out["curves"]
         .as_array()
@@ -805,7 +805,7 @@ fn dragging_a_conic_reads_rho_off_the_cursor_and_its_apex_slides_like_any_point(
     let mut s = new_sketch();
     run(&mut s, "sketch.conic", json!({"start": [0, 0], "end": [40, 0], "apex": [20, 20]}));
     let rho = |s: &Session| match sketch(s).curves[0].kind {
-        solidcraft_sketch::CurveKind::Conic { rho, .. } => rho,
+        torno_sketch::CurveKind::Conic { rho, .. } => rho,
         ref k => panic!("not a conic: {k:?}"),
     };
     assert!((rho(&s) - 0.5).abs() < 1e-9, "default rho: {}", rho(&s));
@@ -1113,7 +1113,7 @@ fn the_step_cap_leaves_the_plan_and_is_restored() {
 /// Stored (counter-clockwise) sweep of an arc, degrees in [0, 360).
 fn sweep_deg(s: &Session, arc: &str) -> f64 {
     let sk = sketch(s);
-    let Some(solidcraft_sketch::CurveKind::Arc { c, a, b }) = sk.curve_index(arc).map(|i| sk.curves[i].kind.clone()) else { panic!("no arc {arc}") };
+    let Some(torno_sketch::CurveKind::Arc { c, a, b }) = sk.curve_index(arc).map(|i| sk.curves[i].kind.clone()) else { panic!("no arc {arc}") };
     let (c, a, b) = (sk.points[c].pos, sk.points[a].pos, sk.points[b].pos);
     ((b - c).angle() - (a - c).angle()).rem_euclid(std::f64::consts::TAU).to_degrees()
 }
@@ -1185,7 +1185,7 @@ fn a_dragged_fillet_stays_in_its_corner() {
         run(&mut s, "sketch.constraint.fix", json!({"entities": ["l1.start"]}));
         run(&mut s, "sketch.constraint.horizontal_vertical", json!({"line": "l1", "mode": "horizontal"}));
         let sk0 = sketch(&s);
-        let arc = sk0.curves.iter().position(|c| matches!(c.kind, solidcraft_sketch::CurveKind::Arc { .. })).expect("fillet arc");
+        let arc = sk0.curves.iter().position(|c| matches!(c.kind, torno_sketch::CurveKind::Arc { .. })).expect("fillet arc");
         let arc_id = sk0.curves[arc].id.clone();
         let inside = |s: &Session| {
             let sk = sketch(s);
@@ -1321,7 +1321,7 @@ fn the_drag_step_counts_every_held_size_but_the_dragged_length() {
     run(&mut s, "sketch.line", json!({"points": [[100, 100], [100, 110]], "ids": ["la"]}));
     run(&mut s, "sketch.line", json!({"points": [[100.05, 120], [110, 120]], "ids": ["lb"], "connect": false}));
     run(&mut s, "sketch.dimension", json!({"entities": ["la.start", "lb.start"], "type": "horizontal", "value": 0.05}));
-    assert!(sketch(&s).constraints.iter().any(|c| matches!(c.kind, solidcraft_sketch::ConstraintKind::DistanceX { .. })));
+    assert!(sketch(&s).constraints.iter().any(|c| matches!(c.kind, torno_sketch::ConstraintKind::DistanceX { .. })));
     let steps = drag_steps(&s, "la.start", [100.0, 100.0], [101.0, 100.0]);
     drag(&mut s, "la.start", [100.0, 100.0], [101.0, 100.0]);
     let (a, b) = (pt(&s, "la.start"), pt(&s, "lb.start"));
@@ -1339,7 +1339,7 @@ fn a_circle_centred_on_a_dragged_end_does_not_set_the_step() {
     run(&mut s, "sketch.constraint.fix", json!({"entities": ["la.start"]}));
     run(&mut s, "sketch.dimension", json!({"entities": ["la"], "value": 20}));
     run(&mut s, "sketch.circle.center", json!({"center": [120, 100], "radius": 0.01}));
-    assert!(sketch(&s).constraints.iter().any(|c| matches!(c.kind, solidcraft_sketch::ConstraintKind::Coincident { .. })));
+    assert!(sketch(&s).constraints.iter().any(|c| matches!(c.kind, torno_sketch::ConstraintKind::Coincident { .. })));
     let steps = drag_steps(&s, "la.end", [120.0, 100.0], [120.0, 101.0]);
     eprintln!("1 mm drag next to a 0.01 mm circle on the end: {steps} steps");
     assert_eq!(steps, 1);
@@ -1546,7 +1546,7 @@ fn pipe_and_sweep_follow_3d_sketch_curves() {
 /// horizontal distance, sideways the vertical one (#257, #7295).
 #[test]
 fn auto_dimension_orientation_follows_where_its_text_is_placed() {
-    use solidcraft_sketch::ConstraintKind;
+    use torno_sketch::ConstraintKind;
     let dimension = |start: [f64; 2], end: [f64; 2], entities: Value, extra: Value| {
         let mut s = new_sketch();
         run(&mut s, "sketch.line", json!({"points": [start, end], "connect": false}));
@@ -1652,7 +1652,7 @@ fn ellipse_with_axes(s: &mut Session, turn: bool) -> (String, String, String) {
         .curves
         .iter()
         .filter_map(|c| match c.kind {
-            solidcraft_sketch::CurveKind::Line { a, b } if c.construction => Some((sk.point(a)?.dist(sk.point(b)?), c.id.clone())),
+            torno_sketch::CurveKind::Line { a, b } if c.construction => Some((sk.point(a)?.dist(sk.point(b)?), c.id.clone())),
             _ => None,
         })
         .collect();
@@ -1668,7 +1668,7 @@ fn ellipse_with_axes(s: &mut Session, turn: bool) -> (String, String, String) {
 /// whole axis. An ellipse without axes keeps its minor radius.
 #[test]
 fn an_ellipse_half_axis_dimension_follows_where_its_text_is_pulled() {
-    use solidcraft_sketch::ConstraintKind;
+    use torno_sketch::ConstraintKind;
     let dimension = |turn: bool, extra: Value| {
         let mut s = new_sketch();
         let (e, ..) = ellipse_with_axes(&mut s, turn);
@@ -2467,7 +2467,7 @@ fn editing_a_mid_timeline_sketch_rebuilds_later_features_once_at_finish() {
         doc.name.clone_from(&before.name);
         doc == before
     };
-    let dir = std::env::temp_dir().join(format!("solidcraft-mid-edit-save-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("torno-mid-edit-save-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
     run(&mut s, "sketch.edit", json!({"sketch": id}));
     for y in [20, 30] {
@@ -2479,7 +2479,7 @@ fn editing_a_mid_timeline_sketch_rebuilds_later_features_once_at_finish() {
     // A save during the edit holds the whole timeline, not the temporary rollback.
     let path = dir.join("Mid edit.solidcraft");
     run(&mut s, "file.save_as", json!({"path": path.to_string_lossy()}));
-    let saved = solidcraft_io::read_design(&std::fs::read(&path).unwrap()).unwrap();
+    let saved = torno_io::read_design(&std::fs::read(&path).unwrap()).unwrap();
     assert_eq!((saved.name.as_str(), saved.marker), ("Mid edit", None));
     assert_eq!(saved.sketch(id).unwrap().curves.len(), 6);
     run(&mut s, "sketch.finish", json!({}));

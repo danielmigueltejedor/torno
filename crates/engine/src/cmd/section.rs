@@ -3,7 +3,7 @@
 
 use serde_json::Value;
 use solidcore_record::{Plane, Vec3};
-use solidcraft_geom::prelude::*;
+use torno_geom::prelude::*;
 
 use super::CommandSpec;
 use crate::params::{bad, bool_, expr, vec3};
@@ -42,14 +42,14 @@ fn section(s: &mut Session, p: &Value) -> Result<Value> {
         // as the viewport draws it. The cut and the reply are in the world.
         Some(v @ (Value::String(_) | Value::Number(_))) => {
             let r = super::features::plane_param(s, Some(v), cmd)?;
-            let solidcraft_doc::PlaneRef::Construction { feature } = &r else { return Err(bad(cmd, "`plane` must be a plane")) };
+            let torno_doc::PlaneRef::Construction { feature } = &r else { return Err(bad(cmd, "`plane` must be a plane")) };
             let st = s.world_state()?;
             let c = st
                 .construct
                 .iter()
                 .find(|c| c.feature == feature.0)
                 .ok_or_else(|| bad(cmd, format!("construction plane `{feature}` is not built (rolled back, suppressed or failed)")))?;
-            let solidcraft_doc::construct::ConstructGeom::Plane(pl) = &c.geom else {
+            let torno_doc::construct::ConstructGeom::Plane(pl) = &c.geom else {
                 return Err(bad(cmd, format!("construction plane `{}` is not built (rolled back, suppressed or failed)", c.name)));
             };
             (pl.origin, pl.normal(), None)
@@ -63,7 +63,7 @@ fn section(s: &mut Session, p: &Value) -> Result<Value> {
     };
     let length = |key: &str| -> Result<Option<f64>> {
         match expr(p, key) {
-            Some(e) => s.doc.eval(&e, solidcraft_doc::expr::Kind::Length).map(Some).map_err(|e| bad(cmd, format!("{key}: {e}"))),
+            Some(e) => s.doc.eval(&e, torno_doc::expr::Kind::Length).map(Some).map_err(|e| bad(cmd, format!("{key}: {e}"))),
             None => Ok(None),
         }
     };

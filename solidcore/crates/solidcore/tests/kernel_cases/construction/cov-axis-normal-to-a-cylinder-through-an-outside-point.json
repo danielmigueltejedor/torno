@@ -103,7 +103,7 @@
     "extrude"
   ],
   "ungraded": [
-    "construction: SolidCraft computes it"
+    "construction: Torno computes it"
   ],
   "what": "an axis square to a cylinder's side through a point outside it",
   "why_not": []

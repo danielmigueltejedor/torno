@@ -1,7 +1,7 @@
 //! The Move window's main value: the one the canvas box shows and the keyboard types into.
 //! It follows the move type, because each type uses a different value.
 use serde_json::json;
-use solidcraft_engine::Session;
+use torno_engine::Session;
 
 use super::*;
 use crate::Services;
@@ -591,7 +591,7 @@ fn translated_box() -> crate::scenario::Harness {
 #[test]
 fn changing_the_move_type_keeps_the_move_made_so_far() {
     let mut h = translated_box();
-    let corners = |b: solidcraft_engine::geom::Aabb3| [b.min, b.max];
+    let corners = |b: torno_engine::geom::Aabb3| [b.min, b.max];
     let before = corners(crate::open_meshing::session_world(&h.app.session).body("Body1").unwrap().mesh().bounds());
     let mut d = h.app.dialog.take().unwrap();
     switch_type(&h.app, &mut d, ROTATE);
@@ -609,7 +609,7 @@ fn changing_the_move_type_keeps_the_move_made_so_far() {
     }
     let after = crate::open_meshing::session_world(&h.app.session).body("Body1").unwrap().mesh().bounds();
     let turn = |p: Vec3| Vec3::new(-p.y, p.x + 10.0, p.z);
-    let mut want = solidcraft_engine::geom::Aabb3::EMPTY;
+    let mut want = torno_engine::geom::Aabb3::EMPTY;
     for c in before {
         want.add(turn(c));
     }

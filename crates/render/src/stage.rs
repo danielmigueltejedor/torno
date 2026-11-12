@@ -7,10 +7,10 @@ use crate::{
 };
 use serde::{Deserialize, Serialize};
 use solidcore_record::Vec3;
-use solidcraft_geom::prelude::*;
-use solidcraft_geom::{Aabb3, Mesh};
-use solidcraft_viewport::surface::OpaqueSurface;
 use std::{collections::BTreeSet, fmt, sync::Arc};
+use torno_geom::prelude::*;
+use torno_geom::{Aabb3, Mesh};
+use torno_viewport::surface::OpaqueSurface;
 
 pub const MAX_STAGE_PANELS: usize = 32;
 fn invalid(message: impl Into<String>) -> JobError {
@@ -111,7 +111,7 @@ impl StagePanel {
         mesh.tri_face.extend([0, 0]);
         // The surface carries exact linear reflectance. This display colour is not
         // used as an additional multiplier by PBR consumers.
-        let color = self.reflectance_linear.map(solidcraft_color::srgb::encode8);
+        let color = self.reflectance_linear.map(torno_color::srgb::encode8);
         Ok(ProductMesh {
             name: format!("__render_stage__/{}", self.id),
             mesh: Arc::new(mesh),

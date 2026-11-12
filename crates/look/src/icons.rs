@@ -1,5 +1,5 @@
-//! SolidCraft's icon set: the SVG masters in `icons/design/svg`, drawn by the kit's renderer
-//! (`solidcraft_ui_kit::icons`).
+//! Torno's icon set: the SVG masters in `icons/design/svg`, drawn by the kit's renderer
+//! (`torno_ui_kit::icons`).
 //!
 //! The masters, `palette.toml` (every colour role in light and dark, the accents and the icons'
 //! default accents) and `aliases.toml` are embedded at build time (see `build.rs`) as [`DATA`],
@@ -11,7 +11,7 @@
 //! A host that draws these icons plus a few masters of its own installs
 //! `IconSet::extended(DATA, extension)` instead of [`SET`]: the same tables, never a copy.
 
-use solidcraft_ui_kit::icons::{self, IconData, IconSet};
+use torno_ui_kit::icons::{self, IconData, IconSet};
 
 // The compiled tables: `ROLE_NAMES`, `ROLE_SOURCE_HEX`, `PALETTE`, `ACCENT_NAMES`, `ACCENTS`,
 // `ACCENT_VARIANTS`, `MASTERS`, `ALIASES` and `ICON_ACCENTS`, as `IconData` names them.
@@ -22,7 +22,7 @@ const _: () = assert!(
     "a theme file must be able to override every role and accent"
 );
 
-/// SolidCraft's icon artwork as data, for [`SET`] or a host's `IconSet::extended` over it.
+/// Torno's icon artwork as data, for [`SET`] or a host's `IconSet::extended` over it.
 pub const DATA: IconData = IconData {
     role_names: ROLE_NAMES,
     role_source_hex: ROLE_SOURCE_HEX,
@@ -36,7 +36,7 @@ pub const DATA: IconData = IconData {
     danger_accent: "constraint",
 };
 
-/// SolidCraft's icons.
+/// Torno's icons.
 pub static SET: IconSet = IconSet::new(DATA);
 
 /// Make [`SET`] the icons the kit draws, once per process, before the first frame and in every test
@@ -48,10 +48,10 @@ pub fn install() {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use solidcraft_ui_kit::icons::{Doc, Look, PLACEHOLDER, Resolved, render, render_tinted};
     use tiny_skia as sk;
+    use torno_ui_kit::icons::{Doc, Look, PLACEHOLDER, Resolved, render, render_tinted};
 
-    // SolidCraft's set whether or not it is installed.
+    // Torno's set whether or not it is installed.
     fn resolve(name: &str) -> Resolved {
         SET.resolve(name)
     }
@@ -64,7 +64,7 @@ mod tests {
         SET.accent_index(name)
     }
 
-    fn primary(name: &str, dark: bool, vision: solidcraft_theme::ColorVision) -> egui::Color32 {
+    fn primary(name: &str, dark: bool, vision: torno_theme::ColorVision) -> egui::Color32 {
         SET.primary(name, dark, vision)
     }
 
@@ -96,7 +96,7 @@ mod tests {
         let doc = SET.parse("<svg><path d='M0 0L64 0L64 64L0 64Z' fill='#8e9faf'/><circle cx='20' cy='20' r='10' fill='#ffffff'/><circle cx='20' cy='20' r='3' fill='#236ead'/><path d='M8 44L56 44' stroke='#ffffff' stroke-width='6'/><circle cx='44' cy='20' r='6' fill='#ffffff' opacity='0.5'/></svg>").unwrap();
         for dark in [false, true] {
             for accent in std::iter::once(None).chain((0..ACCENT_NAMES.len()).map(Some)) {
-                let look = Look { dark, accent, vision: solidcraft_theme::ColorVision::Off, palette: None };
+                let look = Look { dark, accent, vision: torno_theme::ColorVision::Off, palette: None };
                 let pm = render(&doc, look, 64).unwrap();
                 assert_eq!(pm.pixel(26, 20).unwrap().alpha(), 0, "fill must reveal the real background");
                 assert_eq!(pm.pixel(20, 44).unwrap().alpha(), 0, "stroke must reveal the real background");
@@ -110,7 +110,7 @@ mod tests {
     #[test]
     fn knockout_respects_its_clip_and_combines_explicit_masks_with_clips() {
         let doc = SET.parse("<svg><defs><clipPath id='left'><path d='M0 0L32 0L32 64L0 64Z'/></clipPath><mask id='all'><path d='M0 0L64 0L64 64L0 64Z' fill='white'/></mask></defs><path d='M0 0L64 0L64 64L0 64Z' fill='#8e9faf'/><g clip-path='url(#left)'><circle cx='32' cy='32' r='16' fill='#ffffff' mask='url(#all)'/></g></svg>").unwrap();
-        let pm = render(&doc, Look { dark: false, accent: None, vision: solidcraft_theme::ColorVision::Off, palette: None }, 64).unwrap();
+        let pm = render(&doc, Look { dark: false, accent: None, vision: torno_theme::ColorVision::Off, palette: None }, 64).unwrap();
         assert_eq!(pm.pixel(24, 32).unwrap().alpha(), 0);
         assert_eq!(pm.pixel(40, 32).unwrap().alpha(), 255, "cutout must not escape its parent clip");
     }
@@ -118,7 +118,7 @@ mod tests {
     #[test]
     fn accepted_badges_and_environment_sun_have_transparent_holes() {
         for dark in [false, true] {
-            let look = Look { dark, accent: None, vision: solidcraft_theme::ColorVision::Off, palette: None };
+            let look = Look { dark, accent: None, vision: torno_theme::ColorVision::Off, palette: None };
             assert_eq!(role_colour("gap", look), egui::Color32::TRANSPARENT);
             for (id, x, y) in [("contact_new", 48, 48), ("environment_map", 45, 19), ("line_mid", 35, 28)] {
                 let pm = render(doc_for(id, 64).unwrap(), look, 64).unwrap();
@@ -131,7 +131,7 @@ mod tests {
     fn native_clip_paths_and_plus_mask_keep_the_artwork_inside_its_shape() {
         for dark in [false, true] {
             for px in [16, 24, 64] {
-                let look = Look { dark, accent: None, vision: solidcraft_theme::ColorVision::Off, palette: None };
+                let look = Look { dark, accent: None, vision: torno_theme::ColorVision::Off, palette: None };
                 for id in ["environment_map", "curvature_map", "iso_analysis", "zebra"] {
                     let doc = doc_for(id, px).unwrap();
                     let pm = render(doc, look, px).unwrap();
@@ -139,8 +139,8 @@ mod tests {
                     assert!(pm.pixel(px / 2, px / 2).unwrap().alpha() > 0, "{id} lost its clipped contents");
                 }
             }
-            let pm = render(doc_for("new", 64).unwrap(), Look { dark, accent: None, vision: solidcraft_theme::ColorVision::Off, palette: None }, 64)
-                .unwrap();
+            let pm =
+                render(doc_for("new", 64).unwrap(), Look { dark, accent: None, vision: torno_theme::ColorVision::Off, palette: None }, 64).unwrap();
             assert_eq!(pm.pixel(45, 45).unwrap().alpha(), 0, "the plus is genuinely punched out in the native renderer");
         }
     }
@@ -149,7 +149,7 @@ mod tests {
     /// `active-3` values, including the colour vision variants.
     #[test]
     fn tokens_share_the_artworks_primary_strokes() {
-        use solidcraft_theme::icon_strokes as tokens;
+        use torno_theme::icon_strokes as tokens;
         let role = ROLE_NAMES.iter().position(|r| *r == "active-3").unwrap();
         let primary = |accent: &str| {
             let items = ACCENTS[accent_index(accent).unwrap()];
@@ -176,8 +176,8 @@ mod tests {
     #[test]
     fn semantic_ui_tokens_and_icon_strokes_share_the_palette_including_accessibility() {
         for dark in [false, true] {
-            for vision in solidcraft_theme::ColorVision::ALL {
-                let tokens = solidcraft_theme::Tokens::themed(dark, vision);
+            for vision in torno_theme::ColorVision::ALL {
+                let tokens = torno_theme::Tokens::themed(dark, vision);
                 assert_eq!(primary("line", dark, vision), tokens.sketch_accent);
                 assert_eq!(primary("c_parallel", dark, vision), tokens.glyph_text);
                 assert_eq!(primary("centerline", dark, vision), tokens.construction_geom);
@@ -188,7 +188,7 @@ mod tests {
 
     #[test]
     fn semantic_ramps_preserve_silhouettes_and_passive_faces_in_all_themes() {
-        use solidcraft_theme::ColorVision;
+        use torno_theme::ColorVision;
         for id in ["line", "c_parallel", "construction", "centerline", "sketch_rect_pattern", "surface_extrude", "mesh_export"] {
             let resolved = resolve(id);
             for dark in [false, true] {
@@ -222,7 +222,7 @@ mod tests {
         let source = MASTERS.iter().find(|(id, fam, _)| *id == "folder" && *fam == "model").unwrap().2;
         let expected = SET.parse(source).unwrap();
         for dark in [false, true] {
-            let look = Look { dark, accent: None, vision: solidcraft_theme::ColorVision::Off, palette: None };
+            let look = Look { dark, accent: None, vision: torno_theme::ColorVision::Off, palette: None };
             let actual = render(doc_for("folder", 64).unwrap(), look, 64).unwrap();
             let reviewed = render(&expected, look, 64).unwrap();
             assert_eq!(actual.data(), reviewed.data());
@@ -246,7 +246,7 @@ mod tests {
             for dark in [false, true] {
                 for px in [16, 20, 26, 64] {
                     let Some(doc) = doc_for(id, px) else { panic!("{id}") };
-                    let pm = render(doc, Look { dark, accent: None, vision: solidcraft_theme::ColorVision::Off, palette: None }, px)
+                    let pm = render(doc, Look { dark, accent: None, vision: torno_theme::ColorVision::Off, palette: None }, px)
                         .unwrap_or_else(|| panic!("{id} at {px}"));
                     assert!(coverage(&pm) > 8, "{id} at {px}px (dark {dark}) is blank");
                 }
@@ -261,14 +261,14 @@ mod tests {
     #[test]
     fn dark_theme_and_accents_change_colour_not_shape() {
         let doc = doc_for("extrude", 64).unwrap_or_else(|| panic!("extrude"));
-        let light = render(doc, Look { dark: false, accent: None, vision: solidcraft_theme::ColorVision::Off, palette: None }, 64)
+        let light = render(doc, Look { dark: false, accent: None, vision: torno_theme::ColorVision::Off, palette: None }, 64)
             .unwrap_or_else(|| panic!("render"));
-        let dark = render(doc, Look { dark: true, accent: None, vision: solidcraft_theme::ColorVision::Off, palette: None }, 64)
+        let dark = render(doc, Look { dark: true, accent: None, vision: torno_theme::ColorVision::Off, palette: None }, 64)
             .unwrap_or_else(|| panic!("render"));
         assert_ne!(rgba(&light), rgba(&dark));
         let r = resolve("surface_extrude");
         assert_eq!(r.master, "extrude");
-        let surface = render(doc, Look { dark: false, accent: r.accent, vision: solidcraft_theme::ColorVision::Off, palette: None }, 64)
+        let surface = render(doc, Look { dark: false, accent: r.accent, vision: torno_theme::ColorVision::Off, palette: None }, 64)
             .unwrap_or_else(|| panic!("render"));
         assert!(r.accent.is_some());
         assert_ne!(rgba(&light), rgba(&surface));
@@ -293,7 +293,7 @@ mod tests {
     #[test]
     fn danger_tint_preserves_faces_outlines_and_transparent_details() {
         for dark in [false, true] {
-            for vision in solidcraft_theme::ColorVision::ALL {
+            for vision in torno_theme::ColorVision::ALL {
                 let look = Look { dark, accent: accent_index("constraint"), vision, palette: None };
                 for id in ["delete", "new", "extrude"] {
                     for px in [16, 20, 64] {

@@ -7,14 +7,14 @@ use crate::i18n::tr_engine_error;
 use crate::icons::markers::glyph_icon;
 use crate::icons::markers::glyph_letter;
 use crate::ui_kit::BackingTooltipExt as _;
-use solidcraft_engine::geom::prelude::*;
-use solidcraft_ui_text::tr;
 use std::cell::{Cell, RefCell};
+use torno_engine::geom::prelude::*;
+use torno_ui_text::tr;
 
 use egui::{Pos2, Stroke};
 use serde_json::{Value, json};
 use solidcore_record::{Plane, Vec2, Vec3};
-use solidcraft_engine::kernel::Continuity;
+use torno_engine::kernel::Continuity;
 
 use crate::SolveApp;
 use crate::tool_modifiers::{Audit, Binding, Match, ModAction, ModifierCombo, Scope, ToolModifiers, Trigger};
@@ -165,7 +165,7 @@ pub fn trim_drag_to(app: &mut SolveApp, proj: &Proj, pos: Pos2) {
                 .as_array()
                 .into_iter()
                 .flatten()
-                .map(|piece| piece.as_array().into_iter().flatten().filter_map(solidcraft_engine::params::vec2).collect())
+                .map(|piece| piece.as_array().into_iter().flatten().filter_map(torno_engine::params::vec2).collect())
                 .collect()
         })
         .unwrap_or_default();
@@ -229,7 +229,7 @@ fn next_measure(order: Continuity) -> Option<(&'static str, &'static str, &'stat
 fn continuity_label(app: &SolveApp, seam: &Value) -> String {
     let deg = |key: &str| seam[key]["value"].as_f64().map(|x| format!("{x:.3}\u{b0}")).unwrap_or_default();
     let order = seam["order"].as_str().and_then(Continuity::parse);
-    let class = solidcraft_ui_text::tr(order_class(order));
+    let class = torno_ui_text::tr(order_class(order));
     match order {
         None => format!("{class} {}", seam["gap_mm"]["value"].as_f64().map(|g| crate::prefs::show_mm(app, g, 1)).unwrap_or_default()),
         Some(g) => {
@@ -247,7 +247,7 @@ fn marks(app: &SolveApp, painter: &egui::Painter, proj: &Proj) {
         MARKS.with(|m| m.borrow_mut().clear());
         return;
     }
-    let tk = solidcraft_theme::Tokens::get();
+    let tk = torno_theme::Tokens::get();
     MARKS.with(|m| {
         for (at, label) in m.borrow().iter() {
             let Some(q) = proj.to_screen(*at) else { continue };
@@ -258,7 +258,7 @@ fn marks(app: &SolveApp, painter: &egui::Painter, proj: &Proj) {
                 q + egui::vec2(12.0, -12.0),
                 egui::Align2::LEFT_BOTTOM,
                 label,
-                egui::FontId::proportional(solidcraft_theme::Tokens::get().font_body),
+                egui::FontId::proportional(torno_theme::Tokens::get().font_body),
                 tk.text,
             );
             painter.rect_filled(r.expand(3.0), tk.radius_sm.saturating_sub(1), tk.panel.gamma_multiply(0.85));
@@ -266,7 +266,7 @@ fn marks(app: &SolveApp, painter: &egui::Painter, proj: &Proj) {
                 q + egui::vec2(12.0, -12.0),
                 egui::Align2::LEFT_BOTTOM,
                 label,
-                egui::FontId::proportional(solidcraft_theme::Tokens::get().font_body),
+                egui::FontId::proportional(torno_theme::Tokens::get().font_body),
                 tk.text,
             );
         }
@@ -296,7 +296,7 @@ pub fn start_hook(app: &mut SolveApp, id: &str) -> bool {
         return false;
     }
     // Surface analyses toggle: a second click turns the same one off.
-    use solidcraft_engine::SurfaceAnalysis as A;
+    use torno_engine::SurfaceAnalysis as A;
     let same = match (id, app.session.analysis) {
         ("inspect.zebra", Some(A::Zebra { .. })) => Some(true),
         ("inspect.draft", Some(A::Draft { .. })) => Some(true),
@@ -326,12 +326,12 @@ pub fn start_hook(app: &mut SolveApp, id: &str) -> bool {
         let Ok(v) = app.run(id, json!({})) else { return false };
         let summary = &v["summary"];
         // Each class in the legend's words, best first.
-        let gaps = summary["gap"].as_u64().filter(|n| *n > 0).map(|n| format!("{n} {}", solidcraft_ui_text::tr(order_class(None))));
+        let gaps = summary["gap"].as_u64().filter(|n| *n > 0).map(|n| format!("{n} {}", torno_ui_text::tr(order_class(None))));
         let counts: Vec<String> = Continuity::ALL
             .into_iter()
             .rev()
             .filter_map(|g| {
-                summary["orders"][g.as_str()].as_u64().filter(|n| *n > 0).map(|n| format!("{n} {}", solidcraft_ui_text::tr(order_class(Some(g)))))
+                summary["orders"][g.as_str()].as_u64().filter(|n| *n > 0).map(|n| format!("{n} {}", torno_ui_text::tr(order_class(Some(g)))))
             })
             .chain(gaps)
             .collect();
@@ -394,7 +394,7 @@ pub(crate) fn is_canvas_image(path: &str) -> bool {
 pub(crate) fn start_image_placement(app: &mut SolveApp, command: &str, path: String) {
     app.home.open = false;
     IMAGE.with(|i| *i.borrow_mut() = Some(path));
-    app.last_command = solidcraft_engine::find_command(command).map(|spec| (spec.id.into(), spec.label.into()));
+    app.last_command = torno_engine::find_command(command).map(|spec| (spec.id.into(), spec.label.into()));
     app.tool = crate::tools::Tool::for_command(command);
 }
 
@@ -460,7 +460,7 @@ fn comb_options_card(app: &mut SolveApp, ctx: &egui::Context, proj: &Proj) {
     if app.tool.as_ref().map(|t| t.cmd) != Some("inspect.curvature_comb") {
         return;
     }
-    let tk = solidcraft_theme::Tokens::get();
+    let tk = torno_theme::Tokens::get();
     let available = crate::shell::workspace_content(app, crate::shell::content_rect(app, proj.rect));
     let width = tk.form_card_width.min(available.width() - 2.0 * tk.space_16).max(0.0);
     let mut options = comb_options();
@@ -506,7 +506,7 @@ fn combs(app: &SolveApp, painter: &egui::Painter, proj: &Proj) {
     if crate::dim_view::preview_world(app).is_some() {
         return;
     }
-    let tk = solidcraft_theme::Tokens::get();
+    let tk = torno_theme::Tokens::get();
     for comb in &shown.teeth {
         let mut tips: Vec<Pos2> = Vec::new();
         for [a, b] in comb {
@@ -530,8 +530,8 @@ pub struct Lined {
 
 /// The points the cursor can line up with: the sketch's visible points on screen (line ends,
 /// centres, standalone points, the origin) and the shape's own points so far.
-fn align_targets(proj: &Proj, sk: &solidcraft_engine::sketch::Sketch, plane: &solidcore_record::Plane, own: &[Vec2]) -> Vec<(Option<String>, Vec2)> {
-    let visible = solidcraft_engine::view::SketchPointVisibility::new(sk);
+fn align_targets(proj: &Proj, sk: &torno_engine::sketch::Sketch, plane: &solidcore_record::Plane, own: &[Vec2]) -> Vec<(Option<String>, Vec2)> {
+    let visible = torno_engine::view::SketchPointVisibility::new(sk);
     let on_screen = |p: Vec2| proj.to_screen(plane.to_world(p)).is_some_and(|q| proj.rect.contains(q));
     let mut out: Vec<(Option<String>, Vec2)> =
         sk.points.iter().filter(|p| visible.takes(p) && on_screen(p.pos)).map(|p| (Some(p.id.clone()), p.pos)).collect();
@@ -608,7 +608,7 @@ fn nearest_on_polyline(poly: &[Vec2], p: Vec2) -> Option<Vec2> {
 pub fn refine_snap(
     app: &SolveApp,
     proj: &Proj,
-    sk: &solidcraft_engine::sketch::Sketch,
+    sk: &torno_engine::sketch::Sketch,
     plane: &solidcore_record::Plane,
     lp: Vec2,
 ) -> Option<(Vec2, Option<String>)> {
@@ -632,7 +632,7 @@ pub fn refine_snap(
     let mut mid_of: Option<String> = None;
     // A crossing of two curves, before a midpoint or a point on one curve.
     if !mid_only
-        && let Some((q, i, j)) = solidcraft_engine::sketch::nearest_curve_intersection(sk, lp, tol)
+        && let Some((q, i, j)) = torno_engine::sketch::nearest_curve_intersection(sk, lp, tol)
         && let (Some(a), Some(b)) = (sk.curves.get(i), sk.curves.get(j))
     {
         best = Some((q.dist(lp), "X", q));
@@ -640,8 +640,8 @@ pub fn refine_snap(
     }
     if best.is_none() {
         for (i, c) in sk.curves.iter().enumerate() {
-            if let solidcraft_engine::sketch::CurveKind::Line { .. } = c.kind
-                && let Some(solidcraft_engine::sketch::Shape::Line { a, b }) = sk.shape(i)
+            if let torno_engine::sketch::CurveKind::Line { .. } = c.kind
+                && let Some(torno_engine::sketch::Shape::Line { a, b }) = sk.shape(i)
             {
                 let m = (a + b) * 0.5;
                 let d = m.dist(lp);
@@ -715,14 +715,14 @@ pub fn refine_snap(
     }
     // The free coordinate still follows the grid: on a crossing of the drawn grid's lines when
     // the point can be on one, and on the finer lattice between the crossings otherwise (#7114).
-    let (minor, fine) = solidcraft_engine::view::sketch_grid_step(app.cam.half_height());
+    let (minor, fine) = torno_engine::view::sketch_grid_step(app.cam.half_height());
     // `fixed` is the coordinate the point lines up with, on the other axis: the crossing has to
     // run through it. With Snap off (Sketch Palette) the grid holds the point as before.
     let g = |free: f64, fixed: f64| {
         if sk.view.no_snap || !app.preferences.sketch_snap_to_visible_grid {
-            solidcraft_engine::view::sketch_grid_lattice_axis(free, fine)
+            torno_engine::view::sketch_grid_lattice_axis(free, fine)
         } else {
-            solidcraft_engine::view::sketch_grid_free(free, fixed, minor, fine)
+            torno_engine::view::sketch_grid_free(free, fixed, minor, fine)
         }
     };
     // Points to line up with as well (#7828): with `sketch_align_points` off, none, so only the
@@ -802,8 +802,8 @@ pub fn refine_snap(
 /// The constraints one glyph stands for. A point that is the midpoint of several lines (their
 /// midpoints meet) shows a single MidPoint glyph, the first constraint's, for all of them;
 /// any other constraint stands for itself.
-pub fn glyph_group(sk: &solidcraft_engine::sketch::Sketch, id: &str) -> Vec<String> {
-    use solidcraft_engine::sketch::ConstraintKind::Midpoint;
+pub fn glyph_group(sk: &torno_engine::sketch::Sketch, id: &str) -> Vec<String> {
+    use torno_engine::sketch::ConstraintKind::Midpoint;
     match sk.constraints.iter().find(|c| c.id == id).map(|c| (c.kind.clone(), c.driven)) {
         Some((Midpoint { p, .. }, false)) => {
             sk.constraints.iter().filter(|c| !c.driven && matches!(c.kind, Midpoint { p: q, .. } if q == p)).map(|c| c.id.clone()).collect()
@@ -815,8 +815,8 @@ pub fn glyph_group(sk: &solidcraft_engine::sketch::Sketch, id: &str) -> Vec<Stri
 /// What deleting glyph `id` removes: the constraints it stands for, and, for one MidPoint glyph
 /// shared by several lines, their common point once nothing else holds it (it only tied the
 /// midpoints together, so it would be left floating).
-pub fn glyph_deletion(sk: &solidcraft_engine::sketch::Sketch, id: &str) -> Vec<solidcraft_engine::Sel> {
-    use solidcraft_engine::{Sel, sketch::ConstraintKind::Midpoint};
+pub fn glyph_deletion(sk: &torno_engine::sketch::Sketch, id: &str) -> Vec<torno_engine::Sel> {
+    use torno_engine::{Sel, sketch::ConstraintKind::Midpoint};
     let group = glyph_group(sk, id);
     let shared = match sk.constraints.iter().find(|c| c.id == id).map(|c| &c.kind) {
         Some(Midpoint { p, .. }) if group.len() > 1 => Some(*p),
@@ -835,11 +835,11 @@ pub fn glyph_deletion(sk: &solidcraft_engine::sketch::Sketch, id: &str) -> Vec<s
 }
 
 /// [`glyph_deletion`] in the active sketch.
-pub fn active_glyph_deletion(app: &SolveApp, id: &str) -> Vec<solidcraft_engine::Sel> {
+pub fn active_glyph_deletion(app: &SolveApp, id: &str) -> Vec<torno_engine::Sel> {
     let st = crate::open_meshing::session_world(&app.session);
     match active_sketch(app).and_then(|s| st.sketch(s)) {
         Some(ss) => glyph_deletion(&ss.sketch, id),
-        None => vec![solidcraft_engine::Sel::SketchConstraint { id: id.to_string() }],
+        None => vec![torno_engine::Sel::SketchConstraint { id: id.to_string() }],
     }
 }
 
@@ -867,7 +867,7 @@ pub fn delete_glyph(app: &mut SolveApp) -> bool {
     let entities: Vec<String> = active_glyph_deletion(app, &id)
         .into_iter()
         .filter_map(|s| match s {
-            solidcraft_engine::Sel::SketchConstraint { id } | solidcraft_engine::Sel::SketchPoint { id } => Some(id),
+            torno_engine::Sel::SketchConstraint { id } | torno_engine::Sel::SketchPoint { id } => Some(id),
             _ => None,
         })
         .collect();
@@ -902,7 +902,7 @@ pub fn takes(id: &str, hit: &Hit) -> bool {
 }
 
 fn mode(id: &str) -> Option<Mode> {
-    if solidcraft_engine::cmd::construction_line_mode(id).is_some() {
+    if torno_engine::cmd::construction_line_mode(id).is_some() {
         return Some(Mode::Construction);
     }
     Some(match id {
@@ -930,7 +930,7 @@ fn mode(id: &str) -> Option<Mode> {
 /// A tool for one of the extra sketch commands.
 pub fn tool_for(id: &str) -> Option<Tool> {
     mode(id)?;
-    let spec = solidcraft_engine::find_command(id)?;
+    let spec = torno_engine::find_command(id)?;
     Some(Tool {
         cmd: spec.id,
         kind: Kind::Ext,
@@ -955,7 +955,7 @@ pub fn image_placement_finished(tool: &Tool) -> bool {
 }
 
 pub fn hint(id: &str) -> Option<String> {
-    if solidcraft_engine::cmd::construction_line_mode(id).is_some() {
+    if torno_engine::cmd::construction_line_mode(id).is_some() {
         return Some(crate::sketch_construction::hint(id));
     }
     Some(
@@ -970,8 +970,8 @@ pub fn hint(id: &str) -> Option<String> {
             "inspect.center_of_mass" => "Center of mass of all bodies; click a body for its own",
             "inspect.isocurve" => "Isocurves: click faces",
             "inspect.continuity" => "Continuity: click an edge for its numbers (the button again turns the colours off)",
-            "canvas.insert" => solidcraft_ui_text::tr("canvas.place_hint"),
-            "canvas.decal" => solidcraft_ui_text::tr("canvas.decal_place_hint"),
+            "canvas.insert" => torno_ui_text::tr("canvas.place_hint"),
+            "canvas.decal" => torno_ui_text::tr("canvas.decal_place_hint"),
             "sketch.trim" => tr("sketch.hint.trim"),
             "sketch.extend" => tr("sketch.hint.extend"),
             "sketch.break" => tr("sketch.hint.break"),
@@ -1035,8 +1035,8 @@ fn sketch_entity(app: &SolveApp, hits: &[Hit]) -> Option<(String, bool)> {
 /// the corner commands resolve them in from a `point` parameter. An ellipse's axis is never a
 /// side (the engine refuses it), and construction curves are ignored when more than two meet.
 /// Each side must be a line, or an arc for a fillet.
-pub(crate) fn corner_curves(sk: &solidcraft_engine::sketch::Sketch, pi: usize, arcs_ok: bool) -> Option<(usize, usize)> {
-    use solidcraft_engine::sketch::CurveKind;
+pub(crate) fn corner_curves(sk: &torno_engine::sketch::Sketch, pi: usize, arcs_ok: bool) -> Option<(usize, usize)> {
+    use torno_engine::sketch::CurveKind;
     let candidates = sk
         .curves
         .iter()
@@ -1206,7 +1206,7 @@ pub fn on_click(app: &mut SolveApp, tool: &mut Tool, proj: &Proj, pos: Pos2) {
                 // The picked body and face, as Create Sketch sends them: a point alone makes the
                 // engine search every face of every body, which gives up on a large design.
                 Hit::Face { body, index, point } => {
-                    let face = solidcraft_engine::Sel::Face { body: body.clone(), index: *index, point: *point };
+                    let face = torno_engine::Sel::Face { body: body.clone(), index: *index, point: *point };
                     Some((
                         crate::sketch_attachment_ui::face_plane(app, &face).unwrap_or_else(|| json!({"face": [point.x, point.y, point.z]})),
                         *point,
@@ -1317,9 +1317,9 @@ pub fn on_click(app: &mut SolveApp, tool: &mut Tool, proj: &Proj, pos: Pos2) {
             if cmd == "sketch.edit_text" {
                 let selection = hits.first().and_then(|hit| match hit {
                     Hit::SketchCurve { sketch, id, .. } if Some(*sketch) == active_sketch(app) => {
-                        Some(solidcraft_engine::Sel::SketchCurve { id: id.clone(), sketch: None })
+                        Some(torno_engine::Sel::SketchCurve { id: id.clone(), sketch: None })
                     }
-                    Hit::Profile { sketch, index } => Some(solidcraft_engine::Sel::Profile { sketch: *sketch, index: *index }),
+                    Hit::Profile { sketch, index } => Some(torno_engine::Sel::Profile { sketch: *sketch, index: *index }),
                     _ => None,
                 });
                 if let Some(id) = selection.as_ref().and_then(|sel| crate::sketch_text::entity_for_selection(app, sel)) {
@@ -1401,7 +1401,7 @@ pub fn on_click(app: &mut SolveApp, tool: &mut Tool, proj: &Proj, pos: Pos2) {
 /// Typed values are checked first, so a rejected one stays in its box to be corrected rather
 /// than reaching the command.
 pub(crate) fn place_point(app: &mut SolveApp, tool: &mut Tool, p: (Vec2, Option<String>)) {
-    if solidcraft_engine::cmd::construction_line_mode(tool.cmd).is_some() {
+    if torno_engine::cmd::construction_line_mode(tool.cmd).is_some() {
         crate::sketch_construction::place_point(app, tool, p);
         return;
     }
@@ -1449,7 +1449,7 @@ pub(crate) fn place_point(app: &mut SolveApp, tool: &mut Tool, p: (Vec2, Option<
 fn tangent_start(app: &SolveApp, p: &(Vec2, Option<String>)) -> bool {
     let Some(id) = &p.1 else { return false };
     let state = crate::open_meshing::session_world(&app.session);
-    app.session.active_sketch.and_then(|sid| state.sketch(sid)).is_some_and(|ss| solidcraft_engine::cmd::tangent_arc_starts_at(&ss.sketch, id))
+    app.session.active_sketch.and_then(|sid| state.sketch(sid)).is_some_and(|ss| torno_engine::cmd::tangent_arc_starts_at(&ss.sketch, id))
 }
 
 fn run_points(app: &mut SolveApp, t: &Tool) -> bool {
@@ -1553,7 +1553,7 @@ pub fn finish(app: &mut SolveApp, tool: &mut Tool) -> bool {
     }
 }
 
-type SolvedSketchRef = std::sync::Arc<solidcraft_engine::doc::SolvedSketch>;
+type SolvedSketchRef = std::sync::Arc<torno_engine::doc::SolvedSketch>;
 
 /// The shown state's solve of `sketch`, shared.
 fn solved_sketch(app: &SolveApp, sketch: u64) -> Option<SolvedSketchRef> {
@@ -1565,7 +1565,7 @@ fn solved_sketch(app: &SolveApp, sketch: u64) -> Option<SolvedSketchRef> {
 /// new solve without a new revision).
 struct SketchStateKey {
     revision: u64,
-    solve: std::sync::Weak<solidcraft_engine::doc::SolvedSketch>,
+    solve: std::sync::Weak<torno_engine::doc::SolvedSketch>,
     curve: String,
 }
 
@@ -1583,12 +1583,12 @@ impl SketchStateKey {
 /// preview both ask for it each frame).
 struct TrimHoverCache {
     key: SketchStateKey,
-    hover: Option<solidcraft_engine::cmd::TrimHover>,
+    hover: Option<torno_engine::cmd::TrimHover>,
     piece: Option<([u64; 2], Option<Vec<Vec2>>)>,
 }
 
 /// Extend's preview of one curve, per sketch state and growing end (it depends on the cursor
-/// only through the end, [`solidcraft_engine::cmd::extend_end_at`]).
+/// only through the end, [`torno_engine::cmd::extend_end_at`]).
 struct ExtendPreviewCache {
     key: SketchStateKey,
     at_b: bool,
@@ -1602,7 +1602,7 @@ thread_local! {
 
 /// With Trim active and the cursor over curve `id` of `sketch` (the active sketch): the piece a
 /// click takes away (#3052), which the hover shows in place of the whole curve. `None` with
-/// another tool, or for a curve trim cuts otherwise (`solidcraft_engine::cmd::trim_piece`).
+/// another tool, or for a curve trim cuts otherwise (`torno_engine::cmd::trim_piece`).
 pub(crate) fn trim_hover_piece(app: &SolveApp, sketch: u64, id: &str) -> Option<Vec<Vec2>> {
     let tool = app.tool.as_ref().filter(|t| t.cmd == "sketch.trim")?;
     let (at, _) = tool.hover.as_ref()?;
@@ -1617,7 +1617,7 @@ pub(crate) fn trim_hover_piece(app: &SolveApp, sketch: u64, id: &str) -> Option<
             Some(cache) if cache.key.matches(app, &solve, id) => c.insert(cache),
             _ => c.insert(TrimHoverCache {
                 key: SketchStateKey::new(app, &solve, id),
-                hover: solidcraft_engine::cmd::trim_hover(&solve.sketch, id),
+                hover: torno_engine::cmd::trim_hover(&solve.sketch, id),
                 piece: None,
             }),
         };
@@ -1646,7 +1646,7 @@ fn extend_preview_piece(app: &SolveApp, sketch: u64, id: &str) -> Option<Vec<Vec
     let sk = &solve.sketch;
     let ci = sk.curve_index(id)?;
     // An infinite line in the way is cut short about the cursor, so the preview then follows it.
-    let at_b = solidcraft_engine::cmd::extend_end_at(sk, ci, hover.0).filter(|_| !sk.curves.iter().any(|c| c.infinite));
+    let at_b = torno_engine::cmd::extend_end_at(sk, ci, hover.0).filter(|_| !sk.curves.iter().any(|c| c.infinite));
     let Some(at_b) = at_b else { return extend_preview_uncached(sk, ci, hover.0) };
     EXTEND_PREVIEW.with(|c| {
         let mut c = c.borrow_mut();
@@ -1663,22 +1663,22 @@ fn extend_preview_piece(app: &SolveApp, sketch: u64, id: &str) -> Option<Vec<Vec
 }
 
 /// [`extend_preview_piece`] worked out afresh.
-fn extend_preview_uncached(sk: &solidcraft_engine::sketch::Sketch, ci: usize, hover_pos: Vec2) -> Option<Vec<Vec2>> {
+fn extend_preview_uncached(sk: &torno_engine::sketch::Sketch, ci: usize, hover_pos: Vec2) -> Option<Vec<Vec2>> {
     let kind = sk.curves.get(ci)?.kind.clone();
     // Arcs extend along their circle either way round, up to the first geometry in the way.
-    if let solidcraft_engine::sketch::CurveKind::Arc { .. } = kind {
-        return solidcraft_engine::cmd::extend_arc_preview(sk, ci, hover_pos);
+    if let torno_engine::sketch::CurveKind::Arc { .. } = kind {
+        return torno_engine::cmd::extend_arc_preview(sk, ci, hover_pos);
     }
-    let solidcraft_engine::sketch::CurveKind::Line { a, b } = kind else { return None };
+    let torno_engine::sketch::CurveKind::Line { a, b } = kind else { return None };
     let at_b = hover_pos.dist(sk.point(b)?) <= hover_pos.dist(sk.point(a)?);
     let end = sk.point(if at_b { b } else { a })?;
-    let hit = solidcraft_engine::cmd::extend_preview(sk, ci, hover_pos)?;
+    let hit = torno_engine::cmd::extend_preview(sk, ci, hover_pos)?;
     Some(vec![end, hit])
 }
 
 /// Rubber band for point tools and pick markers.
 pub fn preview(app: &SolveApp, t: &Tool, painter: &egui::Painter, proj: &Proj) {
-    if solidcraft_engine::cmd::construction_line_mode(t.cmd).is_some() {
+    if torno_engine::cmd::construction_line_mode(t.cmd).is_some() {
         crate::sketch_construction::preview(app, t, painter, proj);
         return;
     }
@@ -1686,7 +1686,7 @@ pub fn preview(app: &SolveApp, t: &Tool, painter: &egui::Painter, proj: &Proj) {
     let st = crate::open_meshing::session_world(&app.session);
     let Some(ss) = st.sketch(sid) else { return };
     let to = |p: Vec2| proj.to_screen(ss.plane.to_world(p));
-    let tk = solidcraft_theme::Tokens::get();
+    let tk = torno_theme::Tokens::get();
     if let Some(crate::viewport::Hit::SketchCurve { sketch, id, .. }) = &app.viewport.hover
         && let Some(piece) = trim_hover_piece(app, *sketch, id)
     {
@@ -1759,7 +1759,7 @@ pub fn preview(app: &SolveApp, t: &Tool, painter: &egui::Painter, proj: &Proj) {
         crate::tools::paint_preview_curve(curve, &ss.plane, painter, proj, stroke, crate::sketch_palette::mode(app));
     }
     // Picked curves highlighted.
-    let mut display_budget = solidcraft_engine::render::SamplingBudget::new(32_768, 65_536);
+    let mut display_budget = torno_engine::render::SamplingBudget::new(32_768, 65_536);
     for id in t.picks.iter().filter(|x| *x != "|") {
         if let Some(ci) = ss.sketch.curve_index(id) {
             crate::tools::paint_curve(&ss.sketch, ci, &ss.plane, painter, proj, Stroke::new(3.0, tk.accent.gamma_multiply(0.7)), &mut display_budget);
@@ -1864,7 +1864,7 @@ pub fn constraint_glyphs_visible_at_scale(px_per_mm: f32, hide_when_zoomed_out: 
 
 /// The larger side, in screen pixels, of the bounds of the active sketch's points and curves. It
 /// stops measuring once that reaches `MIN_GLYPH_SPAN_PX`, so a large sketch costs no more.
-fn sketch_span_px(ss: &solidcraft_engine::doc::SolvedSketch, proj: &Proj) -> f32 {
+fn sketch_span_px(ss: &torno_engine::doc::SolvedSketch, proj: &Proj) -> f32 {
     let sk = &ss.sketch;
     let at = sk.points.iter().map(|p| p.pos).chain((0..sk.curves.len()).flat_map(|c| sk.polyline(c)));
     let mut r = egui::Rect::NOTHING;
@@ -1881,22 +1881,20 @@ fn sketch_span_px(ss: &solidcraft_engine::doc::SolvedSketch, proj: &Proj) -> f32
 
 /// The constraints that draw a glyph: no dimensions, one MidPoint glyph where lines' midpoints
 /// meet, and a pattern's constraints once, on its first instance.
-fn glyph_constraints(sk: &solidcraft_engine::sketch::Sketch) -> impl Iterator<Item = &solidcraft_engine::sketch::Constraint> {
+fn glyph_constraints(sk: &torno_engine::sketch::Sketch) -> impl Iterator<Item = &torno_engine::sketch::Constraint> {
     let mut midpoints = std::collections::HashSet::new();
     sk.constraints.iter().filter(move |c| {
         if c.kind.is_dimension() {
             return false;
         }
-        if let solidcraft_engine::sketch::ConstraintKind::Midpoint { p, .. } = c.kind
+        if let torno_engine::sketch::ConstraintKind::Midpoint { p, .. } = c.kind
             && !c.driven
             && !midpoints.insert(p)
         {
             return false;
         }
-        !(matches!(
-            c.kind,
-            solidcraft_engine::sketch::ConstraintKind::PatternPoint { .. } | solidcraft_engine::sketch::ConstraintKind::PatternRadius { .. }
-        ) && !sk.patterns.iter().any(|p| p.instances.first().and_then(|i| i.constraints.first()) == Some(&c.id)))
+        !(matches!(c.kind, torno_engine::sketch::ConstraintKind::PatternPoint { .. } | torno_engine::sketch::ConstraintKind::PatternRadius { .. })
+            && !sk.patterns.iter().any(|p| p.instances.first().and_then(|i| i.constraints.first()) == Some(&c.id)))
     })
 }
 
@@ -1928,7 +1926,7 @@ fn glyphs(app: &SolveApp, painter: &egui::Painter, proj: &Proj, hover: Option<Po
         GLYPHS.with(|g| g.borrow_mut().clear());
         return;
     }
-    let tk = solidcraft_theme::Tokens::get();
+    let tk = torno_theme::Tokens::get();
     let picked = PICKED.with(|p| p.borrow().clone());
     // Where each glyph goes: beside its entity (to its left, away from the line), every entity
     // of a two-entity constraint getting one; glyphs that would overlap step along. A glyph
@@ -1985,7 +1983,7 @@ fn glyphs(app: &SolveApp, painter: &egui::Painter, proj: &Proj, hover: Option<Po
                 (cs, ps)
             },
         );
-        let mut display_budget = solidcraft_engine::render::SamplingBudget::new(32_768, 65_536);
+        let mut display_budget = torno_engine::render::SamplingBudget::new(32_768, 65_536);
         for ci in cs {
             crate::tools::paint_curve(&ss.sketch, ci, &ss.plane, painter, proj, Stroke::new(3.0, tk.accent.gamma_multiply(0.7)), &mut display_budget);
         }
@@ -2003,7 +2001,7 @@ fn glyphs(app: &SolveApp, painter: &egui::Painter, proj: &Proj, hover: Option<Po
         // Redundant (already implied by the others, but holding): dimmed, not an error.
         let redundant = !failing && group.iter().all(|g| ss.report.redundant.contains(g));
         let selected = picked.as_deref() == Some(id.as_str())
-            || app.session.selection.iter().any(|s| matches!(s, solidcraft_engine::Sel::SketchConstraint { id: x } if group.contains(x)));
+            || app.session.selection.iter().any(|s| matches!(s, torno_engine::Sel::SketchConstraint { id: x } if group.contains(x)));
         let lit = selected || hovered.as_deref() == Some(id.as_str());
         let col = if failing {
             crate::viewport::Conflict::glyph_colour(app, &tk)
@@ -2027,11 +2025,7 @@ fn glyphs(app: &SolveApp, painter: &egui::Painter, proj: &Proj, hover: Option<Po
             egui::StrokeKind::Inside,
         );
         let pattern_icon = ss.sketch.patterns.iter().find(|p| p.instances.first().and_then(|i| i.constraints.first()) == Some(id)).map(|p| {
-            if matches!(p.kind, solidcraft_engine::sketch::SketchPatternKind::Circular { .. }) {
-                "sketch_circ_pattern"
-            } else {
-                "sketch_rect_pattern"
-            }
+            if matches!(p.kind, torno_engine::sketch::SketchPatternKind::Circular { .. }) { "sketch_circ_pattern" } else { "sketch_rect_pattern" }
         });
         match pattern_icon.or_else(|| glyph_icon(c.kind.name())) {
             Some(icon) => crate::icons::paint_icon(painter, r.shrink(2.0 * scale), icon, f32::from(col.a()) / 255.0),
@@ -2040,7 +2034,7 @@ fn glyphs(app: &SolveApp, painter: &egui::Painter, proj: &Proj, hover: Option<Po
                     *sp,
                     egui::Align2::CENTER_CENTER,
                     glyph_letter(c.kind.name()),
-                    egui::FontId::proportional(solidcraft_theme::Tokens::get().font_panel * scale),
+                    egui::FontId::proportional(torno_theme::Tokens::get().font_panel * scale),
                     col,
                 );
             }
@@ -2057,8 +2051,7 @@ fn glyphs(app: &SolveApp, painter: &egui::Painter, proj: &Proj, hover: Option<Po
             format!("{} ({ids})", c.kind.name())
         };
         // Wrapped to the view's width so a narrow view never clips it (#10794).
-        let g =
-            painter.layout(label, egui::FontId::proportional(solidcraft_theme::Tokens::get().font_small), tk.text, glyph_label_wrap_width(proj.rect));
+        let g = painter.layout(label, egui::FontId::proportional(torno_theme::Tokens::get().font_small), tk.text, glyph_label_wrap_width(proj.rect));
         // Clear of the cursor, which hangs below and right of the pointer, and next to the
         // glyph instance under it (#10794).
         let chip = glyph_label_rect(h, egui::Rect::from_center_size(at_glyph, egui::vec2(glyph, glyph)), g.size() + egui::vec2(6.0, 6.0), proj.rect);
@@ -2071,8 +2064,8 @@ fn glyphs(app: &SolveApp, painter: &egui::Painter, proj: &Proj, hover: Option<Po
 }
 
 /// The curves and points a constraint ties together.
-fn constraint_entities(k: &solidcraft_engine::sketch::ConstraintKind) -> (Vec<usize>, Vec<usize>) {
-    use solidcraft_engine::sketch::ConstraintKind::*;
+fn constraint_entities(k: &torno_engine::sketch::ConstraintKind) -> (Vec<usize>, Vec<usize>) {
+    use torno_engine::sketch::ConstraintKind::*;
     match *k {
         Coincident { p, q } | HorizontalPoints { p, q } | VerticalPoints { p, q } => (vec![], vec![p, q]),
         PatternPoint { p, q, center, directions, .. } => {
@@ -2097,8 +2090,8 @@ fn constraint_entities(k: &solidcraft_engine::sketch::ConstraintKind) -> (Vec<us
 
 /// Where a constraint's glyphs go: one per entity (the middle of a curve, with its direction
 /// there; a point, without).
-fn glyph_anchors(sk: &solidcraft_engine::sketch::Sketch, k: &solidcraft_engine::sketch::ConstraintKind) -> Vec<(Vec2, Option<Vec2>)> {
-    use solidcraft_engine::sketch::ConstraintKind::*;
+fn glyph_anchors(sk: &torno_engine::sketch::Sketch, k: &torno_engine::sketch::ConstraintKind) -> Vec<(Vec2, Option<Vec2>)> {
+    use torno_engine::sketch::ConstraintKind::*;
     // Half way along the curve, and the direction there.
     let mid = |c: usize| -> Option<(Vec2, Option<Vec2>)> {
         let poly = sk.polyline(c);
@@ -2142,7 +2135,7 @@ fn snap_hint(app: &SolveApp, painter: &egui::Painter, proj: &Proj) {
     let st = crate::open_meshing::session_world(&app.session);
     let Some(ss) = active_sketch(app).and_then(|s| st.sketch(s)) else { return };
     let Some(sp) = proj.to_screen(ss.plane.to_world(p)) else { return };
-    let tk = solidcraft_theme::Tokens::get();
+    let tk = torno_theme::Tokens::get();
     // A dotted guide from each point the snap lined the cursor up with (#7828).
     let guides = LINED.with(|l| l.borrow().as_ref().filter(|(at, _)| at.dist(p) < 1e-9).map(|(_, lined)| lined.clone()).unwrap_or_default());
     for from in guides.iter().filter_map(|l| proj.to_screen(ss.plane.to_world(l.at))) {
@@ -2151,7 +2144,7 @@ fn snap_hint(app: &SolveApp, painter: &egui::Painter, proj: &Proj) {
     crate::scenario::publish_count("sketch_align_guides", guides.len() as f64);
     let r = egui::Rect::from_min_size(sp + egui::vec2(12.0, -24.0), egui::vec2(24.0, 14.0));
     painter.rect_filled(r, tk.radius_sm.saturating_sub(1), tk.accent_soft);
-    painter.text(r.center(), egui::Align2::CENTER_CENTER, label, egui::FontId::proportional(solidcraft_theme::Tokens::get().font_micro), tk.text);
+    painter.text(r.center(), egui::Align2::CENTER_CENTER, label, egui::FontId::proportional(torno_theme::Tokens::get().font_micro), tk.text);
 }
 
 /// Per frame, after the viewport is drawn: constraint glyphs, snap hints and analysis marks.
@@ -2215,7 +2208,7 @@ mod glyph_zoom_tests {
     /// and curve, as a point-on-curve constraint does (#8969).
     #[test]
     fn a_point_along_constraint_has_a_glyph_on_its_point() {
-        use solidcraft_engine::sketch::{ConstraintKind, CurveKind, Sketch};
+        use torno_engine::sketch::{ConstraintKind, CurveKind, Sketch};
         let mut sk = Sketch::new();
         let (Ok(a), Ok(b), Ok(q)) = (
             sk.add_point(super::Vec2::new(0.0, 0.0), None),

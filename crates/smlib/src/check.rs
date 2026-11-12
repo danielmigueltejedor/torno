@@ -93,7 +93,7 @@ mod tests {
     fn a_copy_and_a_native_file_round_trip_stay_valid() {
         let b = Brep::make_box([0.0; 3], [2.0, 3.0, 4.0]).unwrap();
         assert!(b.try_clone().unwrap().check(CheckLevel::All).unwrap().is_valid());
-        let dir = std::env::temp_dir().join(format!("solidcraft-smlib-check-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("torno-smlib-check-{}", std::process::id()));
         std::fs::create_dir_all(&dir).unwrap();
         let path = dir.join("box.smb");
         b.write(&path, false).unwrap();

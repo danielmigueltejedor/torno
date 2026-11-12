@@ -6,9 +6,9 @@
 
 use serde_json::json;
 use solidcore_record::Vec3;
-use solidcraft_engine::Sel;
-use solidcraft_engine::doc::FeatureKind;
-use solidcraft_engine::geom::prelude::*;
+use torno_engine::Sel;
+use torno_engine::doc::FeatureKind;
+use torno_engine::geom::prelude::*;
 
 use crate::dialogs::Kind;
 use crate::scenario::Harness;
@@ -63,7 +63,7 @@ fn type_into(h: &mut Harness, handle: &str, text: &str) {
 
 /// Whether the model holds material at `p`.
 fn solid_at(h: &Harness, p: Vec3) -> bool {
-    h.app.session.model.state().bodies.iter().any(|b| b.body.classify_point(p).unwrap() == solidcraft_engine::kernel::PointClass::Inside)
+    h.app.session.model.state().bodies.iter().any(|b| b.body.classify_point(p).unwrap() == torno_engine::kernel::PointClass::Inside)
 }
 
 #[test]
@@ -85,7 +85,7 @@ fn a_hole_is_placed_by_its_distances_from_two_edges() {
     assert!(picked_edge(&h, "Reference 1").is_some_and(|p| p.x.abs() < 1e-6), "the left edge is Reference 1: {:?}", picked_edge(&h, "Reference 1"));
     assert!(picked_edge(&h, "Reference 2").is_some_and(|p| p.y.abs() < 1e-6), "the front edge is Reference 2: {:?}", picked_edge(&h, "Reference 2"));
     let measured = distances(&h);
-    let value = |s: &str| h.app.session.doc.eval(s, solidcraft_engine::doc::expr::Kind::Length).unwrap();
+    let value = |s: &str| h.app.session.doc.eval(s, torno_engine::doc::expr::Kind::Length).unwrap();
     assert!((value(&measured[0]) - picked.x).abs() < 1e-3 && (value(&measured[1]) - picked.y).abs() < 1e-3, "{measured:?} from {picked:?}");
     // The distances show on the canvas, each with a box to type in.
     assert!(h.at(&json!({"handle": "canvas:Distance 1"})).is_ok() && h.at(&json!({"handle": "canvas:Distance 2"})).is_ok());
@@ -147,7 +147,7 @@ fn a_measured_distance_shows_the_document_precision_but_keeps_its_model_value() 
     let f = h.app.session.doc.features.last().unwrap().clone();
     let FeatureKind::Hole { references, .. } = &f.kind else { panic!("the last feature is a hole") };
     let text = references[0].distance.to_string();
-    let value = h.app.session.doc.eval(&text, solidcraft_engine::doc::expr::Kind::Length).unwrap();
+    let value = h.app.session.doc.eval(&text, torno_engine::doc::expr::Kind::Length).unwrap();
     assert!((value - exact).abs() < 1e-9, "OK keeps the measured distance, not the rounded text: {text}");
 }
 
@@ -265,7 +265,7 @@ fn a_cylinder_is_placed_by_its_distances_from_two_edges() {
     assert!(picked_edge(&h, "Reference 1").is_some_and(|p| p.x.abs() < 1e-6), "{:?}", picked_edge(&h, "Reference 1"));
     assert!(picked_edge(&h, "Reference 2").is_some_and(|p| p.y.abs() < 1e-6), "{:?}", picked_edge(&h, "Reference 2"));
     let (measured, _) = cylinder_dialog(&h);
-    let value = |s: &str| h.app.session.doc.eval(s, solidcraft_engine::doc::expr::Kind::Length).unwrap();
+    let value = |s: &str| h.app.session.doc.eval(s, torno_engine::doc::expr::Kind::Length).unwrap();
     assert!((value(&measured[0]) - picked.x).abs() < 1e-3 && (value(&measured[1]) - picked.y).abs() < 1e-3, "{measured:?} from {picked:?}");
     assert!(h.at(&json!({"handle": "canvas:Distance 1"})).is_ok() && h.at(&json!({"handle": "canvas:Distance 2"})).is_ok());
     h.step(&json!({"widget": "OK"})).unwrap();
@@ -358,7 +358,7 @@ fn a_pick_field_clicked_into_waits_for_its_pick_and_says_what_it_takes() {
         assert_eq!(tips, [Some("dialog.primitive_point_tip")], "{cmd}");
     }
     for id in ["dialog.cylinder_face_tip", "dialog.reference_edge_tip", "dialog.primitive_point_tip"] {
-        assert_ne!(solidcraft_ui_text::tr(id), id, "{id} is in the catalog");
+        assert_ne!(torno_ui_text::tr(id), id, "{id} is in the catalog");
     }
 }
 

@@ -1,8 +1,8 @@
 //! Navigation drawing definitions. Camera projection and picking remain in the UI widgets.
 use egui::{Color32, FontId, Pos2, Rect, Shape, Stroke, pos2, vec2};
 use solidcore_record::Vec3;
-use solidcraft_engine::geom::Ring;
-use solidcraft_theme::Tokens;
+use torno_engine::geom::Ring;
+use torno_theme::Tokens;
 pub(crate) struct Facet {
     pub(crate) direction: Vec3,
     pub(crate) points: Ring<Pos2>,

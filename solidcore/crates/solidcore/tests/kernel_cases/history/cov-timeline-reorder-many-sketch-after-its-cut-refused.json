@@ -48,6 +48,6 @@
   "ungraded": [],
   "what": "timeline.reorder_many of a sketch to behind the cut that uses it",
   "why_not": [
-    "the failure is SolidCraft's, not a kernel operation's: step 7 (timeline.reorder_many): invalid parameters for `timeline.reorder_many`: moving the selected features there breaks Notch (unknown sketch 2 (it must come earlier in the timeline))"
+    "the failure is Torno's, not a kernel operation's: step 7 (timeline.reorder_many): invalid parameters for `timeline.reorder_many`: moving the selected features there breaks Notch (unknown sketch 2 (it must come earlier in the timeline))"
   ]
 }

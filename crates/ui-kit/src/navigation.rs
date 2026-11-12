@@ -2,7 +2,7 @@
 use crate::icons;
 use egui::{Rect, Response, Sense, Ui, pos2, vec2};
 use serde::{Deserialize, Serialize};
-use solidcraft_theme::Tokens;
+use torno_theme::Tokens;
 
 pub const NAV_BORDER: f32 = 1.0;
 pub const NAV_PADDING: f32 = 3.0;
@@ -142,13 +142,13 @@ pub fn navigation_fill(t: &Tokens, fill: NavigationFill) -> Option<egui::Color32
 }
 
 /// The label and icon colour of a slot. An active slot keeps the accent ink on its selected fill
-/// where that reads; a theme whose selected fill is as dark as its accent (SolidCraft 95's navy)
+/// where that reads; a theme whose selected fill is as dark as its accent (Torno 95's navy)
 /// gets the theme's selected-text ink instead, so an active toggle never turns into a blank block.
 pub fn navigation_ink(t: &Tokens, fill: NavigationFill) -> egui::Color32 {
     if fill != NavigationFill::Active {
         return t.form_ink;
     }
-    if solidcraft_theme::contrast_ratio(t.form_primary, t.selected_bg) >= NAV_ACTIVE_MIN_CONTRAST { t.form_primary } else { t.selected_ink }
+    if torno_theme::contrast_ratio(t.form_primary, t.selected_bg) >= NAV_ACTIVE_MIN_CONTRAST { t.form_primary } else { t.selected_ink }
 }
 
 /// WCAG small-text contrast for an active slot's label on its selected fill.

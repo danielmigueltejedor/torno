@@ -1,4 +1,4 @@
-//! A design a newer SolidCraft saved: it opens, with a warning, and saving it loses nothing.
+//! A design a newer Torno saved: it opens, with a warning, and saving it loses nothing.
 //!
 //! A newer format number, or a change the file names that this build doesn't have, says a newer
 //! build saved the file. It may use nothing this build lacks, so it is read as usual. When part of
@@ -47,7 +47,7 @@ impl RawFeature {
 
     /// Why it doesn't build here.
     pub fn why(&self) -> String {
-        format!("saved by a newer SolidCraft: this version can't read a `{}` feature. Update SolidCraft to build it; saving keeps it", self.kind())
+        format!("saved by a newer Torno: this version can't read a `{}` feature. Update Torno to build it; saving keeps it", self.kind())
     }
 }
 
@@ -111,11 +111,9 @@ impl NewerFile {
         let format = self.format;
         match self.unknown_changes.first() {
             Some(change) if format <= reads => {
-                format!(
-                    "Saved by a newer SolidCraft (format {format} with `{change}`, which this version doesn't know). If something's missing, update."
-                )
+                format!("Saved by a newer Torno (format {format} with `{change}`, which this version doesn't know). If something's missing, update.")
             }
-            _ => format!("Saved by a newer SolidCraft (format {format}, this version reads up to {reads}). If something's missing, update."),
+            _ => format!("Saved by a newer Torno (format {format}, this version reads up to {reads}). If something's missing, update."),
         }
     }
 
@@ -183,7 +181,7 @@ pub(crate) fn read(mut raw: Value, version: u32, applied: Option<Vec<String>>, n
             let mut foreign = BTreeMap::new();
             let mut doc = salvage(&mut raw, version, applied_names, &mut file, &mut foreign).map_err(|why| {
                 DocError::Invalid(format!(
-                    "this design was saved by a newer SolidCraft (format {}, this version reads up to {}) and this version can't read it: {why}. Update SolidCraft to open it",
+                    "this design was saved by a newer Torno (format {}, this version reads up to {}) and this version can't read it: {why}. Update Torno to open it",
                     newer.format, newer.reads_up_to
                 ))
             })?;

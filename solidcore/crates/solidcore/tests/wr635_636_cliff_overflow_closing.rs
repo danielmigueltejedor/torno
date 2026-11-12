@@ -1,4 +1,4 @@
-//! WR-635 / WR-636 (#960; the SolidCraft fork's tangency-labs/smlib@eddf0ed and bba9914,
+//! WR-635 / WR-636 (#960; the Torno fork's tangency-labs/smlib@eddf0ed and bba9914,
 //! branch `replay/1.0.1`): with `fillet_cliff_overflow`, the removal region of a cliff
 //! overflow also closes
 //!
@@ -209,7 +209,7 @@ fn polyline(pts: &[Point3]) -> Vec<Curve> {
 
 /// A 100 x 60 x 30 slab (x 0..100, y 0..60, z 0..30) whose top face's plane runs on 10
 /// past its front edge: a 100 x 70 x 30 box less its front 10, so the top keeps the box's
-/// plane and domain (a SolidCraft sketch's plane is larger than its face; the corner's
+/// plane and domain (a Torno sketch's plane is larger than its face; the corner's
 /// edge on the top's plane past the front lies in that domain).
 fn slab(k: &mut Kernel) -> Brep {
     let big = create_box(k, p(0.0, -10.0, 0.0), 100.0, 70.0, 30.0).unwrap();
@@ -296,7 +296,7 @@ impl Basin {
 
 #[test]
 fn a_sloped_basin_rim_chamfer_past_the_slab_front_is_subtracted() {
-    // solidcraft#1080's sloped basin (the fork's eddf0ed): the front rim edge chamfered d, its
+    // torno#1080's sloped basin (the fork's eddf0ed): the front rim edge chamfered d, its
     // leg on the top running off the rim over the slab's front face. Each end of the edge is
     // an Nx1 corner of mixed convexity (the end wall's top edge convex, the pocket's corner
     // edge concave): its end face, on the end wall's surface extended back over the rim,

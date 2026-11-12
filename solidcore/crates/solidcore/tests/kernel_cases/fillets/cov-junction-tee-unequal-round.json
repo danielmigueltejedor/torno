@@ -142,7 +142,7 @@
     "blend_dropping"
   ],
   "ungraded": [
-    "continuity: SolidCraft computes it"
+    "continuity: Torno computes it"
   ],
   "what": "pipe tee unequal: main R8, branch R5 offset 0 tilted 0, intersection rounded 1",
   "why_not": []

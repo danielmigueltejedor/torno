@@ -1,0 +1,44 @@
+[package]
+name = "torno-cli"
+description = "Torno headless CLI: run command scripts, measure, export, render snapshots, replay oracle recipes"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+default-run = "torno-cli"
+
+[lints]
+workspace = true
+
+[[bin]]
+name = "torno-cli"
+path = "src/main.rs"
+
+# Compatibility alias for the CLI's former name: forwards to torno-cli with a deprecation
+# note on stderr. Shipped in every package for at least one release.
+[[bin]]
+name = "solvecraft-cli"
+path = "src/alias.rs"
+
+[features]
+default = ["raytrace-cpu", "profile"]
+bundled-render-library = ["torno-engine/bundled-render-library"]
+raytrace-cpu = ["torno-engine/raytrace-cpu"]
+# The profiler, compiled in so any build can say where its time goes (`--profile`,
+# TORNO_PROFILE=1); it records nothing until asked.
+profile = ["torno-engine/profile"]
+
+[dependencies]
+torno-viewport-gpu = { workspace = true }
+torno-viewport = { workspace = true }
+solidcore-record = { workspace = true }
+torno-engine = { workspace = true }
+torno-gpu = { workspace = true }
+torno-mcp = { workspace = true }
+log = { workspace = true }
+serde_json = { workspace = true }
+
+[dev-dependencies]
+# Snapshot tests decode the pictures to compare them with a tolerance.
+image = { workspace = true }
+# Tests measure meshes at their own tolerances.
+torno-kernel = { workspace = true }

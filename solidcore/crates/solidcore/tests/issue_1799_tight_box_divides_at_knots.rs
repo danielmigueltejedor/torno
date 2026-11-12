@@ -5,7 +5,7 @@
 //! A rational patch is read monotone only within one knot span. Halved at middles alone, a
 //! cell over a knot off the dyadic points of the face's domain never comes to lie within one
 //! span, so along the trim it stays undecided down to the depth limit and counts with its
-//! surface's top: the box overshoots. SolidCraft's case: an M10x1.5 thread cut from a shaft
+//! surface's top: the box overshoots. Torno's case: an M10x1.5 thread cut from a shaft
 //! of radius 5 and length 12 boxed to z 12.46875; its screw walls have a knot every eighth
 //! of a turn.
 //!

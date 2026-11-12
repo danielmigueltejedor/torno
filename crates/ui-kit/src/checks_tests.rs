@@ -65,9 +65,9 @@ fn wrapped_checkbox_keeps_full_label_and_clicks_on_its_last_line() {
 
 #[test]
 fn grid_palette_inline_and_menu_share_every_box_state() {
-    let previous = solidcraft_theme::is_dark();
+    let previous = torno_theme::is_dark();
     for dark in [false, true] {
-        solidcraft_theme::set_dark(dark);
+        torno_theme::set_dark(dark);
         for ppp in [1.0, 2.0] {
             for on in [false, true] {
                 for state in ["idle", "hover", "focus", "disabled"] {
@@ -148,7 +148,7 @@ fn grid_palette_inline_and_menu_share_every_box_state() {
             }
         }
     }
-    solidcraft_theme::set_dark(previous);
+    torno_theme::set_dark(previous);
 }
 
 #[test]

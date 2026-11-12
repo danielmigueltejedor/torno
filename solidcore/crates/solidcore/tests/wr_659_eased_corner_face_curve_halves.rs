@@ -5,7 +5,7 @@
 //! with its contact line and with the other half. Upstream bounds the patch faces by the
 //! patch surfaces' iso-curves, which `N_FillNSidedHole` fits to the halves only to
 //! tolerance, in its surfaces' degree and knots (degree 6 over 7 spans). The fork's case:
-//! SolidCraft's G2 corner on the 60 x 40 x 20 box, its three edges at (60, 40, 20) rounded
+//! Torno's G2 corner on the 60 x 40 x 20 box, its three edges at (60, 40, 20) rounded
 //! r 5, set back and eased (`smlib_blend_setback_open_eased`; capi test
 //! `corner_setback_eased_face_curves_are_quintics`). Since solidcore#2933 this marked corner
 //! between planes is the blend corner's Setback, its G2 fill bounded by the same halves, and

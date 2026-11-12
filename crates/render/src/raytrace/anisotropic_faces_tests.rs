@@ -1,9 +1,9 @@
 use super::*;
 use crate::ProductMesh;
 use crate::job::{AnisotropicFaceOptions, CancelToken, ImageRequest, Integrator, TaskPoll};
-use solidcraft_geom::Mesh;
-use solidcraft_viewport::{Camera, StandardView};
 use std::sync::Arc;
+use torno_geom::Mesh;
+use torno_viewport::{Camera, StandardView};
 
 fn body(name: &str, x: f64) -> ProductMesh {
     ProductMesh {

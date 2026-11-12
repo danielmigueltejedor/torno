@@ -19,9 +19,9 @@
 //! settings on the navigation bar, or `ui.agent_cursor {show, speed, follow_camera}`); a call
 //! with `"animate": false` skips it.
 
-use solidcraft_engine::geom::prelude::*;
 use std::collections::VecDeque;
 use std::sync::mpsc::Sender;
+use torno_engine::geom::prelude::*;
 
 use egui::{Pos2, Stroke, pos2, vec2};
 use serde::{Deserialize, Serialize};
@@ -109,7 +109,7 @@ pub fn speed_slider(ui: &mut egui::Ui, speed: &mut Speed) -> egui::Response {
         1.0..=5.5,
         crate::ui_kit::Slider {
             step: Some(0.5),
-            format: |v| if v > 5.25 { solidcraft_ui_text::tr_label("Instant").into() } else { format!("{v:.2}x") },
+            format: |v| if v > 5.25 { torno_ui_text::tr_label("Instant").into() } else { format!("{v:.2}x") },
             ..Default::default()
         },
     );
@@ -157,7 +157,7 @@ pub struct AgentCursor {
     /// Click ripples: where and when.
     ripples: Vec<(Pos2, f64)>,
     /// The view before a followed sketch (restored when it finishes).
-    saved_view: Option<solidcraft_viewport::Camera>,
+    saved_view: Option<torno_viewport::Camera>,
 }
 
 impl AgentCursor {
@@ -241,7 +241,7 @@ const NOT_PLACES: [&str; 14] =
 
 /// A command's toolbar button, or its panel when the button sits in a drop-down.
 fn button(command: &str) -> Option<Pos2> {
-    let spec = solidcraft_engine::find_command(command)?;
+    let spec = torno_engine::find_command(command)?;
     crate::scenario::handle_at(&format!("toolbar:{}", spec.id))
         .or_else(|| crate::workspace::destination(spec).and_then(|(t, p)| crate::scenario::handle_at(&format!("panel:{t}:{p}"))))
 }
@@ -270,17 +270,17 @@ fn batch_targets(steps: &[Value]) -> Vec<(Pos2, &'static str)> {
             seen.push(c);
         }
     }
-    let buttons: Vec<_> = seen.into_iter().filter_map(|c| Some((button(c)?, solidcraft_engine::find_command(c)?.label))).collect();
+    let buttons: Vec<_> = seen.into_iter().filter_map(|c| Some((button(c)?, torno_engine::find_command(c)?.label))).collect();
     summarise(&buttons, MAX_BATCH_STOPS)
 }
 
 /// The places a command's parameters pick, in the world: [x, y, z] points (faces, edges,
 /// vertices, positions), active-sketch [x, y] points, and a new sketch's plane.
 pub fn picks(app: &SolveApp, command: &str, params: &Value) -> Vec<Vec3> {
-    if solidcraft_engine::panels::commands::is_command(command) {
+    if torno_engine::panels::commands::is_command(command) {
         return Vec::new();
     }
-    let id = solidcraft_engine::find_command(command).map_or(command, |c| c.id);
+    let id = torno_engine::find_command(command).map_or(command, |c| c.id);
     let mut out = Vec::new();
     if id == "sketch.create"
         && let Some(n) = params.get("plane").and_then(Value::as_str)
@@ -349,7 +349,7 @@ pub fn intercept(app: &mut SolveApp, req: &crate::control::ControlRequest) -> bo
         "engine.execute" | "command" => {
             let Some(cmd) = params.get("command").or(params.get("id")).and_then(Value::as_str) else { return false };
             let inner = params.get("params").cloned().unwrap_or(json!({}));
-            let label = solidcraft_engine::find_command(cmd).map_or("", |c| c.label);
+            let label = torno_engine::find_command(cmd).map_or("", |c| c.label);
             stops(app, cmd, &inner).into_iter().map(|at| (at, label)).collect()
         }
         // A batch is acted out as one request; one the app refuses is answered at once.
@@ -456,7 +456,7 @@ fn finish(app: &mut SolveApp, ctx: &egui::Context) {
     let mut params = job.params;
     params["animate"] = json!(false);
     let cmd = params.get("command").or(params.get("id")).and_then(Value::as_str).unwrap_or_default().to_string();
-    let id = solidcraft_engine::find_command(&cmd).map_or(cmd.clone(), |c| c.id.to_string());
+    let id = torno_engine::find_command(&cmd).map_or(cmd.clone(), |c| c.id.to_string());
     let follow = app.ui.agent_cursor.follow_camera;
     if follow && id == "sketch.create" {
         app.agent.saved_view = Some(app.cam);
@@ -482,7 +482,7 @@ fn finish(app: &mut SolveApp, ctx: &egui::Context) {
 }
 
 /// The pointer's colour: a violet no part of the UI uses.
-use solidcraft_look::pointer::agent;
+use torno_look::pointer::agent;
 
 /// Draw the pointer, its "Agent" tag and the click ripples over everything.
 pub fn paint(app: &SolveApp, ctx: &egui::Context) {
@@ -495,10 +495,10 @@ pub fn paint(app: &SolveApp, ctx: &egui::Context) {
         let k = ((app.now - t0) / 0.6).clamp(0.0, 1.0) as f32;
         painter.circle_stroke(*at, 6.0 + 22.0 * k, Stroke::new(3.0 * (1.0 - k) + 0.5, agent().gamma_multiply(1.0 - k)));
     }
-    solidcraft_look::pointer::paint(&painter, p);
+    torno_look::pointer::paint(&painter, p);
     if let Some((_, label)) = app.agent.job.as_ref().and_then(|job| job.stops.front()).filter(|(_, label)| !label.is_empty()) {
         use crate::ui_kit::{Container, Surface};
-        let t = solidcraft_theme::Tokens::get();
+        let t = torno_theme::Tokens::get();
         Container::new(ctx, Surface::Popup)
             .area(egui::Id::unique("sc_agent_command"))
             .order(egui::Order::Debug)
@@ -509,7 +509,7 @@ pub fn paint(app: &SolveApp, ctx: &egui::Context) {
             .show(ctx, |ui| {
                 let frame = Container::popup_frame(ui.style()).fill(t.overlay);
                 Container::show_backing(ui, frame, |ui| {
-                    ui.label(egui::RichText::new(solidcraft_ui_text::tr_label(label)).size(t.font_label).color(t.text));
+                    ui.label(egui::RichText::new(torno_ui_text::tr_label(label)).size(t.font_label).color(t.text));
                 });
             });
     }
@@ -519,7 +519,7 @@ pub fn paint(app: &SolveApp, ctx: &egui::Context) {
 mod tests {
     use super::*;
     use crate::Services;
-    use solidcraft_engine::Session;
+    use torno_engine::Session;
 
     fn app() -> SolveApp {
         let mut s = Session::default();

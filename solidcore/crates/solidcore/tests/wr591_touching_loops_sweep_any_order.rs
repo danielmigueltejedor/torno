@@ -4,7 +4,7 @@
 //! orders (none, the outline or the hole reversed, every rotation of the list), swept 2
 //! along +z with caps by `create_linear_sweep`. The caps go through
 //! `create_plane_with_3d_curves`, so through `order_curves_into_loops` (#2423), with
-//! `join_touching_loops` (WR-405) on as SolidCraft runs it.
+//! `join_touching_loops` (WR-405) on as Torno runs it.
 //!
 //! The fork has this case in one order: tangency-labs/smlib@1f2b0c4, capi test
 //! `capi/tests/sweeps.cpp` "extrude plate notched at a corner" (`smlib_extrude` of the same

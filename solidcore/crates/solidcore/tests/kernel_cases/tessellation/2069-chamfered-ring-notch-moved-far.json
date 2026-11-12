@@ -55,6 +55,6 @@
   "ungraded": [],
   "what": "a 210-degree ring with a chamfered outer edge, notched through its chamfer cone and then moved 1000 mm: where the notch meets the cone the mesh used to leave a crack, and the measured volume then grew with the distance from the origin",
   "why_not": [
-    "body \"Ring\" is no kernel operation's output nor an operand: SolidCraft built it or changed the kernel's record"
+    "body \"Ring\" is no kernel operation's output nor an operand: Torno built it or changed the kernel's record"
   ]
 }

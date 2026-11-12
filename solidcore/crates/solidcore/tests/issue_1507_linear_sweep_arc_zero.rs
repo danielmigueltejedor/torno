@@ -1,7 +1,7 @@
 //! tangency-labs/solidcore#1507 (WR-576): `SmPrimitiveCreation::CreateLinearSweep` tests a
 //! profile curve for an arc to the B-rep's tolerance, so a curve that is only near a
 //! circle is swept as the `SmCylinder` of its fitted circle, a body that is not the sweep
-//! of the curve. `CreateLinearSweep` (SolidCraft change, tangency-labs/smlib fd59111) tests it to the zero an `SmCylinder`'s own check
+//! of the curve. `CreateLinearSweep` (Torno change, tangency-labs/smlib fd59111) tests it to the zero an `SmCylinder`'s own check
 //! holds its generating curve to, `SM_EFF_ZERO * 1000 * (1 + size)`: only a curve that is
 //! a circle becomes a cylinder, any other is swept as itself (`SmSurfOfExtrusion`).
 //!

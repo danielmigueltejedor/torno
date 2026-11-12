@@ -16,7 +16,7 @@ use common::edge_at;
 use solidcore_ops::continuity::{ContinuityTolerances, G1AllAlong};
 use solidcore_ops::{blend, make_box, make_cylinder, Blend, Corners};
 
-/// SolidCraft's tolerances, the caller's: a micron, a degree, 1/100 mm and a tenth of that
+/// Torno's tolerances, the caller's: a micron, a degree, 1/100 mm and a tenth of that
 /// again per millimetre twice.
 fn tolerances() -> ContinuityTolerances {
     ContinuityTolerances {

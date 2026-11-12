@@ -29,13 +29,13 @@
 //! an edge that is not a whole side of its surface's box (a trimmed edge, whose extension is no
 //! curve SMLib holds exactly).
 
-use solidcraft_geom::prelude::*;
 use std::collections::{BTreeMap, BTreeSet};
+use torno_geom::prelude::*;
 
 use solidcore_record::Vec3;
 use solidcore_record::brep::{self};
-use solidcraft_geom::brep::eval::CurveEval;
-use solidcraft_smlib::trim::Continuation;
+use torno_geom::brep::eval::CurveEval;
+use torno_smlib::trim::Continuation;
 
 use crate::body::Body;
 use crate::history::{Change, FaceOrigin};
@@ -339,13 +339,13 @@ fn one_face(body: &Body, at: &[Vec3], distance: f64, mode: ExtendMode) -> Result
     let mut sheet = sb.tagged(0).map_err(|e| failed("tag", e))?;
     for p in at {
         sheet = sheet.extend_sheet([p.x, p.y, p.z], reach, distance, how).map_err(|e| match e {
-            solidcraft_smlib::Error::Unsupported => KernelError::Invalid(
+            torno_smlib::Error::Unsupported => KernelError::Invalid(
                 "not supported yet: extending an edge that is not a whole side of its surface's parameter box (a trimmed edge)".into(),
             ),
-            solidcraft_smlib::Error::NotExact => KernelError::Invalid(format!(
+            torno_smlib::Error::NotExact => KernelError::Invalid(format!(
                 "the surface cannot be extended exactly {distance} mm there: the extension would run past a pole of its surface, wrap round it, or not reach that length"
             )),
-            solidcraft_smlib::Error::NoMatch { .. } => KernelError::Invalid(format!("no edge at {p:?}")),
+            torno_smlib::Error::NoMatch { .. } => KernelError::Invalid(format!("no edge at {p:?}")),
             e => failed("extend", e),
         })?;
     }

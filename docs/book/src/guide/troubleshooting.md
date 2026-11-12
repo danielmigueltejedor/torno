@@ -12,13 +12,13 @@ shader compiler. That covers older Intel graphics, PCs without a graphics driver
 Safe mode starts with default settings (your own settings stay as they are, for the next normal
 start), skips the "Recover unsaved design?" offer and draws with the software renderer.
 
-- Windows: run `solidcraft.exe --safe-mode` from a terminal in the install folder, or add
+- Windows: run `torno.exe --safe-mode` from a terminal in the install folder, or add
   ` --safe-mode` to the end of a shortcut's *Target*.
-- macOS: `open -a SolidCraft --args --safe-mode`
-- Linux: `solidcraft --safe-mode` (Flatpak: `flatpak run io.tangencylabs.solidcraft --safe-mode`)
+- macOS: `open -a Torno --args --safe-mode`
+- Linux: `torno --safe-mode` (Flatpak: `flatpak run dev.danielmiguelt.Torno --safe-mode`)
 
-Setting `SOLIDCRAFT_SAFE_MODE=1` does the same. From 0.10.2, if two launches in a row stop
-before the window opens, the next one starts in safe mode by itself. `SOLIDCRAFT_RENDERER=cpu`
+Setting `TORNO_SAFE_MODE=1` does the same. From 0.10.2, if two launches in a row stop
+before the window opens, the next one starts in safe mode by itself. `TORNO_RENDERER=cpu`
 uses only the software renderer and keeps your settings.
 
 ## A design won't open or hangs while opening
@@ -34,7 +34,7 @@ uses only the software renderer and keeps your settings.
   not in it.
 - **Check the crash reports.** If Torno crashed while the design was open, the newest report
   in the `crashes` folder (see the table below) usually holds a `design.sc` with the
-  design as it was. `solidcraft-cli crashes` lists the reports.
+  design as it was. `torno-cli crashes` lists the reports.
 - **Unsaved designs** are in the `recovery` folder, not next to the file.
 - **Report it.** GitHub doesn't accept `.sc` (or `.solidcraft`) attachments, so zip the file
   (`design.sc.zip`) and attach it to an issue, with the crash report if there is one.
@@ -49,10 +49,10 @@ with a bug report.
 
 | System | Settings (`app.ron`, `graphics.json`) | Data (`recovery`, `crashes`, `control`, thumbnails) |
 |---|---|---|
-| Windows | `%APPDATA%\SolidCraft` | `%LOCALAPPDATA%\SolidCraft` |
-| macOS | `~/Library/Application Support/SolidCraft` | (the same folder) |
-| Linux | `~/.local/share/solidcraft` | (the same folder); thumbnails in `$XDG_CACHE_HOME/SolidCraft` or `/tmp/SolidCraft` |
-| Linux (Flatpak) | `~/.var/app/io.tangencylabs.solidcraft/data/solidcraft` | (the same folder) |
+| Windows | `%APPDATA%\Torno` | `%LOCALAPPDATA%\Torno` |
+| macOS | `~/Library/Application Support/Torno` | (the same folder) |
+| Linux | `~/.local/share/torno` | (the same folder); thumbnails in `$XDG_CACHE_HOME/Torno` or `/tmp/Torno` |
+| Linux (Flatpak) | `~/.var/app/dev.danielmiguelt.Torno/data/torno` | (the same folder) |
 
 On Windows, paste `%APPDATA%` or `%LOCALAPPDATA%` into the Explorer address bar to open the
 folder. Releases before the rename used `SolveCraft` folders next to these; Torno only
@@ -85,7 +85,7 @@ Things to try:
 
 - Install the graphics driver from the GPU maker (Intel, AMD, NVIDIA) rather than Windows Update.
 - In a virtual machine, turn on 3D acceleration. Over Remote Desktop, try it on the machine itself.
-- Run `solidcraft --crash-log` to list recent crash reports, and attach the newest one to an
+- Run `torno --crash-log` to list recent crash reports, and attach the newest one to an
   issue.
 - On an Intel Mac (Intel Iris graphics, macOS 12), "Parent device is lost" at start comes from
   the Metal compiler refusing wgpu's indirect-call validation shader. Torno leaves that
@@ -97,7 +97,7 @@ Things to try:
 Some graphics drivers hang on the shader Torno uses to build bodies on the GPU, and the
 system then resets the GPU. Torno already builds bodies on the CPU on the AMD FirePro
 D300/D500/D700 (Mac Pro 2013). On another GPU that does this, start Torno with
-`SOLIDCRAFT_CPU_TESS=1` set to build bodies on the CPU, and open an issue with the GPU's name.
+`TORNO_CPU_TESS=1` set to build bodies on the CPU, and open an issue with the GPU's name.
 
 ## The interface looks blurry on Linux with display scaling
 
@@ -111,10 +111,10 @@ a scale of 200 %.
 
 Run Torno on native Wayland instead: Preferences › Graphics › **Window system** ›
 Wayland, which applies at the next start. Versions without that setting (0.21.0 and earlier)
-take `SOLIDCRAFT_WAYLAND=1` in the environment:
+take `TORNO_WAYLAND=1` in the environment:
 
 ```
-SOLIDCRAFT_WAYLAND=1 solidcraft
+TORNO_WAYLAND=1 torno
 ```
 
 On native Wayland, dropping files onto the window doesn't work; use File > Open or pass the file
@@ -219,4 +219,4 @@ If saving into *Documents* (or *Pictures*, *Desktop* and other protected folders
 "Unauthorized changes blocked" notification. Either save to a folder that isn't protected, or
 allow Torno: *Windows Security › Virus & threat protection › Ransomware protection ›
 Controlled folder access › Allow an app through Controlled folder access*, then add
-`solidcraft.exe`.
+`torno.exe`.

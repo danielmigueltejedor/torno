@@ -6,7 +6,7 @@
 //!
 //! The caller's `angle` (radians) is the one tolerance: edges meeting at less than it continue
 //! one another, and faces meeting at less than it all along an edge make it smooth. Nothing
-//! here picks one (SolidCraft passes its shaded view's half a degree).
+//! here picks one (Torno passes its shaded view's half a degree).
 //!
 //! - [`tangent_chain_ordered`]: the picked edges, then every edge that continues one of them
 //!   within `angle` at a shared vertex, and so on. An edge does not join when it is not

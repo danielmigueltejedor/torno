@@ -368,7 +368,7 @@ fn rounds_of(b: &Brep) -> Vec<(FaceId, Surface)> {
 }
 
 /// The body reopened: each round rebuilt from its record (re-certified), as a design read
-/// back from SolidCraft's record is. Returns the rebuilt rounds.
+/// back from Torno's record is. Returns the rebuilt rounds.
 ///
 /// Each rebuilt round is owned by its face, as every face surface is upstream
 /// (`SmFace::SetSurface` sets it). The surface keeps the face's identity and its edge uses'
@@ -829,9 +829,9 @@ fn a_reopened_round_measurably_off_its_net_is_the_operand_on_s() {
     assert!((v0 - v1).abs() <= 1e-12 * v0, "volumes {v0} and {v1}");
 }
 
-/// The kernel SolidCraft runs: every fix on but `geometric_g2_continuity`, with the round
+/// The kernel Torno runs: every fix on but `geometric_g2_continuity`, with the round
 /// as its definition or as a plain B-spline.
-fn solidcraft_kernel(definition: bool) -> Kernel {
+fn torno_kernel(definition: bool) -> Kernel {
     let mut fixes = UpstreamFixes::default();
     for &name in UpstreamFixes::NAMES {
         if name != "geometric_g2_continuity" {
@@ -866,7 +866,7 @@ fn solidcraft_kernel(definition: bool) -> Kernel {
 fn a_round_on_a_reopened_round_lies_on_it() {
     let mut runs = Vec::new();
     for definition in [true, false] {
-        let mut k = solidcraft_kernel(definition);
+        let mut k = torno_kernel(definition);
         let mut b = chamfered_box(&mut k);
         let rounds: Vec<(FaceId, Surface)> = if definition {
             reopen(&k, &mut b)

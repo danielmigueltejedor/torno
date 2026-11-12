@@ -1,4 +1,4 @@
-//! #1060 (WR-615, fork tangency-labs/smlib a96ce9f; SolidCraft rig 4492): mitred rounds
+//! #1060 (WR-615, fork tangency-labs/smlib a96ce9f; Torno rig 4492): mitred rounds
 //! on a moved face follow it together. A 40 x 30 x 10 box has its four top edges rounded
 //! r 3 (mitred where they meet at the top corners), and the top face is offset by +19
 //! (`OffsetFacesExecutive::offset_faces`). The four rounds form one group that comes off

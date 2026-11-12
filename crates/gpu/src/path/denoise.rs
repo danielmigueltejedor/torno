@@ -1,7 +1,7 @@
 //! Optional output filtering; never writes the Monte Carlo accumulation buffer.
 use super::{Context, Result, SHADER, TIMEOUT, Task, checked, placeholder_bind, scopes, warm_up};
-use solidcraft_render::job::{DenoiseDiagnostics, DenoiseGuideClass, resolve_denoise_class};
 use std::sync::atomic::{AtomicBool, Ordering};
+use torno_render::job::{DenoiseDiagnostics, DenoiseGuideClass, resolve_denoise_class};
 use wgpu::util::DeviceExt;
 
 pub(super) const GUIDE_BYTES_PER_PIXEL: u64 = 96; // two complete surface guides

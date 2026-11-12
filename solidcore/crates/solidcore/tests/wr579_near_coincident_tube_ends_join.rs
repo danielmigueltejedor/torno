@@ -23,7 +23,7 @@
 //! WR-741: a plane that nearly holds a cylinder's axis meets it in an ellipse of radii 1.8e7
 //! and 8, a line to 6e-11 over its 2.3e-4 degrees, whose analytic form carries rounding of
 //! about `rx` times an ulp of its angle (4.6e-9); `SmEllipse`'s tests 1 and 2 held it to
-//! `100 SM_EFF_ZERO (1 + |p|)` and refused exact results. The cases below are SolidCraft's
+//! `100 SM_EFF_ZERO (1 + |p|)` and refused exact results. The cases below are Torno's
 //! records of the cut (`periph_case_R`'s notched tool `t24`, a cone `e3` and the part's
 //! lower slab), not rebuilt here: the verdict on this ellipse turns on its last bits.
 #![allow(
@@ -268,9 +268,9 @@ fn wr575_every_fix_at_1e_6_adds_no_check_failure() {
     assert!(failures.is_empty(), "{failures:#?}");
 }
 
-/// SolidCraft's profile, every fix on but `fillet_refuse_rounds_breaking_through` (its
+/// Torno's profile, every fix on but `fillet_refuse_rounds_breaking_through` (its
 /// `HELD_BACK`).
-fn solidcraft() -> Kernel {
+fn torno() -> Kernel {
     let mut k = Kernel {
         fixes: UpstreamFixes::all(),
         ..Kernel::default()
@@ -285,7 +285,7 @@ fn checks_clean(k: &mut Kernel, b: &mut Brep) {
     assert!(lines.is_empty(), "{lines:?}");
 }
 
-/// A body as SolidCraft records it (binary SMB), read under its naming.
+/// A body as Torno records it (binary SMB), read under its naming.
 fn read_notify_named(k: &mut Kernel, bytes: &[u8]) -> Brep {
     let mut attributes = AttributeStore::default();
     let mut records = NotifyRecords::new();
@@ -301,14 +301,14 @@ fn read_notify_named(k: &mut Kernel, bytes: &[u8]) -> Brep {
     b
 }
 
-/// `t24` and `e3`'s cone as SolidCraft main 4bdffef06 (on solidcore 3df8a06b5) passes them to
-/// the cut `e3`, written where its check refused the cut. `t24` is SolidCraft's 198 x 105.5 x
+/// `t24` and `e3`'s cone as Torno main 4bdffef06 (on solidcore 3df8a06b5) passes them to
+/// the cut `e3`, written where its check refused the cut. `t24` is Torno's 198 x 105.5 x
 /// 71.5 box minus the half-space `t25` and minus the notch `t26`, a rectangle 8 wide turned
 /// about its side on the clipped box's slanted face. The cone is the trapezoid (0, -55),
 /// (24, -55), (19, 16.5), (0, 16.5) turned about world Z through (0, -5.8).
 const TOOL: &[u8] = include_bytes!("data/issue_2539_e3_tool.smb");
 const CONE: &[u8] = include_bytes!("data/issue_2539_e3_cone.smb");
-/// `periph_case_R` before its last cut (SolidCraft's record, as above) cut down by solidcore to
+/// `periph_case_R` before its last cut (Torno's record, as above) cut down by solidcore to
 /// its part below z = -14, where `t24` takes its corner: 18 faces, written by
 /// `write_brep_to_file`. The whole part's record is 338 KB.
 const PART: &[u8] = include_bytes!("data/issue_2539_periph_case_lower.smb");
@@ -326,7 +326,7 @@ fn fine_volume(k: &Kernel, b: &mut Brep) -> f64 {
 /// clean (upstream's tolerance refused it: `SmEllipse` test 2, 3.97e-9 against 3.81e-9).
 #[test]
 fn wr741_the_notched_tool_checks_clean() {
-    let mut k = solidcraft();
+    let mut k = torno();
     let mut tool = read_notify_named(&mut k, TOOL);
     assert!(is_manifold_solid(&tool).unwrap());
     checks_clean(&mut k, &mut tool);
@@ -337,7 +337,7 @@ fn wr741_the_notched_tool_checks_clean() {
 /// keeps from `t24`, as above).
 #[test]
 fn wr741_e3_cone_minus_the_notched_tool() {
-    let mut k = solidcraft();
+    let mut k = torno();
     let cone = read_notify_named(&mut k, CONE);
     let tool = read_notify_named(&mut k, TOOL);
     let mut r = boolean(&mut k, cone, tool, BooleanOperation::Difference)
@@ -356,7 +356,7 @@ fn wr741_e3_cone_minus_the_notched_tool() {
 /// cut, 72170.402 to 70319.173).
 #[test]
 fn wr741_periph_case_minus_the_notched_tool() {
-    let mut k = solidcraft();
+    let mut k = torno();
     let (part, tool) = (
         read_notify_named(&mut k, PART),
         read_notify_named(&mut k, TOOL),

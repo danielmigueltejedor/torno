@@ -3,7 +3,7 @@
 //! leaving a plane cannot meet that same plane again at a positive distance.
 use super::{Triangle, invalid, medium_root, reserved};
 use robust::{Coord, Coord3D, orient2d, orient3d};
-use solidcraft_render::job::{CancelToken, Result};
+use torno_render::job::{CancelToken, Result};
 
 #[derive(Eq, PartialEq, Ord, PartialOrd)]
 struct Edge {
@@ -114,8 +114,8 @@ pub(super) fn ids(triangles: &[Triangle], cancel: &CancelToken) -> Result<Vec<u3
 mod tests {
     use super::*;
     use solidcore_record::Vec3;
-    use solidcraft_geom::MeshGeom;
-    use solidcraft_viewport::surface::OpaqueSurface;
+    use torno_geom::MeshGeom;
+    use torno_viewport::surface::OpaqueSurface;
 
     fn triangle(p: [[f64; 3]; 3], body: u32) -> Triangle {
         Triangle {
@@ -195,9 +195,9 @@ mod tests {
 
     #[test]
     fn packing_offset_and_ids_follow_bvh_reordering() {
-        use solidcraft_geom::Mesh;
-        use solidcraft_render::{ProductMesh, ProductScene};
         use std::sync::Arc;
+        use torno_geom::Mesh;
+        use torno_render::{ProductMesh, ProductScene};
         let mut mesh = Mesh::default();
         for z in [5.0, 0.0, 10.0] {
             let first = mesh.positions.len() as u32;

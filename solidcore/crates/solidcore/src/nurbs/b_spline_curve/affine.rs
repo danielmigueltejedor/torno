@@ -6,7 +6,7 @@
 //! carried point. The weights must be positive: only then is every point of the curve
 //! a convex combination of its control points, so within their bound.
 //!
-//! Not upstream: SolidCraft's station sweep (`placed`). Deviations: none (no upstream
+//! Not upstream: Torno's station sweep (`placed`). Deviations: none (no upstream
 //! counterpart). No recursion.
 //!
 //! [`crv_nurb::Curve::transform`]: crate::nurbs::crv_nurb::Curve::transform

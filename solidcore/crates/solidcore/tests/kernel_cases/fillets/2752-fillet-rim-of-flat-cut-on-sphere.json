@@ -170,7 +170,7 @@
     "blend_dropping"
   ],
   "ungraded": [
-    "continuity: SolidCraft computes it"
+    "continuity: Torno computes it"
   ],
   "what": "an R1 round round the rim of a radius-2 sphere cut flat at z=1",
   "why_not": []

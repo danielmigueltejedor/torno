@@ -3,8 +3,8 @@
 //! Frames are definition-local millimetres; no paths or device objects are saved.
 use crate::{DocError, Result, render_resources::HdrId};
 use serde::{Deserialize, Serialize};
-use solidcraft_render::job::textures::PlanarFrame;
 use std::{collections::BTreeSet, fmt};
+use torno_render::job::textures::PlanarFrame;
 
 pub const MAX_SURFACE_BINDINGS: usize = 128;
 pub const MAX_SURFACE_PATH: usize = 64;
@@ -119,8 +119,8 @@ pub struct EmbeddedSurfaceSource {
     pub flip_v: bool,
 }
 impl EmbeddedSurfaceSource {
-    pub fn role_resources(&self) -> impl Iterator<Item = (solidcraft_render::texture_input::MapRole, HdrId)> + '_ {
-        use solidcraft_render::texture_input::MapRole;
+    pub fn role_resources(&self) -> impl Iterator<Item = (torno_render::texture_input::MapRole, HdrId)> + '_ {
+        use torno_render::texture_input::MapRole;
         [
             (MapRole::BaseColor, self.base_color),
             (MapRole::NormalOpenGl, self.normal_open_gl),
@@ -328,9 +328,9 @@ mod tests {
         let mut direct_document = crate::Document::default();
         std::sync::Arc::make_mut(&mut direct_document.render).setups.insert("Maps".into(), setup.clone());
         assert_eq!(crate::Document::from_json(&direct_document.to_json()).unwrap(), direct_document);
-        options.progressive = Some(solidcraft_render::job::CpuProgressiveOptions { samples_per_pixel: 16, seed: 9 });
+        options.progressive = Some(torno_render::job::CpuProgressiveOptions { samples_per_pixel: 16, seed: 9 });
         options.shadows = true;
-        options.path = Some(solidcraft_render::job::CpuPathOptions { max_depth: 3 });
+        options.path = Some(torno_render::job::CpuPathOptions { max_depth: 3 });
         setup.job = Some(RenderJob::CpuRaytrace { transparent_background: false, options: Box::new(options.clone()) });
         setup.validate().unwrap();
         let mut document = crate::Document::default();
@@ -339,14 +339,14 @@ mod tests {
         options.path = None;
         let saved_options_wire = serde_json::to_value(&options).unwrap();
         let mut runtime = options.to_runtime(0.0).unwrap();
-        runtime.reflections = Some(solidcraft_render::job::ReflectionOptions {
-            bodies: vec![solidcraft_render::job::ReflectionBody { body: "Panel".into(), mode: solidcraft_render::job::ReflectionMode::Mirror }],
+        runtime.reflections = Some(torno_render::job::ReflectionOptions {
+            bodies: vec![torno_render::job::ReflectionBody { body: "Panel".into(), mode: torno_render::job::ReflectionMode::Mirror }],
             samples: 1,
             max_bounces: 2,
         });
         runtime.validate().unwrap();
         let runtime_wire = serde_json::to_value(&runtime).unwrap();
-        let error = solidcraft_render::job::textures::validate_cpu_options(&runtime).unwrap_err();
+        let error = torno_render::job::textures::validate_cpu_options(&runtime).unwrap_err();
         assert!(error.message.contains("selected reflections"));
         assert_eq!(serde_json::to_value(&runtime).unwrap(), runtime_wire, "map refusal preserves the exact runtime selected override");
         assert_eq!(serde_json::to_value(&options).unwrap(), saved_options_wire, "runtime overrides do not rewrite saved CPU fields");

@@ -22,7 +22,7 @@ impl Session {
     pub fn body_features(&self) -> BTreeMap<String, Vec<u64>> {
         let order: HashMap<u64, usize> = self.doc.features.iter().enumerate().map(|(i, f)| (f.id, i)).collect();
         // Each body before the feature being looked at: its geometry, its creator and its features.
-        let mut before: HashMap<String, (solidcraft_doc::kernel::Body, u64, Vec<u64>)> = HashMap::new();
+        let mut before: HashMap<String, (torno_doc::kernel::Body, u64, Vec<u64>)> = HashMap::new();
         for r in &self.model.results {
             let id = r.id;
             let after = &r.state.bodies;
@@ -30,7 +30,7 @@ impl Session {
             // What the feature consumed: bodies there before and gone after.
             let consumed: Vec<u64> =
                 before.iter().filter(|(name, _)| !names.contains(name.as_str())).flat_map(|(_, (_, _, list))| list.iter().copied()).collect();
-            let mut next: HashMap<String, (solidcraft_doc::kernel::Body, u64, Vec<u64>)> = HashMap::with_capacity(after.len());
+            let mut next: HashMap<String, (torno_doc::kernel::Body, u64, Vec<u64>)> = HashMap::with_capacity(after.len());
             for b in after {
                 let list = match before.get(&b.name) {
                     // Passed through unchanged.

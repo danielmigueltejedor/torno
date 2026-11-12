@@ -33,6 +33,6 @@
   "ungraded": [],
   "what": "a cell point outside every tool encloses nothing: refused",
   "why_not": [
-    "the failure is SolidCraft's, not a kernel operation's: step 3 (solid.boundary_fill): the point Position(Vec3 { x: 50.0, y: 50.0, z: 5.0 }) is outside every tool: no enclosed cell there"
+    "the failure is Torno's, not a kernel operation's: step 3 (solid.boundary_fill): the point Position(Vec3 { x: 50.0, y: 50.0, z: 5.0 }) is outside every tool: no enclosed cell there"
   ]
 }

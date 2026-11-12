@@ -1,8 +1,8 @@
 #![allow(clippy::unwrap_used, clippy::panic)]
 use serde_json::{Value, json};
 use solidcore_record::Vec3;
-use solidcraft_doc::{FeatureKind, ProfileSel};
-use solidcraft_geom::MeshGeom;
+use torno_doc::{FeatureKind, ProfileSel};
+use torno_geom::MeshGeom;
 
 use crate::Session;
 
@@ -38,7 +38,7 @@ fn breaking_offset_preserves_downstream_material_history_and_source_independence
         run(&mut session, "parameters.change", json!({"name":radius,"expression":"2 mm"}));
         assert!(session.model.results.iter().all(|result| result.error.is_none()));
         assert!((session.world_state().unwrap().bodies.last().unwrap().mesh().measure().volume.abs() - before_volume).abs() < 1e-6);
-        let reopened = Session::new(solidcraft_doc::Document::from_json(&session.doc.to_json()).unwrap());
+        let reopened = Session::new(torno_doc::Document::from_json(&session.doc.to_json()).unwrap());
         assert!(reopened.model.results.iter().all(|result| result.error.is_none()));
         assert!((reopened.world_state().unwrap().bodies.last().unwrap().mesh().measure().volume.abs() - before_volume).abs() < 1e-6);
     }
@@ -88,7 +88,7 @@ fn inset_past_corner_radius_creates_a_real_boundary_and_saved_profile_identity()
     };
     check(&session);
     let saved = session.doc.to_json();
-    let reopened = Session::new(solidcraft_doc::Document::from_json(&saved).unwrap());
+    let reopened = Session::new(torno_doc::Document::from_json(&saved).unwrap());
     check(&reopened);
     assert_eq!(reopened.doc.to_json(), saved);
     let undo = session.undo.len();
@@ -133,7 +133,7 @@ fn an_outline_outside_a_dog_bone_meets_outside_both_notches() {
     for id in &record.outputs {
         let curve = &sk.curves[sk.curve_index(id).unwrap()];
         let (a, b) = match curve.kind {
-            solidcraft_sketch::CurveKind::Line { a, b } | solidcraft_sketch::CurveKind::Arc { a, b, .. } => (a, b),
+            torno_sketch::CurveKind::Line { a, b } | torno_sketch::CurveKind::Arc { a, b, .. } => (a, b),
             _ => panic!("{id} is no line or arc"),
         };
         for p in [sk.points[a].pos, sk.points[b].pos] {

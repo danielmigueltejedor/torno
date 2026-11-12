@@ -1,5 +1,5 @@
 //! tangency-labs/solidcore#422 (WR-212): an R4 round over a through hole returns success with
-//! a body that is not a closed manifold solid (SolidCraft rig case fillets/324). The round
+//! a body that is not a closed manifold solid (Torno rig case fillets/324). The round
 //! would have to be trimmed by the hole's wall, which SMLib does not do. The opt-in
 //! `Kernel::fixes.fillet_refuse_non_manifold_result` refuses the result instead, as the
 //! issue's "Expected" allows ("a refusal naming the edge that can't be blended"). The

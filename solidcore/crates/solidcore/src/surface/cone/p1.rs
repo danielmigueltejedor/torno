@@ -1310,7 +1310,7 @@ impl Cone {
     /// point's direction (the X axis for a point on the axis).
     ///
     /// With `Kernel::fixes.cone_iso_circle_at_axial_height` (WR-704) the function is the
-    /// SolidCraft fork's (tangency-labs/smlib 1279539, with the `SER` of 672a437 on the NURB
+    /// Torno fork's (tangency-labs/smlib 1279539, with the `SER` of 672a437 on the NURB
     /// conversion): the circle's STEP point is the sweep start and the point's projection
     /// onto the axis, clamped to the height interval, with no inversion, and a failed NURB
     /// conversion is returned. A point within `tol_3d` past either end gives that end's

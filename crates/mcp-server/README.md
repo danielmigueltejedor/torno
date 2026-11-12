@@ -1,4 +1,4 @@
-# solidcraft-mcp-server
+# torno-mcp-server
 
 The machinery of a Model Context Protocol server: JSON-RPC 2.0 over stdio (one message per
 line), the MCP lifecycle (`initialize`, `ping`, `notifications/initialized`), the tools,

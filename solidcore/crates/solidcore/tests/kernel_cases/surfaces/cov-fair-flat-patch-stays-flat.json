@@ -56,6 +56,6 @@
   "ungraded": [],
   "what": "fair on a flat boundary patch, with its edges free: a plane has no curvature to even out, so it stays the flat square",
   "why_not": [
-    "body \"Patch\" is no kernel operation's output nor an operand: SolidCraft built it or changed the kernel's record"
+    "body \"Patch\" is no kernel operation's output nor an operand: Torno built it or changed the kernel's record"
   ]
 }

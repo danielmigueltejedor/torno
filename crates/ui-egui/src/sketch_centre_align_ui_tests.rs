@@ -5,8 +5,8 @@
 
 use serde_json::json;
 use solidcore_record::Vec2;
-use solidcraft_engine::Sel::{SketchCurve, SketchPoint};
-use solidcraft_engine::geom::prelude::*;
+use torno_engine::Sel::{SketchCurve, SketchPoint};
+use torno_engine::geom::prelude::*;
 
 use crate::context_menu::{self, Target};
 use crate::scenario::Harness;

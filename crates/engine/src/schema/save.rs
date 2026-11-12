@@ -120,7 +120,7 @@ pub struct SaveResult {
     pub bytes: usize,
     /// The design's name once saved (a design with no name of its own takes the file's).
     pub name: String,
-    /// A file a newer SolidCraft saved: the format number it keeps.
+    /// A file a newer Torno saved: the format number it keeps.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub kept_format: Option<String>,
     /// A newer file: what could not be kept, in sentences, when something could not.

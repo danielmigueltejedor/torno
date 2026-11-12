@@ -6,7 +6,7 @@ use crate::EmbossFace;
 use crate::apply_point;
 use crate::sheet;
 use solidcore_record::{Loop2, Seg2};
-use solidcraft_geom::{Aabb3, Ring};
+use torno_geom::{Aabb3, Ring};
 
 pub(super) fn eval(doc: &Document, vals: &BTreeMap<String, Value>, f: &Feature, st: &mut ModelState, warning: &mut Option<String>) -> Result<()> {
     match &f.kind {
@@ -247,7 +247,7 @@ pub(super) fn rib_tools(vals: &BTreeMap<String, Value>, st: &ModelState, f: &Fea
 fn planar_normal_at(b: &Body, p: Vec3) -> Option<Vec3> {
     let tol = (b.size() * 2e-3).max(1e-3);
     let faces = b.faces(tol).ok()?;
-    let mesh = b.mesh(&solidcraft_kernel::MeshTolerance::chord(tol)).ok()?;
+    let mesh = b.mesh(&torno_kernel::MeshTolerance::chord(tol)).ok()?;
     let mut near = vec![f64::INFINITY; faces.len()];
     for (t, f) in mesh.triangles.iter().zip(&mesh.tri_face) {
         if let (Some([u, v, w]), Some(d)) = (mesh.tri(t), near.get_mut(*f as usize)) {
@@ -553,7 +553,7 @@ pub(super) fn sheet_eval(
     match &f.kind {
         FeatureKind::SheetBase { sketch, profiles, rule, flip } => {
             let ss = st.sketch(sketch.0).ok_or_else(|| DocError::Unknown(format!("sketch {sketch}")))?.clone();
-            let regions = solidcraft_sketch::merge_regions(&select_profiles(&ss, profiles)?);
+            let regions = torno_sketch::merge_regions(&select_profiles(&ss, profiles)?);
             let r = doc.sheet_rule(rule.as_deref());
             let rv = doc.rule_values(vals, &r)?;
             for (k, region) in regions.into_iter().enumerate() {
@@ -971,7 +971,7 @@ pub(super) fn sheet_eval(
             let mb = st.body(body).cloned().ok_or_else(|| DocError::Unknown(format!("body `{body}`")))?;
             let n = planar_normal_at(&mb.body, face.0).ok_or_else(|| DocError::Invalid("pick a planar face of the plate".into()))?;
             // Thickness: the body's extent along the face normal.
-            let extent = |mesh: &solidcraft_geom::Mesh| {
+            let extent = |mesh: &torno_geom::Mesh| {
                 mesh.positions.iter().map(|p| (*p - face.0).dot(n)).fold((f64::MAX, f64::MIN), |(lo, hi), d| (lo.min(d), hi.max(d)))
             };
             // The tolerance (the mesh's chords, and how far off the face's plane a point of it may
@@ -979,11 +979,11 @@ pub(super) fn sheet_eval(
             // thin plate that thousandth passes the thickness: the far side's triangles counted as
             // this face's (no outline was left), and a hole of a smaller radius than that fell out.
             let mut tol = (mb.body.size() * 1e-3).max(1e-3);
-            let mut mesh = mb.body.mesh(&solidcraft_kernel::MeshTolerance::chord(tol))?;
+            let mut mesh = mb.body.mesh(&torno_kernel::MeshTolerance::chord(tol))?;
             let (mut lo, mut hi) = extent(&mesh);
             if hi - lo > 0.0 && tol > (hi - lo) * 0.1 {
                 tol = ((hi - lo) * 0.1).max(1e-6);
-                mesh = mb.body.mesh(&solidcraft_kernel::MeshTolerance::chord(tol))?;
+                mesh = mb.body.mesh(&torno_kernel::MeshTolerance::chord(tol))?;
                 (lo, hi) = extent(&mesh);
             }
             let t = hi - lo;
@@ -1170,12 +1170,12 @@ fn extrude_cut(st: &ModelState, f: &Feature) -> Result<Option<ExtrudeCut>> {
         return Ok(None);
     }
     let Some(ss) = st.sketch(sketch.0) else { return Ok(None) };
-    let regions = solidcraft_sketch::merge_regions(&select_profiles(ss, profiles)?);
+    let regions = torno_sketch::merge_regions(&select_profiles(ss, profiles)?);
     let text: Vec<Seg2> = ss
         .sketch
         .links
         .iter()
-        .filter(|l| matches!(l.source, solidcraft_sketch::LinkSource::Text { .. }))
+        .filter(|l| matches!(l.source, torno_sketch::LinkSource::Text { .. }))
         .flat_map(|l| ss.sketch.link_curves(&l.id))
         .flat_map(|ci| ss.sketch.exact_segs(ci).unwrap_or_else(|| ss.sketch.segs(ci)))
         .collect();
@@ -1203,7 +1203,7 @@ pub(super) fn sheet_join(
     let Some(ss) = st.sketch(sketch.0).cloned() else { return Ok(Vec::new()) };
     // The depth the extrude was given, along its sketch's normal: only an untrimmed extrude has one.
     let Some(c) = constructor.filter(|c| c.plane == ss.plane) else { return Ok(Vec::new()) };
-    let regions = solidcraft_sketch::merge_regions(&select_profiles(&ss, profiles)?);
+    let regions = torno_sketch::merge_regions(&select_profiles(&ss, profiles)?);
     let plane = ss.plane;
     let n = plane.normal();
     let (lo, hi) = (c.interval.0.min(c.interval.1), c.interval.0.max(c.interval.1));
@@ -2065,18 +2065,13 @@ impl FaceSlice<'_> {
 }
 
 /// The loops (in `plane` coordinates) that bound the triangles `on` of the mesh.
-fn boundary_loops(mesh: &solidcraft_geom::Mesh, plane: &Plane, on: &[[u32; 3]]) -> Vec<Ring<Vec2>> {
+fn boundary_loops(mesh: &torno_geom::Mesh, plane: &Plane, on: &[[u32; 3]]) -> Vec<Ring<Vec2>> {
     chain_loops(mesh, plane, on, |_, _| None).into_iter().map(|l| l.into_iter().map(|(p, _)| p).collect()).collect()
 }
 
 /// The loops (in `plane` coordinates) that bound the triangles `on` of the mesh, each point with
 /// `across(it, next)`: the face the outline runs along from it to the next point.
-fn chain_loops(
-    mesh: &solidcraft_geom::Mesh,
-    plane: &Plane,
-    on: &[[u32; 3]],
-    across: impl Fn(Vec3, Vec3) -> Option<u32>,
-) -> Vec<Vec<(Vec2, Option<u32>)>> {
+fn chain_loops(mesh: &torno_geom::Mesh, plane: &Plane, on: &[[u32; 3]], across: impl Fn(Vec3, Vec3) -> Option<u32>) -> Vec<Vec<(Vec2, Option<u32>)>> {
     // Boundary edges by position (meshes may repeat vertices per triangle).
     let pos = |k: u32| mesh.positions.get(k as usize).copied().unwrap_or_default();
     let q = |p: Vec3| ((p.x * 1e6).round() as i64, (p.y * 1e6).round() as i64, (p.z * 1e6).round() as i64);
@@ -2258,7 +2253,7 @@ impl FaceSlice<'_> {
             )));
         }
         // The floors' outlines, from a mesh fine enough to mark them by.
-        let fine = body.mesh(&solidcraft_kernel::MeshTolerance::chord((t * 1e-2).min(tol).max(1e-4)))?;
+        let fine = body.mesh(&torno_kernel::MeshTolerance::chord((t * 1e-2).min(tol).max(1e-4)))?;
         floors.sort_by(|a, b| depth_of(a.1).total_cmp(&depth_of(b.1)));
         // Floors at one depth are one pocket where they meet.
         let mut groups: Vec<(f64, Vec<Region2>)> = Vec::new();
@@ -2454,7 +2449,7 @@ pub(super) fn plastic_eval(doc: &Document, vals: &BTreeMap<String, Value>, f: &F
             }
             let plane = Plane::from_normal(face.0, n).ok_or_else(|| DocError::Invalid("rim plane".into()))?;
             let tol = (mb.body.size() * 1e-3).max(1e-3);
-            let mesh = mb.body.mesh(&solidcraft_kernel::MeshTolerance::chord(tol))?;
+            let mesh = mb.body.mesh(&torno_kernel::MeshTolerance::chord(tol))?;
             let slice = FaceSlice { mesh: &mesh, plane, at: face.0, n, tol };
             let mut loops = slice.loops(0.0);
             loops.sort_by(|a, b| b.signed_area().abs().total_cmp(&a.signed_area().abs()));

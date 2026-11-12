@@ -3,7 +3,7 @@
 use std::sync::Arc;
 
 use serde_json::Value;
-use solidcraft_doc::{
+use torno_doc::{
     render_resources::{CpuHdrEnvironment, GpuHdrEnvironment, HdrId, HdrResource},
     render_settings::RenderJob,
 };
@@ -19,7 +19,7 @@ fn capture(path: &str, expected: Option<HdrId>, command: &str) -> Result<HdrReso
     if path.is_empty() || path.len() > 4096 || path.chars().any(char::is_control) {
         return Err(bad(command, "HDR capture requires a bounded scoped path"));
     }
-    let bytes = solidcraft_io::vfs::read(path, solidcraft_render::lighting::MAX_HDR_BYTES).map_err(|e| bad(command, e.to_string()))?;
+    let bytes = torno_io::vfs::read(path, torno_render::lighting::MAX_HDR_BYTES).map_err(|e| bad(command, e.to_string()))?;
     if expected.is_some_and(|id| id != HdrId::of(&bytes)) {
         return Err(bad(command, "HDR file changed since selection; inspect and select it again before saving"));
     }

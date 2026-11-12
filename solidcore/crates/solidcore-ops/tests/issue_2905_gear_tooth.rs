@@ -13,7 +13,7 @@ use solidcore_record::brep::Brep as Record;
 
 const R: f64 = 0.5;
 
-/// The tooth (SolidCraft's `65-sketch-gear-tooth`, its 30 degree sector of R40 root, R50 tip and
+/// The tooth (Torno's `65-sketch-gear-tooth`, its 30 degree sector of R40 root, R50 tip and
 /// R15 flank arcs, 8 thick) with edge `e` rounded `R`: its volume before and after.
 fn rounded(e: usize) -> (f64, f64) {
     let fixes: Vec<String> = serde_json::from_str(include_str!(

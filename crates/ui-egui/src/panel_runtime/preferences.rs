@@ -5,7 +5,7 @@ use std::io::{self, Write};
 
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
-use solidcraft_engine::panels::*;
+use torno_engine::panels::*;
 
 use super::*;
 
@@ -38,7 +38,7 @@ pub(super) struct PreferenceRecord {
 mod catalogue_bytes {
     use serde::Deserialize as _;
     use serde::de::Error as _;
-    use solidcraft_engine::doc::canvas::{base64_decode, base64_encode};
+    use torno_engine::doc::canvas::{base64_decode, base64_encode};
 
     pub(super) const MAX_PACKED_BYTES: usize = super::commands::MAX_CATALOGUE_SNAPSHOT_BYTES.div_ceil(3) * 4;
 
@@ -274,7 +274,7 @@ impl PreferenceRecord {
         commands::CatalogueState::hydrate(&self.catalogue, registry)
     }
     pub(super) fn value(&self) -> Value {
-        let packed = solidcraft_engine::doc::canvas::base64_encode(&self.catalogue);
+        let packed = torno_engine::doc::canvas::base64_encode(&self.catalogue);
         let mut value = serde_json::json!({"version":self.version,"selected":self.selected,"catalogue":packed,"legacy":self.legacy});
         if let Some(rejected) = &self.rejected
             && let Some(object) = value.as_object_mut()

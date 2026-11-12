@@ -1,18 +1,18 @@
 //! Independent copies of a component definition graph, assembled and evaluated atomically.
-use solidcraft_doc::BodyName;
-use solidcraft_geom::prelude::*;
 use std::collections::{BTreeMap, BTreeSet};
+use torno_doc::BodyName;
+use torno_geom::prelude::*;
 
 use crate::params::bad;
 use crate::schema::component::PasteNewResult;
 use crate::{Result, Sel, Session};
 use serde_json::Value;
-use solidcraft_doc::{Document, Feature, FeatureKind, Mat, Occurrence};
+use torno_doc::{Document, Feature, FeatureKind, Mat, Occurrence};
 
 const CMD: &str = "component.paste_new";
 const MAX_WORK: usize = 10_000;
 
-fn mesh_distance(mesh: &solidcraft_geom::Mesh, point: solidcore_record::Vec3) -> f64 {
+fn mesh_distance(mesh: &torno_geom::Mesh, point: solidcore_record::Vec3) -> f64 {
     mesh.triangles
         .iter()
         .filter_map(|triangle| mesh.tri(triangle))
@@ -35,7 +35,7 @@ fn mesh_distance(mesh: &solidcraft_geom::Mesh, point: solidcore_record::Vec3) ->
         .fold(f64::INFINITY, f64::min)
 }
 
-fn material_probe_matches(a: &solidcraft_geom::Mesh, b: &solidcraft_geom::Mesh, point: solidcore_record::Vec3, tol_a: f64, tol_b: f64) -> bool {
+fn material_probe_matches(a: &torno_geom::Mesh, b: &torno_geom::Mesh, point: solidcore_record::Vec3, tol_a: f64, tol_b: f64) -> bool {
     if !point.is_finite() || !tol_a.is_finite() || !tol_b.is_finite() || tol_a <= 0. || tol_b <= 0. {
         return false;
     }
@@ -88,7 +88,7 @@ fn cloned_path(source: &Document, path: &[u64], root: u64, destination: &[u64], 
 /// A name for a copy of `base` that isn't in `used` (and then is): numbered, or with `keep`
 /// (pasting into another design, where the original isn't) `base` itself while it is free.
 fn unique(base: &str, used: &mut BTreeSet<String>, keep: bool) -> String {
-    let name = if keep && !used.contains(base.trim()) { base.trim().to_string() } else { solidcraft_doc::copy_name(base, |n| used.contains(n)) };
+    let name = if keep && !used.contains(base.trim()) { base.trim().to_string() } else { torno_doc::copy_name(base, |n| used.contains(n)) };
     used.insert(name.clone());
     name
 }
@@ -191,7 +191,7 @@ fn graph(doc: &Document, root: u64) -> Result<Vec<u64>> {
 /// paste within one design.
 pub(super) struct Source<'a> {
     pub doc: &'a Document,
-    pub model: &'a solidcraft_doc::Model,
+    pub model: &'a torno_doc::Model,
     pub pending_moves: std::borrow::Cow<'a, BTreeMap<u64, Mat>>,
     /// Another design than the target: the copy can't point at anything outside it (it is
     /// refused, saying what), and the user parameters it uses come along.
@@ -376,7 +376,7 @@ pub(super) fn build(
         if body.body.is_mesh() {
             return Err(bad(CMD, "Paste New of a reassigned mesh body is not supported yet"));
         }
-        let offset = source.model_body_offset(body).copied().unwrap_or(solidcraft_doc::IDENTITY);
+        let offset = source.model_body_offset(body).copied().unwrap_or(torno_doc::IDENTITY);
         // An external transfer establishes the local baseline in this graph.
         // Freeze AFTER that boundary, then replay it as an identity ownership event.
         let entry = feats.iter().find(|f| {
@@ -395,8 +395,8 @@ pub(super) fn build(
         let entered = entry.and_then(|f| origin.model.result(f.id)).map(|r| r.state.clone());
         let base = entered.as_ref().and_then(|st| st.body(&body.name)).or_else(|| before.as_ref().and_then(|st| st.body(&body.name))).unwrap_or(body);
         let baseline_component = source.model_body_component(base);
-        let geometry = solidcraft_kernel::transform_matrix(&base.body, offset)?;
-        let step = solidcraft_kernel::step_export(&[&geometry], "SolidCraft independent reassigned body")?;
+        let geometry = torno_kernel::transform_matrix(&base.body, offset)?;
+        let step = torno_kernel::step_export(&[&geometry], "Torno independent reassigned body")?;
         let new_name = unique(&body.name, &mut used_bodies, origin.other_design);
         bodies.insert(body.name.clone(), new_name.clone());
         // From another design it is named as what it is there, an imported body, numbered as
@@ -446,7 +446,7 @@ pub(super) fn build(
                     && let Some(p) = source_parameters.get(name.as_str())
                     && p.model
                 {
-                    if scratch.doc.params.len() >= solidcraft_doc::MAX_PARAMS {
+                    if scratch.doc.params.len() >= torno_doc::MAX_PARAMS {
                         return Err(bad(CMD, "too many copied parameters"));
                     }
                     let new = scratch.doc_mut().new_model_param(&p.expr, &p.unit);
@@ -467,7 +467,7 @@ pub(super) fn build(
         if let Some(p) = source_parameters.get(old.as_str())
             && p.model
         {
-            let expr = solidcraft_doc::clone_expression(&p.expr, &parameters);
+            let expr = torno_doc::clone_expression(&p.expr, &parameters);
             if let Some(p) = scratch.doc_mut().params.iter_mut().find(|p| p.name == *new) {
                 p.expr = expr;
                 p.comment = source_parameters.get(old.as_str()).map(|p| p.comment.clone()).unwrap_or_default();
@@ -576,14 +576,14 @@ pub(super) fn build(
                     return Err(bad(CMD, "cannot copy strict face paint through uncertified foreign re-export"));
                 }
                 if let Some(name) = &face.name {
-                    face.point = solidcraft_doc::naming::point_on_face(&state, name, face.point)
+                    face.point = torno_doc::naming::point_on_face(&state, name, face.point)
                         .ok_or_else(|| bad(CMD, "source frozen face appearance lost its identity"))?;
                 }
                 let source_body = state.body(&face.body).ok_or_else(|| bad(CMD, "source frozen face appearance lost its body"))?;
-                face.point = solidcraft_doc::apply_point(source.model_body_offset(source_body).unwrap_or(&solidcraft_doc::IDENTITY), face.point);
+                face.point = torno_doc::apply_point(source.model_body_offset(source_body).unwrap_or(&torno_doc::IDENTITY), face.point);
                 face.name = None;
             } else if let Some(name) = &mut face.name {
-                *name = solidcraft_doc::remap_topology(name, &features, &bodies);
+                *name = torno_doc::remap_topology(name, &features, &bodies);
             }
             face.body = new.clone();
             if let Some(certificate) = &mut face.certificate {
@@ -595,7 +595,7 @@ pub(super) fn build(
     // Typed configuration and assembly helpers preserve original targets (another design's
     // configurations stay with it: this design's table has its own targets).
     if !origin.other_design {
-        scratch.doc_mut().configs.clone_targets(&solidcraft_doc::config::ConfigCloneMaps {
+        scratch.doc_mut().configs.clone_targets(&torno_doc::config::ConfigCloneMaps {
             features: features.clone(),
             components: components.clone(),
             bodies: bodies.clone(),
@@ -615,7 +615,7 @@ pub(super) fn build(
             notices.push(format!("{} retains external selected occurrence path {:?}", feature.name, face.path));
         }
         if let FeatureKind::Sketch { sketch, .. } = &feature.kind {
-            use solidcraft_sketch::LinkSource as L;
+            use torno_sketch::LinkSource as L;
             let mut pending: Vec<_> = sketch.links.iter().map(|l| &l.source).collect();
             let mut work = 0;
             while let Some(link) = pending.pop() {
@@ -695,7 +695,7 @@ pub(super) fn build(
             }
         }
         for expression in feature.kind.expressions() {
-            for name in solidcraft_doc::expr::references(expression) {
+            for name in torno_doc::expr::references(expression) {
                 reference_work += 1;
                 if reference_work > 100_000 {
                     return Err(bad(CMD, "expression references exceed copy work limit"));
@@ -732,8 +732,8 @@ pub(super) fn build(
         if bodies.iter().any(|(old, new)| frozen.contains(old) && *new == face.body) {
             let body = resolved.body(&face.body).ok_or_else(|| bad(CMD, "missing frozen face body"))?;
             let face_index =
-                solidcraft_doc::appearance::face_index_at(body, face.point).ok_or_else(|| bad(CMD, "cannot reproduce frozen face appearance"))?;
-            let name = solidcraft_doc::naming::face_names(body).get(face_index).cloned().ok_or_else(|| bad(CMD, "missing frozen face identity"))?;
+                torno_doc::appearance::face_index_at(body, face.point).ok_or_else(|| bad(CMD, "cannot reproduce frozen face appearance"))?;
+            let name = torno_doc::naming::face_names(body).get(face_index).cloned().ok_or_else(|| bad(CMD, "missing frozen face identity"))?;
             face_updates.push((index, name));
         }
     }
@@ -780,16 +780,16 @@ pub(super) fn build(
     for body in state.bodies.iter().filter(|b| selected.contains(&source.model_body_component(b))) {
         let new = bodies.get(&body.name).ok_or_else(|| bad(CMD, format!("body {} has no clone identity", body.name)))?;
         let cloned = copied_bodies.get(new.as_str()).ok_or_else(|| bad(CMD, format!("copy did not reproduce body {}", body.name)))?;
-        let a = solidcraft_kernel::transform_matrix(&body.body, *source.model_body_offset(body).unwrap_or(&solidcraft_doc::IDENTITY))?;
-        let b = solidcraft_kernel::transform_matrix(&cloned.body, *scratch.doc.model_body_offset(cloned).unwrap_or(&solidcraft_doc::IDENTITY))?;
-        let ma = solidcraft_kernel::measure(&a)?;
-        let mb = solidcraft_kernel::measure(&b)?;
+        let a = torno_kernel::transform_matrix(&body.body, *source.model_body_offset(body).unwrap_or(&torno_doc::IDENTITY))?;
+        let b = torno_kernel::transform_matrix(&cloned.body, *scratch.doc.model_body_offset(cloned).unwrap_or(&torno_doc::IDENTITY))?;
+        let ma = torno_kernel::measure(&a)?;
+        let mb = torno_kernel::measure(&b)?;
         let tolerance = 1e-5 * (1.0 + (ma.bbox.max - ma.bbox.min).len()) + 64.0 * f64::EPSILON * (ma.bbox.min.len() + ma.bbox.max.len());
         let mut material_matches = true;
         let tol_a = (a.size() * 1e-3).max(1e-3).max(a.size() * 1e-6);
         let tol_b = (b.size() * 1e-3).max(1e-3).max(b.size() * 1e-6);
-        let mesh_a = a.mesh(&solidcraft_kernel::MeshTolerance::chord(tol_a))?;
-        let mesh_b = b.mesh(&solidcraft_kernel::MeshTolerance::chord(tol_b))?;
+        let mesh_a = a.mesh(&torno_kernel::MeshTolerance::chord(tol_a))?;
+        let mesh_b = b.mesh(&torno_kernel::MeshTolerance::chord(tol_b))?;
         // Precharge all 27 candidates, six possible replacements, their triangle
         // distances and the three containment rays before any proof traversal.
         proof_work = proof_work.saturating_add(mesh_a.triangles.len().saturating_add(mesh_b.triangles.len()).saturating_mul(27 * 7 * 4));
@@ -810,7 +810,7 @@ pub(super) fn build(
         // chord-volume biases after STEP. Only independently certified current
         // sections may replace that volume comparison; shape mismatches still
         // refuse even when their volumes happen to agree.
-        let volume_matches = match solidcraft_kernel::certified_prism_equivalent(&a, &b)? {
+        let volume_matches = match torno_kernel::certified_prism_equivalent(&a, &b)? {
             Some(same) => same,
             None => (ma.volume - mb.volume).abs() <= 1e-5 * (1.0 + ma.volume.abs()),
         };
@@ -847,7 +847,7 @@ fn transfer_into_copy(kind: &mut FeatureKind, components: &BTreeMap<u64, u64>) -
             *from = *mapped;
         } else {
             *from = *to;
-            *transform = solidcraft_doc::IDENTITY;
+            *transform = torno_doc::IDENTITY;
         }
     }
     Ok(())
@@ -872,13 +872,13 @@ fn outside_references(notices: &[String], feats: &[Feature], bodies: &BTreeMap<S
 /// ones those use, copied from `source` into `scratch`: named as they were where that name is
 /// free, else `w_2`, `w_3`…; `parameters` maps each to its copy.
 fn copy_user_parameters(scratch: &mut Session, source: &Document, feats: &[Feature], parameters: &mut BTreeMap<String, String>) -> Result<()> {
-    let user: BTreeMap<&str, &solidcraft_doc::Param> = source.params.iter().filter(|p| !p.model).map(|p| (p.name.as_str(), p)).collect();
+    let user: BTreeMap<&str, &torno_doc::Param> = source.params.iter().filter(|p| !p.model).map(|p| (p.name.as_str(), p)).collect();
     let mut pending: Vec<String> = feats.iter().flat_map(|f| f.kind.expressions()).map(str::to_string).collect();
     pending.extend(parameters.keys().filter_map(|old| source.params.iter().find(|p| p.model && p.name == *old)).map(|p| p.expr.clone()));
     let mut used: BTreeSet<&str> = BTreeSet::new();
     let mut work = 0usize;
     while let Some(expr) = pending.pop() {
-        for name in solidcraft_doc::expr::references(&expr) {
+        for name in torno_doc::expr::references(&expr) {
             work += 1;
             if work > 100_000 {
                 return Err(bad(CMD, "parameter references exceed copy work limit"));
@@ -890,8 +890,8 @@ fn copy_user_parameters(scratch: &mut Session, source: &Document, feats: &[Featu
             }
         }
     }
-    let copied: Vec<&solidcraft_doc::Param> = source.params.iter().filter(|p| used.contains(p.name.as_str())).collect();
-    if scratch.doc.params.len() + copied.len() > solidcraft_doc::MAX_PARAMS {
+    let copied: Vec<&torno_doc::Param> = source.params.iter().filter(|p| used.contains(p.name.as_str())).collect();
+    if scratch.doc.params.len() + copied.len() > torno_doc::MAX_PARAMS {
         return Err(bad(CMD, "too many copied parameters"));
     }
     let mut taken: BTreeSet<String> = scratch.doc.params.iter().map(|p| p.name.clone()).collect();
@@ -910,8 +910,8 @@ fn copy_user_parameters(scratch: &mut Session, source: &Document, feats: &[Featu
     }
     for p in copied {
         let name = parameters.get(&p.name).cloned().unwrap_or_default();
-        let expr = solidcraft_doc::clone_expression(&p.expr, parameters);
-        scratch.doc_mut().params.push(solidcraft_doc::Param { name, expr, unit: p.unit.clone(), comment: p.comment.clone(), model: false });
+        let expr = torno_doc::clone_expression(&p.expr, parameters);
+        scratch.doc_mut().params.push(torno_doc::Param { name, expr, unit: p.unit.clone(), comment: p.comment.clone(), model: false });
     }
     Ok(())
 }

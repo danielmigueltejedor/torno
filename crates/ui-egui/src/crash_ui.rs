@@ -1,7 +1,7 @@
-//! The Crash Reports window (Help > Crash Reports…): the reports `solidcraft_engine::crash`
+//! The Crash Reports window (Help > Crash Reports…): the reports `torno_engine::crash`
 //! keeps on this computer, each with a reviewed issue draft. It opens by itself after a crash.
 
-use solidcraft_engine::crash::{self, Summary};
+use torno_engine::crash::{self, Summary};
 
 use crate::SolveApp;
 use crate::ui_kit;
@@ -37,7 +37,7 @@ impl CrashUi {
 }
 
 fn kind_label(kind: &str) -> &'static str {
-    solidcraft_ui_text::tr(match kind {
+    torno_ui_text::tr(match kind {
         "command_panic" => "crash.kind_command",
         "kernel_panic_recovered" => "crash.kind_kernel",
         "unclean_exit" => "crash.kind_unclean",
@@ -48,7 +48,7 @@ fn kind_label(kind: &str) -> &'static str {
 fn report_time(r: &Summary) -> String {
     let time = r.time.replace('T', " ");
     let time = time.trim_end_matches('Z');
-    if r.kind == "unclean_exit" { solidcraft_ui_text::format("crash.detected_time", &[("time", time)]) } else { format!("{time} UTC") }
+    if r.kind == "unclean_exit" { torno_ui_text::format("crash.detected_time", &[("time", time)]) } else { format!("{time} UTC") }
 }
 
 fn report_heading(r: &Summary) -> String {
@@ -66,7 +66,7 @@ pub fn announce(app: &mut SolveApp, fresh: &[Summary]) {
     }
     app.crashes.open = true;
     app.crashes.refresh();
-    let locale = solidcraft_ui_text::Locale::for_language(&app.preferences.language);
+    let locale = torno_ui_text::Locale::for_language(&app.preferences.language);
     app.set_status(locale.text("crash.previous_session"), true);
 }
 
@@ -76,17 +76,17 @@ pub fn show(app: &mut SolveApp, ctx: &egui::Context) {
     }
     let mut report: Option<String> = None;
     let mut delete: Option<Option<String>> = None;
-    let (closed, action) = ui_kit::Window::new(egui::Id::unique("sc_crash_reports"), "bug_report", solidcraft_ui_text::tr_label("Crash Reports"))
+    let (closed, action) = ui_kit::Window::new(egui::Id::unique("sc_crash_reports"), "bug_report", torno_ui_text::tr_label("Crash Reports"))
         .cards(2.0)
-        .actions("", solidcraft_ui_text::tr("ui.close"), None)
+        .actions("", torno_ui_text::tr("ui.close"), None)
         .show(ctx, true, |ui| {
-            ui.spacing_mut().item_spacing.y = solidcraft_theme::Tokens::get().space_10;
-            let intro = ui_kit::text(ui, solidcraft_ui_text::tr("crash.intro"), ui_kit::Text::Hint("intro"));
+            ui.spacing_mut().item_spacing.y = torno_theme::Tokens::get().space_10;
+            let intro = ui_kit::text(ui, torno_ui_text::tr("crash.intro"), ui_kit::Text::Hint("intro"));
             crate::scenario::publish_rect("dialog:note:intro", intro.rect);
             if let Some(d) = app.crashes.dir.clone() {
                 // A long path is cut short (hover shows it all): it must not widen the card.
                 ui_kit::path_chip(ui, &d, |ui| {
-                    if ui_kit::icon_label_button(ui, solidcraft_ui_text::tr("crash.copy_folder"), "copy", true, false).clicked() {
+                    if ui_kit::icon_label_button(ui, torno_ui_text::tr("crash.copy_folder"), "copy", true, false).clicked() {
                         ctx.copy_text(d.clone());
                     }
                 });
@@ -97,35 +97,35 @@ pub fn show(app: &mut SolveApp, ctx: &egui::Context) {
                 egui::Rect::from_min_size(ui.next_widget_position(), egui::vec2(ui.available_width(), 1.0)),
             );
             if app.crashes.reports.is_empty() {
-                ui_kit::empty_box(ui, "none", solidcraft_ui_text::tr_label("No crash reports."));
+                ui_kit::empty_box(ui, "none", torno_ui_text::tr_label("No crash reports."));
             }
             if !app.crashes.reports.is_empty() {
                 ui_kit::report_list(
                     ui,
                     "reports",
-                    solidcraft_theme::Tokens::get().control_height * 10.0 + solidcraft_theme::Tokens::get().space_10 * 4.0,
+                    torno_theme::Tokens::get().control_height * 10.0 + torno_theme::Tokens::get().space_10 * 4.0,
                     |ui| {
                         let last = app.crashes.reports.len().saturating_sub(1);
                         for (index, r) in app.crashes.reports.iter().enumerate() {
                             let title = report_heading(r);
                             ui.push_id(&r.id, |ui| {
-                                ui.spacing_mut().item_spacing.y = solidcraft_theme::Tokens::get().space_6;
-                                ui.add_space(solidcraft_theme::Tokens::get().space_10);
+                                ui.spacing_mut().item_spacing.y = torno_theme::Tokens::get().space_6;
+                                ui.add_space(torno_theme::Tokens::get().space_10);
                                 ui_kit::report_header(ui, kind_label(&r.kind), r.count, &report_time(r), &title, |ui| {
-                                    if ui_kit::bin_button(ui, solidcraft_ui_text::tr("ui.delete")).clicked() {
+                                    if ui_kit::bin_button(ui, torno_ui_text::tr("ui.delete")).clicked() {
                                         delete = Some(Some(r.id.clone()));
                                     }
-                                    ui_kit::icon_label_button(ui, solidcraft_ui_text::tr("crash.copy_path"), "copy", true, false)
+                                    ui_kit::icon_label_button(ui, torno_ui_text::tr("crash.copy_path"), "copy", true, false)
                                         .clicked()
                                         .then(|| ctx.copy_text(r.path.clone()));
-                                    if ui_kit::icon_label_button(ui, solidcraft_ui_text::tr("crash.report"), "bug_report", true, false).clicked() {
+                                    if ui_kit::icon_label_button(ui, torno_ui_text::tr("crash.report"), "bug_report", true, false).clicked() {
                                         report = Some(r.id.clone());
                                     }
                                 });
                                 let mut detail = r.command.clone().unwrap_or_default();
                                 if r.replayable {
                                     let sep = if detail.is_empty() { "" } else { " · " };
-                                    detail = format!("{detail}{sep}{}", solidcraft_ui_text::tr("crash.replayable"));
+                                    detail = format!("{detail}{sep}{}", torno_ui_text::tr("crash.replayable"));
                                 }
                                 if !detail.is_empty() {
                                     ui_kit::text(ui, &detail, ui_kit::Text::MonoNote(&format!("detail:{}", r.id)));
@@ -134,11 +134,11 @@ pub fn show(app: &mut SolveApp, ctx: &egui::Context) {
                                 if r.kind == "unclean_exit" {
                                     ui_kit::text(
                                         ui,
-                                        solidcraft_ui_text::tr("crash.unclean_explanation"),
+                                        torno_ui_text::tr("crash.unclean_explanation"),
                                         ui_kit::Text::Note(&format!("unclean:{}", r.id)),
                                     );
                                 }
-                                ui.add_space(solidcraft_theme::Tokens::get().space_6);
+                                ui.add_space(torno_theme::Tokens::get().space_6);
                                 if index != last {
                                     ui_kit::report_divider(ui, &format!("end:{}", r.id));
                                 }
@@ -150,7 +150,7 @@ pub fn show(app: &mut SolveApp, ctx: &egui::Context) {
             if !app.crashes.note.is_empty() {
                 ui_kit::text(ui, &app.crashes.note, ui_kit::Text::Note("note"));
             }
-            if ui_kit::icon_label_button(ui, solidcraft_ui_text::tr_label("Delete all"), "delete", !app.crashes.reports.is_empty(), true).clicked() {
+            if ui_kit::icon_label_button(ui, torno_ui_text::tr_label("Delete all"), "delete", !app.crashes.reports.is_empty(), true).clicked() {
                 delete = Some(None);
             }
         });
@@ -167,7 +167,7 @@ pub fn show(app: &mut SolveApp, ctx: &egui::Context) {
         && let Some(dir) = app.crashes.dir_path()
     {
         let n = crash::clear(&dir, which.as_deref());
-        app.crashes.note = solidcraft_ui_text::format("crash.deleted", &[("count", &n.to_string())]);
+        app.crashes.note = torno_ui_text::format("crash.deleted", &[("count", &n.to_string())]);
         app.crashes.refresh();
     }
 }
@@ -184,13 +184,13 @@ mod tests {
     use serde_json::json;
 
     fn folder(tag: &str) -> std::path::PathBuf {
-        let d = std::env::temp_dir().join(format!("solidcraft-crash-ui-{tag}-{}", std::process::id()));
+        let d = std::env::temp_dir().join(format!("torno-crash-ui-{tag}-{}", std::process::id()));
         let _ = std::fs::remove_dir_all(&d);
         let id = "20261012-162341-bb60791ed6692f1d";
         std::fs::create_dir_all(d.join(id)).unwrap();
         let report = json!({
             "format": "solidcraft-crash/1", "id": id, "kind": "unclean_exit", "count": 2,
-            "first_seen": "2026-10-12T16:23:41Z", "message": "SolidCraft ended without a clean exit while running `solid.fillet`",
+            "first_seen": "2026-10-12T16:23:41Z", "message": "Torno ended without a clean exit while running `solid.fillet`",
             "location": "unclean exit in solid.fillet", "thread": "(unknown)", "backtrace": [],
             "command": {"command": "solid.fillet", "params": {"radius": 2}},
             "recent_commands": [{"command": "solid.box", "ok": true}],
@@ -211,18 +211,18 @@ mod tests {
         let id = "20261012-162341-bb60791ed6692f1d";
         let path = d.join(id).join("report.json");
         let mut report: serde_json::Value = serde_json::from_slice(&std::fs::read(&path).unwrap()).unwrap();
-        report["message"] = json!("SolidCraft 0.3.2 (started 2026-10-01T10:00:00Z) ended without a clean exit between commands");
+        report["message"] = json!("Torno 0.3.2 (started 2026-10-01T10:00:00Z) ended without a clean exit between commands");
         report["command"] = serde_json::Value::Null;
         std::fs::write(&path, report.to_string()).unwrap();
-        super::announce(&mut h.app, &solidcraft_engine::crash::list(&d));
+        super::announce(&mut h.app, &torno_engine::crash::list(&d));
         h.frames(6);
         assert!(h.app.crashes.open, "unclean exits still alert the user");
         let status = &h.app.status.as_ref().unwrap().0;
-        assert!(status.contains("earlier SolidCraft session"), "{status}");
+        assert!(status.contains("earlier Torno session"), "{status}");
         assert!(status.contains("detected at startup"), "{status}");
         assert!(h.widget("Detected 2026-10-12 16:23:41 UTC  Closed unexpectedly  ×2").is_some());
         assert!(h.widget(report["message"].as_str().unwrap()).is_some(), "keep the original session start visible");
-        assert!(h.widget(solidcraft_ui_text::tr("crash.unclean_explanation")).is_some());
+        assert!(h.widget(torno_ui_text::tr("crash.unclean_explanation")).is_some());
         let _ = std::fs::remove_dir_all(&d);
     }
 
@@ -236,11 +236,11 @@ mod tests {
         let mut report: serde_json::Value = serde_json::from_slice(&std::fs::read(&path).unwrap()).unwrap();
         report["kind"] = json!("command_panic");
         std::fs::write(&path, report.to_string()).unwrap();
-        super::announce(&mut h.app, &solidcraft_engine::crash::list(&d));
+        super::announce(&mut h.app, &torno_engine::crash::list(&d));
         h.frames(6);
         assert!(h.app.crashes.open);
         assert!(h.widget("2026-10-12 16:23:41 UTC  Internal error in a command  ×2").is_some());
-        assert!(h.widget(solidcraft_ui_text::tr("crash.unclean_explanation")).is_none());
+        assert!(h.widget(torno_ui_text::tr("crash.unclean_explanation")).is_none());
         let _ = std::fs::remove_dir_all(&d);
     }
 
@@ -249,7 +249,7 @@ mod tests {
         let d = folder("draft");
         let mut h = crate::scenario::Harness::new();
         h.app.crashes.folder = Some(d.clone());
-        let fresh = solidcraft_engine::crash::list(&d);
+        let fresh = torno_engine::crash::list(&d);
         assert_eq!(fresh.len(), 1);
         super::announce(&mut h.app, &fresh);
         assert!(h.app.crashes.open, "a real crash opens the window");
@@ -258,12 +258,12 @@ mod tests {
         h.step(&json!({"widget": "Report…"})).unwrap();
         h.frames(2);
         let draft = h.app.issue_report.draft.as_ref().expect("Report… opens the draft");
-        assert!(draft.title.starts_with("Crash: SolidCraft ended without a clean exit"), "{}", draft.title);
+        assert!(draft.title.starts_with("Crash: Torno ended without a clean exit"), "{}", draft.title);
         for want in [
             "while running `solid.fillet`",
             "\"radius\": 2",
             "solid.box",
-            "solidcraft-cli crashes replay 20261012-162341-bb60791ed6692f1d",
+            "torno-cli crashes replay 20261012-162341-bb60791ed6692f1d",
             "Renderer: test",
             "Recorded 2 time(s)",
         ] {
@@ -274,7 +274,7 @@ mod tests {
         h.frames(2);
         h.step(&json!({"widget": "Delete all"})).unwrap();
         h.frames(2);
-        assert!(solidcraft_engine::crash::list(&d).is_empty());
+        assert!(torno_engine::crash::list(&d).is_empty());
         let _ = std::fs::remove_dir_all(&d);
     }
 
@@ -294,7 +294,7 @@ mod tests {
     #[test]
     fn recovered_kernel_errors_do_not_interrupt() {
         let mut h = crate::scenario::Harness::new();
-        let quiet = solidcraft_engine::crash::Summary {
+        let quiet = torno_engine::crash::Summary {
             id: "x".into(),
             kind: "kernel_panic_recovered".into(),
             time: String::new(),
@@ -327,7 +327,7 @@ mod tests {
                 let badge = crate::scenario::rect_of("prefs:crash_count").unwrap();
                 assert!((badge.height() - 18.0).abs() < 0.5);
                 assert!(crate::scenario::rect_of("prefs:page_body").unwrap().contains_rect(badge));
-                let t = solidcraft_theme::Tokens::get();
+                let t = torno_theme::Tokens::get();
                 let fill = if count == 0 { t.dialog_footer } else { t.pref_note_fill };
                 assert!(
                     h.shapes.iter().any(|shape| matches!(&shape.shape, egui::Shape::Rect(rect) if rect.rect == badge && rect.fill == fill)),

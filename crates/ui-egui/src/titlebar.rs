@@ -1,4 +1,4 @@
-//! SolidCraft's window title bar: the shared window chrome ([`crate::window_chrome`]) with the
+//! Torno's window title bar: the shared window chrome ([`crate::window_chrome`]) with the
 //! app's own answers. Closing asks about unsaved designs first ([`window_action`]); on Windows and
 //! Linux without OS decorations ([`SolveApp::custom_titlebar`]) the application bar is the title
 //! bar, and on macOS it runs under the traffic lights ([`SolveApp::integrated_titlebar`]).
@@ -15,7 +15,7 @@ pub fn window_action(app: &mut SolveApp, ctx: &egui::Context, action: &str) -> R
     Ok(())
 }
 
-/// Runs a title-bar action as SolidCraft does.
+/// Runs a title-bar action as Torno does.
 pub(crate) fn run(app: &mut SolveApp, ctx: &egui::Context, action: WindowAction) {
     if action == WindowAction::Close {
         // Unsaved designs are asked about first; the window closes once they are answered.
@@ -32,8 +32,8 @@ mod tests {
     use super::*;
     use crate::window_chrome::{BUTTON_WIDTH, CAPTIONS, caption_id};
     use egui::{Event, PointerButton, Pos2, RawInput, Rect, ResizeDirection, ViewportCommand, ViewportId, pos2, vec2};
-    use solidcraft_engine::Session;
-    use solidcraft_theme::Tokens;
+    use torno_engine::Session;
+    use torno_theme::Tokens;
 
     /// A headless window `width` pt wide showing the application bar (as the title bar) and the
     /// resize zones.
@@ -127,16 +127,16 @@ mod tests {
         v
     }
 
-    /// SolidCraft's name leaves Home where it has always been: 88 pt right of the name's start
+    /// Torno's name leaves Home where it has always been: 88 pt right of the name's start
     /// (Home centred at 124 from the bar's content edge, the name starting at 36), the kit's least
     /// place for Home.
     #[test]
-    fn home_keeps_its_place_after_solidcrafts_name() {
+    fn home_keeps_its_place_after_tornos_name() {
         let mut w = Win::new(1600.0);
         w.app.home.open = false;
         w.frame(vec![]);
         let out = w.frame(vec![]);
-        let name = texts(&out).into_iter().find(|(text, _)| text == "SolidCraft").map(|(_, rect)| rect).expect("the name is drawn");
+        let name = texts(&out).into_iter().find(|(text, _)| text == "Torno").map(|(_, rect)| rect).expect("the name is drawn");
         let home = crate::scenario::rect_of("titlebar:home").expect("Home is drawn");
         assert_eq!(home.center().x - name.left(), 88.0);
         assert!(name.right() < home.left());
@@ -144,9 +144,9 @@ mod tests {
 
     #[test]
     fn every_bar_control_uses_translucent_hover_chrome() {
-        let previous = solidcraft_theme::is_dark();
+        let previous = torno_theme::is_dark();
         for dark in [false, true] {
-            solidcraft_theme::set_dark(dark);
+            torno_theme::set_dark(dark);
             let mut w = Win::new(1600.0);
             w.app.home.open = false;
             w.frame(vec![]);
@@ -186,7 +186,7 @@ mod tests {
                 );
             }
         }
-        solidcraft_theme::set_dark(previous);
+        torno_theme::set_dark(previous);
     }
 
     #[test]

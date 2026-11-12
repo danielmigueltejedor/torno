@@ -12,13 +12,13 @@
 //! on it. Anything else that crosses the component's boundary (a feature outside that uses its
 //! sketches, bodies moved out, a joint to one of its subcomponents) is refused.
 
-use solidcraft_geom::prelude::*;
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::Path;
+use torno_geom::prelude::*;
 
 use serde_json::{Value, json};
 use solidcore_record::Vec3;
-use solidcraft_doc::{DesignLink, Document, FeatureKind, ModelBody, ModelState};
+use torno_doc::{DesignLink, Document, FeatureKind, ModelBody, ModelState};
 
 use super::{absolute, component_key, file_sha256, inherit_properties, reply, resolve, session_bodies, stored};
 use crate::params::{bad, str_};
@@ -37,8 +37,8 @@ fn local_path(path: &mut Vec<u64>, own: &BTreeSet<u64>) {
 
 /// Whether two solids measure the same, within what a STEP round trip changes in the measure
 /// of a curved face (a cylinder's volume by about 1e-5).
-fn same_solid(a: &solidcraft_kernel::Body, b: &solidcraft_kernel::Body) -> Result<bool> {
-    let (ma, mb) = (solidcraft_kernel::measure(a)?, solidcraft_kernel::measure(b)?);
+fn same_solid(a: &torno_kernel::Body, b: &torno_kernel::Body) -> Result<bool> {
+    let (ma, mb) = (torno_kernel::measure(a)?, torno_kernel::measure(b)?);
     let tolerance = 1e-4 * (1.0 + (ma.bbox.max - ma.bbox.min).len());
     Ok((ma.volume - mb.volume).abs() <= 1e-4 * (1.0 + ma.volume.abs())
         && (ma.area - mb.area).abs() <= 1e-4 * (1.0 + ma.area.abs())
@@ -48,11 +48,11 @@ fn same_solid(a: &solidcraft_kernel::Body, b: &solidcraft_kernel::Body) -> Resul
 }
 
 /// Whether two bodies are the same solid, each moved by its offset.
-fn same_shape(a: &ModelBody, a_offset: &solidcraft_doc::Mat, b: &ModelBody, b_offset: &solidcraft_doc::Mat) -> Result<bool> {
+fn same_shape(a: &ModelBody, a_offset: &torno_doc::Mat, b: &ModelBody, b_offset: &torno_doc::Mat) -> Result<bool> {
     if a.body.same(&b.body) && a_offset == b_offset {
         return Ok(true);
     }
-    same_solid(&solidcraft_kernel::transform_matrix(&a.body, *a_offset)?, &solidcraft_kernel::transform_matrix(&b.body, *b_offset)?)
+    same_solid(&torno_kernel::transform_matrix(&a.body, *a_offset)?, &torno_kernel::transform_matrix(&b.body, *b_offset)?)
 }
 
 /// Whether `a` and `b` are the same solids, whatever they are called.
@@ -96,7 +96,7 @@ fn unmatched(a: &[&ModelBody], b: &[&ModelBody]) -> Result<Option<String>> {
 
 /// Remove the parameters nothing in `doc` uses any more, directly or through other parameters.
 fn prune_params(doc: &mut Document) {
-    use solidcraft_doc::expr::references;
+    use torno_doc::expr::references;
     while !doc.params.is_empty() {
         let mut used: BTreeSet<String> = BTreeSet::new();
         for f in &doc.features {
@@ -134,7 +134,7 @@ fn keep_component_looks(doc: &mut Document, owners: &BTreeMap<String, u64>, comp
 
 /// What the bodies `new` call the face or edge that `old` calls `name`, found where it is.
 fn renamed(old: &ModelState, new: &[&ModelBody], name: &str, near: Vec3) -> Option<String> {
-    use solidcraft_doc::{appearance::face_index_at, naming};
+    use torno_doc::{appearance::face_index_at, naming};
     if let Some(p) = naming::point_on_face(old, name, near) {
         return new.iter().find_map(|b| face_index_at(b, p).and_then(|i| naming::face_names(b).get(i).cloned()));
     }
@@ -145,7 +145,7 @@ fn renamed(old: &ModelState, new: &[&ModelBody], name: &str, near: Vec3) -> Opti
 /// Joints on the placements `own` name faces of features that are gone: give them the names of
 /// the same faces of the linked bodies (Import feature `import`).
 pub(super) fn rename_joint_faces(s: &mut Session, old: &ModelState, import: u64, own: &BTreeSet<u64>) {
-    use solidcraft_doc::joints::{Coupling, JointOrigin, Size, Snap, cam::CamProfile};
+    use torno_doc::joints::{Coupling, JointOrigin, Size, Snap, cam::CamProfile};
     let state = s.model.state();
     let linked: Vec<&ModelBody> = state.bodies.iter().filter(|b| b.feature == import).collect();
     let rename = |name: &mut String, near: Vec3| {
@@ -249,7 +249,7 @@ fn history_from_outside(
     cmd: &str,
 ) -> Result<BTreeSet<u64>> {
     let empty = ModelState::default();
-    let mut steps: Vec<(&solidcraft_doc::Feature, BTreeSet<String>)> = Vec::new();
+    let mut steps: Vec<(&torno_doc::Feature, BTreeSet<String>)> = Vec::new();
     let mut before: &ModelState = &empty;
     for f in &s.doc.features {
         let Some(r) = s.model.result(f.id) else { continue };
@@ -494,7 +494,7 @@ fn part_design(s: &Session, sc: &Scope, stem: &str, cmd: &str) -> Result<(Sessio
     if built.bodies.len() != bodies.len() {
         return Err(bad(cmd, format!("{name} builds {} bodies on its own instead of {}", built.bodies.len(), bodies.len())));
     }
-    let identity = solidcraft_doc::IDENTITY;
+    let identity = torno_doc::IDENTITY;
     for b in bodies {
         let (Some(was), Some(now)) = (state.body(b), built.body(b)) else {
             return Err(bad(cmd, format!("{name} does not build body {b} on its own")));
@@ -559,14 +559,14 @@ fn clear_history(s: &mut Session, sc: &Scope) {
 /// The design as it was before a swap, to check the swap against.
 struct Before {
     world: std::sync::Arc<ModelState>,
-    placements: BTreeMap<u64, solidcraft_doc::Mat>,
+    placements: BTreeMap<u64, torno_doc::Mat>,
     errors: BTreeMap<u64, bool>,
     joint_errors: BTreeSet<String>,
 }
 
 impl Before {
     fn take(s: &Session) -> Result<Before> {
-        let sol = solidcraft_doc::joints::solve(&s.doc, &s.model.state());
+        let sol = torno_doc::joints::solve(&s.doc, &s.model.state());
         Ok(Before {
             world: s.world_state()?,
             placements: s.doc.occurrences.iter().map(|o| (o.id, o.transform)).collect(),
@@ -594,7 +594,7 @@ impl Before {
                 o.transform = *t;
             }
         }
-        let world = if moved.is_empty() { s.world_state()? } else { std::sync::Arc::new(solidcraft_doc::world_state(&placed, &s.model.state())?) };
+        let world = if moved.is_empty() { s.world_state()? } else { std::sync::Arc::new(torno_doc::world_state(&placed, &s.model.state())?) };
         let (was, now): (Vec<&ModelBody>, Vec<&ModelBody>) = (self.world.bodies.iter().collect(), world.bodies.iter().collect());
         if let Some(what) = unmatched(&was, &now)? {
             return Err(bad(cmd, format!("{what} would look different without the history of {name}")));
@@ -603,7 +603,7 @@ impl Before {
         if !moved.is_empty() {
             warnings.push(format!("the joints now place {}: nothing in their chain is grounded", moved.join(", ")));
         }
-        let sol = solidcraft_doc::joints::solve(&s.doc, &s.model.state());
+        let sol = torno_doc::joints::solve(&s.doc, &s.model.state());
         warnings.extend(
             sol.errors
                 .iter()
@@ -621,7 +621,7 @@ fn copies_of(s: &Session, linked: u64) -> Result<Vec<u64>> {
     let Some(link) = s.doc.links.get(&linked) else { return Ok(Vec::new()) };
     let state = s.model.state();
     let reference: Vec<&ModelBody> = state.bodies.iter().filter(|b| b.feature == link.feature).collect();
-    let volume = |bodies: &[&ModelBody]| bodies.iter().filter_map(|b| solidcraft_kernel::measure(&b.body).ok()).map(|m| m.volume).sum::<f64>();
+    let volume = |bodies: &[&ModelBody]| bodies.iter().filter_map(|b| torno_kernel::measure(&b.body).ok()).map(|m| m.volume).sum::<f64>();
     let expected = volume(&reference);
     let mut out = Vec::new();
     for c in &s.doc.components {
@@ -667,7 +667,7 @@ pub(super) fn extract(s: &mut Session, p: &Value) -> Result<Value> {
     let sc = scope(s, comp, CMD)?;
     let given = str_(p, "path").filter(|x| !x.trim().is_empty() && x.len() < 4096).ok_or_else(|| bad(CMD, "`path` is required"))?;
     let file = absolute(Path::new(given));
-    if !solidcraft_io::is_design_container_path(&file) {
+    if !torno_io::is_design_container_path(&file) {
         return Err(bad(CMD, "the new design must be a .sc file"));
     }
     if s.path.as_deref().is_some_and(|own| absolute(Path::new(own)) == file) {
@@ -844,7 +844,7 @@ mod tests {
     }
 
     fn folder(name: &str) -> PathBuf {
-        let dir = std::env::temp_dir().join(format!("solidcraft-extract-{name}-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("torno-extract-{name}-{}", std::process::id()));
         let _ = std::fs::remove_dir_all(&dir);
         std::fs::create_dir_all(&dir).unwrap();
         dir
@@ -855,7 +855,7 @@ mod tests {
             .unwrap()
             .bodies
             .iter()
-            .map(|b| (b.name.clone(), (solidcraft_kernel::measure(&b.body).unwrap().volume * 1000.0).round() as i64))
+            .map(|b| (b.name.clone(), (torno_kernel::measure(&b.body).unwrap().volume * 1000.0).round() as i64))
             .collect()
     }
 
@@ -865,7 +865,7 @@ mod tests {
             .bodies
             .iter()
             .map(|b| {
-                let c = solidcraft_kernel::measure(&b.body).unwrap().centroid;
+                let c = torno_kernel::measure(&b.body).unwrap().centroid;
                 (b.name.clone(), [c.x, c.y, c.z].map(|v| (v * 1000.0).round() as i64))
             })
             .collect()
@@ -880,7 +880,7 @@ mod tests {
             .bodies
             .iter()
             .map(|b| {
-                let m = solidcraft_kernel::measure(&b.body).unwrap();
+                let m = torno_kernel::measure(&b.body).unwrap();
                 let c = [m.centroid.x, m.centroid.y, m.centroid.z].map(|v| (v * 100.0).round() as i64);
                 [m.volume.round() as i64, c[0], c[1], c[2]]
             })
@@ -930,7 +930,7 @@ mod tests {
         assert_eq!(out["copies"], json!([]), "{out}");
 
         // This design: Plate holds one linked Import feature, its subcomponent and joint are gone
-        let plate_features: Vec<&solidcraft_doc::Feature> = s.doc.features.iter().filter(|f| f.component == plate).collect();
+        let plate_features: Vec<&torno_doc::Feature> = s.doc.features.iter().filter(|f| f.component == plate).collect();
         assert_eq!(plate_features.len(), 1);
         assert!(matches!(plate_features[0].kind, FeatureKind::Import { .. }));
         assert_eq!(s.doc.links.get(&plate).map(|l| l.feature), Some(plate_features[0].id));
@@ -1024,12 +1024,12 @@ mod tests {
         let other_occ = s.doc.occurrence_of(other).map(|o| o.id).unwrap();
         let top = {
             let w = s.world_state().unwrap();
-            let m = solidcraft_kernel::measure(&w.body("PlateBody").unwrap().body).unwrap();
+            let m = torno_kernel::measure(&w.body("PlateBody").unwrap().body).unwrap();
             [(m.bbox.min.x + m.bbox.max.x) / 2.0, (m.bbox.min.y + m.bbox.max.y) / 2.0, m.bbox.max.z]
         };
         let bottom = {
             let w = s.world_state().unwrap();
-            let m = solidcraft_kernel::measure(&w.body("OtherBody").unwrap().body).unwrap();
+            let m = torno_kernel::measure(&w.body("OtherBody").unwrap().body).unwrap();
             [(m.bbox.min.x + m.bbox.max.x) / 2.0, (m.bbox.min.y + m.bbox.max.y) / 2.0, m.bbox.min.z]
         };
         run(
@@ -1166,9 +1166,9 @@ mod tests {
         let top = {
             let st = s.model.state();
             let body = st.bodies.iter().find(|b| s.doc.model_body_component(b) == copy && b.name.starts_with("PlateBody")).unwrap();
-            let m = solidcraft_kernel::measure(&body.body).unwrap();
-            let w = solidcraft_doc::joints::occurrence_world(&s.doc, copy_occ);
-            solidcraft_doc::apply_point(&w, Vec3::new((m.bbox.min.x + m.bbox.max.x) / 2.0, (m.bbox.min.y + m.bbox.max.y) / 2.0, m.bbox.max.z))
+            let m = torno_kernel::measure(&body.body).unwrap();
+            let w = torno_doc::joints::occurrence_world(&s.doc, copy_occ);
+            torno_doc::apply_point(&w, Vec3::new((m.bbox.min.x + m.bbox.max.x) / 2.0, (m.bbox.min.y + m.bbox.max.y) / 2.0, m.bbox.max.z))
         };
         run(
             &mut s,

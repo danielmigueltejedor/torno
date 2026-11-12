@@ -32,6 +32,6 @@
   "ungraded": [],
   "what": "a box edge parallel to the plane",
   "why_not": [
-    "the failure is SolidCraft's, not a kernel operation's: step 2 (construct.point.edge_plane): the edge is parallel to the plane"
+    "the failure is Torno's, not a kernel operation's: step 2 (construct.point.edge_plane): the edge is parallel to the plane"
   ]
 }

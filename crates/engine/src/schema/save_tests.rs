@@ -29,13 +29,13 @@ fn strict_keeps_todays_errors() {
         ("file.save_as", json!({"path": ["a.sc"]})),
         ("file.save_as", json!({"path": "x".repeat(4096)})),
         // Words the handler refuses itself, in its own wording (which names `file.save`).
-        ("file.save_as", json!({"path": "/tmp/solidcraft-save-schema-never.sc", "format": "xml"})),
-        ("file.save_as", json!({"path": "/tmp/solidcraft-save-schema-never.sc", "compression": "max"})),
-        ("file.save", json!({"path": "/tmp/solidcraft-save-schema-never.sc", "format": "xml"})),
-        ("file.save", json!({"path": "/tmp/solidcraft-save-schema-never.sc", "compression": "max"})),
+        ("file.save_as", json!({"path": "/tmp/torno-save-schema-never.sc", "format": "xml"})),
+        ("file.save_as", json!({"path": "/tmp/torno-save-schema-never.sc", "compression": "max"})),
+        ("file.save", json!({"path": "/tmp/torno-save-schema-never.sc", "format": "xml"})),
+        ("file.save", json!({"path": "/tmp/torno-save-schema-never.sc", "compression": "max"})),
         // A name that opens as another kind of file.
-        ("file.save_as", json!({"path": "/tmp/solidcraft-save-schema-never.step"})),
-        ("file.save", json!({"path": "/tmp/solidcraft-save-schema-never.stl"})),
+        ("file.save_as", json!({"path": "/tmp/torno-save-schema-never.step"})),
+        ("file.save", json!({"path": "/tmp/torno-save-schema-never.stl"})),
     ]);
 }
 
@@ -124,7 +124,7 @@ fn the_check_names_what_is_wrong() {
 }
 
 fn folder(name: &str) -> PathBuf {
-    let dir = std::env::temp_dir().join(format!("solidcraft-save-schema-{name}-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("torno-save-schema-{name}-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&dir);
     std::fs::create_dir_all(&dir).unwrap_or_else(|e| panic!("{e}"));
     dir
@@ -178,7 +178,7 @@ fn save_replies_match_the_output_schema() {
     let _ = std::fs::remove_dir_all(&dir);
 }
 
-/// A file a newer SolidCraft saved keeps its format number: the reply carries it and matches. What
+/// A file a newer Torno saved keeps its format number: the reply carries it and matches. What
 /// could not be kept (`warnings`, `not_kept`) is part of the type, and serializes as the handler
 /// has always written it.
 #[test]
@@ -190,7 +190,7 @@ fn a_newer_files_reply_matches_the_output_schema() {
     let plain = dir.join("plain.json");
     run(&mut s, "file.save_as", json!({"path": plain}));
     let mut file: Value = serde_json::from_str(&std::fs::read_to_string(&plain).unwrap_or_default()).unwrap_or_default();
-    file["format"] = json!(solidcraft_doc::format::format_string(solidcraft_doc::format::FORMAT + 1));
+    file["format"] = json!(torno_doc::format::format_string(torno_doc::format::FORMAT + 1));
     file["future_section"] = json!({"anything": [1, 2, 3]});
     file["features"][0]["draft_v2"] = json!({"angle": 3.0});
     let newer = dir.join("newer.json");

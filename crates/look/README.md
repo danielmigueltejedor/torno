@@ -1,6 +1,6 @@
-# solidcraft-look
+# torno-look
 
-Torno's look, ready to install into the UI kit (`solidcraft-ui-kit`), which ships no artwork,
+Torno's look, ready to install into the UI kit (`torno-ui-kit`), which ships no artwork,
 faces or themes of its own. Torno installs it from here, and so can any other host that wants
 the same look: one copy of each piece.
 
@@ -14,11 +14,11 @@ the same look: one copy of each piece.
 | `themes::BUILTIN`, `themes::install()` | The built-in theme files (`themes/*.json`) |
 
 A host that draws Torno's icons plus a few masters of its own installs
-`solidcraft_ui_kit::icons::IconSet::extended(solidcraft_look::icons::DATA, extension)` with
-`solidcraft_ui_kit::icons::install`, then the other parts (`glyphs::install`, `themes::install`,
+`torno_ui_kit::icons::IconSet::extended(torno_look::icons::DATA, extension)` with
+`torno_ui_kit::icons::install`, then the other parts (`glyphs::install`, `themes::install`,
 `fonts::install`). The extension's masters, aliases and default accents win a name both have.
 
-The workspace tab table is the app's, not the look's. The accent ramps are in `solidcraft-theme`.
+The workspace tab table is the app's, not the look's. The accent ramps are in `torno-theme`.
 
 Licences: the code and artwork are MIT OR Apache-2.0; the IBM Plex faces are SIL OFL 1.1, with the
 licence text beside each (`fonts/*/OFL.txt`). Every file has a row in the repository's

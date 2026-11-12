@@ -1,8 +1,8 @@
 //! Small deterministic material previews; no textures, jobs or graphics device.
 use crate::BackingTooltipExt as _;
 use egui::{Color32, Mesh, Rect, Response, Sense, Ui, pos2, vec2};
-use solidcraft_theme::Tokens;
 use std::{collections::VecDeque, sync::Arc};
+use torno_theme::Tokens;
 
 const CACHE_ENTRIES: usize = 64;
 const MAX_SIDE: u16 = 96;
@@ -171,8 +171,8 @@ pub fn sphere_thumbnail(ui: &mut Ui, id: &str, sphere: Sphere, size: f32) -> Res
     let side = f32::from(sphere.key(size).side);
     let (rect, response) = ui.allocate_exact_size(vec2(side, side), Sense::hover());
     paint_sphere(ui, rect, sphere);
-    solidcraft_ui_registry::publish_rect(id, rect);
-    solidcraft_ui_registry::publish_handle(id, rect.center());
+    torno_ui_registry::publish_rect(id, rect);
+    torno_ui_registry::publish_handle(id, rect.center());
     response
 }
 
@@ -221,16 +221,16 @@ pub fn sphere_preview_with_source<R>(
                 );
                 source_ui.set_clip_rect(ui.clip_rect().intersect(source_rect));
                 let source = source(&mut source_ui);
-                solidcraft_ui_registry::publish_rect(&format!("{id}:chip:0"), source.rect.intersect(source_rect));
+                torno_ui_registry::publish_rect(&format!("{id}:chip:0"), source.rect.intersect(source_rect));
                 let mut usage_ui = ui.new_child(
                     egui::UiBuilder::new().id_salt("sample_usage").max_rect(usage_rect).layout(egui::Layout::left_to_right(egui::Align::Center)),
                 );
                 usage_ui.set_clip_rect(ui.clip_rect().intersect(usage_rect));
                 let response = super::workspace_chip(&mut usage_ui, usage);
-                solidcraft_ui_registry::publish_rect(&format!("{id}:chip:1"), response.rect.intersect(usage_rect));
+                torno_ui_registry::publish_rect(&format!("{id}:chip:1"), response.rect.intersect(usage_rect));
             });
             let response = ui.vertical(action);
-            solidcraft_ui_registry::publish_target(&format!("{id}:replace"), response.response.rect);
+            torno_ui_registry::publish_target(&format!("{id}:replace"), response.response.rect);
             response.inner
         });
         row.inner
@@ -252,7 +252,7 @@ pub struct SphereTile<'a> {
 impl SphereTile<'_> {
     pub fn show(&self, ui: &mut Ui) -> Response {
         let t = Tokens::get();
-        let accent = solidcraft_theme::TabAccent::current(ui.ctx());
+        let accent = torno_theme::TabAccent::current(ui.ctx());
         let side = t.control_height + t.space_6;
         // A laid-out row, as the name's galley will have: layout rounds rows to the pixel grid, so
         // the font's raw row height can fall short of two rows of text in some faces.
@@ -293,11 +293,11 @@ impl SphereTile<'_> {
         job.wrap.break_anywhere = false;
         let galley = ui.painter().layout_job(job);
         let label_pos = pos2(label.center().x - galley.rect.center().x, label.top() - galley.rect.top());
-        solidcraft_ui_registry::publish_rect(&format!("{}:label", self.id), label);
-        solidcraft_ui_registry::publish_rect(&format!("{}:galley", self.id), galley.rect.translate(label_pos.to_vec2()));
+        torno_ui_registry::publish_rect(&format!("{}:label", self.id), label);
+        torno_ui_registry::publish_rect(&format!("{}:galley", self.id), galley.rect.translate(label_pos.to_vec2()));
         ui.painter().with_clip_rect(ui.clip_rect().intersect(label)).galley(label_pos, galley, t.form_ink);
         response.widget_info(|| egui::WidgetInfo::selected(egui::Role::Button, ui.is_enabled(), self.selected, self.name));
-        solidcraft_ui_registry::publish_target(self.id, rect);
+        torno_ui_registry::publish_target(self.id, rect);
         let mut tip = egui::Tooltip::for_enabled(&response);
         tip.popup = tip.popup.frame(super::Container::new(ui.ctx(), super::Surface::Toast).tooltip_frame(ui.ctx()));
         crate::Container::show_tooltip(response.id, tip, |ui| {

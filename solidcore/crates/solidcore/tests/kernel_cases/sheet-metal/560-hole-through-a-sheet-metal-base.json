@@ -70,6 +70,6 @@
   "ungraded": [],
   "what": "solid.hole square to a flat sheet metal panel was refused as sheet machining that cannot be preserved",
   "why_not": [
-    "body \"Body1\" is no kernel operation's output nor an operand: SolidCraft built it or changed the kernel's record"
+    "body \"Body1\" is no kernel operation's output nor an operand: Torno built it or changed the kernel's record"
   ]
 }

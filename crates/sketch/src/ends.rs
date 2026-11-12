@@ -10,8 +10,8 @@
 //! constraints, or held on a curve (point on curve, midpoint).
 
 use solidcore_record::{Seg2, Vec2};
-use solidcraft_geom::Aabb2;
-use solidcraft_geom::prelude::*;
+use torno_geom::Aabb2;
+use torno_geom::prelude::*;
 
 use crate::model::{ConstraintKind, CurveKind, Sketch};
 use crate::union_find::{find, union};

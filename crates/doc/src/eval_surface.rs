@@ -12,7 +12,7 @@ pub(super) fn eval(doc: &Document, vals: &BTreeMap<String, Value>, f: &Feature, 
             let mut made = Vec::new();
             if let Some(sk) = sketch {
                 let ss = st.sketch(sk.0).ok_or_else(|| DocError::Unknown(format!("sketch {sk} (it must come earlier in the timeline)")))?;
-                let regions = solidcraft_sketch::merge_regions(&select_profiles(ss, profiles)?);
+                let regions = torno_sketch::merge_regions(&select_profiles(ss, profiles)?);
                 for r in &regions {
                     made.push(kernel::patch_region(&ss.plane, r)?);
                 }
@@ -535,7 +535,7 @@ fn push_sheet(st: &mut ModelState, f: &Feature, traced: crate::lineage::Traced) 
 }
 
 /// The most curves one direction of a network may list (the kernel's own cap).
-const MAX_NETWORK_CURVES: usize = solidcraft_geom::network::MAX_NETWORK_CURVES;
+const MAX_NETWORK_CURVES: usize = torno_geom::network::MAX_NETWORK_CURVES;
 
 /// A loop of three or four sketch curves as one patch: four give the Coons patch of opposite pairs
 /// (the first and third one way, the second and fourth the other); three collapse the side
@@ -669,13 +669,8 @@ fn network_curves(sources: &[(String, NetSource, kernel::Continuity)]) -> Vec<ke
 /// curve lies in (so a chain of planar curves makes a flat patch, and a network that is not
 /// coplanar is followed as the plane through the curve's own tangent). `orders` sets how much of
 /// that plane each side repeats.
-fn boundary_frames(
-    ss: &SolvedSketch,
-    curves: &[String],
-    orders: &[solidcraft_kernel::Continuity],
-    samples: usize,
-) -> Result<Vec<solidcraft_kernel::Boundary>> {
-    use solidcraft_kernel::{Boundary, Frame};
+fn boundary_frames(ss: &SolvedSketch, curves: &[String], orders: &[torno_kernel::Continuity], samples: usize) -> Result<Vec<torno_kernel::Boundary>> {
+    use torno_kernel::{Boundary, Frame};
     // The stations along each curve, evenly in its own arclength, so every side carries the same
     // number of frames and the patch's net is square.
     let mut sides: Vec<Vec<solidcore_record::Vec3>> = Vec::with_capacity(curves.len());
@@ -722,7 +717,7 @@ fn boundary_frames(
                 .ok_or_else(|| DocError::Invalid("a boundary runs through the middle of the loop: no patch can leave it".into()))?;
             frames.push(Frame { p: *p, leave, bend: Vec3::ZERO, bend_change: Vec3::ZERO });
         }
-        out.push(Boundary { frames, order: orders.get(side).copied().unwrap_or(solidcraft_kernel::Continuity::G1) });
+        out.push(Boundary { frames, order: orders.get(side).copied().unwrap_or(torno_kernel::Continuity::G1) });
     }
     Ok(out)
 }
@@ -769,7 +764,7 @@ fn mutual_trim(st: &mut ModelState, i: usize, other: &str, keeps: kernel::TrimKe
 fn sheet_chains(ss: &SolvedSketch, profiles: Option<&ProfileSel>, curves: &[String]) -> Result<Vec<Vec<Seg2>>> {
     let mut chains: Vec<Vec<Seg2>> = Vec::new();
     if let Some(sel) = profiles {
-        for r in solidcraft_sketch::merge_regions(&select_profiles(ss, sel)?) {
+        for r in torno_sketch::merge_regions(&select_profiles(ss, sel)?) {
             chains.extend(std::iter::once(r.outer).chain(r.holes).map(|lp| lp.segs));
         }
     }

@@ -43,14 +43,14 @@ You need a recent stable Rust toolchain.
 ```bash
 git clone https://github.com/getnodalia/torno.git
 cd torno
-cargo run --release -p solidcraft
+cargo run --release -p torno
 ```
 
 ## Project status
 
 | Area | State |
 |---|---|
-| Package and binary names | Pending: crates and binaries are still called `solidcraft` |
+| Package and binary names | Pending: crates and binaries are still called `torno` |
 | App icon | Designed, not applied yet |
 | Nodalia interface | Not started |
 | Shared interface resources | Planned: the Nodalia apps will share interface components and styles |

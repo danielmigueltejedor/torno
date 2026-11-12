@@ -1,6 +1,6 @@
 # SHA-256 pins for scripts/fetch-nist-pmi-corpus.sh: "<sha256>  <path>", the path inside the
 # NIST PMI archive (and under corpus/nist-pmi/). Archive pinned 2026-11-03, the same archive as
-# SolidCraft's tests/external-corpus.toml (source "nist-pmi").
+# Torno's tests/external-corpus.toml (source "nist-pmi").
 # US Government work (NIST), public domain; acknowledgement appreciated, the NIST logo may not be
 # used in promotion. Still never committed: the corpus is fetched, not vendored.
 archive 8fa78429e6d8d9b0d7681d223b6aa9ec98c3772185c55b1a0e3679b21c181911  nist-pmi-step-files.zip

@@ -68,6 +68,6 @@
   "ungraded": [],
   "what": "an O40 x 60 rod with a blind O8 cross bore from its side (x 10..25 at mid height), moved 100 mm, exported to STEP and read back: the body came in empty with no warning (truck's exported edges had 1399 control points)",
   "why_not": [
-    "body \"Rod\" is no kernel operation's output nor an operand: SolidCraft built it or changed the kernel's record"
+    "body \"Rod\" is no kernel operation's output nor an operand: Torno built it or changed the kernel's record"
   ]
 }

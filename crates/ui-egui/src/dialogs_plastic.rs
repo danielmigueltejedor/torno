@@ -5,11 +5,11 @@ use crate::dialogs::put;
 use crate::ui_kit::{choice_row, expr_row, hint_row};
 use serde_json::{Map, Value, json};
 use solidcore_record::Vec3;
-use solidcraft_engine::Sel;
-use solidcraft_engine::doc::FeatureKind;
-use solidcraft_engine::doc::expr::Kind as ValueKind;
-use solidcraft_engine::doc::plastic::PlasticRule;
-use solidcraft_engine::geom::prelude::*;
+use torno_engine::Sel;
+use torno_engine::doc::FeatureKind;
+use torno_engine::doc::expr::Kind as ValueKind;
+use torno_engine::doc::plastic::PlasticRule;
+use torno_engine::geom::prelude::*;
 
 use crate::SolveApp;
 use crate::dialogs::{Kind, combo, face_sel, field, form_row, shown_expr};
@@ -137,7 +137,7 @@ pub fn start(app: &SolveApp, id: &str) -> Option<(Kind, Vec<SelInput>)> {
 
 /// A value row whose empty value means "from the rule" (or another default).
 fn opt_field(ui: &mut egui::Ui, label: &str, v: &mut String, unit: &str, hint: &str) -> bool {
-    let hint = format!("{unit}, {}", solidcraft_ui_text::tr_label(hint));
+    let hint = format!("{unit}, {}", torno_ui_text::tr_label(hint));
     hint_row(ui, label, v, &hint)
 }
 
@@ -367,7 +367,7 @@ pub fn commands(app: &SolveApp, k: &Pl, inputs: &[SelInput], extra: &Map<String,
     Ok(vec![(cmd.to_string(), p)])
 }
 
-fn s(o: &Option<solidcraft_engine::doc::Expr>) -> String {
+fn s(o: &Option<torno_engine::doc::Expr>) -> String {
     o.as_deref().map(str::to_string).unwrap_or_default()
 }
 

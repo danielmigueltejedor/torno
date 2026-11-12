@@ -1,6 +1,6 @@
 use super::*;
 
-fn point(sk: &solidcraft_sketch::Sketch, id: &str) -> Vec2 {
+fn point(sk: &torno_sketch::Sketch, id: &str) -> Vec2 {
     sk.point(sk.resolve_point(id).unwrap()).unwrap()
 }
 
@@ -28,7 +28,7 @@ fn circular_centered_six_holes_span_ninety_degrees_and_flip_about_the_original()
     run(&mut s, "edit.undo", json!({}));
     assert_eq!(s.doc.to_json(), before);
     run(&mut s, "edit.redo", json!({}));
-    let mut s = Session { doc: solidcraft_doc::format::read(&s.doc.to_json()).unwrap().into(), active_sketch: s.active_sketch, ..Default::default() };
+    let mut s = Session { doc: torno_doc::format::read(&s.doc.to_json()).unwrap().into(), active_sketch: s.active_sketch, ..Default::default() };
     s.refresh();
     // Omitting placement settings must retain them after reopening.
     run(&mut s, "sketch.pattern.circular", json!({"pattern":out["pattern"],"angle":90}));
@@ -89,7 +89,7 @@ fn circular_invalid_alignment_and_flip_roll_back_and_old_saved_defaults_still_lo
     kind.remove("alignment");
     kind.remove("reversed");
     let mut reopened =
-        Session { doc: solidcraft_doc::format::read(&saved.to_string()).unwrap().into(), active_sketch: s.active_sketch, ..Default::default() };
+        Session { doc: torno_doc::format::read(&saved.to_string()).unwrap().into(), active_sketch: s.active_sketch, ..Default::default() };
     reopened.refresh();
     run(&mut reopened, "sketch.pattern.circular", json!({"pattern":out["pattern"],"count":3}));
     assert!(point(&sketch(&reopened), &format!("{}.center", out["curves"][1].as_str().unwrap())).dist(Vec2::new(0., 20.)) < 1e-6);
@@ -124,7 +124,7 @@ fn centered_two_direction_grid_keeps_original_fixed_and_follows_live_guides_afte
     let far = out["curves"][7].as_str().unwrap();
     assert!(point(&sketch(&s), &format!("{far}.center")).dist(Vec2::new(-21., 2.)) < 1e-6);
     let saved = s.doc.to_json();
-    let mut s = Session { doc: solidcraft_doc::format::read(&saved).unwrap().into(), active_sketch: s.active_sketch, ..Default::default() };
+    let mut s = Session { doc: torno_doc::format::read(&saved).unwrap().into(), active_sketch: s.active_sketch, ..Default::default() };
     s.refresh();
     let before = s.doc.to_json();
     let edited = run(&mut s, "sketch.pattern.rectangular", json!({"pattern":out["pattern"],"alignment":"left","alignment2":"right","count":4}));
@@ -159,7 +159,7 @@ fn left_and_right_alignments_are_independent_and_invalid_alignment_values_roll_b
     }
     let mut broken: Value = serde_json::from_str(&before).unwrap();
     broken["features"][0]["sketch"]["patterns"][0]["kind"]["reversed2"] = json!("true");
-    assert!(solidcraft_doc::format::read(&broken.to_string()).is_err());
+    assert!(torno_doc::format::read(&broken.to_string()).is_err());
 }
 
 #[test]
@@ -195,7 +195,7 @@ fn even_centered_totals_flip_the_extra_side_independently_and_remain_associative
     assert_eq!(s.doc.to_json(), before);
     run(&mut s, "edit.redo", json!({}));
     run(&mut s, "edit.redo", json!({}));
-    let mut s = Session { doc: solidcraft_doc::format::read(&s.doc.to_json()).unwrap().into(), active_sketch: s.active_sketch, ..Default::default() };
+    let mut s = Session { doc: torno_doc::format::read(&s.doc.to_json()).unwrap().into(), active_sketch: s.active_sketch, ..Default::default() };
     s.refresh();
     run(&mut s, "sketch.drag", json!({"entity":"seed.center","from":[5,5],"to":[7,8]}));
     assert!(point(&sketch(&s), &format!("{}.center", copy_ids[6])).dist(Vec2::new(-39., 0.)) < 1e-6);
@@ -230,7 +230,7 @@ fn two_picked_pattern_lines_remain_live_through_drag_reopen_and_edit() {
     check_relations(&s);
     assert!(point(&sketch(&s), &format!("{copy}.start")).dist(Vec2::new(18.0, 11.0)) < 1e-6);
     let saved = s.doc.to_json();
-    let mut s = Session { doc: solidcraft_doc::format::read(&saved).unwrap().into(), active_sketch: s.active_sketch, ..Default::default() };
+    let mut s = Session { doc: torno_doc::format::read(&saved).unwrap().into(), active_sketch: s.active_sketch, ..Default::default() };
     s.refresh();
     let edited = run(&mut s, "sketch.pattern.rectangular", json!({"pattern":out["pattern"],"count":4,"spacing2":-10}));
     assert_eq!(edited["curves"][0], copy);
@@ -306,7 +306,7 @@ fn malformed_two_direction_patterns_roll_back_and_saved_references_are_validated
         let constraint =
             broken["features"][0]["sketch"]["constraints"].as_array_mut().unwrap().iter_mut().find(|c| c["type"] == "pattern_point").unwrap();
         constraint["directions"] = invalid;
-        assert!(solidcraft_doc::format::read(&broken.to_string()).is_err());
+        assert!(torno_doc::format::read(&broken.to_string()).is_err());
     }
 }
 
@@ -330,7 +330,7 @@ fn mirrored_chain_endpoints_on_the_axis_remain_on_it_during_source_edits() {
 fn check_relations(s: &Session) {
     let sk = sketch(s);
     for (i, constraint) in sk.constraints.iter().enumerate() {
-        assert!(solidcraft_sketch::constraint_residual(&sk, i).is_some_and(|r| r < 1e-6), "{} {:?}", constraint.id, constraint.kind);
+        assert!(torno_sketch::constraint_residual(&sk, i).is_some_and(|r| r < 1e-6), "{} {:?}", constraint.id, constraint.kind);
     }
 }
 
@@ -360,10 +360,10 @@ fn default_second_direction_follows_the_first_line_and_legacy_vectors_keep_their
     for key in ["dir2", "direction", "direction2", "alignment", "alignment2", "reversed", "reversed2"] {
         settings.remove(key);
     }
-    let doc = solidcraft_doc::format::read(&saved.to_string()).unwrap();
+    let doc = torno_doc::format::read(&saved.to_string()).unwrap();
     let sk = doc.sketch(s.active_sketch.unwrap()).unwrap();
     assert!(point(sk, "c3.center").dist(Vec2::new(-15.0, 15.0)) < 1e-6);
-    assert_eq!(doc.format, solidcraft_doc::format::format_string(solidcraft_doc::format::FORMAT));
+    assert_eq!(doc.format, torno_doc::format::format_string(torno_doc::format::FORMAT));
 }
 
 #[test]
@@ -451,7 +451,7 @@ fn pattern_edits_retain_surviving_ids_and_work_after_undo_and_reopen() {
         assert_eq!(s.doc.to_json(), before);
         run(&mut s, "edit.redo", json!({}));
         let mut reopened =
-            Session { doc: solidcraft_doc::format::read(&s.doc.to_json()).unwrap().into(), active_sketch: s.active_sketch, ..Default::default() };
+            Session { doc: torno_doc::format::read(&s.doc.to_json()).unwrap().into(), active_sketch: s.active_sketch, ..Default::default() };
         reopened.refresh();
         let grown = run(&mut reopened, cmd, json!({"pattern":pattern,"count":5,"spacing":12,"angle":-180}));
         assert_eq!(ids(&grown["curves"])[0], "l2");
@@ -605,14 +605,14 @@ fn malformed_saved_pattern_settings_and_relations_are_refused() {
             "center" => sk["patterns"][0]["kind"]["center"] = json!("missing"),
             _ => sk["constraints"][0]["offset"] = json!([1e308, 0]),
         }
-        assert!(solidcraft_doc::format::read(&value.to_string()).is_err(), "{key}");
+        assert!(torno_doc::format::read(&value.to_string()).is_err(), "{key}");
     }
     let mut legacy = saved;
     legacy["format"] = json!("solidcraft/19");
     let sk = legacy["features"][0]["sketch"].as_object_mut().unwrap();
     sk.remove("patterns");
     sk.insert("constraints".into(), json!([]));
-    let read = solidcraft_doc::format::read(&legacy.to_string()).unwrap();
+    let read = torno_doc::format::read(&legacy.to_string()).unwrap();
     assert!(read.sketch(s.active_sketch.unwrap()).unwrap().patterns.is_empty());
 }
 
@@ -647,7 +647,7 @@ fn patterned_arc_ellipse_spline_and_conic_follow_seed_geometry_exactly() {
                 }
             }
         }
-        assert!(solidcraft_doc::format::read(&s.doc.to_json()).is_ok());
+        assert!(torno_doc::format::read(&s.doc.to_json()).is_ok());
     }
 }
 
@@ -683,10 +683,10 @@ fn circular_quantity_expression_survives_parameter_edits_undo_and_reopen() {
     let mut cold_doc = (*s.doc).clone();
     cold_doc.change_param("holes", "9", None, None).unwrap();
     let mut cold =
-        Session { doc: solidcraft_doc::format::read(&cold_doc.to_json()).unwrap().into(), active_sketch: s.active_sketch, ..Default::default() };
+        Session { doc: torno_doc::format::read(&cold_doc.to_json()).unwrap().into(), active_sketch: s.active_sketch, ..Default::default() };
     cold.refresh();
     assert_eq!(sketch(&cold).curves.len(), 9);
-    let mut reopened = Session { doc: solidcraft_doc::format::read(&saved).unwrap().into(), active_sketch: s.active_sketch, ..Default::default() };
+    let mut reopened = Session { doc: torno_doc::format::read(&saved).unwrap().into(), active_sketch: s.active_sketch, ..Default::default() };
     reopened.refresh();
     assert_eq!(sketch(&reopened).curves.len(), 7);
     run(&mut reopened, "parameters.change", json!({"name":"holes","expression":"3"}));
@@ -734,7 +734,7 @@ fn circular_quantity_changes_keep_partial_full_centered_and_reversed_placements(
                 for count in [6, 3] {
                     run(&mut s, "parameters.change", json!({"name":"holes","expression":count}));
                     let sk = sketch(&s);
-                    let solidcraft_sketch::SketchPatternKind::Circular { alignment, .. } = sk.patterns[0].kind else { panic!("circular pattern") };
+                    let torno_sketch::SketchPatternKind::Circular { alignment, .. } = sk.patterns[0].kind else { panic!("circular pattern") };
                     let step = angle / if angle.abs() == 360.0 { count as f64 } else { (count - 1) as f64 };
                     for instance in &sk.patterns[0].instances {
                         let a = (step * alignment.multiplier(instance.index[0], reversed)).to_radians();
@@ -768,7 +768,7 @@ fn a_pattern_too_large_to_solve_says_why() {
         .execute("sketch.pattern.rectangular", &json!({"entities": lines, "count": 17, "spacing": 6.5, "count2": 20, "spacing2": 6.5}))
         .unwrap_err()
         .to_string();
-    assert!(e.contains("unknowns") && e.contains(&solidcraft_sketch::MAX_COMPONENT_VARS.to_string()) && !e.contains("conflicts with"), "{e}");
+    assert!(e.contains("unknowns") && e.contains(&torno_sketch::MAX_COMPONENT_VARS.to_string()) && !e.contains("conflicts with"), "{e}");
 }
 
 #[test]
@@ -786,7 +786,7 @@ fn rectangular_pattern_expressions_follow_parameters_and_survive_reopening() {
     let first = ids(&out["curves"])[0].clone();
     assert!(!s.doc.param_users("pitch").is_empty());
     run(&mut s, "sketch.finish", json!({}));
-    let mut s = Session { doc: solidcraft_doc::format::read(&s.doc.to_json()).unwrap().into(), ..Default::default() };
+    let mut s = Session { doc: torno_doc::format::read(&s.doc.to_json()).unwrap().into(), ..Default::default() };
     s.refresh();
     run(&mut s, "parameters.change", json!({"name":"pitch","expression":"40"}));
     run(&mut s, "parameters.change", json!({"name":"copies","expression":"4"}));
@@ -834,7 +834,7 @@ fn circular_pattern_expressions_validate_inputs_and_keep_numeric_compatibility()
     let legacy = s.doc.to_json();
     // Numeric patterns omit the optional expression field, just as older files do.
     assert!(!s.doc.to_json().contains("\"expressions\""));
-    let reopened = solidcraft_doc::format::read(&legacy).unwrap();
+    let reopened = torno_doc::format::read(&legacy).unwrap();
     assert_eq!(reopened.sketch(1).unwrap().patterns[0].instances.len(), 2);
     // A design with plain numbers saves back unchanged and evaluates to the same copies.
     assert_eq!(reopened.to_json(), legacy);

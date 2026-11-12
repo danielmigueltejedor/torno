@@ -1,6 +1,6 @@
 use super::*;
-use solidcraft_doc::render_settings::RenderJob;
-use solidcraft_geom::prelude::*;
+use torno_doc::render_settings::RenderJob;
+use torno_geom::prelude::*;
 
 fn save(s: &mut Session, patch: Value) {
     s.execute("render.settings.set", &json!({"name":"Studio", "set":patch})).unwrap();
@@ -19,7 +19,7 @@ fn complete_shot_patch_accepts_all_known_fields_and_refuses_unknowns_without_mut
     let mut complete = json!(RenderSetup::default());
     complete["width"] = json!(16);
     complete["height"] = json!(12);
-    complete["camera"] = json!(solidcraft_viewport::Camera { distance: 80.0, fov: 0.6, ..Default::default() });
+    complete["camera"] = json!(torno_viewport::Camera { distance: 80.0, fov: 0.6, ..Default::default() });
     complete["job"] = json!({"method":"cpu_raytrace","options":{"path":{"max_depth":4},
         "progressive":{"samples_per_pixel":4,"seed":17},"lens":{"aperture_radius_mm":0.02,"focus_distance_mm":80.0},
         "output":{"linear_exr":true}}});
@@ -56,7 +56,7 @@ fn complete_shot_patch_accepts_all_known_fields_and_refuses_unknowns_without_mut
         assert_eq!(history, (s.revision, s.undo.len(), s.redo.len(), s.evaluations));
         assert_eq!(s.camera, camera);
     }
-    assert_eq!(solidcraft_doc::Document::from_json(&s.doc.to_json()).unwrap(), *s.doc);
+    assert_eq!(torno_doc::Document::from_json(&s.doc.to_json()).unwrap(), *s.doc);
     s.execute("edit.undo", &json!({})).unwrap();
     assert_eq!(s.doc, before);
     s.execute("edit.redo", &json!({})).unwrap();
@@ -263,9 +263,9 @@ fn render_lights_small_area_pose_and_resize_preserve_aspect_and_emitting_side() 
     assert!((resized_u.len() - 20.0).abs() < 1e-10);
     assert!((resized_v.len() - 40.0).abs() < 1e-10);
     assert!(
-        solidcraft_viewport::surface::unit_direction(u.cross(v))
+        torno_viewport::surface::unit_direction(u.cross(v))
             .unwrap()
-            .dot(solidcraft_viewport::surface::unit_direction(resized_u.cross(resized_v)).unwrap())
+            .dot(torno_viewport::surface::unit_direction(resized_u.cross(resized_v)).unwrap())
             > 0.999999
     );
 }
@@ -299,7 +299,7 @@ fn render_lights_edit_commands_publish_one_undo_and_preserve_other_settings() {
     assert_eq!(list["lights"].as_array().unwrap().len(), 1);
     assert_eq!(list["lights"][0]["kind"], "spot");
     assert_eq!(list["lights"][0]["intensity"], 4.0);
-    assert_eq!(solidcraft_doc::Document::from_json(&s.doc.to_json()).unwrap(), *s.doc);
+    assert_eq!(torno_doc::Document::from_json(&s.doc.to_json()).unwrap(), *s.doc);
 }
 
 #[test]
@@ -594,9 +594,9 @@ fn render_lights_list_does_not_settle_a_stale_model() {
 #[cfg(not(target_arch = "wasm32"))]
 #[test]
 fn embedded_hdr_capture_is_offline_atomic_deduplicated_and_undoable_after_source_removal() {
-    use solidcraft_doc::render_resources::HdrId;
+    use torno_doc::render_resources::HdrId;
     let nonce = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos();
-    let path = std::env::temp_dir().join(format!("solidcraft-saved-hdr-{}-{nonce}.hdr", std::process::id()));
+    let path = std::env::temp_dir().join(format!("torno-saved-hdr-{}-{nonce}.hdr", std::process::id()));
     let mut bytes = b"#?RADIANCE\nFORMAT=32-bit_rle_rgbe\nPRIMARIES=0.64 0.33 0.30 0.60 0.15 0.06 0.3127 0.3290\n\n-Y 2 +X 4\n".to_vec();
     for _ in 0..8 {
         bytes.extend_from_slice(&[128, 64, 32, 129]);
@@ -653,9 +653,9 @@ fn embedded_hdr_capture_is_offline_atomic_deduplicated_and_undoable_after_source
         s.doc.render.resources.required(&id).unwrap().bytes().as_ptr()
     ));
     assert!(!s.doc.to_json().contains(path.to_str().unwrap()));
-    assert_eq!(solidcraft_doc::Document::from_json(&s.doc.to_json()).unwrap(), *s.doc);
-    let container = solidcraft_io::write_design_container(&s.doc).unwrap();
-    assert_eq!(solidcraft_io::read_design(&container).unwrap(), *s.doc);
+    assert_eq!(torno_doc::Document::from_json(&s.doc.to_json()).unwrap(), *s.doc);
+    let container = torno_io::write_design_container(&s.doc).unwrap();
+    assert_eq!(torno_io::read_design(&container).unwrap(), *s.doc);
     assert!(Arc::ptr_eq(&model, &s.model.state()));
     assert_eq!(s.evaluations, 0);
 }
@@ -687,7 +687,7 @@ fn embedded_hdr_capture_rejects_parameters_scope_and_cpu_primaries_without_mutat
         assert_eq!(state, (s.revision, s.undo.len(), s.redo.len()));
     }
     let nonce = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos();
-    let dir = solidcraft_io::vfs::temp_dir().join(format!("solidcraft-hdr-scope-{}-{nonce}", std::process::id()));
+    let dir = torno_io::vfs::temp_dir().join(format!("torno-hdr-scope-{}-{nonce}", std::process::id()));
     std::fs::create_dir(&dir).unwrap();
     let allowed = dir.join("allowed");
     std::fs::create_dir(&allowed).unwrap();
@@ -698,7 +698,7 @@ fn embedded_hdr_capture_rejects_parameters_scope_and_cpu_primaries_without_mutat
     }
     std::fs::write(&path, &bytes).unwrap();
     let mut capture = json!({"name":"HDR","path":path,"set":{"job":{"method":"cpu_raytrace"}}});
-    solidcraft_io::vfs::scoped(Some(solidcraft_io::vfs::PathScope::new([allowed])), || {
+    torno_io::vfs::scoped(Some(torno_io::vfs::PathScope::new([allowed])), || {
         for (command, params) in [("render.hdr.inspect", json!({"path":path})), ("render.settings.capture_hdr", capture.clone())] {
             assert!(s.execute(command, &params).unwrap_err().to_string().contains("outside the folders this agent may use"));
         }
@@ -752,7 +752,7 @@ fn portable_job_save_is_host_independent_atomic_and_undoable_without_geometry_ch
     assert!(Arc::ptr_eq(&saved, &s.doc));
     assert_eq!(s.revision, revision);
     assert_eq!(s.execute("render.settings.get", &json!({"name":"Studio"})).unwrap()["setup"], json!(setup));
-    let reopened = solidcraft_doc::Document::from_json(&s.doc.to_json()).unwrap();
+    let reopened = torno_doc::Document::from_json(&s.doc.to_json()).unwrap();
     assert_eq!(*s.doc, reopened);
     save(&mut s, json!({"width":800}));
     assert_eq!(s.doc.render.setups["Studio"].job, setup.job);
@@ -770,7 +770,7 @@ fn portable_job_save_is_host_independent_atomic_and_undoable_without_geometry_ch
     save(&mut s, json!({"job":{"method":"cpu_raytrace"}}));
     assert_eq!(
         s.doc.render.setups["Studio"].job,
-        Some(solidcraft_doc::render_settings::RenderJob::CpuRaytrace { transparent_background: false, options: Box::default() })
+        Some(torno_doc::render_settings::RenderJob::CpuRaytrace { transparent_background: false, options: Box::default() })
     );
     assert_eq!(s.doc.render.setups["Studio"].exposure_ev, 2.5);
     assert!(Arc::ptr_eq(&model, &s.model.state()));
@@ -822,7 +822,7 @@ fn settings_history_preserves_geometry_cache_and_dirty_state() {
     assert!(Arc::ptr_eq(&doc, &s.doc));
     assert_eq!(s.revision, revision);
     assert_eq!(s.undo.len(), undo + 1);
-    let restored = solidcraft_doc::Document::from_json(&s.doc.to_json()).unwrap();
+    let restored = torno_doc::Document::from_json(&s.doc.to_json()).unwrap();
     assert_eq!(restored.render, s.doc.render);
     s.execute("edit.undo", &json!({})).unwrap();
     assert!(!s.is_dirty());
@@ -864,7 +864,7 @@ fn settings_history_preserves_geometry_cache_and_dirty_state() {
 #[test]
 fn invalid_settings_and_limit_are_atomic() {
     let mut s = Session::default();
-    let mut camera_with_typo = serde_json::to_value(solidcraft_viewport::Camera::default()).unwrap();
+    let mut camera_with_typo = serde_json::to_value(torno_viewport::Camera::default()).unwrap();
     camera_with_typo["fov_degrees"] = json!(45);
     for patch in [
         json!({"width":0}),
@@ -953,7 +953,7 @@ fn render_lights_shape_falloff_and_world_vectors_lower_to_existing_fields_with_u
         assert_eq!(s.doc, changed);
         // GPU stores half-edges, CPU full sides. Both inspect as the same full vectors.
         s.execute("render.lights.set", &json!({"name":"Studio","id":"area:0","set":{"edge_u_mm":[0,60,0],"edge_v_mm":[40,0,0]}})).unwrap();
-        let roundtrip = solidcraft_doc::Document::from_json(&s.doc.to_json()).unwrap();
+        let roundtrip = torno_doc::Document::from_json(&s.doc.to_json()).unwrap();
         assert_eq!(roundtrip, *s.doc);
         s.execute("render.lights.add", &json!({"name":"Studio","set":{"kind":"directional"}})).unwrap();
         s.execute("render.lights.set", &json!({"name":"Studio","id":"directional:0","set":{"direction":[-0.4,-0.6,0.7]}})).unwrap();
@@ -1097,7 +1097,7 @@ fn gpu_hard_directional_commands_materialize_defaults_and_keep_sun_distinct() {
     assert_eq!(s.doc, before, "one Undo restores the complete original8-directional setup");
     s.execute("render.lights.remove", &json!({"name":"Studio","id":"directional:7"})).unwrap();
     assert_eq!(crate::render_lights::inspect(&s.doc.render.setups["Studio"]).unwrap().len(), 7);
-    assert_eq!(solidcraft_doc::Document::from_json(&s.doc.to_json()).unwrap(), *s.doc);
+    assert_eq!(torno_doc::Document::from_json(&s.doc.to_json()).unwrap(), *s.doc);
 }
 
 #[test]
@@ -1216,7 +1216,7 @@ fn gpu_point_spot_commands_keep_cones_ranges_undo_visibility_identity_and_portab
         assert!(Arc::ptr_eq(&before, &s.doc));
         assert_eq!(s.undo.len(), undo);
     }
-    let reopened = solidcraft_doc::Document::from_json(&s.doc.to_json()).unwrap();
+    let reopened = torno_doc::Document::from_json(&s.doc.to_json()).unwrap();
     assert_eq!(reopened, *s.doc);
     assert_eq!(
         crate::render_lights::inspect(&reopened.render.setups["Studio"]).unwrap(),

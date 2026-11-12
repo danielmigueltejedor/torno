@@ -29,7 +29,7 @@ pub(crate) fn holes(app: &SolveApp, id: u64) -> Option<Vec<u64>> {
             return None;
         }
         for feature in &group.features {
-            if !matches!(doc.feature(*feature)?.kind, solidcraft_engine::doc::FeatureKind::Hole { .. }) {
+            if !matches!(doc.feature(*feature)?.kind, torno_engine::doc::FeatureKind::Hole { .. }) {
                 return None;
             }
             ids.push(*feature);
@@ -104,7 +104,7 @@ pub(crate) fn commands(app: &SolveApp, d: &Dialog, edited: Vec<(String, Value)>)
         let Some(params) = redefine.get_mut("params").and_then(Value::as_object_mut) else { continue };
         // A hole at a point keeps the point it was made at: its edit dialog finds the face there
         // in the model before the hole (History rolled back to it), which this one is not.
-        if let Some(solidcraft_engine::doc::FeatureKind::Hole { points: None, position, at, .. }) = app.session.doc.feature(id).map(|f| &f.kind) {
+        if let Some(torno_engine::doc::FeatureKind::Hole { points: None, position, at, .. }) = app.session.doc.feature(id).map(|f| &f.kind) {
             let place = match at {
                 Some(exprs) => json!(exprs.iter().map(|e| e.as_str()).collect::<Vec<_>>()),
                 None => json!([position.0.x, position.0.y, position.0.z]),
@@ -129,7 +129,7 @@ pub(crate) fn commands(app: &SolveApp, d: &Dialog, edited: Vec<(String, Value)>)
 /// The line the folder dialog shows over its fields.
 pub(crate) fn note(app: &SolveApp, d: &Dialog, ui: &mut egui::Ui) {
     if let Some((count, name)) = summary(app, d) {
-        let text = solidcraft_ui_text::format("hole_folder.applies_to", &[("count", &count.to_string()), ("folder", &name)]);
-        ui.add(egui::Label::new(egui::RichText::new(text).color(solidcraft_theme::Tokens::get().text_dim)).wrap());
+        let text = torno_ui_text::format("hole_folder.applies_to", &[("count", &count.to_string()), ("folder", &name)]);
+        ui.add(egui::Label::new(egui::RichText::new(text).color(torno_theme::Tokens::get().text_dim)).wrap());
     }
 }

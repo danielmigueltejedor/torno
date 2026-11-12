@@ -14,8 +14,8 @@ use schemars::{JsonSchema, Schema, SchemaGenerator, json_schema};
 use serde::de::Error as _;
 use serde::{Deserialize, Deserializer};
 use serde_json::{Value, json};
-use solidcraft_geom::fill::{MAX_CROWN, MIN_CROWN};
-use solidcraft_kernel::Construction;
+use torno_geom::fill::{MAX_CROWN, MIN_CROWN};
+use torno_kernel::Construction;
 
 use super::check::{truncate, whole};
 use super::config::NameList;

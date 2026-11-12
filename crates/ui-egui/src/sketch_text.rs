@@ -3,11 +3,11 @@
 //! change (live `sketch.edit_text`); the whole edit is one undo step and Cancel puts the text
 //! back. The Text tool places a text and opens this dialog on it, so a new text is typed here too.
 use crate::ui_kit::BackingTooltipExt as _;
-use solidcraft_engine::geom::prelude::*;
 use std::sync::{Arc, OnceLock};
+use torno_engine::geom::prelude::*;
 
 use serde_json::{Value, json};
-use solidcraft_engine::{
+use torno_engine::{
     Sel,
     doc::expr::Kind as ValueKind,
     sketch::{LinkKind, LinkSource, TextAlign, TextStyle},
@@ -133,11 +133,11 @@ pub(crate) fn one_letter() -> bool {
 /// over) is cut into pieces bounded by both: each piece inside the letter is picked, so the
 /// letter is picked whole. The letters' counters (the inside of an O) are left out; inside one,
 /// a letter is a letter again. The picked profile comes first when it is a letter.
-pub(crate) fn text_profiles(s: &solidcraft_engine::Session, sketch: u64, index: usize) -> Option<Vec<usize>> {
+pub(crate) fn text_profiles(s: &torno_engine::Session, sketch: u64, index: usize) -> Option<Vec<usize>> {
     let state = crate::open_meshing::session_world(s);
     let ss = state.sketch(sketch)?;
     // The text bounding a profile, with or without other curves; whether only it bounds it.
-    let text_of = |profile: &solidcraft_engine::sketch::Profile| -> Option<(String, bool)> {
+    let text_of = |profile: &torno_engine::sketch::Profile| -> Option<(String, bool)> {
         let (mut link, mut alone): (Option<&str>, bool) = (None, true);
         for id in profile.curve_ids() {
             let curve = ss.sketch.curves.iter().find(|curve| curve.id == id)?;
@@ -158,7 +158,7 @@ pub(crate) fn text_profiles(s: &solidcraft_engine::Session, sketch: u64, index: 
             curve.construction = true;
         }
     }
-    let outlines = solidcraft_engine::sketch::find_profiles(&own);
+    let outlines = torno_engine::sketch::find_profiles(&own);
     let in_letter = |i: usize| {
         ss.profiles.get(i).is_some_and(|p| {
             let at = p.region.interior_point();
@@ -423,7 +423,7 @@ pub(crate) fn preview(app: &mut SolveApp, k: &mut Tx) -> Option<Result<(), Strin
 
 /// A field typed as `name = value`, as just its value.
 fn value_of_definition(v: &mut Value) {
-    if let Some((_, rhs)) = v.as_str().and_then(solidcraft_engine::doc::expr::definition) {
+    if let Some((_, rhs)) = v.as_str().and_then(torno_engine::doc::expr::definition) {
         *v = json!(rhs);
     }
 }
@@ -499,7 +499,7 @@ pub(crate) fn refresh(app: &SolveApp, k: &mut Tx) -> bool {
 fn font_has_bold_face(name: &str) -> bool {
     let trimmed = name.trim();
     let font = if trimmed.is_empty() { None } else { Some(trimmed) };
-    solidcraft_engine::sketch::font_data_styled(font, true, false).is_ok()
+    torno_engine::sketch::font_data_styled(font, true, false).is_ok()
 }
 
 /// The dialog's rows; true when Enter was pressed in a value field or in the text (Shift+Enter
@@ -510,7 +510,7 @@ pub(crate) fn rows(ui: &mut egui::Ui, k: &mut Tx, inputs: &mut [SelInput], activ
     if ui.memory(|m| m.has_focus(id)) {
         enter |= ui.input_mut(|i| !i.modifiers.shift && i.consume_key(egui::Modifiers::NONE, egui::Key::Enter));
     }
-    let response = ui_kit::multiline_text_field(ui, "Text", id, &mut k.text).backing_on_hover_text(solidcraft_ui_text::tr("sketch_text.formula"));
+    let response = ui_kit::multiline_text_field(ui, "Text", id, &mut k.text).backing_on_hover_text(torno_ui_text::tr("sketch_text.formula"));
     crate::scenario::publish_handle("dialog:Text", response.rect.center());
     if k.focus {
         response.request_focus();
@@ -526,9 +526,9 @@ pub(crate) fn rows(ui: &mut egui::Ui, k: &mut Tx, inputs: &mut [SelInput], activ
     }
     ui_kit::row(ui, "Font", |ui| font_row(ui, k));
     let emphasis = ui_kit::EmphasisLabels {
-        bold: solidcraft_ui_text::tr("sketch_text.bold"),
-        italic: solidcraft_ui_text::tr("sketch_text.italic"),
-        no_bold: solidcraft_ui_text::tr("sketch_text.no_bold"),
+        bold: torno_ui_text::tr("sketch_text.bold"),
+        italic: torno_ui_text::tr("sketch_text.italic"),
+        no_bold: torno_ui_text::tr("sketch_text.no_bold"),
     };
     ui_kit::row(ui, "Style", |ui| ui_kit::text_emphasis(ui, &mut k.style.bold, &mut k.style.italic, font_has_bold, &emphasis));
     ui_kit::row(ui, "Alignment", |ui| {
@@ -537,7 +537,7 @@ pub(crate) fn rows(ui: &mut egui::Ui, k: &mut Tx, inputs: &mut [SelInput], activ
             TextAlign::Center => 1,
             TextAlign::Right => 2,
         };
-        let labels = ["sketch_text.align_left", "sketch_text.align_center", "sketch_text.align_right"].map(solidcraft_ui_text::tr);
+        let labels = ["sketch_text.align_left", "sketch_text.align_center", "sketch_text.align_right"].map(torno_ui_text::tr);
         ui_kit::segmented(ui, &mut selected, &labels, ui_kit::Segments { compact: true, ..Default::default() });
         k.style.align = match selected {
             1 => TextAlign::Center,
@@ -557,7 +557,7 @@ pub(crate) fn rows(ui: &mut egui::Ui, k: &mut Tx, inputs: &mut [SelInput], activ
         let response = ui.add_enabled_ui(!on_path, |ui| ui_kit::value_pair(ui, "Position", [x, y], ["X", "Y"], None));
         enter |= response.inner;
         if on_path {
-            response.response.backing_on_disabled_hover_text(solidcraft_ui_text::tr("sketch_text.on_path"));
+            response.response.backing_on_disabled_hover_text(torno_ui_text::tr("sketch_text.on_path"));
         }
     }
     for (i, (label, value)) in LABELS.iter().skip(2).zip(rest).enumerate() {
@@ -565,7 +565,7 @@ pub(crate) fn rows(ui: &mut egui::Ui, k: &mut Tx, inputs: &mut [SelInput], activ
         let response = ui.add_enabled_ui(!(on_path && index == ANGLE), |ui| ui_kit::row(ui, label, |ui| ui_kit::field(ui, value)));
         enter |= response.inner;
         if on_path && index == ANGLE {
-            response.response.backing_on_disabled_hover_text(solidcraft_ui_text::tr("sketch_text.on_path"));
+            response.response.backing_on_disabled_hover_text(torno_ui_text::tr("sketch_text.on_path"));
         }
     }
     path_row(ui, k, inputs, active);
@@ -577,10 +577,9 @@ pub(crate) fn rows(ui: &mut egui::Ui, k: &mut Tx, inputs: &mut [SelInput], activ
 fn path_row(ui: &mut egui::Ui, k: &mut Tx, inputs: &mut [SelInput], active: &mut usize) {
     ui_kit::row(ui, "Path", |ui| {
         let on = k.style.path.is_some();
-        let text =
-            if on { solidcraft_ui_text::format("dialog.selected_count", &[("count", "1")]) } else { solidcraft_ui_text::tr("dialog.select").into() };
+        let text = if on { torno_ui_text::format("dialog.selected_count", &[("count", "1")]) } else { torno_ui_text::tr("dialog.select").into() };
         let chip = ui_kit::selection_field(ui, &text, ui_kit::Selection { active: k.picking, filled: on })
-            .backing_on_hover_text(solidcraft_ui_text::tr("sketch_text.path_hint"));
+            .backing_on_hover_text(torno_ui_text::tr("sketch_text.path_hint"));
         let chip_rect = chip.rect;
         crate::scenario::publish_handle("dialog:Path", chip.rect.center());
         if chip.clicked() {
@@ -588,7 +587,7 @@ fn path_row(ui: &mut egui::Ui, k: &mut Tx, inputs: &mut [SelInput], active: &mut
             *active = 0;
         }
         if on {
-            let size = solidcraft_theme::Tokens::get().space_24;
+            let size = torno_theme::Tokens::get().space_24;
             let rect = egui::Rect::from_center_size(egui::pos2(chip_rect.right() - size / 2.0, chip_rect.center().y), egui::vec2(size, size));
             let clear = ui_kit::icon_button_at(ui, rect, "close", "sketch_text.path_clear");
             crate::scenario::publish_handle("dialog:Path clear", clear.rect.center());
@@ -603,7 +602,7 @@ fn path_row(ui: &mut egui::Ui, k: &mut Tx, inputs: &mut [SelInput], active: &mut
     });
     if k.style.path.is_some() {
         ui_kit::section(ui, "path_options", "Options", true, |ui| {
-            let reverse = ui_kit::checkbox(ui, solidcraft_ui_text::tr_label("Reverse"), &mut k.style.reverse);
+            let reverse = ui_kit::checkbox(ui, torno_ui_text::tr_label("Reverse"), &mut k.style.reverse);
             crate::scenario::publish_handle("dialog:Reverse", reverse.rect.center());
         });
     }
@@ -621,7 +620,7 @@ pub(crate) fn families(ctx: &egui::Context) -> Option<Arc<Vec<String>>> {
         {
             let ctx = ctx.clone();
             let spawned = std::thread::Builder::new().name("font list".into()).spawn(move || {
-                let _ = FAMILIES.set(Arc::new(solidcraft_engine::sketch::installed_families()));
+                let _ = FAMILIES.set(Arc::new(torno_engine::sketch::installed_families()));
                 ctx.request_repaint();
             });
             if spawned.is_err() {
@@ -643,14 +642,14 @@ fn is_font_file(s: &str) -> bool {
 
 /// The application supplies families/file recognition; the kit owns search and list widgets.
 fn font_row(ui: &mut egui::Ui, k: &mut Tx) {
-    let builtin = solidcraft_ui_text::format("sketch_text.builtin_font", &[("family", solidcraft_engine::sketch::DEFAULT_FONT_FAMILY)]);
+    let builtin = torno_ui_text::format("sketch_text.builtin_font", &[("family", torno_engine::sketch::DEFAULT_FONT_FAMILY)]);
     let current = if k.font.trim().is_empty() { builtin.clone() } else { k.font.clone() };
     let families = families(ui.ctx());
     let mut options = vec![ui_kit::SearchOption { value: "", label: &builtin, handle: Some("dialog:Font built-in") }];
     if let Some(list) = &families {
         options.extend(list.iter().map(|family| ui_kit::SearchOption { value: family, label: family, handle: None }));
     }
-    let custom = is_font_file(&k.font_filter).then(|| solidcraft_ui_text::format("sketch_text.use_font_file", &[("path", k.font_filter.trim())]));
+    let custom = is_font_file(&k.font_filter).then(|| torno_ui_text::format("sketch_text.use_font_file", &[("path", k.font_filter.trim())]));
     if let Some(font) = ui_kit::searchable_dropdown(
         ui,
         "sketch_text_font",
@@ -658,7 +657,7 @@ fn font_row(ui: &mut egui::Ui, k: &mut Tx) {
         &mut k.font_filter,
         &options,
         custom.as_deref(),
-        families.is_none().then(|| solidcraft_ui_text::tr("sketch_text.loading_fonts")),
+        families.is_none().then(|| torno_ui_text::tr("sketch_text.loading_fonts")),
     ) {
         k.font = font;
         k.font_filter.clear();
@@ -696,8 +695,8 @@ fn edit_params(app: &SolveApp, k: &Tx) -> Result<Value, String> {
             v
         };
         // A field that names parameters, or names its value (`h = 10`, #4071), goes as typed.
-        let names_parameters = i < ANGLE_END
-            && (!solidcraft_engine::doc::expr::references(value).is_empty() || solidcraft_engine::doc::expr::definition(value).is_some());
+        let names_parameters =
+            i < ANGLE_END && (!torno_engine::doc::expr::references(value).is_empty() || torno_engine::doc::expr::definition(value).is_some());
         sent[i] = match given {
             Some(e) => json!(e),
             None if value != initial && names_parameters => json!(value.trim()),
@@ -912,7 +911,7 @@ mod tests {
         assert_eq!(sk.link(&link).unwrap().source, expected);
         assert!(!h.app.session.world_state().unwrap().sketch(sid).unwrap().profiles.is_empty());
         let changed = h.app.session.doc.to_json();
-        let reopened = solidcraft_engine::Session::new(solidcraft_engine::doc::Document::from_json(&changed).unwrap());
+        let reopened = torno_engine::Session::new(torno_engine::doc::Document::from_json(&changed).unwrap());
         assert_eq!(reopened.doc.sketch(sid).unwrap().link(&link).unwrap().source, expected);
         h.app.run("edit.undo", json!({})).unwrap();
         assert_eq!(h.app.session.doc.to_json(), before);
@@ -1064,7 +1063,7 @@ mod tests {
         assert!(!editing(&h.app));
         h.app.start("sketch.edit_text");
         assert!(editing(&h.app));
-        crate::documents::open_tab(&mut h.app, solidcraft_engine::Session::default()).unwrap();
+        crate::documents::open_tab(&mut h.app, torno_engine::Session::default()).unwrap();
         assert!(!editing(&h.app));
     }
 
@@ -1127,7 +1126,7 @@ mod tests {
         h.frames(3);
     }
 
-    fn exprs_of(h: &Harness, link: &str) -> solidcraft_engine::sketch::TextExprs {
+    fn exprs_of(h: &Harness, link: &str) -> torno_engine::sketch::TextExprs {
         let sid = h.app.session.active_sketch.unwrap();
         let LinkSource::Text { exprs, .. } = h.app.session.doc.sketch(sid).unwrap().link(link).unwrap().source.clone() else { panic!("text source") };
         exprs
@@ -1457,12 +1456,12 @@ mod tests {
         h.app.run("sketch.rectangle.two_point", json!({"p0":[-5,-5],"p1":[40,8]})).unwrap();
         let state = h.app.session.world_state().unwrap();
         let profiles = &state.sketch(sid).unwrap().profiles;
-        let below = solidcraft_engine::sketch::profile_at_point(profiles, stem).unwrap();
+        let below = torno_engine::sketch::profile_at_point(profiles, stem).unwrap();
         let picked = text_profiles(&h.app.session, sid, below).unwrap();
         assert_eq!(picked[0], below);
         assert!(picked.len() > 2, "the letters are cut in pieces: {picked:?}");
         assert!((area(&h, &picked) - whole).abs() < 1e-5 * whole, "{} {whole}", area(&h, &picked));
-        let round = solidcraft_engine::sketch::profile_at_point(profiles, solidcore_record::Vec2::new(-3.0, -3.0)).unwrap();
+        let round = torno_engine::sketch::profile_at_point(profiles, solidcore_record::Vec2::new(-3.0, -3.0)).unwrap();
         assert!(text_profiles(&h.app.session, sid, round).is_none());
     }
 

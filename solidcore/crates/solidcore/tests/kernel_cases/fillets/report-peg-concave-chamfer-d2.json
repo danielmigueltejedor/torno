@@ -142,7 +142,7 @@
     "blend_dropping"
   ],
   "ungraded": [
-    "continuity: SolidCraft computes it"
+    "continuity: Torno computes it"
   ],
   "what": "the peg's concave arc where its top meets the cylinder alone chamfered 2: the chamfer's cone runs out over the front top edge at both ends, past the point where the front face runs tangent into the cylinder; reported from the app (2026-10-30, test-peg part)",
   "why_not": []

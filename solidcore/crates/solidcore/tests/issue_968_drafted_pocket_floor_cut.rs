@@ -1,10 +1,10 @@
-//! tangency-labs/solidcore#968 (a SolidCraft regression case): an 80 x 80 x 40 block with
+//! tangency-labs/solidcore#968 (a Torno regression case): an 80 x 80 x 40 block with
 //! a pocket 60 x 60 at the top, 15 deep, drafted out 10 degrees (its floor a square of
 //! `s = 60 - 30 tan 10` at z = 25), R3 on the pocket's 4 rim edges and 4 slanted corner
 //! edges, then the floor cut 5 further down by its own boundary swept straight down
 //! (variant (a) of the issue).
 //!
-//! SolidCraft's previous kernel kept the old floor as a face of no thickness over a sealed
+//! Torno's previous kernel kept the old floor as a face of no thickness over a sealed
 //! void. Here the cut removes exactly the floor's prism: `5 A`, `A = s^2 - 4 delta`, where
 //! each corner round takes `delta = 1.854828` from the square (the issue's closed form),
 //! the result is one solid region with no void, and no face is left at z = 25.

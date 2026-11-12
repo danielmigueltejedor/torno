@@ -14,14 +14,14 @@
 //! linkage, a slider-crank) are met by moving the values of the other joints around the loop;
 //! those that still disagree are reported.
 
-use solidcraft_geom::prelude::*;
 use std::collections::{BTreeMap, BTreeSet, VecDeque};
+use torno_geom::prelude::*;
 
 use serde::{Deserialize, Serialize};
 use solidcore_record::{Plane, Vec3};
-use solidcraft_geom::Aabb3;
+use torno_geom::Aabb3;
 
-use solidcraft_sketch::linalg;
+use torno_sketch::linalg;
 
 use crate::construct::{ConstructGeom, DatumRef};
 use crate::{DocError, Document, IDENTITY, Mat, ModelState, PlaneRef, Result, apply_point, apply_vector, mat_inverse, mat_mul};
@@ -922,7 +922,7 @@ fn named_pick(doc: &Document, st: &ModelState, component: u64, pick: Vec3, face:
 /// placed by its offset, as a named face is).
 fn nearest_plane(doc: &Document, st: &ModelState, o: &JointOrigin, pick: Vec3) -> Result<(Vec3, Vec3)> {
     let comp = component_of(doc, o.part())?;
-    let mut best: Option<(f64, &crate::ModelBody, solidcraft_kernel::FaceInfo, Vec3)> = None;
+    let mut best: Option<(f64, &crate::ModelBody, torno_kernel::FaceInfo, Vec3)> = None;
     for b in component_bodies(doc, st, comp) {
         let offset = doc.model_body_offset(b);
         for f in b.joint_faces()?.iter() {
@@ -1119,11 +1119,11 @@ fn round_of(doc: &Document, st: &ModelState, o: &JointOrigin) -> Result<face::Ro
     let cyl = component_bodies(doc, st, comp)
         .into_iter()
         .filter_map(|b| match doc.model_body_offset(b) {
-            Some(m) => solidcraft_kernel::cylinder_face_at(&b.body, apply_point(&mat_inverse(m)?, pick)).map(|c| face::placed(m, c)),
-            None => solidcraft_kernel::cylinder_face_at(&b.body, pick),
+            Some(m) => torno_kernel::cylinder_face_at(&b.body, apply_point(&mat_inverse(m)?, pick)).map(|c| face::placed(m, c)),
+            None => torno_kernel::cylinder_face_at(&b.body, pick),
         })
         .min_by(|a, b| {
-            let off = |c: &solidcraft_kernel::CylinderFace| {
+            let off = |c: &torno_kernel::CylinderFace| {
                 let v = pick - c.axis_point;
                 ((v - c.axis * v.dot(c.axis)).len() - c.radius).abs()
             };
@@ -1136,7 +1136,7 @@ fn round_of(doc: &Document, st: &ModelState, o: &JointOrigin) -> Result<face::Ro
 }
 
 /// The cylindrical face of a circle-centre snap (component coordinates).
-fn circle_at(doc: &Document, st: &ModelState, o: &JointOrigin) -> Result<solidcraft_kernel::CylinderFace> {
+fn circle_at(doc: &Document, st: &ModelState, o: &JointOrigin) -> Result<torno_kernel::CylinderFace> {
     round_of(doc, st, o).map(|r| r.cylinder)
 }
 

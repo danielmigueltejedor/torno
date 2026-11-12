@@ -17,8 +17,8 @@ pub(crate) mod open_steps;
 mod send;
 
 use serde_json::{Value, json};
-use solidcraft_doc::Document;
-use solidcraft_io::Format;
+use torno_doc::Document;
+use torno_io::Format;
 
 use super::CommandSpec;
 use super::print_face;
@@ -52,7 +52,7 @@ pub static COMMANDS: &[CommandSpec] = &[
         .noundo()
         .contract(&OPEN_CONTRACT)
         .output(output_schema_for::<OpenResult>)
-        .params("path: .sc design (or a .solidcraft design from an earlier release), .dxf/.svg drawing (opens as a new, unsaved design with an XY sketch, using sketch.insert_dxf/sketch.insert_svg units and defaults), or a .step/.stp/.igs/.fcstd/.3dm/.3mf/.stl/.obj/.glb/.gltf file (STEP, IGES, FreeCAD, Rhino, 3MF, STL, OBJ or glTF; opens as a new design holding the file as a component named after it, as file.insert_step and file.insert_mesh make), or a .ply/.xyz/.pts point cloud (opens as a new design holding it, as pointcloud.insert makes; its `units` and `max_points` as there); up?: z|y for a STEP, IGES, FreeCAD, Rhino or glTF file (see file.insert_step and file.insert_mesh); names?: auto|solid|product|instance for a STEP, IGES, FreeCAD or Rhino file (see file.insert_step); units?: for an STL or OBJ file (see file.insert_mesh); origin?: bool for a mesh file (see file.insert_mesh); folder?: bool for a STEP, IGES, FreeCAD or Rhino file (see file.insert_step); read_only?: bool (a design: saving to its own file is refused, file.save_as keeps the changes elsewhere) → open_elsewhere: {host, user, app, opened} when another SolidCraft has the design open (its lock file is fresh); newer_file: {format, reads_up_to, unknown_changes, not_understood, notice} and warnings when a newer SolidCraft saved it: it opens all the same, and what this version can't read is named there and kept by saving"),
+        .params("path: .sc design (or a .solidcraft design from an earlier release), .dxf/.svg drawing (opens as a new, unsaved design with an XY sketch, using sketch.insert_dxf/sketch.insert_svg units and defaults), or a .step/.stp/.igs/.fcstd/.3dm/.3mf/.stl/.obj/.glb/.gltf file (STEP, IGES, FreeCAD, Rhino, 3MF, STL, OBJ or glTF; opens as a new design holding the file as a component named after it, as file.insert_step and file.insert_mesh make), or a .ply/.xyz/.pts point cloud (opens as a new design holding it, as pointcloud.insert makes; its `units` and `max_points` as there); up?: z|y for a STEP, IGES, FreeCAD, Rhino or glTF file (see file.insert_step and file.insert_mesh); names?: auto|solid|product|instance for a STEP, IGES, FreeCAD or Rhino file (see file.insert_step); units?: for an STL or OBJ file (see file.insert_mesh); origin?: bool for a mesh file (see file.insert_mesh); folder?: bool for a STEP, IGES, FreeCAD or Rhino file (see file.insert_step); read_only?: bool (a design: saving to its own file is refused, file.save_as keeps the changes elsewhere) → open_elsewhere: {host, user, app, opened} when another Torno has the design open (its lock file is fresh); newer_file: {format, reads_up_to, unknown_changes, not_understood, notice} and warnings when a newer Torno saved it: it opens all the same, and what this version can't read is named there and kept by saving"),
     CommandSpec::new("file.insert_step", "Insert STEP", insert_step)
         .at("SOLID", "INSERT")
         .icon("import")
@@ -207,8 +207,8 @@ pub(crate) fn up_form(v: &Value) -> Option<bool> {
 }
 
 /// `names` as a STEP or IGES file is read with it, `None` for anything that is not a word of it.
-pub(crate) fn names_form(v: &Value) -> Option<solidcraft_io::StepNames> {
-    v.as_str().and_then(solidcraft_io::StepNames::parse)
+pub(crate) fn names_form(v: &Value) -> Option<torno_io::StepNames> {
+    v.as_str().and_then(torno_io::StepNames::parse)
 }
 
 /// How a STEP or IGES file comes in beyond its path: which way is up in the file, and what its
@@ -217,7 +217,7 @@ struct StepOptions {
     /// `up: "y"`: the file has Y up, so the bodies it brings are turned a quarter turn about X
     /// (Y becomes Z), as the app's "Stand it up" offer does. `z` (the default) keeps the file's axes.
     y_up: bool,
-    names: solidcraft_io::StepNames,
+    names: torno_io::StepNames,
     /// `folder: true`: an import that brings more than one item gets a `Group #N` history folder
     /// (`import_folder`). `false` (the default) makes none, as before the option.
     folder: bool,
@@ -229,7 +229,7 @@ fn step_options(p: &Value, cmd: &str) -> Result<StepOptions> {
         Some(v) => up_form(v).ok_or_else(|| bad(cmd, UP_MESSAGE))?,
     };
     let names = match p.get("names") {
-        None | Some(Value::Null) => solidcraft_io::StepNames::default(),
+        None | Some(Value::Null) => torno_io::StepNames::default(),
         Some(v) => names_form(v).ok_or_else(|| bad(cmd, NAMES_MESSAGE))?,
     };
     let folder = match p.get("folder") {
@@ -246,27 +246,27 @@ fn step_options(p: &Value, cmd: &str) -> Result<StepOptions> {
 }
 
 /// Read a STEP file as an Import feature.
-fn read_step(path: &str, names: solidcraft_io::StepNames) -> Result<solidcraft_io::StepFeature> {
-    let bytes = solidcraft_io::limits::read(path, solidcraft_io::limits::Kind::Step).map_err(|e| EngineError::Other(format!("{path}: {e}")))?;
-    solidcraft_io::step_import_feature_named(&bytes, path, names).map_err(|e| EngineError::Other(format!("{path}: {e}")))
+fn read_step(path: &str, names: torno_io::StepNames) -> Result<torno_io::StepFeature> {
+    let bytes = torno_io::limits::read(path, torno_io::limits::Kind::Step).map_err(|e| EngineError::Other(format!("{path}: {e}")))?;
+    torno_io::step_import_feature_named(&bytes, path, names).map_err(|e| EngineError::Other(format!("{path}: {e}")))
 }
 
 /// Which way is up in a STEP or IGES file, from the program its header names: `("y", name)` for
-/// an exporter whose files have Y up, `("z", name)` for SolidCraft's own (its STEP and IGES exports both name it), else `None`. Only
+/// an exporter whose files have Y up, `("z", name)` for Torno's own (its STEP and IGES exports both name it), else `None`. Only
 /// SolidWorks is listed as Y up: its STEP and IGES writers are well known to keep that program's
 /// Y-up front view, and its name is in FILE_NAME (originating system, preprocessor version) and
 /// often FILE_DESCRIPTION. Programs we aren't sure of stay unknown, so the file is only offered.
-fn exporter_up(import: &solidcraft_kernel::StepImport) -> Option<(&'static str, &'static str)> {
-    if import.system.trim().starts_with("SolidCraft") {
-        return Some(("z", "SolidCraft"));
+fn exporter_up(import: &torno_kernel::StepImport) -> Option<(&'static str, &'static str)> {
+    if import.system.trim().starts_with("Torno") {
+        return Some(("z", "Torno"));
     }
     let named = [&import.system, &import.preprocessor, &import.description].iter().any(|h| h.to_ascii_lowercase().contains("solidworks"));
     named.then_some(("y", "SolidWorks"))
 }
 
 /// A quarter turn about X through the origin: a file's Y up becomes Z up.
-fn quarter_turn_x() -> solidcraft_doc::Mat {
-    solidcraft_doc::rigid(solidcore_record::Vec3::ZERO, solidcore_record::Vec3::ZERO, solidcore_record::Vec3::X, std::f64::consts::FRAC_PI_2)
+fn quarter_turn_x() -> torno_doc::Mat {
+    torno_doc::rigid(solidcore_record::Vec3::ZERO, solidcore_record::Vec3::ZERO, solidcore_record::Vec3::X, std::f64::consts::FRAC_PI_2)
 }
 
 /// Add an Import feature for a STEP file to the session's design, in a new component named
@@ -276,7 +276,7 @@ fn quarter_turn_x() -> solidcraft_doc::Mat {
 /// building the solids in SMLib, placing, meshing and evaluating them), as
 /// `diagnostics.profile` reports it.
 fn add_step(s: &mut Session, path: &str, name: Option<&str>, options: &StepOptions) -> Result<Value> {
-    let profiled = solidcraft_profile::enabled().then(solidcraft_profile::mark);
+    let profiled = torno_profile::enabled().then(torno_profile::mark);
     let sf = read_step(path, options.names)?;
     let fname = name.filter(|n| !n.trim().is_empty()).unwrap_or(&sf.name).to_string();
     let cname = import::component_name(path, name);
@@ -343,23 +343,22 @@ fn add_mesh(
     origin: bool,
     crease_angle: Option<f64>,
 ) -> Result<Value> {
-    let err = |e: solidcraft_io::IoError| EngineError::Other(format!("{path}: {e}"));
-    let bytes = solidcraft_io::vfs::read(path, solidcraft_io::MAX_3MF_BYTES).map_err(|e| EngineError::Other(format!("{path}: {e}")))?;
-    let gltf = solidcraft_io::is_gltf_path(path);
+    let err = |e: torno_io::IoError| EngineError::Other(format!("{path}: {e}"));
+    let bytes = torno_io::vfs::read(path, torno_io::MAX_3MF_BYTES).map_err(|e| EngineError::Other(format!("{path}: {e}")))?;
+    let gltf = torno_io::is_gltf_path(path);
     let (mut mf, plan, looks) = if gltf {
         let dir = std::path::Path::new(path).parent().map(std::path::Path::to_path_buf).unwrap_or_default();
-        let mut load =
-            |name: &str| solidcraft_io::vfs::read(&dir.join(name).to_string_lossy(), solidcraft_io::MAX_GLTF_BYTES).map_err(|e| e.to_string());
-        let mut g = solidcraft_io::read_gltf(&bytes, path, &mut load).map_err(err)?;
+        let mut load = |name: &str| torno_io::vfs::read(&dir.join(name).to_string_lossy(), torno_io::MAX_GLTF_BYTES).map_err(|e| e.to_string());
+        let mut g = torno_io::read_gltf(&bytes, path, &mut load).map_err(err)?;
         if !import::mesh_plan_fits(&g.plan) {
             g.flatten();
         }
         (g.feature, Some(g.plan), g.looks)
     } else {
-        (solidcraft_io::mesh_import_feature_in(&bytes, path, unit.map_or(1.0, |(_, mm)| mm)).map_err(err)?, None, Vec::new())
+        (torno_io::mesh_import_feature_in(&bytes, path, unit.map_or(1.0, |(_, mm)| mm)).map_err(err)?, None, Vec::new())
     };
     if let Some(angle) = crease_angle
-        && let solidcraft_doc::FeatureKind::MeshImport { meshes, .. } = &mut mf.kind
+        && let torno_doc::FeatureKind::MeshImport { meshes, .. } = &mut mf.kind
     {
         for mesh in meshes {
             if angle == 0.0 {
@@ -417,7 +416,7 @@ fn add_mesh(
 fn turn_up(s: &mut Session, placed: &import::Placed) -> Result<Option<u64>> {
     let occ = placed.occurrence.ok_or_else(|| EngineError::Other("the import has no placement to turn".into()))?;
     if let Some(o) = s.doc_mut().occurrences.iter_mut().find(|o| o.id == occ) {
-        o.transform = solidcraft_doc::mat_mul(&quarter_turn_x(), &o.transform);
+        o.transform = torno_doc::mat_mul(&quarter_turn_x(), &o.transform);
     }
     s.refresh();
     Ok(Some(occ))
@@ -429,28 +428,28 @@ fn mesh_up(p: &Value, path: &str, cmd: &str) -> Result<Option<bool>> {
     if p.get("up").is_none_or(Value::is_null) {
         return Ok(None);
     }
-    if !solidcraft_io::is_gltf_path(path) {
+    if !torno_io::is_gltf_path(path) {
         return Err(bad(cmd, "`up` applies to STEP, IGES and glTF files only"));
     }
     Ok(Some(step_options(p, cmd)?.y_up))
 }
 
 /// `units` for an STL, OBJ or PLY file: the unit its coordinates are in (one of
-/// `solidcraft_doc::point_cloud::UNITS`, the same as a point cloud's), which they are scaled from
+/// `torno_doc::point_cloud::UNITS`, the same as a point cloud's), which they are scaled from
 /// to millimetres as the file is read. The design keeps the millimetre mesh and not the unit, so
 /// importing again is how a different unit is tried. A 3MF or glTF file states its own.
 fn mesh_units(p: &Value, path: &str, cmd: &str) -> Result<Option<(&'static str, f64)>> {
-    let names = || solidcraft_doc::point_cloud::UNITS.iter().map(|(n, _)| *n).collect::<Vec<_>>().join(", ");
+    let names = || torno_doc::point_cloud::UNITS.iter().map(|(n, _)| *n).collect::<Vec<_>>().join(", ");
     let unit = match p.get("units") {
         None | Some(Value::Null) => return Ok(None),
-        Some(Value::String(u)) => solidcraft_doc::point_cloud::UNITS
+        Some(Value::String(u)) => torno_doc::point_cloud::UNITS
             .iter()
             .find(|(name, _)| name.eq_ignore_ascii_case(u))
             .map(|(name, mm)| (*name, *mm))
             .ok_or_else(|| bad(cmd, format!("`units` must be one of {} (not `{u}`)", names())))?,
         Some(_) => return Err(bad(cmd, format!("`units` must be one of {}", names()))),
     };
-    if solidcraft_io::is_gltf_path(path) || path.to_ascii_lowercase().ends_with(".3mf") {
+    if torno_io::is_gltf_path(path) || path.to_ascii_lowercase().ends_with(".3mf") {
         return Err(bad(cmd, "`units` applies to STL, OBJ and PLY files only: a 3MF or glTF file states its own"));
     }
     Ok(Some(unit))
@@ -459,7 +458,7 @@ fn mesh_units(p: &Value, path: &str, cmd: &str) -> Result<Option<(&'static str, 
 fn insert_mesh(s: &mut Session, p: &Value) -> Result<Value> {
     let cmd = "file.insert_mesh";
     let path = path_arg(p, cmd)?;
-    if !solidcraft_io::is_mesh_path(path) && !solidcraft_io::is_ply_path(path) {
+    if !torno_io::is_mesh_path(path) && !torno_io::is_ply_path(path) {
         return Err(bad(cmd, "only 3MF, STL, OBJ, PLY and glTF files (.3mf, .stl, .obj, .ply, .glb, .gltf) can be inserted as meshes"));
     }
     let up = mesh_up(p, path, cmd)?;
@@ -496,7 +495,7 @@ fn mesh_origin(p: &Value, cmd: &str) -> Result<bool> {
 fn insert_step(s: &mut Session, p: &Value) -> Result<Value> {
     let cmd = "file.insert_step";
     let path = path_arg(p, cmd)?;
-    if !solidcraft_io::is_step_path(path) {
+    if !torno_io::is_step_path(path) {
         return Err(bad(cmd, "only STEP, IGES, FreeCAD and Rhino files (.step, .stp, .igs, .iges, .fcstd, .3dm) can be inserted"));
     }
     let options = step_options(p, cmd)?;
@@ -508,8 +507,8 @@ fn insert_step(s: &mut Session, p: &Value) -> Result<Value> {
     if let Some(m) = placement {
         let occ = out["occurrence"].as_u64().ok_or_else(|| EngineError::Other("the import has no placement to move".into()))?;
         if let Some(o) = s.doc_mut().occurrences.iter_mut().find(|o| o.id == occ) {
-            let placed = solidcraft_doc::mat_mul(&m, &o.transform);
-            if !solidcraft_doc::is_placement(&placed) {
+            let placed = torno_doc::mat_mul(&m, &o.transform);
+            if !torno_doc::is_placement(&placed) {
                 return Err(bad(cmd, "`matrix` moves the import out of a rigid placement within 1e9 mm"));
             }
             o.transform = placed;
@@ -522,13 +521,13 @@ fn insert_step(s: &mut Session, p: &Value) -> Result<Value> {
 
 fn open(s: &mut Session, p: &Value) -> Result<Value> {
     let path = path_arg(p, "doc.open")?;
-    if !solidcraft_io::is_step_path(path) && p.get("names").is_some_and(|v| !v.is_null()) {
+    if !torno_io::is_step_path(path) && p.get("names").is_some_and(|v| !v.is_null()) {
         return Err(bad("doc.open", "`names` applies to STEP and IGES files only"));
     }
-    if !solidcraft_io::is_step_path(path) && !solidcraft_io::is_gltf_path(path) && p.get("up").is_some_and(|v| !v.is_null()) {
+    if !torno_io::is_step_path(path) && !torno_io::is_gltf_path(path) && p.get("up").is_some_and(|v| !v.is_null()) {
         return Err(bad("doc.open", "`up` applies to STEP, IGES and glTF files only"));
     }
-    if !solidcraft_io::is_mesh_path(path) && p.get("origin").is_some_and(|v| !v.is_null()) {
+    if !torno_io::is_mesh_path(path) && p.get("origin").is_some_and(|v| !v.is_null()) {
         return Err(bad("doc.open", "`origin` applies to 3MF, STL, OBJ and glTF files only"));
     }
     if let Some(command) = super::drawing_import_command(path) {
@@ -551,7 +550,7 @@ fn open(s: &mut Session, p: &Value) -> Result<Value> {
             param_warnings: Vec::new(),
         }));
     }
-    if solidcraft_io::is_point_cloud_path(path) {
+    if torno_io::is_point_cloud_path(path) {
         // A new, unsaved design holding the points.
         let stem = std::path::Path::new(path).file_stem().map(|x| x.to_string_lossy().to_string()).unwrap_or_else(|| "Untitled".into());
         let mut fresh = Session::new(Document::new(&stem));
@@ -577,12 +576,12 @@ fn open(s: &mut Session, p: &Value) -> Result<Value> {
             param_warnings: Vec::new(),
         }));
     }
-    if solidcraft_io::is_step_path(path) || solidcraft_io::is_mesh_path(path) {
+    if torno_io::is_step_path(path) || torno_io::is_mesh_path(path) {
         // A new, unsaved design holding the file's bodies.
         let stem = std::path::Path::new(path).file_stem().map(|x| x.to_string_lossy().to_string()).unwrap_or_else(|| "Untitled".into());
         let mut fresh = Session::new(Document::new(&stem));
         fresh.set_validation(s.validation());
-        let r = if solidcraft_io::is_step_path(path) {
+        let r = if torno_io::is_step_path(path) {
             add_step(&mut fresh, path, None, &step_options(p, "doc.open")?)?
         } else {
             add_mesh(&mut fresh, path, None, mesh_up(p, path, "doc.open")?, mesh_units(p, path, "doc.open")?, mesh_origin(p, "doc.open")?, None)?
@@ -617,15 +616,15 @@ fn open(s: &mut Session, p: &Value) -> Result<Value> {
     }
     let read_only = bool_(p, "read_only").unwrap_or(false);
     // Stamped before it is read: a write while it is being read is a change too.
-    let disk = solidcraft_io::design_lock::stamp(path);
+    let disk = torno_io::design_lock::stamp(path);
     let (doc, saved) = read_design(s, path)?;
     let opened = Session::opened_at_validating(doc, saved.as_ref(), Some(path), s.validation());
     opened_design(s, opened, path, read_only, disk)
 }
 
 /// Read the design file at `path` for `doc.open`, under its file's name if it has none of its own.
-fn read_design(s: &mut Session, path: &str) -> Result<(Document, Option<solidcraft_doc::SavedModel>)> {
-    let (mut doc, saved) = solidcraft_io::read_design_file(path, s.open_preview.take()).map_err(|e| EngineError::Other(format!("{path}: {e}")))?;
+fn read_design(s: &mut Session, path: &str) -> Result<(Document, Option<torno_doc::SavedModel>)> {
+    let (mut doc, saved) = torno_io::read_design_file(path, s.open_preview.take()).map_err(|e| EngineError::Other(format!("{path}: {e}")))?;
     if let Some(stem) = default_name_for(&doc.name, path) {
         doc.name = stem;
     }
@@ -634,19 +633,13 @@ fn read_design(s: &mut Session, path: &str) -> Result<(Document, Option<solidcra
 
 /// `doc.open` of a design: `opened`, the design read from `path` and evaluated, takes `s`'s
 /// place, and the reply says what it is.
-fn opened_design(
-    s: &mut Session,
-    opened: Session,
-    path: &str,
-    read_only: bool,
-    disk: Option<solidcraft_io::design_lock::FileStamp>,
-) -> Result<Value> {
+fn opened_design(s: &mut Session, opened: Session, path: &str, read_only: bool, disk: Option<torno_io::design_lock::FileStamp>) -> Result<Value> {
     s.replace_design(opened);
     s.disk = disk;
     s.read_only = read_only;
     let errors = s.model.results.iter().filter(|r| r.error.is_some()).count();
-    let now = solidcraft_io::design_lock::now_secs();
-    let open_elsewhere = solidcraft_io::design_lock::held_elsewhere(std::path::Path::new(path), now).map(|lock| OpenElsewhere {
+    let now = torno_io::design_lock::now_secs();
+    let open_elsewhere = torno_io::design_lock::held_elsewhere(std::path::Path::new(path), now).map(|lock| OpenElsewhere {
         host: lock.host,
         user: lock.user,
         app: lock.app,
@@ -772,7 +765,7 @@ fn rename_design(s: &mut Session, from: &str, to: &str) {
     s.doc_mut().name = to.to_string();
     // An open sketch's entry finds its place in the history by these states' addresses
     // (Finish folds the edit, Cancel checks the history): it follows the renamed copies.
-    let mut renamed: Vec<(*const solidcraft_doc::Document, std::sync::Arc<solidcraft_doc::Document>)> = Vec::new();
+    let mut renamed: Vec<(*const torno_doc::Document, std::sync::Arc<torno_doc::Document>)> = Vec::new();
     for snap in s.undo.iter_mut().chain(s.redo.iter_mut()) {
         if snap.doc.name == from {
             let old = std::sync::Arc::as_ptr(&snap.doc);
@@ -781,7 +774,7 @@ fn rename_design(s: &mut Session, from: &str, to: &str) {
         }
     }
     if let Some(entry) = s.sketch_entry.as_mut() {
-        let follow = |doc: &mut std::sync::Arc<solidcraft_doc::Document>| match renamed.iter().find(|(old, _)| *old == std::sync::Arc::as_ptr(doc)) {
+        let follow = |doc: &mut std::sync::Arc<torno_doc::Document>| match renamed.iter().find(|(old, _)| *old == std::sync::Arc::as_ptr(doc)) {
             Some((_, new)) => *doc = new.clone(),
             None if doc.name == from => std::sync::Arc::make_mut(doc).name = to.to_string(),
             None => {}
@@ -802,16 +795,16 @@ fn rename_design(s: &mut Session, from: &str, to: &str) {
 /// The kind of file `doc.open` reads `path` as when that is not a design, by its extension. A
 /// design saved under such a name would not open again as the design (#9745).
 fn other_file_kind(path: &str) -> Option<&'static str> {
-    if solidcraft_io::is_step_path(path) {
+    if torno_io::is_step_path(path) {
         Some("a STEP or other CAD exchange file")
-    } else if solidcraft_io::is_mesh_path(path) {
+    } else if torno_io::is_mesh_path(path) {
         Some("a mesh")
     } else if super::drawing_import_command(path).is_some() {
         Some("a 2D drawing")
-    } else if solidcraft_io::is_point_cloud_path(path) {
+    } else if torno_io::is_point_cloud_path(path) {
         Some("a point cloud")
-    } else if solidcraft_io::is_drawing_path(path) {
-        Some("a SolidCraft drawing")
+    } else if torno_io::is_drawing_path(path) {
+        Some("a Torno drawing")
     } else {
         None
     }
@@ -822,14 +815,14 @@ fn other_file_kind(path: &str) -> Option<&'static str> {
 fn check_design_name(cmd: &str, path: &str) -> Result<()> {
     let Some(kind) = other_file_kind(path) else { return Ok(()) };
     let ext = std::path::Path::new(path).extension().map(|e| e.to_string_lossy().to_string()).unwrap_or_default();
-    let export = if solidcraft_io::Format::from_name(&ext).is_ok() { format!(", or write a .{ext} file with file.export") } else { String::new() };
-    Err(bad(cmd, format!("{path}: a .{ext} file opens as {kind}, not as a design; save the design as .{}{export}", solidcraft_io::DESIGN_EXT)))
+    let export = if torno_io::Format::from_name(&ext).is_ok() { format!(", or write a .{ext} file with file.export") } else { String::new() };
+    Err(bad(cmd, format!("{path}: a .{ext} file opens as {kind}, not as a design; save the design as .{}{export}", torno_io::DESIGN_EXT)))
 }
 
 #[allow(clippy::too_many_arguments)]
 fn write(s: &mut Session, cmd: &str, path: &str, format: &str, compression: &str, preview: bool, cache: bool, overwrite: bool) -> Result<Value> {
     // A path outside the agent's folders says so first, whatever its name.
-    solidcraft_io::vfs::check(path).map_err(|e| EngineError::Other(e.to_string()))?;
+    torno_io::vfs::check(path).map_err(|e| EngineError::Other(e.to_string()))?;
     check_design_name(cmd, path)?;
     // A move not captured yet isn't in the document a file holds: refuse, rather than write the
     // file without it and say nothing (#9736). The app asks the Capture Position question first.
@@ -868,30 +861,23 @@ fn write(s: &mut Session, cmd: &str, path: &str, format: &str, compression: &str
 
 fn write_file(s: &mut Session, path: &str, format: &str, compression: &str, preview: bool, cache: bool) -> Result<Value> {
     let compression = match compression {
-        "fast" => solidcraft_io::DesignCompression::Fast,
-        "compact" => solidcraft_io::DesignCompression::Compact,
+        "fast" => torno_io::DesignCompression::Fast,
+        "compact" => torno_io::DesignCompression::Compact,
         _ => return Err(bad("file.save", "compression must be fast or compact")),
     };
     write_bytes(s, path, format, compression, preview, cache)
 }
 
-fn write_bytes(
-    s: &mut Session,
-    path: &str,
-    format: &str,
-    compression: solidcraft_io::DesignCompression,
-    preview: bool,
-    cache: bool,
-) -> Result<Value> {
+fn write_bytes(s: &mut Session, path: &str, format: &str, compression: torno_io::DesignCompression, preview: bool, cache: bool) -> Result<Value> {
     let bytes = match format {
         "container" => s.design_container_at(Some(path), compression, preview, cache)?,
-        "json" => solidcraft_io::write_design(&s.design_at(Some(path))),
+        "json" => torno_io::write_design(&s.design_at(Some(path))),
         _ => return Err(bad("file.save", "format must be container or json")),
     };
     // Atomic, keeping the version being replaced as `<file>.bak`.
-    solidcraft_io::write_atomic(std::path::Path::new(path), &bytes, true).map_err(|e| EngineError::Other(format!("{path}: {e}")))?;
+    torno_io::write_atomic(std::path::Path::new(path), &bytes, true).map_err(|e| EngineError::Other(format!("{path}: {e}")))?;
     s.path = Some(path.to_string());
-    s.disk = solidcraft_io::design_lock::stamp(path);
+    s.disk = torno_io::design_lock::stamp(path);
     s.read_only = false;
     s.mark_saved();
     let mut out = SaveResult {
@@ -903,10 +889,10 @@ fn write_bytes(
         not_kept: None,
         param_warnings: Vec::new(),
     };
-    // A newer SolidCraft's file keeps what this version can't read, and its format number. What
+    // A newer Torno's file keeps what this version can't read, and its format number. What
     // couldn't go back, because the design was changed around it, is said.
     if s.doc.newer_file.is_some() {
-        let mut lost = solidcraft_doc::newer_file::not_kept(&s.doc);
+        let mut lost = torno_doc::newer_file::not_kept(&s.doc);
         if format == "json" && s.doc.newer_file.as_ref().is_some_and(|file| file.needs_container()) {
             lost.push("the parts of the file beside the design, which plain JSON has no room for: save as .sc to keep them".to_string());
         }
@@ -922,16 +908,16 @@ fn write_bytes(
 impl Session {
     /// Open a design with its file location, resolving component links before history keeps
     /// them. Absolute in-memory targets survive Save As, undo, redo and recovery unchanged.
-    pub fn opened_at(doc: Document, saved: Option<&solidcraft_doc::SavedModel>, path: Option<&str>) -> Self {
-        Self::opened_at_validating(doc, saved, path, solidcraft_kernel::Validation::default())
+    pub fn opened_at(doc: Document, saved: Option<&torno_doc::SavedModel>, path: Option<&str>) -> Self {
+        Self::opened_at_validating(doc, saved, path, torno_kernel::Validation::default())
     }
 
     /// [`Self::opened_at`], its features evaluated under `validation` ([`Session::set_validation`]).
     pub fn opened_at_validating(
         mut doc: Document,
-        saved: Option<&solidcraft_doc::SavedModel>,
+        saved: Option<&torno_doc::SavedModel>,
         path: Option<&str>,
-        validation: solidcraft_kernel::Validation,
+        validation: torno_kernel::Validation,
     ) -> Self {
         super::component_link::resolve_design_links(&mut doc, path);
         Self::opened_validating(doc, saved, validation).located(path)
@@ -1012,35 +998,35 @@ impl Session {
     /// saving to it would replace that work (#5467). A file that is gone has not changed.
     pub fn disk_changed(&self) -> bool {
         match (&self.path, &self.disk) {
-            (Some(path), Some(known)) => solidcraft_io::design_lock::changed_since(path, known),
+            (Some(path), Some(known)) => torno_io::design_lock::changed_since(path, known),
             _ => false,
         }
     }
 
     /// Container bytes for desktop and browser saves. Only already evaluated bodies
     /// and warm meshes are eligible; saving never forces evaluation or tessellation.
-    pub fn design_container(&self, compression: solidcraft_io::DesignCompression, preview: bool, cache: bool) -> solidcraft_io::Result<Vec<u8>> {
+    pub fn design_container(&self, compression: torno_io::DesignCompression, preview: bool, cache: bool) -> torno_io::Result<Vec<u8>> {
         self.design_container_at(self.path.as_deref(), compression, preview, cache)
     }
 
     fn design_container_at(
         &self,
         path: Option<&str>,
-        compression: solidcraft_io::DesignCompression,
+        compression: torno_io::DesignCompression,
         preview: bool,
         cache: bool,
-    ) -> solidcraft_io::Result<Vec<u8>> {
+    ) -> torno_io::Result<Vec<u8>> {
         let design = self.design_at(path);
         let geometry = cache.then(|| saved_geometry(self, &design)).flatten();
         let preview = preview.then(|| saved_preview(self)).flatten();
         let thumbnail = cache.then(|| thumbnail::saved(self)).flatten();
-        solidcraft_io::write_design_container_with_thumbnail(&design, compression, preview.as_ref(), geometry.as_ref(), thumbnail.as_deref())
+        torno_io::write_design_container_with_thumbnail(&design, compression, preview.as_ref(), geometry.as_ref(), thumbnail.as_deref())
     }
 }
 
 /// The evaluated model a save keeps, so opening need not rebuild it: only the finished evaluation
 /// of `design`, the document saved (no sketch being edited, no uncaptured moves, no feature errors).
-fn saved_geometry(s: &Session, design: &Document) -> Option<solidcraft_doc::SavedModel> {
+fn saved_geometry(s: &Session, design: &Document) -> Option<torno_doc::SavedModel> {
     if s.active_sketch.is_some() || !s.pending_moves.is_empty() || s.model.state().bodies.is_empty() {
         return None;
     }
@@ -1048,7 +1034,7 @@ fn saved_geometry(s: &Session, design: &Document) -> Option<solidcraft_doc::Save
 }
 
 /// Cache only warm display geometry. A save never waits for an unevaluated mesh.
-fn saved_preview(s: &Session) -> Option<solidcraft_io::DesignPreview> {
+fn saved_preview(s: &Session) -> Option<torno_io::DesignPreview> {
     if s.active_sketch.is_some() || !s.pending_moves.is_empty() || s.model.results.iter().any(|r| r.error.is_some()) {
         return None;
     }
@@ -1056,7 +1042,7 @@ fn saved_preview(s: &Session) -> Option<solidcraft_io::DesignPreview> {
     if world.bodies.is_empty() || world.bodies.len() > 1024 {
         return None;
     }
-    let mut preview = solidcraft_io::DesignPreview::default();
+    let mut preview = torno_io::DesignPreview::default();
     let mut bytes = 0usize;
     let mut triangles = 0usize;
     for body in &world.bodies {
@@ -1067,7 +1053,7 @@ fn saved_preview(s: &Session) -> Option<solidcraft_io::DesignPreview> {
         if bytes > 8 << 20 || triangles > 100_000 {
             return None;
         }
-        preview.meshes.push(solidcraft_doc::MeshData {
+        preview.meshes.push(torno_doc::MeshData {
             name: body.name.clone(),
             positions: mesh.positions.iter().flat_map(|p| [p.x, p.y, p.z]).collect(),
             triangles: mesh.triangles.iter().flatten().copied().collect(),
@@ -1114,12 +1100,12 @@ fn save_as(s: &mut Session, p: &Value) -> Result<Value> {
 }
 
 /// A mesh export's `quality`: standard (as every export was) unless asked for (#4747).
-fn mesh_quality(p: &Value, cmd: &str) -> Result<solidcraft_io::MeshQuality> {
+fn mesh_quality(p: &Value, cmd: &str) -> Result<torno_io::MeshQuality> {
     match p.get("quality") {
-        None | Some(Value::Null) => Ok(solidcraft_io::MeshQuality::default()),
+        None | Some(Value::Null) => Ok(torno_io::MeshQuality::default()),
         Some(v) => v
             .as_str()
-            .and_then(solidcraft_io::MeshQuality::from_name)
+            .and_then(torno_io::MeshQuality::from_name)
             .ok_or_else(|| bad(cmd, format!("`quality` must be standard, fine or finest, not {v}"))),
     }
 }
@@ -1149,7 +1135,7 @@ fn component_parts(s: &Session) -> Vec<(String, Vec<String>)> {
     }
     let st = s.model.state();
     let owners = doc.model_body_components(&st);
-    let names = solidcraft_doc::WorldNames::new(doc, &st);
+    let names = torno_doc::WorldNames::new(doc, &st);
     doc.placements()
         .into_iter()
         .filter(|(comp, _, _)| *comp != 0)
@@ -1169,7 +1155,7 @@ fn export_to(
     format: Format,
     bodies: &[String],
     parts: &[(String, Vec<String>)],
-    quality: solidcraft_io::MeshQuality,
+    quality: torno_io::MeshQuality,
 ) -> Result<Value> {
     if format == Format::Obj {
         // The colours of the bodies go in a material library beside the mesh file.
@@ -1181,13 +1167,13 @@ fn export_to(
         if !bodies.is_empty() {
             return Err(bad(cmd, "design JSON exports the complete document; omit bodies"));
         }
-        solidcraft_io::write_design(&s.design())
+        torno_io::write_design(&s.design())
     } else if format == Format::Step && bodies.is_empty() && !s.doc.occurrences.is_empty() {
-        solidcraft_io::step_assembly(&s.doc, &s.doc.painted(&s.model.state()), &name)?
+        torno_io::step_assembly(&s.doc, &s.doc.painted(&s.model.state()), &name)?
     } else {
         // Bodies carry the colour they are shown in (appearance, material or imported), and the
         // file the design's properties where the format has a place for them.
-        solidcraft_io::export_with_parts(
+        torno_io::export_with_parts(
             &s.doc.painted(&*s.world_state()?),
             bodies,
             parts,
@@ -1198,7 +1184,7 @@ fn export_to(
             export_thumbnail(s, format, bodies).as_deref(),
         )?
     };
-    solidcraft_io::vfs::write(path, &bytes).map_err(|e| EngineError::Other(format!("{path}: {e}")))?;
+    torno_io::vfs::write(path, &bytes).map_err(|e| EngineError::Other(format!("{path}: {e}")))?;
     let reply =
         ExportResult { path: path.to_string(), bytes: bytes.len(), format: format!("{format:?}"), files: Vec::new(), param_warnings: Vec::new() };
     serde_json::to_value(reply).map_err(|e| EngineError::Other(e.to_string()))
@@ -1217,14 +1203,14 @@ fn export_laid_to(
     format: Format,
     bodies: &[String],
     parts: &[(String, Vec<String>)],
-    quality: solidcraft_io::MeshQuality,
+    quality: torno_io::MeshQuality,
 ) -> Result<Value> {
     let name = std::path::Path::new(path).file_stem().map(|x| x.to_string_lossy().to_string()).unwrap_or_else(|| s.doc.name.clone());
     let mut state = s.doc.painted(&*s.world_state()?);
     let laid = print_face::lay_on_print_faces(s, &mut state, bodies, parts);
     let thumbnail = export_thumbnail(s, format, bodies);
-    let bytes = solidcraft_io::export_with_parts(&state, bodies, parts, format, &name, &s.doc.metadata, quality, thumbnail.as_deref())?;
-    solidcraft_io::vfs::write(path, &bytes).map_err(|e| EngineError::Other(format!("{path}: {e}")))?;
+    let bytes = torno_io::export_with_parts(&state, bodies, parts, format, &name, &s.doc.metadata, quality, thumbnail.as_deref())?;
+    torno_io::vfs::write(path, &bytes).map_err(|e| EngineError::Other(format!("{path}: {e}")))?;
     let reply = SaveMeshResult {
         path: path.to_string(),
         bytes: bytes.len(),
@@ -1255,7 +1241,7 @@ fn export(s: &mut Session, p: &Value) -> Result<Value> {
 fn export_step(s: &mut Session, p: &Value) -> Result<Value> {
     let cmd = "file.export_step";
     let path = path_arg(p, cmd)?;
-    export_to(s, cmd, path, Format::Step, &string_list(cmd, p, "bodies")?, &[], solidcraft_io::MeshQuality::default())
+    export_to(s, cmd, path, Format::Step, &string_list(cmd, p, "bodies")?, &[], torno_io::MeshQuality::default())
 }
 
 fn export_stl(s: &mut Session, p: &Value) -> Result<Value> {
@@ -1285,21 +1271,21 @@ fn export_urdf_cmd(s: &mut Session, p: &Value) -> Result<Value> {
 /// The OBJ export: the mesh file and the material library beside it, with the colours of the
 /// bodies. Every path is checked before anything is written; the library goes first and the
 /// mesh file last, so a mesh file never names a library that is not there.
-fn export_obj(s: &Session, path: &str, bodies: &[String], quality: solidcraft_io::MeshQuality) -> Result<Value> {
+fn export_obj(s: &Session, path: &str, bodies: &[String], quality: torno_io::MeshQuality) -> Result<Value> {
     let mtl_path = std::path::Path::new(path).with_extension("mtl");
     let mtl_name = mtl_path.file_name().map(|x| x.to_string_lossy().to_string()).unwrap_or_else(|| String::from("model.mtl"));
-    let files = solidcraft_io::export_obj(&s.doc.painted(&*s.world_state()?), bodies, &mtl_name, quality)?;
+    let files = torno_io::export_obj(&s.doc.painted(&*s.world_state()?), bodies, &mtl_name, quality)?;
     let mut targets: Vec<(String, &[u8])> = Vec::new();
     if !files.mtl.is_empty() {
         targets.push((mtl_path.to_string_lossy().to_string(), files.mtl.as_bytes()));
     }
     targets.push((path.to_string(), files.obj.as_bytes()));
     for (t, _) in &targets {
-        solidcraft_io::vfs::check(t).map_err(|e| EngineError::Other(format!("{t}: {e}")))?;
+        torno_io::vfs::check(t).map_err(|e| EngineError::Other(format!("{t}: {e}")))?;
     }
     let mut written: Vec<String> = Vec::new();
     for (t, bytes) in &targets {
-        if let Err(e) = solidcraft_io::vfs::write(t, bytes) {
+        if let Err(e) = torno_io::vfs::write(t, bytes) {
             let before = if written.is_empty() { "none".to_string() } else { written.join(", ") };
             return Err(EngineError::Other(format!("{t}: {e} (this file may be incomplete; written before it: {before})")));
         }
@@ -1317,7 +1303,7 @@ fn export_urdf(s: &Session, cmd: &str, path: &str, p: &Value) -> Result<Value> {
     };
     // `io::urdf` refuses a prefix XML cannot hold.
     let mesh_prefix = str_(p, "mesh_prefix").unwrap_or("").to_string();
-    let options = solidcraft_io::UrdfOptions { mesh_prefix, effort: positive("effort")?, velocity: positive("velocity")? };
+    let options = torno_io::UrdfOptions { mesh_prefix, effort: positive("effort")?, velocity: positive("velocity")? };
     let file = std::path::Path::new(path);
     let stem = file.file_stem().map(|x| x.to_string_lossy().to_string()).unwrap_or_else(|| s.doc.name.clone());
     // Occurrences where they are shown, uncaptured moves included, except those the joint solver
@@ -1330,7 +1316,7 @@ fn export_urdf(s: &Session, cmd: &str, path: &str, p: &Value) -> Result<Value> {
     let doc = if moves.is_empty() {
         std::borrow::Cow::Borrowed(&*s.doc)
     } else {
-        let placed = solidcraft_doc::joints::solve(&s.doc, &st).world;
+        let placed = torno_doc::joints::solve(&s.doc, &st).world;
         let mut doc = (*s.doc).clone();
         for o in &mut doc.occurrences {
             match moves.get(&o.id) {
@@ -1341,7 +1327,7 @@ fn export_urdf(s: &Session, cmd: &str, path: &str, p: &Value) -> Result<Value> {
         }
         std::borrow::Cow::Owned(doc)
     };
-    let mut pkg = solidcraft_io::urdf(&doc, &doc.painted(&st), &stem, &options)?;
+    let mut pkg = torno_io::urdf(&doc, &doc.painted(&st), &stem, &options)?;
     for name in held {
         pkg.warnings.push(format!("`{name}` was moved but the move is not captured: exported where its joints place it"));
     }
@@ -1349,11 +1335,11 @@ fn export_urdf(s: &Session, cmd: &str, path: &str, p: &Value) -> Result<Value> {
     let mut targets: Vec<(String, &[u8])> = pkg.meshes.iter().map(|(n, b)| (dir.join(n).to_string_lossy().to_string(), b.as_slice())).collect();
     targets.push((path.to_string(), pkg.xml.as_bytes()));
     for (t, _) in &targets {
-        solidcraft_io::vfs::check(t).map_err(|e| EngineError::Other(format!("{t}: {e}")))?;
+        torno_io::vfs::check(t).map_err(|e| EngineError::Other(format!("{t}: {e}")))?;
     }
     let mut written: Vec<String> = Vec::new();
     for (t, bytes) in &targets {
-        if let Err(e) = solidcraft_io::vfs::write(t, bytes) {
+        if let Err(e) = torno_io::vfs::write(t, bytes) {
             let before = if written.is_empty() { "none".to_string() } else { written.join(", ") };
             return Err(EngineError::Other(format!("{t}: {e} (this file may be incomplete; written before it: {before})")));
         }
@@ -1471,7 +1457,7 @@ fn recovery_dir(p: &Value, cmd: &str) -> Result<std::path::PathBuf> {
         None => crate::recovery::default_dir().ok_or_else(|| bad(cmd, "no recovery folder on this system (give `dir`)"))?,
     };
     // An agent's commands reach the recovery folder only when it is one of their folders.
-    solidcraft_io::vfs::check(&dir.to_string_lossy()).map_err(|e| EngineError::Other(e.to_string()))?;
+    torno_io::vfs::check(&dir.to_string_lossy()).map_err(|e| EngineError::Other(e.to_string()))?;
     Ok(dir)
 }
 
@@ -1532,7 +1518,7 @@ mod tests {
         s.execute("solid.box", &json!({"length": 10, "width": 20, "height": 30})).unwrap();
         let dir = std::env::temp_dir();
         let has_thumbnail = |s: &mut Session, name: &str| {
-            let path = dir.join(format!("solidcraft-3mf-thumbnail-{}-{name}", std::process::id()));
+            let path = dir.join(format!("torno-3mf-thumbnail-{}-{name}", std::process::id()));
             s.execute("file.export", &json!({"path": path})).unwrap();
             let bytes = std::fs::read(&path).unwrap();
             std::fs::remove_file(&path).unwrap();
@@ -1547,16 +1533,16 @@ mod tests {
     #[test]
     fn a_step_import_reports_its_profile_while_the_profiler_records() {
         let _serial = crate::schema::diagnostics::PROFILE_TESTS.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-        let dir = std::env::temp_dir().join(format!("solidcraft-import-profile-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("torno-import-profile-{}", std::process::id()));
         std::fs::create_dir_all(&dir).unwrap();
         let path = dir.join("block.step").to_string_lossy().to_string();
         let mut s = Session::default();
         s.execute("solid.box", &json!({"length": 20, "width": 10, "height": 5})).unwrap();
         s.execute("file.export", &json!({"path": path})).unwrap();
         // The first read of the file (a second one finds it in the import cache).
-        solidcraft_profile::set_enabled(true);
+        torno_profile::set_enabled(true);
         let out = Session::default().execute("file.insert_step", &json!({"path": path})).unwrap();
-        solidcraft_profile::set_enabled(false);
+        torno_profile::set_enabled(false);
         let plain = Session::default().execute("file.insert_step", &json!({"path": path})).unwrap();
         assert!(plain.get("profile").is_none(), "nothing recorded, nothing reported: {plain}");
         let p = &out["profile"];
@@ -1600,11 +1586,11 @@ mod tests {
     /// back, an object with parts is one mesh with all its parts' triangles.
     #[test]
     fn a_components_bodies_export_to_3mf_as_one_object_with_parts() {
-        let dir = std::env::temp_dir().join(format!("solidcraft-3mf-parts-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("torno-3mf-parts-{}", std::process::id()));
         std::fs::create_dir_all(&dir).unwrap();
         let path = |n: &str| dir.join(n).to_string_lossy().to_string();
         let read = |p: &str| -> Vec<(String, usize)> {
-            let (objects, warnings) = solidcraft_io::read_3mf(&std::fs::read(p).unwrap()).unwrap();
+            let (objects, warnings) = torno_io::read_3mf(&std::fs::read(p).unwrap()).unwrap();
             assert!(warnings.is_empty(), "{warnings:?}");
             objects.iter().map(|o| (o.name.clone(), o.triangles.len())).collect()
         };
@@ -1654,7 +1640,7 @@ mod tests {
     /// whatever the path's extension, as `file.export` does with `format`, and says so.
     #[test]
     fn each_format_has_an_export_command_of_its_own() {
-        let dir = std::env::temp_dir().join(format!("solidcraft-export-per-format-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("torno-export-per-format-{}", std::process::id()));
         let _ = std::fs::remove_dir_all(&dir);
         std::fs::create_dir_all(&dir).unwrap();
         let at = |n: &str| dir.join(n).to_string_lossy().to_string();
@@ -1696,7 +1682,7 @@ mod tests {
     /// (Save As Mesh too); standard is what the export always gave; anything else is refused.
     #[test]
     fn a_mesh_export_follows_round_faces_more_closely_at_a_finer_quality() {
-        let dir = std::env::temp_dir().join(format!("solidcraft-mesh-quality-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("torno-mesh-quality-{}", std::process::id()));
         std::fs::create_dir_all(&dir).unwrap();
         let mut s = Session::default();
         s.execute("solid.box", &json!({"length": 200, "width": 100, "height": 5})).unwrap();
@@ -1760,7 +1746,7 @@ mod tests {
     /// the design named after its first file, its file, and nothing unsaved; undo keeps the name.
     #[test]
     fn a_save_run_on_a_copy_and_adopted_matches_saving_directly() {
-        let dir = std::env::temp_dir().join(format!("solidcraft-adopt-save-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("torno-adopt-save-{}", std::process::id()));
         std::fs::create_dir_all(&dir).unwrap();
         let mut direct = Session::default();
         direct.execute("solid.box", &json!({"length": 10, "width": 10, "height": 10})).unwrap();
@@ -1779,7 +1765,7 @@ mod tests {
         assert_eq!(adopted.doc.name, "Bracket copy");
         assert_eq!(direct.doc.name, "Bracket");
         assert_eq!(adopted.undo.iter().map(|u| u.doc.name.clone()).collect::<Vec<_>>(), vec!["Bracket copy".to_string(); adopted.undo.len()]);
-        assert_eq!(solidcraft_io::read_design(&std::fs::read(&b).unwrap()).unwrap(), *adopted.doc);
+        assert_eq!(torno_io::read_design(&std::fs::read(&b).unwrap()).unwrap(), *adopted.doc);
         let _ = std::fs::remove_dir_all(&dir);
     }
 
@@ -1788,7 +1774,7 @@ mod tests {
     /// leaves nothing unsaved again. A hidden body is a change too.
     #[test]
     fn a_change_made_while_a_copy_saves_stays_unsaved() {
-        let dir = std::env::temp_dir().join(format!("solidcraft-adopt-changed-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("torno-adopt-changed-{}", std::process::id()));
         std::fs::create_dir_all(&dir).unwrap();
         let path = dir.join("Bracket.solidcraft");
         for hide in [false, true] {
@@ -1814,7 +1800,7 @@ mod tests {
     /// writes it back to that same file (container format), never to a new `.sc` beside it.
     #[test]
     fn saving_an_opened_legacy_design_keeps_its_name() {
-        let dir = std::env::temp_dir().join(format!("solidcraft-legacy-ext-save-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("torno-legacy-ext-save-{}", std::process::id()));
         let _ = std::fs::remove_dir_all(&dir);
         std::fs::create_dir_all(&dir).unwrap();
         let old = dir.join("Bracket.solidcraft");
@@ -1835,15 +1821,15 @@ mod tests {
             .collect();
         assert_eq!(names, ["Bracket.solidcraft"]);
         let bytes = std::fs::read(&old).unwrap();
-        assert!(solidcraft_io::is_design_container(&bytes));
-        assert_eq!(solidcraft_io::read_design(&bytes).unwrap().features.len(), 2);
+        assert!(torno_io::is_design_container(&bytes));
+        assert_eq!(torno_io::read_design(&bytes).unwrap().features.len(), 2);
         // Save As to the new extension leaves the old file as it was.
         s.execute("file.save_as", &json!({"path": dir.join("Bracket.sc").to_string_lossy()})).unwrap();
         assert!(old.is_file() && dir.join("Bracket.sc").is_file());
         let _ = std::fs::remove_dir_all(&dir);
     }
 
-    /// A design a newer SolidCraft saved opens through the command agents and the app use: the
+    /// A design a newer Torno saved opens through the command agents and the app use: the
     /// reply warns, what it can't read shows as that feature's error, work goes on around it, and
     /// saving keeps the feature and the file's number in both encodings.
     #[test]
@@ -1853,15 +1839,15 @@ mod tests {
         let mut s = Session::default();
         s.execute("solid.box", &json!({"length": 2, "width": 3, "height": 4})).unwrap();
         let mut file: Value = serde_json::from_str(&s.doc.to_json()).unwrap();
-        let newer = solidcraft_doc::format::format_string(solidcraft_doc::format::FORMAT + 1);
+        let newer = torno_doc::format::format_string(torno_doc::format::FORMAT + 1);
         file["format"] = json!(newer);
         let future = json!({"id": 900, "name": "Lattice1", "type": "gyroid_lattice", "cell": 2.5});
         file["features"].as_array_mut().unwrap().push(future.clone());
         file["future_section"] = json!([1, 2]);
         for name in ["newer.json", "newer.sc"] {
             let path = dir.join(name);
-            let source = solidcraft_doc::Document::from_json(&file.to_string()).unwrap();
-            let bytes = if name.ends_with(".sc") { solidcraft_io::write_design_container(&source).unwrap() } else { file.to_string().into_bytes() };
+            let source = torno_doc::Document::from_json(&file.to_string()).unwrap();
+            let bytes = if name.ends_with(".sc") { torno_io::write_design_container(&source).unwrap() } else { file.to_string().into_bytes() };
             std::fs::write(&path, bytes).unwrap();
             let path = path.to_string_lossy().to_string();
             let mut opened = Session::default();
@@ -1873,9 +1859,9 @@ mod tests {
             assert_eq!(
                 first,
                 format!(
-                    "Saved by a newer SolidCraft (format {}, this version reads up to {}). If something's missing, update.",
-                    solidcraft_doc::format::FORMAT + 1,
-                    solidcraft_doc::format::FORMAT
+                    "Saved by a newer Torno (format {}, this version reads up to {}). If something's missing, update.",
+                    torno_doc::format::FORMAT + 1,
+                    torno_doc::format::FORMAT
                 )
             );
             assert_eq!(opened.model.state().bodies.len(), 1, "the box still builds");
@@ -1902,7 +1888,7 @@ mod tests {
     /// `overwrite`, which replaces it; a design opened read-only only saves to another file.
     #[test]
     fn a_save_over_a_file_changed_on_disk_or_opened_read_only_is_refused() {
-        let dir = std::env::temp_dir().join(format!("solidcraft-changed-on-disk-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("torno-changed-on-disk-{}", std::process::id()));
         std::fs::create_dir_all(&dir).unwrap();
         let a = dir.join("Bracket.solidcraft");
         let a_str = a.to_string_lossy().to_string();
@@ -1942,7 +1928,7 @@ mod tests {
     /// is captured (then the file has it) or reverted (then the design is as saved).
     #[test]
     fn a_move_not_captured_is_unsaved_and_saving_waits_for_it() {
-        let dir = std::env::temp_dir().join(format!("solidcraft-pending-move-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("torno-pending-move-{}", std::process::id()));
         std::fs::create_dir_all(&dir).unwrap();
         let path = dir.join("two.sc").to_string_lossy().to_string();
         let mut s = Session::default();
@@ -1955,7 +1941,7 @@ mod tests {
         let arm_x = |s: &Session| {
             let world = s.world_state().unwrap();
             let body = world.bodies.iter().find(|b| b.name.starts_with("ArmB")).unwrap();
-            solidcraft_kernel::measure(&body.body).unwrap().centroid.x
+            torno_kernel::measure(&body.body).unwrap().centroid.x
         };
         for answer in ["component.revert_position", "component.capture_position"] {
             s.execute("occurrence.move", &json!({"occurrence": arm, "translate": [7, 0, 0], "capture": false})).unwrap();
@@ -1991,7 +1977,7 @@ mod tests {
         // The mesh storage fixture intentionally does not evaluate geometry. Use
         // original valid STEP boxes for the engine/display-cache measurement.
         let input = target.join("issue303-step.json");
-        let doc = solidcraft_io::read_design(&std::fs::read(input).unwrap()).unwrap();
+        let doc = torno_io::read_design(&std::fs::read(input).unwrap()).unwrap();
         let mut session = Session::new(doc);
         for body in &session.world_state().unwrap().bodies {
             body.mesh();
@@ -2009,12 +1995,12 @@ mod tests {
             s.sort_by(f64::total_cmp);
         }
         let bytes = std::fs::read(target.join("issue303-warm.solidcraft")).unwrap();
-        assert!(solidcraft_io::read_design_preview(&bytes).is_some());
-        assert_eq!(solidcraft_io::read_design(&bytes).unwrap(), *session.doc);
+        assert!(torno_io::read_design_preview(&bytes).is_some());
+        assert_eq!(torno_io::read_design(&bytes).unwrap(), *session.doc);
         let mut reads = Vec::new();
         for _ in 0..9 {
             let began = std::time::Instant::now();
-            assert!(solidcraft_io::read_design_preview(&bytes).is_some());
+            assert!(torno_io::read_design_preview(&bytes).is_some());
             reads.push(began.elapsed().as_secs_f64() * 1000.0);
         }
         reads.sort_by(f64::total_cmp);
@@ -2036,13 +2022,13 @@ mod tests {
         for body in &state.bodies {
             body.mesh();
         }
-        let save_path = std::env::temp_dir().join(format!("solidcraft-preview-save-{}.solidcraft", std::process::id()));
+        let save_path = std::env::temp_dir().join(format!("torno-preview-save-{}.solidcraft", std::process::id()));
         s.execute("file.save", &json!({"path":save_path})).unwrap();
         let saved = std::fs::read(&save_path).unwrap();
-        assert!(solidcraft_io::read_design_geometry(&saved).is_some(), "ordinary saves keep the evaluated model");
+        assert!(torno_io::read_design_geometry(&saved).is_some(), "ordinary saves keep the evaluated model");
         assert!(!saved.windows(b"cache/preview.bin".len()).any(|s| s == b"cache/preview.bin"), "ordinary saves omit redundant display meshes");
         s.execute("file.save", &json!({"path":save_path,"preview":true})).unwrap();
-        assert!(solidcraft_io::read_design_preview(&std::fs::read(&save_path).unwrap()).is_some());
+        assert!(torno_io::read_design_preview(&std::fs::read(&save_path).unwrap()).is_some());
         let _ = std::fs::remove_file(&save_path);
         let _ = std::fs::remove_file(format!("{}.bak", save_path.display()));
         let mut preview = saved_preview(&s).unwrap();
@@ -2050,8 +2036,8 @@ mod tests {
         for mesh in &mut preview.meshes {
             mesh.positions = mesh.positions.iter().map(|c| c * 10.0).collect();
         }
-        let bytes = solidcraft_io::write_design_container_with_preview(&s.doc, solidcraft_io::DesignCompression::Fast, Some(&preview)).unwrap();
-        let path = std::env::temp_dir().join(format!("solidcraft-preview-{}.solidcraft", std::process::id()));
+        let bytes = torno_io::write_design_container_with_preview(&s.doc, torno_io::DesignCompression::Fast, Some(&preview)).unwrap();
+        let path = std::env::temp_dir().join(format!("torno-preview-{}.solidcraft", std::process::id()));
         std::fs::write(&path, bytes).unwrap();
         let seen = std::sync::Arc::new(std::sync::atomic::AtomicUsize::new(0));
         let callback_seen = seen.clone();
@@ -2121,7 +2107,7 @@ mod tests {
         for body in &world.bodies {
             body.mesh();
         }
-        let path = std::env::temp_dir().join(format!("solidcraft-cache-opt-in-{}.solidcraft", std::process::id()));
+        let path = std::env::temp_dir().join(format!("torno-cache-opt-in-{}.solidcraft", std::process::id()));
         for command in ["file.save", "file.save_as"] {
             for cache in [None, Some(true), Some(false), None] {
                 let mut params = json!({"path":path});
@@ -2130,13 +2116,13 @@ mod tests {
                 }
                 session.execute(command, &params).unwrap();
                 let bytes = std::fs::read(&path).unwrap();
-                assert_eq!(solidcraft_io::read_design_geometry(&bytes).is_some(), cache != Some(false), "{command}: {cache:?}");
-                assert_eq!(solidcraft_io::read_design_thumbnail(&bytes).is_some(), cache != Some(false), "{command}: {cache:?}");
+                assert_eq!(torno_io::read_design_geometry(&bytes).is_some(), cache != Some(false), "{command}: {cache:?}");
+                assert_eq!(torno_io::read_design_thumbnail(&bytes).is_some(), cache != Some(false), "{command}: {cache:?}");
                 assert!(
                     !bytes.windows(b"cache/preview.bin".len()).any(|entry| entry == b"cache/preview.bin"),
                     "display meshes require preview: true"
                 );
-                assert_eq!(solidcraft_io::read_design(&bytes).unwrap(), *session.doc);
+                assert_eq!(torno_io::read_design(&bytes).unwrap(), *session.doc);
             }
         }
         std::fs::remove_file(&path).unwrap();
@@ -2219,8 +2205,8 @@ mod tests {
                 .map(|b| (b.name.clone(), b.body.face_count(), b.body.edge_count(), b.body.vertex_count()))
                 .collect::<Vec<_>>()
         };
-        let bytes = session.design_container(solidcraft_io::DesignCompression::Fast, false, true).unwrap();
-        let path = std::env::temp_dir().join(format!("solidcraft-roundtrip-{}.solidcraft", std::process::id()));
+        let bytes = session.design_container(torno_io::DesignCompression::Fast, false, true).unwrap();
+        let path = std::env::temp_dir().join(format!("torno-roundtrip-{}.solidcraft", std::process::id()));
         std::fs::write(&path, &bytes).unwrap();
         let mut reopened = Session::default();
         reopened.execute("doc.open", &json!({"path": path})).unwrap();
@@ -2234,13 +2220,11 @@ mod tests {
         session.execute("solid.box", &json!({"length":10,"width":20,"height":30})).unwrap();
         let world = session.world_state().unwrap();
         assert!(world.bodies.iter().all(|b| b.cached_mesh().is_none()));
-        let bytes = session.design_container(solidcraft_io::DesignCompression::Fast, false, true).unwrap();
+        let bytes = session.design_container(torno_io::DesignCompression::Fast, false, true).unwrap();
         assert!(world.bodies.iter().all(|b| b.cached_mesh().is_none()), "saving the model must not triangulate");
-        assert!(solidcraft_io::read_design_geometry(&bytes).is_some());
-        assert!(
-            solidcraft_io::read_design_geometry(&session.design_container(solidcraft_io::DesignCompression::Fast, false, false).unwrap()).is_none()
-        );
-        let path = std::env::temp_dir().join(format!("solidcraft-saved-model-{}.solidcraft", std::process::id()));
+        assert!(torno_io::read_design_geometry(&bytes).is_some());
+        assert!(torno_io::read_design_geometry(&session.design_container(torno_io::DesignCompression::Fast, false, false).unwrap()).is_none());
+        let path = std::env::temp_dir().join(format!("torno-saved-model-{}.solidcraft", std::process::id()));
         std::fs::write(&path, &bytes).unwrap();
         let mut reopened = Session::default();
         reopened.execute("doc.open", &json!({"path":path})).unwrap();
@@ -2251,11 +2235,11 @@ mod tests {
         // The model of another document (a value edited in the file) is not taken: the design is
         // evaluated.
         let mut changed = (*session.doc).clone();
-        if let Some(solidcraft_doc::FeatureKind::Box { length, .. }) = changed.features.last_mut().map(|f| &mut f.kind) {
+        if let Some(torno_doc::FeatureKind::Box { length, .. }) = changed.features.last_mut().map(|f| &mut f.kind) {
             *length = "20".into();
         }
         let saved = saved_geometry(&session, &session.doc).unwrap();
-        let other = solidcraft_io::write_design_container_with_cache(&changed, solidcraft_io::DesignCompression::Fast, None, Some(&saved)).unwrap();
+        let other = torno_io::write_design_container_with_cache(&changed, torno_io::DesignCompression::Fast, None, Some(&saved)).unwrap();
         std::fs::write(&path, other).unwrap();
         reopened.execute("doc.open", &json!({"path":path})).unwrap();
         let measured = reopened.execute("inspect.measure", &json!({})).unwrap();
@@ -2265,7 +2249,7 @@ mod tests {
 
     #[test]
     fn mesh_import_explicit_crease_normals_are_undoable_and_survive_cached_reopen() {
-        let dir = std::env::temp_dir().join(format!("solidcraft-mesh-normals-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("torno-mesh-normals-{}", std::process::id()));
         std::fs::create_dir_all(&dir).unwrap();
         let path = dir.join("fold.obj");
         std::fs::write(&path, "v 0 0 0\nv 1 0 0\nv 0 1 0\nv 0 -0.8660254037844386 0.5\nf 1 2 3\nf 2 1 4\n").unwrap();
@@ -2284,15 +2268,15 @@ mod tests {
         assert!(session.model.state().bodies.is_empty());
         session.execute("edit.redo", &json!({})).unwrap();
         assert_eq!(normals(&session), expected);
-        let bytes = session.design_container(solidcraft_io::DesignCompression::Fast, false, true).unwrap();
-        let cached = solidcraft_io::read_design_geometry(&bytes).expect("shaded mesh retains native cache");
+        let bytes = session.design_container(torno_io::DesignCompression::Fast, false, true).unwrap();
+        let cached = torno_io::read_design_geometry(&bytes).expect("shaded mesh retains native cache");
         assert!(!cached.bodies[0].body.triangle_corner_normals().unwrap().is_empty());
         let saved_path = dir.join("shaded.sc");
         std::fs::write(&saved_path, &bytes).unwrap();
         let mut reopened = Session::default();
         reopened.execute("doc.open", &json!({"path":saved_path})).unwrap();
         assert_eq!(normals(&reopened), expected);
-        let doc = solidcraft_io::read_design(&bytes).unwrap();
+        let doc = torno_io::read_design(&bytes).unwrap();
         let cold = Session::new(doc);
         assert_eq!(normals(&cold), expected);
         std::fs::remove_dir_all(dir).unwrap();
@@ -2300,7 +2284,7 @@ mod tests {
 
     #[test]
     fn mesh_import_zero_crease_restores_legacy_flat_shading_and_survives_reopen() {
-        let dir = std::env::temp_dir().join(format!("solidcraft-obj-flat-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("torno-obj-flat-{}", std::process::id()));
         std::fs::create_dir_all(&dir).unwrap();
         let vertices = "v 0 0 0\nv 1 0 0\nv 0 1 0\nv 0 -0.8660254037844386 0.5\n";
         let faces = "f 1 2 3\nf 2 1 4\n";
@@ -2329,7 +2313,7 @@ mod tests {
                 .features
                 .iter()
                 .find_map(|f| match &f.kind {
-                    solidcraft_doc::FeatureKind::MeshImport { meshes, .. } => Some(meshes),
+                    torno_doc::FeatureKind::MeshImport { meshes, .. } => Some(meshes),
                     _ => None,
                 })
                 .unwrap();
@@ -2338,15 +2322,15 @@ mod tests {
             assert!(session.model.state().bodies.is_empty());
             session.execute("edit.redo", &json!({})).unwrap();
             assert_eq!(display(&session), expected);
-            let bytes = session.design_container(solidcraft_io::DesignCompression::Fast, false, true).unwrap();
-            let cached = solidcraft_io::read_design_geometry(&bytes).unwrap();
+            let bytes = session.design_container(torno_io::DesignCompression::Fast, false, true).unwrap();
+            let cached = torno_io::read_design_geometry(&bytes).unwrap();
             assert!(cached.bodies[0].body.triangle_corner_normals().unwrap().is_empty());
             let saved_path = dir.join(format!("{name}.sc"));
             std::fs::write(&saved_path, &bytes).unwrap();
             let mut reopened = Session::default();
             reopened.execute("doc.open", &json!({"path":saved_path})).unwrap();
             assert_eq!(display(&reopened), expected);
-            let cold = Session::new(solidcraft_io::read_design(&bytes).unwrap());
+            let cold = Session::new(torno_io::read_design(&bytes).unwrap());
             assert_eq!(display(&cold), expected);
         }
         std::fs::remove_dir_all(dir).unwrap();
@@ -2357,7 +2341,7 @@ mod tests {
     /// too, was evaluated again on opening.
     #[test]
     fn a_design_with_a_mesh_body_keeps_its_saved_model() {
-        let dir = std::env::temp_dir().join(format!("solidcraft-mesh-cache-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("torno-mesh-cache-{}", std::process::id()));
         std::fs::create_dir_all(&dir).unwrap();
         let stl = dir.join("tetra.stl");
         let facets = [
@@ -2382,8 +2366,8 @@ mod tests {
         session.execute("file.insert_mesh", &json!({"path": stl})).unwrap();
         let triangles = |s: &Session| s.model.state().bodies.iter().filter_map(|b| b.body.triangle_mesh().map(|(_, t)| t.len())).collect::<Vec<_>>();
         assert_eq!(triangles(&session), [4], "one mesh body");
-        let bytes = session.design_container(solidcraft_io::DesignCompression::Fast, false, true).unwrap();
-        assert!(solidcraft_io::read_design_geometry(&bytes).is_some(), "the model is saved with the mesh body");
+        let bytes = session.design_container(torno_io::DesignCompression::Fast, false, true).unwrap();
+        assert!(torno_io::read_design_geometry(&bytes).is_some(), "the model is saved with the mesh body");
         let path = dir.join("boxes-mesh.solidcraft");
         std::fs::write(&path, &bytes).unwrap();
         let mut reopened = Session::default();
@@ -2431,8 +2415,8 @@ mod tests {
         assert!(per_feature * 2 < sheet, "each later feature adds {per_feature} bytes, the sheet is {sheet}");
         // Taken from the file as saved: the sheet is the one evaluated.
         let flat = many.model.state().sheets.clone();
-        let path = std::env::temp_dir().join(format!("solidcraft-sheet-cache-{}.solidcraft", std::process::id()));
-        std::fs::write(&path, many.design_container(solidcraft_io::DesignCompression::Fast, false, true).unwrap()).unwrap();
+        let path = std::env::temp_dir().join(format!("torno-sheet-cache-{}.solidcraft", std::process::id()));
+        std::fs::write(&path, many.design_container(torno_io::DesignCompression::Fast, false, true).unwrap()).unwrap();
         let mut reopened = Session::default();
         reopened.execute("doc.open", &json!({"path":path})).unwrap();
         assert!(reopened.model.results.iter().zip(&many.model.results).all(|(a, b)| a.ms == b.ms), "taken from the file, not evaluated");
@@ -2478,8 +2462,8 @@ mod tests {
             2 + 10,
             "the last sketch, its extrude and every box share one set"
         );
-        let path = std::env::temp_dir().join(format!("solidcraft-sketch-key-cache-{}.solidcraft", std::process::id()));
-        let bytes = solidcraft_io::write_design_container_with_cache(&s.doc, solidcraft_io::DesignCompression::Fast, None, Some(&saved)).unwrap();
+        let path = std::env::temp_dir().join(format!("torno-sketch-key-cache-{}.solidcraft", std::process::id()));
+        let bytes = torno_io::write_design_container_with_cache(&s.doc, torno_io::DesignCompression::Fast, None, Some(&saved)).unwrap();
         std::fs::write(&path, bytes).unwrap();
         let mut reopened = Session::default();
         reopened.execute("doc.open", &json!({"path": path})).unwrap();
@@ -2531,15 +2515,15 @@ mod tests {
             assert_eq!(Value::Array(named), serde_json::to_value(&r.state.threads).unwrap(), "{}: its own markings", r.name);
         }
         // Opened from the file as saved: nothing evaluated, every state as evaluated.
-        let bytes = solidcraft_io::write_design_container_with_cache(&s.doc, solidcraft_io::DesignCompression::Fast, None, Some(&saved)).unwrap();
-        let kept = solidcraft_io::DesignContainerReader::new(std::io::Cursor::new(&bytes)).unwrap().geometry().unwrap();
-        let reopened = Session::opened(solidcraft_io::read_design(&bytes).unwrap(), Some(&kept));
+        let bytes = torno_io::write_design_container_with_cache(&s.doc, torno_io::DesignCompression::Fast, None, Some(&saved)).unwrap();
+        let kept = torno_io::DesignContainerReader::new(std::io::Cursor::new(&bytes)).unwrap().geometry().unwrap();
+        let reopened = Session::opened(torno_io::read_design(&bytes).unwrap(), Some(&kept));
         assert_eq!(reopened.model.last_recomputed, 0, "taken from the file, not evaluated");
         assert_eq!(reopened.model.results.len(), s.model.results.len());
         for (a, b) in reopened.model.results.iter().zip(&s.model.results) {
             assert_eq!(a.ms, b.ms, "{}: taken from the file", b.name);
             assert_eq!(serde_json::to_string(&a.state.threads).unwrap(), serde_json::to_string(&b.state.threads).unwrap(), "{}", b.name);
-            let names = |r: &solidcraft_doc::FeatureResult| r.state.bodies.iter().map(|b| (b.name.clone(), b.feature)).collect::<Vec<_>>();
+            let names = |r: &torno_doc::FeatureResult| r.state.bodies.iter().map(|b| (b.name.clone(), b.feature)).collect::<Vec<_>>();
             assert_eq!(names(a), names(b), "{}", b.name);
         }
     }
@@ -2552,21 +2536,21 @@ mod tests {
         s.execute("solid.cylinder", &json!({"radius":3,"height":6,"base":[0,0,0]})).unwrap();
         s.execute("solid.thread", &json!({"face":[3,0,2],"designation":"M6","length":4})).unwrap();
         let saved = saved_geometry(&s, &s.doc).unwrap();
-        assert!(solidcraft_doc::Model::adopt(&s.doc, &saved).is_ok());
-        let mut hostile = solidcraft_doc::SavedModel { records: saved.records.clone(), bodies: saved.bodies.clone() };
+        assert!(torno_doc::Model::adopt(&s.doc, &saved).is_ok());
+        let mut hostile = torno_doc::SavedModel { records: saved.records.clone(), bodies: saved.bodies.clone() };
         hostile.records["threads"][0]["designation"] = json!("M".repeat(1 << 20));
         let repeated: Vec<Value> = (0..4000).map(|_| json!([0, 1])).collect();
         let last = hostile.records["states"].as_array().unwrap().len() - 1;
         hostile.records["states"][last]["threads"] = Value::Array(repeated);
-        assert!(solidcraft_doc::Model::adopt(&s.doc, &hostile).is_err());
+        assert!(torno_doc::Model::adopt(&s.doc, &hostile).is_err());
     }
 
     #[test]
     #[ignore = "manual native cache save benchmark; generate issue303-step.json first"]
     fn benchmark_native_cache_save() {
         let target = std::env::var_os("CARGO_TARGET_DIR").map(std::path::PathBuf::from).unwrap_or_else(|| std::path::PathBuf::from("target"));
-        let input = std::env::var_os("SOLIDCRAFT_BENCH_FILE").map(std::path::PathBuf::from).unwrap_or_else(|| target.join("issue303-step.json"));
-        let mut session = Session::new(solidcraft_io::read_design(&std::fs::read(input).unwrap()).unwrap());
+        let input = std::env::var_os("TORNO_BENCH_FILE").map(std::path::PathBuf::from).unwrap_or_else(|| target.join("issue303-step.json"));
+        let mut session = Session::new(torno_io::read_design(&std::fs::read(input).unwrap()).unwrap());
         for body in &session.world_state().unwrap().bodies {
             body.mesh();
         }
@@ -2584,8 +2568,8 @@ mod tests {
         for (i, times) in samples.iter_mut().enumerate() {
             times.sort_by(f64::total_cmp);
             let bytes = std::fs::read(target.join(format!("issue303-native-{i}.solidcraft"))).unwrap();
-            assert_eq!(solidcraft_io::read_design(&bytes).unwrap(), *session.doc);
-            assert_eq!(solidcraft_io::read_design_geometry(&bytes).is_some(), modes[i].1);
+            assert_eq!(torno_io::read_design(&bytes).unwrap(), *session.doc);
+            assert_eq!(torno_io::read_design_geometry(&bytes).is_some(), modes[i].1);
             eprintln!("native_save mode={i} median_ms={:.3} bytes={}", times[4], bytes.len());
         }
     }
@@ -2594,7 +2578,7 @@ mod tests {
     #[ignore = "manual fresh-process opening benchmark; one encoding per process"]
     fn benchmark_native_cache_open() {
         let target = std::env::var_os("CARGO_TARGET_DIR").map(std::path::PathBuf::from).unwrap_or_else(|| std::path::PathBuf::from("target"));
-        let mode = std::env::var("SOLIDCRAFT_BENCH_ENCODING").unwrap_or_else(|_| "2".into());
+        let mode = std::env::var("TORNO_BENCH_ENCODING").unwrap_or_else(|_| "2".into());
         let path = target.join(format!("issue303-native-{mode}.solidcraft"));
         let display = std::sync::Arc::new(std::sync::Mutex::new(None));
         let notify = display.clone();
@@ -2622,7 +2606,7 @@ mod tests {
     }
 
     fn name_dir(tag: &str) -> std::path::PathBuf {
-        let dir = std::env::temp_dir().join(format!("solidcraft-name-{tag}-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("torno-name-{tag}-{}", std::process::id()));
         std::fs::create_dir_all(&dir).unwrap();
         dir
     }
@@ -2638,7 +2622,7 @@ mod tests {
         assert_eq!(r["name"], "bracket");
         assert_eq!(s.doc.name, "bracket");
         assert!(!s.is_dirty(), "taking the file's name is part of the save");
-        assert_eq!(solidcraft_io::read_design(&std::fs::read(&path).unwrap()).unwrap().name, "bracket");
+        assert_eq!(torno_io::read_design(&std::fs::read(&path).unwrap()).unwrap().name, "bracket");
         // Undoing the box does not bring the old name back.
         s.execute("edit.undo", &json!({})).unwrap();
         assert_eq!(s.doc.name, "bracket");
@@ -2708,7 +2692,7 @@ mod tests {
 
     /// #4907: after Save As the open design *is* the new file — tab, browser and the name stored
     /// in the file — whenever its name didn't come from its current file: a sample's name, or a
-    /// file renamed outside SolidCraft or named by someone else. A plain Save never renames.
+    /// file renamed outside Torno or named by someone else. A plain Save never renames.
     #[test]
     fn save_as_names_a_borrowed_name_after_the_new_file() {
         let dir = name_dir("borrowed");
@@ -2721,7 +2705,7 @@ mod tests {
         assert_eq!(r["name"], "Bracket v2");
         assert_eq!(s.doc.name, "Bracket v2");
         assert!(!s.is_dirty(), "taking the new file's name is part of the save");
-        assert_eq!(solidcraft_io::read_design(&std::fs::read(&path).unwrap()).unwrap().name, "Bracket v2");
+        assert_eq!(torno_io::read_design(&std::fs::read(&path).unwrap()).unwrap().name, "Bracket v2");
         // Undoing the box does not bring the sample's name back.
         s.execute("edit.undo", &json!({})).unwrap();
         assert_eq!(s.doc.name, "Bracket v2");
@@ -2729,11 +2713,11 @@ mod tests {
         let mut reopened = Session::default();
         reopened.execute("doc.open", &json!({"path":path})).unwrap();
         assert_eq!(reopened.doc.name, "Bracket v2");
-        // A file whose stored name is not its own (renamed outside SolidCraft, or saved by a
+        // A file whose stored name is not its own (renamed outside Torno, or saved by a
         // version before #1710): Save As names the design after the new file, while a plain
         // Save to the file it has leaves the name alone.
         let odd = dir.join("renamed.solidcraft");
-        std::fs::write(&odd, solidcraft_io::write_design(&Document::new("Sample Plate"))).unwrap();
+        std::fs::write(&odd, torno_io::write_design(&Document::new("Sample Plate"))).unwrap();
         let mut s = Session::default();
         s.execute("doc.open", &json!({"path":odd})).unwrap();
         assert_eq!(s.doc.name, "Sample Plate");
@@ -2749,7 +2733,7 @@ mod tests {
         let dir = name_dir("open");
         for (stored, file) in [("Untitled", "hinge.solidcraft"), ("", "spacer.json")] {
             let path = dir.join(file);
-            let bytes = solidcraft_io::write_design(&Document::new(stored));
+            let bytes = torno_io::write_design(&Document::new(stored));
             std::fs::write(&path, bytes).unwrap();
             let mut s = Session::default();
             let r = s.execute("doc.open", &json!({"path":path})).unwrap();
@@ -2763,7 +2747,7 @@ mod tests {
 
     #[test]
     fn design_save_formats_reopen_and_preserve_atomic_backups() {
-        let dir = std::env::temp_dir().join(format!("solidcraft-container-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("torno-container-{}", std::process::id()));
         std::fs::create_dir_all(&dir).unwrap();
         let packaged = dir.join("design.solidcraft");
         let plain = dir.join("design.json");
@@ -2772,7 +2756,7 @@ mod tests {
         session.execute("solid.box", &json!({"length":10,"width":20,"height":30})).unwrap();
         session.execute("file.save_as", &json!({"path":packaged})).unwrap();
         let original = std::fs::read(&packaged).unwrap();
-        assert!(solidcraft_io::is_design_container(&original));
+        assert!(torno_io::is_design_container(&original));
         session.execute("file.save_as", &json!({"path":plain})).unwrap();
         assert!(std::fs::read_to_string(&plain).unwrap().contains("solidcraft/"));
         let path = session.path.clone();
@@ -2787,7 +2771,7 @@ mod tests {
             assert!((measure["bodies"][0]["volume_mm3"].as_f64().unwrap() - 6000.0).abs() < 1e-6);
         }
         session.execute("file.save", &json!({"path":packaged})).unwrap();
-        assert_eq!(std::fs::read(solidcraft_io::backup_path(&packaged)).unwrap(), original);
+        assert_eq!(std::fs::read(torno_io::backup_path(&packaged)).unwrap(), original);
         let before = std::fs::read(&packaged).unwrap();
         assert!(session.execute("file.save", &json!({"path":packaged,"format":"invalid"})).is_err());
         assert_eq!(std::fs::read(&packaged).unwrap(), before);
@@ -2799,9 +2783,9 @@ mod tests {
     /// A watched open reports the timeline's progress; cancelled, it skips the rebuild.
     #[test]
     fn watched_open_reports_progress_and_stops_when_cancelled() {
-        use solidcraft_doc::progress::{Progress, watch};
         use std::sync::Arc;
-        let dir = std::env::temp_dir().join(format!("solidcraft-watched-open-{}", std::process::id()));
+        use torno_doc::progress::{Progress, watch};
+        let dir = std::env::temp_dir().join(format!("torno-watched-open-{}", std::process::id()));
         std::fs::create_dir_all(&dir).unwrap();
         let path = dir.join("three.solidcraft").to_string_lossy().to_string();
         let mut s = Session::default();
@@ -2832,7 +2816,7 @@ mod tests {
     #[test]
     fn a_design_opened_a_feature_at_a_time_is_the_one_doc_open_opens() {
         use super::open_steps::OpenSteps;
-        let dir = std::env::temp_dir().join(format!("solidcraft-open-steps-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("torno-open-steps-{}", std::process::id()));
         std::fs::create_dir_all(&dir).unwrap();
         let path = dir.join("steps.sc").to_string_lossy().to_string();
         let step = concat!(env!("CARGO_MANIFEST_DIR"), "/../../tests/step-conformance/cylinder_seam.step");
@@ -2899,8 +2883,8 @@ mod tests {
     #[test]
     fn a_design_opened_a_feature_at_a_time_is_checked_under_the_sessions_mode() {
         use super::open_steps::OpenSteps;
-        use solidcraft_kernel::Validation;
-        let dir = std::env::temp_dir().join(format!("solidcraft-open-steps-mode-{}", std::process::id()));
+        use torno_kernel::Validation;
+        let dir = std::env::temp_dir().join(format!("torno-open-steps-mode-{}", std::process::id()));
         std::fs::create_dir_all(&dir).unwrap();
         let path = dir.join("steps.sc").to_string_lossy().to_string();
         let mut s = Session::default();
@@ -2938,7 +2922,7 @@ mod tests {
     /// so the registry and the commands can't drift apart.
     #[test]
     fn registry_options_name_documented_command_parameters() {
-        use solidcraft_io::formats;
+        use torno_io::formats;
         let params_of = |id: &str| crate::find_command(id).map(|c| c.params).unwrap_or_else(|| panic!("registry names unknown command {id}"));
         for f in formats::FORMATS {
             if let Some(import) = &f.import {

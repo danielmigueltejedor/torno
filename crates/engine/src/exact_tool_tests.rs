@@ -16,14 +16,11 @@ fn run(s: &mut Session, id: &str, p: Value) -> Value {
 }
 
 fn volume(s: &Session, body: &str) -> f64 {
-    s.model.state().body(body).map(|b| solidcraft_kernel::measure(&b.body).unwrap().volume).unwrap_or(f64::NAN)
+    s.model.state().body(body).map(|b| torno_kernel::measure(&b.body).unwrap().volume).unwrap_or(f64::NAN)
 }
 
 fn has(s: &Session, body: &str, at: [f64; 3]) -> bool {
-    s.model
-        .state()
-        .body(body)
-        .is_some_and(|b| b.body.classify_point(Vec3::new(at[0], at[1], at[2])).unwrap() == solidcraft_kernel::PointClass::Inside)
+    s.model.state().body(body).is_some_and(|b| b.body.classify_point(Vec3::new(at[0], at[1], at[2])).unwrap() == torno_kernel::PointClass::Inside)
 }
 
 fn bodies(s: &Session) -> Vec<String> {
@@ -170,7 +167,7 @@ fn a_hole_from_a_revolved_rings_flat_side_opens_it() {
     run(&mut s, "sketch.finish", json!({}));
     run(&mut s, "solid.extrude", json!({"sketch": "Hole", "through_all": true, "direction": "positive", "operation": "cut"}));
     let pi = std::f64::consts::PI;
-    let ring = s.model.state().body("Ring").map(|b| solidcraft_kernel::measure(&b.body).unwrap()).unwrap();
+    let ring = s.model.state().body("Ring").map(|b| torno_kernel::measure(&b.body).unwrap()).unwrap();
     let want = 2.0 * pi * (75.0 * 75.0 - 25.0 * 25.0 - 7.0 * 7.0) + 2.0 * pi * (75.0 + 25.0 + 7.0) * 16.0;
     assert!((ring.area - want).abs() < 1e-3 * want, "area {} instead of {want}", ring.area);
     let volume = pi * (75.0 * 75.0 - 25.0 * 25.0 - 7.0 * 7.0) * 16.0;

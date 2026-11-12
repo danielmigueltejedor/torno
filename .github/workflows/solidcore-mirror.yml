@@ -1,4 +1,4 @@
-# Mirror SolidCraft's vendored kernel to its own repository.
+# Mirror Torno's vendored kernel to its own repository.
 #
 # `solidcore` is the SolidCore kernel, vendored with `git subtree`, so `main` keeps
 # SolidCore's history. This workflow pushes the commits under `solidcore` back to
@@ -6,8 +6,8 @@
 #
 # It mirrors incrementally (scripts/ci/solidcore-mirror.sh): one mirror commit per new main
 # commit that changes solidcore/, a merged branch's commits included, each with exactly that
-# commit's solidcore/ tree, its author, dates and message, and a `solidcraft: <sha>` trailer. The
-# last one records the main commit it reached (`solidcraft-main:`), where the next run starts; the
+# commit's solidcore/ tree, its author, dates and message, and a `torno: <sha>` trailer. The
+# last one records the main commit it reached (`torno-main:`), where the next run starts; the
 # first run starts from the vendoring merge. Never `git subtree split`: it replays main's whole
 # history (about 100 minutes) and overflows dash's recursion limit.
 #
@@ -38,13 +38,15 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  # The directory in SolidCraft that is the whole of SolidCore.
+  # The directory in Torno that is the whole of SolidCore.
   PREFIX: solidcore
   SOLIDCORE_URL: git@github.com:tangency-labs/solidcore.git
   SOLIDCORE_BRANCH: main
 
 jobs:
   mirror:
+    # Pushes to upstream's SolidCore repository or registry: only upstream holds the access.
+    if: github.repository == 'tangency-labs/solidcraft'
     name: Mirror main's kernel commits
     runs-on: ubuntu-24.04
     # Incremental: seconds per run.
@@ -109,7 +111,7 @@ jobs:
             echo
             echo "| | commit |"
             echo "| --- | --- |"
-            echo "| SolidCraft \`$PREFIX\` mirror ($COUNT new) | \`$SPLIT\` |"
+            echo "| Torno \`$PREFIX\` mirror ($COUNT new) | \`$SPLIT\` |"
             echo "| solidcore \`$SOLIDCORE_BRANCH\` | \`$REMOTE\` |"
             echo
             case "$STATE" in

@@ -4,7 +4,7 @@
 
 use serde_json::json;
 use solidcore_record::Vec2;
-use solidcraft_engine::geom::prelude::*;
+use torno_engine::geom::prelude::*;
 
 use crate::scenario::Harness;
 
@@ -85,7 +85,7 @@ fn the_construction_line_is_the_symmetry_line_whatever_the_pick_order() {
 
 #[test]
 fn three_selected_lines_take_the_construction_line_as_the_symmetry_line() {
-    use solidcraft_engine::Sel::SketchCurve;
+    use torno_engine::Sel::SketchCurve;
     let h = between_two_lines();
     let state = crate::open_meshing::session_world(&h.app.session);
     let sk = &state.sketch(h.app.session.active_sketch.unwrap()).unwrap().sketch;

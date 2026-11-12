@@ -5,13 +5,13 @@ use std::net::{TcpStream, ToSocketAddrs};
 use std::time::{Duration, Instant};
 
 use serde_json::{Value, json};
-use solidcraft_engine::Session;
-use solidcraft_engine::control_pending;
-use solidcraft_engine::panels::ActionSink;
-use solidcraft_engine::panels::commands::LayoutCatalogue;
-use solidcraft_engine::schema::ParamCheck;
-use solidcraft_engine::view::Guides;
-use solidcraft_viewport::StandardView;
+use torno_engine::Session;
+use torno_engine::control_pending;
+use torno_engine::panels::ActionSink;
+use torno_engine::panels::commands::LayoutCatalogue;
+use torno_engine::schema::ParamCheck;
+use torno_engine::view::Guides;
+use torno_viewport::StandardView;
 
 /// Something that answers control-channel methods: `engine.execute`, `engine.commands`,
 /// `document.inspect`, `ui.view`, `ui.render`, `ui.screenshot`, `control.running`, and
@@ -95,7 +95,7 @@ pub(crate) const STILL_RUNNING: &str = "still running:";
 struct Outstanding {
     what: String,
     /// What it does when it finishes; `None`: not known (a request this bridge did not send).
-    effect: Option<solidcraft_control::Effect>,
+    effect: Option<torno_control::Effect>,
     since: Instant,
 }
 
@@ -146,8 +146,8 @@ fn outcome(v: &Value) -> Result<Value, String> {
     }
 }
 
-/// A running SolidCraft app reached through its loopback control port
-/// (`solidcraft --control PORT`).
+/// A running Torno app reached through its loopback control port
+/// (`torno --control PORT`).
 pub struct Remote {
     addr: String,
     port: u16,
@@ -173,11 +173,11 @@ pub struct Remote {
 
 /// How a tool error starts when no app listens at the bridged address. The agent reads it, and
 /// `batch` uses it to tell "never sent" from "sent, reply lost".
-pub(crate) const NOT_RUNNING: &str = "no SolidCraft app is listening at";
+pub(crate) const NOT_RUNNING: &str = "no Torno app is listening at";
 
 impl Remote {
     /// Connect to the app at `addr`, with its control token found the usual way
-    /// (`SOLIDCRAFT_CONTROL_TOKEN`, else the app's token file for that port).
+    /// (`TORNO_CONTROL_TOKEN`, else the app's token file for that port).
     pub fn connect(addr: &str) -> std::io::Result<Self> {
         Self::connect_with_token(addr, None)
     }
@@ -268,12 +268,12 @@ impl Remote {
         let (addr, port) = (&self.addr, self.port);
         if e.kind() == std::io::ErrorKind::NotConnected {
             format!(
-                "{NOT_RUNNING} {addr} ({e}): it is not running, or it quit. Start it with `solidcraft --control {port}` \
+                "{NOT_RUNNING} {addr} ({e}): it is not running, or it quit. Start it with `torno --control {port}` \
                  (or ask the user to); the next call connects to it"
             )
         } else {
             format!(
-                "the SolidCraft app at {addr} did not answer ({e}): it may have quit or crashed during this call, after                  running it or not. Inspect the design before sending a change again; if the app quit, start it with                  `solidcraft --control {port}`"
+                "the Torno app at {addr} did not answer ({e}): it may have quit or crashed during this call, after                  running it or not. Inspect the design before sending a change again; if the app quit, start it with                  `torno --control {port}`"
             )
         }
     }
@@ -330,7 +330,7 @@ impl Remote {
         self.next_id += 1;
         let mut params = params;
         // The app confines the files this request reaches to the agent's folders (control.rs).
-        if let (Some(scope), Some(o)) = (solidcraft_engine::io::vfs::current_scope(), params.as_object_mut()) {
+        if let (Some(scope), Some(o)) = (torno_engine::io::vfs::current_scope(), params.as_object_mut()) {
             o.insert("allow_paths".into(), json!(scope.roots().iter().map(|r| r.to_string_lossy()).collect::<Vec<_>>()));
             // And the folders it opened or saved a design in, which count as its open design's.
             if !scope.design_roots().is_empty() {
@@ -339,7 +339,7 @@ impl Remote {
         }
         let mut msg = json!({"id": id, "method": method, "params": params});
         // The token goes with every request (an app restarted mid-session has a new one).
-        let token = solidcraft_engine::control_auth::APP.client_token(self.port, self.explicit_token.as_deref());
+        let token = torno_engine::control_auth::APP.client_token(self.port, self.explicit_token.as_deref());
         if let Some(t) = &token {
             msg["token"] = json!(t.token);
         }
@@ -381,7 +381,7 @@ impl Remote {
             }
             if told.elapsed() >= PROGRESS_EVERY {
                 let secs = self.outstanding.as_ref().map_or(0, Outstanding::secs);
-                solidcraft_engine::note!("solidcraft-mcp: {what} is still running in the app ({secs} s); waiting for it");
+                torno_engine::note!("torno-mcp: {what} is still running in the app ({secs} s); waiting for it");
                 told = Instant::now();
             }
             std::thread::sleep(self.waits.poll.min(limit.saturating_sub(waited)));
@@ -476,8 +476,8 @@ impl Remote {
         // Timed out in the app, still running (#1618): wait for its result on this connection.
         if v.get("running").and_then(Value::as_bool) == Some(true) {
             self.outstanding = Some(Outstanding { what: what.clone(), effect: Some(effect), since: sent });
-            solidcraft_engine::note!(
-                "solidcraft-mcp: {what} is still running in the app after {} s; waiting up to {} s more for it",
+            torno_engine::note!(
+                "torno-mcp: {what} is still running in the app after {} s; waiting up to {} s more for it",
                 sent.elapsed().as_secs(),
                 self.waits.pending.as_secs()
             );
@@ -503,7 +503,7 @@ impl Remote {
         }
         // A refused token: say which token file it came from (and whether it is stale).
         outcome(&v).map_err(|error| {
-            solidcraft_engine::control_auth::APP
+            torno_engine::control_auth::APP
                 .client_token(self.port, self.explicit_token.as_deref())
                 .map_or_else(|| error.clone(), |t| t.explain_error(&error))
         })
@@ -513,7 +513,7 @@ impl Remote {
 /// What is wrong with `params` for `id` by this server's contracts, as messages; none when it has
 /// no contract for `id` (the app may have commands this server lacks).
 fn contract_issues(id: &str, params: &Value) -> Vec<String> {
-    solidcraft_engine::schema::issues(id, params).into_iter().map(|i| i.message).collect()
+    torno_engine::schema::issues(id, params).into_iter().map(|i| i.message).collect()
 }
 
 /// Give `reply` `issues` as its `param_warnings`, as a headless session at the warn level does; a
@@ -581,10 +581,10 @@ impl Remote {
     /// `strict` refuses a call that breaks its command's contract without sending it, and `warn`
     /// sends it and adds the issues to the app's reply.
     fn execute_checked(&mut self, params: Value) -> Result<Value, String> {
-        if let Some(id) = step_command(&params).filter(|id| solidcraft_engine::panels::commands::is_command(id)) {
+        if let Some(id) = step_command(&params).filter(|id| torno_engine::panels::commands::is_command(id)) {
             let empty = json!({});
-            solidcraft_engine::panels::commands::parse_command(id, params.get("params").filter(|p| !p.is_null()).unwrap_or(&empty))
-                .map_err(solidcraft_engine::panels::commands::error_text)?;
+            torno_engine::panels::commands::parse_command(id, params.get("params").filter(|p| !p.is_null()).unwrap_or(&empty))
+                .map_err(torno_engine::panels::commands::error_text)?;
         }
         if self.app_checks() {
             let params = self.at_level(params);
@@ -596,7 +596,7 @@ impl Remote {
         if self.param_check == ParamCheck::Strict
             && let Some(first) = issues.first()
         {
-            return Err(solidcraft_engine::params::bad(id, first.as_str()).to_string());
+            return Err(torno_engine::params::bad(id, first.as_str()).to_string());
         }
         let mut reply = self.call_once("engine.execute", params, true)?;
         add_param_warnings(&mut reply, issues);
@@ -615,7 +615,7 @@ impl Remote {
         }
         let steps = params.get("commands").and_then(Value::as_array).map(Vec::as_slice).unwrap_or_default();
         if self.param_check == ParamCheck::Strict {
-            if let Some(refusal) = solidcraft_engine::batch_preflight::contracts(steps) {
+            if let Some(refusal) = torno_engine::batch_preflight::contracts(steps) {
                 return Ok(refusal.reply(steps.len(), params.get("rollback").and_then(Value::as_bool).unwrap_or(true)));
             }
             return self.call_once("engine.batch", params, true);
@@ -674,7 +674,7 @@ impl Backend for Remote {
         let reply = reply.map_err(|e| self.explain(&e))?;
         let v: Value = serde_json::from_str(&reply).map_err(|e| format!("bad reply from the app: {e}"))?;
         let r = outcome(&v).map_err(|error| {
-            solidcraft_engine::control_auth::APP
+            torno_engine::control_auth::APP
                 .client_token(self.port, self.explicit_token.as_deref())
                 .map_or_else(|| error.clone(), |t| t.explain_error(&error))
         });
@@ -688,12 +688,12 @@ impl Backend for Remote {
     }
     fn describe(&self) -> String {
         if self.conn.is_some() {
-            format!("connected to the SolidCraft app at {} (the user watches the viewport)", self.addr)
+            format!("connected to the Torno app at {} (the user watches the viewport)", self.addr)
         } else {
-            // Still "connected to the SolidCraft app": the skills tell bridged from headless by it.
+            // Still "connected to the Torno app": the skills tell bridged from headless by it.
             format!(
-                "connected to the SolidCraft app at {} once it runs (the user watches the viewport). It was not running \
-                 when this server started; until it is (`solidcraft --control {}`), tool calls say so",
+                "connected to the Torno app at {} once it runs (the user watches the viewport). It was not running \
+                 when this server started; until it is (`torno --control {}`), tool calls say so",
                 self.addr, self.port
             )
         }
@@ -706,7 +706,7 @@ pub struct Headless {
     /// Orientation for renders; the camera is refitted to the model every time.
     pub view: StandardView,
     /// Application layout persists across calls, outside Session/document undo.
-    pub panels: solidcraft_engine::panels::PanelResult<solidcraft_engine::panels::commands::InMemoryPanelBackend>,
+    pub panels: torno_engine::panels::PanelResult<torno_engine::panels::commands::InMemoryPanelBackend>,
 }
 
 impl Default for Headless {
@@ -717,7 +717,7 @@ impl Default for Headless {
 
 impl Headless {
     pub fn new(mut session: Session) -> Self {
-        match solidcraft_engine::render::job::CpuHost::for_platform() {
+        match torno_engine::render::job::CpuHost::for_platform() {
             Ok(host) => {
                 if let Err(e) = session.set_render_job_host(Some(host)) {
                     session.log.push(format!("image host unavailable: {e}"));
@@ -725,14 +725,14 @@ impl Headless {
             }
             Err(e) => session.log.push(format!("image host unavailable: {e}")),
         }
-        Headless { session, view: StandardView::Iso, panels: solidcraft_engine::panels::commands::InMemoryPanelBackend::empty() }
+        Headless { session, view: StandardView::Iso, panels: torno_engine::panels::commands::InMemoryPanelBackend::empty() }
     }
-    pub fn with_panels(mut self, panels: solidcraft_engine::panels::commands::InMemoryPanelBackend) -> Self {
+    pub fn with_panels(mut self, panels: torno_engine::panels::commands::InMemoryPanelBackend) -> Self {
         self.panels = Ok(panels);
         self
     }
     fn execute_command(&mut self, id: &str, params: &Value) -> Result<Value, String> {
-        use solidcraft_engine::panels::commands;
+        use torno_engine::panels::commands;
         if commands::is_command(id) {
             self.panels.as_mut().map_err(|reason| commands::error_text(reason.clone()))?.execute(id, params).map_err(commands::error_text)
         } else {
@@ -740,13 +740,13 @@ impl Headless {
         }
     }
     fn panel_sequence(&mut self, method: &str, p: &Value, steps: &[Value]) -> Result<Value, String> {
-        use solidcraft_engine::panels::{Rule, commands, error};
+        use torno_engine::panels::{Rule, commands, error};
         if steps.len() > 100_000 {
             return Err("script too long".into());
         }
         let rollback = p.get("rollback").and_then(Value::as_bool).unwrap_or(true);
         if method == "engine.batch"
-            && let Some(refusal) = solidcraft_engine::batch_preflight::check(steps, self.session.param_check, &[])
+            && let Some(refusal) = torno_engine::batch_preflight::check(steps, self.session.param_check, &[])
         {
             return Ok(refusal.reply(steps.len(), rollback));
         }
@@ -785,7 +785,7 @@ fn dim(p: &Value, k: &str, default: f64) -> u32 {
 
 impl Headless {
     fn call_at_current_level(&mut self, method: &str, p: Value) -> Result<Value, String> {
-        if matches!(method, "engine.execute" | "command") && step_command(&p).is_some_and(solidcraft_engine::panels::commands::is_command) {
+        if matches!(method, "engine.execute" | "command") && step_command(&p).is_some_and(torno_engine::panels::commands::is_command) {
             let empty = json!({});
             return self.execute_command(step_command(&p).unwrap_or_default(), p.get("params").filter(|p| !p.is_null()).unwrap_or(&empty));
         }
@@ -793,7 +793,7 @@ impl Headless {
             && let Some(steps) = p
                 .as_array()
                 .or_else(|| p.get("commands").and_then(Value::as_array))
-                .filter(|steps| steps.iter().any(|step| step_command(step).is_some_and(solidcraft_engine::panels::commands::is_command)))
+                .filter(|steps| steps.iter().any(|step| step_command(step).is_some_and(torno_engine::panels::commands::is_command)))
         {
             return self.panel_sequence(method, &p, steps);
         }
@@ -813,9 +813,9 @@ impl Headless {
                 match v {
                     // Fit keeps the orientation, also of a camera `view.apply` chose.
                     "fit" => {
-                        let b = solidcraft_engine::view::bounds(s).map_err(|e| e.to_string())?;
+                        let b = torno_engine::view::bounds(s).map_err(|e| e.to_string())?;
                         if let Some(c) = s.camera.as_mut() {
-                            c.fit(&solidcraft_engine::render::view_bounds(&b));
+                            c.fit(&torno_engine::render::view_bounds(&b));
                         }
                     }
                     _ => {
@@ -831,7 +831,7 @@ impl Headless {
                 let cam = match s.camera {
                     Some(cam) => cam,
                     None => {
-                        let mut cam = solidcraft_engine::view::home_camera(s).map_err(|e| e.to_string())?;
+                        let mut cam = torno_engine::view::home_camera(s).map_err(|e| e.to_string())?;
                         cam.set_view(self.view);
                         cam
                     }
@@ -841,18 +841,18 @@ impl Headless {
                 let guides = Guides { grid: shown("grid"), axes: shown("axes") };
                 let path = str_p("path").ok_or("missing `path`")?;
                 // A path outside the agent's folders is refused before anything is drawn.
-                solidcraft_engine::io::vfs::check(path).map_err(|e| format!("{path}: {e}"))?;
-                let scene = solidcraft_engine::view::scene_with_guides(s, &cam, s.section, guides).map_err(|e| e.to_string())?;
-                // Drawn on the GPU by the renderer the host installed (`solidcraft-cli mcp`).
-                let png = solidcraft_engine::capture::png(&scene, &cam, w, h)?;
-                solidcraft_engine::io::vfs::write(path, &png.bytes).map_err(|e| format!("{path}: {e}"))?;
+                torno_engine::io::vfs::check(path).map_err(|e| format!("{path}: {e}"))?;
+                let scene = torno_engine::view::scene_with_guides(s, &cam, s.section, guides).map_err(|e| e.to_string())?;
+                // Drawn on the GPU by the renderer the host installed (`torno-cli mcp`).
+                let png = torno_engine::capture::png(&scene, &cam, w, h)?;
+                torno_engine::io::vfs::write(path, &png.bytes).map_err(|e| format!("{path}: {e}"))?;
                 Ok(json!({
                     "path": path,
                     "bytes": png.bytes.len(),
                     "width": w,
                     "height": h,
                     "renderer": png.renderer,
-                    "warning": solidcraft_engine::capture::warning(png.renderer),
+                    "warning": torno_engine::capture::warning(png.renderer),
                 }))
             }
             "ui.screenshot" => Err("no window in headless mode; use ui.render".into()),
@@ -880,7 +880,7 @@ impl Backend for Headless {
         false
     }
     fn describe(&self) -> String {
-        "headless in-process SolidCraft session".into()
+        "headless in-process Torno session".into()
     }
     fn design_path(&self) -> Option<String> {
         self.session.path.clone()
@@ -893,7 +893,7 @@ impl Backend for Headless {
     }
 }
 
-/// `solidcraft-cli mcp` with no `--connect`: a headless session while no app runs, which gives
+/// `torno-cli mcp` with no `--connect`: a headless session while no app runs, which gives
 /// way to the app the moment one is found, as long as the session has no work of its own yet.
 /// Once it has, it stays headless (the work is not carried over) and every tool result says so.
 pub struct Auto {
@@ -919,7 +919,7 @@ impl Auto {
             return;
         }
         if let Some(port) = (self.discover)() {
-            solidcraft_engine::note!("solidcraft mcp: the SolidCraft app is running now; bridged to 127.0.0.1:{port}");
+            torno_engine::note!("torno mcp: the Torno app is running now; bridged to 127.0.0.1:{port}");
             let level = self.param_check();
             self.remote = Some(Remote::new(&format!("127.0.0.1:{port}"), self.token.as_deref()).with_param_check(level));
             self.headless = None;
@@ -945,7 +945,7 @@ impl Backend for Auto {
         match (&self.remote, &self.headless) {
             (Some(r), _) => r.describe(),
             (None, Some(h)) => format!(
-                "{}, because the SolidCraft app was not running when this server started; if it starts before any design work \
+                "{}, because the Torno app was not running when this server started; if it starts before any design work \
                  is done here, the next call is bridged to it",
                 h.describe()
             ),
@@ -981,8 +981,8 @@ impl Backend for Auto {
     }
     fn notice(&self) -> Option<String> {
         self.headless.as_ref().map(|_| {
-            "Note: this is a headless session because the SolidCraft app was not found; the user cannot see this work. \
-             Ask them to start SolidCraft. While this session has no features, the next call connects to the app; once it \
+            "Note: this is a headless session because the Torno app was not found; the user cannot see this work. \
+             Ask them to start Torno. While this session has no features, the next call connects to the app; once it \
              has work, it stays here."
                 .to_owned()
         })

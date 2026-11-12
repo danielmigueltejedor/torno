@@ -1,11 +1,11 @@
 //! Stable face projection order: outer boundary first, then holes by geometry.
 //! B-rep edge indices depend on face enumeration and must not choose sketch curve IDs.
 
-use solidcraft_geom::prelude::*;
 use std::collections::{BTreeMap, BTreeSet};
+use torno_geom::prelude::*;
 
 use solidcore_record::{Plane, Vec3};
-use solidcraft_geom::{Aabb3, Mesh};
+use torno_geom::{Aabb3, Mesh};
 
 use crate::{DocError, Result};
 
@@ -73,7 +73,7 @@ fn boundary_edges(mesh: &Mesh, mut edges: Vec<usize>, faces: &BTreeSet<usize>, p
     if edges.iter().any(|e| !mesh.edges.get(*e).is_some_and(|p| p.len() >= 2 && p.iter().all(|p| p.is_finite()))) {
         return Err(DocError::Invalid("face projection has an invalid boundary edge".into()));
     }
-    if edges.len() > solidcraft_sketch::MAX_LINK_ENTITIES {
+    if edges.len() > torno_sketch::MAX_LINK_ENTITIES {
         return Err(DocError::Invalid("face projection exceeds the boundary edge limit".into()));
     }
     let geometry_key = |e: usize| {
@@ -194,7 +194,7 @@ mod tests {
             let tri_face = vec![0; triangles.len()];
             let mesh = Mesh { positions: positions.clone(), normals: normals.clone(), triangles: triangles.clone(), tri_face, ..Mesh::default() };
             let outline = super::super::silhouette(&Plane::XY, &mesh, None);
-            let sides = outline.iter().filter(|g| matches!(g, solidcraft_sketch::LinkGeom::Line(a, b) if (a.dist(*b) - 10.0).abs() < 1e-9)).count();
+            let sides = outline.iter().filter(|g| matches!(g, torno_sketch::LinkGeom::Line(a, b) if (a.dist(*b) - 10.0).abs() < 1e-9)).count();
             assert_eq!((outline.len(), sides), (4, 4), "{normals:?}: {outline:?}");
         }
     }
@@ -231,7 +231,7 @@ mod tests {
     #[test]
     fn coarsely_tessellated_round_silhouette_fits_an_arc() {
         use solidcore_record::Vec2;
-        use solidcraft_sketch::LinkGeom;
+        use torno_sketch::LinkGeom;
         let on = |deg: f64| Vec2::new(5. + 5. * deg.to_radians().cos(), 5. + 5. * deg.to_radians().sin());
         let mut chain = vec![Vec2::new(0., -20.)];
         chain.extend([180., 169.5, 135., 100.5, 90.].map(on));
@@ -244,7 +244,7 @@ mod tests {
     #[test]
     fn tangent_snapping_leaves_unrelated_collinear_lines_alone() {
         use solidcore_record::Vec2;
-        use solidcraft_sketch::LinkGeom;
+        use torno_sketch::LinkGeom;
         let v = Vec2::new;
         // A rounded corner of radius 2 meeting the top edge, and an unrelated collinear edge.
         let mut out = vec![
@@ -261,7 +261,7 @@ mod tests {
     #[test]
     fn tangent_snapping_leaves_a_line_further_along_alone() {
         use solidcore_record::Vec2;
-        use solidcraft_sketch::LinkGeom;
+        use torno_sketch::LinkGeom;
         let v = Vec2::new;
         let y = |x: f64| 2.0 - (4.0 - x * x).sqrt();
         // The arc's end at x = 0.5 already meets the next piece; the line along y = 0 ends at
@@ -282,7 +282,7 @@ mod tests {
     #[test]
     fn tangent_snapping_gives_one_line_to_one_end_of_an_arc() {
         use solidcore_record::Vec2;
-        use solidcraft_sketch::LinkGeom;
+        use torno_sketch::LinkGeom;
         let v = Vec2::new;
         let y = |x: f64| 2.0 - (4.0 - x * x).sqrt();
         // A short arc whose two ends both lie near the end of one line: both snapping onto it
@@ -296,7 +296,7 @@ mod tests {
     #[test]
     fn tangent_snapping_moves_the_other_end_of_an_arc_to_its_next_line() {
         use solidcore_record::Vec2;
-        use solidcraft_sketch::LinkGeom;
+        use torno_sketch::LinkGeom;
         let v = Vec2::new;
         let y = |x: f64| 2.0 - (4.0 - x * x).sqrt();
         let (a, b) = (v(-0.2, y(-0.2)), v(0.2, y(0.2)));
@@ -315,7 +315,7 @@ mod tests {
     #[test]
     fn tangent_snapping_closes_a_conic_corner_in_any_order() {
         use solidcore_record::Vec2;
-        use solidcraft_sketch::LinkGeom;
+        use torno_sketch::LinkGeom;
         // A square of side 150 with a conic round of 10 mm legs at each corner, fitted with lines
         // and arcs the way a silhouette is, then snapped with the pieces in each order.
         for rho in [0.1, 0.15, 0.5, 0.8, 0.9] {
@@ -371,7 +371,7 @@ mod tests {
     #[test]
     fn a_round_refitted_to_the_exact_section_still_meets_its_neighbours() {
         use solidcore_record::Vec2;
-        use solidcraft_sketch::LinkGeom;
+        use torno_sketch::LinkGeom;
         let v = Vec2::new;
         // A 10 x 10 square with an R2 round at its top right corner, fitted from mesh crossings:
         // the arc misses the round's circle (centre (8, 8)) by 5e-4 but meets the sides exactly.
@@ -420,7 +420,7 @@ mod tests {
     #[test]
     fn a_round_beside_another_arc_is_refitted_when_their_joint_stays_put() {
         use solidcore_record::Vec2;
-        use solidcraft_sketch::LinkGeom;
+        use torno_sketch::LinkGeom;
         let v = Vec2::new;
         // The R2 round of a 10 x 10 square misses its circle (centre (8, 8)) by `s`, and an arc of
         // radius 10 runs on from its end. The refit moves that joint by `s`. While that is within
@@ -451,7 +451,7 @@ mod tests {
     #[test]
     fn two_arcs_refitted_the_same_way_keep_their_joint() {
         use solidcore_record::Vec2;
-        use solidcraft_sketch::LinkGeom;
+        use torno_sketch::LinkGeom;
         let v = Vec2::new;
         // The R2 round of a 10 x 10 square and the arc of radius 10 running on from it both miss
         // their circles (centres (8, 8) and (8, 20)) by `s` in the same direction. Both refits move
@@ -530,17 +530,16 @@ mod tests {
         let edges = family_edges(&mesh, &[0, 1].into_iter().collect(), &Plane::XY).unwrap();
         assert_eq!(edges.len(), 8);
         let geom: Vec<_> = edges.iter().flat_map(|edge| super::super::fit_world(&Plane::XY, &mesh.edges[*edge])).collect();
-        let mut sk = solidcraft_sketch::Sketch::new();
-        let link = sk
-            .add_link(solidcraft_sketch::LinkKind::Project, solidcraft_sketch::LinkSource::Face { body: "ambiguous".into(), at: Vec3::ZERO }, &geom)
-            .unwrap();
+        let mut sk = torno_sketch::Sketch::new();
+        let link =
+            sk.add_link(torno_sketch::LinkKind::Project, torno_sketch::LinkSource::Face { body: "ambiguous".into(), at: Vec3::ZERO }, &geom).unwrap();
         assert!(sk.update_link(&link, &geom).is_err());
     }
 
     #[test]
     fn family_line_normalization_preserves_corners_arcs_branches_and_retracing() {
         use solidcore_record::Vec2;
-        use solidcraft_sketch::LinkGeom;
+        use torno_sketch::LinkGeom;
         let line = |a, b| LinkGeom::Line(Vec2::new(a, 0.), Vec2::new(b, 0.));
         assert_eq!(super::super::merge_family_lines(vec![line(0., 1.), line(2., 1.)]).unwrap(), vec![line(0., 2.)]);
         for geometry in [
@@ -610,8 +609,8 @@ mod tests {
                 let normalized: Vec<_> = expected
                     .iter()
                     .map(|g| {
-                        let solidcraft_sketch::LinkGeom::Line(a, b) = g[0] else { panic!("line") };
-                        if a.x > b.x || a.y > b.y { vec![solidcraft_sketch::LinkGeom::Line(b, a)] } else { g.clone() }
+                        let torno_sketch::LinkGeom::Line(a, b) = g[0] else { panic!("line") };
+                        if a.x > b.x || a.y > b.y { vec![torno_sketch::LinkGeom::Line(b, a)] } else { g.clone() }
                     })
                     .collect();
                 assert_eq!(actual, normalized);
@@ -628,7 +627,7 @@ mod tests {
     #[test]
     fn rounded_boundary_arc_sweeps_survive_individual_edge_reversal() {
         use solidcore_record::{Seg2, Vec2};
-        use solidcraft_sketch::LinkGeom;
+        use torno_sketch::LinkGeom;
         let mut mesh = Mesh::default();
         for (extent, radius) in [(10.0, 3.0), (8.0, 1.0)] {
             for k in 0..4 {
@@ -723,7 +722,7 @@ mod tests {
     #[test]
     fn curve_ends_a_hair_apart_become_one_point_and_distant_ones_stay() {
         use solidcore_record::Vec2;
-        use solidcraft_sketch::LinkGeom;
+        use torno_sketch::LinkGeom;
         let mut geom = vec![
             LinkGeom::Line(Vec2::new(0., 0.), Vec2::new(10., 0.)),
             LinkGeom::Spline {

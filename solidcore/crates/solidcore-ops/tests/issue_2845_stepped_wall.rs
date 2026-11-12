@@ -48,7 +48,7 @@ fn both_rounds_that_fit_build_their_closed_form() {
 
 /// Past the wall's 4 mm the ball rolls on the face x = 20 and on the wall's far edge (x = 16,
 /// y = 20): the arc runs from that edge to its rail, and the section it takes off the wall is
-/// the strip less the disc's part under the rail. With every fix on: SolidCraft's set fails here
+/// the strip less the disc's part under the rail. With every fix on: Torno's set fails here
 /// with a bare 1001 (the case `12342-round-wall-edge-r5-past-the-wall-refused`).
 fn past_the_wall(r: f64) -> f64 {
     let near = r - 4.0;

@@ -43,5 +43,5 @@ threading the mutation through `LazyBrep`.
 
 ## Workaround used by the harness
 
-`crates/difftest/src/solidcraft.rs` (`make_missing_nurbs`) makes the missing NURBs on the
+`crates/difftest/src/torno.rs` (`make_missing_nurbs`) makes the missing NURBs on the
 body before measuring, with a comment pointing here. It changes no production behaviour.

@@ -4,7 +4,7 @@ fn run(s: &mut Session, command: &str, params: Value) -> Value {
     s.execute(command, &params).unwrap()
 }
 
-fn transferred_profile(revolve: bool) -> (Session, u64, u64, solidcraft_kernel::Body) {
+fn transferred_profile(revolve: bool) -> (Session, u64, u64, torno_kernel::Body) {
     let mut s = Session::default();
     run(&mut s, "sketch.create", json!({"plane":if revolve { "XZ" } else { "XY" },"name":"Profile"}));
     run(&mut s, "sketch.rectangle.two_point", json!({"p0":[20,0],"p1":[30,5]}));
@@ -26,8 +26,8 @@ fn transferred_profile(revolve: bool) -> (Session, u64, u64, solidcraft_kernel::
 fn check_captured_profile_transfer(revolve: bool) {
     let (mut s, _, occurrence, original) = transferred_profile(revolve);
     let before = s.doc.to_json();
-    let matrix = solidcraft_doc::rigid(Vec3::new(40.0, 0.0, 0.0), Vec3::ZERO, Vec3::X, std::f64::consts::FRAC_PI_4);
-    let expected = solidcraft_kernel::transform_matrix(&original, matrix).unwrap();
+    let matrix = torno_doc::rigid(Vec3::new(40.0, 0.0, 0.0), Vec3::ZERO, Vec3::X, std::f64::consts::FRAC_PI_4);
+    let expected = torno_kernel::transform_matrix(&original, matrix).unwrap();
     let expected_bounds = expected.exact_bounds().unwrap();
     let assert_pose = |s: &Session| {
         let state = s.world_state().unwrap();
@@ -35,8 +35,8 @@ fn check_captured_profile_transfer(revolve: bool) {
         let bounds = body.exact_bounds().unwrap();
         assert!(bounds.min.dist(expected_bounds.min) < 0.002, "minimum: {bounds:?}, expected {expected_bounds:?}");
         assert!(bounds.max.dist(expected_bounds.max) < 0.002, "maximum: {bounds:?}, expected {expected_bounds:?}");
-        let measured = solidcraft_kernel::measure(body).unwrap();
-        let expected_measure = solidcraft_kernel::measure(&expected).unwrap();
+        let measured = torno_kernel::measure(body).unwrap();
+        let expected_measure = torno_kernel::measure(&expected).unwrap();
         assert!((measured.volume - expected_measure.volume).abs() < 1e-5);
         assert!(measured.centroid.dist(expected_measure.centroid) < 1e-5);
     };
@@ -47,7 +47,7 @@ fn check_captured_profile_transfer(revolve: bool) {
     assert_eq!(s.undo.len(), undo + 1);
     assert!(s.pending_moves.is_empty());
     assert_pose(&s);
-    let mut reopened = Session { doc: solidcraft_doc::Document::from_json(&s.doc.to_json()).unwrap().into(), ..Session::default() };
+    let mut reopened = Session { doc: torno_doc::Document::from_json(&s.doc.to_json()).unwrap().into(), ..Session::default() };
     reopened.refresh();
     assert_pose(&reopened);
     run(&mut s, "edit.undo", json!({}));
@@ -95,11 +95,11 @@ fn transferred_profile_frame_follows_transfer_edits_suppression_and_rollback() {
     s.refresh();
     assert_x(&s, 20.0, component);
     if let FeatureKind::BodyTransfer { transform, .. } = &mut s.doc_mut().feature_mut(transfer).unwrap().kind {
-        *transform = solidcraft_doc::rigid(Vec3::new(-7.0, 0.0, 0.0), Vec3::ZERO, Vec3::Z, 0.0);
+        *transform = torno_doc::rigid(Vec3::new(-7.0, 0.0, 0.0), Vec3::ZERO, Vec3::Z, 0.0);
     }
     s.refresh();
     assert_x(&s, 27.0, component);
-    let mut reopened = Session { doc: solidcraft_doc::Document::from_json(&s.doc.to_json()).unwrap().into(), ..Session::default() };
+    let mut reopened = Session { doc: torno_doc::Document::from_json(&s.doc.to_json()).unwrap().into(), ..Session::default() };
     reopened.refresh();
     assert_x(&reopened, 27.0, component);
 }
@@ -140,7 +140,7 @@ fn recorded_assignment_preserves_sample_joined_material_and_timeline() {
     s.run_script(&crate::sample::script()).unwrap();
     let before = s.model.state();
     assert_eq!(before.bodies.len(), 1);
-    let volume = solidcraft_kernel::measure(&before.body("Plate").unwrap().body).unwrap().volume;
+    let volume = torno_kernel::measure(&before.body("Plate").unwrap().body).unwrap().volume;
     let created = run(&mut s, "component.from_bodies", json!({"bodies":["Plate"]}));
     let to = created["components"][0]["component"].as_u64().unwrap();
     let feature = created["components"][0]["feature"].as_u64().unwrap();
@@ -149,7 +149,7 @@ fn recorded_assignment_preserves_sample_joined_material_and_timeline() {
     let body = after.body("Plate").unwrap();
     assert_eq!(body.component, to);
     assert!(body.transferred);
-    assert!((solidcraft_kernel::measure(&body.body).unwrap().volume - volume).abs() < 1e-6);
+    assert!((torno_kernel::measure(&body.body).unwrap().volume - volume).abs() < 1e-6);
     assert!(body.mesh().contains(Vec3::new(40.0, 35.0, 12.0)));
     let index = s.doc.feature_index(feature).unwrap();
     s.doc_mut().marker = Some(index);
@@ -174,12 +174,12 @@ fn transformed_pending_destination_repeated_transfer_preserves_world_pose() {
     assert!(bounds.min.dist(Vec3::ZERO) < 1e-6);
     assert!(bounds.max.dist(Vec3::new(10.0, 10.0, 10.0)) < 1e-6);
     assert!(!s.pending_moves.contains_key(&occurrence));
-    let mut destination_reopened = Session { doc: solidcraft_doc::Document::from_json(&s.doc.to_json()).unwrap().into(), ..Session::default() };
+    let mut destination_reopened = Session { doc: torno_doc::Document::from_json(&s.doc.to_json()).unwrap().into(), ..Session::default() };
     destination_reopened.refresh();
     assert!(destination_reopened.world_state().unwrap().body("Block").unwrap().mesh().bounds().min.dist(Vec3::ZERO) < 1e-6);
     run(&mut s, "component.move_bodies", json!({"component":0,"bodies":["Block"]}));
     assert!(s.world_state().unwrap().body("Block").unwrap().mesh().bounds().min.dist(Vec3::ZERO) < 1e-6);
-    let mut reopened = Session { doc: solidcraft_doc::Document::from_json(&s.doc.to_json()).unwrap().into(), ..Session::default() };
+    let mut reopened = Session { doc: torno_doc::Document::from_json(&s.doc.to_json()).unwrap().into(), ..Session::default() };
     reopened.refresh();
     assert!(reopened.world_state().unwrap().body("Block").unwrap().mesh().bounds().min.dist(Vec3::ZERO) < 1e-6);
 }
@@ -207,7 +207,7 @@ fn historical_join_cut_and_new_destination_modeling_keep_material() {
     run(&mut s, "solid.box", json!({"corner":[2,2,0],"length":2,"width":2,"height":10,"operation":"cut"}));
     let original = s.model.state();
     assert_eq!(original.bodies.len(), 1);
-    let v = solidcraft_kernel::measure(&original.body("Block").unwrap().body).unwrap().volume;
+    let v = torno_kernel::measure(&original.body("Block").unwrap().body).unwrap().volume;
     assert!((v - 1760.0).abs() < 1e-6);
     run(&mut s, "material.assign", json!({"bodies":["Block"],"material":"Brass"}));
     run(&mut s, "appearance.assign", json!({"bodies":["Block"],"color":"#bc8537"}));
@@ -219,15 +219,15 @@ fn historical_join_cut_and_new_destination_modeling_keep_material() {
     run(&mut s, "solid.box", json!({"corner":[18,0,0],"length":2,"width":10,"height":10,"operation":"join"}));
     assert_eq!(s.model.state().bodies.len(), 1);
     assert_eq!(s.model.state().body("Block").unwrap().component, c);
-    let final_volume = solidcraft_kernel::measure(&s.model.state().body("Block").unwrap().body).unwrap().volume;
+    let final_volume = torno_kernel::measure(&s.model.state().body("Block").unwrap().body).unwrap().volume;
     assert!((final_volume - 1960.0).abs() < 1e-6);
     run(&mut s, "component.move_bodies", json!({"component":0,"bodies":["Block"]}));
     assert_eq!(s.model.state().body("Block").unwrap().component, 0);
     run(&mut s, "edit.undo", json!({}));
     assert_eq!(s.model.state().body("Block").unwrap().component, c);
-    let mut reopened = Session { doc: solidcraft_doc::Document::from_json(&s.doc.to_json()).unwrap().into(), ..Session::default() };
+    let mut reopened = Session { doc: torno_doc::Document::from_json(&s.doc.to_json()).unwrap().into(), ..Session::default() };
     reopened.refresh();
-    assert!((solidcraft_kernel::measure(&reopened.model.state().body("Block").unwrap().body).unwrap().volume - final_volume).abs() < 1e-6);
+    assert!((torno_kernel::measure(&reopened.model.state().body("Block").unwrap().body).unwrap().volume - final_volume).abs() < 1e-6);
 }
 
 #[test]
@@ -239,7 +239,7 @@ fn ownership_only_boundary_invalidates_old_boolean_cache() {
     let c = s.doc_mut().add_component(Some("Destination"), 0).unwrap();
     let id = s
         .doc_mut()
-        .add_feature(FeatureKind::BodyTransfer { bodies: vec!["Block".into()], from: 0, to: c, transform: solidcraft_doc::IDENTITY }, None)
+        .add_feature(FeatureKind::BodyTransfer { bodies: vec!["Block".into()], from: 0, to: c, transform: torno_doc::IDENTITY }, None)
         .unwrap();
     let index = s.doc.feature_index(id).unwrap();
     let transfer = s.doc_mut().features.remove(index);
@@ -247,7 +247,7 @@ fn ownership_only_boundary_invalidates_old_boolean_cache() {
     s.refresh();
     assert_eq!(s.model.state().bodies.len(), 2);
     assert_eq!(s.model.state().body("Block").unwrap().component, c);
-    let mut reopened = Session { doc: solidcraft_doc::Document::from_json(&s.doc.to_json()).unwrap().into(), ..Session::default() };
+    let mut reopened = Session { doc: torno_doc::Document::from_json(&s.doc.to_json()).unwrap().into(), ..Session::default() };
     reopened.refresh();
     assert_eq!(reopened.model.state().bodies.len(), 2);
     assert_eq!(reopened.model.state().body("Block").unwrap().component, c);
@@ -260,7 +260,7 @@ fn failed_transfer_cannot_change_evaluated_world_owner() {
     let c = s.doc_mut().add_component(Some("Destination"), 0).unwrap();
     let id = s
         .doc_mut()
-        .add_feature(FeatureKind::BodyTransfer { bodies: vec!["Block".into()], from: c, to: c, transform: solidcraft_doc::IDENTITY }, None)
+        .add_feature(FeatureKind::BodyTransfer { bodies: vec!["Block".into()], from: c, to: c, transform: torno_doc::IDENTITY }, None)
         .unwrap();
     s.refresh();
     assert!(s.model.result(id).unwrap().error.is_some());
@@ -281,7 +281,7 @@ fn transferred_thread_follows_body_frame_without_changing_world_axis() {
     let after = s.world_state().unwrap().threads[0].clone();
     assert!(after.axis_point.dist(before.axis_point) < 1e-6);
     assert!(after.axis.dist(*before.axis) < 1e-6);
-    let mut reopened = Session { doc: solidcraft_doc::Document::from_json(&s.doc.to_json()).unwrap().into(), ..Session::default() };
+    let mut reopened = Session { doc: torno_doc::Document::from_json(&s.doc.to_json()).unwrap().into(), ..Session::default() };
     reopened.refresh();
     assert!(reopened.world_state().unwrap().threads[0].axis.dist(*before.axis) < 1e-6);
 }
@@ -294,7 +294,7 @@ fn inherited_component_appearance_and_legacy_assignment_survive_transfer() {
     s.doc_mut()
         .appearances
         .components
-        .insert(source, solidcraft_doc::appearance::Look { name: "Green".into(), color: [0, 150, 0], opacity: 0.7, pbr: None });
+        .insert(source, torno_doc::appearance::Look { name: "Green".into(), color: [0, 150, 0], opacity: 0.7, pbr: None });
     s.refresh();
     let look = s.doc.model_body_look(s.model.state().body("Block").unwrap()).unwrap();
     run(&mut s, "component.move_bodies", json!({"component":0,"bodies":["Block"]}));
@@ -304,12 +304,12 @@ fn inherited_component_appearance_and_legacy_assignment_survive_transfer() {
     run(&mut legacy, "solid.box", json!({"length":10,"width":10,"height":10,"body_name":"Old"}));
     let c = legacy.doc_mut().add_component(Some("Legacy"), 0).unwrap();
     legacy.doc_mut().body_components.insert("Old".into(), c);
-    legacy.doc_mut().body_offsets.insert("Old".into(), solidcraft_doc::rigid(Vec3::new(7.0, 0.0, 0.0), Vec3::ZERO, Vec3::Z, 0.0));
+    legacy.doc_mut().body_offsets.insert("Old".into(), torno_doc::rigid(Vec3::new(7.0, 0.0, 0.0), Vec3::ZERO, Vec3::Z, 0.0));
     legacy.refresh();
     assert!(!legacy.model.state().body("Old").unwrap().transferred);
     run(&mut legacy, "component.move_bodies", json!({"component":0,"bodies":["Old"]}));
     assert!((legacy.world_state().unwrap().body("Old").unwrap().mesh().bounds().min.x - 7.0).abs() < 1e-6);
-    let mut reopened = Session { doc: solidcraft_doc::Document::from_json(&legacy.doc.to_json()).unwrap().into(), ..Session::default() };
+    let mut reopened = Session { doc: torno_doc::Document::from_json(&legacy.doc.to_json()).unwrap().into(), ..Session::default() };
     reopened.refresh();
     assert!((reopened.world_state().unwrap().body("Old").unwrap().mesh().bounds().min.x - 7.0).abs() < 1e-6);
 }
@@ -325,7 +325,7 @@ fn deleting_external_transfer_source_refuses_without_dangling_archive() {
     let document = s.doc.to_json();
     assert!(s.execute("component.delete", &json!({"component":a})).is_err());
     assert_eq!(s.doc.to_json(), document);
-    assert!(solidcraft_doc::Document::from_json(&document).is_ok());
+    assert!(torno_doc::Document::from_json(&document).is_ok());
 }
 
 #[test]
@@ -339,7 +339,7 @@ fn earlier_selected_cylinder_emboss_keeps_source_frame_after_transfer_and_edit()
     run(&mut s, "sketch.rectangle.two_point", json!({"p0":[-2,5],"p1":[2,10]}));
     run(&mut s, "sketch.finish", json!({}));
     let emboss = run(&mut s, "solid.emboss", json!({"sketch":"Badge","face":[30,10,7.5],"depth":1}))["feature"].as_u64().unwrap();
-    let before = solidcraft_kernel::measure(&s.world_state().unwrap().body("Sleeve").unwrap().body).unwrap().volume;
+    let before = torno_kernel::measure(&s.world_state().unwrap().body("Sleeve").unwrap().body).unwrap().volume;
     run(&mut s, "component.activate", json!({"component":0}));
     let destination = run(&mut s, "component.create", json!({"name":"Destination"}));
     let to = destination["component"].as_u64().unwrap();
@@ -347,13 +347,13 @@ fn earlier_selected_cylinder_emboss_keeps_source_frame_after_transfer_and_edit()
     run(&mut s, "occurrence.move", json!({"occurrence":destination_occurrence,"translate":[0,40,0],"axis":[1,0,0],"angle":90,"capture":true}));
     run(&mut s, "component.move_bodies", json!({"component":to,"bodies":["Sleeve"]}));
     assert!(s.doc.features.iter().all(|feature| s.model.result(feature.id).is_some_and(|result| result.error.is_none())));
-    let mut reopened = Session { doc: solidcraft_doc::Document::from_json(&s.doc.to_json()).unwrap().into(), ..Session::default() };
+    let mut reopened = Session { doc: torno_doc::Document::from_json(&s.doc.to_json()).unwrap().into(), ..Session::default() };
     reopened.refresh();
     assert!(reopened.doc.features.iter().all(|feature| reopened.model.result(feature.id).is_some_and(|result| result.error.is_none())));
-    assert!((solidcraft_kernel::measure(&reopened.world_state().unwrap().body("Sleeve").unwrap().body).unwrap().volume - before).abs() < 1e-5);
+    assert!((torno_kernel::measure(&reopened.world_state().unwrap().body("Sleeve").unwrap().body).unwrap().volume - before).abs() < 1e-5);
     let depth = reopened.doc.feature(emboss).unwrap().param_names[0].clone();
     run(&mut reopened, "parameters.change", json!({"name":depth,"expression":"2 mm"}));
-    assert!(solidcraft_kernel::measure(&reopened.world_state().unwrap().body("Sleeve").unwrap().body).unwrap().volume > before);
+    assert!(torno_kernel::measure(&reopened.world_state().unwrap().body("Sleeve").unwrap().body).unwrap().volume > before);
 }
 
 #[test]
@@ -415,7 +415,7 @@ fn edited_transfer_destination_updates_history_owner_copy_and_reopen() {
     assert_eq!(s.pending_moves, pending);
     let copied = run(&mut s, "component.paste_new", json!({"component":b}))["component"].as_u64().unwrap();
     assert_eq!(s.model.state().body("Block (2)").unwrap().component, copied);
-    let mut reopened = Session { doc: solidcraft_doc::Document::from_json(&s.doc.to_json()).unwrap().into(), ..Session::default() };
+    let mut reopened = Session { doc: torno_doc::Document::from_json(&s.doc.to_json()).unwrap().into(), ..Session::default() };
     reopened.refresh();
     assert_eq!(reopened.model.state().body("Block").unwrap().component, b);
     assert_eq!(reopened.model.state().body("Block (2)").unwrap().component, copied);

@@ -32,6 +32,6 @@
   "ungraded": [],
   "what": "component.from_bodies naming a body that is not there",
   "why_not": [
-    "the failure is SolidCraft's, not a kernel operation's: step 2 (component.from_bodies): invalid parameters for `component.from_bodies`: no body `Nope`"
+    "the failure is Torno's, not a kernel operation's: step 2 (component.from_bodies): invalid parameters for `component.from_bodies`: no body `Nope`"
   ]
 }

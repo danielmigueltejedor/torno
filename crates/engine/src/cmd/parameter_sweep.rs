@@ -4,8 +4,8 @@
 //! design, many sizes) can be checked across its whole range before it is trusted, and the
 //! report says what moved where, so a lost face or a flipped joint is found before a part is.
 
-use solidcraft_geom::prelude::*;
 use std::collections::{BTreeMap, BTreeSet};
+use torno_geom::prelude::*;
 
 use serde_json::{Value, json};
 use solidcore_record::Vec3;
@@ -77,21 +77,21 @@ fn look(s: &Session) -> Look {
     }
     // In its own part's frame: an origin that turns over on its part is a lost reference; a part
     // the joints place anew is only its consequence.
-    let frame = |o: &solidcraft_doc::joints::JointOrigin| -> std::result::Result<Frame, String> {
-        let f = solidcraft_doc::joints::resolve_origin(&s.doc, &st, o).map_err(|e| e.to_string())?;
+    let frame = |o: &torno_doc::joints::JointOrigin| -> std::result::Result<Frame, String> {
+        let f = torno_doc::joints::resolve_origin(&s.doc, &st, o).map_err(|e| e.to_string())?;
         Ok((Vec3::new(f[3][0], f[3][1], f[3][2]), Vec3::new(f[2][0], f[2][1], f[2][2])))
     };
     let joints = s.doc.assembly.joints.iter().filter(|j| !j.suppressed).map(|j| (j.id, (j.name.clone(), frame(&j.a), frame(&j.b)))).collect();
     let unsolved = if s.doc.assembly.joints.is_empty() {
         BTreeMap::new()
     } else {
-        solidcraft_doc::joints::solve(&s.doc, &st).errors.into_iter().map(|(id, _, why)| (id, why)).collect()
+        torno_doc::joints::solve(&s.doc, &st).errors.into_iter().map(|(id, _, why)| (id, why)).collect()
     };
     let sketches = st
         .sketches
         .iter()
         .map(|k| {
-            let failing = if k.report.status == solidcraft_sketch::SolveStatus::Failed { k.report.failing.clone() } else { Vec::new() };
+            let failing = if k.report.status == torno_sketch::SolveStatus::Failed { k.report.failing.clone() } else { Vec::new() };
             (k.feature, (k.name.clone(), k.plane.normal(), failing, k.report.folded.clone()))
         })
         .collect();

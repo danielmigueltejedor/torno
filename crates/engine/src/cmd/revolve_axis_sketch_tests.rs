@@ -6,7 +6,7 @@
 use std::f64::consts::PI;
 
 use serde_json::{Value, json};
-use solidcraft_geom::MeshGeom;
+use torno_geom::MeshGeom;
 
 use crate::Session;
 
@@ -53,13 +53,11 @@ fn revolve_axis_named_by_its_owning_sketch_uses_that_sketch() {
         json!({"sketch": "ProfileSketch", "profiles": [0], "axis": {"sketch": "AxisSketch", "curve": "l1"}, "name": "Turn"}),
     );
     assert!(rel(volume(&mut s), RING) < 1e-4, "turned about AxisSketch's l1: {}", volume(&mut s));
-    let Some(solidcraft_doc::Feature { kind: solidcraft_doc::FeatureKind::Revolve { axis, .. }, .. }) = s.doc.features.last() else {
-        panic!("no revolve")
-    };
-    assert!(matches!(axis, solidcraft_doc::AxisRef::SketchLine { curve, sketch: Some(_) } if curve == "l1"), "kept qualified: {axis:?}");
+    let Some(torno_doc::Feature { kind: torno_doc::FeatureKind::Revolve { axis, .. }, .. }) = s.doc.features.last() else { panic!("no revolve") };
+    assert!(matches!(axis, torno_doc::AxisRef::SketchLine { curve, sketch: Some(_) } if curve == "l1"), "kept qualified: {axis:?}");
     // Saved and reopened it still turns about the other sketch's line.
     let saved = s.doc.to_json();
-    let mut reopened = Session::new(solidcraft_doc::Document::from_json(&saved).unwrap());
+    let mut reopened = Session::new(torno_doc::Document::from_json(&saved).unwrap());
     assert!(rel(volume(&mut reopened), RING) < 1e-4, "reopened: {}", volume(&mut reopened));
 }
 

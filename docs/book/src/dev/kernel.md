@@ -7,7 +7,7 @@ measures) and a `KernelError` instead of kernel types and panics.
 
 ## `guard`
 
-The vendored kernel can panic on geometry it does not handle. Every call into it goes through `solidcraft_kernel::guard`, which catches the panic and turns it into
+The vendored kernel can panic on geometry it does not handle. Every call into it goes through `torno_kernel::guard`, which catches the panic and turns it into
 `KernelError::Internal`, leaving the model unchanged:
 
 ```rust

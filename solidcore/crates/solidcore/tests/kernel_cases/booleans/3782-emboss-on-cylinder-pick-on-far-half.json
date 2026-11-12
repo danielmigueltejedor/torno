@@ -63,6 +63,6 @@
   "ungraded": [],
   "what": "emboss on a cylinder with the face pick on the half of the wall opposite the sketch",
   "why_not": [
-    "body \"Cyl\" is no kernel operation's output nor an operand: SolidCraft built it or changed the kernel's record"
+    "body \"Cyl\" is no kernel operation's output nor an operand: Torno built it or changed the kernel's record"
   ]
 }

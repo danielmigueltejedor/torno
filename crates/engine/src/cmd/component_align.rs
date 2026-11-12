@@ -4,8 +4,8 @@
 
 use serde_json::{Value, json};
 use solidcore_record::Vec3;
-use solidcraft_doc::{IDENTITY, mat_inverse, mat_mul, rigid};
-use solidcraft_geom::prelude::*;
+use torno_doc::{IDENTITY, mat_inverse, mat_mul, rigid};
+use torno_geom::prelude::*;
 
 use super::{occurrence, occurrence_path, valid_position};
 use crate::params::{bad, vec3};
@@ -98,8 +98,8 @@ fn world_pick(
     p: &Value,
     pk: &str,
     fk: &str,
-    plane: &Option<solidcraft_doc::PlaneRef>,
-    vals: &std::collections::BTreeMap<String, solidcraft_doc::expr::Value>,
+    plane: &Option<torno_doc::PlaneRef>,
+    vals: &std::collections::BTreeMap<String, torno_doc::expr::Value>,
     cmd: &str,
 ) -> Result<(Vec3, Option<Vec3>)> {
     if let Some(pl_ref) = plane {
@@ -170,9 +170,8 @@ pub(super) fn align(s: &mut Session, p: &Value) -> Result<Value> {
         }
     }
 
-    let plane = |key: &str| -> Result<Option<solidcraft_doc::PlaneRef>> {
-        p.get(key).map(|v| super::super::features::plane_param(s, Some(v), cmd)).transpose()
-    };
+    let plane =
+        |key: &str| -> Result<Option<torno_doc::PlaneRef>> { p.get(key).map(|v| super::super::features::plane_param(s, Some(v), cmd)).transpose() };
     let (from_plane, to_plane) = (plane("from_plane")?, plane("to_plane")?);
     let (vals, _) = s.doc.param_values();
     let (from, from_normal) = world_pick(s, p, "from", "from_face", &from_plane, &vals, cmd)?;

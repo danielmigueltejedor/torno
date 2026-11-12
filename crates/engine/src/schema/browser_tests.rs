@@ -232,7 +232,7 @@ fn the_browser_schemas_take_what_the_handlers_read() {
 /// The typed visibility has the keys the saved one has, with every field set.
 #[test]
 fn the_visibility_reply_type_matches_the_design_s() {
-    let v = solidcraft_doc::Visibility {
+    let v = torno_doc::Visibility {
         hidden_bodies: vec!["A".into()],
         hidden_occurrences: vec![vec![1, 2]],
         hidden_origin: vec!["X".into()],
@@ -246,7 +246,7 @@ fn the_visibility_reply_type_matches_the_design_s() {
         hidden_folders: vec!["c0/bodies".into()],
     };
     assert_eq!(serde_json::to_value(VisibilityState::from(&v)).unwrap(), serde_json::to_value(&v).unwrap());
-    let empty = solidcraft_doc::Visibility::default();
+    let empty = torno_doc::Visibility::default();
     assert_eq!(serde_json::to_value(VisibilityState::from(&empty)).unwrap(), serde_json::to_value(&empty).unwrap());
 }
 

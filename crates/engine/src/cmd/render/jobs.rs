@@ -5,9 +5,9 @@ use crate::schema::render_jobs::{
 use crate::{Result, Session, params::bad, render_jobs::job_error};
 use serde::Deserialize;
 use serde_json::{Value, json};
-use solidcraft_doc::render_resources::{CpuHdrEnvironment, GpuHdrEnvironment};
-use solidcraft_doc::render_settings::{RenderJob, RenderSetup};
-use solidcraft_render::{
+use torno_doc::render_resources::{CpuHdrEnvironment, GpuHdrEnvironment};
+use torno_doc::render_settings::{RenderJob, RenderSetup};
+use torno_render::{
     RenderOperation, RenderRequest,
     job::{ImageRequest, Integrator, JobId, RaytraceOptions},
 };
@@ -20,7 +20,7 @@ const DENOISE_OPAQUE_ONLY_POLICY: &str = "legacy opaque-only filtering; mirror a
 #[derive(Default, Deserialize)]
 #[serde(default, deny_unknown_fields)]
 struct Start {
-    aging: solidcraft_doc::render_aging::SavedAgingStack,
+    aging: torno_doc::render_aging::SavedAgingStack,
     studio_weights: Option<[f64; 3]>,
     progressive: bool,
     denoise: bool,
@@ -31,7 +31,7 @@ struct Start {
     integrator: Integrator,
     environment: Option<EnvironmentRequest>,
     raytrace: Option<RaytraceOptions>,
-    led_strip: Option<solidcraft_render::job::led_strip::LedStripOptions>,
+    led_strip: Option<torno_render::job::led_strip::LedStripOptions>,
     led_samples: Option<u32>,
     setup: Option<String>,
     settings: Option<RenderSetup>,
@@ -43,8 +43,8 @@ struct Start {
 #[serde(default, deny_unknown_fields)]
 struct EnvironmentRequest {
     path: String,
-    resource: Option<solidcraft_doc::render_resources::HdrId>,
-    expected_sha256: Option<solidcraft_doc::render_resources::HdrId>,
+    resource: Option<torno_doc::render_resources::HdrId>,
+    expected_sha256: Option<torno_doc::render_resources::HdrId>,
     rotation_radians: f64,
     intensity: f64,
     samples: u32,
@@ -59,20 +59,20 @@ impl Default for EnvironmentRequest {
 #[serde(default, deny_unknown_fields)]
 struct ProgressiveStart {
     supersampling: Option<u32>,
-    denoise_settings: solidcraft_render::job::DenoiseSettings,
+    denoise_settings: torno_render::job::DenoiseSettings,
     denoise_diagnostics: bool,
-    caustics: Option<solidcraft_render::job::CausticOptions>,
+    caustics: Option<torno_render::job::CausticOptions>,
     studio_weights: Option<[f64; 3]>,
-    aging: solidcraft_doc::render_aging::SavedAgingStack,
+    aging: torno_doc::render_aging::SavedAgingStack,
     #[serde(default)]
     nested_media: bool,
     texture_filtering: bool,
     metal_energy_compensation: bool,
-    volume: Option<solidcraft_render::job::volume::HomogeneousVolume>,
-    adaptive: Option<solidcraft_render::job::adaptive::AdaptiveSampling>,
+    volume: Option<torno_render::job::volume::HomogeneousVolume>,
+    adaptive: Option<torno_render::job::adaptive::AdaptiveSampling>,
     transmission_samples: Option<u32>,
-    finishing: solidcraft_render::job::finishing::Finishing,
-    backdrop: Option<solidcraft_render::job::finishing::Backdrop>,
+    finishing: torno_render::job::finishing::Finishing,
+    backdrop: Option<torno_render::job::finishing::Backdrop>,
     linear_exr: bool,
     integrator: Integrator,
     setup: Option<String>,
@@ -84,9 +84,9 @@ struct ProgressiveStart {
     max_depth: Option<u32>,
     seed: Option<u32>,
     raytrace: super::transmission::Raytrace,
-    lens: Option<solidcraft_render::job::ThinLens>,
-    lighting: Option<solidcraft_render::job::StudioLighting>,
-    tone_map: Option<solidcraft_render::job::ToneMap>,
+    lens: Option<torno_render::job::ThinLens>,
+    lighting: Option<torno_render::job::StudioLighting>,
+    tone_map: Option<torno_render::job::ToneMap>,
     environment: Option<super::environment::Input>,
     denoise: bool,
     clamp_indirect: Option<f64>,
@@ -94,7 +94,7 @@ struct ProgressiveStart {
 
 pub(crate) struct Prepared {
     pub(crate) replace: bool,
-    pub(crate) submission: Option<solidcraft_render::job::PreparedSubmission>,
+    pub(crate) submission: Option<torno_render::job::PreparedSubmission>,
     pub(crate) reply: Value,
 }
 
@@ -149,8 +149,8 @@ enum SavedHdr {
 struct Normalized {
     params: Value,
     hdr: Option<SavedHdr>,
-    surfaces: solidcraft_doc::render_surface::SurfaceBindings,
-    optics: solidcraft_doc::render_optics::OpticalBindings,
+    surfaces: torno_doc::render_surface::SurfaceBindings,
+    optics: torno_doc::render_optics::OpticalBindings,
 }
 
 fn normalize_saved_job(s: &Session, params: &Value, command: &str) -> Result<Option<Normalized>> {
@@ -225,15 +225,15 @@ fn normalize_saved_job(s: &Session, params: &Value, command: &str) -> Result<Opt
     Ok(Some(Normalized { params: lowered, hdr, surfaces, optics }))
 }
 
-pub(crate) fn prepare(s: &Session, params: &Value, command: &str, cancel: &solidcraft_render::job::CancelToken) -> Result<Prepared> {
+pub(crate) fn prepare(s: &Session, params: &Value, command: &str, cancel: &torno_render::job::CancelToken) -> Result<Prepared> {
     prepare_with_metadata(s, params, command, cancel, None)
 }
 pub(crate) fn prepare_with_metadata(
     s: &Session,
     params: &Value,
     command: &str,
-    cancel: &solidcraft_render::job::CancelToken,
-    retained: Option<&solidcraft_render::job::RetainedMetadata>,
+    cancel: &torno_render::job::CancelToken,
+    retained: Option<&torno_render::job::RetainedMetadata>,
 ) -> Result<Prepared> {
     cancel.check().map_err(job_error)?;
     let normalized = normalize_saved_job(s, params, command)?;
@@ -342,7 +342,7 @@ pub(crate) fn prepare_with_metadata(
         if input.integrator != Integrator::Raytrace {
             return Err(bad(command, "saved opaque surfaces require CPU or GPU ray tracing"));
         }
-        solidcraft_render::job::textures::validate_cpu_options(input.raytrace.as_ref().unwrap_or(&RaytraceOptions::default())).map_err(job_error)?;
+        torno_render::job::textures::validate_cpu_options(input.raytrace.as_ref().unwrap_or(&RaytraceOptions::default())).map_err(job_error)?;
         if normalized.as_ref().is_some_and(|n| !n.optics.is_empty()) && input.raytrace.as_ref().is_none_or(|options| options.path.is_none()) {
             return Err(bad(command, "CPU maps with Glass require Indirect lighting and separate targets"));
         }
@@ -374,11 +374,11 @@ pub(crate) fn prepare_with_metadata(
         let trace_dimensions = if options.supersampling == 1 && !options.denoise && !options.denoise_diagnostics {
             dimensions
         } else {
-            solidcraft_render::job::supersampled_dimensions(dimensions.0, dimensions.1, options.supersampling).map_err(job_error)?
+            torno_render::job::supersampled_dimensions(dimensions.0, dimensions.1, options.supersampling).map_err(job_error)?
         };
         options.budget.validate_image(trace_dimensions.0, trace_dimensions.1, options.camera_sampling().map_err(job_error)?).map_err(job_error)?;
         if options.denoise || options.denoise_diagnostics {
-            solidcraft_render::job::validate_cpu_denoise_image(trace_dimensions.0, trace_dimensions.1).map_err(job_error)?;
+            torno_render::job::validate_cpu_denoise_image(trace_dimensions.0, trace_dimensions.1).map_err(job_error)?;
         }
         if let Some(lens) = options.lens {
             let camera = input
@@ -412,7 +412,7 @@ pub(crate) fn prepare_with_metadata(
         }
         let resource = s.doc.render.resources.required(&hdr.resource).map_err(|e| bad(command, e.to_string()))?;
         Some(
-            solidcraft_render::lighting::environment_input::EnvironmentInput::new(resource.source(), hdr.rotation_rad, hdr.intensity, hdr.samples)
+            torno_render::lighting::environment_input::EnvironmentInput::new(resource.source(), hdr.rotation_rad, hdr.intensity, hdr.samples)
                 .map_err(|e| bad(command, e.to_string()))?,
         )
     } else if let Some(environment) = &input.environment {
@@ -432,15 +432,14 @@ pub(crate) fn prepare_with_metadata(
             {
                 return Err(bad(command, "environment requires a bounded HDR input path"));
             }
-            let bytes =
-                solidcraft_io::vfs::read(&environment.path, solidcraft_render::lighting::MAX_HDR_BYTES).map_err(|e| bad(command, e.to_string()))?;
-            if environment.expected_sha256.is_some_and(|id| id != solidcraft_doc::render_resources::HdrId::of(&bytes)) {
+            let bytes = torno_io::vfs::read(&environment.path, torno_render::lighting::MAX_HDR_BYTES).map_err(|e| bad(command, e.to_string()))?;
+            if environment.expected_sha256.is_some_and(|id| id != torno_doc::render_resources::HdrId::of(&bytes)) {
                 return Err(bad(command, "HDR file changed since selection; inspect and select it again"));
             }
-            solidcraft_render::lighting::HdrSource::new(bytes).map_err(|e| bad(command, e.to_string()))?
+            torno_render::lighting::HdrSource::new(bytes).map_err(|e| bad(command, e.to_string()))?
         };
         Some(
-            solidcraft_render::lighting::environment_input::EnvironmentInput::new(
+            torno_render::lighting::environment_input::EnvironmentInput::new(
                 source,
                 environment.rotation_radians,
                 environment.intensity,
@@ -494,7 +493,7 @@ pub(crate) fn prepare_with_metadata(
         if let Some(camera) = s.camera {
             settings.camera = camera;
         } else {
-            settings.camera.fit(&solidcraft_render::view_bounds(&scene.bounds));
+            settings.camera.fit(&torno_render::view_bounds(&scene.bounds));
         }
         settings
     };
@@ -502,7 +501,7 @@ pub(crate) fn prepare_with_metadata(
         return Err(bad(command, "passive stages require a raytrace executor"));
     }
     super::staging::apply(&mut scene, &settings, command)?;
-    let budget = input.raytrace.as_ref().map_or(solidcraft_render::job::CpuBudget::Compact, |o| o.budget);
+    let budget = input.raytrace.as_ref().map_or(torno_render::job::CpuBudget::Compact, |o| o.budget);
     if input.integrator == Integrator::Raytrace {
         settings.validate_for_cpu(budget).map_err(|e| bad(command, e.to_string()))?;
         budget.validate_execution().map_err(job_error)?;
@@ -535,14 +534,14 @@ pub(crate) fn prepare_with_metadata(
     backend.executors = vec![descriptor];
     let mut features = scene.required_features();
     if environment.is_some() {
-        features.push(solidcraft_render::RenderFeature::Hdri);
+        features.push(torno_render::RenderFeature::Hdri);
     }
     let refraction = input.raytrace.as_ref().is_some_and(|options| !options.dielectrics.is_empty());
-    if refraction && !features.contains(&solidcraft_render::RenderFeature::Refraction) {
-        features.push(solidcraft_render::RenderFeature::Refraction);
+    if refraction && !features.contains(&torno_render::RenderFeature::Refraction) {
+        features.push(torno_render::RenderFeature::Refraction);
     }
     let environment_info = environment.as_ref().map(|e| e.metadata());
-    let resolved = solidcraft_render::resolve_request(
+    let resolved = torno_render::resolve_request(
         &[backend],
         &RenderRequest {
             backend: Some(settings.backend.clone()),
@@ -594,7 +593,7 @@ pub(crate) fn prepare_with_metadata(
     let mut admission = submission.admission();
     let retained_lights = request.raytrace.as_ref().map_or(Ok(0), |o| o.retained_bytes()).map_err(job_error)?;
     let retained_environment =
-        if environment_info.is_some() { std::mem::size_of::<solidcraft_render::lighting::environment_input::EnvironmentInfo>() as u64 } else { 0 };
+        if environment_info.is_some() { std::mem::size_of::<torno_render::lighting::environment_input::EnvironmentInfo>() as u64 } else { 0 };
     let retained_request_bytes = retained_lights
         .checked_add(retained_environment)
         .and_then(|bytes| bytes.checked_add(request.retained_resource_metadata_bytes()))
@@ -655,10 +654,10 @@ fn prepare_progressive(
     command: &str,
     require_gpu_path: bool,
     saved_hdr: Option<GpuHdrEnvironment>,
-    saved_surfaces: Option<&solidcraft_doc::render_surface::SurfaceBindings>,
-    saved_optics: Option<&solidcraft_doc::render_optics::OpticalBindings>,
-    cancel: &solidcraft_render::job::CancelToken,
-    retained: Option<&solidcraft_render::job::RetainedMetadata>,
+    saved_surfaces: Option<&torno_doc::render_surface::SurfaceBindings>,
+    saved_optics: Option<&torno_doc::render_optics::OpticalBindings>,
+    cancel: &torno_render::job::CancelToken,
+    retained: Option<&torno_render::job::RetainedMetadata>,
 ) -> Result<Prepared> {
     let cpu_raytrace = params
         .get("raytrace")
@@ -740,7 +739,7 @@ fn prepare_progressive(
         if let Some(camera) = s.camera {
             settings.camera = camera;
         } else {
-            settings.camera.fit(&solidcraft_render::view_bounds(&scene.bounds));
+            settings.camera.fit(&torno_render::view_bounds(&scene.bounds));
         }
         settings
     };
@@ -752,7 +751,7 @@ fn prepare_progressive(
         return Err(bad(command, "sampling and exposure controls require progressive rendering"));
     }
     super::staging::apply(&mut scene, &settings, command)?;
-    let mut options = solidcraft_render::job::JobOptions::default();
+    let mut options = torno_render::job::JobOptions::default();
     if let Some(samples) = input.samples {
         options.samples = samples;
     }
@@ -783,7 +782,7 @@ fn prepare_progressive(
     options.adaptive = input.adaptive;
     options.transmission_samples = input.transmission_samples.unwrap_or(1);
     options.validate().map_err(job_error)?;
-    solidcraft_render::job::supersampled_dimensions(settings.width, settings.height, options.supersampling).map_err(job_error)?;
+    torno_render::job::supersampled_dimensions(settings.width, settings.height, options.supersampling).map_err(job_error)?;
     if let Some(super::environment::Input::BuiltinHdr { id, .. }) = &input.environment
         && options.lighting.as_ref().is_some_and(|lighting| lighting.sun.is_some())
         && super::library::owns_sun(id, command)?
@@ -796,7 +795,7 @@ fn prepare_progressive(
         }
         let resource = s.doc.render.resources.required(&hdr.resource).map_err(|e| bad(command, e.to_string()))?;
         Some(std::sync::Arc::new(
-            solidcraft_render::lighting::environment::EnvironmentSource::from_hdr(
+            torno_render::lighting::environment::EnvironmentSource::from_hdr(
                 resource.source(),
                 hdr.rotation_rad,
                 hdr.intensity,
@@ -809,12 +808,12 @@ fn prepare_progressive(
     };
     let mut features = scene.required_features();
     if environment.is_some() {
-        features.push(solidcraft_render::RenderFeature::Hdri);
+        features.push(torno_render::RenderFeature::Hdri);
     }
     if input.progressive {
-        features.push(solidcraft_render::RenderFeature::Progressive);
+        features.push(torno_render::RenderFeature::Progressive);
         if scene.has_transmission() {
-            features.push(solidcraft_render::RenderFeature::Refraction);
+            features.push(torno_render::RenderFeature::Refraction);
         }
     }
     let mut backend = s.render_backend();
@@ -824,7 +823,7 @@ fn prepare_progressive(
             return Err(bad(command, "saved gpu_path method requires an installed gpu-path executor"));
         }
     }
-    let resolved = solidcraft_render::resolve_request(
+    let resolved = torno_render::resolve_request(
         &[backend],
         &RenderRequest {
             backend: Some(settings.backend.clone()),
@@ -924,11 +923,11 @@ fn ignored_controls(settings: &RenderSetup) -> Vec<&'static str> {
 }
 
 pub(super) fn preflight(s: &mut Session, params: &Value) -> Result<Value> {
-    prepare(s, params, "render.preflight", &solidcraft_render::job::CancelToken::default()).map(|p| p.reply)
+    prepare(s, params, "render.preflight", &torno_render::job::CancelToken::default()).map(|p| p.reply)
 }
 
 pub(super) fn start(s: &mut Session, params: &Value) -> Result<Value> {
-    let p = prepare(s, params, "render.start", &solidcraft_render::job::CancelToken::default())?;
+    let p = prepare(s, params, "render.start", &torno_render::job::CancelToken::default())?;
     let status = s
         .render_jobs
         .start_prepared(
@@ -949,7 +948,7 @@ pub(super) fn start(s: &mut Session, params: &Value) -> Result<Value> {
 #[serde(deny_unknown_fields)]
 struct Regrade {
     job: Option<JobId>,
-    presentation: solidcraft_render::job::presentation::Presentation,
+    presentation: torno_render::job::presentation::Presentation,
 }
 pub(super) fn regrade(s: &mut Session, params: &Value) -> Result<Value> {
     let cmd = "render.result.regrade";
@@ -1014,7 +1013,7 @@ pub(super) fn copy(s: &mut Session, params: &Value) -> Result<Value> {
         .map_err(job_error)?
         .ok_or_else(|| bad("render.result.copy", "render has no completed image"))?;
     let size = (u64::from(frame.info.width), u64::from(frame.info.height));
-    if solidcraft_render::RenderLimits::default().fit(size.0, size.1, None) != Some(size) {
+    if torno_render::RenderLimits::default().fit(size.0, size.1, None) != Some(size) {
         return Err(bad("render.result.copy", "clipboard image exceeds 4096 per side or 4194304 pixels; export the PNG instead"));
     }
     super::typed_reply("render.result.copy", ImageCopied { frame: retyped("render.result.copy", &frame.info)?, param_warnings: Vec::new() })
@@ -1062,7 +1061,7 @@ pub(super) fn export(s: &mut Session, params: &Value) -> Result<Value> {
     }
     // Atomic native writers are also used for the app's own files and do not
     // apply a request's path scope. Check the caller's destination explicitly.
-    solidcraft_io::vfs::check(&input.path).map_err(|e| bad("render.export", e.to_string()))?;
+    torno_io::vfs::check(&input.path).map_err(|e| bad("render.export", e.to_string()))?;
     let job = result_source(s, input.job, "render.export")?;
     let frame = s.render_jobs.frame(job).map_err(job_error)?;
     let bytes = match input.format {
@@ -1081,8 +1080,7 @@ pub(super) fn export(s: &mut Session, params: &Value) -> Result<Value> {
     let denoise_mask = frame.denoise_mask_info().map(|info| retyped("render.export", info)).transpose()?;
     // Replace atomically without reading an arbitrarily large previous target into memory.
     // Design saves retain their independent backup policy.
-    let result =
-        if input.overwrite { solidcraft_io::write_atomic(path, bytes, false) } else { solidcraft_io::safe_write::create_atomic(path, bytes) };
+    let result = if input.overwrite { torno_io::write_atomic(path, bytes, false) } else { torno_io::safe_write::create_atomic(path, bytes) };
     result.map_err(|e| bad("render.export", format!("could not export completed {}: {e}", input.format.extension())))?;
     let reply = ImageExported {
         job: Job(job),

@@ -53,6 +53,6 @@
   "ungraded": [],
   "what": "a 100 x 60 tray with four 20 mm flanges at 108 degrees (leaning in over the base), closed at the corners: the panel ends are cut back on a slant where they would overlap",
   "why_not": [
-    "body \"Body1\" is no kernel operation's output nor an operand: SolidCraft built it or changed the kernel's record"
+    "body \"Body1\" is no kernel operation's output nor an operand: Torno built it or changed the kernel's record"
   ]
 }

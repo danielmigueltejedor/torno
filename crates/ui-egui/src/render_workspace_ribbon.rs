@@ -3,8 +3,8 @@
 use super::{cpu, inspector, library, setups, studio};
 use crate::SolveApp;
 use serde_json::json;
-use solidcraft_engine::render::job::Phase;
-use solidcraft_engine::{CommandInfo, CommandSpec};
+use torno_engine::render::job::Phase;
+use torno_engine::{CommandInfo, CommandSpec};
 
 fn is_job_action(id: &str) -> bool {
     matches!(
@@ -191,7 +191,7 @@ pub(super) fn perform_job(app: &mut SolveApp, id: &str) -> Result<(), String> {
         "render.preflight" => {
             let request = super::image_params(app)?;
             if super::prepare::enabled(app) {
-                return super::prepare::begin_ui(app, solidcraft_engine::render_preparation::Kind::Check, request);
+                return super::prepare::begin_ui(app, torno_engine::render_preparation::Kind::Check, request);
             }
             let reply = match app.run(id, request.clone()) {
                 Ok(reply) => reply,
@@ -234,7 +234,7 @@ pub(super) fn perform_job(app: &mut SolveApp, id: &str) -> Result<(), String> {
                 super::export_image(app, job, overwrite);
             }
         }
-        _ => return Err(solidcraft_ui_text::tr("render.error_job_action").into()),
+        _ => return Err(torno_ui_text::tr("render.error_job_action").into()),
     }
     Ok(())
 }
@@ -243,10 +243,10 @@ pub(super) fn perform_job(app: &mut SolveApp, id: &str) -> Result<(), String> {
 pub(super) struct PendingFinal {
     action: String,
     params: serde_json::Value,
-    document: std::sync::Weak<solidcraft_engine::doc::Document>,
+    document: std::sync::Weak<torno_engine::doc::Document>,
     revision: u64,
-    model: std::sync::Weak<solidcraft_engine::doc::ModelState>,
-    moves: std::collections::BTreeMap<u64, solidcraft_engine::doc::Mat>,
+    model: std::sync::Weak<torno_engine::doc::ModelState>,
+    moves: std::collections::BTreeMap<u64, torno_engine::doc::Mat>,
     shot: String,
     visual: serde_json::Value,
 }
@@ -281,7 +281,7 @@ pub(super) fn submit_deferred(app: &mut SolveApp, pending: PendingFinal) -> Resu
         }
         "render.start" => {
             if super::prepare::enabled(app) {
-                return super::prepare::begin_ui(app, solidcraft_engine::render_preparation::Kind::Start, pending.params);
+                return super::prepare::begin_ui(app, torno_engine::render_preparation::Kind::Start, pending.params);
             }
             let reply = app.run(id, pending.params)?;
             follow_started(app, &reply)?;
@@ -289,11 +289,11 @@ pub(super) fn submit_deferred(app: &mut SolveApp, pending: PendingFinal) -> Resu
         "render.result.regrade" => {
             let reply = app.run(id, pending.params)?;
             let job = serde_json::from_value(reply["job"].clone())
-                .map_err(|error| solidcraft_ui_text::format("render.error_regrade_identity", &[("error", &error.to_string())]))?;
+                .map_err(|error| torno_ui_text::format("render.error_regrade_identity", &[("error", &error.to_string())]))?;
             app.render_workspace.view.job = Some(job);
         }
 
-        _ => return Err(solidcraft_ui_text::tr("render.error_job_action").into()),
+        _ => return Err(torno_ui_text::tr("render.error_job_action").into()),
     }
     Ok(())
 }
@@ -301,8 +301,8 @@ pub(super) fn submit_deferred(app: &mut SolveApp, pending: PendingFinal) -> Resu
 /// The explicit Render click follows its newly minted real-session job. The
 /// asynchronous preparation path reuses this after the same command post-hooks.
 pub(super) fn follow_started(app: &mut SolveApp, reply: &serde_json::Value) -> Result<(), String> {
-    let job = serde_json::from_value(reply["job"].clone())
-        .map_err(|e| solidcraft_ui_text::format("render.error_job_identity", &[("error", &e.to_string())]))?;
+    let job =
+        serde_json::from_value(reply["job"].clone()).map_err(|e| torno_ui_text::format("render.error_job_identity", &[("error", &e.to_string())]))?;
     app.render_workspace.view.job = Some(job);
     app.render_workspace.view.job_shot = Some(app.render_workspace.view.name.clone());
     // An explicit UI Render action must show the image being computed. Otherwise
@@ -325,9 +325,9 @@ pub(super) fn follow_started(app: &mut SolveApp, reply: &serde_json::Value) -> R
     Ok(())
 }
 
-pub(super) fn presentation(app: &SolveApp) -> solidcraft_engine::render::job::presentation::Presentation {
+pub(super) fn presentation(app: &SolveApp) -> torno_engine::render::job::presentation::Presentation {
     let view = &app.render_workspace.view;
-    solidcraft_engine::render::job::presentation::Presentation {
+    torno_engine::render::job::presentation::Presentation {
         exposure_ev: view.draft.exposure_ev,
         tone_map: view.studio.tone_map,
         finishing: view.studio.finishing,
@@ -441,7 +441,7 @@ fn navigate(app: &mut SolveApp, id: &str) -> Result<(), String> {
             library::review_selected_quality(app)?;
         }
         "render.status" | "render.backends" => focus(app, RenderSelection::Check, None),
-        _ => return Err(solidcraft_ui_text::tr("render.error_interactive_command").into()),
+        _ => return Err(torno_ui_text::tr("render.error_interactive_command").into()),
     }
     Ok(())
 }

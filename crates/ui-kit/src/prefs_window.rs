@@ -5,7 +5,7 @@
 //! and puts back the snapshot through [`Host`].
 use crate::{BackingTooltipExt as _, Icon, settings_search};
 use egui::Ui;
-use solidcraft_theme::Tokens;
+use torno_theme::Tokens;
 
 /// One page of the window.
 pub enum Page<S> {
@@ -278,19 +278,19 @@ pub fn show<S: Host>(ctx: &egui::Context, host: &mut S, pages: &[Page<S>], optio
     let mut defaults = false;
     let (closed, action) = window.show_pages_with_header(ctx, &mut selected, &list, host, &hooks, |ui| {
         let button = crate::button(ui, labels.restore_defaults, crate::Button::Ghost).backing_on_hover_text(labels.restore_defaults_hint);
-        solidcraft_ui_registry::publish_target(&format!("{}:defaults", options.prefix), button.rect);
+        torno_ui_registry::publish_target(&format!("{}:defaults", options.prefix), button.rect);
         defaults = button.clicked();
     });
-    if let Some(rect) = solidcraft_ui_registry::rect_of("dialog:page_body") {
-        solidcraft_ui_registry::publish_rect(&format!("{}:page_body", options.prefix), rect);
+    if let Some(rect) = torno_ui_registry::rect_of("dialog:page_body") {
+        torno_ui_registry::publish_rect(&format!("{}:page_body", options.prefix), rect);
     }
     for name in ["window", "footer", "ok", "apply", "cancel"] {
-        if let Some(rect) = solidcraft_ui_registry::rect_of(&format!("dialog:{name}")) {
-            solidcraft_ui_registry::publish_target(&format!("{}:{name}", options.prefix), rect);
+        if let Some(rect) = torno_ui_registry::rect_of(&format!("dialog:{name}")) {
+            torno_ui_registry::publish_target(&format!("{}:{name}", options.prefix), rect);
         }
     }
-    if let Some(rect) = solidcraft_ui_registry::rect_of("dialog:footer:actions") {
-        solidcraft_ui_registry::publish_rect(&format!("{}:actions", options.prefix), rect);
+    if let Some(rect) = torno_ui_registry::rect_of("dialog:footer:actions") {
+        torno_ui_registry::publish_rect(&format!("{}:actions", options.prefix), rect);
     }
     edited(host);
     let button = match action {
@@ -320,8 +320,8 @@ fn page_path<S>(pages: &[Page<S>], index: usize) -> String {
     let Some(page) = pages.get(index) else { return String::new() };
     let group = pages.get(..=index).and_then(|pages| pages.iter().rev().find_map(|page| page.host().group));
     match group {
-        Some(group) => format!("{} > {}", solidcraft_ui_text::tr(group), solidcraft_ui_text::tr(page.host().label)),
-        None => solidcraft_ui_text::tr(page.host().label).to_owned(),
+        Some(group) => format!("{} > {}", torno_ui_text::tr(group), torno_ui_text::tr(page.host().label)),
+        None => torno_ui_text::tr(page.host().label).to_owned(),
     }
 }
 
@@ -332,7 +332,7 @@ fn search_header<S: Host>(ui: &mut Ui, host: &mut S, options: &Options<'_, S>) {
     if typed {
         place_search_cursor(ui.ctx(), id, host.window_ref().filter.chars().count());
     }
-    solidcraft_ui_registry::publish_handle(&format!("{}:search", options.prefix), field.rect.center());
+    torno_ui_registry::publish_handle(&format!("{}:search", options.prefix), field.rect.center());
     if field.has_focus() {
         settings_search::note_key_sink(ui.ctx());
     }

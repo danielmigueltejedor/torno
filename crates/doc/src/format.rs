@@ -322,7 +322,7 @@ impl Family<'_> {
     /// not: [`Family::newer`] says so.
     pub fn take_version(&self, v: &mut Value) -> Result<(u32, Option<Vec<String>>)> {
         let noun = self.noun;
-        let not_ours = |what: String| DocError::Invalid(format!("not a SolidCraft {noun} ({what})"));
+        let not_ours = |what: String| DocError::Invalid(format!("not a Torno {noun} ({what})"));
         let Some(obj) = v.as_object() else { return Err(not_ours("expected a JSON object".into())) };
         let version = match obj.get("format") {
             None => self.untagged.ok_or_else(|| not_ours("no format".into()))?,
@@ -432,7 +432,7 @@ impl Formats<'_> {
     /// their later number. A file past this build's number has no steps to run.
     fn upgrade(&self, noun: &str, v: &mut Value, version: u32, applied: Option<&[String]>) -> Result<()> {
         if version == 0 {
-            return Err(DocError::Invalid(format!("not a SolidCraft {noun} (format 0)")));
+            return Err(DocError::Invalid(format!("not a Torno {noun} (format 0)")));
         }
         // A list beside a format that isn't made of changes is ignored, like any field an upgrade
         // drops.
@@ -686,7 +686,7 @@ fn v2_to_v3(v: &mut Value) -> Result<()> {
 
 /// Read a design file's JSON, upgrading older formats.
 pub fn read(s: &str) -> Result<Document> {
-    let mut v: Value = serde_json::from_str(s).map_err(|e| DocError::Invalid(format!("not a SolidCraft design: {e}")))?;
+    let mut v: Value = serde_json::from_str(s).map_err(|e| DocError::Invalid(format!("not a Torno design: {e}")))?;
     let (version, applied) = DESIGN.take_version(&mut v)?;
     match DESIGN.newer(version, applied.as_deref()) {
         Some(newer) => crate::newer_file::read(v, version, applied, newer),
@@ -745,7 +745,7 @@ pub(crate) fn decode(mut v: Value, version: u32, applied: Option<&[String]>) -> 
         if let Some(crate::Feature { kind: crate::FeatureKind::Sketch { sketch, .. }, .. }) = d.features.get_mut(feature_index) {
             let mut spaces = std::collections::BTreeMap::new();
             for link in &sketch.links {
-                spaces.entry(link.id.as_str()).or_insert_with(|| solidcraft_sketch::WireSpace::from_legacy_link(link));
+                spaces.entry(link.id.as_str()).or_insert_with(|| torno_sketch::WireSpace::from_legacy_link(link));
             }
             for wire_index in wire_indices {
                 if let Some(wire) = sketch.wires.get_mut(wire_index) {
@@ -864,7 +864,7 @@ fn all_unique(ids: impl Iterator<Item = u64>) -> bool {
     ids.into_iter().all(|id| seen.insert(id))
 }
 
-/// The sketch ceilings ([`solidcraft_sketch::CEILING_POINTS`] and the others, the highest the
+/// The sketch ceilings ([`torno_sketch::CEILING_POINTS`] and the others, the highest the
 /// limit interactive editing enforces may be raised to), applied to the raw JSON so an oversized
 /// sketch is never deserialised. Every sketch in the timeline is solved when the design opens, and the
 /// solver sizes its dense matrices by the sketch, so a file with hundreds of thousands of
@@ -879,10 +879,10 @@ fn validate_sketch_sizes(value: &Value) -> Result<()> {
         let Some(sketch) = feature.get("sketch") else { continue };
         let len = |key: &str| sketch.get(key).and_then(Value::as_array).map_or(0, Vec::len);
         // The ceilings, not the limits in force: a design made where the limit was raised opens (#10874).
-        if len("points") > solidcraft_sketch::CEILING_POINTS
-            || len("curves") > solidcraft_sketch::CEILING_CURVES
-            || len("constraints") > solidcraft_sketch::CEILING_CONSTRAINTS
-            || len("patterns") > solidcraft_sketch::CEILING_CONSTRAINTS
+        if len("points") > torno_sketch::CEILING_POINTS
+            || len("curves") > torno_sketch::CEILING_CURVES
+            || len("constraints") > torno_sketch::CEILING_CONSTRAINTS
+            || len("patterns") > torno_sketch::CEILING_CONSTRAINTS
         {
             return Err(invalid());
         }
@@ -893,7 +893,7 @@ fn validate_sketch_sizes(value: &Value) -> Result<()> {
             for pattern in patterns {
                 let Some(entities) = pattern.get("entities").and_then(Value::as_array) else { return Err(invalid()) };
                 let Some(instances) = pattern.get("instances").and_then(Value::as_array) else { return Err(invalid()) };
-                if entities.len() > solidcraft_sketch::CEILING_CURVES + solidcraft_sketch::CEILING_POINTS || instances.len() >= 500 {
+                if entities.len() > torno_sketch::CEILING_CURVES + torno_sketch::CEILING_POINTS || instances.len() >= 500 {
                     return Err(invalid());
                 }
                 for instance in instances {
@@ -901,9 +901,9 @@ fn validate_sketch_sizes(value: &Value) -> Result<()> {
                     points = points.saturating_add(size("points"));
                     curves = curves.saturating_add(size("curves"));
                     constraints = constraints.saturating_add(size("constraints"));
-                    if points > solidcraft_sketch::CEILING_POINTS
-                        || curves > solidcraft_sketch::CEILING_CURVES
-                        || constraints > solidcraft_sketch::CEILING_CONSTRAINTS
+                    if points > torno_sketch::CEILING_POINTS
+                        || curves > torno_sketch::CEILING_CURVES
+                        || constraints > torno_sketch::CEILING_CONSTRAINTS
                     {
                         return Err(invalid());
                     }
@@ -1099,7 +1099,7 @@ fn validate_versioned_geometry(value: &Value) -> Result<()> {
             }
             let indices = curve.get("pts").and_then(Value::as_array).ok_or_else(invalid)?;
             work = work.saturating_add(indices.len());
-            if !(4..=solidcraft_sketch::MAX_SPLINE_POINTS).contains(&indices.len())
+            if !(4..=torno_sketch::MAX_SPLINE_POINTS).contains(&indices.len())
                 || work > 1_000_000
                 || curve.get("control").is_some_and(|control| control.as_bool() != Some(false))
                 || curve.get("degree").is_some_and(|degree| degree.as_u64() != Some(3))
@@ -1176,7 +1176,7 @@ fn validate_freeform_offsets(value: &Value) -> Result<()> {
             if !(1..=256).contains(&divisions)
                 || !divisions.is_power_of_two()
                 || !(1..=256).contains(&pieces)
-                || pieces * divisions >= solidcraft_sketch::MAX_SPLINE_POINTS as u64
+                || pieces * divisions >= torno_sketch::MAX_SPLINE_POINTS as u64
                 || !distance.is_finite()
                 || !(1e-9..=MAX_REAL).contains(&distance.abs())
                 || !tolerance.is_finite()
@@ -1298,7 +1298,7 @@ fn normalise(d: &mut Document) -> Result<()> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use solidcraft_geom::prelude::*;
+    use torno_geom::prelude::*;
 
     /// A pending change that records that its step ran, in `trace`.
     fn traced(name: &'static str) -> Part {
@@ -1579,23 +1579,23 @@ mod tests {
         for tag in [
             "",
             "solidcraft-drawing/",
-            "solidcraft-drawing",
+            "torno-drawing",
             "solidcraft-drawing/x",
             "solidcraft-drawing/-1",
             "solidcraft-drawing/4294967296",
-            "Solidcraft-drawing/1",
+            "Torno-drawing/1",
             "solidcraft-drawing/1 ",
-            "solidcraft-drawings/1",
-            "solidcraft/drawing/1",
+            "torno-drawings/1",
+            "torno/drawing/1",
         ] {
             assert_eq!(DRAWING.version_of(tag), None, "{tag:?}");
         }
         // The number reads as Rust reads a `u32`, a leading `+` included, as in a design's tag.
         assert_eq!(DRAWING.version_of("solidcraft-drawing/+1"), Some(1));
         let error = DRAWING.take_version(&mut serde_json::json!({"format": format_string(FORMAT)})).unwrap_err().to_string();
-        assert_eq!(error, format!("not a SolidCraft drawing (format `solidcraft/{FORMAT}`)"));
+        assert_eq!(error, format!("not a Torno drawing (format `solidcraft/{FORMAT}`)"));
         let error = read(&serde_json::json!({"format": DRAWING.format_string(1)}).to_string()).unwrap_err().to_string();
-        assert_eq!(error, "not a SolidCraft design (format `solidcraft-drawing/1`)");
+        assert_eq!(error, "not a Torno design (format `solidcraft-drawing/1`)");
     }
 
     /// Every refusal names its family: a design's read exactly as they did before drawings had one
@@ -1623,10 +1623,10 @@ mod tests {
             assert_eq!(says(&DRAWING, tagged(&DRAWING, n)), Some(Newer { format: n, reads_up_to: current, unknown_changes: vec![] }));
         }
         for (family, noun) in [(&DESIGN, "design"), (&DRAWING, "drawing")] {
-            assert_eq!(refusal(family, tagged(family, 0)), format!("not a SolidCraft {noun} (format 0)"));
-            assert_eq!(refusal(family, json!([])), format!("not a SolidCraft {noun} (expected a JSON object)"));
-            assert_eq!(refusal(family, json!({"format": 1})), format!("not a SolidCraft {noun} (format is not a string)"));
-            assert_eq!(refusal(family, json!({"format": ""})), format!("not a SolidCraft {noun} (format ``)"));
+            assert_eq!(refusal(family, tagged(family, 0)), format!("not a Torno {noun} (format 0)"));
+            assert_eq!(refusal(family, json!([])), format!("not a Torno {noun} (expected a JSON object)"));
+            assert_eq!(refusal(family, json!({"format": 1})), format!("not a Torno {noun} (format is not a string)"));
+            assert_eq!(refusal(family, json!({"format": ""})), format!("not a Torno {noun} (format ``)"));
             // `format_pending`'s caps, on both sides of each.
             let mut file = tagged(family, 1);
             file["format_pending"] = vec!["x".repeat(128); 1000].into();
@@ -1644,7 +1644,7 @@ mod tests {
         let file = json!({"format": format_string(next), "format_pending": ["c-later"]});
         assert_eq!(says(&design, file), Some(Newer { format: next, reads_up_to: next, unknown_changes: vec!["c-later".into()] }));
         assert!(matches!(DESIGN.take_version(&mut json!({})), Ok((1, None))));
-        assert_eq!(refusal(&DRAWING, json!({})), "not a SolidCraft drawing (no format)");
+        assert_eq!(refusal(&DRAWING, json!({})), "not a Torno drawing (no format)");
     }
 
     /// One drawing change pending, as a drawing's first change will be: the build writes format 2
@@ -1676,7 +1676,7 @@ mod tests {
         assert_eq!(drawing.newer(3, None).unwrap(), Newer { format: 3, reads_up_to: 2, unknown_changes: vec![] });
         assert_eq!(open(json!({"format": "solidcraft-drawing/3"})).unwrap(), Vec::<String>::new());
         // An upgrade called without `take_version` still says format 0 isn't one.
-        assert_eq!(drawing.upgrade(&mut json!({}), 0, None).unwrap_err().to_string(), "not a SolidCraft drawing (format 0)");
+        assert_eq!(drawing.upgrade(&mut json!({}), 0, None).unwrap_err().to_string(), "not a Torno drawing (format 0)");
     }
 
     /// `format_pending` is read and checked: a damaged list is refused, a list of changes this
@@ -1809,7 +1809,7 @@ mod tests {
     #[test]
     fn version_nine_wire_spaces_preserve_saved_points_and_explicit_markers() {
         use solidcore_record::Vec3;
-        use solidcraft_sketch::{LinkKind, LinkSource, Sketch, WireSpace};
+        use torno_sketch::{LinkKind, LinkSource, Sketch, WireSpace};
         let mut sketch = Sketch::new();
         sketch.add_drawn_wire(&[Vec3::new(12.0, 3.0, 4.0)]).unwrap();
         let link = sketch
@@ -1905,7 +1905,7 @@ mod tests {
         let mut document = Document::new("legacy named extent");
         document.set_param("offset", "2", Some("mm"), None).unwrap();
         let sketch = document
-            .add_feature(FeatureKind::Sketch { plane: PlaneRef::Origin { name: "XY".into() }, sketch: solidcraft_sketch::Sketch::new() }, None)
+            .add_feature(FeatureKind::Sketch { plane: PlaneRef::Origin { name: "XY".into() }, sketch: torno_sketch::Sketch::new() }, None)
             .unwrap();
         document
             .add_feature(
@@ -1972,7 +1972,7 @@ mod tests {
     #[test]
     fn saved_offset_cannot_alias_and_overwrite_its_source_geometry() {
         use solidcore_record::Vec2;
-        use solidcraft_sketch::{CurveKind, Sketch};
+        use torno_sketch::{CurveKind, Sketch};
         let mut sketch = Sketch::new();
         let center = sketch.add_point(Vec2::ZERO, None).unwrap();
         let major = sketch.add_point(Vec2::new(10.0, 0.0), None).unwrap();
@@ -1995,7 +1995,7 @@ mod tests {
         let mut document = Document::new("missing offset geometry");
         document
             .add_feature(
-                crate::FeatureKind::Sketch { plane: crate::PlaneRef::Origin { name: "XY".into() }, sketch: solidcraft_sketch::Sketch::new() },
+                crate::FeatureKind::Sketch { plane: crate::PlaneRef::Origin { name: "XY".into() }, sketch: torno_sketch::Sketch::new() },
                 None,
             )
             .unwrap();
@@ -2071,7 +2071,7 @@ mod tests {
             ("degree", serde_json::json!(2)),
             ("pts", serde_json::json!([0, 1, 2])),
             ("pts", serde_json::json!([0, 1, 2, u64::MAX])),
-            ("pts", serde_json::json!(vec![0; solidcraft_sketch::MAX_SPLINE_POINTS + 1])),
+            ("pts", serde_json::json!(vec![0; torno_sketch::MAX_SPLINE_POINTS + 1])),
         ] {
             let mut damaged = curve.clone();
             damaged[key] = malformed;
@@ -2111,7 +2111,7 @@ mod tests {
     #[test]
     fn periodic_file_validation_refuses_damaged_closed_geometry() {
         use solidcore_record::Vec2;
-        use solidcraft_sketch::{CurveKind, Sketch};
+        use torno_sketch::{CurveKind, Sketch};
         let mut sketch = Sketch::new();
         let mut pts = Vec::new();
         for point in [Vec2::ZERO, Vec2::new(10.0, 0.0), Vec2::new(0.0, 10.0), Vec2::ZERO] {
@@ -2263,7 +2263,7 @@ mod tests {
     #[test]
     fn version_seven_origin_sketch_keeps_geometry_dimension_ids_and_expressions() {
         use solidcore_record::Vec2;
-        use solidcraft_sketch::{ConstraintKind, Sketch};
+        use torno_sketch::{ConstraintKind, Sketch};
         let mut d = Document::new("legacy origin dimensions");
         d.set_param("reach", "25 mm", Some("mm"), None).unwrap();
         let dim = d.new_model_param("reach", "mm");
@@ -2293,7 +2293,7 @@ mod tests {
     #[test]
     fn version_eight_persistent_angle_sweep_and_slot_dimensions_roundtrip() {
         use solidcore_record::Vec2;
-        use solidcraft_sketch::{ConstraintKind, Sketch};
+        use torno_sketch::{ConstraintKind, Sketch};
         let mut d = Document::new("persistent typed dimensions");
         let heading = d.new_model_param("45 deg", "deg");
         let sweep = d.new_model_param("180 deg", "deg");
@@ -2459,14 +2459,14 @@ mod tests {
     /// file too, before the arrays are deserialised.
     #[test]
     fn oversized_sketches_are_refused_before_typed_decoding() {
-        use solidcraft_sketch::{CEILING_CONSTRAINTS, CEILING_CURVES, CEILING_POINTS, MAX_POINTS, Sketch};
+        use torno_sketch::{CEILING_CONSTRAINTS, CEILING_CURVES, CEILING_POINTS, MAX_POINTS, Sketch};
 
         // A sketch right at the point cap, chained by coincident constraints.
         let mut sketch = Sketch::new();
         let mut previous = 0;
         while sketch.points.len() < MAX_POINTS {
             let i = sketch.add_point(solidcore_record::Vec2::new(0.001 * sketch.points.len() as f64, 0.0), None).unwrap();
-            sketch.add_constraint(solidcraft_sketch::ConstraintKind::Coincident { p: previous, q: i }, None).unwrap();
+            sketch.add_constraint(torno_sketch::ConstraintKind::Coincident { p: previous, q: i }, None).unwrap();
             previous = i;
         }
         let mut doc = Document::new("big sketch");
@@ -2489,7 +2489,7 @@ mod tests {
     /// Largest sketch was raised) passes the size check when it opens, whatever the limit here.
     #[test]
     fn a_sketch_past_the_default_limit_opens() {
-        use solidcraft_sketch::{MAX_CURVES, MAX_POINTS};
+        use torno_sketch::{MAX_CURVES, MAX_POINTS};
         let points: Vec<Value> = (0..MAX_POINTS + 1).map(|i| serde_json::json!({"id": format!("p{}", i + 1), "pos": [i as f64, 0.0]})).collect();
         let curves: Vec<Value> =
             (0..MAX_CURVES + 1).map(|i| serde_json::json!({"id": format!("l{}", i + 1), "kind": {"type": "line", "a": i, "b": i + 1}})).collect();
@@ -2586,10 +2586,10 @@ mod tests {
     }
 
     /// An integer-valued coordinate is range-checked like a float one, while ids and counters
-    /// may still be large integers (solidcraft#5021).
+    /// may still be large integers (torno#5021).
     #[test]
     fn integer_valued_coordinates_are_range_checked_and_large_ids_still_load() {
-        let mut sketch = solidcraft_sketch::Sketch::new();
+        let mut sketch = torno_sketch::Sketch::new();
         sketch.add_point(solidcore_record::Vec2::new(40.0, 0.0), None).unwrap();
         let mut d = Document::new("range");
         d.add_feature(crate::FeatureKind::Sketch { plane: crate::PlaneRef::Origin { name: "XY".into() }, sketch }, None).unwrap();

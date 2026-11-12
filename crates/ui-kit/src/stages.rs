@@ -2,7 +2,7 @@
 use super::{Container, LayoutMode, Surface};
 use crate::BackingTooltipExt as _;
 use egui::{Rect, Sense, Ui, pos2, vec2};
-use solidcraft_theme::{TabAccent, Tokens};
+use torno_theme::{TabAccent, Tokens};
 
 /// The workspace switcher card, the ribbon card beside it and the bottom of the pair, laid out
 /// in the space above the viewport.

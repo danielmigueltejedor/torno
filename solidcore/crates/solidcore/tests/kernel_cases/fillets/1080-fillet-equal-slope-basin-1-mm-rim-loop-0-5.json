@@ -225,7 +225,7 @@
     "blend_dropping"
   ],
   "ungraded": [
-    "continuity: SolidCraft computes it"
+    "continuity: Torno computes it"
   ],
   "what": "all four top rim edges of a basin whose walls all slope 10 over 20, its front rim 1 mm wide, rounded R 0.5, mitred at the rim's corners",
   "why_not": []

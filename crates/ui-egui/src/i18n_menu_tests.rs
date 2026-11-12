@@ -13,7 +13,7 @@ use crate::context_menu::{self, Target};
 use crate::ui_kit::Item;
 use crate::{Services, SolveApp};
 use serde_json::json;
-use solidcraft_engine::Session;
+use torno_engine::Session;
 
 /// Every English text `label()` can be asked to translate.
 fn english_texts() -> BTreeSet<String> {
@@ -71,7 +71,7 @@ fn take(app: &SolveApp, out: &mut BTreeSet<String>) {
         take_items(out, &context_menu::items(app, &Target::Group { id: *id, scope: "c0".into() }));
         take_items(out, &browser::group_items(app, *id, "c0"));
     }
-    for spec in solidcraft_engine::command_specs().iter() {
+    for spec in torno_engine::command_specs().iter() {
         let target = Target::ToolbarCommand { id: spec.id.to_string() };
         take_items(out, &context_menu::items(app, &target));
     }
@@ -109,10 +109,7 @@ fn every_menu_label_is_in_the_english_catalog() {
     // Linked components offer source-file actions absent from the sample design.
     let linked = app.session.execute("component.create", &json!({"name": "Linked part"})).expect("linked component");
     let component = linked["component"].as_u64().expect("component id");
-    app.session
-        .doc_mut()
-        .links
-        .insert(component, solidcraft_engine::doc::DesignLink { path: "part.solidcraft".into(), feature: 0, ..Default::default() });
+    app.session.doc_mut().links.insert(component, torno_engine::doc::DesignLink { path: "part.solidcraft".into(), feature: 0, ..Default::default() });
     take(&app, &mut seen);
     assert!(seen.contains("Open Linked Design"));
 
@@ -141,7 +138,7 @@ fn command_done_echo_follows_the_language_preference_without_a_render_scope() {
     app.preferences.language = "zh".into();
     app.run("solid.box", json!({ "length": 5, "width": 5, "height": 5 })).expect("box");
     let echo = app.session.log.last().expect("the echo is logged");
-    let zh = solidcraft_ui_text::Locale::for_language("zh");
+    let zh = torno_ui_text::Locale::for_language("zh");
     let expected = zh.format("ui.command_done", &[("command", zh.label(crate::command_label("solid.box")))]);
     assert_eq!(echo, &expected);
     assert!(echo.contains("完成"), "{echo}");

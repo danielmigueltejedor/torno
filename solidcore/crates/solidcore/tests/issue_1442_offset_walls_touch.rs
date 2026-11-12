@@ -1,5 +1,5 @@
 //! tangency-labs/solidcore#1442 (fork tangency-labs/smlib a759622): an offset whose walls
-//! would meet is refused as such. SolidCraft rig case shell/4711: a 60 x 40 x 10 block
+//! would meet is refused as such. Torno rig case shell/4711: a 60 x 40 x 10 block
 //! less an r3 through hole at (22.5, 7) and a 10 x 10 notch (x 25..35, through the
 //! front), shelled inward open at the bottom face (z = 0).
 //!

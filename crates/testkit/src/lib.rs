@@ -3,7 +3,7 @@
 //! bytes, dropped and repeated runs, appended garbage and, for text formats, dropped and
 //! repeated lines and numbers that lie (`nan`, `inf`, `1e400`, …). Each mutated file must give an
 //! error or a result, never a panic, within a time budget and the reader's own caps. A panic a
-//! reader catches itself (`solidcraft_kernel::guard`) counts too: the browser build aborts on any
+//! reader catches itself (`torno_kernel::guard`) counts too: the browser build aborts on any
 //! panic, so a caught one on the desktop is a crash there.
 //!
 //! The mutations come from a fixed seed (xorshift), so a failure names a case that reproduces.

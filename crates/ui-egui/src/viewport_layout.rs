@@ -1,9 +1,9 @@
 //! Floating controls reserve drawing space without changing rendering or picking projection.
 use egui::{Rect, pos2, vec2};
 use solidcore_record::Vec3;
-use solidcraft_engine::geom::Aabb3;
-use solidcraft_engine::geom::prelude::*;
-use solidcraft_viewport::Camera;
+use torno_engine::geom::Aabb3;
+use torno_engine::geom::prelude::*;
+use torno_viewport::Camera;
 
 #[derive(Clone, Debug, PartialEq)]
 pub(crate) struct Layout {
@@ -111,8 +111,8 @@ impl Layout {
         retained_confirm: Option<Rect>,
     ) -> Self {
         use crate::panel_runtime::{egui_rect, logical_rect, resolve_usable_region};
-        use solidcraft_engine::panels::{Point, Size};
-        let clearance = solidcraft_theme::Tokens::get().space_4;
+        use torno_engine::panels::{Point, Size};
+        let clearance = torno_theme::Tokens::get().space_4;
         let mut obstacles = usable.obstacles.clone();
         let navigation = if navigation.is_positive() && navigation.is_finite() && usable.contains_rect(logical_rect(navigation)) {
             navigation
@@ -365,7 +365,7 @@ pub(crate) fn fit_host_bounds(
     share: f64,
 ) -> Option<Camera> {
     use crate::panel_runtime::egui_rect;
-    use solidcraft_engine::panels::Point;
+    use torno_engine::panels::Point;
     if bounds.is_empty() || !bounds.min.is_finite() || !bounds.max.is_finite() || !cam.is_valid() {
         return None;
     }
@@ -381,7 +381,7 @@ pub(crate) fn fit_host_bounds(
     let room = region.fit_rect_with_clearance(
         aspect,
         Point { x: layout.viewport.center().x, y: layout.viewport.center().y },
-        solidcraft_theme::Tokens::get().space_8,
+        torno_theme::Tokens::get().space_8,
     )?;
     let room = egui_rect(room);
     if !room.is_positive() {
@@ -404,7 +404,7 @@ pub(crate) fn centre_host_camera(
     fov: f64,
 ) -> Option<Camera> {
     use crate::panel_runtime::{egui_rect, logical_rect};
-    use solidcraft_engine::panels::{Point, Size};
+    use torno_engine::panels::{Point, Size};
     if !cam.is_valid() || !layout.viewport.is_positive() || !fov.is_finite() || !(0.0..std::f64::consts::PI).contains(&fov) {
         return None;
     }
@@ -452,14 +452,14 @@ pub(crate) fn centre_host_camera(
             if let Some(landing) = region.place_footprint(
                 Size { width: size.x, height: size.y },
                 Point { x: layout.viewport.center().x, y: layout.viewport.center().y },
-                solidcraft_theme::Tokens::get().space_8,
+                torno_theme::Tokens::get().space_8,
             ) {
                 let at = layout.viewport.center() + (egui_rect(landing).center() - footprint.center());
                 let candidate = translate(at);
                 let final_points: Option<Vec<_>> = corners.iter().map(|p| project(candidate, *p)).collect();
                 if let Some(points) = final_points {
                     let footprint = points.iter().fold(Rect::NOTHING, |rect, p| rect.union(Rect::from_min_max(*p, *p)));
-                    if region.contains_rect(logical_rect(footprint.expand(solidcraft_theme::Tokens::get().space_4))) {
+                    if region.contains_rect(logical_rect(footprint.expand(torno_theme::Tokens::get().space_4))) {
                         result = candidate;
                     }
                 }

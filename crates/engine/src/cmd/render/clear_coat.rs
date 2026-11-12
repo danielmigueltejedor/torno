@@ -2,8 +2,8 @@
 use crate::{Result, params::bad};
 use serde::Deserialize;
 use solidcore_record::Vec3;
-use solidcraft_render::ProductScene;
-use solidcraft_viewport::{
+use torno_render::ProductScene;
+use torno_viewport::{
     clear_coat::ClearCoat,
     surface::{OpaqueSurface, srgb8_to_linear},
 };
@@ -18,7 +18,7 @@ pub(super) struct Override {
     ior: f64,
 }
 pub(super) fn apply(scene: &mut ProductScene, overrides: &[Override], command: &str) -> Result<()> {
-    if overrides.len() > solidcraft_doc::render_coat::MAX_COAT_BINDINGS {
+    if overrides.len() > torno_doc::render_coat::MAX_COAT_BINDINGS {
         return Err(bad(command, "at most 64 runtime clear-coat overrides are supported"));
     }
     let mut ordinals = std::collections::BTreeSet::new();
@@ -96,8 +96,8 @@ mod stable_tests {
     use super::*;
     use crate::Session;
     use serde_json::json;
-    use solidcraft_doc::render_coat::{CoatBindings, CoatMaterial, SavedCoat};
     use std::sync::Arc;
+    use torno_doc::render_coat::{CoatBindings, CoatMaterial, SavedCoat};
 
     #[test]
     fn stable_coats_save_reopen_replace_and_undo_offline_for_cpu_and_gpu_without_changing_sources() {
@@ -121,12 +121,12 @@ mod stable_tests {
             assert_eq!(s.doc.materials, before.materials);
             assert_eq!(physical, s.execute("component.properties", &json!({})).unwrap());
             let saved = s.doc.clone();
-            let loaded = solidcraft_doc::Document::from_json(&saved.to_json()).unwrap();
+            let loaded = torno_doc::Document::from_json(&saved.to_json()).unwrap();
             assert_eq!(loaded.render, saved.render);
             let original = crate::product_scene::extract(&s).unwrap();
             let mut scene = original.clone();
             let faces_capacity = scene.meshes[0].faces.capacity();
-            let cpu = solidcraft_render::job::RaytraceOptions::default();
+            let cpu = torno_render::job::RaytraceOptions::default();
             super::super::coat_bindings::apply(
                 &s,
                 &mut scene,
@@ -192,7 +192,7 @@ mod stable_tests {
             );
             assert_eq!(s.doc, before, "zero weight is authored opaque intent, not permission to silently drop it on Glass");
             let mut glass = original;
-            glass.meshes[0].transmission = Some(solidcraft_render::transmission::Transmission::new(Vec3::ZERO, None).unwrap());
+            glass.meshes[0].transmission = Some(torno_render::transmission::Transmission::new(Vec3::ZERO, None).unwrap());
             assert!(super::super::coat_bindings::apply(&s, &mut glass, &saved, None, "check").unwrap_err().to_string().contains("opaque"));
             s.execute("browser.visibility", &json!({"items":["Housing"],"visible":false})).unwrap();
             let mut hidden = crate::product_scene::extract(&s).unwrap();
@@ -216,14 +216,11 @@ mod stable_tests {
         let mut bindings = CoatBindings::default();
         bindings.set(SavedCoat { target, coat: CoatMaterial::default() }, false).unwrap();
         let scene = crate::product_scene::extract(&s).unwrap();
-        let options = solidcraft_render::job::RaytraceOptions {
-            reflections: Some(solidcraft_render::job::ReflectionOptions {
+        let options = torno_render::job::RaytraceOptions {
+            reflections: Some(torno_render::job::ReflectionOptions {
                 samples: 1,
                 max_bounces: 1,
-                bodies: vec![solidcraft_render::job::ReflectionBody {
-                    body: "Housing".into(),
-                    mode: solidcraft_render::job::ReflectionMode::RoughSpecular,
-                }],
+                bodies: vec![torno_render::job::ReflectionBody { body: "Housing".into(), mode: torno_render::job::ReflectionMode::RoughSpecular }],
             }),
             ..Default::default()
         };

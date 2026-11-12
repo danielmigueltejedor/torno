@@ -56,6 +56,6 @@
   ],
   "what": "sheet.hem on the top edge of a 100 x 60 x 2 base, 8 long, the rule's hem gap (0.01 mm): a closed hem folded under the sheet",
   "why_not": [
-    "body \"Body1\" is no kernel operation's output nor an operand: SolidCraft built it or changed the kernel's record"
+    "body \"Body1\" is no kernel operation's output nor an operand: Torno built it or changed the kernel's record"
   ]
 }

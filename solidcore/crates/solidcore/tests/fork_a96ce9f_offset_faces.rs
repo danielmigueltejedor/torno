@@ -199,7 +199,7 @@ fn the_top_front_round_follows_the_top() {
 }
 
 /// `SmApiBrepCopy` of `b` whose caller names the copy's objects in key domain `domain`
-/// (`NamingScheme::Caller`, as SolidCraft's bodies and the difftest's SolidCraft cases are).
+/// (`NamingScheme::Caller`, as Torno's bodies and the difftest's Torno cases are).
 fn caller_named_copy(k: &mut Kernel, b: &Brep, domain: u64) -> Brep {
     let key = |entity, domain: u64| {
         let r = p3::topology_ref(0, entity);

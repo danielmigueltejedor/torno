@@ -238,7 +238,7 @@ fn visibility_does_not_make_a_stale_editor_current() {
                 session.execute("solid.box", &json!({"length":1,"width":1,"height":1})).unwrap();
             }
             5 => {
-                session.pending_moves.insert(1, solidcraft_doc::IDENTITY);
+                session.pending_moves.insert(1, torno_doc::IDENTITY);
             }
             _ => session = Session::default(),
         }

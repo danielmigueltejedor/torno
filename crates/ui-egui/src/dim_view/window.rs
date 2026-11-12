@@ -22,7 +22,7 @@
 
 use super::*;
 use crate::prefs::{DIMENSION_STEP_DEG, DIMENSION_STEP_MM, DimensionInput};
-use solidcraft_engine::doc::expr::{Kind, unit_info};
+use torno_engine::doc::expr::{Kind, unit_info};
 
 /// The window's area.
 const AREA: &str = "sc_dim_window";
@@ -40,7 +40,7 @@ fn steps(app: &SolveApp) -> (f64, f64) {
 }
 
 /// Whether a dimension's value is a length or an angle, from its parameter's unit.
-fn kind(doc: &solidcraft_engine::doc::Document, param: &str) -> Kind {
+fn kind(doc: &torno_engine::doc::Document, param: &str) -> Kind {
     doc.param(param).and_then(|p| unit_info(&p.unit)).map_or(Kind::Length, |(kind, _)| kind)
 }
 
@@ -83,10 +83,10 @@ fn places(amount: f64) -> usize {
 /// sketch it gives, or the refusal OK would show. It runs OK's own command on a scratch copy of
 /// the session, so nothing reaches the design.
 struct Existing {
-    doc: Arc<solidcraft_engine::doc::Document>,
+    doc: Arc<torno_engine::doc::Document>,
     param: String,
     expr: String,
-    sketch: Option<Arc<solidcraft_engine::doc::SolvedSketch>>,
+    sketch: Option<Arc<torno_engine::doc::SolvedSketch>>,
     error: Option<String>,
 }
 
@@ -109,7 +109,7 @@ pub(super) fn forget() {
     EXISTING.with(|e| *e.borrow_mut() = None);
 }
 
-fn existing(app: &SolveApp, param: &str, expr: &str) -> (Option<Arc<solidcraft_engine::doc::SolvedSketch>>, Option<String>) {
+fn existing(app: &SolveApp, param: &str, expr: &str) -> (Option<Arc<torno_engine::doc::SolvedSketch>>, Option<String>) {
     EXISTING.with(|cell| {
         let mut cell = cell.borrow_mut();
         let current = cell.as_ref().is_some_and(|x| Arc::ptr_eq(&x.doc, &app.session.doc) && x.param == param && x.expr == expr);
@@ -150,7 +150,7 @@ pub(super) fn paint(app: &SolveApp, painter: &egui::Painter, proj: &Proj) {
     };
     let state = app.session.world_state().ok();
     let changes = after.and_then(|after| crate::preview::sketch_changes(state.as_ref().and_then(|state| state.sketch(sketch)), &after));
-    let mut budget = solidcraft_engine::render::SamplingBudget::new(32_768, 65_536);
+    let mut budget = torno_engine::render::SamplingBudget::new(32_768, 65_536);
     let curves = changes.map_or(0, |changes| crate::preview::paint_sketch(&changes, painter, proj, &mut budget));
     crate::scenario::publish_count("dimwin:preview_curves", curves as f64);
 }
@@ -229,18 +229,18 @@ pub(super) fn show(app: &mut SolveApp, ctx: &egui::Context, e: &mut Edit, at: Po
                 ui.set_width(width);
                 // The parameter's name, then the check and the cross.
                 let (title, _) = ui.allocate_exact_size(egui::vec2(width, t.control_height), egui::Sense::hover());
-                let name = solidcraft_ui_text::format("dialog.dimension_name", &[("name", &e.param)]);
+                let name = torno_ui_text::format("dialog.dimension_name", &[("name", &e.param)]);
                 ui.scope_builder(egui::UiBuilder::new().max_rect(title).layout(egui::Layout::left_to_right(egui::Align::Center)), |ui| {
                     crate::ui_kit::text(ui, &name, crate::ui_kit::Text::Inline)
-                        .backing_on_hover_text(solidcraft_ui_text::tr("dialog.dimension_insert_hint"));
+                        .backing_on_hover_text(torno_ui_text::tr("dialog.dimension_insert_hint"));
                 });
                 let side = t.control_height;
                 let cancel = Rect::from_min_size(egui::pos2(title.right() - side, title.top()), egui::vec2(side, side));
                 let ok = cancel.translate(egui::vec2(-(side + t.space_2), 0.0));
-                if button(ui, ok, "dimwin:ok", solidcraft_ui_text::tr("ui.heading_ok"), "finish") {
+                if button(ui, ok, "dimwin:ok", torno_ui_text::tr("ui.heading_ok"), "finish") {
                     answer = Some(true);
                 }
-                if button(ui, cancel, "dimwin:cancel", solidcraft_ui_text::tr("ui.cancel"), "close") {
+                if button(ui, cancel, "dimwin:cancel", torno_ui_text::tr("ui.cancel"), "close") {
                     answer = Some(false);
                     escaped = true;
                 }
@@ -262,9 +262,9 @@ pub(super) fn show(app: &mut SolveApp, ctx: &egui::Context, e: &mut Edit, at: Po
                         let can_step = step(&e.expr, 1.0).is_some();
                         let tip = |id: &str| {
                             if can_step {
-                                solidcraft_ui_text::format(id, &[("step", &step_text)])
+                                torno_ui_text::format(id, &[("step", &step_text)])
                             } else {
-                                solidcraft_ui_text::tr("dialog.dimension_step_expression").to_string()
+                                torno_ui_text::tr("dialog.dimension_step_expression").to_string()
                             }
                         };
                         let up = crate::ui_kit::compact_button(ui, crate::ui_kit::MOVE_UP, &tip("dialog.dimension_step_up"), can_step, false);

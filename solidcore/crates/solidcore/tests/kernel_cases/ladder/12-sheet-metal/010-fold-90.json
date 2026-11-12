@@ -68,6 +68,6 @@
   ],
   "what": "001's base folded 90 deg up along a sketch line across it at x = 70",
   "why_not": [
-    "body \"Body1\" is no kernel operation's output nor an operand: SolidCraft built it or changed the kernel's record"
+    "body \"Body1\" is no kernel operation's output nor an operand: Torno built it or changed the kernel's record"
   ]
 }

@@ -51,7 +51,7 @@ fn point_at_edge_and_plane_accepts_preselected_axes() {
         for (command, params) in commands {
             h.app.run(&command, params).unwrap();
         }
-        let points = solidcraft_engine::view::construction_points(&h.app.session);
+        let points = torno_engine::view::construction_points(&h.app.session);
         assert_eq!(points.len(), 1);
         assert!(points[0].2.dist(expected) < 1e-9, "{name}: {:?}", points[0].2);
     }
@@ -78,7 +78,7 @@ fn point_at_edge_and_plane_picks_a_construction_axis() {
         h.step(&json!({"click":{"handle":"dialog:ok"}})).unwrap();
         h.settle();
         assert!(h.app.dialog.is_none());
-        let points = solidcraft_engine::view::construction_points(&h.app.session);
+        let points = torno_engine::view::construction_points(&h.app.session);
         assert_eq!(points.len(), 1);
         assert!(points[0].2.dist(Vec3::new(20.0, 10.0, 0.0)) < 1e-9, "{:?}", points[0].2);
     }
@@ -343,7 +343,7 @@ fn check_form(command: &str, labels: &[&str]) {
     let mut h = fixture();
     let mut d = representative(&h, command);
     assert_eq!(super::command(&d.kind), Some(command));
-    let spec = solidcraft_engine::find_command(command).unwrap();
+    let spec = torno_engine::find_command(command).unwrap();
     assert!(!spec.icon.is_empty());
     let expected = apply_commands(&h.app, &d).unwrap_or_else(|e| panic!("{command}: representative parameters: {e}"));
     // Rendering must never discard an optional/default value or add a new parameter.
@@ -367,7 +367,7 @@ fn check_form(command: &str, labels: &[&str]) {
     for input in &d.inputs {
         assert!(scenario::rect_of(&format!("dialog:field:{}", input.label)).is_some(), "{command}: selection field {}", input.label);
         assert!(
-            nodes.iter().any(|(_, n)| n.role() == egui::accesskit::Role::Button && n.label() == Some(solidcraft_ui_text::tr_label(input.label))),
+            nodes.iter().any(|(_, n)| n.role() == egui::accesskit::Role::Button && n.label() == Some(torno_ui_text::tr_label(input.label))),
             "{command}: picker {} is a button",
             input.label
         );
@@ -487,7 +487,7 @@ fn motion_dialog_hints_are_translated() {
     }
     let mut h = fixture();
     h.app.preferences.language = "ja".into();
-    let _japanese = solidcraft_ui_text::scope("ja");
+    let _japanese = torno_ui_text::scope("ja");
     for (command, english) in [("motion.study", "add a key for a joint first"), ("motion.trace", "select a point on a component")] {
         let mut d = Dialog::for_command(&h.app, command).unwrap();
         let mut painted = Vec::new();
@@ -506,7 +506,7 @@ fn motion_dialog_hints_are_translated() {
             out.shapes.iter().for_each(|shape| texts(&shape.shape, &mut painted));
         }
         assert!(!painted.iter().any(|p| p == english), "{command} paints {english:?} in Japanese");
-        assert!(painted.iter().any(|p| p == solidcraft_ui_text::tr_label(english)), "{command} paints {painted:?}");
+        assert!(painted.iter().any(|p| p == torno_ui_text::tr_label(english)), "{command} paints {painted:?}");
     }
 }
 
@@ -781,7 +781,7 @@ form_case!(trace, "motion.trace", ["Joint", "From", "To", "Samples"]);
 #[test]
 fn registry_dialog_inventory_has_no_unclassified_feature_forms() {
     let h = fixture();
-    for spec in solidcraft_engine::command_specs() {
+    for spec in torno_engine::command_specs() {
         let Some(d) = Dialog::for_command(&h.app, spec.id) else { continue };
         assert!(super::command(&d.kind).is_some(), "{}: {:?}", spec.id, d.kind);
     }
@@ -800,7 +800,7 @@ fn hand_drawn_dialog_texts_are_translated() {
     }
     let mut h = fixture();
     h.app.preferences.language = "ja".into();
-    let _japanese = solidcraft_ui_text::scope("ja");
+    let _japanese = torno_ui_text::scope("ja");
     for (command, english) in [
         ("joint.gear", "▶ Play"),
         ("motion.study", "Loop"),
@@ -1117,7 +1117,7 @@ fn blend_editor_refills_named_edges_after_sketch_resize() {
         let names = &s.doc.feature(id).unwrap().edge_names;
         for (pick, name) in picks.iter().zip(names) {
             let Sel::Edge { point, index, .. } = pick else { panic!("{pick:?}") };
-            let hit = solidcraft_engine::doc::naming::locate_edge(&body, name, *point).unwrap();
+            let hit = torno_engine::doc::naming::locate_edge(&body, name, *point).unwrap();
             assert_eq!(*index, hit.edge);
             assert!(hit.on_point, "{command}: {point:?} must lie on the resized edge");
         }
@@ -1154,11 +1154,11 @@ fn face_editor_refills_named_faces_after_sketch_resize() {
 
 #[test]
 fn draft_uses_the_picked_solid_beside_a_hidden_overlapping_mesh() {
-    use solidcraft_engine::doc::{Document, MeshData, naming};
+    use torno_engine::doc::{Document, MeshData, naming};
 
-    let mesh = solidcraft_engine::kernel::box_solid(Vec3::ZERO, Vec3::new(20.0, 20.0, 10.0))
+    let mesh = torno_engine::kernel::box_solid(Vec3::ZERO, Vec3::new(20.0, 20.0, 10.0))
         .unwrap()
-        .mesh(&solidcraft_engine::kernel::MeshTolerance::chord(0.01))
+        .mesh(&torno_engine::kernel::MeshTolerance::chord(0.01))
         .unwrap();
     let mut doc = Document::default();
     doc.add_feature(
@@ -1211,7 +1211,7 @@ fn draft_uses_the_picked_solid_beside_a_hidden_overlapping_mesh() {
 /// The Offset Face dialog sends the body clicked where two bodies touch flush, so that body moves.
 #[test]
 fn offset_face_dialog_moves_the_body_clicked_where_two_bodies_touch_flush() {
-    use solidcraft_engine::doc::naming;
+    use torno_engine::doc::naming;
     let mut h = Harness::new();
     // Big (40 × 30 × 20, made first) and Small (10 × 10 × 5) touch flush at Y=0.
     h.app.run("solid.box", json!({"length": 40, "width": 30, "height": 20, "operation": "new", "body_name": "Big"})).unwrap();
@@ -1231,7 +1231,7 @@ fn offset_face_dialog_moves_the_body_clicked_where_two_bodies_touch_flush() {
     assert_eq!(params["body"], "Small");
     h.app.run(command, params.clone()).unwrap();
     let state = h.app.session.model.state();
-    let volume = |n: &str| solidcraft_engine::kernel::measure(&state.body(n).unwrap().body).unwrap().volume;
+    let volume = |n: &str| torno_engine::kernel::measure(&state.body(n).unwrap().body).unwrap().volume;
     // Small grows to 10 × 12 × 5; Big keeps 40 × 30 × 20.
     assert!((volume("Small") - 600.0).abs() < 1e-6, "{}", volume("Small"));
     assert!((volume("Big") - 24000.0).abs() < 1e-6, "{}", volume("Big"));
@@ -1508,7 +1508,7 @@ fn extrude_builds_the_one_region_clicked_where_the_face_outline_cuts_a_profile()
         let made = h.app.run(id, p.clone()).unwrap()["feature"].as_u64().unwrap();
         let Some(FeatureKind::Extrude { profiles, .. }) = h.app.session.doc.feature(made).map(|f| f.kind.clone()) else { panic!("an extrude") };
         let after = h.app.session.world_state().unwrap();
-        let used = solidcraft_engine::doc::profile_selection_indices(after.sketch(sketch).unwrap(), &profiles).unwrap();
+        let used = torno_engine::doc::profile_selection_indices(after.sketch(sketch).unwrap(), &profiles).unwrap();
         assert_eq!(used, vec![index], "the region clicked at x = {x}, and only it");
         let volume = h.app.run("inspect.measure", json!({})).unwrap()["total"]["volume_mm3"].as_f64().unwrap();
         assert!(((volume - before) - area * 5.0).abs() < 5e-3 * area * 5.0, "x = {x}: {volume} - {before} vs {}", area * 5.0);
@@ -1521,13 +1521,13 @@ fn extrude_builds_the_one_region_clicked_where_the_face_outline_cuts_a_profile()
 #[test]
 fn every_selection_field_label_is_translated() {
     let h = fixture();
-    let _japanese = solidcraft_ui_text::scope("ja");
+    let _japanese = torno_ui_text::scope("ja");
     let mut missing = std::collections::BTreeSet::new();
-    for spec in solidcraft_engine::command_specs() {
+    for spec in torno_engine::command_specs() {
         let Some(d) = Dialog::for_command(&h.app, spec.id) else { continue };
         for input in &d.inputs {
             let label = input.label.trim();
-            if label.chars().any(|c| c.is_ascii_alphabetic()) && solidcraft_ui_text::tr_label(label) == label {
+            if label.chars().any(|c| c.is_ascii_alphabetic()) && torno_ui_text::tr_label(label) == label {
                 missing.insert(format!("{}: {label}", spec.id));
             }
         }
@@ -1690,9 +1690,9 @@ fn pattern_says_why_a_clicked_sketch_is_not_taken() {
         }
     }
     assert!(crate::dialogs::missing_pick(crate::dialogs::SKETCH_NOT_OBJECT), "shown as what to pick, with no Create Issue");
-    let _japanese = solidcraft_ui_text::scope("ja");
-    assert!(!solidcraft_ui_text::tr_label(crate::dialogs::SKETCH_NOT_OBJECT).is_ascii(), "the hint reads in the user's language");
-    assert!(!solidcraft_ui_text::tr("ui.pattern_object_type_tip").is_ascii(), "so does the Object Type tooltip");
+    let _japanese = torno_ui_text::scope("ja");
+    assert!(!torno_ui_text::tr_label(crate::dialogs::SKETCH_NOT_OBJECT).is_ascii(), "the hint reads in the user's language");
+    assert!(!torno_ui_text::tr("ui.pattern_object_type_tip").is_ascii(), "so does the Object Type tooltip");
 }
 
 /// Features stored with bare numbers edit with their units written out, as the Plastic ones do
@@ -1802,7 +1802,7 @@ fn dialog_sketch_selection_labels_translate_and_keep_identifiers() {
         (Sel::SketchConstraint { id: "k3".into() }, "Constraint k3", "Bedingung k3"),
     ] {
         for (language, expected) in [("en", english), ("de", german)] {
-            let _language = solidcraft_ui_text::scope(language);
+            let _language = torno_ui_text::scope(language);
             assert_eq!(selection_label(&h.app.session, h.app.preferences.origin_plane_names, &d, &d.inputs[0], &sel), expected);
         }
     }

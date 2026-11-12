@@ -1,5 +1,5 @@
 [package]
-name = "solidcraft-viewport-gpu"
+name = "torno-viewport-gpu"
 description = "The viewport renderer's GPU work the Craft apps share, on wgpu: the viewport's pipelines, offscreen pictures, adapter selection and display plans evaluated in a compute shader"
 version.workspace = true
 edition.workspace = true
@@ -13,8 +13,8 @@ log = { workspace = true }
 serde = { workspace = true }
 solidcore-record = { workspace = true }
 solidcore-tess = { workspace = true }
-solidcraft-color = { workspace = true }
-solidcraft-viewport = { workspace = true }
+torno-color = { workspace = true }
+torno-viewport = { workspace = true }
 thiserror = { workspace = true }
 wgpu = { workspace = true }
 

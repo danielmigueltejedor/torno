@@ -35,16 +35,16 @@ stays editable for retrying. Copying or opening a report does not modify the des
 
 ## Where they are
 
-`<data dir>/solidcraft/crashes/`, next to the recovery folder:
+`<data dir>/torno/crashes/`, next to the recovery folder:
 
 | System | Folder |
 |---|---|
-| Linux | `~/.local/share/solidcraft/crashes` (or `$XDG_DATA_HOME/solidcraft/crashes`) |
-| Windows | `%LOCALAPPDATA%\SolidCraft\crashes` |
-| macOS | `~/Library/Application Support/SolidCraft/crashes` |
+| Linux | `~/.local/share/torno/crashes` (or `$XDG_DATA_HOME/torno/crashes`) |
+| Windows | `%LOCALAPPDATA%\Torno\crashes` |
+| macOS | `~/Library/Application Support/Torno/crashes` |
 
-`SOLIDCRAFT_CRASH_DIR` overrides the folder. `solidcraft --crash-log` and
-`solidcraft-cli crashes dir` print it.
+`TORNO_CRASH_DIR` overrides the folder. `torno --crash-log` and
+`torno-cli crashes dir` print it.
 
 ## For agents
 
@@ -54,15 +54,15 @@ All of these read the same folder:
 |---|---|---|---|
 | Engine command (MCP `execute`, control channel, scripts) | `diagnostics.crash_reports {limit?}` | `diagnostics.crash_report {id}` | `diagnostics.crash_reports.clear {id?}` |
 | MCP tool | `crash_reports {limit?}` | `crash_reports {id}` | — |
-| CLI | `solidcraft-cli crashes [--json]` | `solidcraft-cli crashes show <id>` | `solidcraft-cli crashes clear [<id>]` |
+| CLI | `torno-cli crashes [--json]` | `torno-cli crashes show <id>` | `torno-cli crashes clear [<id>]` |
 | Control channel (UI) | `ui.help {"item": "crashes"}` opens the window | | |
 
-**Reproduce:** `solidcraft-cli crashes replay <id>` opens the report's design, runs its
+**Reproduce:** `torno-cli crashes replay <id>` opens the report's design, runs its
 commands, and reports whether the same internal error happens again (same place and message).
-Without the CLI, run `solidcraft-cli run <report>/replay.json --in <report>/design.sc`.
+Without the CLI, run `torno-cli run <report>/replay.json --in <report>/design.sc`.
 A fixed crash turns into a regression test with the same two files.
 
-**Check that reporting works:** with `SOLIDCRAFT_CRASH_TEST=1` set for the app, the command
+**Check that reporting works:** with `TORNO_CRASH_TEST=1` set for the app, the command
 `diagnostics.crash_test` has these modes:
 - `panic`: an internal error in a command
 - `kernel`: an internal error inside the geometry kernel
@@ -73,7 +73,7 @@ A fixed crash turns into a regression test with the same two files.
 
 A panic on a Rayon worker during a command is held and reported with that command when it
 ends. Two limits: only Rayon pool threads are held, so a panic on a plain thread
-(`solidcraft-each`, `solidcraft-interference`, `plan-mesh`) is written at once from the
+(`torno-each`, `torno-interference`, `plan-mesh`) is written at once from the
 journal, not with the design the command started from; and the count of open commands is
 process-wide, so a worker panic from unrelated background work while a command is open is
 reported with the next command that ends.
@@ -113,7 +113,7 @@ A folder `crashes/<YYYYMMDD-HHMMSS>-<signature>/`:
       `si_code`, `thread_name`, `pid` and `frames`: up to 24 `module+offset symbol+offset` lines
       walked up the frame pointers from the faulting instruction, which the `backtrace` lists too.
       The process still ends with the signal, so macOS also writes its own crash report, with every
-      thread's stack: `~/Library/Logs/DiagnosticReports/solidcraft-<date>.ips` (Console ▸ Crash
+      thread's stack: `~/Library/Logs/DiagnosticReports/torno-<date>.ips` (Console ▸ Crash
       Reports), whose `pid` is the one in `native`.
 - `design.sc`: the design the replay starts from
 - `replay.json`: `{"commands": [{command, params}, …]}`

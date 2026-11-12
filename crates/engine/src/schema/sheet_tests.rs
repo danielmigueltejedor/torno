@@ -496,10 +496,10 @@ fn rule_replies_match_the_output_schemas_without_warnings() {
         }
     }
     // Saved rules whose expressions no longer evaluate are still listed, with null values.
-    warn.doc_mut().sheet.rules.push(solidcraft_doc::sheet::SheetRule {
+    warn.doc_mut().sheet.rules.push(torno_doc::sheet::SheetRule {
         name: "Invalid".into(),
         thickness: "Missing".into(),
-        ..solidcraft_doc::sheet::SheetRule::steel()
+        ..torno_doc::sheet::SheetRule::steel()
     });
     let reply = warn.execute("sheet.rules", &json!({})).unwrap();
     assert_eq!(reply["rules"][0]["values"], Value::Null);
@@ -678,7 +678,7 @@ fn bend_table_replies_match_the_output_schema() {
     assert_eq!(json["format"], "json");
     assert_eq!(serde_json::from_str::<Value>(json["text"].as_str().unwrap_or_default()).ok(), Some(flat));
     // To a file: the reply names it, and the file holds the text.
-    let path = solidcraft_io::vfs::temp_dir().join(format!("solidcraft-bend-table-{}.csv", std::process::id()));
+    let path = torno_io::vfs::temp_dir().join(format!("torno-bend-table-{}.csv", std::process::id()));
     let path = path.to_string_lossy().to_string();
     let written = table(&mut s, json!({"format": null, "path": path}));
     assert_eq!((written.get("text"), &written["path"], &written["format"]), (None, &json!(path), &json!("csv")), "{written}");

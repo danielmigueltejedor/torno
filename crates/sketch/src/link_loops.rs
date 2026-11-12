@@ -3,9 +3,9 @@
 use super::{LCurve, curve_points};
 use crate::{Shape, intersections};
 use solidcore_record::Vec2;
-use solidcraft_geom::Aabb2;
-use solidcraft_geom::prelude::*;
 use std::f64::consts::TAU;
+use torno_geom::Aabb2;
+use torno_geom::prelude::*;
 
 struct Boundary {
     curves: Vec<usize>,

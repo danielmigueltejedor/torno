@@ -8,7 +8,7 @@
 
 use crate::BackingTooltipExt as _;
 use egui::{Align2, FontId, Painter, Pos2, Rect, Sense, Stroke, pos2, vec2};
-use solidcraft_theme::Tokens;
+use torno_theme::Tokens;
 
 /// The bar's height: the window's title bar on desktop builds.
 pub const HEIGHT: f32 = 34.0;
@@ -24,10 +24,10 @@ pub const REPORT_TEXT_X: f32 = 29.0;
 /// Space between the search field and Settings.
 pub const SEARCH_GAP: f32 = 4.0;
 /// Home's least place from the bar's left edge, and the least gap between the app's name and
-/// Home's button. 128 was Home's fixed place, sized for "SolidCraft": the name starts at 36 and is
+/// Home's button. 128 was Home's fixed place, sized for "Torno": the name starts at 36 and is
 /// 65.1 wide in Plex Sans semibold at the theme's heading size (14), so it ends at 101.1, and Home's
 /// button starts at 108 (20 before its place), 6.9 after it. A longer name moves Home right by
-/// the same gap, rounded down so SolidCraft's bar stays put: 36 + 65.1 + 6 + 20 = 127.1, under 128.
+/// the same gap, rounded down so Torno's bar stays put: 36 + 65.1 + 6 + 20 = 127.1, under 128.
 const HOME_MIN: f32 = 128.0;
 const NAME_GAP: f32 = 6.0;
 /// A bar narrower than this shows no product name, no Undo and Redo, and narrower file actions.
@@ -206,7 +206,7 @@ pub fn separator(ui: &egui::Ui, bar: Rect, x: f32, group: &str, handles: &Handle
     let t = Tokens::get();
     let rect = Rect::from_center_size(pos2(x, bar.center().y), vec2(1.0, 20.0));
     ui.painter().line_segment([rect.center_top(), rect.center_bottom()], Stroke::new(1.0, t.app_bar.lerp_to_gamma(t.app_bar_separator, 0.4)));
-    solidcraft_ui_registry::publish_rect(&handle(handles.separator, group), rect);
+    torno_ui_registry::publish_rect(&handle(handles.separator, group), rect);
 }
 
 /// An icon button of the bar, dimmed and deaf to clicks when disabled (its tip still shows).
@@ -218,7 +218,7 @@ fn icon_button(ui: &mut egui::Ui, bar: Rect, at: f32, b: &BarButton, compact: bo
     let resp = ui.interact(br, ui.scope_id().with(("ab", b.id)), if b.enabled { Sense::click() } else { Sense::hover() });
     resp.widget_info(|| egui::WidgetInfo::labeled(egui::Role::Button, b.enabled, b.tip));
     for prefix in handles.button {
-        solidcraft_ui_registry::publish_target(&handle(prefix, b.id), br);
+        torno_ui_registry::publish_target(&handle(prefix, b.id), br);
     }
     if b.enabled && (resp.hovered() || resp.has_focus()) {
         ui.painter().rect_filled(br.shrink(3.0), t.radius_sm, t.app_bar_hover_button);
@@ -258,10 +258,10 @@ pub fn show(ui: &mut egui::Ui, data: &AppBar, bar: Rect, content: Rect) -> BarOu
     let home_response = ui.interact(home, ui.scope_id().with("appbar_home"), if idle { Sense::click() } else { Sense::hover() });
     home_response.widget_info(|| egui::WidgetInfo::labeled(egui::Role::Button, idle, data.home.tip));
     for name in h.home {
-        solidcraft_ui_registry::publish_handle(name, home.center());
+        torno_ui_registry::publish_handle(name, home.center());
     }
     for name in h.home_rect {
-        solidcraft_ui_registry::publish_rect(name, home);
+        torno_ui_registry::publish_rect(name, home);
     }
     if idle && (home_response.hovered() || home_response.has_focus()) {
         ui.painter().rect_filled(home.shrink(3.0), t.radius_sm, t.app_bar_hover_button);
@@ -280,10 +280,10 @@ pub fn show(ui: &mut egui::Ui, data: &AppBar, bar: Rect, content: Rect) -> BarOu
     let resp = ui.interact(file, ui.scope_id().with(("ab", "file")), if idle { Sense::click() } else { Sense::hover() });
     resp.widget_info(|| egui::WidgetInfo::labeled(egui::Role::Button, idle, data.file));
     for name in h.file {
-        solidcraft_ui_registry::publish_handle(name, file.center());
+        torno_ui_registry::publish_handle(name, file.center());
     }
     for name in h.file_rect {
-        solidcraft_ui_registry::publish_rect(name, file);
+        torno_ui_registry::publish_rect(name, file);
     }
     if idle && (resp.hovered() || resp.has_focus() || data.file_open) {
         ui.painter().rect_filled(file, t.radius_sm, t.app_bar_hover);
@@ -326,7 +326,7 @@ pub fn show(ui: &mut egui::Ui, data: &AppBar, bar: Rect, content: Rect) -> BarOu
         data.search.then(|| search_rect(ui.ctx(), data.search_shortcut, r, gear_left - SEARCH_GAP, report.left() - CLUSTER_BUTTONS - tabs_start));
     let search_shift = search.map_or(0.0, |s| s.width() + SEARCH_GAP);
     if let Some(search) = search {
-        solidcraft_ui_registry::publish_target(h.search, search);
+        torno_ui_registry::publish_target(h.search, search);
     }
     if icon_button(ui, r, help_x(report), &data.help, compact, h) {
         actions.push(BarAction::Help { x: help_x(report) });
@@ -339,7 +339,7 @@ pub fn show(ui: &mut egui::Ui, data: &AppBar, bar: Rect, content: Rect) -> BarOu
     // Report a bug.
     let response = ui.interact(report, ui.scope_id().with("sc_report_button"), Sense::click());
     response.widget_info(|| egui::WidgetInfo::labeled(egui::Role::Button, ui.is_enabled(), data.report.label));
-    solidcraft_ui_registry::publish_target(h.report, report);
+    torno_ui_registry::publish_target(h.report, report);
     let hot = response.hovered() || response.has_focus();
     let tip = if data.report.icon_only {
         // Drawn like Settings and Help beside it.
@@ -374,9 +374,9 @@ pub fn show(ui: &mut egui::Ui, data: &AppBar, bar: Rect, content: Rect) -> BarOu
         ui.painter().rect_filled(gear.shrink(3.0), t.radius_sm, t.app_bar_hover_button);
     }
     crate::icons::paint_app_bar(ui.painter(), gear.shrink(7.0), data.settings.icon, 1.0);
-    solidcraft_ui_registry::publish_rect(h.settings, gear);
+    torno_ui_registry::publish_rect(h.settings, gear);
     let assistant = data.assistant.then(|| Rect::from_center_size(pos2(report.left() - 86.0 - search_shift, r.center().y), vec2(32.0, 32.0)));
-    solidcraft_ui_registry::publish_handle(h.settings, gear.center());
+    torno_ui_registry::publish_handle(h.settings, gear.center());
     if gresp.backing_on_hover_text(data.settings.tip).clicked() {
         actions.push(BarAction::Button { id: data.settings.id.to_string() });
     }
@@ -394,7 +394,7 @@ pub fn show(ui: &mut egui::Ui, data: &AppBar, bar: Rect, content: Rect) -> BarOu
             ui.painter().hline(vrect.x_range(), vrect.bottom(), Stroke::new(1.0, t.app_bar_text));
         }
         ui.painter().galley(vrect.min, galley, t.app_bar_text);
-        solidcraft_ui_registry::publish_handle(h.version, vrect.center());
+        torno_ui_registry::publish_handle(h.version, vrect.center());
         if vresp.clicked() {
             actions.push(BarAction::Version);
         }
@@ -571,7 +571,7 @@ fn rename_field(ui: &mut egui::Ui, rect: Rect, rename: &mut TabRename, handles: 
     if rename.text.chars().count() > rename.max {
         *rename.text = rename.text.chars().take(rename.max).collect();
     }
-    solidcraft_ui_registry::publish_target(handles.rename, rect);
+    torno_ui_registry::publish_target(handles.rename, rect);
     let was_focused = *rename.focused;
     if !*rename.focused {
         // The whole name selected, so typing replaces it.
@@ -665,7 +665,7 @@ pub fn tabs(ui: &mut egui::Ui, strip: &mut TabStrip, r: Rect, x0: f32, x1: f32) 
         let tr = Rect::from_min_size(pos2(left, r.top() + 4.0), vec2(w - 2.0, r.height() - 8.0));
         let active = strip.shown_selected == Some(i);
         let resp = ui.interact(tr, ui.scope_id().with(("doc_tab", i)), Sense::click_and_drag());
-        solidcraft_ui_registry::publish_target(&format!("{}{i}", h.tab), tr);
+        torno_ui_registry::publish_target(&format!("{}{i}", h.tab), tr);
         // Dragging a tab along the strip moves it. The tabs are also part of the title bar:
         // dragging the only tab, or one mostly up or down, moves the window. A double click
         // renames the tab (the first click selected it), or maximizes the window as the bar's
@@ -718,7 +718,7 @@ pub fn tabs(ui: &mut egui::Ui, strip: &mut TabStrip, r: Rect, x0: f32, x1: f32) 
         let xr = Rect::from_center_size(pos2(tr.right() - 13.0, tr.center().y), vec2(16.0, 16.0));
         let show_close = active || resp.hovered() || ui.rect_contains_pointer(tr);
         let xresp = ui.interact(xr, ui.scope_id().with(("doc_close", i)), if show_close { Sense::click() } else { Sense::hover() });
-        solidcraft_ui_registry::publish_target(&format!("{}{i}", h.close), xr);
+        torno_ui_registry::publish_target(&format!("{}{i}", h.close), xr);
         if show_close && (xresp.hovered() || xresp.has_focus()) {
             ui.painter().rect_filled(xr, t.radius_sm.saturating_sub(1), t.app_bar_hover_strong);
         }
@@ -752,7 +752,7 @@ pub fn tabs(ui: &mut egui::Ui, strip: &mut TabStrip, r: Rect, x0: f32, x1: f32) 
     if shown < n {
         let mr = Rect::from_center_size(pos2(x + 12.0, r.center().y), vec2(20.0, 22.0));
         let mresp = ui.interact(mr, ui.scope_id().with("doc_more"), Sense::click());
-        solidcraft_ui_registry::publish_handle(h.more, mr.center());
+        torno_ui_registry::publish_handle(h.more, mr.center());
         if mresp.hovered() {
             ui.painter().rect_filled(mr, t.radius_sm, t.app_bar_hover_button);
         }
@@ -803,7 +803,7 @@ pub fn tabs(ui: &mut egui::Ui, strip: &mut TabStrip, r: Rect, x0: f32, x1: f32) 
                         let top = ui.cursor().top();
                         let picked = crate::menu::list_row(ui, &item);
                         let rect = Rect::from_min_max(pos2(ui.min_rect().left(), top), pos2(ui.min_rect().right(), ui.cursor().top()));
-                        solidcraft_ui_registry::publish_handle(&format!("{}{}", h.menu_row, row.id), rect.center());
+                        torno_ui_registry::publish_handle(&format!("{}{}", h.menu_row, row.id), rect.center());
                         if picked.is_some() {
                             chosen = Some(row.id);
                         }
@@ -837,7 +837,7 @@ pub fn tabs(ui: &mut egui::Ui, strip: &mut TabStrip, r: Rect, x0: f32, x1: f32) 
         "plus",
         if presp.hovered() { 1.0 } else { 0.55 },
     );
-    solidcraft_ui_registry::publish_handle(h.new, pr.center());
+    torno_ui_registry::publish_handle(h.new, pr.center());
     if presp.backing_on_hover_text(strip.new_tip).clicked() {
         actions.push(TabAction::New);
     }
@@ -1017,8 +1017,8 @@ pub fn switcher(ui: &mut egui::Ui, data: &Switcher, ws: Rect) -> bool {
         crate::ribbon::dropdown_arrow(&painter, arrow, t.text_dim);
     }
     let clicked = wresp.backing_on_hover_text(data.tip).clicked();
-    solidcraft_ui_registry::publish_rect(data.handle_rect, ws);
-    solidcraft_ui_registry::publish_target(data.handle_target, ws);
+    torno_ui_registry::publish_rect(data.handle_rect, ws);
+    torno_ui_registry::publish_target(data.handle_target, ws);
     clicked
 }
 

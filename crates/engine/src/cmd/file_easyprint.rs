@@ -4,7 +4,7 @@
 //! answer; see [`crate::easyprint`].
 
 use serde_json::{Value, json};
-use solidcraft_io::Format;
+use torno_io::Format;
 
 use crate::easyprint::{self, MAX_BYTES};
 use crate::params::{bad, bool_, str_, string_list};
@@ -37,7 +37,7 @@ pub(super) fn export_bodies(s: &Session, cmd: &str, named: &[String], format: Fo
     }
     let mut doc = s.doc.painted(&*s.world_state()?);
     let laid = super::print_face::lay_on_print_faces(s, &mut doc, &bodies, &[]);
-    let write = |format| solidcraft_io::export_with_metadata(&doc, &bodies, format, &s.doc.name, &s.doc.metadata);
+    let write = |format| torno_io::export_with_metadata(&doc, &bodies, format, &s.doc.name, &s.doc.metadata);
     let mut fell_back = false;
     let (bytes, ext) = match (format, write(format)) {
         (_, Ok(b)) => (b, if format == Format::StlBinary { "stl" } else { "3mf" }),

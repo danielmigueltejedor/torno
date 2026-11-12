@@ -36,6 +36,6 @@
   "ungraded": [],
   "what": "three r2 rounds at a box corner, rolling-ball corner, set back 2: not past where the rounds meet (r): refused",
   "why_not": [
-    "the failure is SolidCraft's, not a kernel operation's: step 2 (solid.fillet): invalid input: the setback must be more than the radius (2 mm) at the corner (60.000, 40.000, 20.000): the rounds' contact lines meet 2 mm from it along its edges, and the corner's patch starts past that"
+    "the failure is Torno's, not a kernel operation's: step 2 (solid.fillet): invalid input: the setback must be more than the radius (2 mm) at the corner (60.000, 40.000, 20.000): the rounds' contact lines meet 2 mm from it along its edges, and the corner's patch starts past that"
   ]
 }

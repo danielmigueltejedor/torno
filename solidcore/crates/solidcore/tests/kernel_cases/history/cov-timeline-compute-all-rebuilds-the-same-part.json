@@ -163,7 +163,7 @@
     "blend_dropping"
   ],
   "ungraded": [
-    "results: SolidCraft computes it"
+    "results: Torno computes it"
   ],
   "what": "timeline.compute_all rebuilds every feature from nothing to the same part",
   "why_not": []

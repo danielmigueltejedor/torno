@@ -14,17 +14,17 @@
 
 use crate::i18n::LocaleNames as _;
 use crate::ui_kit::{Container, Surface};
-#[cfg(not(target_arch = "wasm32"))]
-use solidcraft_engine::geom::prelude::*;
 use std::collections::VecDeque;
 use std::sync::{
     Arc,
     atomic::{AtomicU8, Ordering},
     mpsc::{Receiver, Sender, TryRecvError},
 };
+#[cfg(not(target_arch = "wasm32"))]
+use torno_engine::geom::prelude::*;
 
 use serde_json::{Value, json};
-use solidcraft_engine::{Session, doc::Document, doc::progress::Progress};
+use torno_engine::{Session, doc::Document, doc::progress::Progress};
 
 use crate::SolveApp;
 use crate::control::ControlResponse;
@@ -58,7 +58,7 @@ pub struct Request {
     /// A control-channel caller waiting for the command's reply.
     pub reply: Option<Sender<ControlResponse>>,
     /// The folders that caller's agent may use: the worker reads the file inside them.
-    pub scope: Option<solidcraft_engine::io::vfs::PathScope>,
+    pub scope: Option<torno_engine::io::vfs::PathScope>,
     /// What that caller asked of an open or import besides its path (`up`, `names`, `matrix`,
     /// `name`, ...): the command gets them as given and checks them as it does run directly.
     pub options: serde_json::Map<String, Value>,
@@ -74,7 +74,7 @@ pub struct Request {
     pub mesh: bool,
     /// The level the caller's own `param_check` named and the warnings it found before the run:
     /// the reply says both (#9184).
-    pub(crate) param_check: Option<(solidcraft_engine::schema::ParamCheck, Vec<String>)>,
+    pub(crate) param_check: Option<(torno_engine::schema::ParamCheck, Vec<String>)>,
     /// The status line once the file is in, in place of the usual one.
     pub note: Option<String>,
     /// Which operation it is ([`crate::operations::serial`]).
@@ -87,7 +87,7 @@ impl Request {
             path: path.into(),
             kind,
             reply: None,
-            scope: solidcraft_engine::io::vfs::current_scope(),
+            scope: torno_engine::io::vfs::current_scope(),
             options: Default::default(),
             allow_hosts: Vec::new(),
             design: None,
@@ -115,8 +115,8 @@ impl Request {
     fn command(&self) -> (&'static str, Value) {
         match &self.kind {
             Kind::Open => ("doc.open", self.params()),
-            Kind::Insert if self.mesh || solidcraft_engine::io::is_mesh_path(&self.path) => ("file.insert_mesh", self.params()),
-            Kind::Insert if solidcraft_engine::io::is_point_cloud_path(&self.path) => ("pointcloud.insert", self.params()),
+            Kind::Insert if self.mesh || torno_engine::io::is_mesh_path(&self.path) => ("file.insert_mesh", self.params()),
+            Kind::Insert if torno_engine::io::is_point_cloud_path(&self.path) => ("pointcloud.insert", self.params()),
             Kind::Insert => (insert_command(&self.path), self.params()),
             Kind::InsertDesign => ("component.insert_design", self.params()),
             Kind::Recover { id, dir } => ("doc.recover", json!({"id": id, "dir": dir})),
@@ -148,8 +148,8 @@ impl Request {
 
 /// Route drawing files to the same commands as the sketch's Insert DXF and Insert SVG.
 pub(crate) fn insert_command(path: &str) -> &'static str {
-    solidcraft_engine::cmd::drawing_import_command(path)
-        .unwrap_or_else(|| if solidcraft_engine::io::is_mesh_path(path) { "file.insert_mesh" } else { "file.insert_step" })
+    torno_engine::cmd::drawing_import_command(path)
+        .unwrap_or_else(|| if torno_engine::io::is_mesh_path(path) { "file.insert_mesh" } else { "file.insert_step" })
 }
 
 struct Made {
@@ -195,13 +195,13 @@ struct Staged {
     session: Option<Session>,
     command: &'static str,
     params: Value,
-    reading: Option<solidcraft_engine::kernel::StepReading>,
+    reading: Option<torno_engine::kernel::StepReading>,
     /// A design being opened: its features evaluated so far.
-    opening: Option<solidcraft_engine::OpenSteps>,
+    opening: Option<torno_engine::OpenSteps>,
     /// The feature of that design whose imported STEP file was read last (by `reading`), and
     /// the result, held until the feature has been evaluated, which finds the file read.
     read_for: Option<usize>,
-    held: Option<Arc<solidcraft_engine::kernel::StepImport>>,
+    held: Option<Arc<torno_engine::kernel::StepImport>>,
     /// The command's result once it has run; then the bodies' meshes are made, a few a frame,
     /// so the first frame that draws the design doesn't make them all at once.
     ran: Option<Value>,
@@ -224,10 +224,10 @@ const STAGED_FRAME_MS: f64 = 30.0;
 fn staged_kind(request: &Request) -> bool {
     let p = &request.path;
     let step = matches!(request.kind, Kind::Insert | Kind::Open)
-        && solidcraft_engine::io::is_step_path(p)
-        && !solidcraft_engine::io::is_iges_path(p)
-        && !solidcraft_engine::io::is_native_cad_path(p);
-    step || (request.kind == Kind::Open && solidcraft_engine::io::is_design_path(p))
+        && torno_engine::io::is_step_path(p)
+        && !torno_engine::io::is_iges_path(p)
+        && !torno_engine::io::is_native_cad_path(p);
+    step || (request.kind == Kind::Open && torno_engine::io::is_design_path(p))
 }
 
 impl Running {
@@ -369,7 +369,7 @@ pub fn begin(app: &mut SolveApp, path: &str, insert: bool) {
 /// while "Fold the History bar into groups" is on, and none while it is off (#8885), unless the
 /// caller chose (`folder`).
 pub(crate) fn step_folder_option(app: &SolveApp, path: &str, options: &mut serde_json::Map<String, Value>) {
-    if solidcraft_engine::io::is_step_path(path) {
+    if torno_engine::io::is_step_path(path) {
         options.entry("folder").or_insert(Value::Bool(app.preferences.history_bar_groups));
     }
 }
@@ -400,7 +400,7 @@ pub fn begin_request(app: &mut SolveApp, mut request: Request) -> Result<(), Str
             }
             Kind::InsertDesign => {
                 let (command, params) = request.command();
-                let r = solidcraft_engine::io::vfs::allowing_hosts(&request.allow_hosts, || app.run(command, params));
+                let r = torno_engine::io::vfs::allowing_hosts(&request.allow_hosts, || app.run(command, params));
                 if r.is_ok() {
                     app.fit_view();
                     if let Some(note) = &request.note {
@@ -427,13 +427,13 @@ pub fn begin_request(app: &mut SolveApp, mut request: Request) -> Result<(), Str
                 let (command, params) = request.command();
                 let r = app.run(command, params);
                 if r.is_ok() && !request.path.is_empty() {
-                    app.set_status(solidcraft_ui_text::format("ui.saved_to", &[("path", &request.path)]), false);
+                    app.set_status(torno_ui_text::format("ui.saved_to", &[("path", &request.path)]), false);
                 }
                 r
             }
             Kind::UpdateLinks | Kind::ReloadCloud => {
                 let (command, params) = request.command();
-                solidcraft_engine::io::vfs::allowing_hosts(&request.allow_hosts, || app.run(command, params))
+                torno_engine::io::vfs::allowing_hosts(&request.allow_hosts, || app.run(command, params))
             }
         };
         request.answer(r);
@@ -441,7 +441,7 @@ pub fn begin_request(app: &mut SolveApp, mut request: Request) -> Result<(), Str
     }
     #[cfg(not(target_arch = "wasm32"))]
     {
-        // A design open in another SolidCraft asks first (#5467).
+        // A design open in another Torno asks first (#5467).
         let Some(request) = crate::open_elsewhere::check_open(app, request) else { return Ok(()) };
         queue(app, request)
     }
@@ -467,8 +467,8 @@ fn reuse_open(app: &mut SolveApp, request: &Request) -> bool {
     if request.kind != Kind::Open {
         return false;
     }
-    let reused = solidcraft_engine::io::vfs::scoped(request.scope.clone(), || {
-        solidcraft_engine::io::vfs::check(&request.path).map_err(|e| e.to_string())?;
+    let reused = torno_engine::io::vfs::scoped(request.scope.clone(), || {
+        torno_engine::io::vfs::check(&request.path).map_err(|e| e.to_string())?;
         // Let the command validate import-specific options, even for an existing tab.
         if !request.options.is_empty() {
             return Ok(false);
@@ -499,7 +499,7 @@ pub fn control(app: &mut SolveApp, req: crate::control::ControlRequest) -> Optio
     }
     // In any spelling the engine takes: another would run on the window thread.
     let Some(id) =
-        req.params.get("command").or(req.params.get("id")).and_then(Value::as_str).and_then(solidcraft_engine::find_command).map(|spec| spec.id)
+        req.params.get("command").or(req.params.get("id")).and_then(Value::as_str).and_then(torno_engine::find_command).map(|spec| spec.id)
     else {
         return Some(req);
     };
@@ -575,7 +575,7 @@ fn reoffer(app: &mut SolveApp, id: &str, dir: Option<&str>) {
     if app.recoverable.iter().any(|e| e.id == id) {
         return;
     }
-    if let Some(e) = solidcraft_engine::recovery::orphans(&dir).into_iter().find(|e| e.id == id) {
+    if let Some(e) = torno_engine::recovery::orphans(&dir).into_iter().find(|e| e.id == id) {
         app.recoverable.insert(0, e);
     }
 }
@@ -664,9 +664,9 @@ fn start(app: &mut SolveApp) {
                 let Some(partial) = watch.take_partial() else { continue };
                 let began = std::time::Instant::now();
                 let picture = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| partial_picture(&partial.world, &stop))).ok().flatten();
-                if solidcraft_engine::geom::env::var_os("PROFILE_OPEN").is_some() {
+                if torno_engine::geom::env::var_os("PROFILE_OPEN").is_some() {
                     eprintln!(
-                        "SolidCraft partial picture: features={} bodies={} drawn={} ms={:.1}",
+                        "Torno partial picture: features={} bodies={} drawn={} ms={:.1}",
                         partial.features,
                         partial.world.bodies.len(),
                         picture.is_some(),
@@ -702,8 +702,8 @@ fn start(app: &mut SolveApp) {
                     let picture = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| saved_picture(preview))).ok().flatten();
                     if let Some(picture) = picture.filter(|_| !progress.is_cancelled()) {
                         let _ = preview_tx.send(picture);
-                        if solidcraft_engine::geom::env::var_os("PROFILE_OPEN").is_some() {
-                            eprintln!("SolidCraft saved preview: ready_ms={:.3}", preview_began.elapsed().as_secs_f64() * 1000.0);
+                        if torno_engine::geom::env::var_os("PROFILE_OPEN").is_some() {
+                            eprintln!("Torno saved preview: ready_ms={:.3}", preview_began.elapsed().as_secs_f64() * 1000.0);
                         }
                     }
                 }
@@ -711,7 +711,7 @@ fn start(app: &mut SolveApp) {
         }
         // Servers allowed once hold for this request only, on this worker thread.
         let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
-            solidcraft_engine::io::vfs::allowing_hosts(&allow_hosts, || {
+            torno_engine::io::vfs::allowing_hosts(&allow_hosts, || {
                 compute(scratch, command, &params, scope, thumbnail, &worker_phase, &worker_progress)
             })
         }))
@@ -840,7 +840,7 @@ fn step_staged(running: &mut Running) {
         send(staged, Ok(Made { session, result, thumbnail }));
         return;
     }
-    if staged.command == "doc.open" && solidcraft_engine::io::is_design_path(&path) {
+    if staged.command == "doc.open" && torno_engine::io::is_design_path(&path) {
         match step_opening(staged, &progress, scope, &in_budget) {
             None => {}
             Some(Ok(result)) => {
@@ -855,12 +855,11 @@ fn step_staged(running: &mut Running) {
     let Some(reading) = staged.reading.as_mut() else {
         // Parse and walk the file. The reading keeps the watch: its steps report progress and
         // stop on Cancel.
-        let read = solidcraft_engine::io::vfs::scoped(scope, || {
-            let bytes = solidcraft_engine::io::limits::read(&path, solidcraft_engine::io::limits::Kind::Step).map_err(|e| format!("{path}: {e}"))?;
+        let read = torno_engine::io::vfs::scoped(scope, || {
+            let bytes = torno_engine::io::limits::read(&path, torno_engine::io::limits::Kind::Step).map_err(|e| format!("{path}: {e}"))?;
             // The same text the import command makes of the bytes, so it finds this reading.
             let text = String::from_utf8_lossy(&bytes).into_owned();
-            solidcraft_engine::doc::progress::watch(progress.clone(), || solidcraft_engine::kernel::StepReading::new(&text))
-                .map_err(|e| format!("{path}: {e}"))
+            torno_engine::doc::progress::watch(progress.clone(), || torno_engine::kernel::StepReading::new(&text)).map_err(|e| format!("{path}: {e}"))
         });
         match read {
             Ok(reading) => staged.reading = Some(reading),
@@ -890,8 +889,8 @@ fn step_staged(running: &mut Running) {
         return;
     };
     let (command, params) = (staged.command, staged.params.clone());
-    let result = solidcraft_engine::io::vfs::scoped(running.request.scope.clone(), || {
-        solidcraft_engine::doc::progress::watch(progress.clone(), || session.execute(command, &params))
+    let result = torno_engine::io::vfs::scoped(running.request.scope.clone(), || {
+        torno_engine::doc::progress::watch(progress.clone(), || session.execute(command, &params))
     });
     drop(import);
     match result {
@@ -912,16 +911,16 @@ fn step_staged(running: &mut Running) {
 fn step_opening(
     staged: &mut Staged,
     progress: &Arc<Progress>,
-    scope: Option<solidcraft_engine::io::vfs::PathScope>,
+    scope: Option<torno_engine::io::vfs::PathScope>,
     in_budget: &dyn Fn() -> bool,
 ) -> Option<Result<Value, String>> {
-    use solidcraft_engine::doc::progress::watch;
-    use solidcraft_engine::io::vfs::scoped;
+    use torno_engine::doc::progress::watch;
+    use torno_engine::io::vfs::scoped;
     let session = staged.session.as_mut()?;
     let Some(opening) = staged.opening.as_mut() else {
         let params = staged.params.clone();
         let validation = session.validation();
-        match scoped(scope.clone(), || watch(progress.clone(), || solidcraft_engine::OpenSteps::start(&params, validation))) {
+        match scoped(scope.clone(), || watch(progress.clone(), || torno_engine::OpenSteps::start(&params, validation))) {
             Ok(Some(opening)) => staged.opening = Some(opening),
             // Options only `doc.open` takes: it opens the file at once.
             Ok(None) => {
@@ -947,7 +946,7 @@ fn step_opening(
             && let Some(text) = opening.next_import()
         {
             staged.read_for = Some(next);
-            staged.reading = watch(progress.clone(), || solidcraft_engine::kernel::StepReading::new(&text)).ok();
+            staged.reading = watch(progress.clone(), || torno_engine::kernel::StepReading::new(&text)).ok();
             continue;
         }
         let more = scoped(scope.clone(), || watch(progress.clone(), || opening.step()));
@@ -964,9 +963,9 @@ fn step_opening(
 /// the finished model), or `None` when there is nothing to show yet, too much to draw, or the
 /// load ended meanwhile (`stop`).
 #[cfg(not(target_arch = "wasm32"))]
-fn partial_picture(world: &solidcraft_engine::doc::ModelState, stop: &dyn Fn() -> bool) -> Option<egui::ColorImage> {
-    use solidcraft_engine::geom::Aabb3;
-    use solidcraft_viewport::{Camera, Rgb, Scene, SceneMesh, StandardView};
+fn partial_picture(world: &torno_engine::doc::ModelState, stop: &dyn Fn() -> bool) -> Option<egui::ColorImage> {
+    use torno_engine::geom::Aabb3;
+    use torno_viewport::{Camera, Rgb, Scene, SceneMesh, StandardView};
     let mut scene = Scene::default();
     let mut bounds = Aabb3::EMPTY;
     let mut triangles = 0usize;
@@ -987,7 +986,7 @@ fn partial_picture(world: &solidcraft_engine::doc::ModelState, stop: &dyn Fn() -
     }
     let mut camera = Camera::default();
     camera.set_view(StandardView::Iso);
-    camera.fit(&solidcraft_engine::render::view_bounds(&bounds));
+    camera.fit(&torno_engine::render::view_bounds(&bounds));
     scene.radius = bounds.diagonal();
     if stop() || !preview_work_fits(&scene, &camera) {
         return None;
@@ -996,10 +995,10 @@ fn partial_picture(world: &solidcraft_engine::doc::ModelState, stop: &dyn Fn() -
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-fn saved_picture(preview: solidcraft_engine::io::DesignPreview) -> Option<egui::ColorImage> {
+fn saved_picture(preview: torno_engine::io::DesignPreview) -> Option<egui::ColorImage> {
     use solidcore_record::Vec3;
-    use solidcraft_engine::geom::{Aabb3, Mesh};
-    use solidcraft_viewport::{Camera, Rgb, Scene, SceneMesh, StandardView};
+    use torno_engine::geom::{Aabb3, Mesh};
+    use torno_viewport::{Camera, Rgb, Scene, SceneMesh, StandardView};
     let mut scene = Scene::default();
     let mut bounds = Aabb3::EMPTY;
     for cached in preview.meshes {
@@ -1032,7 +1031,7 @@ fn saved_picture(preview: solidcraft_engine::io::DesignPreview) -> Option<egui::
     }
     let mut camera = Camera::default();
     camera.set_view(StandardView::Iso);
-    camera.fit(&solidcraft_engine::render::view_bounds(&bounds));
+    camera.fit(&torno_engine::render::view_bounds(&bounds));
     scene.radius = bounds.diagonal();
     if !preview_work_fits(&scene, &camera) {
         return None;
@@ -1042,8 +1041,8 @@ fn saved_picture(preview: solidcraft_engine::io::DesignPreview) -> Option<egui::
 
 /// The preview picture, drawn on the GPU by the renderer the app installs (none: no picture).
 #[cfg(not(target_arch = "wasm32"))]
-fn preview_image(scene: &solidcraft_viewport::Scene, camera: &solidcraft_viewport::Camera) -> Option<egui::ColorImage> {
-    match solidcraft_engine::capture::rgba(scene, camera, 320, 200) {
+fn preview_image(scene: &torno_viewport::Scene, camera: &torno_viewport::Camera) -> Option<egui::ColorImage> {
+    match torno_engine::capture::rgba(scene, camera, 320, 200) {
         Ok(picture) => Some(egui::ColorImage::from_rgba_unmultiplied([320, 200], &picture.rgba)),
         Err(e) => {
             log::warn!("no preview picture: {e}");
@@ -1056,7 +1055,7 @@ fn preview_image(scene: &solidcraft_viewport::Scene, camera: &solidcraft_viewpor
 /// not monopolize the file worker or a software GPU. Counts each triangle's pixel box at twice the
 /// picture's size.
 #[cfg(not(target_arch = "wasm32"))]
-fn preview_work_fits(scene: &solidcraft_viewport::Scene, camera: &solidcraft_viewport::Camera) -> bool {
+fn preview_work_fits(scene: &torno_viewport::Scene, camera: &torno_viewport::Camera) -> bool {
     let mut pixels = 0.0;
     let projection = camera.view_proj(640.0 / 400.0, scene.radius.max(1.0));
     for body in &scene.meshes {
@@ -1100,12 +1099,12 @@ fn compute(
     mut session: Session,
     command: &str,
     params: &Value,
-    scope: Option<solidcraft_engine::io::vfs::PathScope>,
+    scope: Option<torno_engine::io::vfs::PathScope>,
     thumbnail: bool,
     phase: &AtomicU8,
     progress: &Arc<Progress>,
 ) -> Job {
-    let profile = solidcraft_engine::geom::env::var_os("PROFILE_OPEN").is_some();
+    let profile = torno_engine::geom::env::var_os("PROFILE_OPEN").is_some();
     let began = std::time::Instant::now();
     let cancelled = || Err("file operation cancelled".to_string());
     if progress.is_cancelled() {
@@ -1113,9 +1112,8 @@ fn compute(
     }
     // The timeline's rebuild reports each feature and stops at the next one after Cancel. An
     // agent's scope is per thread, so it is set again here.
-    let result =
-        solidcraft_engine::io::vfs::scoped(scope, || solidcraft_engine::doc::progress::watch(progress.clone(), || session.execute(command, params)))
-            .map_err(|e| e.to_string())?;
+    let result = torno_engine::io::vfs::scoped(scope, || torno_engine::doc::progress::watch(progress.clone(), || session.execute(command, params)))
+        .map_err(|e| e.to_string())?;
     if command == "file.export_view_dxf" {
         // A successful export has already published its complete file. A Cancel arriving
         // after that commit must not turn a completed save into a misleading cancellation.
@@ -1132,7 +1130,7 @@ fn compute(
     // The display meshes are made once the design is in the window, which shows its bodies as
     // they come ([`crate::open_meshing`]): framing, picking and drawing never mesh on the UI.
     // Its outlines frame it in the window until it is meshed: measured here, not there.
-    solidcraft_engine::kernel::for_each_on_threads(&world.bodies, 16, |b| {
+    torno_engine::kernel::for_each_on_threads(&world.bodies, 16, |b| {
         let _ = b.outline_bounds();
     });
     drop(world);
@@ -1141,7 +1139,7 @@ fn compute(
     let view_ms = view_began.elapsed().as_secs_f64() * 1000.0;
     if profile {
         eprintln!(
-            "SolidCraft open phases: geometry_ms={geometry_ms:.3} placement_ms={placement_ms:.3} tessellation_ms={tessellation_ms:.3} display_warmup_ms={view_ms:.3} total_ms={:.3}",
+            "Torno open phases: geometry_ms={geometry_ms:.3} placement_ms={placement_ms:.3} tessellation_ms={tessellation_ms:.3} display_warmup_ms={view_ms:.3} total_ms={:.3}",
             began.elapsed().as_secs_f64() * 1000.0
         );
     }
@@ -1193,7 +1191,7 @@ pub fn tick(app: &mut SolveApp, ctx: &egui::Context) {
         match job {
             Ok(made) if request.kind == Kind::ExportDxf => {
                 if !request.path.is_empty() {
-                    app.set_status(solidcraft_ui_text::format("ui.saved_to", &[("path", &request.path)]), false);
+                    app.set_status(torno_ui_text::format("ui.saved_to", &[("path", &request.path)]), false);
                 }
                 request.answer(Ok(made.result));
             }
@@ -1213,7 +1211,7 @@ pub fn tick(app: &mut SolveApp, ctx: &egui::Context) {
                 {
                     panel.depth = app.session.undo.len();
                 }
-                let language = solidcraft_ui_text::Locale::for_language(&app.preferences.language);
+                let language = torno_ui_text::Locale::for_language(&app.preferences.language);
                 app.set_status(language.format("ui.command_done", &[("command", language.label(crate::command_label(id)))]), false);
                 // A design it could not read is said as when that was all it was asked.
                 if let Some(f) = r.as_ref().ok().and_then(|v| v["failed"].as_array()).and_then(|f| f.first()) {
@@ -1269,7 +1267,7 @@ pub fn tick(app: &mut SolveApp, ctx: &egui::Context) {
                 } else {
                     app.set_status(
                         if made.result.get("read_only").and_then(Value::as_bool) == Some(true) {
-                            solidcraft_ui_text::tr("document.opened_read_only").to_string()
+                            torno_ui_text::tr("document.opened_read_only").to_string()
                         } else if let Some(summary) = crate::timeline::import_status(app, &made.result) {
                             summary
                         } else if let Some(w) = warnings.filter(|w| !w.is_empty()) {
@@ -1277,7 +1275,7 @@ pub fn tick(app: &mut SolveApp, ctx: &egui::Context) {
                         } else {
                             // Built here, outside the window's language scope: in the language
                             // chosen, as the other statuses of this file are.
-                            let language = solidcraft_ui_text::Locale::for_language(&app.preferences.language);
+                            let language = torno_ui_text::Locale::for_language(&app.preferences.language);
                             // An opened design is named as its tab names it, an inserted one as
                             // its component is named.
                             let name = if request.insert() {
@@ -1333,7 +1331,7 @@ pub fn tick(app: &mut SolveApp, ctx: &egui::Context) {
         if request.kind == Kind::Open
             && let Some(dir) = &app.reopen_guard_dir
         {
-            solidcraft_engine::recovery::reopen_finished(dir, &request.path);
+            torno_engine::recovery::reopen_finished(dir, &request.path);
         }
     }
     #[cfg(not(target_arch = "wasm32"))]
@@ -1377,9 +1375,9 @@ fn load_steps(
         ["file_load.step_read", "file_load.step_rebuild", "file_load.step_show"]
     };
     let count = |key: &str, done: usize, total: usize| {
-        Some(solidcraft_ui_text::format(key, &[("done", &(done + 1).min(total).to_string()), ("total", &total.to_string())]))
+        Some(torno_ui_text::format(key, &[("done", &(done + 1).min(total).to_string()), ("total", &total.to_string())]))
     };
-    let percent = |d: usize, t: usize| Some(solidcraft_ui_text::format("file_load.step_percent", &[("percent", &(d * 100 / t.max(1)).to_string())]));
+    let percent = |d: usize, t: usize| Some(torno_ui_text::format("file_load.step_percent", &[("percent", &(d * 100 / t.max(1)).to_string())]));
     let (current, detail) = match (phase, work) {
         (1.., _) => (2, None),
         (_, Some(("reading", d, t))) if cad => (0, percent(d, t)),
@@ -1402,10 +1400,9 @@ pub fn show(app: &mut SolveApp, ctx: &egui::Context) {
         Kind::Recover { .. } => r.request.path.clone(),
         // The linked design being read again, once the worker is on one.
         Kind::UpdateLinks => match r.progress.item() {
-            Some((name, i, n)) => solidcraft_ui_text::format(
-                "file_load.link_item",
-                &[("name", &name), ("done", &(i + 1).min(n).to_string()), ("total", &n.to_string())],
-            ),
+            Some((name, i, n)) => {
+                torno_ui_text::format("file_load.link_item", &[("name", &name), ("done", &(i + 1).min(n).to_string()), ("total", &n.to_string())])
+            }
             None => app.session.doc.name.clone(),
         },
         Kind::ReloadCloud => app.session.doc.name.clone(),
@@ -1443,11 +1440,11 @@ pub fn show(app: &mut SolveApp, ctx: &egui::Context) {
     // Anchored at its top: the card grows downwards (the saved preview) and Cancel stays put.
     let top = egui::pos2(centre.x, (centre.y - 120.0).max(cover.top() + 8.0));
     let title = if cancelled && export {
-        solidcraft_ui_text::tr_label("dxf.cancelling")
+        torno_ui_text::tr_label("dxf.cancelling")
     } else if cancelled {
-        solidcraft_ui_text::tr("file_load.waiting")
+        torno_ui_text::tr("file_load.waiting")
     } else {
-        solidcraft_ui_text::tr(match r.request.kind {
+        torno_ui_text::tr(match r.request.kind {
             Kind::Insert | Kind::InsertDesign => "file_load.inserting",
             Kind::Open => "file_load.opening",
             Kind::Recover { .. } => "file_load.recovering",
@@ -1465,17 +1462,17 @@ pub fn show(app: &mut SolveApp, ctx: &egui::Context) {
         Kind::ReloadCloud => "import",
     };
     let (closed, action) = ui_kit::Window::new(card_id, icon, title)
-        .cards(((cover.width() - 16.0) / solidcraft_theme::Tokens::get().form_card_width).clamp(0.5, 1.3))
+        .cards(((cover.width() - 16.0) / torno_theme::Tokens::get().form_card_width).clamp(0.5, 1.3))
         .placed(egui::Align2::CENTER_TOP, top)
-        .actions("", solidcraft_ui_text::tr("ui.cancel"), None)
+        .actions("", torno_ui_text::tr("ui.cancel"), None)
         .show(ctx, true, |ui| {
             ui_kit::text(ui, &format!("{name}…"), ui_kit::Text::Report("name", false));
             if let Some(preview) = r.preview.as_ref().filter(|_| !cancelled) {
                 let w = ui.available_width();
                 ui.image((preview.id(), egui::vec2(w, w * 200.0 / 320.0)));
                 let note = match r.built {
-                    Some(built) => solidcraft_ui_text::format("file_load.built", &[("built", &built.to_string()), ("total", &total.to_string())]),
-                    None => solidcraft_ui_text::tr("file_load.preview_note").to_string(),
+                    Some(built) => torno_ui_text::format("file_load.built", &[("built", &built.to_string()), ("total", &total.to_string())]),
+                    None => torno_ui_text::tr("file_load.preview_note").to_string(),
                 };
                 ui_kit::text(ui, &note, ui_kit::Text::Note("preview"));
             }
@@ -1484,31 +1481,31 @@ pub fn show(app: &mut SolveApp, ctx: &egui::Context) {
             let stepped = !cancelled && matches!(r.request.kind, Kind::Open | Kind::Insert | Kind::InsertDesign | Kind::Recover { .. });
             if stepped {
                 let cad = matches!(r.request.kind, Kind::Open | Kind::Insert)
-                    && (solidcraft_engine::io::is_step_path(&r.request.path) || solidcraft_engine::io::is_iges_path(&r.request.path));
+                    && (torno_engine::io::is_step_path(&r.request.path) || torno_engine::io::is_iges_path(&r.request.path));
                 let (labels, current, detail) = load_steps(cad, phase, r.progress.work(), (done, total));
-                let labels = labels.map(solidcraft_ui_text::tr);
+                let labels = labels.map(torno_ui_text::tr);
                 ui_kit::steps(ui, "file_load", &labels, current, detail.as_deref());
             } else {
                 let status = if cancelled && export {
-                    solidcraft_ui_text::tr_label("dxf.cancel_wait").to_string()
+                    torno_ui_text::tr_label("dxf.cancel_wait").to_string()
                 } else if cancelled {
-                    solidcraft_ui_text::tr("file_load.stopping").to_string()
+                    torno_ui_text::tr("file_load.stopping").to_string()
                 } else {
                     match (phase, work) {
                         (_, work) if r.request.kind == Kind::ExportDxf => crate::dialogs_view_dxf::progress_text(work),
                         (_, Some(("reading", d, t))) => {
-                            solidcraft_ui_text::format("file_load.reading_percent", &[("percent", &(d * 100 / t.max(1)).to_string())])
+                            torno_ui_text::format("file_load.reading_percent", &[("percent", &(d * 100 / t.max(1)).to_string())])
                         }
                         (_, Some((_, d, t))) => {
-                            solidcraft_ui_text::format("file_load.converting", &[("done", &(d + 1).to_string()), ("total", &t.to_string())])
+                            torno_ui_text::format("file_load.converting", &[("done", &(d + 1).to_string()), ("total", &t.to_string())])
                         }
-                        (1, _) => solidcraft_ui_text::tr("file_load.preparing_view").to_string(),
-                        (2, _) => solidcraft_ui_text::tr("file_load.preparing_thumbnail").to_string(),
-                        _ if total > 0 => solidcraft_ui_text::format(
+                        (1, _) => torno_ui_text::tr("file_load.preparing_view").to_string(),
+                        (2, _) => torno_ui_text::tr("file_load.preparing_thumbnail").to_string(),
+                        _ if total > 0 => torno_ui_text::format(
                             "file_load.rebuilding",
                             &[("done", &(done + 1).min(total).to_string()), ("total", &total.to_string())],
                         ),
-                        _ => solidcraft_ui_text::tr("file_load.reading").to_string(),
+                        _ => torno_ui_text::tr("file_load.reading").to_string(),
                     }
                 };
                 ui_kit::steps(ui, "file_load", &[status.as_str()], 0, None);
@@ -1541,7 +1538,7 @@ pub fn show(app: &mut SolveApp, ctx: &egui::Context) {
         // The worker stops at its next cancellation checkpoint; its scratch design and
         // result channels are isolated from any file operation started afterwards.
         app.file_load.cancel();
-        app.set_status(if export { solidcraft_ui_text::tr_label("dxf.cancelled") } else { "file operation cancelled" }, false);
+        app.set_status(if export { torno_ui_text::tr_label("dxf.cancelled") } else { "file operation cancelled" }, false);
     }
 }
 
@@ -1704,7 +1701,7 @@ mod tests {
         assert!(app.file_load.idle());
         assert!(Arc::ptr_eq(&dirty, &app.session.doc));
         // ui.file dispatch carries its scope on the calling thread; preserve it in the queue.
-        solidcraft_engine::io::vfs::scoped(Some(Default::default()), || {
+        torno_engine::io::vfs::scoped(Some(Default::default()), || {
             begin(&mut app, "existing.solidcraft", false);
         });
         assert!(app.status.as_ref().is_some_and(|s| s.2 && s.0.contains("outside the folders")));
@@ -1715,9 +1712,9 @@ mod tests {
     #[test]
     fn drawing_insert_and_drop_reuse_the_active_sketch_or_create_xy() {
         let mut h = crate::scenario::Harness::new();
-        let dxf = solidcraft_engine::io::write_dxf(&[
-            solidcraft_engine::io::Geom2::Line(solidcore_record::Vec2::ZERO, solidcore_record::Vec2::new(10.0, 0.0)),
-            solidcraft_engine::io::Geom2::Arc {
+        let dxf = torno_engine::io::write_dxf(&[
+            torno_engine::io::Geom2::Line(solidcore_record::Vec2::ZERO, solidcore_record::Vec2::new(10.0, 0.0)),
+            torno_engine::io::Geom2::Arc {
                 c: solidcore_record::Vec2::ZERO,
                 a: solidcore_record::Vec2::new(5.0, 0.0),
                 b: solidcore_record::Vec2::new(0.0, 5.0),
@@ -1744,7 +1741,7 @@ mod tests {
             let id = h.app.session.active_sketch.unwrap();
             assert_eq!(h.app.session.model.state().sketch(id).unwrap().plane, solidcore_record::Plane::XY);
             assert_eq!(h.app.session.doc.sketch(id).unwrap().curves.len(), 2);
-            h.app.cam.set_view(solidcraft_viewport::StandardView::Top);
+            h.app.cam.set_view(torno_viewport::StandardView::Top);
             h.app.fit_view();
             h.run(&json!([{ "shot": format!("insert-{file}") }])).unwrap();
             h.app.drop_path(&path);
@@ -1786,8 +1783,8 @@ mod tests {
         let undo = h.app.session.undo.len();
         let cam = h.app.cam;
         let progress = Arc::new(Progress::default());
-        solidcraft_engine::doc::progress::watch(progress.clone(), || {
-            solidcraft_engine::kernel::watch::current().unwrap().progress("dxf_occlusion", 64, 128);
+        torno_engine::doc::progress::watch(progress.clone(), || {
+            torno_engine::kernel::watch::current().unwrap().progress("dxf_occlusion", 64, 128);
         });
         let (tx, rx) = std::sync::mpsc::channel();
         h.app.file_load.running = Some(Running {
@@ -1892,8 +1889,8 @@ mod tests {
         if !crate::gpu::test_picture_renderer() {
             return;
         }
-        let preview = solidcraft_engine::io::DesignPreview {
-            meshes: vec![solidcraft_engine::doc::MeshData {
+        let preview = torno_engine::io::DesignPreview {
+            meshes: vec![torno_engine::doc::MeshData {
                 name: "Saved triangle".into(),
                 positions: vec![0.0, 0.0, 0.0, 10.0, 0.0, 0.0, 0.0, 10.0, 0.0].into(),
                 triangles: vec![0, 1, 2].into(),
@@ -1909,8 +1906,8 @@ mod tests {
     #[cfg(not(target_arch = "wasm32"))]
     #[test]
     fn repeated_large_preview_triangles_are_a_cache_miss_before_drawing() {
-        let preview = solidcraft_engine::io::DesignPreview {
-            meshes: vec![solidcraft_engine::doc::MeshData {
+        let preview = torno_engine::io::DesignPreview {
+            meshes: vec![torno_engine::doc::MeshData {
                 name: "Hostile overdraw".into(),
                 positions: vec![0.0, 0.0, 0.0, 10.0, 0.0, 0.0, 0.0, 10.0, 0.0].into(),
                 triangles: (0..10_000).flat_map(|_| [0, 1, 2]).collect(),
@@ -2005,7 +2002,7 @@ mod tests {
     /// lands as a worker's would; Cancel between frames leaves the design as it was.
     #[test]
     fn a_staged_step_import_lands_over_frames_and_cancels_between_them() {
-        let dir = std::env::temp_dir().join(format!("solidcraft-staged-step-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("torno-staged-step-{}", std::process::id()));
         std::fs::create_dir_all(&dir).unwrap();
         let path = dir.join("boxes.step").to_string_lossy().into_owned();
         let mut part = Session::default();
@@ -2062,7 +2059,7 @@ mod tests {
     /// design that lands is the one `doc.open` opens.
     #[test]
     fn a_staged_design_open_lands_over_frames_and_cancels_between_them() {
-        let dir = std::env::temp_dir().join(format!("solidcraft-staged-open-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("torno-staged-open-{}", std::process::id()));
         std::fs::create_dir_all(&dir).unwrap();
         let path = dir.join("staged.sc").to_string_lossy().into_owned();
         let step = concat!(env!("CARGO_MANIFEST_DIR"), "/../../tests/step-conformance/cylinder_seam.step");
@@ -2129,7 +2126,7 @@ mod tests {
     /// last count of that file must not stay up until the next import.
     #[test]
     fn a_staged_design_open_shows_an_import_only_while_its_file_is_read() {
-        let dir = std::env::temp_dir().join(format!("solidcraft-staged-work-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("torno-staged-work-{}", std::process::id()));
         std::fs::create_dir_all(&dir).unwrap();
         let path = dir.join("staged.sc").to_string_lossy().into_owned();
         let step = concat!(env!("CARGO_MANIFEST_DIR"), "/../../tests/step-conformance/cylinder_seam.step");
@@ -2174,7 +2171,7 @@ mod tests {
     /// are left alone.
     #[test]
     fn a_step_open_asks_for_a_history_folder_as_the_bar_groups() {
-        let mut app = SolveApp::new(solidcraft_engine::Session::default(), crate::Services::default());
+        let mut app = SolveApp::new(torno_engine::Session::default(), crate::Services::default());
         let asked = |app: &SolveApp, path: &str, folder: Option<bool>| {
             let mut options = serde_json::Map::new();
             if let Some(folder) = folder {

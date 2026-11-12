@@ -3,9 +3,9 @@ use crate::scenario::Harness;
 use crate::viewport::Proj;
 use serde_json::{Value, json};
 use solidcore_record::{Plane, Vec2, Vec3};
-use solidcraft_engine::geom::prelude::*;
-use solidcraft_engine::sketch::Sketch;
-use solidcraft_viewport::{Camera, Mat4};
+use torno_engine::geom::prelude::*;
+use torno_engine::sketch::Sketch;
+use torno_viewport::{Camera, Mat4};
 
 fn tool(command: &str, points: &[[f64; 2]]) -> Tool {
     let mut tool = Tool::for_command(command).unwrap();

@@ -219,7 +219,7 @@
     "blend_dropping"
   ],
   "ungraded": [
-    "continuity: SolidCraft computes it"
+    "continuity: Torno computes it"
   ],
   "what": "the four rim edges of a rectangular pocket rounded r2 (convex edges meeting at the pocket's concave corners)",
   "why_not": []

@@ -1,4 +1,4 @@
-//! [`Order`]'s inverse and its pieces (#3137): what SolidCraft's `history::Order` gave, read off
+//! [`Order`]'s inverse and its pieces (#3137): what Torno's `history::Order` gave, read off
 //! the conversion's order. A body whose solids touch along an edge comes back with one record
 //! edge per pair of faces that edge separates: each is a piece of that kernel edge.
 #![allow(

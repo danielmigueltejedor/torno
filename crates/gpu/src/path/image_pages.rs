@@ -1,7 +1,7 @@
 //! Row-aligned GPU storage pages and filter windows. Page boundaries change
 //! resource residency only; camera/sample identities remain full-image indices.
 use super::{FAILURE_BYTES, JobError, JobOptions, Result};
-use solidcraft_render::job::{ErrorCode, MAX_TRACE_DIMENSION, MAX_TRACE_PIXELS};
+use torno_render::job::{ErrorCode, MAX_TRACE_DIMENSION, MAX_TRACE_PIXELS};
 
 // A working-set target, not an image-size limit: larger images use more pages.
 // Actual adapter binding/allocation limits can make pages smaller.

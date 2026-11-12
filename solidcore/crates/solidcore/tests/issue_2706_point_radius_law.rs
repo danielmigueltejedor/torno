@@ -7,7 +7,7 @@
 //! of 3, which removes `(1 - pi/4) 3^2 20` in closed form.
 //!
 //! Two kernels: the default one, and the one that builds a round as its definition (every
-//! fix on, `UpstreamFixes::all()`, as SolidCraft runs it), where each round face must be a
+//! fix on, `UpstreamFixes::all()`, as Torno runs it), where each round face must be a
 //! [`ProceduralBlend`](solidcore::surface::procedural_blend::ProceduralBlend) carrying the
 //! law, held to the bound its certificate states.
 

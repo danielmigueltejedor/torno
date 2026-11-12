@@ -3,8 +3,8 @@
 //! ([`Scene`]) and a small CPU rasterizer (z-buffer, shaded triangles, depth-tested lines) for
 //! pictures without a GPU. The opaque and clear-coat shading models and the section hatch. It
 //! draws solidcore-tess's display meshes and knows no app's geometry crate, GPU API or UI
-//! toolkit: the GPU pipelines are `solidcraft-viewport-gpu`, the egui glue
-//! `solidcraft-viewport-egui`.
+//! toolkit: the GPU pipelines are `torno-viewport-gpu`, the egui glue
+//! `torno-viewport-egui`.
 #![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic, clippy::unimplemented, clippy::todo, clippy::unreachable)]
 #![forbid(unsafe_code)]
 

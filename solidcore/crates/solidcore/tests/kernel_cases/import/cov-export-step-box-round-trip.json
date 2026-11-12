@@ -57,6 +57,6 @@
   "ungraded": [],
   "what": "a box written by Export STEP and read back",
   "why_not": [
-    "body \"Block\" is no kernel operation's output nor an operand: SolidCraft built it or changed the kernel's record"
+    "body \"Block\" is no kernel operation's output nor an operand: Torno built it or changed the kernel's record"
   ]
 }

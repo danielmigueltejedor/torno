@@ -40,6 +40,6 @@
   "ungraded": [],
   "what": "config.configure of a feature the design does not have",
   "why_not": [
-    "the failure is SolidCraft's, not a kernel operation's: step 6 (config.configure): invalid parameters for `config.configure`: no feature `Nope`"
+    "the failure is Torno's, not a kernel operation's: step 6 (config.configure): invalid parameters for `config.configure`: no feature `Nope`"
   ]
 }

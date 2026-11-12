@@ -5,7 +5,7 @@
 //! Every tip publishes its handle (`axis_view:<axis>`) to the widget registry while it is drawn.
 use crate::BackingTooltipExt as _;
 use egui::{Pos2, Rect, Sense, Stroke, pos2, vec2};
-use solidcraft_theme::Tokens;
+use torno_theme::Tokens;
 
 /// How far a tip is from the centre, before [`ART_SCALE`].
 const AXIS_LENGTH: f64 = 38.0;
@@ -128,15 +128,15 @@ pub fn show(ui: &mut egui::Ui, compass: &Compass) -> Option<ViewAction> {
             painter.circle(c, 3.6, t.text.gamma_multiply(0.9), Stroke::new(1.4, t.panel));
         }
         crate::icons::glyphs::axis_tip(&painter, c, name, *d, *at, *depth, hovered == Some(i), t);
-        solidcraft_ui_registry::publish_handle(&format!("axis_view:{name}"), *at);
+        torno_ui_registry::publish_handle(&format!("axis_view:{name}"), *at);
     }
-    solidcraft_ui_registry::publish_count("axis_view_highlights", f64::from(u8::from(hovered.is_some())));
+    torno_ui_registry::publish_count("axis_view_highlights", f64::from(u8::from(hovered.is_some())));
     if let Some(i) = hovered
         && let Some((name, d, _, _)) = tips.get(i)
     {
-        solidcraft_ui_registry::publish_handle(&format!("axis_view_hover:{name}"), hover.unwrap_or(c));
+        torno_ui_registry::publish_handle(&format!("axis_view_hover:{name}"), hover.unwrap_or(c));
         ui.interact(Rect::from_center_size(hover.unwrap_or(c), vec2(2.0, 2.0)), ui.scope_id().with("axis_view_tip"), Sense::hover())
-            .backing_on_hover_text(solidcraft_ui_text::format(
+            .backing_on_hover_text(torno_ui_text::format(
                 if compass.snap_hint { "ui.view_compass_tip_snap" } else { "ui.view_compass_tip" },
                 &[("axis", &name.to_uppercase())],
             ));
@@ -146,7 +146,7 @@ pub fn show(ui: &mut egui::Ui, compass: &Compass) -> Option<ViewAction> {
         }
     }
     let home = Rect::from_center_size(pos2(c.x - 37.0, c.y - 37.0), vec2(18.0, 18.0));
-    solidcraft_ui_registry::publish_target("axis_view:home", home);
+    torno_ui_registry::publish_target("axis_view:home", home);
     let hr = ui.interact(home, ui.scope_id().with("axis_view_home"), Sense::click());
     // The home button sits in its own small round chip.
     painter.circle(home.center(), 12.0, t.overlay.gamma_multiply(if hr.hovered() { 0.9 } else { 0.5 }), Stroke::new(1.0, t.border));

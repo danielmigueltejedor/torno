@@ -1,6 +1,6 @@
 //! Shared numerical editors for bounded camera sampling and GPU transport extensions.
 use crate::{SolveApp, ui_kit};
-use solidcraft_engine::render::job::adaptive::MAX_PILOT_SAMPLES;
+use torno_engine::render::job::adaptive::MAX_PILOT_SAMPLES;
 
 /// Pilot allocation and conditional transmission sampling share portable intent.
 #[cfg(test)]
@@ -25,7 +25,7 @@ pub(super) fn adaptive_controls(app: &mut SolveApp, ui: &mut egui::Ui) {
     crate::scenario::publish_target("render:adaptive-enable", response.rect);
     if response.changed() {
         app.render_workspace.view.studio.adaptive = enabled.then(|| {
-            let mut options = solidcraft_engine::render::job::adaptive::AdaptiveSampling::default();
+            let mut options = torno_engine::render::job::adaptive::AdaptiveSampling::default();
             if app.render_workspace.view.method == super::ImageMethod::CpuRaytrace {
                 // Explicitly enabling the option does not silently raise the saved
                 // production cap, change the image size or choose a larger profile.
@@ -105,36 +105,36 @@ fn caustics_controls(app: &mut SolveApp, ui: &mut egui::Ui) {
     let response = ui.add_enabled_ui(enabled || can_enable, |ui| ui_kit::checkbox(ui, app.tr("render.caustics_enable"), &mut enabled));
     crate::scenario::publish_target("render:caustics:enable", response.inner.rect);
     if response.inner.changed() {
-        app.render_workspace.view.studio.caustics = enabled.then(solidcraft_engine::render::job::CausticOptions::default);
+        app.render_workspace.view.studio.caustics = enabled.then(torno_engine::render::job::CausticOptions::default);
     }
     if let Some(options) = &mut app.render_workspace.view.studio.caustics {
-        let area_lights = solidcraft_ui_text::tr("render.caustics_area_lights");
+        let area_lights = torno_ui_text::tr("render.caustics_area_lights");
         let response = ui_kit::checkbox(ui, area_lights, &mut options.area_lights);
         crate::scenario::publish_target("render:caustics:area-lights", response.rect);
-        let environment = solidcraft_ui_text::tr("render.caustics_environment");
+        let environment = torno_ui_text::tr("render.caustics_environment");
         let response = ui_kit::checkbox(ui, environment, &mut options.environment);
         crate::scenario::publish_target("render:caustics:environment", response.rect);
-        let photons = solidcraft_ui_text::tr("render.caustics_photons");
+        let photons = torno_ui_text::tr("render.caustics_photons");
         ui_kit::row(ui, photons, |ui| {
-            let field = ui_kit::number_field_preserving(ui, &mut options.photons, 1..=solidcraft_engine::render::job::MAX_CAUSTIC_PHOTONS, 64.0, "");
+            let field = ui_kit::number_field_preserving(ui, &mut options.photons, 1..=torno_engine::render::job::MAX_CAUSTIC_PHOTONS, 64.0, "");
             crate::scenario::publish_target("render:caustics:photons", field.rect);
             field
         });
-        let radius = solidcraft_ui_text::tr("render.caustics_radius");
+        let radius = torno_ui_text::tr("render.caustics_radius");
         ui_kit::row(ui, radius, |ui| {
             let field = ui_kit::number_field_preserving(ui, &mut options.radius_mm, 1e-6..=1e6, 0.1, " mm");
             crate::scenario::publish_target("render:caustics:radius", field.rect);
             field
         });
-        let seed = solidcraft_ui_text::tr("render.children.seed");
+        let seed = torno_ui_text::tr("render.children.seed");
         ui_kit::row(ui, seed, |ui| {
             let field = ui_kit::number_field_preserving(ui, &mut options.seed, 0..=u32::MAX, 1.0, "");
             crate::scenario::publish_target("render:caustics:seed", field.rect);
             field
         });
-        let depth = solidcraft_ui_text::tr("render.caustics_depth");
+        let depth = torno_ui_text::tr("render.caustics_depth");
         ui_kit::row(ui, depth, |ui| {
-            let field = ui_kit::number_field_preserving(ui, &mut options.max_depth, 1..=solidcraft_engine::render::job::MAX_PATH_DEPTH, 1.0, "");
+            let field = ui_kit::number_field_preserving(ui, &mut options.max_depth, 1..=torno_engine::render::job::MAX_PATH_DEPTH, 1.0, "");
             crate::scenario::publish_target("render:caustics:depth", field.rect);
             field
         });

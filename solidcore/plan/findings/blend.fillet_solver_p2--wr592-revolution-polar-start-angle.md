@@ -86,7 +86,7 @@ so whether #7 passes depends on the input. The fork has the same fragility.
   came from the test's volume accuracy of 1e-8. At the fork's 1e-12 the port is
   1.3e-10 from 20 r^2 (1 - pi/4) + r^3 (1 - pi/6) and equals the C++. The test now
   measures at 1e-12 and asserts the fork's relative 1e-8.
-- **Torno preset (aside):** with `UpstreamFixes::solidcraft()` the polar circle
+- **Torno preset (aside):** with `UpstreamFixes::torno()` the polar circle
   still starts at 1.194e-10 degrees, so #7 would still fail. The check stops earlier,
   though. The *first* round already fails `ValidatePointers` with eight
   `SmBrep::Test #61 Valid: Bad Edge fails pE->ValidateGeometry(FALSE)`. A per-flag

@@ -2,11 +2,11 @@
 //! Only roughness and shading normals change; geometry and visibility do not.
 use serde::{Deserialize, Serialize};
 use solidcore_record::Vec3;
-use solidcraft_geom::prelude::*;
 use std::f64::consts::TAU;
+use torno_geom::prelude::*;
 
 use crate::job::{ErrorCode, JobError, Result};
-use solidcraft_viewport::surface::{MIN_ROUGHNESS, OpaqueSurface, unit_direction};
+use torno_viewport::surface::{MIN_ROUGHNESS, OpaqueSurface, unit_direction};
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(default, deny_unknown_fields)]

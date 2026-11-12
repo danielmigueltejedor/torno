@@ -225,7 +225,7 @@
     "blend_dropping"
   ],
   "ungraded": [
-    "continuity: SolidCraft computes it"
+    "continuity: Torno computes it"
   ],
   "what": "the three edges at a 20 mm cube's corner rounded R20 with fit reduce: reduced to the largest that fits, just under 20",
   "why_not": []

@@ -1,12 +1,12 @@
 //! URDF export (#719, docs/urdf.md): files, names, limits, mass and forward kinematics against
 //! the joint solver.
 
-use solidcraft_geom::prelude::*;
 use std::path::PathBuf;
+use torno_geom::prelude::*;
 
 use serde_json::{Value, json};
-use solidcraft_doc::{Mat, joints, mat_mul};
-use solidcraft_io::urdf::{Step, UrdfModel, UrdfOptions, UrdfPackage};
+use torno_doc::{Mat, joints, mat_mul};
+use torno_io::urdf::{Step, UrdfModel, UrdfOptions, UrdfPackage};
 
 use crate::Session;
 
@@ -67,7 +67,7 @@ fn joint(s: &mut Session, kind: &str, name: &str, limits: Value) {
 }
 
 fn package(s: &Session) -> UrdfPackage {
-    match solidcraft_io::urdf(&s.doc, &s.doc.painted(&s.model.state()), "t", &UrdfOptions::default()) {
+    match torno_io::urdf(&s.doc, &s.doc.painted(&s.model.state()), "t", &UrdfOptions::default()) {
         Ok(p) => p,
         Err(e) => panic!("urdf: {e}"),
     }
@@ -77,7 +77,7 @@ fn close(a: &Mat, b: &Mat) -> bool {
     a.iter().flatten().zip(b.iter().flatten()).all(|(x, y)| (x - y).abs() < 1e-9)
 }
 
-/// Every placement's link, composed at the design's current joint values, sits where SolidCraft
+/// Every placement's link, composed at the design's current joint values, sits where Torno
 /// places it.
 fn assert_fk(m: &UrdfModel, s: &Session, what: &str) {
     let vals = joints::joint_values(&s.doc.assembly);
@@ -90,14 +90,14 @@ fn assert_fk(m: &UrdfModel, s: &Session, what: &str) {
         }
         let Some((_, _, want)) = placements.iter().find(|p| p.1 == l.path) else { panic!("{what}: {} has no placement", l.name) };
         let got = mat_mul(f, &l.mesh_origin);
-        assert!(close(&got, want), "{what}: {} at {got:?}, SolidCraft has {want:?}", l.name);
+        assert!(close(&got, want), "{what}: {} at {got:?}, Torno has {want:?}", l.name);
         seen += 1;
     }
     assert_eq!(seen, placements.len() - 1, "{what}: a link per placement");
 }
 
 fn temp(tag: &str) -> PathBuf {
-    let d = solidcraft_io::vfs::temp_dir().join(format!("solidcraft-urdf-{tag}-{}", std::process::id()));
+    let d = torno_io::vfs::temp_dir().join(format!("torno-urdf-{tag}-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&d);
     let _ = std::fs::create_dir_all(&d);
     d
@@ -106,8 +106,8 @@ fn temp(tag: &str) -> PathBuf {
 /// Volume (m³) of an STL whose triangles share their corners (`None`: not closed).
 fn stl_volume(bytes: &[u8]) -> Option<f64> {
     let mut index: std::collections::HashMap<[u32; 3], u32> = std::collections::HashMap::new();
-    let mut mesh = solidcraft_geom::Mesh::default();
-    for t in solidcraft_io::read_stl(bytes).ok()? {
+    let mut mesh = torno_geom::Mesh::default();
+    for t in torno_io::read_stl(bytes).ok()? {
         let mut tri = [0u32; 3];
         for (k, p) in t.iter().enumerate() {
             let n = mesh.positions.len() as u32;
@@ -183,7 +183,7 @@ fn urdf_forward_kinematics_match_the_assembly() {
             let p = package(&s);
             let what = format!("{kind} (B grounded: {b_grounded})");
             assert_fk(&p.model, &s, &what);
-            // The same URDF follows SolidCraft to other values.
+            // The same URDF follows Torno to other values.
             run(&mut s, "joint.drive", json!({"joint": "J", "values": second}));
             assert_fk(&p.model, &s, &what);
             let moving = p.model.joints.iter().filter(|j| j.step != Step::Fixed).count();
@@ -226,7 +226,7 @@ fn urdf_treats_infinite_limits_as_none() {
     for j in &mut doc.assembly.joints {
         j.limits = vec![Some((f64::NEG_INFINITY, f64::INFINITY))];
     }
-    let p = solidcraft_io::urdf(&doc, &s.doc.painted(&s.model.state()), "t", &UrdfOptions::default()).unwrap();
+    let p = torno_io::urdf(&doc, &s.doc.painted(&s.model.state()), "t", &UrdfOptions::default()).unwrap();
     assert!(p.xml.contains(r#"<joint name="Turn" type="continuous">"#), "{}", p.xml);
 }
 
@@ -286,9 +286,7 @@ fn urdf_ignores_uncaptured_moves_of_jointed_occurrences() {
 fn urdf_keeps_uncaptured_moves_when_the_joint_is_broken() {
     let mut s = two_cubes();
     joint(&mut s, "revolute", "Turn", Value::Null);
-    let Some(f) = s.doc.features.iter().rev().find(|f| matches!(f.kind, solidcraft_doc::FeatureKind::Box { .. })).map(|f| f.id) else {
-        panic!("box")
-    };
+    let Some(f) = s.doc.features.iter().rev().find(|f| matches!(f.kind, torno_doc::FeatureKind::Box { .. })).map(|f| f.id) else { panic!("box") };
     run(&mut s, "timeline.suppress", json!({"feature": f, "suppressed": true}));
     let d = temp("pending-broken");
     let path = d.join("k.urdf");
@@ -376,7 +374,7 @@ fn urdf_inertial_is_mass_weighted() {
     }
     assert!(i.inertia[0][1].abs() < 1e-15);
     // The centre of mass is the cube's centre, in the link frame.
-    assert!(i.com.dist(solidcraft_doc::apply_point(&l.mesh_origin, solidcore_record::Vec3::new(105.0, 5.0, 5.0))) < 1e-9, "{:?}", i.com);
+    assert!(i.com.dist(torno_doc::apply_point(&l.mesh_origin, solidcore_record::Vec3::new(105.0, 5.0, 5.0))) < 1e-9, "{:?}", i.com);
 }
 
 #[test]
@@ -467,7 +465,7 @@ fn urdf_walks_grounded_occurrences_in_id_order() {
     run(&mut s, "joint.create", json!({"type": "rigid", "a": {"face": [5, 5, 10]}, "b": {"occurrence": "C", "face": [25, 5, 20]}, "name": "FromA"}));
     let mut doc = (*s.doc).clone();
     doc.occurrences.reverse();
-    let p = solidcraft_io::urdf(&doc, &s.doc.painted(&s.model.state()), "t", &UrdfOptions::default()).unwrap();
+    let p = torno_io::urdf(&doc, &s.doc.painted(&s.model.state()), "t", &UrdfOptions::default()).unwrap();
     assert!(p.model.joints.iter().any(|j| j.name == "FromA"), "{:?}", names(&p.model));
     assert!(has_warning(&p, "joint `FromB` closes a loop"), "{:?}", p.warnings);
 }
@@ -508,9 +506,7 @@ fn urdf_skips_a_joint_with_an_error() {
     let mut s = two_cubes();
     joint(&mut s, "revolute", "Turn", Value::Null);
     // Snap the joint to a face that then goes away.
-    let Some(f) = s.doc.features.iter().rev().find(|f| matches!(f.kind, solidcraft_doc::FeatureKind::Box { .. })).map(|f| f.id) else {
-        panic!("box")
-    };
+    let Some(f) = s.doc.features.iter().rev().find(|f| matches!(f.kind, torno_doc::FeatureKind::Box { .. })).map(|f| f.id) else { panic!("box") };
     run(&mut s, "timeline.suppress", json!({"feature": f, "suppressed": true}));
     let p = package(&s);
     assert!(has_warning(&p, "joint `Turn` is skipped"), "{:?}", p.warnings);
@@ -558,31 +554,31 @@ fn urdf_warns_when_placements_are_cut_off() {
     let s = Session::default();
     let mut doc = (*s.doc).clone();
     for k in 1..=66u64 {
-        doc.components.push(solidcraft_doc::Component {
+        doc.components.push(torno_doc::Component {
             id: 1000 + k,
             name: format!("C{k}"),
             parent: if k == 1 { 0 } else { 999 + k },
             ..Default::default()
         });
-        doc.occurrences.push(solidcraft_doc::Occurrence {
+        doc.occurrences.push(torno_doc::Occurrence {
             id: 2000 + k,
             component: 1000 + k,
             parent: if k == 1 { 0 } else { 999 + k },
             name: format!("C{k}:1"),
-            transform: solidcraft_doc::IDENTITY,
+            transform: torno_doc::IDENTITY,
             grounded: false,
         });
     }
     // A component placed twice with a part nested in it, next to the deep chain: its copy is
     // still there, since only the branch past the limit stops.
-    doc.components.push(solidcraft_doc::Component { id: 3001, name: "Leg".into(), parent: 0, ..Default::default() });
-    doc.components.push(solidcraft_doc::Component { id: 3002, name: "Foot".into(), parent: 3001, ..Default::default() });
+    doc.components.push(torno_doc::Component { id: 3001, name: "Leg".into(), parent: 0, ..Default::default() });
+    doc.components.push(torno_doc::Component { id: 3002, name: "Foot".into(), parent: 3001, ..Default::default() });
     // Listed first, so the walk (a stack) goes down the chain before reaching them.
     for (id, component, parent, name) in [(4003, 3002, 3001, "Foot:1"), (4002, 3001, 0, "Leg:2"), (4001, 3001, 0, "Leg:1")] {
-        let o = solidcraft_doc::Occurrence { id, component, parent, name: name.into(), transform: solidcraft_doc::IDENTITY, grounded: false };
+        let o = torno_doc::Occurrence { id, component, parent, name: name.into(), transform: torno_doc::IDENTITY, grounded: false };
         doc.occurrences.insert(0, o);
     }
-    let p = solidcraft_io::urdf(&doc, &s.model.state(), "t", &UrdfOptions::default()).unwrap();
+    let p = torno_io::urdf(&doc, &s.model.state(), "t", &UrdfOptions::default()).unwrap();
     assert!(has_warning(&p, "left out"), "{:?}", p.warnings);
     assert!(p.model.links.iter().any(|l| l.path == [4002, 4003]), "the copy of Foot under Leg:2");
     assert_tree(&p.model);
@@ -592,7 +588,7 @@ fn urdf_warns_when_placements_are_cut_off() {
 fn urdf_robot_name_is_xml_safe() {
     let s = hinge();
     for stem in ["a--b", "x\u{1}y", "<&>"] {
-        let p = match solidcraft_io::urdf(&s.doc, &s.doc.painted(&s.model.state()), stem, &UrdfOptions::default()) {
+        let p = match torno_io::urdf(&s.doc, &s.doc.painted(&s.model.state()), stem, &UrdfOptions::default()) {
             Ok(p) => p,
             Err(e) => panic!("{e}"),
         };
@@ -639,12 +635,12 @@ fn urdf_files_stay_inside_allow_paths() {
     let mut s = hinge();
     let inside = temp("scope-in");
     let outside = temp("scope-out");
-    let refused = solidcraft_io::vfs::scoped(Some(solidcraft_io::vfs::PathScope::new([inside.clone()])), || {
+    let refused = torno_io::vfs::scoped(Some(torno_io::vfs::PathScope::new([inside.clone()])), || {
         s.execute("file.export", &json!({"path": outside.join("r.urdf").to_string_lossy()}))
     });
     assert!(refused.is_err());
     assert_eq!(std::fs::read_dir(&outside).map(|r| r.count()).unwrap_or(0), 0, "nothing written");
-    let ok = solidcraft_io::vfs::scoped(Some(solidcraft_io::vfs::PathScope::new([inside.clone()])), || {
+    let ok = torno_io::vfs::scoped(Some(torno_io::vfs::PathScope::new([inside.clone()])), || {
         s.execute("file.export", &json!({"path": inside.join("r.urdf").to_string_lossy()}))
     });
     assert!(ok.is_ok(), "{ok:?}");

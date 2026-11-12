@@ -3,7 +3,7 @@
 //! run parallel and never meet, and the merge refuses the shell (1001). The gap is
 //! closed by the straight edge between the two ends (the default path since #2981).
 //!
-//! SolidCraft rig case shell/1494, rebuilt: a 47.5 x 45 x 30 box joined with an r7.5
+//! Torno rig case shell/1494, rebuilt: a 47.5 x 45 x 30 box joined with an r7.5
 //! cylinder along x from its side x = 47.5 to 77.5, the axis in the front face's plane
 //! y = 0 at z = 10, shelled 1 inward open at the bottom. The fork's closed form is
 //! 8864.598272772 (the box's inset, the cylinder's inset from x 48.5 to 76.5, and between

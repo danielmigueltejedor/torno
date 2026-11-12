@@ -59,11 +59,11 @@ The generated `fixes.json` must match the original corpus's flags at
 `fillet_nx1_tangent_side_edge_same_convexity` and `fillet_blend_corner`; its
 corpus fix list is kept as merged, rather than restoring obsolete flags.
 
-Build `cargo build --locked --profile ci -p solidcraft-cli`, then run one process
+Build `cargo build --locked --profile ci -p torno-cli`, then run one process
 per case (trace body IDs are process-local):
 
 ```sh
-solidcraft-cli kernel-cases tests/kernel-cases/<area>/<case> --export=DIR --json
+torno-cli kernel-cases tests/kernel-cases/<area>/<case> --export=DIR --json
 ```
 
 Move each inline `bodies.<id>.record` into the sibling `.bodies.json.gz` (gzip

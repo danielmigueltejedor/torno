@@ -2,7 +2,7 @@
 //! same plane, cone, sphere or torus over a wider STEP domain, so a sheet extended past a side
 //! keeps its kind and is never re-expressed as a B-spline.
 //!
-//! Not upstream: SolidCraft's composition (`cone_continued`, generalised), moved into the
+//! Not upstream: Torno's composition (`cone_continued`, generalised), moved into the
 //! kernel so the modelling layer computes no geometry (docs/layers.md §1). Each result is an
 //! exact class at bound 0 (owner rule 13564): the source's label (placement, radii, angle)
 //! unchanged, and the result's NURBS form proved on that one implicit surface

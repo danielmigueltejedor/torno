@@ -47,7 +47,7 @@ These are computed today in an app or in ops-shaped code. Each becomes a kernel 
 - **A continuity measure across an edge** at given parameters: the gap, the normal angle and the curvature difference.
 - **Ray/body intersection** for picking (Torno's pickers).
 - **Classification of a face's surface for offsetting, distances, and sheet-metal bounds** (Torno's `crates/kernel`), each where it is a computation and not a recipe.
-- **Evaluation and exact NURBS forms of analytic surfaces** (Torno's record, `solidcraft_geom::brep::{eval, form}`).
+- **Evaluation and exact NURBS forms of analytic surfaces** (Torno's record, `torno_geom::brep::{eval, form}`).
 
 ## 2. Meshing and Importers
 
@@ -94,7 +94,7 @@ apps               -> solidcore-ops, solidcore-record, solidcore-tess
 
 ## 6. Order
 
-1. `solidcore-record`, data only: Torno's `solidcraft_geom::brep` without its evaluator and NURBS-form construction, which move into the kernel.
+1. `solidcore-record`, data only: Torno's `torno_geom::brep` without its evaluator and NURBS-form construction, which move into the kernel.
 2. `solidcore-tess`: the one mesher.
 3. The kernel's new primitives (§1, "Primitives the kernel gains"), each with its tests. Then `solidcore-ops` gets the workflows rebuilt on those primitives:
    - Torno's: tangent chains (the walk is ops; the tangency angle at each vertex is the kernel's measure), the offset and shell recipes, and pickers;

@@ -1,7 +1,7 @@
 use solidcore_record::{Plane, Vec2, Vec3};
-use solidcraft_geom::Vec3Geom;
-use solidcraft_kernel::measure;
-use solidcraft_sketch::{ConstraintKind, Sketch};
+use torno_geom::Vec3Geom;
+use torno_kernel::measure;
+use torno_sketch::{ConstraintKind, Sketch};
 
 use crate::*;
 
@@ -639,7 +639,7 @@ fn input_sketches_cover_points_and_patches() {
 
 #[test]
 fn timeline_clones_share_meshes_even_when_cloned_before_tessellation() {
-    let body = solidcraft_kernel::box_solid(Vec3::ZERO, Vec3::new(10., 10., 10.)).unwrap();
+    let body = torno_kernel::box_solid(Vec3::ZERO, Vec3::new(10., 10., 10.)).unwrap();
     let a = crate::eval::ModelBody::new("box".into(), body, 1);
     let b = a.clone();
     assert!(std::sync::Arc::ptr_eq(&a.mesh(), &b.mesh()));
@@ -1228,7 +1228,7 @@ fn a_sketch_too_large_to_search_whole_says_profiles_may_be_missing() {
     let c = sk.add_point(Vec2::ZERO, None).unwrap();
     for k in 0..5 {
         let m = sk.add_point(Vec2::new(1e5 - k as f64 * 1e3, 0.0), None).unwrap();
-        sk.add_curve(solidcraft_sketch::CurveKind::Ellipse { c, m, r: 6e4 - k as f64 * 1e3 }, None).unwrap();
+        sk.add_curve(torno_sketch::CurveKind::Ellipse { c, m, r: 6e4 - k as f64 * 1e3 }, None).unwrap();
     }
     let large = doc.add_feature(FeatureKind::Sketch { plane: PlaneRef::Origin { name: "XY".into() }, sketch: sk }, None).unwrap();
     let (plate, plate_sketch) = plate_doc();
@@ -1419,7 +1419,7 @@ fn an_extruded_ellipse_or_spline_is_one_wall_named_by_its_curve() {
                 [(0., 0.), (10., -3.), (20., 4.), (30., 0.)].iter().map(|&(x, y)| sk.add_point(Vec2::new(x, y), None).unwrap()).collect();
             let (a, b) = (sk.add_point(Vec2::new(30., 20.), None).unwrap(), sk.add_point(Vec2::new(0., 20.), None).unwrap());
             let curve = sk
-                .add_curve(solidcraft_sketch::CurveKind::Spline { pts: pts.clone(), control: false, degree: 3, periodic: false, nurbs: None }, None)
+                .add_curve(torno_sketch::CurveKind::Spline { pts: pts.clone(), control: false, degree: 3, periodic: false, nurbs: None }, None)
                 .unwrap();
             sk.add_line_pts(pts[3], a, None).unwrap();
             sk.add_line_pts(a, b, None).unwrap();
@@ -1427,7 +1427,7 @@ fn an_extruded_ellipse_or_spline_is_one_wall_named_by_its_curve() {
             curve
         } else {
             let m = sk.add_point(Vec2::new(10., 0.), None).unwrap();
-            sk.add_curve(solidcraft_sketch::CurveKind::Ellipse { c: 0, m, r: 5. }, None).unwrap()
+            sk.add_curve(torno_sketch::CurveKind::Ellipse { c: 0, m, r: 5. }, None).unwrap()
         };
         let id = sk.curves[curve].id.clone();
         let mut doc = Document::new("one wall");
@@ -1480,7 +1480,7 @@ fn a_sketch_on_the_construction_plane_of_another_component_lies_on_it() {
     let solved = state.sketch(id).unwrap();
     // The sketch is kept in its own component's frame; placed, it lies on the plane where the
     // owner puts it (the owner is not moved): the same origin, axes, normal and line end.
-    use solidcraft_geom::prelude::*;
+    use torno_geom::prelude::*;
     let want = Plane::named("XZ").unwrap().offset(60.0);
     let m = doc.component_transform(sketcher);
     let close = |a: Vec3, b: Vec3, what: &str| assert!((a - b).len() < 1e-6, "{what}: {a:?} instead of {b:?}");

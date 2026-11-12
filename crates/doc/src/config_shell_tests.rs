@@ -35,8 +35,8 @@ fn face_index(body: &ModelBody, inner: bool) -> usize {
         .unwrap()
         .iter()
         .position(|source| {
-            matches!(source, Some(solidcraft_kernel::FaceSource::ShellPlanar { inner: current, source, .. })
-            if *current == inner && matches!(source.as_ref(), solidcraft_kernel::FaceSource::Box { axis:0,high:true,.. }))
+            matches!(source, Some(torno_kernel::FaceSource::ShellPlanar { inner: current, source, .. })
+            if *current == inner && matches!(source.as_ref(), torno_kernel::FaceSource::Box { axis:0,high:true,.. }))
         })
         .unwrap()
 }
@@ -82,15 +82,15 @@ fn shell_planar_anchor_rebuild_cold_geometry_and_missing_source_errors() {
     let body = state.body("Case").unwrap();
     let outer = doc.strong_face_target(body, face_index(body, false), Vec3::default()).unwrap();
     let outer_matches: Vec<_> = body.body.face_sources().unwrap().iter().enumerate().filter_map(|(index, source)| {
-        matches!(source, Some(solidcraft_kernel::FaceSource::ShellPlanar { inner: false, source, .. }) if matches!(source.as_ref(), solidcraft_kernel::FaceSource::Box { axis: 0, high: true, .. })).then_some((index, body.body.face_plane(index)))
+        matches!(source, Some(torno_kernel::FaceSource::ShellPlanar { inner: false, source, .. }) if matches!(source.as_ref(), torno_kernel::FaceSource::Box { axis: 0, high: true, .. })).then_some((index, body.body.face_plane(index)))
     }).collect();
     assert_eq!(outer_matches.len(), 1, "outer support must be one physical face: {outer_matches:?}");
     assert!(super::super::styles::shell_plane_family(outer_matches.iter().map(|(_, plane)| *plane)));
     let outer_plane = body.body.face_plane(face_index(body, false)).unwrap();
     let outer_anchor = doc.capture_face_anchor(body, face_index(body, false), &outer_plane, &[], 0, &[]).unwrap();
-    let projected = crate::project::resolve_anchored_face(&doc, &state, &outer_plane, solidcraft_sketch::LinkKind::Project, &outer_anchor).unwrap();
-    let mut linked = solidcraft_sketch::Sketch::new();
-    let link = linked.add_link(solidcraft_sketch::LinkKind::Project, projected.source, &projected.geom).unwrap();
+    let projected = crate::project::resolve_anchored_face(&doc, &state, &outer_plane, torno_sketch::LinkKind::Project, &outer_anchor).unwrap();
+    let mut linked = torno_sketch::Sketch::new();
+    let link = linked.add_link(torno_sketch::LinkKind::Project, projected.source, &projected.geom).unwrap();
     assert!(!linked.update_link(&link, &projected.geom).unwrap());
     let inner_index = face_index(body, true);
     let inner = doc.strong_face_target(body, inner_index, Vec3::default()).unwrap();
@@ -100,7 +100,7 @@ fn shell_planar_anchor_rebuild_cold_geometry_and_missing_source_errors() {
     let picked = body.body.face_plane(inner_index).unwrap();
     assert!((picked.origin.x - 18.).abs() < 1e-8);
     let anchor = doc.capture_face_anchor(body, inner_index, &picked, &[], 0, &[]).unwrap();
-    let mut sketch = solidcraft_sketch::Sketch::new();
+    let mut sketch = torno_sketch::Sketch::new();
     let points: Vec<_> =
         [(2., 2.), (4., 2.), (4., 4.), (2., 4.)].into_iter().map(|(x, y)| sketch.add_point(Vec2::new(x, y), None).unwrap()).collect();
     for edge in 0..4 {
@@ -137,11 +137,11 @@ fn shell_planar_anchor_rebuild_cold_geometry_and_missing_source_errors() {
     let plane = doc.resolve_face_anchor(&anchor, 0, &changed).unwrap();
     assert!((plane.origin.x - 27.).abs() < 1e-8);
     let after = changed.bodies.iter().find(|body| body.feature == boss).unwrap().mesh().bounds();
-    assert!((solidcraft_kernel::measure(&changed.bodies.iter().find(|body| body.feature == boss).unwrap().body).unwrap().volume - 8.).abs() < 1e-8);
+    assert!((torno_kernel::measure(&changed.bodies.iter().find(|body| body.feature == boss).unwrap().body).unwrap().volume - 8.).abs() < 1e-8);
     assert!((doc.resolve_face_anchor(&outer_anchor, 0, &changed).unwrap().origin.x - 30.).abs() < 1e-8);
     let changed_outer_plane = doc.resolve_face_anchor(&outer_anchor, 0, &changed).unwrap();
     let refreshed =
-        crate::project::resolve_anchored_face(&doc, &changed, &changed_outer_plane, solidcraft_sketch::LinkKind::Project, &outer_anchor).unwrap();
+        crate::project::resolve_anchored_face(&doc, &changed, &changed_outer_plane, torno_sketch::LinkKind::Project, &outer_anchor).unwrap();
     assert!(!linked.update_link(&link, &refreshed.geom).unwrap(), "same exterior boundary must retain projected IDs");
     assert!((after.min.x - before.min.x - 9.).abs() < 1e-8, "{before:?} -> {after:?}");
     assert!((after.max.x - before.max.x - 9.).abs() < 1e-8, "{before:?} -> {after:?}");
@@ -203,7 +203,7 @@ fn regularized_shell_keeps_legacy_and_explicit_single_face_projections_closed() 
             let body = state.body("Case").unwrap();
             let index = face_index(body, false);
             let mesh = body.mesh();
-            assert_eq!(body.body.face_sources().unwrap().iter().filter(|source|matches!(source,Some(solidcraft_kernel::FaceSource::ShellPlanar {inner:false,source,..}) if matches!(source.as_ref(),solidcraft_kernel::FaceSource::Box {axis:0,high:true,..}))).count(),1,"no physical outer-wall strip face may remain");
+            assert_eq!(body.body.face_sources().unwrap().iter().filter(|source|matches!(source,Some(torno_kernel::FaceSource::ShellPlanar {inner:false,source,..}) if matches!(source.as_ref(),torno_kernel::FaceSource::Box {axis:0,high:true,..}))).count(),1,"no physical outer-wall strip face may remain");
             let plane = body.body.face_plane(index).unwrap();
             let point = mesh
                 .triangles
@@ -212,14 +212,14 @@ fn regularized_shell_keeps_legacy_and_explicit_single_face_projections_closed() 
                 .find_map(|(tri, face)| (*face as usize == index).then(|| mesh.tri(tri)).flatten())
                 .map(|[a, b, c]| (a + b + c) / 3.)
                 .unwrap();
-            let source = solidcraft_sketch::LinkSource::Face { body: "Case".into(), at: point };
+            let source = torno_sketch::LinkSource::Face { body: "Case".into(), at: point };
             let (values, _) = doc.param_values();
-            let legacy = crate::project::resolve(&doc, &values, &state, &plane, solidcraft_sketch::LinkKind::Project, &source).unwrap();
-            let explicit = crate::project::resolve_face_indices(&state, &plane, solidcraft_sketch::LinkKind::Project, "Case", &[index]).unwrap();
+            let legacy = crate::project::resolve(&doc, &values, &state, &plane, torno_sketch::LinkKind::Project, &source).unwrap();
+            let explicit = crate::project::resolve_face_indices(&state, &plane, torno_sketch::LinkKind::Project, "Case", &[index]).unwrap();
             assert_eq!(legacy.geom, explicit.geom);
             assert_eq!(explicit.geom.len(), 4, "raw planar piece keeps all four edges");
-            let mut sketch = solidcraft_sketch::Sketch::new();
-            let link = sketch.add_link(solidcraft_sketch::LinkKind::Project, source, &legacy.geom).unwrap();
+            let mut sketch = torno_sketch::Sketch::new();
+            let link = sketch.add_link(torno_sketch::LinkKind::Project, source, &legacy.geom).unwrap();
             sketch.links[0].face_name = Some(crate::naming::face_names(body)[index].clone());
             let warnings = crate::project::refresh_links(&doc, &values, &state, &plane, &mut sketch).unwrap();
             assert!(warnings.is_empty(), "{warnings:?}");
@@ -246,15 +246,11 @@ fn saved_former_strip_projection_asks_for_its_face_again_without_expanding_healt
     assert_eq!(crate::naming::face_name_at_body(body, Vec3::new(20., 6., 1.)).as_deref(), Some(stem.as_str()), "the shelled wall is one face");
     // What the builds before format 14 saved for that piece: its number by centroid order.
     let former = format!("{stem}#1");
-    let mut sketch = solidcraft_sketch::Sketch::new();
+    let mut sketch = torno_sketch::Sketch::new();
     let corners = [Vec2::new(0., 0.), Vec2::new(12., 0.), Vec2::new(12., 2.), Vec2::new(0., 2.)];
-    let geometry: Vec<_> = (0..4).map(|i| solidcraft_sketch::LinkGeom::Line(corners[i], corners[(i + 1) % 4])).collect();
+    let geometry: Vec<_> = (0..4).map(|i| torno_sketch::LinkGeom::Line(corners[i], corners[(i + 1) % 4])).collect();
     sketch
-        .add_link(
-            solidcraft_sketch::LinkKind::Project,
-            solidcraft_sketch::LinkSource::Face { body: "Case".into(), at: Vec3::new(20., 6., 1.) },
-            &geometry,
-        )
+        .add_link(torno_sketch::LinkKind::Project, torno_sketch::LinkSource::Face { body: "Case".into(), at: Vec3::new(20., 6., 1.) }, &geometry)
         .unwrap();
     sketch.links[0].face_name = Some(former.clone());
     let sk = doc
@@ -300,7 +296,7 @@ fn saved_former_strip_projection_asks_for_its_face_again_without_expanding_healt
 
 #[test]
 fn saved_curved_strip_projection_asks_for_its_face_again_after_exact_wall_coalescence() {
-    use solidcraft_sketch::{LinkKind, LinkSource, Sketch};
+    use torno_sketch::{LinkKind, LinkSource, Sketch};
     let mut doc = Document::new("saved curved strip");
     doc.set_param("width", "80", Some("mm"), None).unwrap();
     doc.set_param("wall", "2", Some("mm"), None).unwrap();
@@ -350,7 +346,7 @@ fn saved_curved_strip_projection_asks_for_its_face_again_after_exact_wall_coales
     let reference = former.clone();
     let source = LinkSource::Face { body: "Case".into(), at };
     let (a, b, c, d) = (Vec2::new(24., 0.), Vec2::new(30., 0.), Vec2::new(30., 2.), Vec2::new(24., 2.));
-    let geometry: Vec<_> = [(a, b), (b, c), (c, d), (d, a)].into_iter().map(|(p, q)| solidcraft_sketch::LinkGeom::Line(p, q)).collect();
+    let geometry: Vec<_> = [(a, b), (b, c), (c, d), (d, a)].into_iter().map(|(p, q)| torno_sketch::LinkGeom::Line(p, q)).collect();
     let mut sketch = Sketch::new();
     sketch.add_link(LinkKind::Project, source, &geometry).unwrap();
     sketch.links[0].face_name = Some(former);
@@ -393,7 +389,7 @@ fn saved_curved_strip_projection_asks_for_its_face_again_after_exact_wall_coales
 
 #[test]
 fn saved_stepped_tab_cut_piece_projection_asks_for_its_face_again_without_expanding_material() {
-    use solidcraft_sketch::{LinkKind, LinkSource, Sketch};
+    use torno_sketch::{LinkKind, LinkSource, Sketch};
     let mut doc = Document::new("public stepped tab case");
     doc.set_param("length", "40", Some("mm"), None).unwrap();
     doc.set_param("wall", "2", Some("mm"), None).unwrap();
@@ -444,13 +440,13 @@ fn saved_stepped_tab_cut_piece_projection_asks_for_its_face_again_without_expand
     assert!(
         matches!(
             current.body.face_sources().and_then(|sources| sources.get(merged)).cloned().flatten(),
-            Some(solidcraft_kernel::FaceSource::Box { axis: 0, high: false, .. })
+            Some(torno_kernel::FaceSource::Box { axis: 0, high: false, .. })
         ),
         "the merged wall carries its exact construction identity"
     );
     assert!(!current_names.contains(&former));
     let corners = [Vec2::new(10., 0.), Vec2::new(20., 0.), Vec2::new(20., 20.), Vec2::new(10., 20.)];
-    let geometry: Vec<_> = (0..4).map(|i| solidcraft_sketch::LinkGeom::Line(corners[i], corners[(i + 1) % 4])).collect();
+    let geometry: Vec<_> = (0..4).map(|i| torno_sketch::LinkGeom::Line(corners[i], corners[(i + 1) % 4])).collect();
     let mut sketch = Sketch::new();
     sketch.add_link(LinkKind::Project, LinkSource::Face { body: "Case".into(), at }, &geometry).unwrap();
     sketch.links[0].face_name = Some(former.clone());
@@ -488,7 +484,7 @@ fn saved_stepped_tab_cut_piece_projection_asks_for_its_face_again_without_expand
             assert!(state.bodies.iter().all(|b| b.feature != material), "saved 10 x 20 patch must not become the 30 x 20 wall");
             let case = state.body("Case").unwrap();
             let expected = length * 30. * 20. + 8. * 10. * 8. - (length - 2. * wall) * (30. - 2. * wall) * (20. - wall);
-            assert!((solidcraft_kernel::measure(&case.body).unwrap().volume - expected).abs() < 1e-6);
+            assert!((torno_kernel::measure(&case.body).unwrap().volume - expected).abs() < 1e-6);
         }
     }
 }

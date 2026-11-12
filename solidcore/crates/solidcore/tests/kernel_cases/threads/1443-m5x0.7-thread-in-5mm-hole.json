@@ -54,6 +54,6 @@
   "ungraded": [],
   "what": "a modelled thread on a hole that isn't the thread's size: refused with the size to use, never a silent change of the hole",
   "why_not": [
-    "the failure is SolidCraft's, not a kernel operation's: step 3 (solid.thread): this 5 mm hole is too wide for a modelled M5x0.7 thread: it would cut 0.00 mm of the thread's 0.38 mm depth; drill 4.3 mm for M5x0.7, or thread this hole M6"
+    "the failure is Torno's, not a kernel operation's: step 3 (solid.thread): this 5 mm hole is too wide for a modelled M5x0.7 thread: it would cut 0.00 mm of the thread's 0.38 mm depth; drill 4.3 mm for M5x0.7, or thread this hole M6"
   ]
 }

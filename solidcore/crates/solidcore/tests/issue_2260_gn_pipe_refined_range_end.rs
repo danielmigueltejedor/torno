@@ -1,5 +1,5 @@
 //! The #2252 pipe-on-plate G2 round (r 2, order 2, w 0) by WR-685's G^n section on
-//! SolidCraft's flag profile (tangency-labs/solidcraft#8526
+//! Torno's flag profile (tangency-labs/solidcraft#8526
 //! at c494a18, `crates/smlib/src/core.rs` `fixes()`, 292 flags), reported on #2260.
 //!
 //! With `query_statuses_pass_on` (tangency-labs/smlib 8311f8e) `sm_RefineCCSolutions`
@@ -43,8 +43,8 @@ use solidcore::query::api_queries::edge_closest_point;
 use solidcore::topology::brep::validation::{check_brep, CheckLevel};
 use solidcore::Kernel;
 
-/// The flags SolidCraft's `fixes()` turns on at tangency-labs/solidcraft c494a18.
-const SOLIDCRAFT_C494A18: &[&str] = &[
+/// The flags Torno's `fixes()` turns on at tangency-labs/solidcraft c494a18.
+const TORNO_C494A18: &[&str] = &[
     "analytic_copy_keeps_parameterization",
     "analytic_corner_failure_is_false",
     "analytic_inversion_answers_apart",
@@ -347,11 +347,11 @@ fn check_round(names: &[&str]) {
     );
 }
 
-/// SolidCraft's whole profile plus the G^n section: the round completes with the fork's
+/// Torno's whole profile plus the G^n section: the round completes with the fork's
 /// volume.
 #[test]
-fn solidcraft_profile_pipe_gn_round_completes() {
-    check_round(SOLIDCRAFT_C494A18);
+fn torno_profile_pipe_gn_round_completes() {
+    check_round(TORNO_C494A18);
 }
 
 /// The four flags the failure needed together (`keep_operand_uv_trims`,

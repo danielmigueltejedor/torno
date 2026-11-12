@@ -2,7 +2,7 @@
 
 This is Torno's geometry data model in `solidcore_record::brep` (solidcore's
 record crate: geometry as data, no maths). It has no modelling-backend dependency;
-its geometric checks and evaluation are the kernel's (`solidcraft_geom::brep`). It is the body encoding of a design's model cache
+its geometric checks and evaluation are the kernel's (`torno_geom::brep`). It is the body encoding of a design's model cache
 ([the container format](design-container.md#model-cache)); it is not a STEP
 replacement for external interchange. The container reader, binary codec and
 kernel adapters are separate layers. The truck adapter writes it exactly: a body

@@ -16,9 +16,9 @@
 //! slice 4). The formulas on the variants below say what the data means, in ISO 10303-42's
 //! terms; they are not computed here.
 //!
-//! Origin: SolidCraft's `crates/step/src/geom.rs` at `a5b71ca2` (MIT OR Apache-2.0).
+//! Origin: Torno's `crates/step/src/geom.rs` at `a5b71ca2` (MIT OR Apache-2.0).
 //!
-//! Deviations from SolidCraft: [`Placement`] keeps `axis` and `ref_direction` as the file gives
+//! Deviations from Torno: [`Placement`] keeps `axis` and `ref_direction` as the file gives
 //! them (each optional, neither normalised; was: both unit and orthogonal, a missing reference
 //! direction chosen perpendicular to the axis), and [`Axis1::direction`] likewise. A `VECTOR` is
 //! a [`Vector`] of the written orientation, magnitude and unit factors (was: a unit direction

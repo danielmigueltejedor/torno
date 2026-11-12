@@ -104,8 +104,8 @@
   "ungraded": [],
   "what": "a pin r3 h10 patterned 4 times at 10 mm as bodies",
   "why_not": [
-    "body \"Pin (2)\" is no kernel operation's output nor an operand: SolidCraft built it or changed the kernel's record",
-    "body \"Pin (3)\" is no kernel operation's output nor an operand: SolidCraft built it or changed the kernel's record",
-    "body \"Pin (4)\" is no kernel operation's output nor an operand: SolidCraft built it or changed the kernel's record"
+    "body \"Pin (2)\" is no kernel operation's output nor an operand: Torno built it or changed the kernel's record",
+    "body \"Pin (3)\" is no kernel operation's output nor an operand: Torno built it or changed the kernel's record",
+    "body \"Pin (4)\" is no kernel operation's output nor an operand: Torno built it or changed the kernel's record"
   ]
 }

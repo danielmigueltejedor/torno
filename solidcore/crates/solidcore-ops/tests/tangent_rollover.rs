@@ -21,7 +21,7 @@ use solidcore_ops::{make_box, session, Body, BooleanOp, CheckLevel, Error};
 
 const LENGTH: f64 = 10.0;
 
-/// The corpus's fix set (`kernel_cases/fixes.json`, the set SolidCraft runs).
+/// The corpus's fix set (`kernel_cases/fixes.json`, the set Torno runs).
 fn fixes() {
     let fixes: Vec<String> = serde_json::from_str(include_str!(
         "../../solidcore/tests/kernel_cases/fixes.json"

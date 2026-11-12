@@ -314,7 +314,7 @@ impl Transform {
     ///   absolutely, so `sqrt(F C)` by under `1e-159` (`F` is at most 12), which the
     ///   absolute term `ratio * 1e-150` covers.
     ///
-    /// Not upstream (SolidCraft's station-map check, `maps_ok`).
+    /// Not upstream (Torno's station-map check, `maps_ok`).
     #[must_use]
     pub fn is_regular(&self, ratio: f64) -> crate::geom::certified::Verdict {
         use crate::geom::certified::{gamma, Bounded, Verdict};

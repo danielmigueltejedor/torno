@@ -68,12 +68,12 @@ fn up_key<'de, D: Deserializer<'de>>(d: D) -> Result<Option<UpAxis>, D::Error> {
 
 fn names_key<'de, D: Deserializer<'de>>(d: D) -> Result<Option<StepNamesParam>, D::Error> {
     read_key(d, NAMES_MESSAGE, |v| {
-        let word = v.as_str().and_then(solidcraft_io::StepNames::parse)?;
+        let word = v.as_str().and_then(torno_io::StepNames::parse)?;
         Some(match word {
-            solidcraft_io::StepNames::Auto => StepNamesParam::Auto,
-            solidcraft_io::StepNames::Solid => StepNamesParam::Solid,
-            solidcraft_io::StepNames::Product => StepNamesParam::Product,
-            solidcraft_io::StepNames::Instance => StepNamesParam::Instance,
+            torno_io::StepNames::Auto => StepNamesParam::Auto,
+            torno_io::StepNames::Solid => StepNamesParam::Solid,
+            torno_io::StepNames::Product => StepNamesParam::Product,
+            torno_io::StepNames::Instance => StepNamesParam::Instance,
         })
     })
 }
@@ -82,7 +82,7 @@ fn units_key<'de, D: Deserializer<'de>>(d: D) -> Result<Option<MeshUnits>, D::Er
     let value = Value::deserialize(d)?;
     match &value {
         Value::Null => Ok(None),
-        Value::String(u) => match solidcraft_doc::point_cloud::UNITS.iter().find(|(name, _)| name.eq_ignore_ascii_case(u)) {
+        Value::String(u) => match torno_doc::point_cloud::UNITS.iter().find(|(name, _)| name.eq_ignore_ascii_case(u)) {
             Some((name, _)) => Ok(Some(MeshUnits((*name).to_string()))),
             None => Err(D::Error::custom(whole(format!("`units` must be one of {} (not `{u}`)", unit_names())))),
         },
@@ -109,7 +109,7 @@ fn crease_angle_key<'de, D: Deserializer<'de>>(d: D) -> Result<Option<f64>, D::E
 
 /// The unit names, as the handler lists them in its messages.
 fn unit_names() -> String {
-    solidcraft_doc::point_cloud::UNITS.iter().map(|(n, _)| *n).collect::<Vec<_>>().join(", ")
+    torno_doc::point_cloud::UNITS.iter().map(|(n, _)| *n).collect::<Vec<_>>().join(", ")
 }
 
 /// The keys `file.insert_mesh` reads. See [`InsertMeshParams`], which leaves out the keys the
@@ -172,7 +172,7 @@ fn leave_unread(value: &mut Value) {
     let Some(path) = keys.get("path").and_then(Value::as_str).filter(|p| !p.trim().is_empty() && p.len() < 4096).map(str::to_string) else {
         return;
     };
-    if !solidcraft_io::is_mesh_path(&path) && !solidcraft_io::is_ply_path(&path) {
+    if !torno_io::is_mesh_path(&path) && !torno_io::is_ply_path(&path) {
         // Refused for its kind before anything else is read.
         for key in ["name", "up", "names", "folder", "units", "origin", "crease_angle_degrees"] {
             keys.remove(key);
@@ -180,11 +180,11 @@ fn leave_unread(value: &mut Value) {
         return;
     }
     let up_given = keys.get("up").is_some_and(|u| !u.is_null());
-    if !(up_given && solidcraft_io::is_gltf_path(&path)) {
+    if !(up_given && torno_io::is_gltf_path(&path)) {
         keys.remove("names");
         keys.remove("folder");
     }
-    if !solidcraft_io::is_gltf_path(&path) {
+    if !torno_io::is_gltf_path(&path) {
         keys.remove("up");
     }
 }
@@ -308,7 +308,7 @@ impl JsonSchema for StepNamesParam {
     }
 }
 
-/// A length unit of an STL, OBJ or PLY file: one of `solidcraft_doc::point_cloud::UNITS`, in the
+/// A length unit of an STL, OBJ or PLY file: one of `torno_doc::point_cloud::UNITS`, in the
 /// case the table spells it.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct MeshUnits(pub String);
@@ -318,7 +318,7 @@ impl JsonSchema for MeshUnits {
         "MeshUnits".into()
     }
     fn json_schema(_: &mut SchemaGenerator) -> Schema {
-        let names: Vec<&str> = solidcraft_doc::point_cloud::UNITS.iter().map(|(n, _)| *n).collect();
+        let names: Vec<&str> = torno_doc::point_cloud::UNITS.iter().map(|(n, _)| *n).collect();
         json_schema!({
             "description": "`mm`, `cm`, `m`, `in` or `ft`, in any case.",
             "type": "string",

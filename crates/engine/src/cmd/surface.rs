@@ -2,14 +2,14 @@
 //! solids), and the planned surface toolset (`planned!`: registered, not built yet).
 
 use serde_json::Value;
-use solidcraft_doc::{
+use torno_doc::{
     BlendSide, EdgeContinuity, Expr, ExtendMode, ExtendTo, FaceAt, FeatureKind, PatchContinuity, PlaneRef, ProfileSel, RuledCorners, RuledMode,
     TrimCurves, expr::Kind,
 };
-use solidcraft_doc::{BodyName, SketchId};
-use solidcraft_doc::{Dir, FacePick, Position};
-use solidcraft_geom::prelude::*;
-use solidcraft_kernel::{Construction, Continuity};
+use torno_doc::{BodyName, SketchId};
+use torno_doc::{Dir, FacePick, Position};
+use torno_geom::prelude::*;
+use torno_kernel::{Construction, Continuity};
 
 use super::CommandSpec;
 use super::features::{add_feature, axis_param, check_expr, extent_param, feature_sketch, operation, plane_param, profiles, sketch_id};
@@ -227,7 +227,7 @@ fn patch_points(p: &Value, cmd: &str) -> Result<Vec<solidcore_record::Vec3>> {
     let Some(v) = p.get("points") else { return Ok(Vec::new()) };
     let list = v
         .as_array()
-        .filter(|a| a.len() <= solidcraft_geom::fill_general::MAX_FILL_POINTS)
+        .filter(|a| a.len() <= torno_geom::fill_general::MAX_FILL_POINTS)
         .ok_or_else(|| bad(cmd, "`points` must list at most 64 points [x,y,z]"))?;
     list.iter().map(|q| vec3(q).filter(|q| q.is_finite()).ok_or_else(|| bad(cmd, "a patch point must be a finite [x,y,z]"))).collect()
 }
@@ -237,7 +237,7 @@ fn patch_points(p: &Value, cmd: &str) -> Result<Vec<solidcore_record::Vec3>> {
 fn crown_param(p: &Value, cmd: &str) -> Result<f64> {
     match p.get("crown") {
         None => Ok(0.0),
-        Some(v) => match v.as_f64().filter(|x| (solidcraft_geom::fill::MIN_CROWN..=solidcraft_geom::fill::MAX_CROWN).contains(x)) {
+        Some(v) => match v.as_f64().filter(|x| (torno_geom::fill::MIN_CROWN..=torno_geom::fill::MAX_CROWN).contains(x)) {
             Some(x) => Ok(x),
             None => Err(bad(cmd, "`crown` must be a number between -0.9 and 3")),
         },
@@ -365,7 +365,7 @@ fn untrim(s: &mut Session, p: &Value) -> Result<Value> {
 
 /// The profiles and curves a surface builder takes: `curves`, and `profiles` (all of them when
 /// neither is given).
-fn sheet_inputs(p: &Value, cmd: &str) -> Result<(Option<solidcraft_doc::ProfileSel>, Vec<String>)> {
+fn sheet_inputs(p: &Value, cmd: &str) -> Result<(Option<torno_doc::ProfileSel>, Vec<String>)> {
     let curves = string_list(cmd, p, "curves")?;
     if curves.len() > 1000 {
         return Err(bad(cmd, "at most 1000 curves"));
@@ -437,7 +437,7 @@ fn surface_loft(s: &mut Session, p: &Value) -> Result<Value> {
             if sec.get("sketch").is_some() {
                 return Err(bad(cmd, "a section is either a sketch chain or a body edge chain"));
             }
-            sections.push(solidcraft_doc::SheetSection {
+            sections.push(torno_doc::SheetSection {
                 sketch: SketchId(0),
                 profiles: None,
                 curves: Vec::new(),
@@ -452,7 +452,7 @@ fn surface_loft(s: &mut Session, p: &Value) -> Result<Value> {
             return Err(bad(cmd, "at most 1000 curves a section"));
         }
         let profiles = if sec.get("profiles").is_some() { Some(profiles(sec, cmd)?) } else { None };
-        sections.push(solidcraft_doc::SheetSection { sketch: SketchId(sketch), profiles, curves, body: None, edges: Vec::new() });
+        sections.push(torno_doc::SheetSection { sketch: SketchId(sketch), profiles, curves, body: None, edges: Vec::new() });
     }
     let continuity = match p.get("continuity") {
         None => [Continuity::G0, Continuity::G0],
@@ -820,11 +820,11 @@ mod tests {
     }
     fn volume(s: &Session, name: &str) -> f64 {
         let st = s.world_state().unwrap();
-        solidcraft_kernel::measure(&st.body(name).unwrap().body).unwrap().volume
+        torno_kernel::measure(&st.body(name).unwrap().body).unwrap().volume
     }
 
     fn area(s: &Session, name: &str) -> f64 {
-        solidcraft_kernel::measure(&s.world_state().unwrap().body(name).unwrap().body).unwrap().area
+        torno_kernel::measure(&s.world_state().unwrap().body(name).unwrap().body).unwrap().area
     }
 
     /// Surface Extrude of open curves: a line and an arc joined end to end (listed in either
@@ -849,13 +849,13 @@ mod tests {
         assert!((area(&s, "Wall") - want).abs() < want * 1e-3, "{} vs {want}", area(&s, "Wall"));
         // Symmetric: the distance is the total, split evenly around the sketch plane.
         run(&mut s, "surface.extrude", json!({"sketch": "S", "curves": ["l1"], "distance": 4, "direction": "symmetric", "body_name": "Both"}));
-        let bb = solidcraft_kernel::measure(&s.world_state().unwrap().body("Both").unwrap().body).unwrap().bbox;
+        let bb = torno_kernel::measure(&s.world_state().unwrap().body("Both").unwrap().body).unwrap().bbox;
         assert!((bb.min.z + 2.0).abs() < 1e-9 && (bb.max.z - 2.0).abs() < 1e-9, "{bb:?}");
         run(&mut s, "edit.undo", json!({}));
         assert!(s.world_state().unwrap().body("Both").is_none());
         run(&mut s, "edit.redo", json!({}));
         assert!(s.world_state().unwrap().body("Both").is_some());
-        let cold = Session::new(solidcraft_doc::Document::from_json(&s.doc.to_json()).unwrap());
+        let cold = Session::new(torno_doc::Document::from_json(&s.doc.to_json()).unwrap());
         assert!((area(&cold, "Wall") - area(&s, "Wall")).abs() < 1e-9);
         // Refused: no such curve, a zero distance, and an extent a sheet does not take yet.
         assert!(s.execute("surface.extrude", &json!({"sketch": "S", "curves": ["nope"], "distance": 4})).is_err());
@@ -894,7 +894,7 @@ mod tests {
     fn unstitch_a_box_and_stitch_it_back() {
         let mut s = Session::default();
         run(&mut s, "solid.box", json!({"length": 10, "width": 10, "height": 10, "body_name": "Box"}));
-        let names_before: Vec<String> = solidcraft_doc::naming::face_names(s.model.state().body("Box").unwrap()).to_vec();
+        let names_before: Vec<String> = torno_doc::naming::face_names(s.model.state().body("Box").unwrap()).to_vec();
         run(&mut s, "surface.unstitch", json!({"body": "Box"}));
         let st = s.world_state().unwrap();
         assert!(st.body("Box").is_none());
@@ -904,7 +904,7 @@ mod tests {
         for n in &pieces {
             let b = st.body(n).unwrap();
             assert!(b.body.is_surface() && b.body.face_count() == 1);
-            names_after.extend(solidcraft_doc::naming::face_names(s.model.state().body(n).unwrap()).iter().cloned());
+            names_after.extend(torno_doc::naming::face_names(s.model.state().body(n).unwrap()).iter().cloned());
         }
         let (mut a, mut b) = (names_before.clone(), names_after);
         a.sort();
@@ -914,7 +914,7 @@ mod tests {
         let st = s.world_state().unwrap();
         let back = st.bodies.first().unwrap();
         assert!(!back.body.is_surface());
-        assert!((solidcraft_kernel::measure(&back.body).unwrap().volume - 1000.0).abs() < 1e-9);
+        assert!((torno_kernel::measure(&back.body).unwrap().volume - 1000.0).abs() < 1e-9);
         run(&mut s, "edit.undo", json!({}));
         run(&mut s, "edit.undo", json!({}));
         assert!(s.world_state().unwrap().body("Box").is_some());
@@ -922,7 +922,7 @@ mod tests {
         let st = s.world_state().unwrap();
         assert_eq!(st.bodies.len(), 3);
         assert_eq!(st.body("Box").unwrap().body.face_count(), 4);
-        let cold = Session::new(solidcraft_doc::Document::from_json(&s.doc.to_json()).unwrap());
+        let cold = Session::new(torno_doc::Document::from_json(&s.doc.to_json()).unwrap());
         assert_eq!(cold.world_state().unwrap().bodies.len(), 3);
         assert!(s.execute("surface.unstitch", &json!({"body": "Nope"})).is_err());
         assert!(s.execute("surface.unstitch", &json!({})).is_err());
@@ -937,11 +937,11 @@ mod tests {
         run(&mut s, "sketch.finish", json!({}));
         run(&mut s, "surface.patch", json!({"sketch": "S", "body_name": "Sheet"}));
         run(&mut s, "surface.thicken", json!({"bodies": ["Sheet"], "thickness": 2, "body_name": "Up"}));
-        let up = solidcraft_kernel::measure(&s.world_state().unwrap().body("Up").unwrap().body).unwrap().bbox;
+        let up = torno_kernel::measure(&s.world_state().unwrap().body("Up").unwrap().body).unwrap().bbox;
         run(&mut s, "edit.undo", json!({}));
         run(&mut s, "surface.reverse_normal", json!({"body": "Sheet"}));
         run(&mut s, "surface.thicken", json!({"bodies": ["Sheet"], "thickness": 2, "body_name": "Down"}));
-        let down = solidcraft_kernel::measure(&s.world_state().unwrap().body("Down").unwrap().body).unwrap().bbox;
+        let down = torno_kernel::measure(&s.world_state().unwrap().body("Down").unwrap().body).unwrap().bbox;
         assert!((up.max.z - down.max.z - 2.0).abs() < 1e-9 && (up.min.z - down.min.z - 2.0).abs() < 1e-9, "{up:?} vs {down:?}");
         run(&mut s, "solid.box", json!({"length": 1, "width": 1, "height": 1, "corner": [20, 0, 0], "body_name": "Cube"}));
         assert!(s.execute("surface.reverse_normal", &json!({"body": "Cube"})).is_err());
@@ -963,7 +963,7 @@ mod tests {
         run(&mut s, "surface.stitch", json!({"bodies": ["Box", "Lid"]}));
         assert!(!s.world_state().unwrap().body("Box").unwrap().body.is_surface());
         assert!((volume(&s, "Box") - 1000.0).abs() < 1e-9);
-        let cold = Session::new(solidcraft_doc::Document::from_json(&s.doc.to_json()).unwrap());
+        let cold = Session::new(torno_doc::Document::from_json(&s.doc.to_json()).unwrap());
         assert!((volume(&cold, "Box") - 1000.0).abs() < 1e-9);
         // By default the gap heals, and a box's sides can't close its top: refused, the box kept.
         run(&mut s, "solid.box", json!({"length": 10, "width": 10, "height": 10, "corner": [20, 0, 0], "body_name": "Healed"}));
@@ -994,7 +994,7 @@ mod tests {
             "surface.revolve",
             json!({"sketch": "S", "curves": ["side"], "axis": "y", "angle": "90 deg", "symmetric": true, "body_name": "Both"}),
         );
-        let bb = solidcraft_kernel::measure(&s.world_state().unwrap().body("Both").unwrap().body).unwrap().bbox;
+        let bb = torno_kernel::measure(&s.world_state().unwrap().body("Both").unwrap().body).unwrap().bbox;
         let z = 3.0 * (PI / 4.0).sin();
         assert!((bb.min.z + z).abs() < 1e-3 && (bb.max.z - z).abs() < 1e-3, "{bb:?}");
         run(&mut s, "surface.revolve", json!({"sketch": "S", "curves": ["slant"], "axis": "y", "body_name": "Cone"}));
@@ -1003,7 +1003,7 @@ mod tests {
         run(&mut s, "edit.undo", json!({}));
         assert!(s.world_state().unwrap().body("Cone").is_none());
         run(&mut s, "edit.redo", json!({}));
-        let cold = Session::new(solidcraft_doc::Document::from_json(&s.doc.to_json()).unwrap());
+        let cold = Session::new(torno_doc::Document::from_json(&s.doc.to_json()).unwrap());
         assert!((area(&cold, "Cone") - area(&s, "Cone")).abs() < 1e-9);
         // A rectangle off the axis turned all the way round closes into the ring solid.revolve makes.
         run(&mut s, "sketch.create", json!({"plane": "XY", "name": "R"}));
@@ -1057,7 +1057,7 @@ mod tests {
         run(&mut s, "edit.undo", json!({}));
         assert!(s.world_state().unwrap().body("Walls").is_none());
         run(&mut s, "edit.redo", json!({}));
-        let cold = Session::new(solidcraft_doc::Document::from_json(&s.doc.to_json()).unwrap());
+        let cold = Session::new(torno_doc::Document::from_json(&s.doc.to_json()).unwrap());
         assert!((area(&cold, "Bend") - area(&s, "Bend")).abs() < 1e-9);
         // Refused: no path, and a path curve that is not there.
         assert!(s.execute("surface.sweep", &json!({"sketch": "S", "curves": ["l"], "path_sketch": "P"})).is_err());
@@ -1091,7 +1091,7 @@ mod tests {
         run(&mut s, "edit.undo", json!({}));
         assert!(s.world_state().unwrap().body("Walls").is_none());
         run(&mut s, "edit.redo", json!({}));
-        let cold = Session::new(solidcraft_doc::Document::from_json(&s.doc.to_json()).unwrap());
+        let cold = Session::new(torno_doc::Document::from_json(&s.doc.to_json()).unwrap());
         assert!((area(&cold, "Walls") - area(&s, "Walls")).abs() < 1e-9);
         assert!(s.execute("surface.loft", &json!({"sections": [{"sketch": "A", "curves": ["a"]}, {"sketch": "B", "profiles": [0]}]})).is_err());
         assert!(s.execute("surface.loft", &json!({"sections": [{"sketch": "A", "curves": ["a"]}]})).is_err());
@@ -1132,11 +1132,11 @@ mod tests {
             let fid = s.doc.features.last().unwrap().id;
             let st = s.model.state();
             let b = st.body(&body).unwrap();
-            let names = solidcraft_doc::naming::face_names(b);
+            let names = torno_doc::naming::face_names(b);
             for curve in ["l1", "l2"] {
                 let want = format!("F{fid}:side:{curve}");
                 let i = names.iter().position(|n| n.starts_with(&want)).unwrap_or_else(|| panic!("{cmd}: no face named {want}: {names:?}"));
-                assert!(solidcraft_doc::naming::face_name_exact(b, i), "{cmd}: {want} is named from geometry");
+                assert!(torno_doc::naming::face_name_exact(b, i), "{cmd}: {want} is named from geometry");
             }
         }
     }
@@ -1157,7 +1157,7 @@ mod tests {
         assert!(st.body("Can").is_some(), "the source body stays");
         run(&mut s, "solid.box", json!({"length": 10, "width": 10, "height": 10, "corner": [30, 0, 0], "body_name": "Box"}));
         run(&mut s, "surface.offset", json!({"faces": [[35, 5, 10]], "distance": "5 mm", "body_name": "Lid"}));
-        let bb = solidcraft_kernel::measure(&s.world_state().unwrap().body("Lid").unwrap().body).unwrap().bbox;
+        let bb = torno_kernel::measure(&s.world_state().unwrap().body("Lid").unwrap().body).unwrap().bbox;
         assert!((bb.min.z - 15.0).abs() < 1e-9 && (area(&s, "Lid") - 100.0).abs() < 1e-9);
         run(&mut s, "surface.offset", json!({"faces": [[35, 5, 10]], "distance": 0, "body_name": "Copy"}));
         assert!((area(&s, "Copy") - 100.0).abs() < 1e-9);
@@ -1167,7 +1167,7 @@ mod tests {
         run(&mut s, "edit.undo", json!({}));
         assert!(s.world_state().unwrap().body("Copy").is_none());
         run(&mut s, "edit.redo", json!({}));
-        let cold = Session::new(solidcraft_doc::Document::from_json(&s.doc.to_json()).unwrap());
+        let cold = Session::new(torno_doc::Document::from_json(&s.doc.to_json()).unwrap());
         assert!((area(&cold, "Sleeve") - area(&s, "Sleeve")).abs() < 1e-9);
         assert!(s.execute("surface.offset", &json!({"distance": 1})).is_err());
     }
@@ -1200,10 +1200,10 @@ mod tests {
             "surface.ruled",
             json!({"body": "Box", "edges": [[5, 0, 10]], "distance": 2, "mode": "direction", "direction": [0, -1, 0], "body_name": "Lip"}),
         );
-        let bb = solidcraft_kernel::measure(&s.world_state().unwrap().body("Lip").unwrap().body).unwrap().bbox;
+        let bb = torno_kernel::measure(&s.world_state().unwrap().body("Lip").unwrap().body).unwrap().bbox;
         assert!((area(&s, "Lip") - 20.0).abs() < 1e-9 && (bb.min.y + 2.0).abs() < 1e-9);
         let st = s.world_state().unwrap();
-        let names = solidcraft_doc::naming::face_names(st.body("Flange").unwrap());
+        let names = torno_doc::naming::face_names(st.body("Flange").unwrap());
         assert!(names.len() == 4 && names.iter().all(|n| !n.is_empty()), "{names:?}");
         let before = s.doc.features.len();
         for bad in [
@@ -1221,7 +1221,7 @@ mod tests {
         run(&mut s, "edit.undo", json!({}));
         assert!(s.world_state().unwrap().body("Lip").is_none());
         run(&mut s, "edit.redo", json!({}));
-        let cold = Session::new(solidcraft_doc::Document::from_json(&s.doc.to_json()).unwrap());
+        let cold = Session::new(torno_doc::Document::from_json(&s.doc.to_json()).unwrap());
         assert!((area(&cold, "Draft") - area(&s, "Draft")).abs() < 1e-9);
     }
 
@@ -1245,20 +1245,19 @@ mod tests {
         let mut s = Session::default();
         plate_with_three_holes(&mut s);
         let top = [5.0, 5.0, 2.0];
-        let name =
-            solidcraft_doc::naming::face_name_at_body(s.model.state().body("Plate").unwrap(), solidcore_record::Vec3::new(5.0, 5.0, 2.0)).unwrap();
+        let name = torno_doc::naming::face_name_at_body(s.model.state().body("Plate").unwrap(), solidcore_record::Vec3::new(5.0, 5.0, 2.0)).unwrap();
         run(&mut s, "surface.untrim", json!({"face": {"body": "Plate", "point": top}, "body_name": "Top"}));
         let st = s.world_state().unwrap();
         let made = &st.body("Top").unwrap().body;
         assert!(made.is_surface() && made.face_count() == 1);
         assert_eq!(edge_count(&s, "Top"), 4, "the rectangle alone");
         assert!((area(&s, "Top") - 800.0).abs() < 1e-9, "{}", area(&s, "Top"));
-        assert_eq!(solidcraft_doc::naming::face_names(s.model.state().body("Top").unwrap()).first(), Some(&name), "the face keeps its name");
+        assert_eq!(torno_doc::naming::face_names(s.model.state().body("Top").unwrap()).first(), Some(&name), "the face keeps its name");
         assert!(st.body("Plate").is_some(), "the solid stays");
         run(&mut s, "edit.undo", json!({}));
         assert!(s.world_state().unwrap().body("Top").is_none());
         run(&mut s, "edit.redo", json!({}));
-        let cold = Session::new(solidcraft_doc::Document::from_json(&s.doc.to_json()).unwrap());
+        let cold = Session::new(torno_doc::Document::from_json(&s.doc.to_json()).unwrap());
         assert!((area(&cold, "Top") - 800.0).abs() < 1e-9);
         // One hole, by a point on its rim.
         run(&mut s, "surface.untrim", json!({"face": {"body": "Plate", "point": top}, "holes": [[22, 10, 2]], "body_name": "Two"}));
@@ -1299,16 +1298,16 @@ mod tests {
         run(&mut s, "surface.trim", json!({"body": "Half", "plane": {"origin": [0, 0, 15], "normal": [0, 0.5, 1]}, "keep": [0, 10, 1]}));
         let pi = std::f64::consts::PI;
         assert!((area(&s, "Half") - (150.0 * pi - 100.0)).abs() < 150.0 * pi * 1e-3, "{}", area(&s, "Half"));
-        let name = solidcraft_doc::naming::face_names(s.model.state().body("Half").unwrap()).first().cloned().unwrap();
+        let name = torno_doc::naming::face_names(s.model.state().body("Half").unwrap()).first().cloned().unwrap();
         let on = [10.0 * 2.5f64.cos(), 10.0 * 2.5f64.sin(), 5.0];
         assert!(s.execute("surface.untrim", &json!({"face": {"body": "Half", "point": on}})).is_err(), "no holes, outer kept");
         run(&mut s, "surface.untrim", json!({"face": {"body": "Half", "point": on}, "outer": true, "in_place": true}));
         let st = s.world_state().unwrap();
         assert_eq!(st.bodies.len(), 1, "untrimmed where it is");
         assert!((area(&s, "Half") - 150.0 * pi).abs() < 150.0 * pi * 1e-3, "{}", area(&s, "Half")); // (measured on meshes)
-        let bb = solidcraft_kernel::measure(&st.body("Half").unwrap().body).unwrap().bbox;
+        let bb = torno_kernel::measure(&st.body("Half").unwrap().body).unwrap().bbox;
         assert!(bb.min.z.abs() < 1e-9 && (bb.max.z - 15.0).abs() < 1e-6, "{bb:?}");
-        assert_eq!(solidcraft_doc::naming::face_names(s.model.state().body("Half").unwrap()).first(), Some(&name), "the face keeps its name");
+        assert_eq!(torno_doc::naming::face_names(s.model.state().body("Half").unwrap()).first(), Some(&name), "the face keeps its name");
     }
 
     /// The plate written to STEP and inserted back: its imported top face untrims to the whole
@@ -1317,8 +1316,8 @@ mod tests {
     fn untrim_an_imported_step_face() {
         let mut s = Session::default();
         plate_with_three_holes(&mut s);
-        let step = solidcraft_kernel::step_export(&[&s.world_state().unwrap().body("Plate").unwrap().body], "untrim test").unwrap();
-        let path = std::env::temp_dir().join(format!("solidcraft-untrim-{}.step", std::process::id()));
+        let step = torno_kernel::step_export(&[&s.world_state().unwrap().body("Plate").unwrap().body], "untrim test").unwrap();
+        let path = std::env::temp_dir().join(format!("torno-untrim-{}.step", std::process::id()));
         std::fs::write(&path, step).unwrap();
         let mut s = Session::default();
         run(&mut s, "file.insert_step", json!({"path": path.to_string_lossy()}));
@@ -1363,7 +1362,7 @@ mod tests {
         run(&mut s, "edit.undo", json!({}));
         assert!((area(&s, "Strip") - 200.0 * pi / 4.0 * 2.0).abs() < 1.0);
         run(&mut s, "edit.redo", json!({}));
-        let cold = Session::new(solidcraft_doc::Document::from_json(&s.doc.to_json()).unwrap());
+        let cold = Session::new(torno_doc::Document::from_json(&s.doc.to_json()).unwrap());
         assert!((area(&cold, "Strip") - area(&s, "Strip")).abs() < 1e-9);
         run(&mut s, "edit.undo", json!({}));
 
@@ -1378,7 +1377,7 @@ mod tests {
             let want = 10.0 * pi / 2.0 * 20.0 + 5.0 * 20.0;
             // SMLib's area, integrated on the exact surface to 1e-8: the run-off is exactly 5 long.
             assert!((area(&s, "Strip") - want).abs() < want * 1e-6, "{mode}: {} vs {want}", area(&s, "Strip"));
-            let cold = Session::new(solidcraft_doc::Document::from_json(&s.doc.to_json()).unwrap());
+            let cold = Session::new(torno_doc::Document::from_json(&s.doc.to_json()).unwrap());
             assert!((area(&cold, "Strip") - area(&s, "Strip")).abs() < 1e-9, "{mode}");
             run(&mut s, "edit.undo", json!({}));
         }
@@ -1458,11 +1457,11 @@ mod tests {
     }
 
     fn names(s: &Session, body: &str) -> Vec<String> {
-        solidcraft_doc::naming::face_names(s.model.state().body(body).unwrap()).to_vec()
+        torno_doc::naming::face_names(s.model.state().body(body).unwrap()).to_vec()
     }
 
     fn exact(s: &Session, body: &str, i: usize) -> bool {
-        solidcraft_doc::naming::face_name_exact(s.model.state().body(body).unwrap(), i)
+        torno_doc::naming::face_name_exact(s.model.state().body(body).unwrap(), i)
     }
 
     /// Two 20 × 10 sheets crossing at right angles (z = 0 and x = 0, both y = 0…10), trimmed by
@@ -1484,7 +1483,7 @@ mod tests {
         assert!(l.is_surface());
         assert_eq!((l.face_count(), l.edge_count()), (2, 7), "one connected sheet");
         assert!((area(&s, "Floor") - 200.0).abs() < 1e-9, "{}", area(&s, "Floor"));
-        let bb = solidcraft_kernel::measure(l).unwrap().bbox;
+        let bb = torno_kernel::measure(l).unwrap().bbox;
         assert!(bb.min.x.abs() < 1e-9 && bb.min.z.abs() < 1e-9 && (bb.max.x - 10.0).abs() < 1e-9 && (bb.max.z - 10.0).abs() < 1e-9, "{bb:?}");
         let mut got = names(&s, "Floor");
         got.sort();
@@ -1496,13 +1495,13 @@ mod tests {
         run(&mut s, "edit.undo", json!({}));
         assert!(s.world_state().unwrap().body("Wall").is_some() && (area(&s, "Floor") - 200.0).abs() < 1e-9);
         run(&mut s, "edit.redo", json!({}));
-        let cold = Session::new(solidcraft_doc::Document::from_json(&saved).unwrap());
+        let cold = Session::new(torno_doc::Document::from_json(&saved).unwrap());
         assert!((area(&cold, "Floor") - 200.0).abs() < 1e-9 && cold.world_state().unwrap().body("Wall").is_none());
         // Without stitching, each keeps its half under its own name.
         run(&mut s, "edit.undo", json!({}));
         run(&mut s, "surface.trim", json!({"body": "Floor", "keep": [-5, 5, 0], "with": "Wall", "keep_with": [0, 5, -5]}));
         assert!((area(&s, "Floor") - 100.0).abs() < 1e-9 && (area(&s, "Wall") - 100.0).abs() < 1e-9);
-        let bb = solidcraft_kernel::measure(&s.world_state().unwrap().body("Wall").unwrap().body).unwrap().bbox;
+        let bb = torno_kernel::measure(&s.world_state().unwrap().body("Wall").unwrap().body).unwrap().bbox;
         assert!((bb.max.z).abs() < 1e-9, "the wall's lower half: {bb:?}");
     }
 
@@ -1602,7 +1601,7 @@ mod tests {
         assert!((area(&s, "U") - 50.0).abs() < 1e-9, "{}", area(&s, "U"));
         let saved = s.doc.to_json();
         assert!(saved.contains("\"keep_more\""), "the other points are saved");
-        let cold = Session::new(solidcraft_doc::Document::from_json(&saved).unwrap());
+        let cold = Session::new(torno_doc::Document::from_json(&saved).unwrap());
         assert!((area(&cold, "U") - 50.0).abs() < 1e-9);
         run(&mut s, "edit.undo", json!({}));
         run(&mut s, "surface.trim", json!({"body": "U", "plane": cut, "keep": [[5, 0, 5], [10, 1, 5]]}));
@@ -1690,7 +1689,7 @@ mod tests {
         assert!(cover.is_surface() && cover.face_count() == 1);
         // The cover is a smooth surface on the rim, close to the cylinder that cut it (its area
         // within 1% of the cylinder's inside the rim).
-        let area = solidcraft_kernel::measure(cover).unwrap().area;
+        let area = torno_kernel::measure(cover).unwrap().area;
         let want = 28.0 * 40.0 * 2.0 * (14.0f64 / 40.0).asin();
         assert!((area - want).abs() < want * 1e-2, "{area} vs {want}");
         assert!(s.execute("surface.thicken", &json!({"bodies": ["Nope"], "thickness": 1})).is_err());
@@ -1722,7 +1721,7 @@ mod tests {
     /// always was. Hostile crowns are refused.
     #[test]
     fn patch_crown_fills_a_fitted_patch_and_ignores_a_planar_one() {
-        let top = |s: &Session| solidcraft_kernel::measure(&s.world_state().unwrap().body("Cover").unwrap().body).unwrap().bbox.max.z;
+        let top = |s: &Session| torno_kernel::measure(&s.world_state().unwrap().body("Cover").unwrap().body).unwrap().bbox.max.z;
         let (plain, reply) = saddle_cover(None);
         assert_eq!(reply["crown"], json!(0.0), "the crown is reported, 0 by default: {reply}");
         let plain_cover = plain.world_state().unwrap().body("Cover").unwrap().body.clone();
@@ -1736,8 +1735,8 @@ mod tests {
         // Crown 0 is the body the default makes, and stitching still closes on the rim (the
         // crowned patch adds material, so the sealed cup holds more).
         let (zero, _) = saddle_cover(Some(0.0));
-        let zero_area = solidcraft_kernel::measure(&zero.world_state().unwrap().body("Cover").unwrap().body).unwrap().area;
-        assert_eq!(zero_area, solidcraft_kernel::measure(&plain_cover).unwrap().area, "crown 0 is the plain patch");
+        let zero_area = torno_kernel::measure(&zero.world_state().unwrap().body("Cover").unwrap().body).unwrap().area;
+        assert_eq!(zero_area, torno_kernel::measure(&plain_cover).unwrap().area, "crown 0 is the plain patch");
         let sealed = |mut s: Session| {
             run(&mut s, "surface.stitch", json!({"bodies": ["Saddle", "Cover"], "body_name": "Sealed"}));
             s
@@ -1764,7 +1763,7 @@ mod tests {
             json!({"edges": [[25, 0, 10], [30, 5, 10], [25, 10, 10], [20, 5, 10]], "body": "Cup", "body_name": "Lid", "crown": 1.0}),
         );
         let lid = s.world_state().unwrap().body("Lid").unwrap().body.clone();
-        let bb = solidcraft_kernel::measure(&lid).unwrap().bbox;
+        let bb = torno_kernel::measure(&lid).unwrap().bbox;
         assert!((bb.max.z - 10.0).abs() < 1e-9, "a planar rim stays the plane: {bb:?}");
         // Hostile crowns.
         for crown in [json!(3.01), json!(-0.91), json!(1e300), json!(f64::NAN), json!("full")] {
@@ -1820,7 +1819,7 @@ mod tests {
         // measurable effect in this fixture (the volumes agree to 2e-5 mm³) — the blend's crown
         // wiring is item 2/4's to check; this item only owns the patch's crown.
         for (bulge, s, name) in [(0.0, &plain, &plain_name), (0.6, &full, &full_name)] {
-            let bb = solidcraft_kernel::measure(&s.world_state().unwrap().body(name).unwrap().body).unwrap().bbox;
+            let bb = torno_kernel::measure(&s.world_state().unwrap().body(name).unwrap().body).unwrap().bbox;
             assert!(bb.min.z.abs() < 1e-9 && (bb.max.z - 15.0).abs() < 1e-9, "the rims stay the boxes' tops at bulge {bulge}: {bb:?}");
         }
     }
@@ -1845,7 +1844,7 @@ mod tests {
         assert_eq!(r["warning"], json!(null), "{r}");
         // The flat sheet between the two top faces: 40 x 10, at z = 10.
         assert!((area(&s, "Bridge") - 400.0).abs() < 1e-6, "{}", area(&s, "Bridge"));
-        let bb = solidcraft_kernel::measure(&s.world_state().unwrap().body("Bridge").unwrap().body).unwrap().bbox;
+        let bb = torno_kernel::measure(&s.world_state().unwrap().body("Bridge").unwrap().body).unwrap().bbox;
         assert!((bb.min.z - 10.0).abs() < 1e-9 && (bb.max.z - 10.0).abs() < 1e-9, "{bb:?}");
         assert!(s.world_state().unwrap().body("Bridge").unwrap().body.is_surface());
         // Undo, redo and a cold reopen keep it and its bodies.
@@ -1853,7 +1852,7 @@ mod tests {
         assert!(s.world_state().unwrap().body("Bridge").is_none());
         run(&mut s, "edit.redo", json!({}));
         assert!((area(&s, "Bridge") - 400.0).abs() < 1e-6);
-        let cold = Session::new(solidcraft_doc::Document::from_json(&s.doc.to_json()).unwrap());
+        let cold = Session::new(torno_doc::Document::from_json(&s.doc.to_json()).unwrap());
         assert!((area(&cold, "Bridge") - 400.0).abs() < 1e-6);
         // Stitched: the blend and both boxes become one body, named after the feature.
         let mut sewn = blend.clone();
@@ -1897,7 +1896,7 @@ mod tests {
         let want = 2.0 * std::f64::consts::PI * 100.0;
         assert!((area(&s, "Neck") - want).abs() < want * 1e-3, "{} vs {want}", area(&s, "Neck"));
         let turn = |s: &Session, name: &str| {
-            let grid = solidcraft_kernel::sample_grid(&s.world_state().unwrap().body(name).unwrap().body, 17, 5).unwrap();
+            let grid = torno_kernel::sample_grid(&s.world_state().unwrap().body(name).unwrap().body, 17, 5).unwrap();
             grid.iter()
                 .map(|row| {
                     let (a, b) = (row[0], row[row.len() - 1]);
@@ -1914,7 +1913,7 @@ mod tests {
         run(&mut s, "surface.blend", turned);
         assert!((turn(&s, "Twist") - 90.0).abs() < 0.1, "{}°", turn(&s, "Twist"));
         assert!(s.doc.to_json().contains("\"seam\""), "the seam is saved");
-        let cold = Session::new(solidcraft_doc::Document::from_json(&s.doc.to_json()).unwrap());
+        let cold = Session::new(torno_doc::Document::from_json(&s.doc.to_json()).unwrap());
         assert!((turn(&cold, "Twist") - 90.0).abs() < 0.1, "read back: {}°", turn(&cold, "Twist"));
         // A closed rim does not blend to an open edge; a seam that is not two points is refused.
         run(&mut s, "solid.box", json!({"length": 40, "width": 10, "height": 10, "corner": [-20, 30, 30], "body_name": "Block"}));
@@ -1944,7 +1943,7 @@ mod tests {
         // A coarse mesh is enough to tell the patches apart (measuring a fitted face's area
         // exactly tessellates it finely).
         let mesh =
-            |s: &Session, name: &str| s.world_state().unwrap().body(name).unwrap().body.mesh(&solidcraft_kernel::MeshTolerance::chord(0.05)).unwrap();
+            |s: &Session, name: &str| s.world_state().unwrap().body(name).unwrap().body.mesh(&torno_kernel::MeshTolerance::chord(0.05)).unwrap();
         let (mut s, rim) = open_tube();
         let reply = run(&mut s, "surface.patch", json!({"edges": rim, "body": "Tube", "continuity": "g1", "body_name": "Cap"}));
         assert_eq!(reply["continuity"], json!({"all": "g1"}), "{reply}");
@@ -1962,7 +1961,7 @@ mod tests {
             run(&mut s, "surface.patch", json!({"edges": rim, "body": "Tube", "continuity": [{"edge": first, "g": "g2"}], "body_name": "Mixed"}));
         assert_eq!(reply["continuity"]["edges"][0]["g"], json!("g2"), "{reply}");
         // Saved and read back: the same patches.
-        let back = solidcraft_doc::Document::from_json(&s.doc.to_json()).unwrap();
+        let back = torno_doc::Document::from_json(&s.doc.to_json()).unwrap();
         let reopened = Session::new(back);
         for name in ["Cap", "Tall", "Mixed"] {
             let (a, b) = (mesh(&s, name).positions, mesh(&reopened, name).positions);
@@ -2044,7 +2043,7 @@ mod tests {
         assert!((area(&s, "Shell") - area_before).abs() < 1e-9, "undo did not take the fairing back");
         run(&mut s, "edit.redo", json!({}));
         assert!((area(&s, "Shell") - area_after).abs() < 1e-9, "redo did not put the fairing back");
-        let cold = Session::new(solidcraft_doc::Document::from_json(&s.doc.to_json()).unwrap());
+        let cold = Session::new(torno_doc::Document::from_json(&s.doc.to_json()).unwrap());
         assert!((area(&cold, "Shell") - area_after).abs() < 1e-9, "a cold reopen did not rebuild the same sheet");
         // Refusals: an unknown body, a body whose faces are all planes, an out-of-range strength
         // or step count, and a missing tolerance expression.
@@ -2085,7 +2084,7 @@ mod tests {
         let body = s.world_state().unwrap().body("Blend").unwrap().body.clone();
         // A fine grid in the run direction: the seams sit at u = 0, 1/2 and 1, and the first step
         // off each one is the tangent there (a thousandth of the run, so it is the tangent).
-        let grid = solidcraft_kernel::sample_grid(&body, 1001, 9).unwrap();
+        let grid = torno_kernel::sample_grid(&body, 1001, 9).unwrap();
         // The ends lie on the two boxes' top faces, and the sketch is met exactly between them.
         for p in &grid[0] {
             assert!((p.z - 10.0).abs() < 1e-9 && (p.x - 20.0).abs() < 1e-9, "the first seam is the box edge: {p:?}");

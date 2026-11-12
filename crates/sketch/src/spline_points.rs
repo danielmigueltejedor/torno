@@ -9,7 +9,7 @@
 //! point re-spreads every span and the whole curve moves, wherever the point goes.
 
 use solidcore_record::Vec2;
-use solidcraft_geom::prelude::*;
+use torno_geom::prelude::*;
 
 use crate::model::{ConstraintKind, CurveKind, Result, Sketch, SketchError};
 

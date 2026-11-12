@@ -1,10 +1,11 @@
 //! Original, headless CPU/GPU Glass evidence. This is not an application or image-quality acceptance test.
-//! Run with `--features solidcraft-render/raytrace-cpu`; output directory must not exist.
+//! Run with `--features torno-render/raytrace-cpu`; output directory must not exist.
 use serde_json::json;
 use solidcore_record::Vec3;
-use solidcraft_geom::MeshGeom;
-use solidcraft_geom::{Aabb3, Mesh, Vec3Geom};
-use solidcraft_render::{
+use std::{error::Error, fs, path::Path, sync::Arc, time::Duration};
+use torno_geom::MeshGeom;
+use torno_geom::{Aabb3, Mesh, Vec3Geom};
+use torno_render::{
     ProductMesh, ProductScene,
     glass_model::{Dispersion, GlassModel, ThinFilm},
     job::{
@@ -14,11 +15,10 @@ use solidcraft_render::{
     },
     transmission::{Transmission, subsurface::Subsurface},
 };
-use solidcraft_viewport::{
+use torno_viewport::{
     Camera,
     surface::{OpaqueSurface, unit_direction},
 };
-use std::{error::Error, fs, path::Path, sync::Arc, time::Duration};
 
 type Result<T> = std::result::Result<T, Box<dyn Error>>;
 const CASES: &[&str] = &[
@@ -462,7 +462,7 @@ fn main() -> Result<()> {
     fs::create_dir(out)?;
     let evidence = Evidence { samples, width, out };
     let cpu = (backend != "gpu").then(CpuHost::for_platform).transpose()?;
-    let gpu = (backend != "cpu").then(solidcraft_gpu::path::host).transpose()?;
+    let gpu = (backend != "cpu").then(torno_gpu::path::host).transpose()?;
     for (index, selected) in CASES.iter().copied().enumerate().filter(|(_, selected)| case == "all" || case == *selected) {
         let serial = u64::try_from(index)? + 1;
         if let Some(host) = &cpu {

@@ -39,7 +39,7 @@ fn walk(dir: &Path, root: &Path, out: &mut Vec<String>) -> Result<(), String> {
         let e = e.map_err(|e| e.to_string())?;
         let name = e.file_name().to_string_lossy().into_owned();
         // vendored code keeps its own licences: the patched crates (vendor/README.md) and the
-        // kernel (solidcore/); their images, STEP files and fonts are not SolidCraft's assets.
+        // kernel (solidcore/); their images, STEP files and fonts are not Torno's assets.
         if name.starts_with('.')
             || name.starts_with("target")
             || matches!(name.as_str(), "plan" | "dist" | "node_modules" | "corpus" | "solidcore" | "vendor")
@@ -62,7 +62,7 @@ fn walk(dir: &Path, root: &Path, out: &mut Vec<String>) -> Result<(), String> {
 }
 
 /// Collected files kept beside the code that ships them, held to the same rows as `assets/`:
-/// SolidCraft's look (its icon masters and tools, fonts, theme files and glyph drawing code) and
+/// Torno's look (its icon masters and tools, fonts, theme files and glyph drawing code) and
 /// the app's own marker and navigation cube drawing code.
 const COLLECTED_OUTSIDE_ASSETS: &[&str] = &[
     "crates/look/icons/",
@@ -140,7 +140,7 @@ mod tests {
 
     #[test]
     fn vendored_code_is_not_an_asset() {
-        let root = std::env::temp_dir().join(format!("solidcraft-xtask-assets-{}", std::process::id()));
+        let root = std::env::temp_dir().join(format!("torno-xtask-assets-{}", std::process::id()));
         let _ = std::fs::remove_dir_all(&root);
         std::fs::create_dir_all(root.join("solidcore/assets")).unwrap();
         std::fs::create_dir_all(root.join("vendor/patched")).unwrap();

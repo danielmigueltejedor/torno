@@ -3,7 +3,7 @@
 
 use serde_json::{Value, json};
 use solidcore_record::Vec3;
-use solidcraft_geom::prelude::*;
+use torno_geom::prelude::*;
 
 use crate::Session;
 
@@ -202,7 +202,7 @@ fn canvases_move_with_their_component() {
     let root = s.doc.canvases.iter().find(|c| c.name == "Root").unwrap();
     assert!(near(s.doc.canvas_plane(&vals, root).unwrap().origin, Vec3::ZERO));
     // The component survives a save and reopen.
-    let back = solidcraft_doc::Document::from_json(&s.doc.to_json()).unwrap();
+    let back = torno_doc::Document::from_json(&s.doc.to_json()).unwrap();
     assert_eq!(back.canvases, s.doc.canvases);
 }
 
@@ -267,7 +267,7 @@ fn move_expression_distances_keep_parameters_through_rebuild_and_reopen() {
         assert_shift(&s, 4.0);
         run(&mut s, "parameters.change", json!({"name": "travel", "expression": "8 mm"}));
         assert_shift(&s, 8.0);
-        let mut reopened = Session::new(solidcraft_doc::Document::from_json(&s.doc.to_json()).unwrap());
+        let mut reopened = Session::new(torno_doc::Document::from_json(&s.doc.to_json()).unwrap());
         assert_shift(&reopened, 8.0);
         run(&mut reopened, "parameters.change", json!({"name": "travel", "expression": "12 mm"}));
         assert_shift(&reopened, 12.0);
@@ -641,7 +641,7 @@ fn root_picks_on_a_moved_component_build_where_it_is_shown() {
     assert!((lid.origin.z - 10.0).abs() < 1e-6 && lid.normal().z.abs() > 1.0 - 1e-9, "{lid:?}");
     let st = s.model.state();
     let axis = st.construct.iter().find(|c| c.name == "FrontEdge").map(|c| c.geom.clone()).unwrap();
-    let solidcraft_doc::construct::ConstructGeom::Axis { origin, dir } = axis else { panic!("{axis:?}") };
+    let torno_doc::construct::ConstructGeom::Axis { origin, dir } = axis else { panic!("{axis:?}") };
     assert!(origin.y.abs() < 1e-6 && origin.z.abs() < 1e-6 && dir.x.abs() > 1.0 - 1e-9, "{origin:?} {dir:?}");
     let v0 = volume(&mut s);
     run(&mut s, "solid.hole", json!({"position": [60, 10, 10], "diameter": 4, "depth": 5}));
@@ -731,7 +731,7 @@ fn body_volume(s: &Session, body: &str) -> f64 {
 /// The body the last feature, a fillet or chamfer, keeps.
 fn blend_body(s: &Session) -> Option<String> {
     match &s.doc.features.last().unwrap().kind {
-        solidcraft_doc::FeatureKind::Fillet { body, .. } | solidcraft_doc::FeatureKind::Chamfer { body, .. } => body.as_ref().map(|b| b.0.clone()),
+        torno_doc::FeatureKind::Fillet { body, .. } | torno_doc::FeatureKind::Chamfer { body, .. } => body.as_ref().map(|b| b.0.clone()),
         k => panic!("{k:?}"),
     }
 }
@@ -739,7 +739,7 @@ fn blend_body(s: &Session) -> Option<String> {
 /// The points the last feature, a fillet or chamfer, keeps.
 fn blend_edges(s: &Session) -> Vec<Vec3> {
     match &s.doc.features.last().unwrap().kind {
-        solidcraft_doc::FeatureKind::Fillet { edges, .. } | solidcraft_doc::FeatureKind::Chamfer { edges, .. } => edges.iter().map(|p| p.0).collect(),
+        torno_doc::FeatureKind::Fillet { edges, .. } | torno_doc::FeatureKind::Chamfer { edges, .. } => edges.iter().map(|p| p.0).collect(),
         k => panic!("{k:?}"),
     }
 }
@@ -1110,7 +1110,7 @@ fn press_pull_on_an_edge_where_two_parts_meet_takes_body() {
 fn edge_picks_with_no_placement_to_look_through_are_checked() {
     let mut s = Session::default();
     run(&mut s, "solid.box", json!({"length": 40, "width": 30, "height": 10, "body_name": "Box"}));
-    let mut flat = solidcraft_doc::IDENTITY;
+    let mut flat = torno_doc::IDENTITY;
     flat[2][2] = 0.0;
     s.doc_mut().body_offsets.insert("Box".into(), flat);
     let err = refused(&mut s, "solid.chamfer", json!({"edges": [[20, 15, 10]], "distance": 1}));

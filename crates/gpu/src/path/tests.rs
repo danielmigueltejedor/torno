@@ -1,8 +1,8 @@
 use super::*;
-use solidcraft_geom::MeshGeom;
-use solidcraft_geom::{Aabb3, Mesh};
-use solidcraft_render::ProductMesh;
-use solidcraft_viewport::{Camera, StandardView, surface::OpaqueSurface};
+use torno_geom::MeshGeom;
+use torno_geom::{Aabb3, Mesh};
+use torno_render::ProductMesh;
+use torno_viewport::{Camera, StandardView, surface::OpaqueSurface};
 
 fn executor() -> Option<Executor> {
     let (adapter, device, queue) = match open_headless() {
@@ -10,8 +10,8 @@ fn executor() -> Option<Executor> {
         Err(e) => {
             // The path tracer runs on Vulkan or Metal only: where the backends in use leave both out
             // (`WGPU_BACKEND=dx12`), it is unavailable by design, not missing.
-            let available = !solidcraft_viewport_gpu::select::path_backends().is_empty();
-            assert!(!available || std::env::var_os("SOLIDCRAFT_REQUIRE_GPU").is_none(), "required GPU unavailable: {e}");
+            let available = !torno_viewport_gpu::select::path_backends().is_empty();
+            assert!(!available || std::env::var_os("TORNO_REQUIRE_GPU").is_none(), "required GPU unavailable: {e}");
             eprintln!("gpu-path device test skipped: {e}");
             return None;
         }
@@ -79,8 +79,8 @@ fn white() -> OpaqueSurface {
     OpaqueSurface::new(Vec3::new(1.0, 1.0, 1.0), 0.0, 1.0, 1.0).unwrap()
 }
 
-fn clear_glass() -> solidcraft_render::transmission::Transmission {
-    solidcraft_render::transmission::Transmission::new(Vec3::ZERO, None).unwrap()
+fn clear_glass() -> torno_render::transmission::Transmission {
+    torno_render::transmission::Transmission::new(Vec3::ZERO, None).unwrap()
 }
 
 #[test]
@@ -98,7 +98,7 @@ fn volume_glass_requires_closed_outward_homogeneous_geometry() {
         t.swap(1, 2);
     }
     assert!(scene::flatten(&inward, Vec3::ZERO, &CancelToken::default()).is_err());
-    open.meshes[0].transmission = Some(solidcraft_render::transmission::Transmission::new(Vec3::ZERO, Some(0.1)).unwrap());
+    open.meshes[0].transmission = Some(torno_render::transmission::Transmission::new(Vec3::ZERO, Some(0.1)).unwrap());
     assert!(scene::flatten(&open, Vec3::ZERO, &CancelToken::default()).is_ok());
 }
 
@@ -174,7 +174,7 @@ fn gpu_exact_dielectric_matches_f64_fresnel() {
             context.queue.submit([encoder.finish()]);
             task.sample = 1;
             let actual = task.read_linear().unwrap()[0];
-            let expected = solidcraft_render::transmission::fresnel(cosine, ni, nt).unwrap();
+            let expected = torno_render::transmission::fresnel(cosine, ni, nt).unwrap();
             for (a, b) in actual.iter().zip([expected.s, expected.p, expected.transmitted_cosine.unwrap_or(0.0)]) {
                 assert!((f64::from(*a) - b).abs() < 2e-5, "Fresnel {ni}->{nt} cos={cosine}: {a} != {b}");
             }
@@ -235,8 +235,8 @@ fn gpu_sheet_grazing_and_zero_thickness_match_physical_path_limits() {
                         continue;
                     }
                     let pixels = task.read_linear().unwrap();
-                    let optics = solidcraft_render::transmission::Transmission::new(sigma, Some(thickness)).unwrap();
-                    let (reflection, transmission) = solidcraft_render::transmission::slab(optics, thickness, cosine, ni, nt).unwrap();
+                    let optics = torno_render::transmission::Transmission::new(sigma, Some(thickness)).unwrap();
+                    let (reflection, transmission) = torno_render::transmission::slab(optics, thickness, cosine, ni, nt).unwrap();
                     for (pixel, expected) in pixels.iter().take(2).zip([reflection, transmission]) {
                         for (actual, expected) in pixel.iter().zip([expected.x, expected.y, expected.z]) {
                             assert!(
@@ -257,7 +257,7 @@ fn gpu_sheet_grazing_and_zero_thickness_match_physical_path_limits() {
 
 #[test]
 fn optional_glass_gpu_film_dispersion_and_visible_normals_match_the_f64_oracle() {
-    use solidcraft_render::glass_model::{Dispersion, GlassModel, ThinFilm};
+    use torno_render::glass_model::{Dispersion, GlassModel, ThinFilm};
     let Some(executor) = executor() else { return };
     let context = &executor.context;
     let source = format!(
@@ -362,14 +362,14 @@ fn optional_glass_gpu_film_dispersion_and_visible_normals_match_the_f64_oracle()
 
 fn rough_glass_fixture(thin: bool, roughness: f64, absorption: Vec3, scattering: f64) -> ProductScene {
     let mut scene = glass_slab(thin);
-    let mut transmission = solidcraft_render::transmission::Transmission::new(absorption, thin.then_some(0.7))
+    let mut transmission = torno_render::transmission::Transmission::new(absorption, thin.then_some(0.7))
         .unwrap()
         .with_shadow_transmission(false)
-        .with_model(solidcraft_render::glass_model::GlassModel { roughness, ..Default::default() })
+        .with_model(torno_render::glass_model::GlassModel { roughness, ..Default::default() })
         .unwrap();
     if scattering > 0.0 {
         transmission = transmission
-            .with_subsurface(solidcraft_render::transmission::subsurface::Subsurface { scattering_per_mm: scattering, anisotropy: 0.3 })
+            .with_subsurface(torno_render::transmission::subsurface::Subsurface { scattering_per_mm: scattering, anisotropy: 0.3 })
             .unwrap();
     }
     scene.meshes[0].transmission = Some(transmission);
@@ -418,7 +418,7 @@ fn optical_hard_light_specialization_ignores_identity_models_and_refuses_nonfini
 
 #[test]
 fn rough_glass_hard_direction_point_spot_and_contained_transmission_match_analytic_projected_bsdf() {
-    use solidcraft_render::job::{DirectionalLightOptions, DirectionalLights, PunctualLightOptions, PunctualLights, SpotConeOptions, StudioLighting};
+    use torno_render::job::{DirectionalLightOptions, DirectionalLights, PunctualLightOptions, PunctualLights, SpotConeOptions, StudioLighting};
     let Some(executor) = executor() else { return };
     let roughness = 0.5_f64;
     // At normal incidence D=1/(pi*roughness^4), G=1 and F=.04.
@@ -573,7 +573,7 @@ fn rough_glass_hard_direction_point_spot_and_contained_transmission_match_analyt
 
 #[test]
 fn rough_optical_two_phase_tiles_preserve_adaptive_strata_and_converged_film() {
-    use solidcraft_render::job::{DirectionalLightOptions, DirectionalLights, StudioLighting, adaptive::AdaptiveSampling};
+    use torno_render::job::{DirectionalLightOptions, DirectionalLights, StudioLighting, adaptive::AdaptiveSampling};
     let Some(executor) = executor() else { return };
     let lighting = StudioLighting {
         directional_lights: DirectionalLights::new(&[DirectionalLightOptions { direction: [0.0, 0.0, 1.0], color: [1.0; 3], intensity: 1.0 }])
@@ -652,10 +652,10 @@ fn rough_shadow_overlap_scene(shadow_transmission: bool) -> ProductScene {
         *point = Vec3::new(2.0 + point.x * 0.1, point.y * 0.1, 1.0 + point.z * 1.4);
     }
     glass.transmission = Some(
-        solidcraft_render::transmission::Transmission::new(Vec3::ZERO, None)
+        torno_render::transmission::Transmission::new(Vec3::ZERO, None)
             .unwrap()
             .with_shadow_transmission(shadow_transmission)
-            .with_model(solidcraft_render::glass_model::GlassModel { roughness: 0.5, ..Default::default() })
+            .with_model(torno_render::glass_model::GlassModel { roughness: 0.5, ..Default::default() })
             .unwrap(),
     );
     let bounds = floor.mesh.bounds().union(&glass.mesh.bounds());
@@ -664,7 +664,7 @@ fn rough_shadow_overlap_scene(shadow_transmission: bool) -> ProductScene {
 
 #[test]
 fn rough_closed_shadow_approximation_replaces_only_the_transmitted_hard_source_family() {
-    use solidcraft_render::job::{PunctualLightOptions, PunctualLights, StudioLighting};
+    use torno_render::job::{PunctualLightOptions, PunctualLights, StudioLighting};
     let Some(executor) = executor() else { return };
     let lighting = StudioLighting {
         punctual_lights: PunctualLights::new(&[PunctualLightOptions {
@@ -720,7 +720,7 @@ fn rough_closed_shadow_approximation_replaces_only_the_transmitted_hard_source_f
 
 #[test]
 fn reflection_only_closed_nee_packet_keeps_its_actual_inside_medium_beer() {
-    use solidcraft_render::job::{PunctualLightOptions, PunctualLights, StudioLighting};
+    use torno_render::job::{PunctualLightOptions, PunctualLights, StudioLighting};
     let Some(executor) = executor() else { return };
     let context = &executor.context;
     let lighting = StudioLighting {
@@ -788,7 +788,7 @@ fn reflection_only_closed_nee_packet_keeps_its_actual_inside_medium_beer() {
 
 #[test]
 fn rough_closed_and_virtual_sheet_photon_partition_keeps_primary_caustics_and_avoids_double_counting() {
-    use solidcraft_render::job::{CausticOptions, DirectionalLightOptions, DirectionalLights, StudioLighting};
+    use torno_render::job::{CausticOptions, DirectionalLightOptions, DirectionalLights, StudioLighting};
     let Some(executor) = executor() else { return };
     if executor.context.device.limits().max_storage_buffers_per_shader_stage < 7 {
         return;
@@ -924,7 +924,7 @@ fn rough_closed_and_virtual_sheet_photon_partition_keeps_primary_caustics_and_av
 
 #[test]
 fn rough_volume_photon_kernels_and_hg_delta_connection_match_independent_measures() {
-    use solidcraft_render::job::{CausticOptions, PunctualLightOptions, PunctualLights, StudioLighting};
+    use torno_render::job::{CausticOptions, PunctualLightOptions, PunctualLights, StudioLighting};
     let Some(executor) = executor() else { return };
     let context = &executor.context;
     if context.device.limits().max_storage_buffers_per_shader_stage < 7 {
@@ -1073,7 +1073,7 @@ fn rough_volume_photon_kernels_and_hg_delta_connection_match_independent_measure
     let transmitted = 0.96 / (0.25 * std::f64::consts::PI * 0.5_f64.powi(4));
     let phase = |cosine: f64| 0.91 / (4.0 * std::f64::consts::PI * (1.09 - 0.6 * cosine).powf(1.5));
     let outgoing = Vec3::new(0.0002, 0.0, 1.0).normalized().unwrap();
-    let narrow = solidcraft_render::glass_model::GlassModel { roughness: 0.001, ..Default::default() }
+    let narrow = torno_render::glass_model::GlassModel { roughness: 0.001, ..Default::default() }
         .evaluate(-Vec3::Z, outgoing, Vec3::Z, 1.0, 1.5, 550.0)
         .unwrap()
         .value
@@ -1206,10 +1206,8 @@ fn photon_density_kernel_counts_hash_collisions_once_and_respects_receiver_suppo
     };
     let first = receiver(1.0);
     let second = receiver(2.0);
-    let options = JobOptions {
-        caustics: Some(solidcraft_render::job::CausticOptions { photons: 4, radius_mm: 1.0, ..Default::default() }),
-        ..Default::default()
-    };
+    let options =
+        JobOptions { caustics: Some(torno_render::job::CausticOptions { photons: 4, radius_mm: 1.0, ..Default::default() }), ..Default::default() };
     let mut task = Task::new(context.clone(), scene, request(2), options, CancelToken::default()).unwrap();
     assert_eq!(task.photons.as_ref().unwrap().progress().done, 0, "setup warm-up cannot consume admitted photon work");
     task.sample = 1;
@@ -1300,7 +1298,7 @@ fn photon_receiver_fixture(scattering: f64) -> ProductScene {
     source.meshes[0].surface = Some(OpaqueSurface::new(Vec3::ZERO, 0.0, 0.1, 1.0).unwrap());
     let optics = clear_glass();
     source.meshes[0].transmission = Some(if scattering > 0.0 {
-        optics.with_subsurface(solidcraft_render::transmission::subsurface::Subsurface { scattering_per_mm: scattering, anisotropy: 0.0 }).unwrap()
+        optics.with_subsurface(torno_render::transmission::subsurface::Subsurface { scattering_per_mm: scattering, anisotropy: 0.0 }).unwrap()
     } else {
         optics
     });
@@ -1374,7 +1372,7 @@ fn photon_map_probe(task: &mut Task, position: Vec3) -> [f32; 4] {
 
 #[test]
 fn delta_source_photon_power_matches_directional_and_point_disk_integrals() {
-    use solidcraft_render::job::{
+    use torno_render::job::{
         CausticOptions, DirectionalLightOptions, DirectionalLights, PunctualLightOptions, PunctualLights, SpotConeOptions, StudioLighting,
     };
     let Some(executor) = executor() else { return };
@@ -1456,7 +1454,7 @@ fn delta_source_photon_power_matches_directional_and_point_disk_integrals() {
 
 #[test]
 fn photon_refresh_keeps_pass_zero_reuses_storage_and_selects_distinct_complete_maps() {
-    use solidcraft_render::job::{CausticOptions, DirectionalLightOptions, DirectionalLights, StudioLighting, adaptive::AdaptiveSampling};
+    use torno_render::job::{CausticOptions, DirectionalLightOptions, DirectionalLights, StudioLighting, adaptive::AdaptiveSampling};
     let Some(executor) = executor() else { return };
     if executor.context.device.limits().max_storage_buffers_per_shader_stage < 7 {
         return;
@@ -1558,7 +1556,7 @@ fn photon_refresh_keeps_pass_zero_reuses_storage_and_selects_distinct_complete_m
 
 #[test]
 fn guided_photons_preserve_parallel_point_spot_and_area_power_at_a_translated_aperture() {
-    use solidcraft_render::job::{
+    use torno_render::job::{
         AreaLight, AreaLights, CausticOptions, DirectionalLightOptions, DirectionalLights, PunctualLightOptions, PunctualLights, SpotConeOptions,
         StudioLighting,
     };
@@ -1644,7 +1642,7 @@ fn guided_photons_preserve_parallel_point_spot_and_area_power_at_a_translated_ap
 
 #[test]
 fn area_photon_caustics_match_rectangle_radiometry_and_partition_camera_depth() {
-    use solidcraft_render::job::{AreaLight, AreaLights, CausticOptions, StudioLighting};
+    use torno_render::job::{AreaLight, AreaLights, CausticOptions, StudioLighting};
     let Some(executor) = executor() else { return };
     if executor.context.device.limits().max_storage_buffers_per_shader_stage < 7 {
         return;
@@ -1717,7 +1715,7 @@ fn area_photon_caustics_match_rectangle_radiometry_and_partition_camera_depth() 
 
 #[test]
 fn environment_photon_caustics_preserve_sun_and_analytic_rectangle_visibility() {
-    use solidcraft_render::job::{AreaLight, AreaLights, CausticOptions, StudioLighting, Sun};
+    use torno_render::job::{AreaLight, AreaLights, CausticOptions, StudioLighting, Sun};
     let Some(executor) = executor() else { return };
     if executor.context.device.limits().max_storage_buffers_per_shader_stage < 7 {
         return;
@@ -1797,7 +1795,7 @@ fn environment_photon_caustics_preserve_sun_and_analytic_rectangle_visibility() 
 
 #[test]
 fn photon_subsurface_flight_precedes_a_closer_analytic_emitter() {
-    use solidcraft_render::job::{AreaLight, AreaLights, CausticOptions, PunctualLightOptions, PunctualLights, SpotConeOptions, StudioLighting};
+    use torno_render::job::{AreaLight, AreaLights, CausticOptions, PunctualLightOptions, PunctualLights, SpotConeOptions, StudioLighting};
     let Some(executor) = executor() else { return };
     if executor.context.device.limits().max_storage_buffers_per_shader_stage < 7 {
         return;
@@ -1850,16 +1848,16 @@ fn photon_subsurface_flight_precedes_a_closer_analytic_emitter() {
 
 #[test]
 fn contained_punctual_connections_apply_physical_beer_and_hg_survival_without_an_ior_jump() {
-    use solidcraft_render::job::{PunctualLightOptions, PunctualLights, StudioLighting};
+    use torno_render::job::{PunctualLightOptions, PunctualLights, StudioLighting};
     let Some(executor) = executor() else { return };
     let sigma = Vec3::new(0.2, 0.4, 0.0);
     for scattering in [0.0, 0.4] {
         let mut source = photon_receiver_fixture(scattering);
         source.meshes[0].surface = Some(OpaqueSurface::new(Vec3::ZERO, 0.0, 0.1, 1.5).unwrap());
-        let mut optics = solidcraft_render::transmission::Transmission::new(sigma, None).unwrap();
+        let mut optics = torno_render::transmission::Transmission::new(sigma, None).unwrap();
         if scattering > 0.0 {
             optics = optics
-                .with_subsurface(solidcraft_render::transmission::subsurface::Subsurface { scattering_per_mm: scattering, anisotropy: 0.0 })
+                .with_subsurface(torno_render::transmission::subsurface::Subsurface { scattering_per_mm: scattering, anisotropy: 0.0 })
                 .unwrap();
         }
         source.meshes[0].transmission = Some(optics);
@@ -1936,7 +1934,7 @@ fn contained_punctual_connections_apply_physical_beer_and_hg_survival_without_an
 
 #[test]
 fn gpu_embedded_receiver_keeps_the_legacy_straight_shadow_scale() {
-    use solidcraft_render::{
+    use torno_render::{
         glass_model::GlassModel,
         job::{PunctualLightOptions, PunctualLights, StudioLighting},
     };
@@ -1944,7 +1942,7 @@ fn gpu_embedded_receiver_keeps_the_legacy_straight_shadow_scale() {
     for (model, ior_scale) in [(None, 1.0), (Some(GlassModel::default()), 1.0), (Some(GlassModel { roughness: 0.35, ..Default::default() }), 2.25)] {
         let mut source = photon_receiver_fixture(0.0);
         source.meshes[0].surface = Some(OpaqueSurface::new(Vec3::ZERO, 0.0, 0.1, 1.5).unwrap());
-        let mut optics = solidcraft_render::transmission::Transmission::new(Vec3::ZERO, None).unwrap().with_shadow_transmission(true);
+        let mut optics = torno_render::transmission::Transmission::new(Vec3::ZERO, None).unwrap().with_shadow_transmission(true);
         if let Some(model) = model {
             optics = optics.with_model(model).unwrap();
         }
@@ -2072,8 +2070,8 @@ fn gpu_camera_inside_volume_fails_without_publishing_fake_radiance() {
 fn engine_preflight_keeps_cpu_alpha_and_routes_physical_glass_to_the_native_host() {
     use serde_json::json;
     let Some(executor) = executor() else { return };
-    let mut s = solidcraft_engine::Session::default();
-    s.set_render_job_host(Some(solidcraft_render::job::CpuHost::cooperative())).unwrap();
+    let mut s = torno_engine::Session::default();
+    s.set_render_job_host(Some(torno_render::job::CpuHost::cooperative())).unwrap();
     s.execute("solid.box", &json!({"length":10,"width":10,"height":2,"body_name":"Glass"})).unwrap();
     s.execute("appearance.assign", &json!({"bodies":["Glass"],"color":"#c0e0ff","opacity":0.2})).unwrap();
     let cpu = s.execute("render.preflight", &json!({"settings":{"width":16,"height":16}})).unwrap();
@@ -2096,7 +2094,7 @@ fn engine_preflight_keeps_cpu_alpha_and_routes_physical_glass_to_the_native_host
     assert_eq!(snapshot, s.doc.to_json());
     params["progressive"] = json!(false);
     assert!(s.execute("render.preflight", &params).is_err());
-    assert!(!solidcraft_engine::product_scene::extract(&s).unwrap().has_transmission());
+    assert!(!torno_engine::product_scene::extract(&s).unwrap().has_transmission());
 }
 
 #[test]
@@ -2121,7 +2119,7 @@ fn gpu_thin_lens_focus_and_defocus_match_geometric_oracle() {
         let mut request = request(2);
         request.camera = Camera { distance: 12.0, fov, yaw, pitch, roll, ..Default::default() };
         let camera = request.camera;
-        let lens = solidcraft_render::job::ThinLens { aperture_radius_mm: 0.4, focus_distance_mm: 9.0 };
+        let lens = torno_render::job::ThinLens { aperture_radius_mm: 0.4, focus_distance_mm: 9.0 };
         let options = JobOptions { lens: Some(lens), ..Default::default() };
         let mut task = Task::new(context.clone(), sphere(white()), request, options, CancelToken::default()).unwrap();
         let (right, up, back) = camera.basis();
@@ -2195,9 +2193,9 @@ fn gpu_zero_aperture_is_bit_identical_and_lens_admission_is_explicit() {
         task.read_linear().unwrap()
     };
     for fov in [0.0, 0.7] {
-        assert_eq!(render(None, fov), render(Some(solidcraft_render::job::ThinLens { aperture_radius_mm: 0.0, focus_distance_mm: 8.0 }), fov));
+        assert_eq!(render(None, fov), render(Some(torno_render::job::ThinLens { aperture_radius_mm: 0.0, focus_distance_mm: 8.0 }), fov));
     }
-    let lens = Some(solidcraft_render::job::ThinLens { aperture_radius_mm: 0.3, focus_distance_mm: 4.0 });
+    let lens = Some(torno_render::job::ThinLens { aperture_radius_mm: 0.3, focus_distance_mm: 4.0 });
     assert_eq!(render(lens, 0.7), render(lens, 0.7));
     request.camera.fov = 0.0;
     assert!(admission(&sphere(white()), &request, JobOptions { lens, ..Default::default() }).is_err());
@@ -2206,10 +2204,10 @@ fn gpu_zero_aperture_is_bit_identical_and_lens_admission_is_explicit() {
 }
 
 #[test]
-#[ignore = "manual glass transport evidence; set SOLIDCRAFT_GLASS_EVIDENCE to a PNG path"]
+#[ignore = "manual glass transport evidence; set TORNO_GLASS_EVIDENCE to a PNG path"]
 fn glass_transport_evidence() {
     let Some(executor) = executor() else { return };
-    let output = std::env::var("SOLIDCRAFT_GLASS_EVIDENCE").unwrap();
+    let output = std::env::var("TORNO_GLASS_EVIDENCE").unwrap();
     let mut meshes = Vec::new();
     for (centre, radius, color) in
         [(Vec3::new(-1.3, 0.0, 1.5), 1.5, Vec3::new(0.75, 0.94, 1.0)), (Vec3::new(2.0, 1.0, 1.0), 1.0, Vec3::new(1.0, 0.7, 0.35))]
@@ -2220,7 +2218,7 @@ fn glass_transport_evidence() {
             *p = *p * radius + centre;
         }
         body.transmission =
-            Some(solidcraft_render::transmission::Transmission::new(Vec3::new(-color.x.ln(), -color.y.ln(), -color.z.ln()) / 5.0, None).unwrap());
+            Some(torno_render::transmission::Transmission::new(Vec3::new(-color.x.ln(), -color.y.ln(), -color.z.ln()) / 5.0, None).unwrap());
         meshes.push(body);
     }
     for y in -16..16 {
@@ -2265,8 +2263,7 @@ fn glass_transport_evidence() {
         background: [236, 240, 245],
         transparent_background: false,
     };
-    let lens =
-        std::env::var_os("SOLIDCRAFT_GLASS_DOF").map(|_| solidcraft_render::job::ThinLens { aperture_radius_mm: 0.5, focus_distance_mm: 12.0 });
+    let lens = std::env::var_os("TORNO_GLASS_DOF").map(|_| torno_render::job::ThinLens { aperture_radius_mm: 0.5, focus_distance_mm: 12.0 });
     let options = JobOptions { samples: 256, max_depth: 16, seed: 1948, lens, ..Default::default() };
     let mut task = Task::new(executor.context.clone(), ProductScene { meshes, bounds }, request, options, CancelToken::default()).unwrap();
     task.environment = 1.0;
@@ -2310,7 +2307,7 @@ fn glass_slab(thin: bool) -> ProductScene {
             opacity: 1.0,
             surface: Some(OpaqueSurface::new(Vec3::ZERO, 0.0, 0.1, 1.5).unwrap()),
             transmission: Some(
-                solidcraft_render::transmission::Transmission::new(Vec3::new(-0.5_f64.ln(), -0.8_f64.ln(), 0.0), thin.then_some(1.0)).unwrap(),
+                torno_render::transmission::Transmission::new(Vec3::new(-0.5_f64.ln(), -0.8_f64.ln(), 0.0), thin.then_some(1.0)).unwrap(),
             ),
             faces: vec![],
         }],
@@ -2324,9 +2321,9 @@ fn gpu_solid_and_thin_slabs_match_absorbing_interreflection_oracle() {
         let mut scene = glass_slab(thin);
         if thin {
             let sigma = scene.meshes[0].transmission.unwrap().extinction();
-            scene.meshes[0].transmission = Some(solidcraft_render::transmission::Transmission::new(sigma, Some(thickness)).unwrap());
+            scene.meshes[0].transmission = Some(torno_render::transmission::Transmission::new(sigma, Some(thickness)).unwrap());
         }
-        let (_, expected) = solidcraft_render::transmission::slab(scene.meshes[0].transmission.unwrap(), thickness, 1.0, 1.0, 1.5).unwrap();
+        let (_, expected) = torno_render::transmission::slab(scene.meshes[0].transmission.unwrap(), thickness, 1.0, 1.0, 1.5).unwrap();
         let mut request = request(1);
         request.camera.fov = 0.0001;
         let options = JobOptions { samples: 4096, max_depth: 16, seed: 1948, ..Default::default() };
@@ -2427,7 +2424,7 @@ fn geometry_materialization_lane_keeps_positive_zero_at_the_shader_offset() {
         }
     }
     task.request.studio_weights = None;
-    task.options.lighting = Some(solidcraft_render::job::StudioLighting { environment: [0.75; 3], ..Default::default() });
+    task.options.lighting = Some(torno_render::job::StudioLighting { environment: [0.75; 3], ..Default::default() });
     assert_eq!(&task.parameters(1).unwrap()[offset..offset + 4], &0u32.to_le_bytes());
 }
 
@@ -2441,11 +2438,11 @@ fn render_lights_path_visibility_uniform_keeps_the_shader_contract() {
 /// #3217: the path tracer opens Vulkan adapters, or Metal on macOS, never D3D12 or GL.
 #[test]
 fn path_devices_are_vulkan_or_metal_only() {
-    let picked = solidcraft_viewport_gpu::select::pick_path(solidcraft_viewport_gpu::select::Policy::Auto, |_| true);
+    let picked = torno_viewport_gpu::select::pick_path(torno_viewport_gpu::select::Policy::Auto, |_| true);
     if let Some((adapter, _)) = &picked {
         assert!(matches!(adapter.get_info().backend, wgpu::Backend::Vulkan | wgpu::Backend::Metal));
     }
-    if solidcraft_viewport_gpu::select::path_backends().is_empty() {
+    if torno_viewport_gpu::select::path_backends().is_empty() {
         assert!(picked.is_none());
     }
 }
@@ -2481,7 +2478,7 @@ fn viewport_path_backends_keep_windows_on_its_selected_backend() {
 #[test]
 fn viewport_path_backends_preserve_other_platforms() {
     for backend in [wgpu::Backend::Vulkan, wgpu::Backend::Gl, wgpu::Backend::Metal] {
-        assert_eq!(viewport_path_backends(backend, false), solidcraft_viewport_gpu::select::path_backends());
+        assert_eq!(viewport_path_backends(backend, false), torno_viewport_gpu::select::path_backends());
     }
 }
 
@@ -2494,10 +2491,10 @@ fn admission_rejects_hostile_parameters_and_transparency() {
         assert!(admission(&scene, &r, JobOptions::default()).is_err());
     }
     r.width = 16;
-    for samples in [0, solidcraft_render::job::MAX_SAMPLES_PER_PIXEL + 1, u32::MAX] {
+    for samples in [0, torno_render::job::MAX_SAMPLES_PER_PIXEL + 1, u32::MAX] {
         assert!(admission(&scene, &r, JobOptions { samples, ..Default::default() }).is_err());
     }
-    for depth in [0, u32::from(solidcraft_render::job::MAX_PATH_DEPTH) + 1, u32::MAX] {
+    for depth in [0, u32::from(torno_render::job::MAX_PATH_DEPTH) + 1, u32::MAX] {
         assert!(admission(&scene, &r, JobOptions { max_depth: depth, ..Default::default() }).is_err());
     }
     for ev in [f64::NAN, f64::INFINITY, 33.0] {
@@ -2534,7 +2531,7 @@ fn admission_ignores_the_cpu_raster_projected_pixel_limit() {
     let mut r = request(100);
     r.camera.distance = 1.0;
     r.camera.fov = 0.0;
-    let raster_error = solidcraft_render::job::admit(&scene, &r).unwrap_err();
+    let raster_error = torno_render::job::admit(&scene, &r).unwrap_err();
     assert_eq!(raster_error.code, ErrorCode::LimitExceeded);
     assert!(raster_error.message.contains("128000000 pixel tests"), "{raster_error:?}");
     // Exercise the actual GPU admission path without requiring a Vulkan device.
@@ -2548,16 +2545,16 @@ fn admission_applies_the_gpu_estimate_instead_of_the_cpu_raster_budget() {
     // A library-bounded source (not an ordinary UI scene): about 100 MiB of face appearances
     // on a small mesh at the largest image. Its CPU raster estimate is above 384 MiB (covered
     // in the render crate); the GPU's own estimate stays within its 512 MiB job cap.
-    let count = (100 * 1024 * 1024 / std::mem::size_of::<solidcraft_render::FaceAppearance>()).min(1_000_000);
+    let count = (100 * 1024 * 1024 / std::mem::size_of::<torno_render::FaceAppearance>()).min(1_000_000);
     let mut scene = sphere(white());
-    let appearance = solidcraft_render::FaceAppearance { face: 0, color: [255; 3], opacity: 1.0, surface: None, transmission: None };
+    let appearance = torno_render::FaceAppearance { face: 0, color: [255; 3], opacity: 1.0, surface: None, transmission: None };
     scene.meshes[0].faces = vec![appearance; count];
     let r = request(2048);
     let a = admission(&scene, &r, JobOptions::default()).unwrap();
     assert!(a.estimated_total_bytes <= 512 * 1024 * 1024, "{a:?}");
     assert_eq!(a.face_appearances, count as u64);
     // The CPU host still rejects the same source.
-    assert_eq!(solidcraft_render::job::admit(&scene, &r).unwrap_err().code, ErrorCode::LimitExceeded);
+    assert_eq!(torno_render::job::admit(&scene, &r).unwrap_err().code, ErrorCode::LimitExceeded);
 }
 
 #[test]
@@ -2638,8 +2635,8 @@ fn gpu_brdf_matches_f64_surface_oracle() {
 fn viewport_brdf_probe_source() -> String {
     format!(
         "{}\n{}\n{}",
-        solidcraft_viewport_gpu::view::SHADER,
-        solidcraft_viewport_gpu::pbr::SOURCE,
+        torno_viewport_gpu::view::SHADER,
+        torno_viewport_gpu::pbr::SOURCE,
         r#"
 struct Probe { base: vec4<f32>, parameters: vec4<f32>, view: vec4<f32>, light: vec4<f32>, };
 // Bindings 0 and 1 belong to the production viewport uniform and palette.
@@ -2822,7 +2819,7 @@ fn gpu_tiny_scene_matches_cpu_studio_with_face_appearance() {
             surface: Some(white()),
             transmission: None,
             faces: [7, 9]
-                .map(|face| solidcraft_render::FaceAppearance { face, color: [0; 3], opacity: 1.0, surface: Some(surface), transmission: None })
+                .map(|face| torno_render::FaceAppearance { face, color: [0; 3], opacity: 1.0, surface: Some(surface), transmission: None })
                 .to_vec(),
         }],
         bounds,
@@ -2834,7 +2831,7 @@ fn gpu_tiny_scene_matches_cpu_studio_with_face_appearance() {
         task.complete_sample().unwrap();
     }
     let actual = task.read_linear().unwrap();
-    let expected = solidcraft_render::studio::shade(surface, Vec3::Z, Vec3::Z).unwrap();
+    let expected = torno_render::studio::shade(surface, Vec3::Z, Vec3::Z).unwrap();
     for pixel in actual {
         assert_eq!(pixel[3], 1.0);
         for (a, b) in pixel.iter().zip([expected.x, expected.y, expected.z]) {
@@ -2902,7 +2899,7 @@ fn native_host_cancel_never_publishes_a_frame() {
     let host = ImageHost::with_executor(Arc::new(executor)).unwrap();
     let job = host
         .submit_with_options(
-            solidcraft_render::job::JobId { session: 1, serial: 1, generation: 1 },
+            torno_render::job::JobId { session: 1, serial: 1, generation: 1 },
             1,
             sphere(white()),
             request(64),
@@ -2929,7 +2926,7 @@ fn native_host_cancel_never_publishes_a_frame() {
 #[ignore = "manual 1M-triangle 1920x1080 GPU performance measurement"]
 fn path_performance() {
     let executor = executor().expect("benchmark requires an adapter");
-    let samples = std::env::var("SOLIDCRAFT_PATH_BENCH_SAMPLES").ok().map(|s| s.parse::<u32>().unwrap()).unwrap_or(1);
+    let samples = std::env::var("TORNO_PATH_BENCH_SAMPLES").ok().map(|s| s.parse::<u32>().unwrap()).unwrap_or(1);
     let options = JobOptions { samples, ..Default::default() };
     options.validate().unwrap();
     let surface = OpaqueSurface::new(Vec3::new(0.8, 0.4, 0.2), 0.25, 0.4, 1.5).unwrap();
@@ -2973,10 +2970,10 @@ fn path_performance() {
 fn admission_refuses_cpu_options_without_opening_a_device() {
     let scene = ProductScene { meshes: Vec::new(), bounds: Aabb3::EMPTY };
     let mut input = request(16);
-    input.integrator = solidcraft_render::job::Integrator::Raytrace;
+    input.integrator = torno_render::job::Integrator::Raytrace;
     assert_eq!(admission(&scene, &input, JobOptions::default()).unwrap_err().code, ErrorCode::InvalidRequest);
-    input.integrator = solidcraft_render::job::Integrator::Raster;
-    input.raytrace = Some(solidcraft_render::job::RaytraceOptions::default());
+    input.integrator = torno_render::job::Integrator::Raster;
+    input.raytrace = Some(torno_render::job::RaytraceOptions::default());
     assert_eq!(admission(&scene, &input, JobOptions::default()).unwrap_err().code, ErrorCode::InvalidRequest);
 }
 
@@ -3005,7 +3002,7 @@ fn gpu_clear_coat_brdf_matches_f64_surface_oracle() {
             for ior in [1.5, 3.0] {
                 let surface = OpaqueSurface::new(Vec3::new(0.8, 0.5, 0.2), metallic, 0.3, 1.5)
                     .unwrap()
-                    .with_clear_coat(solidcraft_viewport::clear_coat::ClearCoat::new(1.0, roughness, ior).unwrap());
+                    .with_clear_coat(torno_viewport::clear_coat::ClearCoat::new(1.0, roughness, ior).unwrap());
                 let mut task = Task::new(context.clone(), sphere(surface), request(1), JobOptions::default(), CancelToken::default()).unwrap();
                 for (view, light) in [
                     (Vec3::Z, Vec3::Z),
@@ -3066,7 +3063,7 @@ fn gpu_clear_coat_pdf_matches_f64_surface_oracle() {
             for ior in [1.5, 3.0] {
                 let surface = OpaqueSurface::new(Vec3::new(0.8, 0.5, 0.2), metallic, 0.3, 1.5)
                     .unwrap()
-                    .with_clear_coat(solidcraft_viewport::clear_coat::ClearCoat::new(1.0, roughness, ior).unwrap());
+                    .with_clear_coat(torno_viewport::clear_coat::ClearCoat::new(1.0, roughness, ior).unwrap());
                 let mut task = Task::new(context.clone(), sphere(surface), request(1), JobOptions::default(), CancelToken::default()).unwrap();
                 for (view, light) in [
                     (Vec3::Z, Vec3::Z),
@@ -3091,7 +3088,7 @@ fn gpu_clear_coat_pdf_matches_f64_surface_oracle() {
                     context.queue.submit([encoder.finish()]);
                     task.sample = 1;
                     let actual = task.read_linear().unwrap()[0];
-                    let expected = solidcraft_viewport::clear_coat::surface_pdf(surface, Vec3::Z, view, light).unwrap();
+                    let expected = torno_viewport::clear_coat::surface_pdf(surface, Vec3::Z, view, light).unwrap();
                     for (a, b) in actual.iter().zip([expected, 0.0, 0.0]) {
                         assert!((f64::from(*a) - b).abs() <= 3e-3 * b.abs() + 2e-5, "m={metallic}, r={roughness}, ior={ior}: {a} vs {b}");
                     }
@@ -3128,9 +3125,9 @@ fn gpu_clear_coat_samples_the_pdf_mixture_components() {
         for weight in [0.0, 0.4, 1.0] {
             let surface = OpaqueSurface::new(Vec3::new(0.02, 0.02, 0.02), metallic, 0.45, 1.5)
                 .unwrap()
-                .with_clear_coat(solidcraft_viewport::clear_coat::ClearCoat::new(weight, 0.12, 1.5).unwrap());
+                .with_clear_coat(torno_viewport::clear_coat::ClearCoat::new(weight, 0.12, 1.5).unwrap());
             let mut task = Task::new(context.clone(), sphere(surface), request(1), JobOptions::default(), CancelToken::default()).unwrap();
-            let [diffuse, specular, coat] = solidcraft_viewport::clear_coat::lobe_probabilities(surface);
+            let [diffuse, specular, coat] = torno_viewport::clear_coat::lobe_probabilities(surface);
             // One variate inside each interval (the start of an empty diffuse one).
             for component in [diffuse * 0.5, diffuse + specular * 0.5, 1.0 - coat * 0.5] {
                 if component >= 1.0 {
@@ -3208,9 +3205,9 @@ fn gpu_indirect_clamp_keeps_hue_caps_the_brightest_channel_and_spares_the_first_
         (Some(2.0), 1, [2.0, 2.0, 2.0], [2.0, 2.0, 2.0]),
         (Some(0.000_001), 2, [1.0, 0.5, 0.0], [0.000_001, 0.000_000_5, 0.0]),
     ];
-    for volume in [None, Some(solidcraft_render::job::volume::HomogeneousVolume { extinction_per_mm: 0.01, ..Default::default() })] {
+    for volume in [None, Some(torno_render::job::volume::HomogeneousVolume { extinction_per_mm: 0.01, ..Default::default() })] {
         for &(limit, bounce, value, expected) in cases {
-            let lighting = Some(solidcraft_render::job::StudioLighting { environment: [1.0; 3], ..Default::default() });
+            let lighting = Some(torno_render::job::StudioLighting { environment: [1.0; 3], ..Default::default() });
             let options = JobOptions { clamp_indirect: limit, volume, lighting, ..Default::default() };
             options.validate().unwrap();
             let mut task = Task::new(context.clone(), sphere(white()), request(1), options, CancelToken::default()).unwrap();
@@ -3280,7 +3277,7 @@ fn gpu_indirect_clamp_bounds_every_bounce_and_leaves_what_the_camera_sees_direct
 
 #[test]
 fn gpu_studio_area_mis_matches_independent_quadrature_and_distance_visibility() {
-    use solidcraft_render::job::{AreaLight, AreaLights, StudioLighting};
+    use torno_render::job::{AreaLight, AreaLights, StudioLighting};
     let Some(executor) = executor() else { return };
     let surface = white();
     let plane = |z: f64| {
@@ -3351,7 +3348,7 @@ fn gpu_studio_area_mis_matches_independent_quadrature_and_distance_visibility() 
 
 #[test]
 fn gpu_studio_environment_mis_matches_furnace_at_last_and_continuing_bounces() {
-    use solidcraft_render::job::StudioLighting;
+    use torno_render::job::StudioLighting;
     let Some(executor) = executor() else { return };
     for depth in [1, 2] {
         let options = JobOptions {
@@ -3374,10 +3371,10 @@ fn gpu_studio_environment_mis_matches_furnace_at_last_and_continuing_bounces() {
 
 #[test]
 fn gpu_emitter_inside_glass_applies_final_segment_absorption() {
-    use solidcraft_render::job::{AreaLight, AreaLights, StudioLighting};
+    use torno_render::job::{AreaLight, AreaLights, StudioLighting};
     let Some(executor) = executor() else { return };
     let mut glass = sphere(OpaqueSurface::new(Vec3::ZERO, 0.0, 0.1, 1.0).unwrap());
-    glass.meshes[0].transmission = Some(solidcraft_render::transmission::Transmission::new(Vec3::new(0.7, 0.3, 0.0), None).unwrap());
+    glass.meshes[0].transmission = Some(torno_render::transmission::Transmission::new(Vec3::new(0.7, 0.3, 0.0), None).unwrap());
     let light = AreaLight { center: [0.0; 3], u: [0.4, 0.0, 0.0], v: [0.0, 0.4, 0.0], radiance: [3.0; 3] };
     let options = JobOptions {
         samples: 16,
@@ -3428,7 +3425,7 @@ fn environment_plane() -> ProductScene {
 }
 #[test]
 fn gpu_rough_metal_furnace_restores_the_missing_energy() {
-    use solidcraft_render::job::StudioLighting;
+    use torno_render::job::StudioLighting;
     let Some(executor) = executor() else { return };
     let mut scene = environment_plane();
     scene.meshes[0].surface = Some(OpaqueSurface::new(Vec3::new(1.0, 1.0, 1.0), 1.0, 1.0, 1.5).unwrap());
@@ -3475,7 +3472,7 @@ fn original_hdr() -> Vec<u8> {
 }
 #[test]
 fn gpu_hdr_environment_matches_constant_furnace_and_resource_admission() {
-    use solidcraft_render::lighting::environment::EnvironmentSource;
+    use torno_render::lighting::environment::EnvironmentSource;
     let Some(executor) = executor() else { return };
     let source = Arc::new(EnvironmentSource::hdr(original_hdr(), 0.3, 1.0, false).unwrap());
     let mut image = request(8);
@@ -3495,7 +3492,7 @@ fn gpu_hdr_environment_matches_constant_furnace_and_resource_admission() {
 }
 #[test]
 fn gpu_finite_sun_matches_cone_quadrature_at_final_and_continuing_bounces() {
-    use solidcraft_render::job::{StudioLighting, Sun};
+    use torno_render::job::{StudioLighting, Sun};
     let Some(executor) = executor() else { return };
     let sun = Sun { direction: [0.0, 0.0, 1.0], angular_radius_rad: 0.4, radiance: [3.0; 3] };
     let mut expected = 0.0;
@@ -3527,7 +3524,7 @@ fn gpu_finite_sun_matches_cone_quadrature_at_final_and_continuing_bounces() {
 
 #[test]
 fn gpu_environment_orientation_rotation_intensity_and_pdf_match_cpu() {
-    use solidcraft_render::lighting::environment::EnvironmentSource;
+    use torno_render::lighting::environment::EnvironmentSource;
     let Some(executor) = executor() else { return };
     let context = &executor.context;
     let mut bytes = b"#?RADIANCE\nFORMAT=32-bit_rle_rgbe\n\n-Y 2 +X 4\n".to_vec();
@@ -3627,7 +3624,7 @@ fn shadow_probe(context: &Arc<Context>, scene: ProductScene, origin: Vec3, direc
 
 #[test]
 fn gpu_shadow_sheets_solids_endpoints_and_invalid_crossings_match_oracles() {
-    use solidcraft_render::transmission::{slab, solid_shadow};
+    use torno_render::transmission::{slab, solid_shadow};
     let Some(executor) = executor() else { return };
     let context = &executor.context;
     for thin in [true, false] {
@@ -3684,7 +3681,7 @@ fn gpu_shadow_interface_walk_is_bounded_and_stacked_sheet_pdf_matches() {
             mesh.tri_face.extend_from_slice(&base.tri_face);
         }
         scene.meshes[0].mesh = Arc::new(mesh);
-        scene.meshes[0].transmission = Some(solidcraft_render::transmission::Transmission::new(Vec3::ZERO, Some(0.0)).unwrap());
+        scene.meshes[0].transmission = Some(torno_render::transmission::Transmission::new(Vec3::ZERO, Some(0.0)).unwrap());
         let actual = shadow_probe(&executor.context, scene, Vec3::new(0.0, 0.0, 2.0), -Vec3::Z, 100.0);
         if count == 65 {
             assert_eq!(actual[0], [0.0, 0.0, 0.0, 1.0]);
@@ -3699,7 +3696,7 @@ fn gpu_shadow_interface_walk_is_bounded_and_stacked_sheet_pdf_matches() {
 
 #[test]
 fn gpu_shadow_mis_does_not_double_direct_energy_through_index_matched_glass() {
-    use solidcraft_render::job::{AreaLight, AreaLights, StudioLighting};
+    use torno_render::job::{AreaLight, AreaLights, StudioLighting};
     let Some(executor) = executor() else { return };
     let surface = white();
     let receiver = ProductMesh {
@@ -3730,7 +3727,7 @@ fn gpu_shadow_mis_does_not_double_direct_energy_through_index_matched_glass() {
         let mut scene = glass_slab(thin);
         scene.meshes[0].surface = Some(OpaqueSurface::new(Vec3::ZERO, 0.0, 0.1, 1.0).unwrap());
         scene.meshes[0].transmission =
-            Some(solidcraft_render::transmission::Transmission::new(Vec3::ZERO, thin.then_some(0.0)).unwrap().with_shadow_transmission(enabled));
+            Some(torno_render::transmission::Transmission::new(Vec3::ZERO, thin.then_some(0.0)).unwrap().with_shadow_transmission(enabled));
         scene.meshes.push(receiver.clone());
         let options = JobOptions {
             samples: 4096,
@@ -3760,7 +3757,7 @@ fn gpu_shadow_mis_does_not_double_direct_energy_through_index_matched_glass() {
 
 #[test]
 fn gpu_absorbing_two_sheet_mis_matches_f64_quadrature() {
-    use solidcraft_render::job::{AreaLight, AreaLights, StudioLighting};
+    use torno_render::job::{AreaLight, AreaLights, StudioLighting};
     let Some(executor) = executor() else { return };
     let surface = white();
     // A tiny receiver excludes sheet-reflection returns from this direct-only oracle.
@@ -3781,13 +3778,13 @@ fn gpu_absorbing_two_sheet_mis_matches_f64_quadrature() {
         faces: vec![],
     };
     let light = AreaLight { center: [0.0, 0.0, 2.0], u: [4.0, 0.0, 0.0], v: [0.0, -4.0, 0.0], radiance: [1.0; 3] };
-    let optics = solidcraft_render::transmission::Transmission::new(Vec3::new(0.2, 0.1, 0.05), Some(0.7)).unwrap();
+    let optics = torno_render::transmission::Transmission::new(Vec3::new(0.2, 0.1, 0.05), Some(0.7)).unwrap();
     let mut expected = 0.0;
     for y in 0..128 {
         for x in 0..128 {
             let delta = Vec3::new(-4.0 + (f64::from(x) + 0.5) / 16.0, -4.0 + (f64::from(y) + 0.5) / 16.0, 4.0);
             let l = delta.normalized().unwrap();
-            let transmission = solidcraft_render::transmission::slab(optics, 0.7, l.z, 1.0, 1.5).unwrap().1.x;
+            let transmission = torno_render::transmission::slab(optics, 0.7, l.z, 1.0, 1.5).unwrap().1.x;
             expected += transmission * transmission * surface.brdf(Vec3::Z, Vec3::Z, l).unwrap().x * l.z * l.z / delta.len2() * 64.0 / 16384.0;
         }
     }
@@ -3829,8 +3826,8 @@ fn gpu_absorbing_two_sheet_mis_matches_f64_quadrature() {
 
 #[test]
 fn gpu_hdr_and_sun_shadow_mis_preserve_index_matched_energy() {
-    use solidcraft_render::job::{StudioLighting, Sun};
-    use solidcraft_render::lighting::environment::EnvironmentSource;
+    use torno_render::job::{StudioLighting, Sun};
+    use torno_render::lighting::environment::EnvironmentSource;
     let Some(executor) = executor() else { return };
     let sun = Sun { direction: [0.0, 0.0, 1.0], angular_radius_rad: 0.4, radiance: [3.0; 3] };
     let mut sun_expected = 0.0;
@@ -3855,7 +3852,7 @@ fn gpu_hdr_and_sun_shadow_mis_preserve_index_matched_energy() {
             let mut scene = glass_slab(thin);
             scene.meshes[0].surface = Some(OpaqueSurface::new(Vec3::ZERO, 0.0, 0.1, 1.0).unwrap());
             scene.meshes[0].transmission =
-                Some(solidcraft_render::transmission::Transmission::new(Vec3::ZERO, thin.then_some(0.0)).unwrap().with_shadow_transmission(true));
+                Some(torno_render::transmission::Transmission::new(Vec3::ZERO, thin.then_some(0.0)).unwrap().with_shadow_transmission(true));
             let mut receiver = environment_plane().meshes.remove(0);
             for p in &mut Arc::make_mut(&mut receiver.mesh).positions {
                 p.z -= 2.0;
@@ -3887,16 +3884,13 @@ fn gpu_hdr_and_sun_shadow_mis_preserve_index_matched_energy() {
     }
 }
 
-fn texture_fixture(frame: solidcraft_render::job::textures::PlanarFrame) -> Arc<solidcraft_render::job::textures::RuntimeTextures> {
+fn texture_fixture(frame: torno_render::job::textures::PlanarFrame) -> Arc<torno_render::job::textures::RuntimeTextures> {
     texture_fixture_filtering(frame, false)
 }
 
-fn texture_fixture_filtering(
-    frame: solidcraft_render::job::textures::PlanarFrame,
-    portable: bool,
-) -> Arc<solidcraft_render::job::textures::RuntimeTextures> {
+fn texture_fixture_filtering(frame: torno_render::job::textures::PlanarFrame, portable: bool) -> Arc<torno_render::job::textures::RuntimeTextures> {
     use image::ImageEncoder;
-    use solidcraft_render::{
+    use torno_render::{
         job::textures::{RuntimeTextures, TextureBinding, TextureMap},
         texture_input::MapRole,
     };
@@ -3923,7 +3917,7 @@ fn texture_fixture_filtering(
 }
 #[test]
 fn texture_admission_rejects_glass_and_stale_identity_and_honors_cancellation() {
-    use solidcraft_render::job::textures::PlanarFrame;
+    use torno_render::job::textures::PlanarFrame;
     let source = texture_fixture(PlanarFrame { origin: [0.; 3], u: [1., 0., 0.], v: [0., 1., 0.] });
     let mut input = request(2);
     input.textures = Some(source.clone());
@@ -3931,7 +3925,7 @@ fn texture_admission_rejects_glass_and_stale_identity_and_honors_cancellation() 
     let plain = admission(&scene, &request(2), JobOptions::default()).unwrap();
     let textured = admission(&scene, &input, JobOptions::default()).unwrap();
     assert_eq!(textured.preparation_bytes - plain.preparation_bytes, source.working_bytes());
-    assert!(solidcraft_render::job::admit(&scene, &input).is_err());
+    assert!(torno_render::job::admit(&scene, &input).is_err());
     assert!(
         admission(&scene, &input, JobOptions { texture_filtering: true, ..Default::default() }).unwrap_err().message.contains("texture filtering"),
         "a requested filter may not silently use an LOD0 capture"
@@ -3985,7 +3979,7 @@ fn host_readiness_includes_unmapped_non_nested_glass() {
 
 #[test]
 fn a_clamped_job_uses_the_clamped_optical_glass_and_caustic_programs() {
-    use solidcraft_render::job::{CausticOptions, PunctualLightOptions, PunctualLights, StudioLighting};
+    use torno_render::job::{CausticOptions, PunctualLightOptions, PunctualLights, StudioLighting};
     let Some(executor) = executor() else { return };
     let context = &executor.context;
     let lighting = Some(StudioLighting {
@@ -4067,7 +4061,7 @@ fn opaque_scene_specialization_preserves_body_face_and_volume_media() {
     scene.meshes[0].transmission = Some(clear_glass());
     assert!(!use_opaque_pipeline(&scene, options));
     scene.meshes[0].transmission = None;
-    scene.meshes[0].faces.push(solidcraft_render::FaceAppearance {
+    scene.meshes[0].faces.push(torno_render::FaceAppearance {
         face: 0,
         color: [255; 3],
         opacity: 1.0,
@@ -4083,12 +4077,12 @@ fn opaque_scene_specialization_preserves_body_face_and_volume_media() {
     assert!(!use_opaque_pipeline(&scene, JobOptions { volume: Some(Default::default()), ..options }));
     assert!(use_opaque_pipeline(
         &scene,
-        JobOptions { volume: Some(solidcraft_render::job::volume::HomogeneousVolume { extinction_per_mm: 0.0, ..Default::default() }), ..options }
+        JobOptions { volume: Some(torno_render::job::volume::HomogeneousVolume { extinction_per_mm: 0.0, ..Default::default() }), ..options }
     ));
 }
 #[test]
 fn gpu_planar_color_and_normal_maps_match_cpu_sampling_oracle() {
-    use solidcraft_render::job::textures::{PlanarFrame, sample_map};
+    use torno_render::job::textures::{PlanarFrame, sample_map};
     let Some(executor) = executor() else { return };
     let context = &executor.context;
     let shader = context.device.create_shader_module(wgpu::ShaderModuleDescriptor { label: None, source: wgpu::ShaderSource::Wgsl(SHADER.into()) });
@@ -4147,11 +4141,11 @@ fn gpu_planar_color_and_normal_maps_match_cpu_sampling_oracle() {
 #[test]
 fn gpu_quality_texture_preserves_minor_axis_detail_and_linear_mip_precision() {
     use image::ImageEncoder;
-    use solidcraft_render::{
+    use torno_render::{
         job::textures::{PlanarFrame, RuntimeTextures, TextureMap},
         texture_input::MapRole,
     };
-    use solidcraft_viewport::surface::srgb8_to_linear;
+    use torno_viewport::surface::srgb8_to_linear;
     let Some(executor) = executor() else { return };
     let context = &executor.context;
     let source = texture_fixture(PlanarFrame { origin: [0.0; 3], u: [2.0, 0.0, 0.0], v: [0.0, 2.0, 0.0] });
@@ -4214,7 +4208,7 @@ fn gpu_quality_texture_preserves_minor_axis_detail_and_linear_mip_precision() {
 #[test]
 fn gpu_quality_normal_mips_broaden_mapped_roughness_only_for_unresolved_detail() {
     use image::ImageEncoder;
-    use solidcraft_render::{
+    use torno_render::{
         job::textures::{PlanarFrame, RuntimeTextures, TextureMap},
         texture_input::MapRole,
     };
@@ -4291,7 +4285,7 @@ fn gpu_quality_normal_mips_broaden_mapped_roughness_only_for_unresolved_detail()
 
 #[test]
 fn gpu_finite_emitter_inside_solid_retains_entry_radiance_eta() {
-    use solidcraft_render::job::{AreaLight, AreaLights, StudioLighting};
+    use torno_render::job::{AreaLight, AreaLights, StudioLighting};
     let Some(executor) = executor() else { return };
     let surface = white();
     let receiver = ProductMesh {
@@ -4316,7 +4310,7 @@ fn gpu_finite_emitter_inside_solid_retains_entry_radiance_eta() {
         for x in 0..128 {
             let delta = Vec3::new(-9.0 + (f64::from(x) + 0.5) * 18.0 / 128.0, -9.0 + (f64::from(y) + 0.5) * 18.0 / 128.0, 2.0);
             let l = delta.normalized().unwrap();
-            let r = solidcraft_render::transmission::fresnel(l.z, 1.0, 1.5).unwrap().reflectance();
+            let r = torno_render::transmission::fresnel(l.z, 1.0, 1.5).unwrap().reflectance();
             expected += (1.0 - r) / 2.25 * surface.brdf(Vec3::Z, Vec3::Z, l).unwrap().x * l.z * l.z / delta.len2() * 324.0 / 16384.0;
         }
     }
@@ -4324,7 +4318,7 @@ fn gpu_finite_emitter_inside_solid_retains_entry_radiance_eta() {
         let mut scene = glass_slab(thin);
         scene.meshes[0].surface = Some(OpaqueSurface::new(Vec3::ZERO, 0.0, 0.1, 1.5).unwrap());
         scene.meshes[0].transmission =
-            Some(solidcraft_render::transmission::Transmission::new(Vec3::ZERO, thin.then_some(0.0)).unwrap().with_shadow_transmission(enabled));
+            Some(torno_render::transmission::Transmission::new(Vec3::ZERO, thin.then_some(0.0)).unwrap().with_shadow_transmission(enabled));
         scene.meshes.push(receiver.clone());
         let options = JobOptions {
             samples: 4096,
@@ -4561,7 +4555,7 @@ fn gpu_shadow_closed_corner_keeps_short_exit_segment() {
     scene.meshes[0].transmission = Some(optics);
     let cosine = std::f64::consts::FRAC_1_SQRT_2;
     let actual = shadow_probe(&executor.context, scene, Vec3::new(8.4999, 0., 2.), Vec3::new(cosine, 0., -cosine), 4.);
-    let expected = solidcraft_render::transmission::solid_shadow(optics, 0.0001 * 2.0_f64.sqrt(), cosine, cosine, 1.5).unwrap();
+    let expected = torno_render::transmission::solid_shadow(optics, 0.0001 * 2.0_f64.sqrt(), cosine, cosine, 1.5).unwrap();
     assert_eq!(actual[1][1], 2.0, "{actual:?}");
     for (a, b) in actual[0].iter().zip([expected.x, expected.y, expected.z]) {
         assert!((f64::from(*a) - b).abs() < 2e-5, "{actual:?} vs {expected:?}");
@@ -4891,7 +4885,7 @@ fn gpu_long_ray_near_corner_refraction_keeps_real_exit() {
             scene.bounds = mesh.bounds();
             scene.meshes[0].mesh = Arc::new(mesh);
             scene.meshes[0].surface = Some(OpaqueSurface::new(Vec3::ZERO, 0., 0.1, ior).unwrap());
-            scene.meshes[0].transmission = Some(solidcraft_render::transmission::Transmission::new(Vec3::ZERO, None).unwrap());
+            scene.meshes[0].transmission = Some(torno_render::transmission::Transmission::new(Vec3::ZERO, None).unwrap());
             let mut task = Task::new(context.clone(), scene, request(2), JobOptions::default(), CancelToken::default()).unwrap();
             let mut params = vec![0; 32];
             scene::vector(&mut params, transform(origin), 0.);
@@ -4997,7 +4991,7 @@ fn gpu_rib_total_internal_reflection_retains_origin_residual() {
             scene.bounds = mesh.bounds();
             scene.meshes[0].mesh = Arc::new(mesh);
             scene.meshes[0].surface = Some(OpaqueSurface::new(Vec3::ZERO, 0., 0.1, f64::from(1.49_f32)).unwrap());
-            scene.meshes[0].transmission = Some(solidcraft_render::transmission::Transmission::new(Vec3::ZERO, None).unwrap());
+            scene.meshes[0].transmission = Some(torno_render::transmission::Transmission::new(Vec3::ZERO, None).unwrap());
             let mut task = Task::new(context.clone(), scene, request(2), JobOptions::default(), CancelToken::default()).unwrap();
             let mut params = vec![0; 32];
             scene::vector(&mut params, transform(a), 0.);
@@ -5344,7 +5338,7 @@ fn medium_failures_are_tolerated_only_when_rare() {
 
 #[test]
 fn identical_maps_pack_once_for_multiple_gpu_bodies() {
-    use solidcraft_render::job::textures::{PlanarFrame, RuntimeTextures};
+    use torno_render::job::textures::{PlanarFrame, RuntimeTextures};
     let fixture = texture_fixture(PlanarFrame { origin: [0.0; 3], u: [2.0, 0.0, 0.0], v: [0.0, 2.0, 0.0] });
     let first = fixture.bindings()[0].clone();
     let mut second = first.clone();
@@ -5376,7 +5370,7 @@ fn identical_maps_pack_once_for_multiple_gpu_bodies() {
 #[test]
 fn packed_legacy_and_portable_gpu_maps_keep_distinct_policies_in_both_orders() {
     use image::ImageEncoder;
-    use solidcraft_render::{
+    use torno_render::{
         job::textures::{PlanarFrame, RuntimeTextures, TextureMap},
         texture_input::MapRole,
     };
@@ -5419,7 +5413,7 @@ fn packed_legacy_and_portable_gpu_maps_keep_distinct_policies_in_both_orders() {
 #[test]
 fn packed_gpu_mips_preserve_odd_size_linear_color_and_data_means() {
     use image::ImageEncoder;
-    use solidcraft_render::{
+    use torno_render::{
         job::textures::{PlanarFrame, RuntimeTextures, TextureMap},
         texture_input::MapRole,
     };
@@ -5445,7 +5439,7 @@ fn packed_gpu_mips_preserve_odd_size_linear_color_and_data_means() {
         let expected = (0..15)
             .map(|i| {
                 let value = if i & 1 == 0 { 64 } else { 192 };
-                if linear { solidcraft_viewport::surface::srgb8_to_linear(value) } else { f64::from(value) / 255. }
+                if linear { torno_viewport::surface::srgb8_to_linear(value) } else { f64::from(value) / 255. }
             })
             .sum::<f64>()
             / 15.;
@@ -5457,7 +5451,7 @@ fn packed_gpu_mips_preserve_odd_size_linear_color_and_data_means() {
 
 #[test]
 fn gpu_trilinear_minification_matches_singular_value_lod_and_repeat_oracle() {
-    use solidcraft_render::{
+    use torno_render::{
         job::textures::PlanarFrame,
         texture_lod::select_isotropic_lod,
         texture_sampling::{
@@ -5538,7 +5532,7 @@ fn gpu_trilinear_minification_matches_singular_value_lod_and_repeat_oracle() {
 #[test]
 fn gpu_scalar_faces_preserve_legacy_roles_and_suppress_only_portable_roles() {
     use image::ImageEncoder;
-    use solidcraft_render::{
+    use torno_render::{
         FaceAppearance,
         job::textures::{PlanarFrame, RuntimeTextures, TextureMap, sample_map},
         texture_input::MapRole,
@@ -5628,7 +5622,7 @@ fn gpu_scalar_faces_preserve_legacy_roles_and_suppress_only_portable_roles() {
 #[test]
 fn gpu_wood_minification_converges_to_mean_and_preserves_scalar_face_override() {
     use image::ImageEncoder;
-    use solidcraft_render::{
+    use torno_render::{
         FaceAppearance,
         job::textures::{BaseColorMode, PlanarFrame, RuntimeTextures, TextureBinding, TextureMap},
         texture_input::MapRole,
@@ -5675,7 +5669,7 @@ fn gpu_wood_minification_converges_to_mean_and_preserves_scalar_face_override() 
         let options = JobOptions {
             samples: 1,
             max_depth: 1,
-            lens: lens.then_some(solidcraft_render::job::ThinLens { aperture_radius_mm: 0.15, focus_distance_mm: 4.0 }),
+            lens: lens.then_some(torno_render::job::ThinLens { aperture_radius_mm: 0.15, focus_distance_mm: 4.0 }),
             ..Default::default()
         };
         let mut task = Task::new(executor.context.clone(), scene, image, options, CancelToken::default()).unwrap();
@@ -5728,7 +5722,7 @@ fn gpu_wood_minification_converges_to_mean_and_preserves_scalar_face_override() 
 #[test]
 fn gpu_mapped_wood_preserves_index_matched_sheet_and_solid_transport() {
     use image::ImageEncoder;
-    use solidcraft_render::{
+    use torno_render::{
         job::textures::{BaseColorMode, PlanarFrame, RuntimeTextures, TextureBinding, TextureMap},
         texture_input::MapRole,
     };
@@ -5784,7 +5778,7 @@ fn gpu_mapped_wood_preserves_index_matched_sheet_and_solid_transport() {
             }
             glass.surface = Some(OpaqueSurface::new(Vec3::ZERO, 0., 1., 1.).unwrap());
             glass.transmission =
-                Some(solidcraft_render::transmission::Transmission::new(Vec3::ZERO, thin.then_some(0.)).unwrap().with_shadow_transmission(true));
+                Some(torno_render::transmission::Transmission::new(Vec3::ZERO, thin.then_some(0.)).unwrap().with_shadow_transmission(true));
             let mut scene = ProductScene { bounds: board.mesh.bounds().union(&glass.mesh.bounds()), meshes: vec![board.clone(), glass] };
             if !mapped {
                 scene.meshes[0].surface = Some(OpaqueSurface::new(Vec3::new(0.5, 0.5, 0.5), 0., 1., 1.).unwrap());
@@ -5835,7 +5829,7 @@ fn gpu_mapped_wood_preserves_index_matched_sheet_and_solid_transport() {
 #[test]
 fn gpu_mapped_wood_keeps_fine_detail_behind_large_index_matched_solid_glass() {
     use image::ImageEncoder;
-    use solidcraft_render::{
+    use torno_render::{
         job::textures::{BaseColorMode, PlanarFrame, RuntimeTextures, TextureBinding, TextureMap},
         texture_input::MapRole,
     };
@@ -5854,7 +5848,7 @@ fn gpu_mapped_wood_keeps_fine_detail_behind_large_index_matched_solid_glass() {
         position.y *= 50.0;
     }
     glass.surface = Some(OpaqueSurface::new(Vec3::ZERO, 0., 1., 1.).unwrap());
-    glass.transmission = Some(solidcraft_render::transmission::Transmission::new(Vec3::ZERO, None).unwrap().with_shadow_transmission(true));
+    glass.transmission = Some(torno_render::transmission::Transmission::new(Vec3::ZERO, None).unwrap().with_shadow_transmission(true));
     // Each 2x2-texel block has a flat bilinear centre. The two camera patches
     // below see adjacent white/black details, not the texture's averaged mean.
     let pixels: Vec<u8> = (0..16)
@@ -5926,7 +5920,7 @@ fn gpu_mapped_wood_keeps_fine_detail_behind_large_index_matched_solid_glass() {
 #[test]
 fn gpu_scalar_maps_match_linear_reference_without_touching_ior() {
     use image::ImageEncoder;
-    use solidcraft_render::{
+    use torno_render::{
         job::textures::{PlanarFrame, RuntimeTextures, TextureMap},
         texture_input::MapRole,
     };
@@ -6012,7 +6006,7 @@ fn production_envelope_is_device_bounded_and_never_silently_resized() {
 fn disjoint_glass_count_does_not_relax_closed_topology_or_overlap_validation() {
     let template = sphere_grid(white(), 8, 16);
     let mut source = ProductScene { meshes: Vec::new(), bounds: Aabb3::EMPTY };
-    for i in 0..solidcraft_render::job::MAX_GPU_DIELECTRICS {
+    for i in 0..torno_render::job::MAX_GPU_DIELECTRICS {
         let mut body = template.meshes[0].clone();
         body.name = format!("separate glass {i}");
         for p in &mut Arc::make_mut(&mut body.mesh).positions {
@@ -6029,7 +6023,7 @@ fn disjoint_glass_count_does_not_relax_closed_topology_or_overlap_validation() {
 
 #[test]
 fn display_identity_matches_the_legacy_response_and_spatial_filters_ignore_chunking() {
-    use solidcraft_render::job::finishing::{Backdrop, BackdropMode, Finishing};
+    use torno_render::job::finishing::{Backdrop, BackdropMode, Finishing};
     let cancel = CancelToken::default();
     let input: Vec<[f32; 4]> = (0..91)
         .map(|i| {
@@ -6092,7 +6086,7 @@ fn complete_linear_fixture(context: Arc<Context>, options: JobOptions) -> (Vec<u
     // Use the public environment-lighting contract, not the test-only numerical
     // furnace path. Primary misses remain transparent black in the linear master.
     let options = JobOptions {
-        lighting: Some(solidcraft_render::job::StudioLighting {
+        lighting: Some(torno_render::job::StudioLighting {
             punctual_lights: Default::default(),
             directional_lights: Default::default(),
             environment: [8.0; 3],
@@ -6116,7 +6110,7 @@ fn complete_linear_fixture(context: Arc<Context>, options: JobOptions) -> (Vec<u
 }
 #[test]
 fn gpu_raw_master_keeps_hdr_samples_before_denoise_gain_tone_and_camera_backdrop() {
-    use solidcraft_render::job::finishing::{Backdrop, Finishing};
+    use torno_render::job::finishing::{Backdrop, Finishing};
     let Some(executor) = executor() else {
         return;
     };
@@ -6164,7 +6158,7 @@ fn gpu_raw_master_keeps_hdr_samples_before_denoise_gain_tone_and_camera_backdrop
     }
     assert!(maximum > 2.0, "raw highlight radiance must not be clipped or reconstructed from PNG: {maximum}");
     // Optional fresh external evidence folder for an independent OpenEXR reader.
-    if let Some(out) = std::env::var_os("SOLIDCRAFT_FINISHING_EVIDENCE_DIR") {
+    if let Some(out) = std::env::var_os("TORNO_FINISHING_EVIDENCE_DIR") {
         let out = std::path::PathBuf::from(out);
         assert!(out.is_absolute() && !out.exists());
         std::fs::create_dir_all(&out).unwrap();
@@ -6184,7 +6178,7 @@ fn gpu_raw_master_keeps_hdr_samples_before_denoise_gain_tone_and_camera_backdrop
 
 #[test]
 fn gpu_host_retains_linear_companion_under_the_same_exact_frame_lease() {
-    use solidcraft_render::job::{JobId, Phase};
+    use torno_render::job::{JobId, Phase};
     let Some(executor) = executor() else {
         return;
     };
@@ -6195,7 +6189,7 @@ fn gpu_host_retains_linear_companion_under_the_same_exact_frame_lease() {
     let base = host.admit(&source, &req, JobOptions::default()).unwrap();
     let options = JobOptions { samples: 4, linear_exr: true, ..Default::default() };
     let extra = host.admit(&source, &req, options).unwrap();
-    assert_eq!(extra.estimated_total_bytes - base.estimated_total_bytes, solidcraft_render::job::linear_exr::encoded_limit(8, 8).unwrap());
+    assert_eq!(extra.estimated_total_bytes - base.estimated_total_bytes, torno_render::job::linear_exr::encoded_limit(8, 8).unwrap());
     let handle = host.submit_with_options(id, 7, source.clone(), req.clone(), options).unwrap();
     let status = handle.wait_timeout(std::time::Duration::from_secs(30)).unwrap();
     assert_eq!(status.progress.phase, Phase::Completed, "{:?}", status.error);
@@ -6236,12 +6230,12 @@ fn gpu_host_retains_linear_companion_under_the_same_exact_frame_lease() {
 #[test]
 fn engine_exports_raw_master_from_the_exact_completed_job_without_png_conversion() {
     use serde_json::json;
-    use solidcraft_render::job::{JobId, Phase};
+    use torno_render::job::{JobId, Phase};
     let Some(executor) = executor() else {
         return;
     };
     let host = ImageHost::with_executor(Arc::new(executor)).unwrap();
-    let mut s = solidcraft_engine::Session::default();
+    let mut s = torno_engine::Session::default();
     s.register_render_job_host(host.clone()).unwrap();
     s.execute("solid.box", &json!({"length":2,"width":2,"height":1,"body_name":"Original output fixture"})).unwrap();
     let before = s.doc.to_json();
@@ -6255,7 +6249,7 @@ fn engine_exports_raw_master_from_the_exact_completed_job_without_png_conversion
     assert_eq!(handle.wait_timeout(std::time::Duration::from_secs(30)).unwrap().progress.phase, Phase::Completed);
     let frame = handle.frame().unwrap().unwrap();
     let root = std::env::temp_dir().join(format!(
-        "solidcraft-linear-export-{}-{}",
+        "torno-linear-export-{}-{}",
         std::process::id(),
         std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos()
     ));
@@ -6293,7 +6287,7 @@ fn engine_exports_raw_master_from_the_exact_completed_job_without_png_conversion
 
 #[test]
 fn gpu_bloom_changes_display_only_with_explicit_scratch_and_opaque_contract() {
-    use solidcraft_render::job::{bloom::Bloom, finishing::Finishing};
+    use torno_render::job::{bloom::Bloom, finishing::Finishing};
     let Some(executor) = executor() else { return };
     let options = JobOptions { samples: 16, seed: 17, max_depth: 3, linear_exr: true, ..Default::default() };
     let (png, raw) = complete_linear_fixture(executor.context.clone(), options);
@@ -6352,10 +6346,10 @@ fn display_bloom_slices_refuse_invalid_ranges_without_panicking() {
 /// then prove that the same device still accepts a fresh nested scope stack.
 #[test]
 fn cancelled_environment_preparation_unwinds_gpu_error_scopes() {
-    use solidcraft_render::lighting::environment::EnvironmentSource;
+    use torno_render::lighting::environment::EnvironmentSource;
     let Ok((_, device, _queue)) = open_headless() else {
-        let available = !solidcraft_viewport_gpu::select::path_backends().is_empty();
-        assert!(!available || std::env::var_os("SOLIDCRAFT_REQUIRE_GPU").is_none(), "required Vulkan device unavailable");
+        let available = !torno_viewport_gpu::select::path_backends().is_empty();
+        assert!(!available || std::env::var_os("TORNO_REQUIRE_GPU").is_none(), "required Vulkan device unavailable");
         return;
     };
     let mut image = request(1);
@@ -6380,8 +6374,8 @@ fn cancelled_environment_preparation_unwinds_gpu_error_scopes() {
 #[test]
 fn failed_resource_creation_unwinds_gpu_error_scopes() {
     let Ok((_, device, _queue)) = open_headless() else {
-        let available = !solidcraft_viewport_gpu::select::path_backends().is_empty();
-        assert!(!available || std::env::var_os("SOLIDCRAFT_REQUIRE_GPU").is_none(), "required Vulkan device unavailable");
+        let available = !torno_viewport_gpu::select::path_backends().is_empty();
+        assert!(!available || std::env::var_os("TORNO_REQUIRE_GPU").is_none(), "required Vulkan device unavailable");
         return;
     };
     let outcome = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
@@ -6459,7 +6453,7 @@ fn actual_gpu_dispatch_visits_workgroup_tails_and_only_the_current_tile() {
 
 #[test]
 fn real_device_loss_retires_the_executor_and_the_sessions_cached_availability() {
-    use solidcraft_engine::Session;
+    use torno_engine::Session;
     let Some(executor) = executor() else { return };
     let context = executor.context.clone();
     let host = ImageHost::with_executor(Arc::new(executor)).unwrap();
@@ -6491,11 +6485,11 @@ fn fixed_gpu_previews_match_complete_prefixes_with_finishing_and_final_exr() {
         seed: 47,
         transmission_samples: 2,
         linear_exr: true,
-        finishing: solidcraft_render::job::finishing::Finishing {
+        finishing: torno_render::job::finishing::Finishing {
             rgb_gain: [1.2, 0.9, 1.1],
             contrast: 1.1,
-            bloom: Some(solidcraft_render::job::bloom::Bloom { strength: 0.25, threshold: 0.1, radius: 1 }),
-            photographic: solidcraft_render::job::photographic::Photographic { grain: 0.01, seed: 17, ..Default::default() },
+            bloom: Some(torno_render::job::bloom::Bloom { strength: 0.25, threshold: 0.1, radius: 1 }),
+            photographic: torno_render::job::photographic::Photographic { grain: 0.01, seed: 17, ..Default::default() },
             ..Default::default()
         },
         ..Default::default()
@@ -6560,7 +6554,7 @@ fn adaptive_gpu_checkpoint_target_includes_pilots_without_disabling_final_render
     let Some(executor) = executor() else { return };
     let options = JobOptions {
         samples: 16,
-        adaptive: Some(solidcraft_render::job::adaptive::AdaptiveSampling { pilot_samples: 16, min_samples: 16, ..Default::default() }),
+        adaptive: Some(torno_render::job::adaptive::AdaptiveSampling { pilot_samples: 16, min_samples: 16, ..Default::default() }),
         ..Default::default()
     };
     assert_eq!(executor.preview_samples(options), Some(32));
@@ -6568,7 +6562,7 @@ fn adaptive_gpu_checkpoint_target_includes_pilots_without_disabling_final_render
     let host = ImageHost::with_executor(Arc::new(executor)).unwrap();
     let job = host
         .submit_with_options(
-            solidcraft_render::job::JobId { session: 9023, serial: 1, generation: 1 },
+            torno_render::job::JobId { session: 9023, serial: 1, generation: 1 },
             57,
             ProductScene { meshes: Vec::new(), bounds: Aabb3::EMPTY },
             request(2),
@@ -6586,15 +6580,15 @@ fn adaptive_gpu_checkpoint_target_includes_pilots_without_disabling_final_render
 fn gpu_ui_box_coat_and_color_map_keep_every_raw_sample_finite() {
     use image::ImageEncoder;
     use serde_json::json;
-    use solidcraft_render::{
+    use torno_render::{
         job::textures::{PlanarFrame, RuntimeTextures, TextureBinding, TextureMap},
         texture_input::MapRole,
     };
-    use solidcraft_viewport::{clear_coat::ClearCoat, surface::srgb8_to_linear};
+    use torno_viewport::{clear_coat::ClearCoat, surface::srgb8_to_linear};
     let Some(executor) = executor() else { return };
-    let mut session = solidcraft_engine::Session::default();
+    let mut session = torno_engine::Session::default();
     session.execute("solid.box", &json!({"length":10,"width":20,"height":5})).unwrap();
-    let captured = solidcraft_engine::product_scene::extract(&session).unwrap();
+    let captured = torno_engine::product_scene::extract(&session).unwrap();
     assert_eq!(captured.meshes.len(), 1);
     let mut encoded_map = Vec::new();
     image::codecs::png::PngEncoder::new(&mut encoded_map).write_image(&[80, 160, 220, 255], 1, 1, image::ExtendedColorType::Rgba8).unwrap();
@@ -6608,7 +6602,7 @@ fn gpu_ui_box_coat_and_color_map_keep_every_raw_sample_finite() {
         roll: 0.0,
         distance: 61.06594959585294,
         fov: 0.0,
-        up: solidcraft_viewport::UpAxis::Z,
+        up: torno_viewport::UpAxis::Z,
     };
     let options: JobOptions = serde_json::from_value(json!({
         "samples":4,"max_depth":3,"seed":7,"exposure_ev":0.5,"tone_map":"aces_fitted",
@@ -6702,7 +6696,7 @@ fn directional_receiver() -> ProductScene {
 
 #[test]
 fn gpu_hard_directional_rgb_sum_matches_f64_brdf_without_emitter_mis_or_sample_count_bias() {
-    use solidcraft_render::job::{DirectionalLightOptions, DirectionalLights, StudioLighting};
+    use torno_render::job::{DirectionalLightOptions, DirectionalLights, StudioLighting};
     let Some(executor) = executor() else { return };
     let sources = [
         DirectionalLightOptions { direction: [0.0, 0.0, 2.0], color: [1.0, 0.0, 0.0], intensity: 2.0 },
@@ -6741,7 +6735,7 @@ fn gpu_hard_directional_rgb_sum_matches_f64_brdf_without_emitter_mis_or_sample_c
 
 #[test]
 fn gpu_hard_directionals_preserve_zero_source_and_default_streams_and_cancel_without_publication() {
-    use solidcraft_render::job::{DirectionalLightOptions, DirectionalLights, LightingPreset, StudioLighting};
+    use torno_render::job::{DirectionalLightOptions, DirectionalLights, LightingPreset, StudioLighting};
     let Some(executor) = executor() else { return };
     let render = |lighting| {
         let options = JobOptions { samples: 4, max_depth: 3, seed: 71, lighting, ..Default::default() };
@@ -6773,7 +6767,7 @@ fn gpu_hard_directionals_preserve_zero_source_and_default_streams_and_cancel_wit
 
 #[test]
 fn gpu_hard_directional_uniform_layout_and_admission_keep_the_positive_zero_abi() {
-    use solidcraft_render::job::{DirectionalLightOptions, DirectionalLights, StudioLighting};
+    use torno_render::job::{DirectionalLightOptions, DirectionalLights, StudioLighting};
     let Some(executor) = executor() else { return };
     shader_validates_without_a_device();
     main_inlines_few_bvh_walks();
@@ -6813,7 +6807,7 @@ fn gpu_hard_directional_uniform_layout_and_admission_keep_the_positive_zero_abi(
 
 #[test]
 fn gpu_hard_directional_visibility_obeys_opaque_blockers_and_external_beer_attenuation() {
-    use solidcraft_render::job::{DirectionalLightOptions, DirectionalLights, StudioLighting, volume::HomogeneousVolume};
+    use torno_render::job::{DirectionalLightOptions, DirectionalLights, StudioLighting, volume::HomogeneousVolume};
     let Some(executor) = executor() else { return };
     let light = DirectionalLightOptions { direction: [0.0, 0.0, 1.0], color: [1.0, 0.5, 0.25], intensity: 2.0 };
     for (blocker, medium) in [(false, false), (true, false), (false, true)] {
@@ -6861,8 +6855,8 @@ fn gpu_hard_directional_visibility_obeys_opaque_blockers_and_external_beer_atten
     }
 }
 
-fn punctual_options(sources: &[solidcraft_render::job::PunctualLightOptions], samples: u32, depth: u32) -> JobOptions {
-    use solidcraft_render::job::{PunctualLights, StudioLighting};
+fn punctual_options(sources: &[torno_render::job::PunctualLightOptions], samples: u32, depth: u32) -> JobOptions {
+    use torno_render::job::{PunctualLights, StudioLighting};
     JobOptions {
         samples,
         max_depth: depth,
@@ -6871,8 +6865,8 @@ fn punctual_options(sources: &[solidcraft_render::job::PunctualLightOptions], sa
         ..Default::default()
     }
 }
-fn punctual_point() -> solidcraft_render::job::PunctualLightOptions {
-    solidcraft_render::job::PunctualLightOptions {
+fn punctual_point() -> torno_render::job::PunctualLightOptions {
+    torno_render::job::PunctualLightOptions {
         position_mm: [0.0, 0.0, 4.0],
         color: [0.25, 0.5, 1.0],
         intensity: 2.0,
@@ -6882,7 +6876,7 @@ fn punctual_point() -> solidcraft_render::job::PunctualLightOptions {
     }
 }
 // Independent scalar law; does not call the CPU/GPU punctual sampling helpers.
-fn punctual_oracle(source: solidcraft_render::job::PunctualLightOptions, position: Vec3) -> (Vec3, Vec3) {
+fn punctual_oracle(source: torno_render::job::PunctualLightOptions, position: Vec3) -> (Vec3, Vec3) {
     let [x, y, z] = source.position_mm;
     let delta = Vec3::new(x, y, z) - position;
     let distance = delta.len();
@@ -6913,10 +6907,10 @@ fn punctual_primary_point(camera: Camera, ordinal: u32, seed: u32) -> Vec3 {
 }
 #[test]
 fn gpu_point_and_spot_real_primary_rays_match_inverse_square_rgb_cone_and_endpoint_depth() {
-    use solidcraft_render::job::SpotConeOptions;
+    use torno_render::job::SpotConeOptions;
     let Some(executor) = executor() else { return };
     for cone in [None, Some(SpotConeOptions { emitted_axis: [0.0, 0.0, -1.0], inner_half_angle_radians: 0.2, outer_half_angle_radians: 0.9 })] {
-        let source = solidcraft_render::job::PunctualLightOptions { cone, ..punctual_point() };
+        let source = torno_render::job::PunctualLightOptions { cone, ..punctual_point() };
         for depth in [1, 2] {
             let options = punctual_options(&[source], 16, depth);
             let image = request(1);
@@ -6940,7 +6934,7 @@ fn gpu_point_and_spot_real_primary_rays_match_inverse_square_rgb_cone_and_endpoi
 }
 #[test]
 fn gpu_punctual_uniform_high_low_precision_and_admission_keep_studio_barrier_before_page_metadata() {
-    use solidcraft_render::job::PunctualLightOptions;
+    use torno_render::job::PunctualLightOptions;
     shader_validates_without_a_device();
     main_inlines_few_bvh_walks();
     let light = PunctualLightOptions { position_mm: [1e9 - 0.01, -1e9 + 0.02, 0.003], ..punctual_point() };
@@ -6971,7 +6965,7 @@ fn gpu_punctual_uniform_high_low_precision_and_admission_keep_studio_barrier_bef
 }
 #[test]
 fn gpu_punctual_delta_sources_preserve_zero_default_stream_and_cancel_without_publication() {
-    use solidcraft_render::job::{DirectionalLights, LightingPreset, StudioLighting};
+    use torno_render::job::{DirectionalLights, LightingPreset, StudioLighting};
     let Some(executor) = executor() else { return };
     let render = |options| {
         let mut task = Task::new(executor.context.clone(), directional_receiver(), request(4), options, CancelToken::default()).unwrap();
@@ -6980,7 +6974,7 @@ fn gpu_punctual_delta_sources_preserve_zero_default_stream_and_cancel_without_pu
         }
         task.read_linear().unwrap()
     };
-    let zero = solidcraft_render::job::PunctualLightOptions { intensity: 0.0, ..punctual_point() };
+    let zero = torno_render::job::PunctualLightOptions { intensity: 0.0, ..punctual_point() };
     let old = JobOptions { samples: 4, max_depth: 3, seed: 71, ..Default::default() };
     let mut explicit = punctual_options(&[zero; 8], 4, 3);
     explicit.seed = old.seed;
@@ -6995,10 +6989,10 @@ fn gpu_punctual_delta_sources_preserve_zero_default_stream_and_cancel_without_pu
     // when a zero-strength delta family is appended after them.
     let mut mixed = old;
     mixed.lighting = Some(StudioLighting {
-        sun: Some(solidcraft_render::job::Sun { direction: [0.0, 0.0, 1.0], angular_radius_rad: 0.2, radiance: [2.0; 3] }),
+        sun: Some(torno_render::job::Sun { direction: [0.0, 0.0, 1.0], angular_radius_rad: 0.2, radiance: [2.0; 3] }),
         directional_lights: DirectionalLights::new(&LightingPreset::Neutral.directional_lights()).unwrap(),
         environment: [0.2; 3],
-        area_lights: solidcraft_render::job::AreaLights::new(&[solidcraft_render::job::AreaLight {
+        area_lights: torno_render::job::AreaLights::new(&[torno_render::job::AreaLight {
             center: [1.0, 0.0, 4.0],
             u: [1.0, 0.0, 0.0],
             v: [0.0, -1.0, 0.0],
@@ -7008,7 +7002,7 @@ fn gpu_punctual_delta_sources_preserve_zero_default_stream_and_cancel_without_pu
         ..Default::default()
     });
     let mut with_zero = mixed;
-    with_zero.lighting.as_mut().unwrap().punctual_lights = solidcraft_render::job::PunctualLights::new(&[zero; 8]).unwrap();
+    with_zero.lighting.as_mut().unwrap().punctual_lights = torno_render::job::PunctualLights::new(&[zero; 8]).unwrap();
     assert_eq!(render(mixed), render(with_zero));
     let cancel = CancelToken::default();
     let mut task = Task::new(executor.context.clone(), directional_receiver(), request(4), explicit, cancel.clone()).unwrap();
@@ -7019,7 +7013,7 @@ fn gpu_punctual_delta_sources_preserve_zero_default_stream_and_cancel_without_pu
 #[test]
 fn gpu_punctual_finite_shadow_blocks_only_before_the_source_and_preserves_physical_falloff() {
     let Some(executor) = executor() else { return };
-    let light = solidcraft_render::job::PunctualLightOptions { position_mm: [4.0, 0.0, 4.0], ..punctual_point() };
+    let light = torno_render::job::PunctualLightOptions { position_mm: [4.0, 0.0, 4.0], ..punctual_point() };
     for blocker_z in [None, Some(2.0), Some(4.0), Some(6.0)] {
         let mut scene = directional_receiver();
         if let Some(z) = blocker_z {
@@ -7052,7 +7046,7 @@ fn gpu_punctual_finite_shadow_blocks_only_before_the_source_and_preserves_physic
 
 #[test]
 fn gpu_punctual_samples_match_independent_cone_boundaries_midpoint_high_low_and_counter_carry() {
-    use solidcraft_render::job::SpotConeOptions;
+    use torno_render::job::SpotConeOptions;
     let Some(executor) = executor() else { return };
     let context = &executor.context;
     // A test-only entry calls the production sampler at an independently given
@@ -7101,7 +7095,7 @@ fn gpu_punctual_samples_match_independent_cone_boundaries_midpoint_high_low_and_
         (task.read_linear().unwrap()[0], task.punctual_diagnostics().unwrap())
     };
     let cone = SpotConeOptions { emitted_axis: [0.0, 0.0, -3.0], inner_half_angle_radians: 0.2, outer_half_angle_radians: 0.8 };
-    let light = solidcraft_render::job::PunctualLightOptions { cone: Some(cone), ..punctual_point() };
+    let light = torno_render::job::PunctualLightOptions { cone: Some(cone), ..punctual_point() };
     let midpoint = ((cone.inner_half_angle_radians.cos() + cone.outer_half_angle_radians.cos()) * 0.5).acos();
     for angle in [0.0, cone.inner_half_angle_radians, midpoint, cone.outer_half_angle_radians, 1.0] {
         let point = Vec3::new(4.0 * angle.sin(), 0.0, 4.0 - 4.0 * angle.cos());
@@ -7112,7 +7106,7 @@ fn gpu_punctual_samples_match_independent_cone_boundaries_midpoint_high_low_and_
         }
         assert!(actual.1.is_empty());
     }
-    let far = solidcraft_render::job::PunctualLightOptions { position_mm: [1e9 - 0.01, 0.0, 0.0], reference_distance_mm: 0.01, ..punctual_point() };
+    let far = torno_render::job::PunctualLightOptions { position_mm: [1e9 - 0.01, 0.0, 0.0], reference_distance_mm: 0.01, ..punctual_point() };
     let point = Vec3::new(1e9 - 0.02, 0.0, 0.0);
     let actual = run(far, point, false);
     let expected = punctual_oracle(far, point).1;
@@ -7120,16 +7114,12 @@ fn gpu_punctual_samples_match_independent_cone_boundaries_midpoint_high_low_and_
         assert!((f64::from(*a) - b).abs() < 2e-6, "nearby large-world points {:?} vs {expected:?}", actual.0);
     }
     assert!(actual.1.is_empty());
-    let near = solidcraft_render::job::PunctualLightOptions { position_mm: [0.0; 3], intensity: 0.0, ..punctual_point() };
+    let near = torno_render::job::PunctualLightOptions { position_mm: [0.0; 3], intensity: 0.0, ..punctual_point() };
     let actual = run(near, Vec3::ZERO, true);
     assert_eq!(actual.0, [0.0, 0.0, 0.0, 1.0]);
     assert_eq!(actual.1.near_source, 1_u64 << 32, "near-source counting precedes zero-intensity omission and carries into the high word");
-    let excessive = solidcraft_render::job::PunctualLightOptions {
-        position_mm: [0.0, 0.0, 0.002],
-        reference_distance_mm: 1e6,
-        intensity: 64.0,
-        ..punctual_point()
-    };
+    let excessive =
+        torno_render::job::PunctualLightOptions { position_mm: [0.0, 0.0, 0.002], reference_distance_mm: 1e6, intensity: 64.0, ..punctual_point() };
     let actual = run(excessive, Vec3::ZERO, false);
     assert_eq!(actual.0, [0.0, 0.0, 0.0, 1.0]);
     assert_eq!(actual.1.radiance_limit, 1);
@@ -7138,7 +7128,7 @@ fn gpu_punctual_samples_match_independent_cone_boundaries_midpoint_high_low_and_
 #[test]
 fn gpu_punctual_shadow_offset_crossing_is_reported_without_reversing_or_infinite_connection() {
     let Some(executor) = executor() else { return };
-    let light = solidcraft_render::job::PunctualLightOptions { position_mm: [0.0, 0.0, 0.01], ..punctual_point() };
+    let light = torno_render::job::PunctualLightOptions { position_mm: [0.0, 0.0, 0.01], ..punctual_point() };
     let mut image = request(1);
     image.camera.distance = 0.001;
     // Keep the original tiny orthographic pixel footprint. Move only its axial
@@ -7171,10 +7161,10 @@ fn gpu_punctual_shadow_offset_crossing_is_reported_without_reversing_or_infinite
 #[test]
 fn gpu_point_delta_visibility_keeps_glass_and_external_beer_without_competing_mis_bias() {
     let Some(executor) = executor() else { return };
-    let light = solidcraft_render::job::PunctualLightOptions { position_mm: [4.0, 0.0, 4.0], ..punctual_point() };
+    let light = torno_render::job::PunctualLightOptions { position_mm: [4.0, 0.0, 4.0], ..punctual_point() };
     for glass in [false, true] {
         let mut scene = directional_receiver();
-        let optics = solidcraft_render::transmission::Transmission::new(Vec3::new(0.1, 0.2, 0.3), Some(0.7)).unwrap().with_shadow_transmission(true);
+        let optics = torno_render::transmission::Transmission::new(Vec3::new(0.1, 0.2, 0.3), Some(0.7)).unwrap().with_shadow_transmission(true);
         if glass {
             let mut panel = scene.meshes[0].clone();
             panel.name = "point connection glass".into();
@@ -7186,7 +7176,7 @@ fn gpu_point_delta_visibility_keeps_glass_and_external_beer_without_competing_mi
         }
         let mut options = punctual_options(&[light], 4, 1);
         if !glass {
-            options.volume = Some(solidcraft_render::job::volume::HomogeneousVolume {
+            options.volume = Some(torno_render::job::volume::HomogeneousVolume {
                 min_mm: [-10.0, -10.0, 1.0],
                 max_mm: [10.0, 10.0, 3.0],
                 extinction_per_mm: 0.1,
@@ -7260,7 +7250,7 @@ fn gpu_point_delta_visibility_keeps_glass_and_external_beer_without_competing_mi
             let (direction, incident) = punctual_oracle(light, p);
             let brdf = white().brdf(Vec3::Z, image.camera.back(), direction).unwrap();
             let visibility = if glass {
-                solidcraft_render::transmission::slab(optics, 0.7, direction.z, 1.0, 1.5).unwrap().1
+                torno_render::transmission::slab(optics, 0.7, direction.z, 1.0, 1.5).unwrap().1
             } else {
                 Vec3::new(1.0, 1.0, 1.0) * (-0.1 * 2.0 / direction.z).exp()
             };
@@ -7301,11 +7291,11 @@ fn gpu_point_delta_visibility_keeps_glass_and_external_beer_without_competing_mi
 }
 #[test]
 fn gpu_point_spot_complete_previews_match_prefixes_and_preserve_exact_final_png_raw_exr() {
-    use solidcraft_render::job::SpotConeOptions;
+    use torno_render::job::SpotConeOptions;
     let Some(executor) = executor() else { return };
     let sources = [
         punctual_point(),
-        solidcraft_render::job::PunctualLightOptions {
+        torno_render::job::PunctualLightOptions {
             position_mm: [2.0, 0.0, 4.0],
             cone: Some(SpotConeOptions { emitted_axis: [-2.0, 0.0, -4.0], inner_half_angle_radians: 0.2, outer_half_angle_radians: 0.8 }),
             ..punctual_point()
@@ -7365,15 +7355,11 @@ fn gpu_punctual_volume_connection_matches_independent_hg_and_finite_beer_without
     });
     for cone in [
         None,
-        Some(solidcraft_render::job::SpotConeOptions {
-            emitted_axis: [-1.0, 0.0, -2.0],
-            inner_half_angle_radians: 0.2,
-            outer_half_angle_radians: 0.8,
-        }),
+        Some(torno_render::job::SpotConeOptions { emitted_axis: [-1.0, 0.0, -2.0], inner_half_angle_radians: 0.2, outer_half_angle_radians: 0.8 }),
     ] {
-        let light = solidcraft_render::job::PunctualLightOptions { position_mm: [1.0, 0.0, 4.0], cone, ..punctual_point() };
+        let light = torno_render::job::PunctualLightOptions { position_mm: [1.0, 0.0, 4.0], cone, ..punctual_point() };
         let options = JobOptions {
-            volume: Some(solidcraft_render::job::volume::HomogeneousVolume {
+            volume: Some(torno_render::job::volume::HomogeneousVolume {
                 min_mm: [-10.0, -10.0, 1.0],
                 max_mm: [10.0, 10.0, 3.0],
                 extinction_per_mm: 0.1,
@@ -7413,9 +7399,9 @@ fn gpu_punctual_volume_connection_matches_independent_hg_and_finite_beer_without
 }
 #[test]
 fn gpu_adaptive_denoised_point_spot_updates_preserve_every_pilot_production_pass_and_final_bytes() {
-    use solidcraft_render::job::{SpotConeOptions, adaptive::AdaptiveSampling};
+    use torno_render::job::{SpotConeOptions, adaptive::AdaptiveSampling};
     let Some(executor) = executor() else { return };
-    let light = solidcraft_render::job::PunctualLightOptions {
+    let light = torno_render::job::PunctualLightOptions {
         cone: Some(SpotConeOptions { emitted_axis: [0.0, 0.0, -1.0], inner_half_angle_radians: 0.2, outer_half_angle_radians: 0.8 }),
         ..punctual_point()
     };
@@ -7476,7 +7462,7 @@ fn gpu_punctual_offset_preserves_small_shift_after_large_local_barycentric_displ
         compilation_options: Default::default(),
         cache: None,
     });
-    let light = solidcraft_render::job::PunctualLightOptions { position_mm: [1.01, 0.0, 0.0], reference_distance_mm: 0.01, ..punctual_point() };
+    let light = torno_render::job::PunctualLightOptions { position_mm: [1.01, 0.0, 0.0], reference_distance_mm: 0.01, ..punctual_point() };
     let mut task = Task::new(context.clone(), directional_receiver(), request(2), punctual_options(&[light], 1, 1), CancelToken::default()).unwrap();
     context.queue.write_buffer(&task.uniform, 0, &task.parameters(1).unwrap());
     let mut encoder = context.device.create_command_encoder(&Default::default());
@@ -7742,7 +7728,7 @@ fn shared_bvh_node_walk_preserves_original_ordinary_and_compensated_hit_bits() {
 
 #[test]
 fn photon_source_power_table_matches_shader_counts_and_packed_zero_environment() {
-    use solidcraft_render::job::{CausticOptions, DirectionalLightOptions, DirectionalLights, StudioLighting};
+    use torno_render::job::{CausticOptions, DirectionalLightOptions, DirectionalLights, StudioLighting};
     let mut bytes = Vec::new();
     for value in [-1.0_f32, -1.0, -1.0, 0.0, 1.0, 1.0, 1.0, 0.0] {
         bytes.extend_from_slice(&value.to_le_bytes());
@@ -7761,13 +7747,13 @@ fn photon_source_power_table_matches_shader_counts_and_packed_zero_environment()
     let table = photons::source_distribution(options, &image, &bytes, None, 0.0).unwrap().unwrap();
     assert_eq!(table.cumulative().len(), 1, "underflowed environment is absent on the shader");
     let mut hdr = image.clone();
-    hdr.environment = Some(Arc::new(solidcraft_render::lighting::environment::EnvironmentSource::hdr(original_hdr(), 0.0, 1e-100, false).unwrap()));
+    hdr.environment = Some(Arc::new(torno_render::lighting::environment::EnvironmentSource::hdr(original_hdr(), 0.0, 1e-100, false).unwrap()));
     assert_eq!(photons::source_distribution(options, &hdr, &bytes, None, 1e-100).unwrap().unwrap().cumulative().len(), 1);
     let mut subnormal = options;
     subnormal.lighting.as_mut().unwrap().environment = [f64::from(f32::from_bits(1)); 3];
     assert_eq!(photons::source_distribution(subnormal, &image, &bytes, None, 0.0).unwrap().unwrap().cumulative().len(), 2);
     hdr.environment = Some(Arc::new(
-        solidcraft_render::lighting::environment::EnvironmentSource::hdr(original_hdr(), 0.0, f64::from(f32::from_bits(1)), false).unwrap(),
+        torno_render::lighting::environment::EnvironmentSource::hdr(original_hdr(), 0.0, f64::from(f32::from_bits(1)), false).unwrap(),
     ));
     assert_eq!(photons::source_distribution(options, &hdr, &bytes, None, f64::from(f32::from_bits(1))).unwrap().unwrap().cumulative().len(), 2);
     let mut lit = options;
@@ -7802,7 +7788,7 @@ fn device_limits_use_adapter_capacity_with_a_finite_host_ceiling() {
 }
 
 fn maximum_paged_image_options(adaptive_photons: bool) -> JobOptions {
-    use solidcraft_render::job::{
+    use torno_render::job::{
         CausticOptions, DenoiseSettings,
         adaptive::{AdaptiveSampling, MAX_PILOT_SAMPLES},
         bloom::Bloom,
@@ -7980,7 +7966,7 @@ fn real_adapter_eight_k_x2_maximum_control_preflight_and_preview_accounting_allo
 
 #[test]
 fn gpu_paged_optical_scratch_and_refreshed_photons_keep_global_sample_identity() {
-    use solidcraft_render::job::{CausticOptions, DenoiseGuideClass, DenoiseSettings, DirectionalLightOptions, DirectionalLights, StudioLighting};
+    use torno_render::job::{CausticOptions, DenoiseGuideClass, DenoiseSettings, DirectionalLightOptions, DirectionalLights, StudioLighting};
     let Some(executor) = executor() else { return };
     if executor.context.device.limits().max_storage_buffers_per_shader_stage < 7 {
         return;
@@ -7990,7 +7976,7 @@ fn gpu_paged_optical_scratch_and_refreshed_photons_keep_global_sample_identity()
     scene.meshes[0].transmission = Some(
         clear_glass()
             .with_shadow_transmission(false)
-            .with_model(solidcraft_render::glass_model::GlassModel { roughness: 0.4, ..Default::default() })
+            .with_model(torno_render::glass_model::GlassModel { roughness: 0.4, ..Default::default() })
             .unwrap(),
     );
     assert!(needs_glass_lighting(&scene));

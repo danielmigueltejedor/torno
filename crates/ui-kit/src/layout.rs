@@ -2,7 +2,7 @@
 use super::{metrics::*, text::paint_text};
 use crate::BackingTooltipExt as _;
 use egui::{Response, RichText, Ui, vec2};
-use solidcraft_theme::Tokens;
+use torno_theme::Tokens;
 
 pub(super) const FORM: &str = "sc_dense_form";
 
@@ -64,11 +64,11 @@ fn scope_inner<R>(ui: &mut Ui, grow: Option<egui::Id>, add: impl FnOnce(&mut Ui)
 
 /// The colour egui draws selected text, a selected button's label and a focused field's outline
 /// in, on a form: the form's primary colour, unless it all but vanishes on `selected_bg` (below
-/// 1.5:1), as in SolidCraft 95 and CGA where they are the same colour; then the theme's ink for
+/// 1.5:1), as in Torno 95 and CGA where they are the same colour; then the theme's ink for
 /// selected elements (#11804). Every other theme keeps its look. Tokens: `form_primary,
 /// selected_bg, selected_ink`.
 pub fn selection_ink(t: &Tokens) -> egui::Color32 {
-    if solidcraft_theme::contrast_ratio(t.form_primary, t.selected_bg) >= SELECTION_INK_MIN_CONTRAST { t.form_primary } else { t.selected_ink }
+    if torno_theme::contrast_ratio(t.form_primary, t.selected_bg) >= SELECTION_INK_MIN_CONTRAST { t.form_primary } else { t.selected_ink }
 }
 
 /// Below this contrast with `selected_bg`, a form's primary colour counts as the selection's own
@@ -110,7 +110,7 @@ pub fn catalog_footer(ui: &mut Ui, text: &str) -> Response {
     let galley = ui.painter().layout_job(job);
     ui.painter().galley(rect.left_top() + vec2(t.space_24, t.space_8), galley, t.form_dim);
     response.widget_info(|| egui::WidgetInfo::labeled(egui::Role::Label, ui.is_enabled(), text));
-    solidcraft_ui_registry::publish_rect("catalog:footer", rect);
+    torno_ui_registry::publish_rect("catalog:footer", rect);
     response
 }
 
@@ -153,7 +153,7 @@ impl CatalogLayout {
             .min_scrolled_height(0.0)
             .auto_shrink([false, false])
             .show(ui, add);
-        solidcraft_ui_registry::publish_rect(&format!("{}:body", self.key), scroll.inner_rect);
+        torno_ui_registry::publish_rect(&format!("{}:body", self.key), scroll.inner_rect);
         scroll.inner
     }
 
@@ -169,8 +169,8 @@ impl CatalogLayout {
         if (height - self.footer_height).abs() > 0.5 {
             ui.ctx().request_discard("catalog footer measurement changed");
         }
-        solidcraft_ui_registry::publish_rect(&format!("{}:content", self.key), self.bounds);
-        solidcraft_ui_registry::publish_rect(&format!("{}:footer", self.key), scroll.inner_rect);
+        torno_ui_registry::publish_rect(&format!("{}:content", self.key), self.bounds);
+        torno_ui_registry::publish_rect(&format!("{}:footer", self.key), scroll.inner_rect);
     }
 }
 
@@ -193,7 +193,7 @@ pub(super) fn publish(ui: &Ui, response: &Response, kind: egui::Role) {
         _ => {}
     }
     let label = label(ui);
-    response.widget_info(|| egui::WidgetInfo::labeled(kind, ui.is_enabled(), solidcraft_ui_text::tr_label(label)));
+    response.widget_info(|| egui::WidgetInfo::labeled(kind, ui.is_enabled(), torno_ui_text::tr_label(label)));
     publish_geometry(ui, response);
 }
 
@@ -219,8 +219,8 @@ pub fn status_line(ui: &mut Ui, text: &str, tone: StatusTone) -> Response {
         StatusTone::Warning => t.warning,
         StatusTone::Error => t.error,
     };
-    let response = ui.add(egui::Label::new(RichText::new(solidcraft_ui_text::tr_label(text)).size(t.font_label).color(ink)).wrap());
-    solidcraft_ui_registry::publish_rect(&format!("dialog:status:{text}"), response.rect);
+    let response = ui.add(egui::Label::new(RichText::new(torno_ui_text::tr_label(text)).size(t.font_label).color(ink)).wrap());
+    torno_ui_registry::publish_rect(&format!("dialog:status:{text}"), response.rect);
     response
 }
 
@@ -346,8 +346,8 @@ fn sized_row_body<R>(ui: &mut Ui, text: &str, height: f32, scrub: bool, control:
                     )
                     .inner;
                 let help = super::help_icon(ui, help);
-                solidcraft_ui_registry::publish_rect(&format!("dialog:row_label:{text}"), label.rect);
-                solidcraft_ui_registry::publish_rect(&format!("dialog:row_help:{text}"), help.rect);
+                torno_ui_registry::publish_rect(&format!("dialog:row_label:{text}"), label.rect);
+                torno_ui_registry::publish_rect(&format!("dialog:row_help:{text}"), help.rect);
             } else {
                 ui.add(egui::Label::new(RichText::new(shown.clone()).size(t.font_label).color(t.dialog_label)).truncate())
                     .backing_on_hover_text(shown);
@@ -375,10 +375,10 @@ fn sized_row_body<R>(ui: &mut Ui, text: &str, height: f32, scrub: bool, control:
             },
         )
         .inner;
-    solidcraft_ui_registry::publish_rect(&format!("dialog:row:{text}"), rect);
-    solidcraft_ui_registry::publish_rect(&format!("dialog:label:{text}"), label_rect);
-    solidcraft_ui_registry::publish_rect(&format!("dialog:control:{text}"), control_rect);
-    solidcraft_ui_registry::publish_handle(&format!("dialog:row:{text}"), rect.center());
+    torno_ui_registry::publish_rect(&format!("dialog:row:{text}"), rect);
+    torno_ui_registry::publish_rect(&format!("dialog:label:{text}"), label_rect);
+    torno_ui_registry::publish_rect(&format!("dialog:control:{text}"), control_rect);
+    torno_ui_registry::publish_handle(&format!("dialog:row:{text}"), rect.center());
     result
 }
 
@@ -405,7 +405,7 @@ fn caption_in(ui: &mut Ui, aligned_to: &str, text: &str, color: egui::Color32) {
     let left = (rect.left() + label_column(ui, aligned_to, width) + label_gap(ui, width)).min(rect.right());
     let text_rect = egui::Rect::from_min_max(egui::pos2(left, rect.top()), rect.max);
     paint_text(ui, text_rect, text, egui::FontId::proportional(t.font_small), color, false);
-    solidcraft_ui_registry::publish_rect(&format!("dialog:caption:{aligned_to}"), text_rect);
+    torno_ui_registry::publish_rect(&format!("dialog:caption:{aligned_to}"), text_rect);
 }
 
 /// Natural-height content aligned beneath an indexed row's control, bounded independently of the form.
@@ -447,7 +447,7 @@ pub fn figure_rows(ui: &mut Ui, id: &str, fields: &mut [(&str, &mut String)], pa
     let mut slots = Vec::with_capacity(fields.len());
     for (label, value) in fields.iter_mut() {
         let caption = egui::Rect::from_min_max(egui::pos2(left, top), egui::pos2(rect.right(), top + t.font_small));
-        paint_text(ui, caption, solidcraft_ui_text::tr_label(label), egui::FontId::proportional(t.font_small), t.form_dim, false);
+        paint_text(ui, caption, torno_ui_text::tr_label(label), egui::FontId::proportional(t.font_small), t.form_dim, false);
         let field = egui::Rect::from_min_max(egui::pos2(left, caption.bottom() + t.space_2), egui::pos2(rect.right(), top + slot));
         enter |= ui
             .scope_builder(
@@ -467,8 +467,8 @@ pub fn figure_rows(ui: &mut Ui, id: &str, fields: &mut [(&str, &mut String)], pa
         top += slot + t.space_4;
     }
     paint(ui.painter(), figure, &slots);
-    solidcraft_ui_registry::publish_rect(&format!("dialog:figure:{id}"), rect);
-    solidcraft_ui_registry::publish_rect(&format!("dialog:figure_picture:{id}"), figure);
+    torno_ui_registry::publish_rect(&format!("dialog:figure:{id}"), rect);
+    torno_ui_registry::publish_rect(&format!("dialog:figure_picture:{id}"), figure);
     enter
 }
 
@@ -479,8 +479,8 @@ pub fn figure_rows(ui: &mut Ui, id: &str, fields: &mut [(&str, &mut String)], pa
 pub fn section_heading(ui: &mut Ui, title: &str) {
     let t = Tokens::get();
     let (rect, _) = ui.allocate_exact_size(vec2(dimension(ui.available_width()), t.space_16), egui::Sense::hover());
-    paint_text(ui, rect, &solidcraft_ui_text::tr_label(title).to_uppercase(), crate::type_face::semibold(t.font_caption), t.form_dim, true);
-    solidcraft_ui_registry::publish_rect(&format!("dialog:heading:{title}"), rect);
+    paint_text(ui, rect, &torno_ui_text::tr_label(title).to_uppercase(), crate::type_face::semibold(t.font_caption), t.form_dim, true);
+    torno_ui_registry::publish_rect(&format!("dialog:heading:{title}"), rect);
 }
 
 pub fn section<R>(ui: &mut Ui, id: impl egui::AsIdSalt, title: &str, default_open: bool, add: impl FnOnce(&mut Ui) -> R) -> Option<R> {
@@ -583,7 +583,7 @@ fn section_with_badge<R>(
     );
     super::disclosure(ui.painter(), icon_rect.center(), open, t.form_dim);
     let text_rect = egui::Rect::from_min_max(egui::pos2((icon_rect.right() + t.form_gap_y).min(rect.right()), rect.top()), rect.max);
-    let caption = solidcraft_ui_text::tr_label(title).to_uppercase();
+    let caption = torno_ui_text::tr_label(title).to_uppercase();
     let badge_value = count;
     let badge_width = badge_value.as_ref().map_or(0.0, |value| label_width(ui, value) + t.space_12);
     let reserved = if badge_value.is_some() { badge_width + t.space_12 } else { 0.0 };
@@ -611,7 +611,7 @@ fn section_with_badge<R>(
             egui::FontId::proportional(t.font_small),
             t.form_dim,
         );
-        solidcraft_ui_registry::publish_rect(&format!("dialog:section:{title}:count"), badge);
+        torno_ui_registry::publish_rect(&format!("dialog:section:{title}:count"), badge);
         if pending {
             rule_right = badge.left() - t.space_12;
         } else {
@@ -621,11 +621,11 @@ fn section_with_badge<R>(
     if rule_left < rule_right {
         t.secondary_hline(ui.painter(), rule_left..=rule_right, rect.center().y, t.dialog_rule);
     }
-    response.widget_info(|| egui::WidgetInfo::selected(egui::Role::DisclosureTriangle, ui.is_enabled(), open, solidcraft_ui_text::tr_label(title)));
+    response.widget_info(|| egui::WidgetInfo::selected(egui::Role::DisclosureTriangle, ui.is_enabled(), open, torno_ui_text::tr_label(title)));
     // A disclosure says whether it is open as expanded, as egui's own collapsing header does.
     ui.ctx().accesskit_node_builder(response.id, |node| node.set_expanded(open));
-    solidcraft_ui_registry::publish_handle(&format!("dialog:section:{title}"), response.rect.center());
-    solidcraft_ui_registry::publish_rect(&format!("dialog:section:{title}"), rect);
+    torno_ui_registry::publish_handle(&format!("dialog:section:{title}"), response.rect.center());
+    torno_ui_registry::publish_rect(&format!("dialog:section:{title}"), rect);
     if response.clicked() && !pending && !searching {
         open = !open;
     }
@@ -699,8 +699,8 @@ pub fn search_fold<R>(ui: &mut Ui, title: &str, count: usize, add: impl FnOnce(&
     response.widget_info(|| egui::WidgetInfo::selected(egui::Role::DisclosureTriangle, ui.is_enabled(), open, &accessible));
     // A disclosure says whether it is open as expanded, as egui's own collapsing header does.
     ui.ctx().accesskit_node_builder(response.id, |node| node.set_expanded(open));
-    solidcraft_ui_registry::publish_rect("prefs:search:shortcuts", rect);
-    solidcraft_ui_registry::publish_handle("prefs:search:shortcuts", response.rect.center());
+    torno_ui_registry::publish_rect("prefs:search:shortcuts", rect);
+    torno_ui_registry::publish_handle("prefs:search:shortcuts", response.rect.center());
     if response.clicked() {
         open = !open;
     }
@@ -727,8 +727,8 @@ pub fn list_row(ui: &mut Ui, key: &str, text: &str) -> Response {
     let label = egui::Rect::from_min_max(rect.min, egui::pos2((remove.left() - t.space_8).max(rect.left()), rect.bottom()));
     paint_text(ui, label, text, egui::FontId::proportional(t.font_label), t.form_ink, false);
     let response = ui.push_id(key, |ui| super::icon_button_at(ui, remove, "close", "Remove")).inner;
-    solidcraft_ui_registry::publish_rect(&format!("dialog:list:{key}"), rect);
-    solidcraft_ui_registry::publish_handle(&format!("dialog:list:{key}:remove"), remove.center());
+    torno_ui_registry::publish_rect(&format!("dialog:list:{key}"), rect);
+    torno_ui_registry::publish_handle(&format!("dialog:list:{key}:remove"), remove.center());
     response.union(row)
 }
 
@@ -740,7 +740,7 @@ pub fn divider(ui: &mut Ui, key: &str) {
     }
     let (rect, _) = ui.allocate_exact_size(vec2(dimension(ui.available_width()), 1.0), egui::Sense::hover());
     Tokens::get().secondary_hline(ui.painter(), rect.x_range(), rect.top(), Tokens::get().dialog_rule);
-    solidcraft_ui_registry::publish_rect(&format!("dialog:divider:{key}"), rect);
+    torno_ui_registry::publish_rect(&format!("dialog:divider:{key}"), rect);
 }
 
 /// Give a compound row's subfield its accessible name without allocating layout space.
@@ -753,12 +753,12 @@ pub fn named_control<R>(ui: &mut Ui, label: &str, add: impl FnOnce(&mut Ui) -> R
 /// Publish geometry without replacing native accessibility. Tokens: `none`.
 pub(super) fn publish_geometry(ui: &Ui, response: &Response) {
     let label = label(ui);
-    solidcraft_ui_registry::publish_rect(&format!("dialog:widget:{label}"), response.rect);
+    torno_ui_registry::publish_rect(&format!("dialog:widget:{label}"), response.rect);
     // A click lands where the field shows: a field scrolled out of a dialog's field area, under
     // its footer, has no handle (a click at its centre would press the button over it).
     let shown = response.rect.intersect(ui.clip_rect());
     if shown.is_positive() {
-        solidcraft_ui_registry::publish_handle(&format!("dialog:{label}"), shown.center());
+        torno_ui_registry::publish_handle(&format!("dialog:{label}"), shown.center());
     }
 }
 
@@ -779,7 +779,7 @@ pub fn text_lines(ui: &mut Ui, id: &str, text: &str) {
             ui.add(egui::Label::new(RichText::new(*line).font(font.clone()).color(t.form_ink)).truncate()).backing_on_hover_text(*line);
         }
     });
-    solidcraft_ui_registry::publish_rect(&format!("dialog:lines:{id}"), response.inner_rect);
+    torno_ui_registry::publish_rect(&format!("dialog:lines:{id}"), response.inner_rect);
 }
 
 /// Read-only text variants retain their original wrapping, allocation and scenario identities.
@@ -924,13 +924,13 @@ fn text_impl(ui: &mut Ui, text: &str, style: Text<'_>, hover_hint: Option<&str>)
         Text::Cell | Text::MonoCell | Text::NameCell(_) | Text::SelectedNameCell => ("cell", text),
     };
     let id = format!("dialog:{kind}:{key}");
-    solidcraft_ui_registry::publish_rect(&id, response.rect);
+    torno_ui_registry::publish_rect(&id, response.rect);
     if matches!(style, Text::Heading(_)) {
         super::settings_search::remember(ui, text, response.rect);
         super::settings_search::follow(ui, text, response.rect);
     }
     if !matches!(style, Text::Note(_) | Text::MonoNote(_)) {
-        solidcraft_ui_registry::publish_handle(&id, response.rect.center());
+        torno_ui_registry::publish_handle(&id, response.rect.center());
     }
     response
 }
@@ -944,7 +944,7 @@ pub fn summary_row(ui: &mut Ui, name: &str, summary: &str, enabled: &mut bool, a
     let check = egui::Rect::from_min_size(rect.min + vec2(t.space_6, 0.0), vec2(t.space_24, rect.height()));
     let changed = ui
         .scope_builder(egui::UiBuilder::new().max_rect(check).layout(egui::Layout::left_to_right(egui::Align::Center)), |ui| {
-            super::checkbox(ui, "", enabled).backing_on_hover_text(solidcraft_ui_text::tr_label("Enable rule")).changed()
+            super::checkbox(ui, "", enabled).backing_on_hover_text(torno_ui_text::tr_label("Enable rule")).changed()
         })
         .inner;
     let right = (rect.right() - dimension(actions_width) - t.space_6).max(check.right());
@@ -958,8 +958,8 @@ pub fn summary_row(ui: &mut Ui, name: &str, summary: &str, enabled: &mut bool, a
     paint_text(ui, detail, summary, egui::FontId::proportional(t.font_small), t.form_dim, false);
     let response = ui.interact(text, ui.scope_id().with("summary"), egui::Sense::hover()).backing_on_hover_text(summary);
     response.widget_info(|| egui::WidgetInfo::labeled(egui::Role::Label, ui.is_enabled(), format!("{name}: {summary}")));
-    solidcraft_ui_registry::publish_rect(&format!("dialog:inline:{name}"), title);
-    solidcraft_ui_registry::publish_rect("dialog:report:rule_report", detail);
+    torno_ui_registry::publish_rect(&format!("dialog:inline:{name}"), title);
+    torno_ui_registry::publish_rect("dialog:report:rule_report", detail);
     ui.scope_builder(
         egui::UiBuilder::new()
             .max_rect(egui::Rect::from_min_max(egui::pos2(right, rect.top()), rect.max))

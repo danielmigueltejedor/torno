@@ -141,7 +141,7 @@
     "blend_dropping"
   ],
   "ungraded": [
-    "continuity: SolidCraft computes it"
+    "continuity: Torno computes it"
   ],
   "what": "the drafted peg's front top edge rounded r2: the round runs into the cone its drafted front face runs tangent into; reported from the app (2026-10-30, test-peg part), drafted",
   "why_not": []

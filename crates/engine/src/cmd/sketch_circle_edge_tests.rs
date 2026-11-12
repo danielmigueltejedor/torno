@@ -6,7 +6,7 @@
 
 use serde_json::{Value, json};
 use solidcore_record::Vec2;
-use solidcraft_geom::prelude::*;
+use torno_geom::prelude::*;
 
 use crate::Session;
 
@@ -17,7 +17,7 @@ fn run(s: &mut Session, id: &str, p: Value) -> Value {
     }
 }
 
-fn sketch(s: &Session) -> solidcraft_sketch::Sketch {
+fn sketch(s: &Session) -> torno_sketch::Sketch {
     s.model.state().sketch(s.active_sketch.unwrap()).unwrap().sketch.clone()
 }
 
@@ -155,12 +155,12 @@ fn a_tube_keeps_its_bore_when_its_inner_diameter_changes() {
         let body = &s.model.state().bodies[0].body;
         assert_eq!(
             body.classify_point(solidcore_record::Vec3::new(0.0, 0.0, 50.0)).unwrap(),
-            solidcraft_kernel::PointClass::Outside,
+            torno_kernel::PointClass::Outside,
             "the bore stays empty"
         );
         assert_eq!(
             body.classify_point(solidcore_record::Vec3::new(inner + 5.0, 0.0, 50.0)).unwrap(),
-            solidcraft_kernel::PointClass::Inside,
+            torno_kernel::PointClass::Inside,
             "the wall stays solid"
         );
     }
@@ -183,7 +183,7 @@ fn a_tube_keeps_its_bore_when_its_inner_diameter_changes() {
         check(&mut s, 10.0);
         run(&mut s, "edit.redo", json!({}));
         check(&mut s, 25.0);
-        let mut reopened = Session::new(solidcraft_doc::Document::from_json(&s.doc.to_json()).unwrap());
+        let mut reopened = Session::new(torno_doc::Document::from_json(&s.doc.to_json()).unwrap());
         check(&mut reopened, 25.0);
         run(&mut reopened, "parameters.change", json!({"name": name, "expression": "6 mm"}));
         check(&mut reopened, 3.0);
@@ -215,7 +215,7 @@ fn the_dimensions_undo_and_reopen() {
     run(&mut s, "sketch.dimension", json!({"entities": ["pt", "c1"], "value": 9}));
     let saved = s.doc.to_json();
     assert!(saved.contains("\"point_circle_distance\"") && saved.contains("\"circle_circle_distance\""), "not saved");
-    let mut reopened = Session::new(solidcraft_doc::Document::from_json(&saved).unwrap());
+    let mut reopened = Session::new(torno_doc::Document::from_json(&saved).unwrap());
     run(&mut reopened, "sketch.edit", json!({"sketch": "Sketch1"}));
     near(&reopened, "c2.center", [24.0, 10.0]);
     near(&reopened, "pt", [10.0, 24.0]);

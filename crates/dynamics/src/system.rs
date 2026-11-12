@@ -21,7 +21,7 @@
 use std::f64::consts::TAU;
 
 use solidcore_record::Vec3;
-use solidcraft_geom::prelude::*;
+use torno_geom::prelude::*;
 
 use crate::linalg::{Sym, solve_psd};
 use crate::math::{Mat3, Quat, cross2};

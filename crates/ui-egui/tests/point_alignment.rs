@@ -4,11 +4,11 @@
 mod raster;
 
 use serde_json::json;
-use solidcraft_engine::geom::prelude::*;
-use solidcraft_engine::sketch::ConstraintKind;
-use solidcraft_ui_egui::scenario::Harness;
+use torno_engine::geom::prelude::*;
+use torno_engine::sketch::ConstraintKind;
+use torno_ui_egui::scenario::Harness;
 
-fn line_midpoint(sk: &solidcraft_engine::sketch::Sketch, id: &str) -> solidcore_record::Vec2 {
+fn line_midpoint(sk: &torno_engine::sketch::Sketch, id: &str) -> solidcore_record::Vec2 {
     let a = sk.point(sk.resolve_point(&format!("{id}.start")).unwrap()).unwrap();
     let b = sk.point(sk.resolve_point(&format!("{id}.end")).unwrap()).unwrap();
     (a + b) * 0.5
@@ -52,7 +52,7 @@ fn horizontal_vertical_uses_preselected_line_and_preserves_rejection() {
 
 #[test]
 fn horizontal_vertical_leaves_ambiguous_preselection_to_pick_tool() {
-    use solidcraft_engine::Sel;
+    use torno_engine::Sel;
     for selection in [
         vec![Sel::SketchPoint { id: "origin".into() }],
         vec![Sel::SketchPoint { id: "origin".into() }, Sel::SketchCurve { id: "c1".into(), sketch: None }],
@@ -244,7 +244,7 @@ fn shift_picks_midpoint_in_either_order_and_persists_ordinary_constraints() {
             assert_eq!(h.app.session.doc.to_json(), after);
             // The ordinary constraint glyph remains selectable and deletable.
             h.step(&json!({"key":"Escape"})).unwrap();
-            let glyph = solidcraft_ui_egui::sketch_tools::glyph_positions().into_iter().find(|(id, _)| id == &constraint).unwrap().1;
+            let glyph = torno_ui_egui::sketch_tools::glyph_positions().into_iter().find(|(id, _)| id == &constraint).unwrap().1;
             h.step(&json!({"click":[glyph.x,glyph.y]})).unwrap();
             h.step(&json!({"key":"Delete"})).unwrap();
             let sk = &h.app.session.model.state().sketches[0].sketch;
@@ -252,7 +252,7 @@ fn shift_picks_midpoint_in_either_order_and_persists_ordinary_constraints() {
             assert_eq!(sk.points.len(), 5);
             let midpoint_constraint = sk.constraints.iter().find(|c| matches!(c.kind, ConstraintKind::Midpoint { .. })).unwrap().id.clone();
             // The defining Midpoint relationship is editable through the same glyph UI.
-            let glyph = solidcraft_ui_egui::sketch_tools::glyph_positions().into_iter().find(|(id, _)| id == &midpoint_constraint).unwrap().1;
+            let glyph = torno_ui_egui::sketch_tools::glyph_positions().into_iter().find(|(id, _)| id == &midpoint_constraint).unwrap().1;
             h.step(&json!({"click":[glyph.x,glyph.y]})).unwrap();
             h.step(&json!({"key":"Delete"})).unwrap();
             let sk = &h.app.session.model.state().sketches[0].sketch;
@@ -357,8 +357,8 @@ fn conflicting_midpoint_pick_keeps_pending_preview_without_creating_geometry() {
 
 #[test]
 fn context_menu_explicitly_aligns_two_points_and_removes_one_freedom() {
-    use solidcraft_engine::Sel;
-    use solidcraft_ui_egui::context_menu::{self, Target};
+    use torno_engine::Sel;
+    use torno_ui_egui::context_menu::{self, Target};
     // Include independent points, a circle centre and line endpoints; choose the direction
     // opposite to the automatic H/V guess, in either selection order.
     for (first, second) in [("a", "b"), ("l1.start", "c1.center"), ("l1.start", "l1.end")] {
@@ -408,7 +408,7 @@ fn context_menu_explicitly_aligns_two_points_and_removes_one_freedom() {
                     .id
                     .clone();
                 h.frames(3);
-                assert!(solidcraft_ui_egui::sketch_tools::glyph_positions().iter().any(|(id, _)| id == &constraint));
+                assert!(torno_ui_egui::sketch_tools::glyph_positions().iter().any(|(id, _)| id == &constraint));
                 let after = h.app.session.doc.to_json();
                 h.app.run("edit.undo", json!({})).unwrap();
                 assert_eq!(h.app.session.doc.to_json(), before);
@@ -427,8 +427,8 @@ fn context_menu_explicitly_aligns_two_points_and_removes_one_freedom() {
 
 #[test]
 fn context_menu_alignment_requires_exactly_two_points_and_preserves_conflicts() {
-    use solidcraft_engine::Sel;
-    use solidcraft_ui_egui::context_menu::{self, Target};
+    use torno_engine::Sel;
+    use torno_ui_egui::context_menu::{self, Target};
     let mut h = Harness::new();
     h.app.run("sketch.create", json!({"plane":"XY"})).unwrap();
     h.app.run("sketch.circle.center", json!({"center":[20,30],"radius":3})).unwrap();
@@ -462,14 +462,14 @@ fn context_menu_alignment_requires_exactly_two_points_and_preserves_conflicts() 
 #[test]
 #[ignore = "writes review images; run explicitly for visual verification"]
 fn context_menu_alignment_review_images() {
-    use solidcraft_engine::Sel;
-    use solidcraft_ui_egui::{
+    use torno_engine::Sel;
+    use torno_ui_egui::{
         context_menu::{self, Target},
         fonts,
     };
     let dir = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../target/point-alignment-review");
     std::fs::create_dir_all(&dir).unwrap();
-    let previous = solidcraft_theme::is_dark();
+    let previous = torno_theme::is_dark();
     for dark in [false, true] {
         let mut h = Harness::new();
         h.app.home.open = false;
@@ -487,7 +487,7 @@ fn context_menu_alignment_review_images() {
         h.frames(3);
         h.ctx = egui::Context::default();
         fonts::setup_fonts_for(&h.ctx, "ja", "");
-        solidcraft_theme::apply(&h.ctx);
+        torno_theme::apply(&h.ctx);
         let mut textures = std::collections::HashMap::new();
         for _ in 0..8 {
             raster::paint(&mut h, &mut textures, vec![]);
@@ -509,13 +509,13 @@ fn context_menu_alignment_review_images() {
             raster::raster(&mut h, &textures, output).save(dir.join(format!("{mode}-{shot}.png"))).unwrap();
         }
     }
-    solidcraft_theme::set_dark(previous);
+    torno_theme::set_dark(previous);
 }
 
 #[test]
 fn context_menu_alignment_follows_screen_axes_in_principal_sketch_views() {
-    use solidcraft_engine::Sel;
-    use solidcraft_ui_egui::{
+    use torno_engine::Sel;
+    use torno_ui_egui::{
         context_menu::{self, Target},
         dialogs, viewport,
     };
@@ -543,8 +543,8 @@ fn context_menu_alignment_follows_screen_axes_in_principal_sketch_views() {
 
 #[test]
 fn idle_midpoints_are_selectable_without_modifying_the_sketch() {
-    use solidcraft_engine::Sel;
-    use solidcraft_ui_egui::{
+    use torno_engine::Sel;
+    use torno_ui_egui::{
         context_menu::{self, Target},
         viewport::Hit,
     };
@@ -587,8 +587,8 @@ fn idle_midpoints_are_selectable_without_modifying_the_sketch() {
 
 #[test]
 fn selected_midpoints_can_take_both_axes_and_reuse_the_same_helpers() {
-    use solidcraft_engine::{Sel, Session};
-    use solidcraft_ui_egui::context_menu::{self, Target};
+    use torno_engine::{Sel, Session};
+    use torno_ui_egui::context_menu::{self, Target};
     for reverse in [false, true] {
         for horizontal_first in [false, true] {
             let mut h = Harness::new();
@@ -632,7 +632,7 @@ fn selected_midpoints_can_take_both_axes_and_reuse_the_same_helpers() {
             // The same references must remain pickable after materializing their helper points.
             let mid = line_midpoint(sk, "l2");
             h.step(&json!({"move":{"sketch":[mid.x,mid.y]}})).unwrap();
-            assert!(matches!(h.app.viewport.hover, Some(solidcraft_ui_egui::viewport::Hit::SketchMidpoint { .. })));
+            assert!(matches!(h.app.viewport.hover, Some(torno_ui_egui::viewport::Hit::SketchMidpoint { .. })));
             h.app.run("edit.undo", json!({})).unwrap();
             assert_eq!(h.app.session.doc.to_json(), after_first);
             h.app.run("edit.undo", json!({})).unwrap();
@@ -640,7 +640,7 @@ fn selected_midpoints_can_take_both_axes_and_reuse_the_same_helpers() {
             h.app.run("edit.redo", json!({})).unwrap();
             h.app.run("edit.redo", json!({})).unwrap();
             assert_eq!(h.app.session.doc.to_json(), after);
-            let mut reopened = Session::new(solidcraft_engine::doc::Document::from_json(&after).unwrap());
+            let mut reopened = Session::new(torno_engine::doc::Document::from_json(&after).unwrap());
             reopened.active_sketch = h.app.session.active_sketch;
             reopened.execute("sketch.move_point", &json!({"point":"l2.end","to":[60,25]})).unwrap();
             let sk = &reopened.model.state().sketches[0].sketch;
@@ -659,7 +659,7 @@ fn selected_midpoints_can_take_both_axes_and_reuse_the_same_helpers() {
 
 #[test]
 fn midpoint_menu_aligns_rectangle_sides_and_refuses_conflicts_atomically() {
-    use solidcraft_ui_egui::context_menu;
+    use torno_ui_egui::context_menu;
     for horizontal in [true, false] {
         for fixed in [true, false] {
             let mut h = Harness::new();
@@ -682,7 +682,7 @@ fn midpoint_menu_aligns_rectangle_sides_and_refuses_conflicts_atomically() {
             let selected = h.app.session.selection.clone();
             let lines: Vec<_> = selected
                 .iter()
-                .map(|s| if let solidcraft_engine::Sel::SketchMidpoint { id } = s { id.clone() } else { panic!("expected MID: {s:?}") })
+                .map(|s| if let torno_engine::Sel::SketchMidpoint { id } = s { id.clone() } else { panic!("expected MID: {s:?}") })
                 .collect();
             let dof = h.app.session.model.state().sketches[0].report.dof;
             h.step(&json!({"click":{"sketch":if horizontal {[32.5,55.]} else {b}},"button":"right"})).unwrap();
@@ -706,17 +706,17 @@ fn midpoint_menu_aligns_rectangle_sides_and_refuses_conflicts_atomically() {
 #[test]
 #[ignore = "writes MID review images; run explicitly for visual verification"]
 fn midpoint_selection_review_images() {
-    use solidcraft_ui_egui::{
+    use torno_ui_egui::{
         context_menu::{self, Target},
         fonts,
     };
     let dir = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../target/midpoint-selection-review");
     std::fs::create_dir_all(&dir).unwrap();
-    solidcraft_engine::capture::install(std::sync::Arc::new(|scene, cam, w, h| {
-        let (rgba, renderer) = solidcraft_gpu::env::headless_rgba(scene, cam, w, h)?;
-        Ok(solidcraft_engine::capture::Picture { rgba, renderer })
+    torno_engine::capture::install(std::sync::Arc::new(|scene, cam, w, h| {
+        let (rgba, renderer) = torno_gpu::env::headless_rgba(scene, cam, w, h)?;
+        Ok(torno_engine::capture::Picture { rgba, renderer })
     }));
-    let previous = solidcraft_theme::is_dark();
+    let previous = torno_theme::is_dark();
     for dark in [false, true] {
         for horizontal in [false, true] {
             let mut h = Harness::new();
@@ -734,7 +734,7 @@ fn midpoint_selection_review_images() {
             h.frames(3);
             h.ctx = egui::Context::default();
             fonts::setup_fonts_for(&h.ctx, "ja", "");
-            solidcraft_theme::apply(&h.ctx);
+            torno_theme::apply(&h.ctx);
             let mut textures = std::collections::HashMap::new();
             for _ in 0..8 {
                 raster::paint(&mut h, &mut textures, vec![]);
@@ -743,7 +743,7 @@ fn midpoint_selection_review_images() {
             h.step(&json!({"move":{"sketch":a}})).unwrap();
             h.step(&json!({"click":{"sketch":a}})).unwrap();
             h.step(&json!({"click":{"sketch":b},"shift":true})).unwrap();
-            assert!(h.app.session.selection.iter().all(|s| matches!(s, solidcraft_engine::Sel::SketchMidpoint { .. })));
+            assert!(h.app.session.selection.iter().all(|s| matches!(s, torno_engine::Sel::SketchMidpoint { .. })));
             assert_eq!(h.app.session.selection.len(), 2);
             let prefix = format!("{}-{}", if dark { "dark" } else { "light" }, if horizontal { "horizontal" } else { "vertical" });
             context_menu::open_for(&mut h.app, egui::pos2(880., 800.), Target::Viewport);
@@ -752,15 +752,14 @@ fn midpoint_selection_review_images() {
             }
             let output = raster::paint(&mut h, &mut textures, vec![]);
             raster::raster(&mut h, &textures, output).save(dir.join(format!("{prefix}-menu.png"))).unwrap();
-            std::fs::write(dir.join(format!("{prefix}-menu-model.png")), solidcraft_ui_egui::control::view_png(&h.app, 1000, 900).unwrap()).unwrap();
+            std::fs::write(dir.join(format!("{prefix}-menu-model.png")), torno_ui_egui::control::view_png(&h.app, 1000, 900).unwrap()).unwrap();
             context_menu::pick(&mut h.app, if horizontal { "ui.horizontalConstraint" } else { "ui.verticalConstraint" }).unwrap();
             for _ in 0..4 {
                 raster::paint(&mut h, &mut textures, vec![]);
             }
             let output = raster::paint(&mut h, &mut textures, vec![]);
             raster::raster(&mut h, &textures, output).save(dir.join(format!("{prefix}-aligned.png"))).unwrap();
-            std::fs::write(dir.join(format!("{prefix}-aligned-model.png")), solidcraft_ui_egui::control::view_png(&h.app, 1000, 900).unwrap())
-                .unwrap();
+            std::fs::write(dir.join(format!("{prefix}-aligned-model.png")), torno_ui_egui::control::view_png(&h.app, 1000, 900).unwrap()).unwrap();
             if !horizontal {
                 context_menu::open_for(&mut h.app, egui::pos2(880., 800.), Target::Viewport);
                 context_menu::pick(&mut h.app, "ui.horizontalConstraint").unwrap();
@@ -769,10 +768,9 @@ fn midpoint_selection_review_images() {
                 }
                 let output = raster::paint(&mut h, &mut textures, vec![]);
                 raster::raster(&mut h, &textures, output).save(dir.join(format!("{prefix}-both.png"))).unwrap();
-                std::fs::write(dir.join(format!("{prefix}-both-model.png")), solidcraft_ui_egui::control::view_png(&h.app, 1000, 900).unwrap())
-                    .unwrap();
+                std::fs::write(dir.join(format!("{prefix}-both-model.png")), torno_ui_egui::control::view_png(&h.app, 1000, 900).unwrap()).unwrap();
             }
         }
     }
-    solidcraft_theme::set_dark(previous);
+    torno_theme::set_dark(previous);
 }

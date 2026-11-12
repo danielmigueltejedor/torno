@@ -1738,7 +1738,7 @@ fn a_ball_patch_extends_its_own_net_on_its_sphere_up_to_its_caps() {
 /// A small plane far from the origin extended far, keeping its parameters: the end cap of a
 /// bar at (147..152, -25.5, 846..852), 5.83 mm square, turned 2 degrees about x by a draft,
 /// extended 547.405 past every side by the draft's local operation (its placement and net as
-/// SolidCraft's draft hands them over). Its net lies on the plane to its rounding, about 1e-13
+/// Torno's draft hands them over). Its net lies on the plane to its rounding, about 1e-13
 /// at this size, and the continuation carries that out about 190 times each way: the
 /// extended net is 6.4e-11 off the plane, where the rounding of the check alone is 8e-12. It
 /// is the plane's own net continued, on the plane within what the source's residual grows

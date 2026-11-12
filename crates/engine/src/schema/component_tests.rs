@@ -1,5 +1,5 @@
-use solidcraft_geom::prelude::*;
 use std::sync::Arc;
+use torno_geom::prelude::*;
 
 use serde_json::{Value, json};
 
@@ -276,8 +276,8 @@ fn rig_file(name: &str) -> String {
         "bufferViews": [{"buffer": 0, "byteOffset": 0, "byteLength": 96}, {"buffer": 0, "byteOffset": 96, "byteLength": 72}],
         "buffers": [{"byteLength": bin.len()}],
     });
-    let path = std::env::temp_dir().join(format!("solidcraft-component-schema-{}-{name}.glb", std::process::id()));
-    std::fs::write(&path, solidcraft_io::glb_container(doc.to_string().as_bytes(), &bin)).unwrap_or_else(|e| panic!("{e}"));
+    let path = std::env::temp_dir().join(format!("torno-component-schema-{}-{name}.glb", std::process::id()));
+    std::fs::write(&path, torno_io::glb_container(doc.to_string().as_bytes(), &bin)).unwrap_or_else(|e| panic!("{e}"));
     path.to_string_lossy().to_string()
 }
 
@@ -498,8 +498,8 @@ fn sketches_move_to_the_part_whose_face_they_are_on() {
     assert_eq!(out["kept"][0]["reason"], "not on a face");
     assert_eq!(s.doc.feature(on_face).unwrap().component, component);
     assert_eq!(s.doc.feature(on_xy).unwrap().component, 0);
-    let solidcraft_doc::FeatureKind::Sketch { plane, .. } = &s.doc.feature(on_face).unwrap().kind else { panic!("not sketch") };
-    assert_eq!(solidcraft_doc::face_anchor::plane_face_anchor(plane).unwrap().author_path, vec![occurrence]);
+    let torno_doc::FeatureKind::Sketch { plane, .. } = &s.doc.feature(on_face).unwrap().kind else { panic!("not sketch") };
+    assert_eq!(torno_doc::face_anchor::plane_face_anchor(plane).unwrap().author_path, vec![occurrence]);
     assert!(s.model.result(on_face).unwrap().error.is_none());
     let after = world_plane(&s);
     assert!((after.origin - before.origin).len() < 1e-6 && after.normal().dot(before.normal()) > 1. - 1e-9, "{before:?} {after:?}");
@@ -550,9 +550,7 @@ fn sketches_moved_to_a_part_while_an_exploded_view_is_shown_save_what_they_save_
         }
         run(&mut s, "component.move_sketches.to_parts", json!({}));
         run(&mut s, "explode.show", json!({}));
-        let solidcraft_doc::FeatureKind::Sketch { plane: solidcraft_doc::PlaneRef::Face { plane, at, .. }, .. } =
-            &s.doc.feature(on_face).unwrap().kind
-        else {
+        let torno_doc::FeatureKind::Sketch { plane: torno_doc::PlaneRef::Face { plane, at, .. }, .. } = &s.doc.feature(on_face).unwrap().kind else {
             panic!("not a face sketch")
         };
         (*plane, *at)

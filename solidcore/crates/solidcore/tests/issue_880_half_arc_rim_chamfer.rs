@@ -1,9 +1,9 @@
 //! tangency-labs/solidcore#880 (WR-582): a chamfer of one edge of a smooth rim chain. The
-//! fork refused SolidCraft's chamfer of half the elliptical rim a flat cut leaves on its
+//! fork refused Torno's chamfer of half the elliptical rim a flat cut leaves on its
 //! tilted cylinder with "a rail leaves the face it rolls on" (`NO_ROOM`); pinned SMLib
 //! refuses it with the generic 1001.
 //!
-//! SolidCraft's `build::cylinder` (at 6c60f1a9) extrudes `Loop2::circle_from(0, r,
+//! Torno's `build::cylinder` (at 6c60f1a9) extrudes `Loop2::circle_from(0, r,
 //! SEAM_ANGLE)`: two half-circle arcs from `SEAM_ANGLE = 0.6131` rad, on
 //! `Plane::from_normal(base, axis)`, whose x axis is `Z × n` projected. Here the same two
 //! arcs (radius 5, from 35.128 to 215.128 degrees and from -144.872 to 35.128) are swept
@@ -41,10 +41,10 @@ use solidcore::topology::brep::validation::{check_brep, CheckLevel};
 use solidcore::topology::{edge, EdgeId, EdgeuseId};
 use solidcore::{Brep, Kernel};
 
-/// SolidCraft's `SEAM_ANGLE`, in radians.
+/// Torno's `SEAM_ANGLE`, in radians.
 const SEAM_ANGLE: f64 = 0.6131;
 
-/// SolidCraft's tilted cylinder, cut flat at z = 10.
+/// Torno's tilted cylinder, cut flat at z = 10.
 fn cut_cylinder(k: &mut Kernel) -> Brep {
     let seam = SEAM_ANGLE.to_degrees();
     // (`create_arc` takes degrees within [-360, 360]: the second half circle, from

@@ -24,4 +24,4 @@
   - the band is refused with the flag off;
   - r 2, 2.02 and 2.5 are bit for bit unchanged.
 
-  Also `fixtures/solidcraft/190-round-as-tall-as-its-wall.json`'s `disc_top_rounded_just_past_its_height`.
+  Also `fixtures/torno/190-round-as-tall-as-its-wall.json`'s `disc_top_rounded_just_past_its_height`.

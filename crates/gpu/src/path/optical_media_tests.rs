@@ -1,6 +1,6 @@
 use super::*;
-use solidcraft_geom::MeshGeom;
-use solidcraft_render::transmission::{Transmission, subsurface::Subsurface};
+use torno_geom::MeshGeom;
+use torno_render::transmission::{Transmission, subsurface::Subsurface};
 
 fn slab_body(name: &str, scale: Vec3, shift: Vec3, ior: f64, absorption: Vec3) -> ProductMesh {
     let mut body = glass_slab(false).meshes.remove(0);
@@ -141,7 +141,7 @@ fn subsurface_random_walk_preserves_zero_rate_and_matches_energy_and_absorption_
 
 #[test]
 fn nested_media_camera_inside_before_opaque_geometry_attenuates_the_visible_emitter_from_the_actual_origin() {
-    use solidcraft_render::job::{AreaLight, AreaLights, StudioLighting};
+    use torno_render::job::{AreaLight, AreaLights, StudioLighting};
     let Some(executor) = executor() else { return };
     let radiance = [2.0, 3.0, 5.0];
     let render = |inside: bool, absorbing: bool, reverse: bool| {
@@ -472,7 +472,7 @@ fn origin_vacuum(o:vec3<f32>,d:vec3<f32>)->bool {
 
 #[test]
 fn gpu_photon_origin_uses_optical_bounds_with_low_parts_and_all_proposal_layouts() {
-    use solidcraft_render::job::CausticOptions;
+    use torno_render::job::CausticOptions;
     let source = [
         photons::shader_source().unwrap(),
         r#"
@@ -650,7 +650,7 @@ fn origin_emitter_fixture() -> ProductScene {
 }
 #[test]
 fn gpu_actual_sampled_pupils_normalize_initial_beer_before_visible_emission_without_new_variates() {
-    use solidcraft_render::job::{AreaLight, AreaLights, StudioLighting};
+    use torno_render::job::{AreaLight, AreaLights, StudioLighting};
     let Some(executor) = executor() else { return };
     let mut image = request(1);
     image.camera.target = Vec3::new(0.25, 0.0, -0.5);
@@ -658,7 +658,7 @@ fn gpu_actual_sampled_pupils_normalize_initial_beer_before_visible_emission_with
     image.camera.fov = 0.2;
     let samples = 16;
     let seed = 71;
-    let lens = solidcraft_render::job::ThinLens { aperture_radius_mm: 1.0, focus_distance_mm: 2.0 };
+    let lens = torno_render::job::ThinLens { aperture_radius_mm: 1.0, focus_distance_mm: 2.0 };
     let radiance = [2.0, 3.0, 5.0];
     let light = AreaLight { center: [0.0, 0.0, -1.0], u: [3.0, 0.0, 0.0], v: [0.0, 3.0, 0.0], radiance };
     let options = JobOptions {
@@ -744,7 +744,7 @@ fn gpu_actual_sampled_pupils_normalize_initial_beer_before_visible_emission_with
 }
 #[test]
 fn gpu_boundary_origins_refuse_through_existing_diagnostics_and_non_nested_outside_pixels_stay_exact() {
-    use solidcraft_render::job::{AreaLight, AreaLights, StudioLighting};
+    use torno_render::job::{AreaLight, AreaLights, StudioLighting};
     let Some(executor) = executor() else { return };
     for z in [-2.0, 2.0] {
         let mut image = request(4);
@@ -806,7 +806,7 @@ fn gpu_boundary_origins_refuse_through_existing_diagnostics_and_non_nested_outsi
 #[test]
 fn opus_128_disjoint_optics_are_independent_of_the_16_layer_medium_stack() {
     let mut source = ProductScene { meshes: Vec::new(), bounds: Aabb3::EMPTY };
-    for index in 0..solidcraft_render::job::MAX_OPTICAL_TARGETS {
+    for index in 0..torno_render::job::MAX_OPTICAL_TARGETS {
         source.meshes.push(slab_body(&format!("OPUS {index}"), Vec3::new(1.0, 1.0, 0.25), Vec3::new(index as f64 * 30.0, 0.0, 0.0), 1.0, Vec3::ZERO));
     }
     source.bounds = source.meshes.iter().fold(Aabb3::EMPTY, |bounds, body| bounds.union(&body.mesh.bounds()));
@@ -832,7 +832,7 @@ fn opus_thirty_gpu_optics_cross_60_interfaces_with_the_new_depth_budget() {
     let mut req = request(1);
     req.camera.distance = 50.0;
     req.camera.fov = 0.00000001;
-    let options = JobOptions { samples: 1, max_depth: u32::from(solidcraft_render::job::MAX_PATH_DEPTH), seed: 9, ..Default::default() };
+    let options = JobOptions { samples: 1, max_depth: u32::from(torno_render::job::MAX_PATH_DEPTH), seed: 9, ..Default::default() };
     let mut task = Task::new(executor.context, source, req, options, CancelToken::default()).unwrap();
     task.environment = 1.0;
     task.environment_bottom_only = true;
@@ -894,10 +894,10 @@ fn opus_final_gpu_profile_completes_on_the_same_physical_executor() {
     let Some(executor) = executor() else { return };
     let host = ImageHost::with_executor(Arc::new(executor)).unwrap();
     let options =
-        JobOptions { samples: 2, max_depth: u32::from(solidcraft_render::job::MAX_PATH_DEPTH), linear_exr: true, seed: 81, ..Default::default() };
+        JobOptions { samples: 2, max_depth: u32::from(torno_render::job::MAX_PATH_DEPTH), linear_exr: true, seed: 81, ..Default::default() };
     let mut submission = host.prepare_submission(sphere(white()), request(1), options, None, CancelToken::default()).unwrap();
     submission.select_image_mode(RenderMode::Final).unwrap();
-    let job = host.submit_prepared(solidcraft_render::job::JobId { session: 982, serial: 1, generation: 1 }, 1, submission).unwrap();
+    let job = host.submit_prepared(torno_render::job::JobId { session: 982, serial: 1, generation: 1 }, 1, submission).unwrap();
     let status = job.wait_timeout(Duration::from_secs(30)).unwrap();
     assert_eq!(status.progress.phase, Phase::Completed, "{:?}", status.error);
     assert_eq!(status.resolved.profile.mode, RenderMode::Final);

@@ -255,7 +255,7 @@ fn variable_round_end_sections_off_their_circles(k: &mut Kernel) -> f64 {
 
 /// The default kernel (every fix off) rounds on the ball's exact circle: the exact section is
 /// the default, with no flag (WR-708 addendum 2026-11-06, #2330). Before, only the retired
-/// `fillet_exact_arc_sections` gave it: on SolidCraft's 52ea418 the default kernel's end
+/// `fillet_exact_arc_sections` gave it: on Torno's 52ea418 the default kernel's end
 /// sections here were upstream's polynomial arcs, 3.26e-4 off a circle, and with the flag
 /// 1.36e-11 off, as here (the residual of the touch circle's skin).
 #[test]

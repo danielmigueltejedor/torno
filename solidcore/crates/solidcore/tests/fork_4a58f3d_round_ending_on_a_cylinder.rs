@@ -1,4 +1,4 @@
-//! The SolidCraft fork's capi case `round_ending_on_a_cylinder` (`ops_kernel.cpp`,
+//! The Torno fork's capi case `round_ending_on_a_cylinder` (`ops_kernel.cpp`,
 //! tangency-labs/smlib@4a58f3d), smlib#79 step 4d, tangency-labs/solidcore#2273: a round
 //! ending on a cylindrical end face meets it along a certified rib (the blend corner's End,
 //! brought over by #2307).

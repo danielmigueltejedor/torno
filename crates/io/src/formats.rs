@@ -1,4 +1,4 @@
-//! The format registry: one table describing every file format SolidCraft reads or writes,
+//! The format registry: one table describing every file format Torno reads or writes,
 //! with the options each one takes. The UI's pickers and panels, the hosts' file-dialog
 //! filters and the web `accept` list all derive from this table, so a new format (or a new
 //! option) is added in one place. The writers and readers themselves stay where they are
@@ -162,7 +162,7 @@ pub static DESIGN_SAVE_OPTIONS: &[OptionSpec] = &[
     OptionSpec {
         param: "format",
         label: "Format",
-        kind: OptionKind::Choice { choices: &[("container", "SolidCraft container"), ("json", "Plain JSON design")], default: 0 },
+        kind: OptionKind::Choice { choices: &[("container", "Torno container"), ("json", "Plain JSON design")], default: 0 },
     },
     OptionSpec {
         param: "compression",
@@ -179,7 +179,7 @@ pub static DESIGN_SAVE_OPTIONS: &[OptionSpec] = &[
 pub static FORMATS: &[FormatSpec] = &[
     FormatSpec {
         id: "design",
-        label: "SolidCraft design",
+        label: "Torno design",
         extensions: &[crate::DESIGN_EXTS[0], crate::DESIGN_EXTS[1], crate::DESIGN_EXTS[2], "json"],
         role: Role::Design,
         import: Some(ImportSpec { target: ImportTarget::Design, options: &[], native_only: false }),
@@ -396,7 +396,7 @@ pub fn import_filters(native: bool) -> Vec<(&'static str, Vec<&'static str>)> {
     for f in importable(native) {
         let Some(import) = f.import.as_ref() else { continue };
         match import.target {
-            ImportTarget::Design => add("SolidCraft design (container or JSON)", f.extensions),
+            ImportTarget::Design => add("Torno design (container or JSON)", f.extensions),
             ImportTarget::Brep if import.native_only => add("FreeCAD and Rhino", f.extensions),
             ImportTarget::Brep => add(f.label, f.extensions),
             ImportTarget::Mesh => add("Mesh (3MF, STL, OBJ, glTF)", f.extensions),
@@ -480,7 +480,7 @@ mod tests {
 
     #[test]
     fn paths_resolve_to_the_canonical_rows() {
-        assert_eq!(for_path("a.SolidCraft").map(|f| f.id), Some("design"));
+        assert_eq!(for_path("a.SolidCraft").map(|f| f.id), Some("design")); // rebrand: keep
         assert_eq!(for_path("a.json").map(|f| f.id), Some("design"));
         assert_eq!(for_path("a.STEP").map(|f| f.id), Some("step"));
         assert_eq!(for_path("a.3mf").map(|f| f.id), Some("3mf"));
@@ -507,7 +507,7 @@ mod tests {
     fn import_filter_groups_hold_the_expected_extensions() {
         let native = import_filters(true);
         let find = |label: &str| native.iter().find(|(l, _)| *l == label).map(|(_, e)| e.clone()).unwrap_or_default();
-        assert_eq!(find("SolidCraft design (container or JSON)"), vec!["sc", "solidcraft", "solvecraft", "json"]);
+        assert_eq!(find("Torno design (container or JSON)"), vec!["sc", "solidcraft", "solvecraft", "json"]); // rebrand: keep
         assert_eq!(find("STEP"), vec!["step", "stp"]);
         assert_eq!(find("IGES"), vec!["igs", "iges"]);
         assert_eq!(find("FreeCAD and Rhino"), vec!["fcstd", "3dm"]);

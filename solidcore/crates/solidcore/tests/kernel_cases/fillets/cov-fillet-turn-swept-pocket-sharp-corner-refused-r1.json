@@ -399,7 +399,7 @@
     "exporter_commit": "0a79d0874400c8508f5bb6df1406b783f47090ca",
     "fixes_source": "04b4b2db6:crates/solidcore/tests/kernel_cases/fixes.json",
     "solidcore": "8ddce901671f1cebd9214a31d21895d725e886c8",
-    "solidcraft": "8f264574875d46860614e9381ee5f8222db7b7a6"
+    "torno": "8f264574875d46860614e9381ee5f8222db7b7a6"
   },
   "expressible": true,
   "gallery_note": "the operand the refusal leaves: the pocket's vertical corner edges are sharp, so a swept turn at the floor corner (10, 20, 5) has no rounding to follow; that edge must first be rounded to at least radius 1.",

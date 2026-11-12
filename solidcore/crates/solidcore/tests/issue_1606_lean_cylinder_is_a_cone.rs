@@ -2,7 +2,7 @@
 //! `SmCylinder` flag. With `cylinder_rebuild_mean_radius` on, the rebuild refused every leaned
 //! cylinder (`SM_ERR`); with it off, the leaned surface still reported itself a cylinder.
 //!
-//! The case is SolidCraft's `draft_a_curved_face`: the side of a cylinder of radius 5 about +Z
+//! The case is Torno's `draft_a_curved_face`: the side of a cylinder of radius 5 about +Z
 //! from the origin, heights 0 to 10, drafted by 0.1 rad about z = 0 (leaning in). Its solid is
 //! the frustum of radii R = 5 and r = R - 10 tan 0.1, of volume
 //! pi h (R^2 + R r + r^2) / 3 = 638.3350153968712.
@@ -33,7 +33,7 @@ fn cylinder(k: &Kernel, origin: Point3) -> Cone {
     cylinder
 }
 
-/// The leaned cylinder of the SolidCraft case under `k`: a cone with the drafted radius law,
+/// The leaned cylinder of the Torno case under `k`: a cone with the drafted radius law,
 /// whose analytic data and NURB both bound the frustum's volume.
 fn check_draft(k: &Kernel) {
     let cylinder = cylinder(k, Point3::new(0.0, 0.0, 0.0));

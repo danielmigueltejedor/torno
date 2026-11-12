@@ -227,8 +227,8 @@ fn issue_1463_revolved_cylinders_are_never_inside_out() {
     }
 }
 
-/// tangency-labs/solidcore#2539: SolidCraft's enclosure part `periph_case_R` is notched by
-/// `t26`, a rectangle turned a whole turn about its side on a tilted axis (SolidCraft's
+/// tangency-labs/solidcore#2539: Torno's enclosure part `periph_case_R` is notched by
+/// `t26`, a rectangle turned a whole turn about its side on a tilted axis (Torno's
 /// exact `smlib_revolve` inputs). The side 8 off the axis sweeps an exact cylinder: each
 /// control point of its net lies on it to rounding (a weight-1 point 8 from the axis, a
 /// corner of the circle's square, weight `1/sqrt(2)`, 8 sqrt(2) from it), each column of

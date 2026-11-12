@@ -49,7 +49,7 @@ fn line(a: Point3, b: Point3) -> Curve {
     spline(1, &[a, b], &[0.0, 0.0, 1.0, 1.0])
 }
 
-/// The natural cubic through `points` at chord-length parameters (SolidCraft's sketch
+/// The natural cubic through `points` at chord-length parameters (Torno's sketch
 /// spline, `fit_spans`), as its Bézier pieces: each piece's four control points.
 fn natural_pieces(points: &[Point3]) -> Vec<[Point3; 4]> {
     let n = points.len() - 1;
@@ -181,7 +181,7 @@ fn a_straight_rail_tapering_similar_sections_gives_the_frustum() {
 }
 
 /// The hull side of #3140 (the case its first comment gives): keel and sheer sections, stem and transom rails, each a
-/// natural cubic through its points (mm). SolidCraft's even fill of 15 stations per span left
+/// natural cubic through its points (mm). Torno's even fill of 15 stations per span left
 /// the bow edge up to 2.65 mm off the stem in the forefoot's hook, against its own tolerance
 /// of 1e-4 of the diagonal (about 1 mm). Here every guided edge is certified within that
 /// tolerance, and sampled along each rail the skin is within it.
@@ -221,7 +221,7 @@ fn a_hull_side_follows_its_stem_and_transom_within_the_tolerance() {
             curves: sheer.iter().collect(),
         },
     ];
-    // SolidCraft's tolerance: 1e-4 of the sections' control points' diagonal
+    // Torno's tolerance: 1e-4 of the sections' control points' diagonal
     let mut lo = Point3::new(f64::INFINITY, f64::INFINITY, f64::INFINITY);
     let mut hi = Point3::new(f64::NEG_INFINITY, f64::NEG_INFINITY, f64::NEG_INFINITY);
     for c in keel.iter().chain(&sheer) {

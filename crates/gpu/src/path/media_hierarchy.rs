@@ -2,11 +2,11 @@
 //! candidate selection; disjoint overlapping bounds never imply nested media.
 use super::scene::{Triangle, reserved};
 use solidcore_record::Vec3;
-use solidcraft_render::{
+use std::ops::Range;
+use torno_render::{
     job::{CancelToken, ErrorCode, JobError, Result},
     optical_boundary::{ContactIndex, forbidden_contact, origin_crossing},
 };
-use std::ops::Range;
 
 pub(super) struct Region<'a> {
     pub lo: Vec3,
@@ -106,7 +106,7 @@ pub(super) fn parents(regions: &[Region<'_>], triangles: &[Triangle], allow_nest
     if regions.is_empty() {
         return Ok(Vec::new());
     }
-    if regions.len() > solidcraft_render::job::MAX_GPU_DIELECTRICS {
+    if regions.len() > torno_render::job::MAX_GPU_DIELECTRICS {
         return Err(invalid("at most 128 dielectric bodies are supported"));
     }
     let mut contains = [[false; 128]; 128];
@@ -151,7 +151,7 @@ pub(super) fn parents(regions: &[Region<'_>], triangles: &[Triangle], allow_nest
     let mut result = reserved(regions.len())?;
     for (child, region) in regions.iter().enumerate() {
         let depth = contains.iter().filter(|parents| parents[child]).count();
-        if depth >= solidcraft_render::job::MAX_NESTED_MEDIA {
+        if depth >= torno_render::job::MAX_NESTED_MEDIA {
             return Err(JobError::new(ErrorCode::LimitExceeded, "at most 16 nested dielectric layers are supported"));
         }
         let mut parent = 0;

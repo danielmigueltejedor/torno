@@ -1,4 +1,4 @@
-//! tangency-labs/solidcore#398: SolidCraft rig case shell/1525 (`tangency-labs/solidcraft`,
+//! tangency-labs/solidcore#398: Torno rig case shell/1525 (`tangency-labs/solidcraft`,
 //! branch `kernel-smlib`, `tests/kernel-cases/shell/1525-shell-box-with-rounds-chamfer-and-fillet`):
 //! a 50 x 50 x 30 box, its four vertical edges rounded r10, a 5 mm chamfer round the base,
 //! a 4 mm fillet where the chamfer meets the wall, shelled 2 mm inward (open at the top, and
@@ -238,7 +238,7 @@ fn issue_398_closed_shell() {
 }
 
 /// The open-top shell with `shell_edges_on_analytics_exact` (WR-545) on as well, as the
-/// SolidCraft rig runs shell/1525: `make_edges_on_analytics_exact` intersects the result's
+/// Torno rig runs shell/1525: `make_edges_on_analytics_exact` intersects the result's
 /// face-owned surfaces through its face services (the fork reaches each face through
 /// `SmSurface::GetFace`); without them it failed with `Unported(topology.face_p2)`. The
 /// fork (tangency-labs/smlib 68fb9162) gives 51 faces, V = 13701.7343.

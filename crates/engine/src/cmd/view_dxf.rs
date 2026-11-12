@@ -9,8 +9,8 @@ use std::collections::BTreeMap;
 
 use serde_json::Value;
 use solidcore_record::Vec2;
-use solidcraft_io::{DxfEntity, DxfLayer, DxfLinetype, DxfShape};
-use solidcraft_viewport::Camera;
+use torno_io::{DxfEntity, DxfLayer, DxfLinetype, DxfShape};
+use torno_viewport::Camera;
 
 use super::CommandSpec;
 use crate::mesh_lines::{self, Stage, View};
@@ -57,7 +57,7 @@ fn export(s: &mut Session, p: &Value) -> Result<Value> {
         Some(_) => Some(str_(p, "path").filter(|v| !v.trim().is_empty() && v.len() < 4096).ok_or_else(|| bad(CMD, "invalid path"))?),
     };
     if let Some(path) = path {
-        solidcraft_io::vfs::check(path).map_err(|e| crate::EngineError::Other(e.to_string()))?;
+        torno_io::vfs::check(path).map_err(|e| crate::EngineError::Other(e.to_string()))?;
     }
     let started = web_time::Instant::now();
     Stage::new("dxf_meshes", 1).check().map_err(|e| bad(CMD, e))?;
@@ -92,7 +92,7 @@ fn export(s: &mut Session, p: &Value) -> Result<Value> {
     if sketch > 0 {
         layers.push(DxfLayer::new("SKETCH", 5));
     }
-    let text = solidcraft_io::write_dxf_drawing(&layers, &entities)?;
+    let text = torno_io::write_dxf_drawing(&layers, &entities)?;
     writing.check().map_err(|e| bad(CMD, e))?;
     let stats = ViewDxfStats {
         bodies: meshes.placements.len(),
@@ -107,8 +107,8 @@ fn export(s: &mut Session, p: &Value) -> Result<Value> {
         occlusion_ms: drawing.occlusion_ms,
     };
     let output = if let Some(path) = path {
-        solidcraft_io::vfs::check(path).map_err(|e| crate::EngineError::Other(e.to_string()))?;
-        solidcraft_io::write_atomic(std::path::Path::new(path), text.as_bytes(), false).map_err(|e| crate::EngineError::Other(e.to_string()))?;
+        torno_io::vfs::check(path).map_err(|e| crate::EngineError::Other(e.to_string()))?;
+        torno_io::write_atomic(std::path::Path::new(path), text.as_bytes(), false).map_err(|e| crate::EngineError::Other(e.to_string()))?;
         DxfOutput::File { path: path.to_string() }
     } else {
         DxfOutput::Text { dxf: text }

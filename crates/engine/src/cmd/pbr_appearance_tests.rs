@@ -123,8 +123,8 @@ fn invalid_optical_requests_refuse_atomically_and_scalar_export_cannot_lose_them
     )
     .unwrap();
     assert!(
-        solidcraft_io::catalog::Catalog::from_document(&s.doc, "user.fixture", "Original", Default::default())
-            .and_then(|c| c.in_format(solidcraft_io::catalog::V1_FORMAT))
+        torno_io::catalog::Catalog::from_document(&s.doc, "user.fixture", "Original", Default::default())
+            .and_then(|c| c.in_format(torno_io::catalog::V1_FORMAT))
             .is_err()
     );
     let mut invalid: serde_json::Value = serde_json::from_str(&s.doc.to_json()).unwrap();
@@ -153,8 +153,8 @@ fn physical_default_look_and_face_override_keep_independent_optical_meaning() {
     assert!(scene.meshes[0].faces.iter().any(|f| f.color == [0, 128, 160] && f.surface.is_none()));
     assert_eq!(s.doc.user_materials[0].density, 0.7);
     assert!(
-        solidcraft_io::catalog::Catalog::from_document(&s.doc, "user.fixture", "Original", Default::default())
-            .and_then(|c| c.in_format(solidcraft_io::catalog::V1_FORMAT))
+        torno_io::catalog::Catalog::from_document(&s.doc, "user.fixture", "Original", Default::default())
+            .and_then(|c| c.in_format(torno_io::catalog::V1_FORMAT))
             .is_err()
     );
 }
@@ -233,7 +233,7 @@ fn named_opaque_finishes_reach_the_scene_and_survive_undo_and_reopen_without_cha
         ("Wood - Oak", [190, 146, 92], 1.0),
         ("Paint - Gloss White", [246, 246, 244], 1.0),
     ];
-    assert!(solidcraft_doc::appearance::LIBRARY.len() >= legacy.len());
+    assert!(torno_doc::appearance::LIBRARY.len() >= legacy.len());
     for (name, color, opacity) in legacy {
         let matching: Vec<_> = entries.iter().filter(|entry| entry["name"] == name).collect();
         assert_eq!(matching.len(), 1, "legacy row must occur exactly once: {name}");
@@ -245,10 +245,10 @@ fn named_opaque_finishes_reach_the_scene_and_survive_undo_and_reopen_without_cha
     for name in
         ["Steel - Satin PBR", "Aluminum - Satin PBR", "Copper - Clean PBR", "ABS - Molded PBR", "PLA - Smooth PBR", "Wood - Oak Uniform PBR Preview"]
     {
-        assert!(solidcraft_doc::appearance::OPAQUE_FINISHES.iter().any(|(entry, ..)| *entry == name));
+        assert!(torno_doc::appearance::OPAQUE_FINISHES.iter().any(|(entry, ..)| *entry == name));
     }
-    for &(name, ..) in solidcraft_doc::appearance::OPAQUE_FINISHES {
-        let expected = solidcraft_doc::appearance::library(name).unwrap();
+    for &(name, ..) in torno_doc::appearance::OPAQUE_FINISHES {
+        let expected = torno_doc::appearance::library(name).unwrap();
         let matching: Vec<_> = entries.iter().filter(|entry| entry["name"] == name).collect();
         assert_eq!(matching.len(), 1, "finish row must occur exactly once: {name}");
         assert_eq!(matching[0]["color"], expected.hex());
@@ -268,13 +268,13 @@ fn named_opaque_finishes_reach_the_scene_and_survive_undo_and_reopen_without_cha
         assert_eq!(s.doc.appearances, before);
         s.execute("edit.redo", &json!({})).unwrap();
         assert_eq!(s.doc.appearances.bodies["Specimen"], expected);
-        let mut reopened = Session::new(solidcraft_doc::Document::from_json(&saved).unwrap());
+        let mut reopened = Session::new(torno_doc::Document::from_json(&saved).unwrap());
         assert_eq!(reopened.doc.appearances.bodies["Specimen"], expected);
         assert_eq!(reopened.execute("component.properties", &json!({})).unwrap(), mass);
         assert!(
-            solidcraft_io::catalog::Catalog::from_document(&reopened.doc, "user.fixture", "Original", Default::default())
+            torno_io::catalog::Catalog::from_document(&reopened.doc, "user.fixture", "Original", Default::default())
                 .unwrap()
-                .in_format(solidcraft_io::catalog::V1_FORMAT)
+                .in_format(torno_io::catalog::V1_FORMAT)
                 .is_err()
         );
     }
@@ -337,7 +337,7 @@ fn physical_material_presets_refuse_inherited_transparency_before_any_edit() {
 #[test]
 fn physical_material_finish_defaults_keep_optics_through_edits_undo_and_reopen() {
     let mut s = fixture();
-    let expected = solidcraft_doc::appearance::library("ABS - Molded PBR").unwrap();
+    let expected = torno_doc::appearance::library("ABS - Molded PBR").unwrap();
     s.execute("material.create", &json!({"name":"Original density fixture","density_g_cm3":0.7,"appearance":"ABS - Molded PBR"})).unwrap();
     assert_eq!(s.doc.user_materials[0].appearance.as_ref(), Some(&expected));
     s.execute("edit.undo", &json!({})).unwrap();
@@ -402,7 +402,7 @@ fn custom_looks_with_preset_names_keep_their_explicit_color_and_response() {
     let custom = s.doc.appearances.bodies["Specimen"].clone();
     assert_eq!(custom.color, scalar.color);
     assert_eq!(json!(custom.pbr.unwrap()), response);
-    assert_ne!(custom, solidcraft_doc::appearance::library("Steel - Satin PBR").unwrap());
+    assert_ne!(custom, torno_doc::appearance::library("Steel - Satin PBR").unwrap());
     s.execute("edit.undo", &json!({})).unwrap();
     assert_eq!(s.doc.appearances.bodies["Specimen"], scalar);
     s.execute("edit.redo", &json!({})).unwrap();
@@ -454,7 +454,7 @@ fn pack_listing_keeps_legacy_rows_and_labels_unavailable_recipes_without_mutatio
         ("Wood - Oak", [190, 146, 92], 1.0),
         ("Paint - Gloss White", [246, 246, 244], 1.0),
     ];
-    assert!(solidcraft_doc::appearance::LIBRARY.len() >= legacy.len());
+    assert!(torno_doc::appearance::LIBRARY.len() >= legacy.len());
     for (name, color, opacity) in legacy {
         let matching: Vec<_> = rows.iter().filter(|row| row["name"] == name).collect();
         assert_eq!(matching.len(), 1, "legacy appearance must occur exactly once: {name}");
@@ -471,7 +471,7 @@ fn pack_listing_keeps_legacy_rows_and_labels_unavailable_recipes_without_mutatio
         ("PLA - Smooth PBR", [110, 160, 222], 0.0, 0.35),
         ("Wood - Oak Uniform PBR Preview", [190, 146, 92], 0.0, 0.65),
     ];
-    assert!(finishes.iter().all(|finish| solidcraft_doc::appearance::OPAQUE_FINISHES.contains(finish)));
+    assert!(finishes.iter().all(|finish| torno_doc::appearance::OPAQUE_FINISHES.contains(finish)));
     for (name, color, metallic, roughness) in finishes {
         let matching: Vec<_> = rows.iter().filter(|row| row["name"] == name).collect();
         assert_eq!(matching.len(), 1, "published finish must occur exactly once: {name}");
@@ -548,7 +548,7 @@ fn cold_native_reopen_keeps_owned_opaque_values_without_pack_metadata_or_assets(
     let look = s.doc.appearances.bodies.get("Swatch").unwrap().clone();
     let density = s.doc.density("Swatch");
     let nonce = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos();
-    let dir = std::env::temp_dir().join(format!("solidcraft-pack-{}-{nonce}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("torno-pack-{}-{nonce}", std::process::id()));
     std::fs::create_dir(&dir).unwrap();
     let path = dir.join("opaque.solidcraft");
     s.execute("file.save", &json!({"path":path.to_str().unwrap()})).unwrap();
@@ -564,7 +564,7 @@ fn cold_native_reopen_keeps_owned_opaque_values_without_pack_metadata_or_assets(
 #[test]
 fn starter_selectors_keep_final_validation_and_custom_names_stay_inert() {
     let mut s = pack_session();
-    let preset = solidcraft_doc::appearance_pack::find("starter.wood.oak-honey").unwrap();
+    let preset = torno_doc::appearance_pack::find("starter.wood.oak-honey").unwrap();
     let doc = s.doc.clone();
     let history = (s.undo.len(), s.redo.len(), s.revision);
     for selector in [preset.id, preset.name] {

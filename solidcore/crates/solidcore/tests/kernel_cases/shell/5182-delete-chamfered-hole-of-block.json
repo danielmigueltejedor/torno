@@ -62,6 +62,6 @@
   "ungraded": [],
   "what": "a chamfered O6 through hole in a block (synthetic: the report's part was an imported STEP), its wall and chamfer deleted: refused ('face 8 borders face 7, which is curved; only planar neighbours can extend')",
   "why_not": [
-    "body \"Block\" is no kernel operation's output nor an operand: SolidCraft built it or changed the kernel's record"
+    "body \"Block\" is no kernel operation's output nor an operand: Torno built it or changed the kernel's record"
   ]
 }

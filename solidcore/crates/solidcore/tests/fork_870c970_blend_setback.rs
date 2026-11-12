@@ -1,4 +1,4 @@
-//! The SolidCraft fork's setback corner, `SmBlendSetback` (tangency-labs/smlib PR #79:
+//! The Torno fork's setback corner, `SmBlendSetback` (tangency-labs/smlib PR #79:
 //! `870c970`, `beba428`, `3fdb76b`, `52da453`; tangency-labs/solidcore#2273): the capi cases
 //! `SETBACK_CASES` of the fork's `capi/tests/ops_kernel.cpp`, with the fork's values and
 //! tolerances. `870c970` committed the fill's cases as known failing; `beba428` and `3fdb76b`

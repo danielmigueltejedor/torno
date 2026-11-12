@@ -12,9 +12,9 @@
 use crate::transmission;
 use serde::{Deserialize, Serialize};
 use solidcore_record::Vec3;
-use solidcraft_geom::Vec3Geom;
-use solidcraft_viewport::surface::unit_direction;
 use std::f64::consts::{PI, TAU};
+use torno_geom::Vec3Geom;
+use torno_viewport::surface::unit_direction;
 
 /// Fixed R, G, B representative bands. Thin films can alias in this approximation.
 pub const WAVELENGTHS_NM: [f64; 3] = [610.0, 550.0, 460.0];
@@ -360,7 +360,7 @@ impl GlassModel {
             if cv == 0.0 {
                 return Ok(None);
             }
-            solidcraft_viewport::surface::visible_normal(v, n, self.roughness * self.roughness, [uniforms[0], uniforms[1]])
+            torno_viewport::surface::visible_normal(v, n, self.roughness * self.roughness, [uniforms[0], uniforms[1]])
                 .map_err(|_| GlassModelError::Direction)?
         };
         let vm = v.dot(m).clamp(0.0, 1.0);

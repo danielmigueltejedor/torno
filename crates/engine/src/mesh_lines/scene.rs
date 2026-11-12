@@ -2,14 +2,14 @@
 //! triangle hierarchy per shared mesh. Per-placement node bounds are small; projected
 //! triangle coordinates are evaluated only in visited leaves. Covered line intervals prune
 //! subsequent nodes and instances, including the entire query once coverage is complete.
-use solidcraft_geom::prelude::*;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicUsize, Ordering};
+use torno_geom::prelude::*;
 use web_time::Instant;
 
 use solidcore_record::Vec3;
-use solidcraft_doc::apply_point;
-use solidcraft_geom::{Aabb3, Mesh};
+use torno_doc::apply_point;
+use torno_geom::{Aabb3, Mesh};
 
 use super::meshes::{Placement, Scene, WORKERS, claim, transformed_bounds};
 use super::progress::Stage;
@@ -23,7 +23,7 @@ const MAX_VIEW_NODES: usize = 256 * 1024 * 1024 / std::mem::size_of::<Aabb3>();
 const WORK: usize = 200_000_000;
 
 fn parallel<T: Sync, R: Send>(items: &[T], f: impl Fn(&T) -> Result<R, &'static str> + Sync) -> Result<Vec<R>, &'static str> {
-    solidcraft_kernel::map_on_threads(items, WORKERS, f).into_iter().map(|r| r.ok_or("export worker failed")?).collect()
+    torno_kernel::map_on_threads(items, WORKERS, f).into_iter().map(|r| r.ok_or("export worker failed")?).collect()
 }
 
 struct Node {
@@ -552,7 +552,7 @@ pub(crate) fn drawing(scene: &Scene, sketch: &[Part], view: &View) -> Result<Dra
 #[cfg(test)]
 mod tests {
     use super::*;
-    use solidcraft_viewport::Camera;
+    use torno_viewport::Camera;
     #[test]
     fn coverage_handles_disjoint_spans_and_early_complete_coverage() {
         let mut c = Coverage::default();
@@ -606,7 +606,7 @@ mod tests {
         let mut placements = Vec::new();
         let mut flat = Vec::new();
         for (offset, angle) in [(Vec3::ZERO, 0.), (Vec3::new(3., 2., 4.), 0.3), (Vec3::new(2., 1., -4.), -0.6)] {
-            let transform = solidcraft_doc::rigid(offset, Vec3::ZERO, Vec3::Z, angle);
+            let transform = torno_doc::rigid(offset, Vec3::ZERO, Vec3::Z, angle);
             placements.push(Placement { mesh: 0, transform, visibility: vec![true; mesh.edges.len()] });
             let mut placed = mesh.clone();
             placed.positions = placed.positions.iter().map(|p| apply_point(&transform, *p)).collect();
@@ -626,8 +626,8 @@ mod tests {
 
     #[test]
     fn repeated_surface_over_one_million_triangles_keeps_one_mesh_and_exports_all_placements() {
-        use solidcraft_viewport::StandardView;
         use std::sync::Arc;
+        use torno_viewport::StandardView;
         let mut mesh = Mesh::default();
         for y in 0..=100 {
             for x in 0..=100 {
@@ -649,7 +649,7 @@ mod tests {
         let placements = (0..60)
             .map(|i| Placement {
                 mesh: 0,
-                transform: solidcraft_doc::rigid(Vec3::new((i % 10) as f64 * 20., (i / 10) as f64 * 20., 0.), Vec3::ZERO, Vec3::Z, 0.),
+                transform: torno_doc::rigid(Vec3::new((i % 10) as f64 * 20., (i / 10) as f64 * 20., 0.), Vec3::ZERO, Vec3::Z, 0.),
                 visibility: vec![true; 4],
             })
             .collect();

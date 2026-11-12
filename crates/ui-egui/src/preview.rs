@@ -1,5 +1,5 @@
 //! Live operation previews. While a feature dialog is open, its commands are evaluated on a
-//! scratch copy of the session ([`solidcraft_engine::Session::preview`]), off the UI thread
+//! scratch copy of the session ([`torno_engine::Session::preview`]), off the UI thread
 //! where threads exist, and the result is drawn in place of the bodies it changes: new surface
 //! tinted (unless Graphics' Tint new surface in a preview is off, when a changed body is drawn
 //! as itself), removed material as a translucent ghost. The last good preview stays up while
@@ -11,22 +11,22 @@
 //! is all its preview builds: its boolean, which can take seconds (a text joined onto a part),
 //! runs once, on OK, and an error it finds shows then, the dialog staying open.
 
-use solidcraft_engine::geom::prelude::*;
 use std::hash::{Hash, Hasher};
 use std::sync::Arc;
 use std::sync::mpsc::{Receiver, TryRecvError};
+use torno_engine::geom::prelude::*;
 
 use serde_json::Value;
 use solidcore_record::Vec3;
-use solidcraft_engine::Session;
-use solidcraft_engine::doc::ModelState;
-use solidcraft_engine::doc::progress::Progress;
-use solidcraft_engine::geom::{Aabb3, Mesh, Ring};
-use solidcraft_engine::kernel::history::Change;
+use torno_engine::Session;
+use torno_engine::doc::ModelState;
+use torno_engine::doc::progress::Progress;
+use torno_engine::geom::{Aabb3, Mesh, Ring};
+use torno_engine::kernel::history::Change;
 
 use crate::SolveApp;
 use crate::gpu::{GpuScene, SceneSlot};
-use solidcraft_theme::Tokens;
+use torno_theme::Tokens;
 
 /// Colours a preview is drawn with (straight sRGBA).
 #[derive(Clone, Copy, Debug)]
@@ -79,7 +79,7 @@ impl Colors {
 }
 
 pub struct SketchPreview {
-    pub sketch: std::sync::Arc<solidcraft_engine::doc::SolvedSketch>,
+    pub sketch: std::sync::Arc<torno_engine::doc::SolvedSketch>,
     pub curves: Vec<usize>,
     pub points: Vec<usize>,
 }
@@ -97,7 +97,7 @@ pub struct Built {
     /// (`fit: reduce`).
     pub applied: Option<(f64, f64)>,
     /// The radius spline of each edge a fillet tapered (`fit: taper`), with a point on the edge.
-    pub tapered: Vec<(Vec3, solidcraft_engine::kernel::Taper)>,
+    pub tapered: Vec<(Vec3, torno_engine::kernel::Taper)>,
     /// The reply of a previewed drive that stopped short of the asked values (the dialog says
     /// where and why, in the UI's language).
     pub stopped: Option<serde_json::Value>,
@@ -154,7 +154,7 @@ pub struct PreviewState {
     /// The reply of a previewed drive that stopped short (see [`Built::stopped`]).
     pub stopped: Option<serde_json::Value>,
     /// The radius splines the previewed fillet tapered its edges with.
-    pub tapered: Vec<(Vec3, solidcraft_engine::kernel::Taper)>,
+    pub tapered: Vec<(Vec3, torno_engine::kernel::Taper)>,
     straight: crate::extrude_preview::StraightPreview,
     moving: crate::move_preview::MovePreview,
     /// PreviewReselect: Primary held - hide the preview and restore replaced bodies for picks.
@@ -455,11 +455,12 @@ fn spawn(pv: &mut PreviewState, key: u64, scratch: Session, cmds: Vec<(String, V
     // Watched by `progress`, so a job left behind for other inputs skips its remaining features.
     let watched = progress.clone();
     let spawned = std::thread::Builder::new().name("preview".into()).spawn(move || {
-        let job = scratch.stop_token().within(|| {
-            solidcraft_engine::doc::progress::watch(watched, || {
-                if tool { compute_tool(&scratch, &cmds, colors) } else { compute(&scratch, &cmds, colors) }
-            })
-        });
+        let job =
+            scratch.stop_token().within(|| {
+                torno_engine::doc::progress::watch(watched, || {
+                    if tool { compute_tool(&scratch, &cmds, colors) } else { compute(&scratch, &cmds, colors) }
+                })
+            });
         let _ = tx.send(job);
     });
     match spawned {
@@ -692,7 +693,7 @@ pub fn build(before: &ModelState, after: &ModelState, c: Colors) -> Built {
         if before.construct.iter().any(|old| old == construct) {
             continue;
         }
-        if let solidcraft_engine::doc::construct::ConstructGeom::Plane(plane) = construct.geom {
+        if let torno_engine::doc::construct::ConstructGeom::Plane(plane) = construct.geom {
             let (o, x, y) = (plane.origin, plane.x * 10.0, plane.y * 10.0);
             let quad = [o - x - y, o + x - y, o + x + y, o - x + y];
             for triangle in [[quad[0], quad[1], quad[2]], [quad[0], quad[2], quad[3]]] {
@@ -813,8 +814,8 @@ const FACE_SAMPLES: usize = 24;
 /// What of `sketch` differs from `old`, the same sketch before a change: the curves whose shape
 /// or points moved and the points that moved (`None`: nothing did).
 pub(crate) fn sketch_changes(
-    old: Option<&solidcraft_engine::doc::SolvedSketch>,
-    sketch: &std::sync::Arc<solidcraft_engine::doc::SolvedSketch>,
+    old: Option<&torno_engine::doc::SolvedSketch>,
+    sketch: &std::sync::Arc<torno_engine::doc::SolvedSketch>,
 ) -> Option<SketchPreview> {
     let old_curves = old.into_iter().flat_map(|s| s.sketch.curves.iter().map(|c| (c.id.as_str(), c))).collect::<std::collections::HashMap<_, _>>();
     let old_points =
@@ -994,7 +995,7 @@ pub fn paint_sketches(app: &SolveApp, painter: &egui::Painter, proj: &crate::vie
     {
         return;
     }
-    let mut budget = solidcraft_engine::render::SamplingBudget::new(32_768, 65_536);
+    let mut budget = torno_engine::render::SamplingBudget::new(32_768, 65_536);
     let curves: usize = app.preview.sketches.iter().map(|preview| paint_sketch(preview, painter, proj, &mut budget)).sum();
     crate::scenario::publish_count("sketch_preview_curves", curves as f64);
 }
@@ -1005,7 +1006,7 @@ pub(crate) fn paint_sketch(
     preview: &SketchPreview,
     painter: &egui::Painter,
     proj: &crate::viewport::Proj,
-    budget: &mut solidcraft_engine::render::SamplingBudget,
+    budget: &mut torno_engine::render::SamplingBudget,
 ) -> usize {
     let stroke = egui::Stroke::new(2.5, Tokens::get().preview_sketch);
     let sketch = &preview.sketch;
@@ -1028,7 +1029,7 @@ mod tests {
     #[test]
     fn tool_preview_follows_tab_without_recolouring_removal_or_idle_previews() {
         for dark in [false, true] {
-            for vision in solidcraft_theme::ColorVision::ALL {
+            for vision in torno_theme::ColorVision::ALL {
                 let t = Tokens::themed(dark, vision);
                 let base = Colors::from_tokens(&t);
                 for tab in ["MODEL", "SKETCH", "SURFACE", "ASSEMBLE", "INSERT", "INSPECT", "MANAGE", "VIEW", "SHEET METAL", "RENDER"] {
@@ -1299,8 +1300,8 @@ mod tests {
             let sketch = &mut std::sync::Arc::make_mut(sketch).sketch;
             for curve in &mut sketch.curves {
                 match &mut curve.kind {
-                    solidcraft_engine::sketch::CurveKind::Circle { r, .. } => *r = 3.0,
-                    solidcraft_engine::sketch::CurveKind::Line { a, b } => std::mem::swap(a, b),
+                    torno_engine::sketch::CurveKind::Circle { r, .. } => *r = 3.0,
+                    torno_engine::sketch::CurveKind::Line { a, b } => std::mem::swap(a, b),
                     _ => {}
                 }
             }
@@ -1320,7 +1321,7 @@ mod tests {
     /// intersect".
     #[test]
     fn combine_previews_its_result_without_an_error() {
-        let mut s = solidcraft_engine::Session::default();
+        let mut s = torno_engine::Session::default();
         s.execute("solid.box", &json!({"length": 20, "width": 20, "height": 20, "body_name": "Cube"})).unwrap();
         s.execute("solid.cylinder", &json!({"base": [10, 10, -5], "diameter": 6, "height": 30, "body_name": "Pin"})).unwrap();
         for op in ["cut", "join", "intersect"] {
@@ -1374,7 +1375,7 @@ mod tests {
 
     #[test]
     fn a_hole_shows_its_cut_through_the_body() {
-        let mut s = solidcraft_engine::Session::default();
+        let mut s = torno_engine::Session::default();
         s.execute("solid.box", &json!({"length": 40, "width": 30, "height": 20})).unwrap();
         let p = s.preview(&[("solid.hole".to_string(), json!({"position": [20, 15, 20], "diameter": 5, "depth": 10}))]).unwrap();
         let b = build(&p.before, &p.after, colors());
@@ -1390,7 +1391,7 @@ mod tests {
     /// feature replaces are left out, and the body itself is still drawn.
     #[test]
     fn removed_material_can_be_left_fully_transparent() {
-        let mut s = solidcraft_engine::Session::default();
+        let mut s = torno_engine::Session::default();
         s.execute("solid.box", &json!({"length": 40, "width": 30, "height": 20})).unwrap();
         let cmds = [("solid.hole".to_string(), json!({"position": [20, 15, 20], "diameter": 5, "depth": 10}))];
         let p = s.preview(&cmds).unwrap();
@@ -1654,7 +1655,7 @@ mod tests {
         let cmds = vec![("solid.extrude".to_string(), params.clone())];
         assert_eq!(extrusion_target_error(&s, &cmds, &s.model.state()), None);
         s.execute("solid.extrude", &params).unwrap();
-        let volume = s.model.state().body("Block").map(|b| solidcraft_engine::kernel::measure(&b.body).unwrap().volume).unwrap_or(0.0);
+        let volume = s.model.state().body("Block").map(|b| torno_engine::kernel::measure(&b.body).unwrap().volume).unwrap_or(0.0);
         assert!((volume - (1000.0 - 160.0)).abs() < 1e-6, "{volume}");
     }
 

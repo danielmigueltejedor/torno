@@ -97,6 +97,6 @@
   "ungraded": [],
   "what": "an 80 x 40 base with a 30 mm flange on the y = 0 edge and a 15 mm flange on the x = 80 edge, and a round hole through the base beside them: sew failed with a non-manifold edge contact",
   "why_not": [
-    "body \"Body1\" is no kernel operation's output nor an operand: SolidCraft built it or changed the kernel's record"
+    "body \"Body1\" is no kernel operation's output nor an operand: Torno built it or changed the kernel's record"
   ]
 }

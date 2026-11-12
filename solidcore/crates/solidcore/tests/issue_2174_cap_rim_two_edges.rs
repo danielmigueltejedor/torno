@@ -23,7 +23,7 @@
 //! Sheets: the issue's repro (the ball intersected with a box over z >= 5 turned 90
 //! degrees about z; rim vertices (+-8.66, 0, 5), seam end (8.66, 0, 5)), the ball turned
 //! 90 degrees less a box below z = 5 (rim vertices (8.66, 0, 5) and (0, 8.66, 5)), and
-//! SolidCraft's sheet as it wrote it (`data/issue_2174_solidcraft_cap_sheet.smb`, which
+//! Torno's sheet as it wrote it (`data/issue_2174_torno_cap_sheet.smb`, which
 //! failed in `relate` with 1001 out).
 //!
 //! The pinned C++ on the repro's sheet (the `issue2174` fixture of
@@ -129,8 +129,8 @@ fn turned_cap(k: &mut Kernel) -> Brep {
     without_flat_face(k, c)
 }
 
-/// SolidCraft's sheet, written by SolidCraft (binary `.smb`).
-fn solidcraft_cap(k: &mut Kernel) -> Brep {
+/// Torno's sheet, written by Torno (binary `.smb`).
+fn torno_cap(k: &mut Kernel) -> Brep {
     let fresh = Brep::new();
     let mut store = AttributeStore::new();
     let mut records = NotifyRecords::new();
@@ -142,7 +142,7 @@ fn solidcraft_cap(k: &mut Kernel) -> Brep {
         records: &mut records,
         next_key: 1 << 50,
     };
-    let bytes = include_bytes!("data/issue_2174_solidcraft_cap_sheet.smb").to_vec();
+    let bytes = include_bytes!("data/issue_2174_torno_cap_sheet.smb").to_vec();
     let mut b = read_brep_from_file(k, Some(bytes), false, false, &mut env).unwrap();
     b.refresh_cached_topology();
     assert_eq!(b.face_list().len(), 1);
@@ -224,13 +224,13 @@ fn turned_cap_thickens_in() {
 }
 
 #[test]
-fn solidcraft_cap_thickens_out() {
-    assert_sound(issue_kernel(true), solidcraft_cap, 1.0);
+fn torno_cap_thickens_out() {
+    assert_sound(issue_kernel(true), torno_cap, 1.0);
 }
 
 #[test]
-fn solidcraft_cap_thickens_in() {
-    assert_sound(issue_kernel(true), solidcraft_cap, -1.0);
+fn torno_cap_thickens_in() {
+    assert_sound(issue_kernel(true), torno_cap, -1.0);
 }
 
 /// The fix alone, on the defaults, is enough.
@@ -245,7 +245,7 @@ fn intersected_cap_thickens_with_this_fix_alone() {
 /// Upstream refused the loop gap there (1043).
 #[test]
 fn flag_off_closes_the_gap_at_the_vertex_images() {
-    let sheets: [fn(&mut Kernel) -> Brep; 3] = [intersected_cap, turned_cap, solidcraft_cap];
+    let sheets: [fn(&mut Kernel) -> Brep; 3] = [intersected_cap, turned_cap, torno_cap];
     for sheet in sheets {
         for distance in [1.0, -1.0] {
             assert_sound(issue_kernel(false), sheet, distance);

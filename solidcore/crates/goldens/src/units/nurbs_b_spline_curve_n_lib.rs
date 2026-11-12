@@ -28,7 +28,7 @@
 //! Generated cases are drawn inside the routines' input contract ([`in_contract`]).
 //!
 //! An `interp_crv` case with `given_params` (fixture cases only, never generated) runs
-//! the SolidCraft fork's `CreateInterpolatingCurve(..., cpOptParams)` (tangency-labs/
+//! the Torno fork's `CreateInterpolatingCurve(..., cpOptParams)` (tangency-labs/
 //! smlib#76 68f6913, ported as `create_interpolating_curve_with_params`) on the Rust
 //! side, with the parameters `par` gives as `cpOptParams`, computed by the Rust side
 //! itself (`param_values`, upstream `N_FitCalcCrvParamValues`). The pinned C++ has no

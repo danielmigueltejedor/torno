@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Start the installed SolidCraft snap on headless X11 and Wayland and model a box in it.
+"""Start the installed Torno snap on headless X11 and Wayland and model a box in it.
 
 Runs the confined app (`snap install --dangerous` first) with its normal plugs, drives it over
 the control channel from the host (snaps share the host's network namespace), checks a
@@ -103,11 +103,11 @@ def run_backend(backend, out):
     runtime = Path(f"/run/user/{os.getuid()}")
     if not runtime.is_dir():
         raise RuntimeError(f"{runtime} is missing: snaps expect the login session's runtime directory")
-    env = dict(os.environ, XDG_RUNTIME_DIR=str(runtime), SOLIDCRAFT_CONTROL_TOKEN=TOKEN)
-    for name in ("WAYLAND_DISPLAY", "WAYLAND_SOCKET", "DISPLAY", "SOLIDCRAFT_WAYLAND", "SOLVECRAFT_WAYLAND"):
+    env = dict(os.environ, XDG_RUNTIME_DIR=str(runtime), TORNO_CONTROL_TOKEN=TOKEN)
+    for name in ("WAYLAND_DISPLAY", "WAYLAND_SOCKET", "DISPLAY", "TORNO_WAYLAND", "SOLVECRAFT_WAYLAND"):
         env.pop(name, None)
     # The snap can write to the (non-hidden) home folder, not to the host's /tmp.
-    work = Path(tempfile.mkdtemp(prefix="solidcraft-snap-smoke-", dir=Path.home()))
+    work = Path(tempfile.mkdtemp(prefix="torno-snap-smoke-", dir=Path.home()))
     compositor = None
     log = (work / "app.log").open("wb")
     try:
@@ -129,9 +129,9 @@ def run_backend(backend, out):
                 time.sleep(.1)
         with socket.socket() as probe:
             if probe.connect_ex(("127.0.0.1", PORTS[backend])) == 0:
-                raise RuntimeError(f"port {PORTS[backend]} is already in use (another SolidCraft?)")
+                raise RuntimeError(f"port {PORTS[backend]} is already in use (another Torno?)")
         # Its own process group, so stopping it also stops the app under xvfb-run.
-        app = subprocess.Popen(prefix + ["/snap/bin/solidcraft", "--control", str(PORTS[backend])],
+        app = subprocess.Popen(prefix + ["/snap/bin/torno", "--control", str(PORTS[backend])],
                                env=env, stdout=log, stderr=subprocess.STDOUT, start_new_session=True)
         try:
             renderer, stats = drive(app, PORTS[backend], work / "frame.png")

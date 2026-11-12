@@ -1,4 +1,4 @@
-//! Search across a settings page the kit draws; the Preferences window is SolidCraft's use of it.
+//! Search across a settings page the kit draws; the Preferences window is Torno's use of it.
 //! The field is the Keyboard Shortcuts magnifier. A match is the control's own label, its
 //! section, its page, or the value a dropdown is showing, scored the same way as command search.
 //! English counts too, from the message catalog, so a new setting is found by being drawn —
@@ -8,7 +8,7 @@ use std::collections::{HashMap, HashSet};
 
 use egui::{Context, Id, Pos2, Rect, Response, RichText, Sense, Ui, UiBuilder, Vec2, vec2};
 
-use solidcraft_theme::Tokens;
+use torno_theme::Tokens;
 
 const STATE: &str = "prefs_search_state";
 const SCROLL: &str = "prefs_search_force_scroll";
@@ -557,7 +557,7 @@ fn text_matches(query: &str, text: &str) -> bool {
     // is typed in reading order: compare the query in display order too, so a multi-word Hebrew
     // or Arabic label is found as it is typed (#10471; #7532 fixed only the test's half).
     setting_score(query, text) > 0
-        || setting_score(&solidcraft_ui_text::bidi::visual(query), text) > 0
+        || setting_score(&torno_ui_text::bidi::visual(query), text) > 0
         || english_hit(query, text)
         || keywords(text).iter().any(|word| setting_score(query, word) > 0)
 }
@@ -641,10 +641,10 @@ fn keywords(text: &str) -> &'static [&'static str] {
         "theme" => &["dark", "light", "appearance"],
         "availability" => &["assistant controls"],
         "let ai agents connect" => &["let ai agents connect (control channel / mcp)"],
-        "add solidcraft to ai apps" => &["make solidcraft available to ai apps on this computer"],
+        "add torno to ai apps" => &["make torno available to ai apps on this computer"],
         "run slow commands in the background" => &["run agent commands in the background"],
-        "connect the last agent at start" => &["connect the last-used agent when solidcraft starts"],
-        "open the chat at start" => &["open the assistant panel when solidcraft starts"],
+        "connect the last agent at start" => &["connect the last-used agent when torno starts"],
+        "open the chat at start" => &["open the assistant panel when torno starts"],
         "ask first" => &["ask before changes", "ask every time"],
         "make edits" => &["allow model edits", "auto-allow model edits"],
         "do everything" => &["allow everything"],
@@ -720,12 +720,12 @@ fn english_hit(query: &str, shown: &str) -> bool {
         static MAP: RefCell<(String, HashMap<String, Vec<String>>)> = RefCell::new((String::new(), HashMap::new()));
     }
     MAP.with(|slot| {
-        let lang = solidcraft_ui_text::language().to_string();
+        let lang = torno_ui_text::language().to_string();
         let mut slot = slot.borrow_mut();
         if slot.0 != lang {
             let mut map: HashMap<String, Vec<String>> = HashMap::new();
-            let locale = solidcraft_ui_text::Locale::for_language(&lang);
-            solidcraft_ui_text::each_english_message(|id, english| {
+            let locale = torno_ui_text::Locale::for_language(&lang);
+            torno_ui_text::each_english_message(|id, english| {
                 if english.contains('{') {
                     return;
                 }
@@ -823,7 +823,7 @@ pub fn remember_matched(ui: &mut Ui, label: &str, hint: Option<&str>, rect: Rect
     if scroll {
         ui.scroll_to_rect(rect, Some(egui::Align::Center));
     }
-    solidcraft_ui_registry::publish_handle(&format!("{prefix}:search:current"), rect.center());
+    torno_ui_registry::publish_handle(&format!("{prefix}:search:current"), rect.center());
 }
 
 pub fn set_reveal(ctx: &Context, reveal: Option<Reveal>) {
@@ -860,7 +860,7 @@ pub fn follow(ui: &Ui, label: &str, rect: Rect) {
     ui.scroll_to_rect(rect, Some(egui::Align::Center));
     let t = Tokens::get();
     ui.painter().rect_stroke(rect, t.radius_sm, egui::Stroke::new(t.space_2, t.form_primary), egui::StrokeKind::Outside);
-    solidcraft_ui_registry::publish_handle(&format!("{}:revealed", reveal.prefix), rect.center());
+    torno_ui_registry::publish_handle(&format!("{}:revealed", reveal.prefix), rect.center());
 }
 
 /// Wall clock in milliseconds, for how long a reveal stays outlined.
@@ -916,7 +916,7 @@ mod tests {
             assert_eq!(hits.len(), 1, "control {kind} owns one real keyboard target");
             assert_eq!((hits[0].page, hits[0].label.as_str()), (PAGE_LAYOUT, "Quality"));
             set_reveal(&ctx, Some(Reveal { page: PAGE_LAYOUT, label: "Quality".into(), until: f64::MAX, prefix: "prefs".into() }));
-            solidcraft_ui_registry::clear_handles();
+            torno_ui_registry::clear_handles();
             // The search is cleared before the selected setting is revealed.
             crate::test_support::raw_frame(&ctx, Default::default(), |ui| {
                 let _search = begin(ui, "", "prefs");
@@ -937,7 +937,7 @@ mod tests {
                     2 => crate::preset_card(ui, "Quality", "", false, false, &|_, _, _| {}, 100.0),
                     _ => crate::settings_chip(ui, "Quality", Default::default()),
                 };
-                assert_eq!(solidcraft_ui_registry::handle_at("prefs:revealed"), Some(response.rect.center()));
+                assert_eq!(torno_ui_registry::handle_at("prefs:revealed"), Some(response.rect.center()));
             });
         }
     }
@@ -966,8 +966,8 @@ mod tests {
                 let _search = begin(ui, "", "prefs");
                 begin_page(ui, PAGE_GRAPHICS, "Graphics");
                 crate::settings_picture_choices(ui, "shared", "Sampling", &choices, 0, true);
-                let rect = solidcraft_ui_registry::rect_of(if expected == "Sampling" { "dialog:row:Sampling" } else { "prefs:shared:on" }).unwrap();
-                assert_eq!(solidcraft_ui_registry::handle_at("prefs:revealed"), Some(rect.center()));
+                let rect = torno_ui_registry::rect_of(if expected == "Sampling" { "dialog:row:Sampling" } else { "prefs:shared:on" }).unwrap();
+                assert_eq!(torno_ui_registry::handle_at("prefs:revealed"), Some(rect.center()));
             });
         }
     }

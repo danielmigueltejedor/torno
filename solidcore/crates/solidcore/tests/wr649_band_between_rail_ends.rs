@@ -2,7 +2,7 @@
 //! `fillet_refuse_overlapping_bands` (WR-542) and `fillet_mitre_concave_face_corners`
 //! (WR-642), a blend's band on a face is its rail between the rail's end vertices. The
 //! rails are not trimmed yet when the bands are checked, and run on past the corners that end
-//! them; sampled over the whole curve, the rail of SolidCraft's #871 part's plate-top round
+//! them; sampled over the whole curve, the rail of Torno's #871 part's plate-top round
 //! on the end face, run on past the shoulder's mitre (y 13.244), crossed the band of the
 //! window's y 14 round (rail y 13.5) at (23.5, 13.8999, 9.5), and r 0.5 was refused as no
 //! room.
@@ -14,7 +14,7 @@
 //! 1.26 wall and the fillet is still refused.
 //!
 //! The mirrored shell-rim refusals (solidcore#2903) live here too, at the end: their
-//! captured bodies rerun SolidCraft's fused application case on each of the four mirror
+//! captured bodies rerun Torno's fused application case on each of the four mirror
 //! seeds of the same shelled-box rim, both as captured and after the application edited
 //! the box, and every newly built rim strip must carry its `ProceduralBlend` definition.
 
@@ -54,7 +54,7 @@ fn boxed(k: &mut Kernel, lo: Point3, hi: Point3) -> Brep {
     create_box(k, lo, hi.x - lo.x, hi.y - lo.y, hi.z - lo.z).unwrap()
 }
 
-/// SolidCraft's #871 part: a base, a top on it, a window through both.
+/// Torno's #871 part: a base, a top on it, a window through both.
 fn part(k: &mut Kernel) -> Brep {
     let base = boxed(k, p(9.5, 8.0, 0.0), p(23.5, 29.5, 10.0));
     let top = boxed(k, p(9.5, A, 10.0), p(23.5, B, 20.0));

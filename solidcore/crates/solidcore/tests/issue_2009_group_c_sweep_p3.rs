@@ -1,5 +1,5 @@
 //! #2009 group C (fork c8f6a31): the curve sweep, revolve and offset-ruled-surface
-//! statuses SMLib drops and the SolidCraft fork passes on, behind
+//! statuses SMLib drops and the Torno fork passes on, behind
 //! `UpstreamFixes::sweep_statuses_pass_on` (WR-662). No valid input fails these calls,
 //! so each test injects the callee's failure (a curve without NURB data, a path
 //! without tangent) and compares the flag on with the flag off.

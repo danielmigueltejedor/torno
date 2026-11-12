@@ -21,13 +21,13 @@ use std::collections::HashMap;
 
 use egui::{Color32, Sense, vec2};
 use serde_json::{Value, json};
-use solidcraft_engine::slicers::{self, Slicer};
+use torno_engine::slicers::{self, Slicer};
 
 use crate::SolveApp;
 use crate::dialogs::{Kind, form_row};
 use crate::selection::{BODIES, PLANAR_FACES, SelInput};
-use solidcraft_engine::Sel;
-use solidcraft_theme::Tokens;
+use torno_engine::Sel;
+use torno_theme::Tokens;
 
 /// The formats, as shown and as `file.save_mesh` names them.
 /// (label, `format` parameter, file extension).
@@ -186,10 +186,10 @@ fn spawn_wait(
 /// Run `file.send_to_slicer` and report what happened. A slicer that has to be started first is
 /// started and waited for in the background.
 fn send_to_slicer(app: &mut SolveApp, params: Value) {
-    let _language = solidcraft_ui_text::scope(&app.preferences.language);
+    let _language = torno_ui_text::scope(&app.preferences.language);
     if let Some(wait) = &app.slicer_wait {
         // Whatever was picked this time (another slicer, other bodies): nothing else is sent.
-        let line = solidcraft_ui_text::format("ui.slicer_still_starting", &[("slicer", &wait.slicer.name)]);
+        let line = torno_ui_text::format("ui.slicer_still_starting", &[("slicer", &wait.slicer.name)]);
         app.set_status(line, false);
         return;
     }
@@ -210,7 +210,7 @@ fn begin_wait(app: &mut SolveApp, params: Value, result: &Value) {
     let spec = params["slicer"].as_str().unwrap_or_default().to_string();
     let Some(slicer) = slicers::resolve(&spec) else {
         // Started, but it can't be found again to be sent the file: say so rather than go quiet.
-        app.set_status(solidcraft_ui_text::format("ui.slicer_lost", &[("slicer", &name), ("path", &path)]), true);
+        app.set_status(torno_ui_text::format("ui.slicer_lost", &[("slicer", &name), ("path", &path)]), true);
         return;
     };
     // Same reading as `slicers::wait_for_ready`: when `busctl` is missing or fails, send; when it is
@@ -219,7 +219,7 @@ fn begin_wait(app: &mut SolveApp, params: Value, result: &Value) {
     let done =
         spawn_wait(move |left| probe.is_ready_within(left.min(slicers::PROBE_LIMIT)) != Some(false), slicers::READY_LIMIT, slicers::READY_POLL);
     app.slicer_wait = Some(SlicerWait { done, slicer, result: result.clone() });
-    app.set_status(solidcraft_ui_text::format("ui.slicer_starting", &[("slicer", &name)]), false);
+    app.set_status(torno_ui_text::format("ui.slicer_starting", &[("slicer", &name)]), false);
 }
 
 /// Per frame: when the slicer being waited for is ready, send the file; when the wait ran out, say so.
@@ -232,11 +232,11 @@ pub fn tick_wait(app: &mut SolveApp, ctx: &egui::Context) {
         Err(TryRecvError::Disconnected) => false,
     };
     let Some(wait) = app.slicer_wait.take() else { return };
-    let _language = solidcraft_ui_text::scope(&app.preferences.language);
+    let _language = torno_ui_text::scope(&app.preferences.language);
     let path = wait.result.get("path").and_then(Value::as_str).unwrap_or_default().to_string();
     if ready && path.is_empty() {
         // Nothing was written to send (the answer had no path): say so, rather than open "".
-        app.set_status(solidcraft_ui_text::format("ui.slicer_no_file", &[("slicer", &wait.slicer.name)]), true);
+        app.set_status(torno_ui_text::format("ui.slicer_no_file", &[("slicer", &wait.slicer.name)]), true);
     } else if ready {
         // The file is already written: open that one, rather than export the design again.
         let mut result = wait.result;
@@ -251,7 +251,7 @@ pub fn tick_wait(app: &mut SolveApp, ctx: &egui::Context) {
         }
         report(app, &result);
     } else {
-        app.set_status(solidcraft_ui_text::format("ui.slicer_no_response", &[("slicer", &wait.slicer.name), ("path", &path)]), true);
+        app.set_status(torno_ui_text::format("ui.slicer_no_response", &[("slicer", &wait.slicer.name), ("path", &path)]), true);
     }
 }
 
@@ -317,7 +317,7 @@ fn paint_icon(ui: &egui::Ui, rect: egui::Rect, tex: Option<egui::TextureId>, nam
                 rect.center(),
                 egui::Align2::CENTER_CENTER,
                 letter,
-                egui::FontId::proportional(solidcraft_theme::Tokens::get().font_small),
+                egui::FontId::proportional(torno_theme::Tokens::get().font_small),
                 t.text,
             );
         }
@@ -346,7 +346,7 @@ fn sync_print_face(app: &mut SolveApp, k: &mut SaveMesh, inputs: &mut [SelInput]
             for face in picked.iter().filter(|f| !shown.contains(f)) {
                 let Sel::Face { body, .. } = face else { continue };
                 if !bodies.contains(body) {
-                    app.set_status(solidcraft_ui_text::tr("ui.print_face_body_not_sent"), true);
+                    app.set_status(torno_ui_text::tr("ui.print_face_body_not_sent"), true);
                 } else if !done.contains(body) {
                     crate::print_face_ui::set(app, body, Some(face));
                     done.push(body.clone());
@@ -379,7 +379,7 @@ pub fn rows(app: &mut SolveApp, ui: &mut egui::Ui, k: &mut SaveMesh, inputs: &mu
     // One row each: the two side by side do not fit the dialog's width.
     for (label, visible) in [("Add all bodies", false), ("Add visible bodies", true)] {
         form_row(ui, "", |ui| {
-            if crate::ui_kit::button(ui, solidcraft_ui_text::tr_label(label), crate::ui_kit::Button::Small).clicked()
+            if crate::ui_kit::button(ui, torno_ui_text::tr_label(label), crate::ui_kit::Button::Small).clicked()
                 && let Some(input) = inputs.first_mut()
             {
                 input.items = body_picks(app, visible);
@@ -428,11 +428,11 @@ fn slicer_combo(app: &mut SolveApp, ui: &mut egui::Ui, k: &mut SaveMesh) {
     let current = entries.iter().find(|e| e.key == k.slicer);
     let pad = "\u{2003}\u{2003}";
     let easyprint = crate::easyprint_ui::available(app);
-    let easyprint_label = solidcraft_ui_text::tr("ui.easyprint_row");
+    let easyprint_label = torno_ui_text::tr("ui.easyprint_row");
     let text = match current {
         Some(e) => format!("{pad}{}", e.slicer.name),
         None if easyprint && k.slicer == EASYPRINT => format!("{pad}{easyprint_label}"),
-        None => solidcraft_ui_text::tr_label("No slicer found").to_string(),
+        None => torno_ui_text::tr_label("No slicer found").to_string(),
     };
     let mut pick_custom = false;
     let mut delete: Option<String> = None;
@@ -458,7 +458,7 @@ fn slicer_combo(app: &mut SolveApp, ui: &mut egui::Ui, k: &mut SaveMesh) {
             ui.painter().galley(at, text, Tokens::get().text);
             crate::scenario::publish_handle(&format!("dialog:Slicer:{}", e.slicer.name), rect.center());
             if e.user {
-                let hint = solidcraft_ui_text::format("ui.slicer_delete_tip", &[("program", e.slicer.command.first().map_or("", String::as_str))]);
+                let hint = torno_ui_text::format("ui.slicer_delete_tip", &[("program", e.slicer.command.first().map_or("", String::as_str))]);
                 resp.clone().backing_on_hover_text(if elided { format!("{}\n{hint}", e.slicer.name) } else { hint });
                 if resp.hovered() && ui.input_mut(|i| i.consume_key(egui::Modifiers::NONE, egui::Key::Delete)) {
                     delete = Some(e.key.clone());
@@ -499,12 +499,12 @@ fn slicer_combo(app: &mut SolveApp, ui: &mut egui::Ui, k: &mut SaveMesh) {
         ui.painter().text(
             rect.left_center() + vec2(ICON + 9.0, 0.0),
             egui::Align2::LEFT_CENTER,
-            solidcraft_ui_text::tr_label("Custom…"),
-            egui::FontId::proportional(solidcraft_theme::Tokens::get().font_button),
+            torno_ui_text::tr_label("Custom…"),
+            egui::FontId::proportional(torno_theme::Tokens::get().font_button),
             Tokens::get().text,
         );
         crate::scenario::publish_handle("dialog:Slicer:Custom", rect.center());
-        if resp.backing_on_hover_text(solidcraft_ui_text::tr("ui.custom_program_tip")).clicked() {
+        if resp.backing_on_hover_text(torno_ui_text::tr("ui.custom_program_tip")).clicked() {
             pick_custom = true;
             ui.close();
         }
@@ -538,7 +538,7 @@ fn slicer_combo(app: &mut SolveApp, ui: &mut egui::Ui, k: &mut SaveMesh) {
 /// Put a program the user picked at the top of the list (and keep it).
 fn add_custom(app: &mut SolveApp, path: &str) -> Result<(), String> {
     if slicers::custom(path).is_none() {
-        return Err(solidcraft_ui_text::format("ui.not_a_program", &[("path", path)]));
+        return Err(torno_ui_text::format("ui.not_a_program", &[("path", path)]));
     }
     let list = &mut app.preferences.custom_slicers;
     list.retain(|p| p != path);
@@ -559,12 +559,12 @@ pub fn commands(k: &SaveMesh, inputs: &[SelInput]) -> Result<Vec<(String, Value)
     }
     let names = crate::selection::items(inputs, 0).body_names();
     if names.is_empty() {
-        return Err(solidcraft_ui_text::tr("ui.save_mesh_pick_bodies").into());
+        return Err(torno_ui_text::tr("ui.save_mesh_pick_bodies").into());
     }
     p["bodies"] = json!(names);
     if k.open {
         if k.slicer.is_empty() {
-            return Err(solidcraft_ui_text::tr("ui.save_mesh_no_slicer_open").into());
+            return Err(torno_ui_text::tr("ui.save_mesh_no_slicer_open").into());
         }
         p["format"] = json!("3mf");
         if k.slicer == EASYPRINT {
@@ -621,7 +621,7 @@ pub fn run(app: &mut SolveApp, k: &SaveMesh, inputs: &[SelInput]) -> Result<(), 
 /// Run `file.save_mesh` into `path` and report what happened.
 fn save(app: &mut SolveApp, mut params: Value, path: &str) {
     // Runs from the file picker's answer, outside the frame's language scope.
-    let _language = solidcraft_ui_text::scope(&app.preferences.language);
+    let _language = torno_ui_text::scope(&app.preferences.language);
     params["path"] = json!(path);
     let Ok(result) = app.run("file.save_mesh", params) else { return };
     report(app, &result);
@@ -635,21 +635,19 @@ fn report(app: &mut SolveApp, result: &Value) {
         None => match result.get("slicer").and_then(Value::as_str) {
             Some(s) => {
                 let mut line = match (result.get("numbered").and_then(Value::as_bool), std::path::Path::new(path).file_name()) {
-                    (Some(true), Some(file)) => {
-                        solidcraft_ui_text::format("ui.sent_to_slicer_copy", &[("slicer", s), ("file", &file.to_string_lossy())])
-                    }
-                    _ => solidcraft_ui_text::format("ui.sent_to_slicer", &[("slicer", s)]),
+                    (Some(true), Some(file)) => torno_ui_text::format("ui.sent_to_slicer_copy", &[("slicer", s), ("file", &file.to_string_lossy())]),
+                    _ => torno_ui_text::format("ui.sent_to_slicer", &[("slicer", s)]),
                 };
                 // Said once: sending the same bodies again overwrites the file the slicer has open.
                 if result.get("numbered").is_some() && !std::mem::replace(&mut app.preferences.slicer_resend_hint_seen, true) {
-                    line = format!("{line}. {}", solidcraft_ui_text::tr("ui.slicer_resend_hint"));
+                    line = format!("{line}. {}", torno_ui_text::tr("ui.slicer_resend_hint"));
                 }
                 if result.get("stl_fallback").and_then(Value::as_bool) == Some(true) {
-                    line = format!("{line}. {}", solidcraft_ui_text::tr("ui.slicer_stl_fallback"));
+                    line = format!("{line}. {}", torno_ui_text::tr("ui.slicer_stl_fallback"));
                 }
                 app.set_status(line, false);
             }
-            None => app.set_status(solidcraft_ui_text::format("ui.saved_to", &[("path", path)]), false),
+            None => app.set_status(torno_ui_text::format("ui.saved_to", &[("path", path)]), false),
         },
     }
 }
@@ -657,11 +655,11 @@ fn report(app: &mut SolveApp, result: &Value) {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use solidcraft_engine::Sel;
+    use torno_engine::Sel;
 
     #[test]
     fn without_a_program_dialog_send_to_slicer_is_unavailable_and_starts_nothing() {
-        let mut app = SolveApp::new(solidcraft_engine::Session::default(), Default::default());
+        let mut app = SolveApp::new(torno_engine::Session::default(), Default::default());
         assert!(app.services.pick_program.is_none());
         assert!(!available(&app));
         app.preferences.send_slicer = "prusa".into();
@@ -677,13 +675,13 @@ mod tests {
     #[cfg(unix)]
     fn app_with_fake_slicer(tag: &str) -> (SolveApp, std::path::PathBuf, Value) {
         use std::os::unix::fs::PermissionsExt;
-        let dir = std::env::temp_dir().join(format!("solidcraft-slicer-wait-{tag}-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("torno-slicer-wait-{tag}-{}", std::process::id()));
         let _ = std::fs::remove_dir_all(&dir);
         std::fs::create_dir_all(&dir).unwrap();
         let (script, seen) = (dir.join("fake-slicer"), dir.join("seen"));
         std::fs::write(&script, format!("#!/bin/sh\necho \"$@\" >> {}\n", seen.display())).unwrap();
         std::fs::set_permissions(&script, std::fs::Permissions::from_mode(0o755)).unwrap();
-        let mut app = SolveApp::new(solidcraft_engine::Session::default(), Default::default());
+        let mut app = SolveApp::new(torno_engine::Session::default(), Default::default());
         app.run("solid.box", json!({"length": 10, "width": 10, "height": 10, "body_name": "Part"})).unwrap();
         app.preferences.custom_slicers = vec![script.to_string_lossy().into_owned()];
         let params = json!({"slicer": script, "bodies": ["Part"], "wait": "no"});
@@ -722,7 +720,7 @@ mod tests {
         assert!(app.dialog.is_none());
         assert_eq!(sent(&seen), 1);
         let _ = std::fs::remove_dir_all(seen.parent().unwrap());
-        solidcraft_engine::slicers::set_chosen_programs(&[]);
+        torno_engine::slicers::set_chosen_programs(&[]);
     }
 
     #[cfg(unix)]
@@ -759,12 +757,12 @@ mod tests {
         assert_eq!(sent(&seen), 1, "one send");
         assert!(app.status.as_ref().is_some_and(|(_, _, error)| !*error), "{:?}", app.status);
         let _ = std::fs::remove_dir_all(seen.parent().unwrap());
-        solidcraft_engine::slicers::set_chosen_programs(&[]);
+        torno_engine::slicers::set_chosen_programs(&[]);
     }
 
     #[test]
     fn a_started_slicer_that_can_not_be_found_again_is_reported() {
-        let mut app = SolveApp::new(solidcraft_engine::Session::default(), Default::default());
+        let mut app = SolveApp::new(torno_engine::Session::default(), Default::default());
         let result = json!({"starting": "Ghost Slicer", "path": "/tmp/part.3mf"});
         begin_wait(&mut app, json!({"slicer": "no such slicer anywhere", "bodies": ["Part"]}), &result);
         assert!(app.slicer_wait.is_none());
@@ -804,7 +802,7 @@ mod tests {
         assert_eq!(names, ["fake-slicer", "part.3mf", "seen"], "no second file");
         assert!(app.status.as_ref().is_some_and(|(m, _, error)| !*error && m.contains("Sent")), "{:?}", app.status);
         let _ = std::fs::remove_dir_all(dir);
-        solidcraft_engine::slicers::set_chosen_programs(&[]);
+        torno_engine::slicers::set_chosen_programs(&[]);
     }
 
     #[cfg(unix)]
@@ -812,7 +810,7 @@ mod tests {
     fn the_launcher_gets_the_flag_on_a_send_and_after_a_start_even_when_the_preference_is_off() {
         use std::os::unix::fs::PermissionsExt;
         let ctx = egui::Context::default();
-        let dir = std::env::temp_dir().join(format!("solidcraft-slicer-flag-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("torno-slicer-flag-{}", std::process::id()));
         let _ = std::fs::remove_dir_all(&dir);
         // The launcher is recognised by its command, and PrusaSlicer by its name.
         let folder = dir.join("slic3r-app-launcher");
@@ -820,7 +818,7 @@ mod tests {
         let (script, seen) = (folder.join("PrusaSlicer"), dir.join("seen"));
         std::fs::write(&script, format!("#!/bin/sh\necho \"$@\" >> {}\n", seen.display())).unwrap();
         std::fs::set_permissions(&script, std::fs::Permissions::from_mode(0o755)).unwrap();
-        let mut app = SolveApp::new(solidcraft_engine::Session::default(), Default::default());
+        let mut app = SolveApp::new(torno_engine::Session::default(), Default::default());
         app.run("solid.box", json!({"length": 10, "width": 10, "height": 10, "body_name": "Part"})).unwrap();
         let spec = script.to_string_lossy().into_owned();
         app.preferences.custom_slicers = vec![spec.clone()];
@@ -851,7 +849,7 @@ mod tests {
         let second = std::fs::read_to_string(&seen).unwrap().lines().nth(1).unwrap().to_string();
         assert_eq!(second, "--single-instance /tmp/part.3mf");
         let _ = std::fs::remove_dir_all(dir);
-        solidcraft_engine::slicers::set_chosen_programs(&[]);
+        torno_engine::slicers::set_chosen_programs(&[]);
     }
 
     #[cfg(unix)]
@@ -875,7 +873,7 @@ mod tests {
         std::thread::sleep(std::time::Duration::from_millis(100));
         assert!(!seen.exists(), "the slicer was not started with an empty path");
         let _ = std::fs::remove_dir_all(seen.parent().unwrap());
-        solidcraft_engine::slicers::set_chosen_programs(&[]);
+        torno_engine::slicers::set_chosen_programs(&[]);
     }
 
     #[cfg(unix)]
@@ -1030,7 +1028,7 @@ mod tests {
         // A click on the face of `body` at `point` in the Print face input; that face's index.
         let pick = |h: &mut crate::scenario::Harness, body: &str, point: [f64; 3]| {
             let p = solidcore_record::Vec3::new(point[0], point[1], point[2]);
-            let index = solidcraft_engine::doc::appearance::face_index_at(h.app.session.world_state().unwrap().body(body).unwrap(), p).unwrap();
+            let index = torno_engine::doc::appearance::face_index_at(h.app.session.world_state().unwrap().body(body).unwrap(), p).unwrap();
             let d = h.app.dialog.as_mut().unwrap();
             d.active = 1;
             d.pick(&h.app.session, Sel::Face { body: body.into(), index, point: p });

@@ -13,9 +13,9 @@ pub(super) struct Classification {
 /// near-maximal text/background contrast: four shipped palettes measure 21:1, while
 /// every other shipped palette is at most 16.006:1. No theme ids are special-cased.
 pub(super) fn theme_traits(t: &Tokens) -> Classification {
-    let linear = solidcraft_color::srgb::decode8;
+    let linear = torno_color::srgb::decode8;
     let luminance = 0.2126 * linear(t.dialog_footer.r()) + 0.7152 * linear(t.dialog_footer.g()) + 0.0722 * linear(t.dialog_footer.b());
-    Classification { dark: luminance < 0.5, high: solidcraft_theme::contrast_ratio(t.form_ink, t.dialog_footer) >= 20.0 }
+    Classification { dark: luminance < 0.5, high: torno_theme::contrast_ratio(t.form_ink, t.dialog_footer) >= 20.0 }
 }
 
 pub(super) fn palette(p: &Prefs, id: &str) -> Tokens {
@@ -319,7 +319,7 @@ fn row_contents(app: &mut SolveApp, ui: &mut egui::Ui) {
     let mut card = |ui: &mut egui::Ui, index: usize, width: f32| {
         let Some(e) = visible.get(index) else { return };
         let source = app.tr(if e.imported { "prefs.imported_file" } else { "prefs.built_in" });
-        let note = if e.class.high { solidcraft_ui_text::format("prefs.picker.high_note", &[("source", source)]) } else { source.to_owned() };
+        let note = if e.class.high { torno_ui_text::format("prefs.picker.high_note", &[("source", source)]) } else { source.to_owned() };
         let day = system && slot_id(&app.preferences, false) == e.id;
         let night = system && slot_id(&app.preferences, true) == e.id;
         let selected = !following && if system { day || night } else { app.preferences.theme == e.id };
@@ -383,8 +383,8 @@ fn row_contents(app: &mut SolveApp, ui: &mut egui::Ui) {
         });
     } else {
         let arrows = ui_kit::PageLabels {
-            previous: solidcraft_ui_text::tr("prefs.appearance.previous_themes"),
-            next: solidcraft_ui_text::tr("prefs.appearance.next_themes"),
+            previous: torno_ui_text::tr("prefs.appearance.previous_themes"),
+            next: torno_ui_text::tr("prefs.appearance.next_themes"),
         };
         ui_kit::theme_browser(
             ui,

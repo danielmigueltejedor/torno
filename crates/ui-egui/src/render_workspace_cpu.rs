@@ -1,6 +1,6 @@
 //! Transient CPU image controls; engine commands own file capture and admission.
 use serde_json::{Value, json};
-use solidcraft_engine::render::job::{CpuBudget, RaytraceEnvironmentOptions, ReflectionBody, ReflectionMode};
+use torno_engine::render::job::{CpuBudget, RaytraceEnvironmentOptions, ReflectionBody, ReflectionMode};
 
 use super::hdr;
 use crate::{SolveApp, ui_kit};
@@ -15,7 +15,7 @@ pub(super) fn validate_progressive_image(app: &SolveApp) -> Result<(), String> {
     let (width, height) = (view.draft.width, view.draft.height);
     let size = (u64::from(width), u64::from(height));
     let camera_sampling = if view.method == super::ImageMethod::CpuRaytrace {
-        solidcraft_engine::render::job::cpu_camera_sampling(view.raytrace.progressive, view.studio.adaptive, view.raytrace.budget)
+        torno_engine::render::job::cpu_camera_sampling(view.raytrace.progressive, view.studio.adaptive, view.raytrace.budget)
             .map_err(|error| error.to_string())?
     } else {
         None
@@ -27,7 +27,7 @@ pub(super) fn validate_progressive_image(app: &SolveApp) -> Result<(), String> {
         let (trace_width, trace_height) = trace_dimensions(view, width, height)?;
         view.raytrace.budget.validate_image(trace_width, trace_height, camera_sampling).map_err(|error| error.to_string())?;
         if view.studio.denoise || view.studio.denoise_diagnostics {
-            solidcraft_engine::render::job::validate_cpu_denoise_image(trace_width, trace_height).map_err(|error| error.to_string())?;
+            torno_engine::render::job::validate_cpu_denoise_image(trace_width, trace_height).map_err(|error| error.to_string())?;
         }
         if let Some(output) = super::studio::cpu_output(view) {
             output.validate_image(width, height).map_err(|error| error.to_string())?;
@@ -39,7 +39,7 @@ pub(super) fn validate_progressive_image(app: &SolveApp) -> Result<(), String> {
 /// Match captured CPU output admission. A saved identity output object still uses
 /// native pixels; only processing that needs the linear output route adds its 8K envelope.
 fn bounded_output(view: &super::ViewState) -> bool {
-    let output = solidcraft_engine::render::job::OutputOptions {
+    let output = torno_engine::render::job::OutputOptions {
         tone_map: view.studio.tone_map,
         finishing: view.studio.finishing,
         backdrop: view.studio.backdrop_enabled.then_some(view.studio.backdrop),
@@ -50,16 +50,16 @@ fn bounded_output(view: &super::ViewState) -> bool {
 
 fn trace_dimensions(view: &super::ViewState, width: u32, height: u32) -> Result<(u32, u32), String> {
     if bounded_output(view) {
-        solidcraft_engine::render::job::supersampled_dimensions(width, height, view.studio.supersampling).map_err(|error| error.to_string())
+        torno_engine::render::job::supersampled_dimensions(width, height, view.studio.supersampling).map_err(|error| error.to_string())
     } else {
         Ok((width, height))
     }
 }
 
 /// Validate captured/saved intent without applying the bounds of a new size edit.
-pub(super) fn image_limits(app: &SolveApp) -> solidcraft_engine::render::RenderLimits {
+pub(super) fn image_limits(app: &SolveApp) -> torno_engine::render::RenderLimits {
     if app.render_workspace.view.method == super::ImageMethod::GpuRaytrace {
-        return solidcraft_engine::render::job::GPU_PATH_LIMITS;
+        return torno_engine::render::job::GPU_PATH_LIMITS;
     }
     if app.render_workspace.view.method != super::ImageMethod::CpuRaytrace {
         return Default::default();
@@ -72,12 +72,11 @@ pub(super) fn image_limits(app: &SolveApp) -> solidcraft_engine::render::RenderL
     limits.max_dimension /= scale;
     limits.max_pixels /= scale.saturating_mul(scale).max(1);
     if bounded_output(&app.render_workspace.view) {
-        limits.max_dimension = limits.max_dimension.min(u64::from(solidcraft_engine::render::job::MAX_OUTPUT_DIMENSION));
-        limits.max_pixels = limits.max_pixels.min(solidcraft_engine::render::job::MAX_OUTPUT_PIXELS);
+        limits.max_dimension = limits.max_dimension.min(u64::from(torno_engine::render::job::MAX_OUTPUT_DIMENSION));
+        limits.max_pixels = limits.max_pixels.min(torno_engine::render::job::MAX_OUTPUT_PIXELS);
     }
-    let sampling =
-        solidcraft_engine::render::job::cpu_camera_sampling(options.progressive, app.render_workspace.view.studio.adaptive, options.budget)
-            .unwrap_or(options.progressive);
+    let sampling = torno_engine::render::job::cpu_camera_sampling(options.progressive, app.render_workspace.view.studio.adaptive, options.budget)
+        .unwrap_or(options.progressive);
     if let Some(progressive) = sampling {
         let work = u64::from(progressive.samples_per_pixel.max(1)).saturating_mul(scale).saturating_mul(scale);
         limits.max_pixels = limits.max_pixels.min(options.budget.limits().max_camera_samples / work.max(1));
@@ -87,10 +86,10 @@ pub(super) fn image_limits(app: &SolveApp) -> solidcraft_engine::render::RenderL
 
 /// Every explicit UI size selection, including Largest, stays inside the output
 /// controls' envelope without narrowing a valid already-authored native request.
-pub(super) fn size_selection_limits(app: &SolveApp) -> solidcraft_engine::render::RenderLimits {
+pub(super) fn size_selection_limits(app: &SolveApp) -> torno_engine::render::RenderLimits {
     let mut limits = image_limits(app);
-    limits.max_dimension = limits.max_dimension.min(u64::from(solidcraft_engine::render::job::MAX_OUTPUT_DIMENSION));
-    limits.max_pixels = limits.max_pixels.min(solidcraft_engine::render::job::MAX_OUTPUT_PIXELS);
+    limits.max_dimension = limits.max_dimension.min(u64::from(torno_engine::render::job::MAX_OUTPUT_DIMENSION));
+    limits.max_pixels = limits.max_pixels.min(torno_engine::render::job::MAX_OUTPUT_PIXELS);
     limits
 }
 
@@ -104,7 +103,7 @@ pub(super) fn profile_for_size(app: &SolveApp, width: u64, height: u64) -> Optio
     }
     let view = &app.render_workspace.view;
     if image_limits(app).fit(width, height, None) == Some((width, height))
-        && solidcraft_engine::render::job::cpu_camera_sampling(view.raytrace.progressive, view.studio.adaptive, view.raytrace.budget).is_ok()
+        && torno_engine::render::job::cpu_camera_sampling(view.raytrace.progressive, view.studio.adaptive, view.raytrace.budget).is_ok()
     {
         return None;
     }
@@ -112,7 +111,7 @@ pub(super) fn profile_for_size(app: &SolveApp, width: u64, height: u64) -> Optio
     let height = u32::try_from(height).ok()?;
     let (width, height) = if view.method == super::ImageMethod::CpuRaytrace { trace_dimensions(view, width, height).ok()? } else { (width, height) };
     CpuBudget::ALL.into_iter().find(|budget| {
-        solidcraft_engine::render::job::cpu_camera_sampling(
+        torno_engine::render::job::cpu_camera_sampling(
             app.render_workspace.view.raytrace.progressive,
             app.render_workspace.view.studio.adaptive,
             *budget,
@@ -304,7 +303,7 @@ fn path_controls(app: &mut SolveApp, ui: &mut egui::Ui) {
     let response = ui.add_enabled_ui(enabled || reason.is_none(), |ui| ui_kit::checkbox(ui, &label, &mut enabled));
     crate::scenario::publish_target("render:cpu-path", response.inner.rect);
     if response.inner.changed() {
-        app.render_workspace.view.raytrace.path = enabled.then(solidcraft_engine::render::job::CpuPathOptions::default);
+        app.render_workspace.view.raytrace.path = enabled.then(torno_engine::render::job::CpuPathOptions::default);
         app.render_workspace.view.dirty = true;
     }
     if let Some(reason) = reason {
@@ -313,7 +312,7 @@ fn path_controls(app: &mut SolveApp, ui: &mut egui::Ui) {
     if let Some(mut path) = app.render_workspace.view.raytrace.path {
         let label = app.tr("render.cpu_path_depth").to_string();
         let response = ui_kit::row(ui, &label, |ui| {
-            let field = ui_kit::number_field_preserving(ui, &mut path.max_depth, 1..=solidcraft_engine::render::job::MAX_PATH_DEPTH, 1.0, "");
+            let field = ui_kit::number_field_preserving(ui, &mut path.max_depth, 1..=torno_engine::render::job::MAX_PATH_DEPTH, 1.0, "");
             crate::scenario::publish_target("render:cpu-path-depth", field.rect);
             field
         });
@@ -344,7 +343,7 @@ pub(super) struct View {
     pub intensity: f64,
     pub samples: u32,
     pub color: [f64; 3],
-    pub gradient: solidcraft_engine::render::lighting::environment::SkyGradient,
+    pub gradient: torno_engine::render::lighting::environment::SkyGradient,
     pub checked: Option<Checked>,
     bindings: std::collections::BTreeMap<String, Binding>,
 }
@@ -360,7 +359,7 @@ struct Target {
 struct Binding {
     target: Target,
     revision: u64,
-    document: std::sync::Weak<solidcraft_engine::doc::Document>,
+    document: std::sync::Weak<torno_engine::doc::Document>,
 }
 
 #[derive(Clone, Debug)]
@@ -368,7 +367,7 @@ pub(super) struct Checked {
     pub request: Value,
     pub revision: u64,
     pub environment: Value,
-    document: std::sync::Weak<solidcraft_engine::doc::Document>,
+    document: std::sync::Weak<torno_engine::doc::Document>,
 }
 
 impl Default for View {
@@ -469,7 +468,7 @@ pub(super) fn set_reflection(app: &mut SolveApp, name: &str, mode: Option<Reflec
     let options = &mut app.render_workspace.view.raytrace;
     if let Some(mode) = mode {
         let mut reflections = options.reflections.clone().unwrap_or_else(|| {
-            let mut reflections = solidcraft_engine::render::job::ReflectionOptions::default();
+            let mut reflections = torno_engine::render::job::ReflectionOptions::default();
             if options.progressive.is_some() {
                 reflections.samples = 1;
             }
@@ -545,7 +544,7 @@ pub(super) fn params(app: &SolveApp, params: &mut Value) -> Result<(), String> {
         lens.validate_camera(&app.cam).map_err(|error| error.to_string())?;
     }
     if options.area_samples.is_some_and(|n| !matches!(n, 1 | 4 | 16 | 64)) {
-        return Err(solidcraft_ui_text::tr("render.error_area_samples").into());
+        return Err(torno_ui_text::tr("render.error_area_samples").into());
     }
     if options.area_lights.as_ref().is_none_or(Vec::is_empty) {
         options.area_samples = None;
@@ -564,7 +563,7 @@ pub(super) fn params(app: &SolveApp, params: &mut Value) -> Result<(), String> {
         match view.environment {
             Environment::Constant => options.environment = Some(RaytraceEnvironmentOptions { color: view.color, intensity: view.intensity }),
             Environment::Sky => {
-                options.sky = Some(Box::new(solidcraft_engine::render::job::CpuSky {
+                options.sky = Some(Box::new(torno_engine::render::job::CpuSky {
                     gradient: view.gradient,
                     rotation_rad: view.rotation_rad,
                     intensity: view.intensity,

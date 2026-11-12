@@ -42,6 +42,6 @@
   "ungraded": [],
   "what": "a fillet picked on the seam where a rounded edge runs tangent into the flat top has no corner to round and is refused as an invalid pick",
   "why_not": [
-    "the failure is SolidCraft's, not a kernel operation's: step 3 (solid.fillet): invalid input: the edge at (20.000, 3.000, 20.000) is smooth: its faces meet tangentially, so there is nothing to round"
+    "the failure is Torno's, not a kernel operation's: step 3 (solid.fillet): invalid input: the edge at (20.000, 3.000, 20.000) is smooth: its faces meet tangentially, so there is nothing to round"
   ]
 }

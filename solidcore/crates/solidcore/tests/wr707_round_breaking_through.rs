@@ -3,7 +3,7 @@
 //! that stays inside, with that radius less the fit margin on the refusal
 //! ([`SolidError::FilletRefused`]).
 //!
-//! The case (SolidCraft #1668, filed as #2299): a 104 x 64 x 42 box shelled outward by 2,
+//! The case (Torno #1668, filed as #2299): a 104 x 64 x 42 box shelled outward by 2,
 //! open at the bottom, its outer top edge along y = 32, z = 42 rounded. The ball of radius
 //! r has its centre at (32 - r, 42 - r) in (y, z); the wall's inner corner (30, 40) lies
 //! sqrt 2 (r - 2) from it, inside the ball past r = 2 sqrt 2 / (sqrt 2 - 1) = 6.828427: the

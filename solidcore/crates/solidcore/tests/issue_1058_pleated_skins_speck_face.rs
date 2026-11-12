@@ -1,4 +1,4 @@
-//! tangency-labs/solidcore#1058 (WR-306): SolidCraft rig booleans/4623 joins two crossing
+//! tangency-labs/solidcore#1058 (WR-306): Torno rig booleans/4623 joins two crossing
 //! pleated loft skins, and SMLib's check refuses the result: edges and vertices with a
 //! tolerance of 1.73 mm against 0.01. Where two pleat creases pass about 1e-5 apart, both
 //! ends of a short intersection curve fall in one proto vertex; `SmProtoEdge::Resolve`
@@ -44,7 +44,7 @@ fn named(entity: EntityRef, domain: u64) -> ObjectRef {
     }
 }
 
-/// `api_brep_copy` into key domain `n`, as SolidCraft copies boolean operands.
+/// `api_brep_copy` into key domain `n`, as Torno copies boolean operands.
 fn copy_of(k: &mut Kernel, b: &Brep, n: u64) -> Brep {
     let target = move |e| named(e, n * 100_000_000);
     let mut state = p2::ArenaNotifyState::new(&Brep::new());

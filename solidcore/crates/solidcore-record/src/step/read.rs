@@ -15,9 +15,9 @@
 //! exactly zero in every component, a vector of magnitude zero, a radius, magnitude or weight of
 //! the wrong sign, a knot vector that does not fit its control points.
 //!
-//! Origin: SolidCraft's `crates/step/src/read.rs` at `a5b71ca2` (MIT OR Apache-2.0).
+//! Origin: Torno's `crates/step/src/read.rs` at `a5b71ca2` (MIT OR Apache-2.0).
 //!
-//! Deviations from SolidCraft, each without a geometric computation in its place (the kernel
+//! Deviations from Torno, each without a geometric computation in its place (the kernel
 //! takes those over in slice 4):
 //! - Directions are not normalised (was `unit`): a direction is refused when every ratio is
 //!   exactly 0 (was: when its length is at most 1e-12). Model-space directions are the ratios

@@ -4,10 +4,10 @@
 //! at the edge's ends. A taper (a variable radius following the room) is built on it, and a
 //! variable round whose radius is larger than the room at a station is refused there.
 //!
-//! Not upstream: SolidCraft's `blend_variable.rs` (`EdgeSetup::{band_fits, room, end_room}`,
+//! Not upstream: Torno's `blend_variable.rs` (`EdgeSetup::{band_fits, room, end_room}`,
 //! `extension_fits`, and the refusals of its `taper`), made the kernel's and certified.
 //!
-//! | Rust | SolidCraft |
+//! | Rust | Torno |
 //! |------|-----------|
 //! | [`band_room`], [`BandRoom`] | `taper`'s `end_room` at both ends, `room` at its stations, and its refusals |
 //! | [`law_fits_band`] | `taper`'s "the room runs out inside the edge", for any radius law |
@@ -30,7 +30,7 @@
 //! has lower end 0. An end of the edge is square, closes to a point, or leans as its side's
 //! far end lies within, before or past the plane square to the edge at the end vertex, by the
 //! edges' tolerance, proved ([`Bounded::at_most`]); where the bounds do not decide it the end
-//! is [`EndRoom::Undecided`]. Deviations from SolidCraft: a curved side at an end is not
+//! is [`EndRoom::Undecided`]. Deviations from Torno: a curved side at an end is not
 //! taken as closing to a point (its lean is not measured); the faces are the kernel's, not
 //! chorded polylines. No recursion.
 

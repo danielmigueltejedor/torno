@@ -4,7 +4,7 @@
 use super::TransmissionError;
 use serde::{Deserialize, Serialize};
 use solidcore_record::Vec3;
-use solidcraft_geom::prelude::*;
+use torno_geom::prelude::*;
 
 #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -77,14 +77,14 @@ impl Subsurface {
         if !uniform[1].is_finite() || !(0.0..1.0).contains(&uniform[1]) {
             return Err(TransmissionError::Scattering);
         }
-        let direction = solidcraft_viewport::surface::unit_direction(incoming).map_err(|_| TransmissionError::Direction)?;
+        let direction = torno_viewport::surface::unit_direction(incoming).map_err(|_| TransmissionError::Direction)?;
         let cosine = self.sample_cosine(uniform[0])?;
         let radius = ((1.0 - cosine) * (1.0 + cosine)).sqrt();
         let angle = std::f64::consts::TAU * uniform[1];
         let axis = if direction.z.abs() > 0.9 { Vec3::Y } else { Vec3::Z };
-        let x = solidcraft_viewport::surface::unit_direction(axis.cross(direction)).map_err(|_| TransmissionError::Direction)?;
+        let x = torno_viewport::surface::unit_direction(axis.cross(direction)).map_err(|_| TransmissionError::Direction)?;
         let y = direction.cross(x);
-        solidcraft_viewport::surface::unit_direction(x * (radius * angle.cos()) + y * (radius * angle.sin()) + direction * cosine)
+        torno_viewport::surface::unit_direction(x * (radius * angle.cos()) + y * (radius * angle.sin()) + direction * cosine)
             .map_err(|_| TransmissionError::Direction)
     }
     pub fn survival(self, distance_mm: f64) -> Result<f64, TransmissionError> {
@@ -147,7 +147,7 @@ mod transport_math_tests {
                 assert!((cdf - u).abs() < 2e-12, "g{g},u{u}: CDF{cdf}");
                 for incoming in [Vec3::Z, -Vec3::Z, Vec3::X, Vec3::new(0.3, 0.4, 0.5)] {
                     let direction = s.sample_direction(incoming, [u, 0.37]).unwrap();
-                    let incoming = solidcraft_viewport::surface::unit_direction(incoming).unwrap();
+                    let incoming = torno_viewport::surface::unit_direction(incoming).unwrap();
                     assert!((direction.len() - 1.0).abs() < 1e-15);
                     assert!((direction.dot(incoming) - c).abs() < 1e-15);
                 }

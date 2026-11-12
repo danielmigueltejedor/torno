@@ -2,7 +2,7 @@
 use crate::BackingTooltipExt as _;
 use crate::icons;
 use egui::{Painter, Rect, Stroke, pos2, vec2};
-use solidcraft_theme::{TabAccent, Tokens};
+use torno_theme::{TabAccent, Tokens};
 
 /// Browser and named history rows use the same density.
 pub const TREE_ROW_HEIGHT: f32 = 26.0;
@@ -216,12 +216,12 @@ impl HistoryTransport {
 
     pub fn label(self, playing: bool, play: PlayLabels<'_>) -> &str {
         match self {
-            Self::First => solidcraft_ui_text::tr("ui.history_first"),
-            Self::Back => solidcraft_ui_text::tr("ui.history_back"),
+            Self::First => torno_ui_text::tr("ui.history_first"),
+            Self::Back => torno_ui_text::tr("ui.history_back"),
             Self::Play if playing => play.stop,
             Self::Play => play.play,
-            Self::Forward => solidcraft_ui_text::tr("ui.history_forward"),
-            Self::Last => solidcraft_ui_text::tr("ui.history_last"),
+            Self::Forward => torno_ui_text::tr("ui.history_forward"),
+            Self::Last => torno_ui_text::tr("ui.history_last"),
         }
     }
 
@@ -236,7 +236,7 @@ impl HistoryTransport {
     pub fn show_as(self, ui: &mut egui::Ui, rect: Rect, playing: bool, prefix: &str, play: PlayLabels<'_>) -> egui::Response {
         let t = Tokens::get();
         let response = ui.interact(rect, ui.scope_id().with(("history_transport", self.id())), egui::Sense::click());
-        solidcraft_ui_registry::publish_target(&format!("{prefix}{}", self.id()), rect);
+        torno_ui_registry::publish_target(&format!("{prefix}{}", self.id()), rect);
         if response.hovered() {
             ui.painter().rect_filled(rect, t.radius_sm, t.hover);
         }
@@ -348,7 +348,7 @@ pub fn history_seam(ui: &mut egui::Ui, card: Rect, names: bool) -> HistorySeamRe
     let id = ui.scope_id().with("history_seam");
     let edge = ui.interact(seam.edge, id.with("edge"), egui::Sense::CLICK | egui::Sense::DRAG);
     let button = ui.interact(seam.pill, id, egui::Sense::click_and_drag());
-    let label = solidcraft_ui_text::tr(if names { "ui.collapse" } else { "ui.expand" });
+    let label = torno_ui_text::tr(if names { "ui.collapse" } else { "ui.expand" });
     button.widget_info(|| egui::WidgetInfo::labeled(egui::Role::Button, ui.is_enabled(), label));
     if button.clicked() {
         button.request_focus();
@@ -393,12 +393,12 @@ pub fn history_seam(ui: &mut egui::Ui, card: Rect, names: bool) -> HistorySeamRe
         crate::Container::show_tooltip(response.id, tip, |ui| {
             let t = Tokens::get();
             ui.label(egui::RichText::new(label).font(crate::type_face::semibold(t.font_body)).color(t.text));
-            ui.label(egui::RichText::new(solidcraft_ui_text::tr("ui.history_edge_hint")).size(t.font_small).color(t.text_dim));
+            ui.label(egui::RichText::new(torno_ui_text::tr("ui.history_edge_hint")).size(t.font_small).color(t.text_dim));
         });
     }
-    solidcraft_ui_registry::publish_handle("history:names", seam.pill.center());
-    solidcraft_ui_registry::publish_rect("history:seam", seam.edge);
-    solidcraft_ui_registry::publish_rect("history:handle", seam.pill);
+    torno_ui_registry::publish_handle("history:names", seam.pill.center());
+    torno_ui_registry::publish_rect("history:seam", seam.edge);
+    torno_ui_registry::publish_rect("history:handle", seam.pill);
     // egui's click response includes Enter and Space for a focused button.
     HistorySeamResponse {
         toggle: button.clicked() || edge.double_clicked(),
@@ -415,9 +415,9 @@ mod tests {
 
     #[test]
     fn seam_geometry_and_paint_states_follow_tokens_in_both_themes() {
-        let previous = solidcraft_theme::is_dark();
+        let previous = torno_theme::is_dark();
         for dark in [false, true] {
-            solidcraft_theme::set_dark(dark);
+            torno_theme::set_dark(dark);
             for names in [false, true] {
                 let card = Rect::from_min_size(pos2(20.0, 30.0), vec2(history_width(names), 280.0));
                 let seam = HistorySeam::new(card);
@@ -461,7 +461,7 @@ mod tests {
                 }
             }
         }
-        solidcraft_theme::set_dark(previous);
+        torno_theme::set_dark(previous);
     }
 
     struct SeamHarness {
@@ -574,11 +574,11 @@ mod tests {
 
     #[test]
     fn chip_selection_error_and_rollback_use_tokens_in_both_themes() {
-        let previous = solidcraft_theme::is_dark();
+        let previous = torno_theme::is_dark();
         for dark in [false, true] {
-            solidcraft_theme::set_dark(dark);
+            torno_theme::set_dark(dark);
             let t = Tokens::get();
-            let accent = TabAccent::for_ramp(&t, solidcraft_theme::AccentRamp::Surface);
+            let accent = TabAccent::for_ramp(&t, torno_theme::AccentRamp::Surface);
             for style in [HistoryStyle::Icons, HistoryStyle::Names] {
                 for (selected, error, dim) in [(true, false, false), (false, true, false), (true, false, true)] {
                     let rect = Rect::from_min_size(pos2(20.0, 20.0), vec2(158.0, style.height()));
@@ -629,14 +629,14 @@ mod tests {
                 }
             }
         }
-        solidcraft_theme::set_dark(previous);
+        torno_theme::set_dark(previous);
     }
 
     #[test]
     fn chips_have_no_connector_shapes_in_either_theme_or_width() {
-        let previous = solidcraft_theme::is_dark();
+        let previous = torno_theme::is_dark();
         for dark in [false, true] {
-            solidcraft_theme::set_dark(dark);
+            torno_theme::set_dark(dark);
             let t = Tokens::get();
             for style in [HistoryStyle::Bottom, HistoryStyle::Icons, HistoryStyle::Names] {
                 let ctx = crate::test_support::context();
@@ -657,7 +657,7 @@ mod tests {
                             error: false,
                             warning: false,
                             reference: false,
-                            accent: TabAccent::for_ramp(&t, solidcraft_theme::AccentRamp::Main),
+                            accent: TabAccent::for_ramp(&t, torno_theme::AccentRamp::Main),
                             ink: None,
                         }
                         .paint(ui.painter(), rect, style);
@@ -675,13 +675,13 @@ mod tests {
                 assert_eq!(connections, 0, "dark={dark}");
             }
         }
-        solidcraft_theme::set_dark(previous);
+        torno_theme::set_dark(previous);
     }
 
     #[test]
     fn both_strip_orientations_share_the_drop_bar_and_marker_geometry() {
         let t = Tokens::get();
-        let accent = TabAccent::for_ramp(&t, solidcraft_theme::AccentRamp::Surface);
+        let accent = TabAccent::for_ramp(&t, torno_theme::AccentRamp::Surface);
         for vertical in [false, true] {
             let rect = Rect::from_min_size(pos2(20.0, 20.0), if vertical { vec2(160.0, 12.0) } else { vec2(12.0, 28.0) });
             let ctx = crate::test_support::context();
@@ -696,11 +696,11 @@ mod tests {
             assert_eq!(lines[0].1, Stroke::new(t.space_2, accent.color));
             assert_eq!(lines[0].0, if vertical { [rect.left_center(), rect.right_center()] } else { [rect.center_top(), rect.center_bottom()] });
         }
-        let previous = solidcraft_theme::is_dark();
+        let previous = torno_theme::is_dark();
         for dark in [false, true] {
-            solidcraft_theme::set_dark(dark);
+            torno_theme::set_dark(dark);
             let t = Tokens::get();
-            let accent = TabAccent::for_ramp(&t, solidcraft_theme::AccentRamp::Surface);
+            let accent = TabAccent::for_ramp(&t, torno_theme::AccentRamp::Surface);
             // Both vertical widths retain the 12 pt marker row; the bottom strip rotates it.
             for (vertical, size) in [(true, vec2(46.0, 12.0)), (true, vec2(158.0, 12.0)), (false, vec2(12.0, 28.0))] {
                 let rect = Rect::from_min_size(pos2(20.0, 20.0), size);
@@ -746,6 +746,6 @@ mod tests {
                 assert!(!out.shapes.iter().any(|s| matches!(s.shape, egui::Shape::Path(_))), "no arrowheads");
             }
         }
-        solidcraft_theme::set_dark(previous);
+        torno_theme::set_dark(previous);
     }
 }

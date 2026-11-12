@@ -1,4 +1,4 @@
-//! The SolidCraft engine.
+//! The Torno engine.
 //!
 //! Every user-visible action is a command with a stable, dotted, lower-case id
 //! (`solid.extrude`, `sketch.create`, `solid.fillet`, `timeline.rollback`). Commands take JSON
@@ -41,28 +41,28 @@ pub mod status_items;
 pub mod timing;
 pub mod view;
 
-use solidcraft_geom::prelude::*;
 use std::sync::Arc;
+use torno_geom::prelude::*;
 
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use solidcore_record::Vec3;
-use solidcraft_doc::{Document, Model, ModelState};
+use torno_doc::{Document, Model, ModelState};
 
 pub use cmd::settings::{MAX_PROFILE_NAME, profile_name};
 pub use cmd::{
     Addition, CommandInfo, CommandSpec, OpenSteps, addition, auto_operation, command_specs, dimension_roles, extrude_reach, find_command,
     resolve_design_links, shown_scope, standard_view,
 };
-pub use solidcraft_doc as doc;
-pub use solidcraft_doc::Visibility;
-pub use solidcraft_geom as geom;
-pub use solidcraft_geom::note;
-pub use solidcraft_io as io;
-pub use solidcraft_kernel as kernel;
-pub use solidcraft_profile as profile;
-pub use solidcraft_render as render;
-pub use solidcraft_sketch as sketch;
+pub use torno_doc as doc;
+pub use torno_doc::Visibility;
+pub use torno_geom as geom;
+pub use torno_geom::note;
+pub use torno_io as io;
+pub use torno_kernel as kernel;
+pub use torno_profile as profile;
+pub use torno_render as render;
+pub use torno_sketch as sketch;
 
 /// Longest accepted request line on the JSON-lines channels (MCP over stdio and the control
 /// server over loopback), so both refuse runaway input at the same size.
@@ -89,25 +89,25 @@ pub enum EngineError {
     Internal(String, String),
 }
 
-impl From<solidcraft_doc::DocError> for EngineError {
-    fn from(e: solidcraft_doc::DocError) -> Self {
+impl From<torno_doc::DocError> for EngineError {
+    fn from(e: torno_doc::DocError) -> Self {
         match e {
-            solidcraft_doc::DocError::Kernel(e) => e.into(),
+            torno_doc::DocError::Kernel(e) => e.into(),
             e => EngineError::Other(e.to_string()),
         }
     }
 }
-impl From<solidcraft_sketch::SketchError> for EngineError {
-    fn from(e: solidcraft_sketch::SketchError) -> Self {
+impl From<torno_sketch::SketchError> for EngineError {
+    fn from(e: torno_sketch::SketchError) -> Self {
         EngineError::Other(e.to_string())
     }
 }
-impl From<solidcraft_kernel::KernelError> for EngineError {
-    fn from(e: solidcraft_kernel::KernelError) -> Self {
+impl From<torno_kernel::KernelError> for EngineError {
+    fn from(e: torno_kernel::KernelError) -> Self {
         match e {
             // A panic the kernel caught: internal, as one in the command would be. The command's id
             // is filled in where the command is run (`Session::execute`).
-            solidcraft_kernel::KernelError::Internal(m) => EngineError::Internal(String::new(), m),
+            torno_kernel::KernelError::Internal(m) => EngineError::Internal(String::new(), m),
             e => EngineError::Other(e.to_string()),
         }
     }
@@ -115,12 +115,12 @@ impl From<solidcraft_kernel::KernelError> for EngineError {
 
 impl EngineError {
     /// The error a failed feature's result reports: internal when the kernel caught a panic.
-    pub(crate) fn of_feature(r: &solidcraft_doc::FeatureResult, error: String) -> EngineError {
+    pub(crate) fn of_feature(r: &torno_doc::FeatureResult, error: String) -> EngineError {
         if r.internal { EngineError::Internal(String::new(), error) } else { EngineError::Other(error) }
     }
 }
-impl From<solidcraft_io::IoError> for EngineError {
-    fn from(e: solidcraft_io::IoError) -> Self {
+impl From<torno_io::IoError> for EngineError {
+    fn from(e: torno_io::IoError) -> Self {
         EngineError::Other(e.to_string())
     }
 }
@@ -247,9 +247,9 @@ pub struct ForeignCopy {
     /// The design's name (it names what the paste adds).
     pub design: String,
     /// Timeline features, in their original order (`timeline.paste` with `from_design`).
-    pub features: Vec<solidcraft_doc::Feature>,
+    pub features: Vec<torno_doc::Feature>,
     /// Its placed model: what its Browser and view showed.
-    pub world: Arc<solidcraft_doc::ModelState>,
+    pub world: Arc<torno_doc::ModelState>,
     /// The bodies copied, as its Browser names them (a body seen in another placement under the
     /// name it has there).
     pub bodies: Vec<String>,
@@ -259,12 +259,12 @@ pub struct ForeignCopy {
     /// The component placements copied, by path.
     pub placements: Vec<Vec<u64>>,
     /// Each of `placements`: the component placed, the occurrence and where it is in the world.
-    pub placed: Vec<(u64, u64, solidcraft_doc::Mat)>,
+    pub placed: Vec<(u64, u64, torno_doc::Mat)>,
     /// The design, its evaluated model and its placements moved but not yet applied: what a
     /// pasted component's history is copied from.
     pub doc: Arc<Document>,
     pub model: Model,
-    pub pending_moves: std::collections::BTreeMap<u64, solidcraft_doc::Mat>,
+    pub pending_moves: std::collections::BTreeMap<u64, torno_doc::Mat>,
 }
 
 impl ForeignCopy {
@@ -310,7 +310,7 @@ pub struct Snapshot {
     pub label: String,
     pub doc: Arc<Document>,
     pub active_sketch: Option<u64>,
-    pub pending_moves: std::collections::BTreeMap<u64, solidcraft_doc::Mat>,
+    pub pending_moves: std::collections::BTreeMap<u64, torno_doc::Mat>,
     /// What was hidden or shown then (`browser.visibility`). It is saved with the design, so
     /// hiding a body is undone and redone like any other change.
     pub visibility: Visibility,
@@ -326,7 +326,7 @@ pub(crate) struct SketchEntry {
     pub(crate) undo_top: Option<Arc<Document>>,
     /// A temporary editor rollback, restored by the engine even without a window.
     pub(crate) restore_marker: Option<Option<usize>>,
-    pub(crate) pending_moves: std::collections::BTreeMap<u64, solidcraft_doc::Mat>,
+    pub(crate) pending_moves: std::collections::BTreeMap<u64, torno_doc::Mat>,
     pub(crate) visibility: Visibility,
 }
 
@@ -335,8 +335,8 @@ pub struct Ahead(Session);
 
 impl Ahead {
     /// What the evaluation computes, kept for the run that follows here whatever the evaluation
-    /// cache drops meanwhile: hand it to [`solidcraft_doc::Model::keep`] for that run.
-    pub fn kept(&self) -> Arc<solidcraft_doc::KeptResults> {
+    /// cache drops meanwhile: hand it to [`torno_doc::Model::keep`] for that run.
+    pub fn kept(&self) -> Arc<torno_doc::KeptResults> {
         self.0.model.kept().unwrap_or_default()
     }
 
@@ -371,7 +371,7 @@ impl Ahead {
 
 /// The model a session copy evaluated ahead ([`Ahead::evaluate`]).
 #[derive(Clone, Debug)]
-pub struct Evaluated(solidcraft_doc::Model);
+pub struct Evaluated(torno_doc::Model);
 
 /// What some commands would make, evaluated on a scratch copy of a session
 /// ([`Session::preview`]). The session itself is not changed.
@@ -390,25 +390,25 @@ pub struct Preview {
 #[derive(Clone)]
 struct WorldCache {
     doc: Arc<Document>,
-    model: Arc<solidcraft_doc::ModelState>,
-    pending_moves: std::collections::BTreeMap<u64, solidcraft_doc::Mat>,
+    model: Arc<torno_doc::ModelState>,
+    pending_moves: std::collections::BTreeMap<u64, torno_doc::Mat>,
     active_component: u64,
     active_occurrence_path: Option<Vec<u64>>,
     /// The placed model, or why it could not be placed (kept too, so a model that cannot be
     /// placed is not placed again on every read).
-    world: std::result::Result<Arc<solidcraft_doc::ModelState>, String>,
+    world: std::result::Result<Arc<torno_doc::ModelState>, String>,
     /// The moved components' bodies as placed for `world`, reused by the next world state.
-    placed: Arc<std::sync::Mutex<solidcraft_doc::PlacedBodies>>,
+    placed: Arc<std::sync::Mutex<torno_doc::PlacedBodies>>,
     /// Every placed body's world name, own name and frame for `world` ([`Session::body_frames`]),
     /// worked out when a command first maps a body name.
     frames: Arc<std::sync::OnceLock<BodyFrames>>,
 }
 
 /// Every placed body's world name, its component's own name for it, and its frame.
-pub(crate) type BodyFrames = Arc<Vec<(String, String, solidcraft_doc::Mat)>>;
+pub(crate) type BodyFrames = Arc<Vec<(String, String, torno_doc::Mat)>>;
 
 impl WorldCache {
-    fn matches(&self, session: &Session, model: &Arc<solidcraft_doc::ModelState>) -> bool {
+    fn matches(&self, session: &Session, model: &Arc<torno_doc::ModelState>) -> bool {
         Arc::ptr_eq(&self.doc, &session.doc)
             && Arc::ptr_eq(&self.model, model)
             && self.pending_moves == session.pending_moves
@@ -447,12 +447,12 @@ impl ComputedCommands {
     /// Prepare display tessellation before returning the transaction to the window; a model that
     /// cannot be placed is the error.
     pub fn warm_meshes(&self, keep_going: impl Fn() -> bool + Sync) -> Result<()> {
-        self.warm_display(solidcraft_doc::display_quality::DisplayQuality::Normal, keep_going)
+        self.warm_display(torno_doc::display_quality::DisplayQuality::Normal, keep_going)
     }
 
     /// Prepare both the reference picking mesh and the GPU plan/highlight mesh at the
     /// selected quality. Warming only the reference mesh leaves cold planning on the UI.
-    pub fn warm_display(&self, quality: solidcraft_doc::display_quality::DisplayQuality, keep_going: impl Fn() -> bool + Sync) -> Result<()> {
+    pub fn warm_display(&self, quality: torno_doc::display_quality::DisplayQuality, keep_going: impl Fn() -> bool + Sync) -> Result<()> {
         self.computed.world_state()?.warm_display_at(quality, keep_going);
         Ok(())
     }
@@ -490,7 +490,7 @@ pub struct Session {
     pub uid: u64,
     /// `path`'s size and modification time when it was opened or last saved: a Save to it
     /// finding them changed would replace another program's or computer's work (#5467).
-    pub disk: Option<solidcraft_io::design_lock::FileStamp>,
+    pub disk: Option<torno_io::design_lock::FileStamp>,
     /// Opened read-only (`doc.open {read_only}`, the "open elsewhere" notice): saving to its own
     /// file is refused; Save As to another file is how its changes are kept.
     pub read_only: bool,
@@ -501,7 +501,7 @@ pub struct Session {
     pub user_named: bool,
     /// One-shot display-only notification during doc.open, before authoritative evaluation.
     /// Interactive loaders may show it provisionally; it never becomes model state.
-    pub open_preview: Option<Box<dyn Fn(solidcraft_io::DesignPreview) + Send + Sync>>,
+    pub open_preview: Option<Box<dyn Fn(torno_io::DesignPreview) + Send + Sync>>,
     saved: Arc<Document>,
     /// Messages for the command line / log.
     pub log: Vec<String>,
@@ -539,20 +539,20 @@ pub struct Session {
     /// The placement used when authoring shared component geometry.
     pub active_occurrence_path: Option<Vec<u64>>,
     /// Occurrence moves not captured yet (Capture Position keeps them, a recompute drops them).
-    pub pending_moves: std::collections::BTreeMap<u64, solidcraft_doc::Mat>,
+    pub pending_moves: std::collections::BTreeMap<u64, torno_doc::Mat>,
     /// The placements the exploded view (`explode.show`) put in `pending_moves` to be shown:
     /// display only. An entry of `pending_moves` still equal to its one here is the exploded view's,
     /// not a move of the design's, so the placements the design reports and Capture Position
     /// keeps leave it out ([`Session::uncaptured_moves`]).
-    pub exploded: std::collections::BTreeMap<u64, solidcraft_doc::Mat>,
+    pub exploded: std::collections::BTreeMap<u64, torno_doc::Mat>,
     /// Stops the work computing off the window thread for this design, shared with its copies.
-    stop: solidcraft_kernel::Stop,
+    stop: torno_kernel::Stop,
     /// A copy of a design ([`Session::scratch`]), sharing its token.
     is_copy: bool,
     world_cache: std::sync::Mutex<Option<WorldCache>>,
     /// The design the joints were last solved for, as the solve left it, and the model it read
     /// (see [`Session::solve_joints`]).
-    joints_settled: Option<(Arc<Document>, std::sync::Weak<solidcraft_doc::ModelState>)>,
+    joints_settled: Option<(Arc<Document>, std::sync::Weak<torno_doc::ModelState>)>,
     occurrence_visibility_cache: std::sync::Mutex<Option<occurrences::VisibilityCache>>,
     /// The hidden joints, folders and bodies of the view, as sets: the browser asks about every
     /// joint of the design on every frame (#3892), the viewport about every body, and an answer
@@ -581,11 +581,11 @@ pub struct Session {
     /// that did not change.
     contact_meshes: std::sync::Arc<std::sync::Mutex<cmd::motion::contact_sweep::ContactMeshes>>,
     /// Features copied with `timeline.copy` (pasted by `timeline.paste`).
-    pub clipboard: Vec<solidcraft_doc::Feature>,
+    pub clipboard: Vec<torno_doc::Feature>,
     /// Sketch geometry copied with `sketch.copy` (pasted by `sketch.paste`).
     pub sketch_clipboard: Option<cmd::sketch_clipboard::SketchClip>,
     /// Resolved appearance copied by appearance.copy; transient, outside design/history.
-    pub appearance_clipboard: Option<solidcraft_doc::appearance::Look>,
+    pub appearance_clipboard: Option<torno_doc::appearance::Look>,
     /// What was copied in another design, to paste here (`component.paste_from_design`). The
     /// host puts it here; each design's own copies stay in its own clipboard.
     pub foreign_copy: Option<Arc<ForeignCopy>>,
@@ -619,7 +619,7 @@ pub struct Session {
     /// The camera `view.apply` asked the view to use (view state, not saved). The desktop app
     /// moves its viewport there and takes it; headless renders keep using it until a standard
     /// view is chosen.
-    pub camera: Option<solidcraft_viewport::Camera>,
+    pub camera: Option<torno_viewport::Camera>,
     /// Host-owned viewport metadata, never saved or included in history.
     render_viewport: Option<Arc<render::ExecutorDescriptor>>,
     render_jobs: render_jobs::Jobs,
@@ -652,7 +652,7 @@ pub struct LiveEdit {
     /// What the frame's solve found: a full solve's report, or, when the sketch was solved
     /// without a rank analysis, its last report's degrees of freedom and determined flags (a
     /// drag does not change them; the evaluation at the gesture's end brings them up to date).
-    pub report: solidcraft_sketch::SolveReport,
+    pub report: torno_sketch::SolveReport,
 }
 
 /// The design, active sketch, pending positions and undo history at an `edit.checkpoint`.
@@ -661,7 +661,7 @@ pub(crate) struct Checkpoint {
     pub id: u64,
     pub doc: Arc<Document>,
     pub active_sketch: Option<u64>,
-    pub pending_moves: std::collections::BTreeMap<u64, solidcraft_doc::Mat>,
+    pub pending_moves: std::collections::BTreeMap<u64, torno_doc::Mat>,
     pub visibility: Visibility,
     pub undo: Vec<Snapshot>,
     pub redo: Vec<Snapshot>,
@@ -743,8 +743,8 @@ pub enum CombPick {
 
 impl SurfaceAnalysis {
     /// How a picture shades the faces for this analysis.
-    pub fn mode(self) -> solidcraft_viewport::AnalysisMode {
-        use solidcraft_viewport::AnalysisMode as M;
+    pub fn mode(self) -> torno_viewport::AnalysisMode {
+        use torno_viewport::AnalysisMode as M;
         match self {
             SurfaceAnalysis::Zebra { stripes } => M::Zebra { stripes },
             SurfaceAnalysis::Draft { pull, angle } => M::Draft { pull, angle },
@@ -776,15 +776,15 @@ impl Session {
     /// A session on `doc` whose evaluation is the model its file kept (`saved`), when that is
     /// `doc`'s evaluation ([`Model::adopt`]); otherwise the timeline is evaluated.
     /// Use [`Self::opened_at`] when the document's file location is known.
-    /// `SOLIDCRAFT_NO_MODEL_CACHE` set always evaluates.
-    pub fn opened(doc: Document, saved: Option<&solidcraft_doc::SavedModel>) -> Self {
-        Self::opened_validating(doc, saved, solidcraft_kernel::Validation::default())
+    /// `TORNO_NO_MODEL_CACHE` set always evaluates.
+    pub fn opened(doc: Document, saved: Option<&torno_doc::SavedModel>) -> Self {
+        Self::opened_validating(doc, saved, torno_kernel::Validation::default())
     }
 
     /// [`Self::opened`], its features evaluated under `validation` ([`Session::set_validation`]).
-    pub fn opened_validating(mut doc: Document, saved: Option<&solidcraft_doc::SavedModel>, validation: solidcraft_kernel::Validation) -> Self {
+    pub fn opened_validating(mut doc: Document, saved: Option<&torno_doc::SavedModel>, validation: torno_kernel::Validation) -> Self {
         // A design's font files are checked like its other paths before it is evaluated.
-        solidcraft_io::vfs::install_checks();
+        torno_io::vfs::install_checks();
         // The session keeps what is hidden (an undo step of its own); the design file carries it.
         let visibility = std::mem::take(&mut doc.visibility);
         let doc = Arc::new(doc);
@@ -799,9 +799,9 @@ impl Session {
     }
 
     /// The model `doc`'s file kept, when it is `doc`'s evaluation and the cache is not turned off.
-    pub(crate) fn saved_model(doc: &Arc<Document>, saved: Option<&solidcraft_doc::SavedModel>) -> Option<Model> {
+    pub(crate) fn saved_model(doc: &Arc<Document>, saved: Option<&torno_doc::SavedModel>) -> Option<Model> {
         saved
-            .filter(|_| solidcraft_geom::env::var_os("NO_MODEL_CACHE").is_none())
+            .filter(|_| torno_geom::env::var_os("NO_MODEL_CACHE").is_none())
             .and_then(|saved| Model::adopt(doc, saved).map_err(|e| log::info!("the saved model is not used: {e}")).ok())
     }
 
@@ -929,8 +929,8 @@ impl Session {
     }
 
     /// The token over the work running off the window thread for this design, on any of its
-    /// copies: a job started from a copy runs [`solidcraft_kernel::Stop::within`] it.
-    pub fn stop_token(&self) -> solidcraft_kernel::Stop {
+    /// copies: a job started from a copy runs [`torno_kernel::Stop::within`] it.
+    pub fn stop_token(&self) -> torno_kernel::Stop {
         self.stop.clone()
     }
 
@@ -1150,7 +1150,7 @@ impl Session {
 
     /// Prepared placements only: optional save caches must not compute a cold world. `None`
     /// when the design has components and nothing has placed them since it last changed.
-    pub fn cached_world_state(&self) -> Option<Arc<solidcraft_doc::ModelState>> {
+    pub fn cached_world_state(&self) -> Option<Arc<torno_doc::ModelState>> {
         let state = self.model.state();
         if self.doc.occurrences.is_empty() {
             return Some(state);
@@ -1161,8 +1161,8 @@ impl Session {
     /// Re-evaluate the model after a document change.
     /// The model placed in the world through component occurrences (and uncaptured moves): what
     /// to display, measure, pick and export. The same as `model.state()` without components.
-    /// An error when the model cannot be placed (see [`solidcraft_doc::world_state`]).
-    pub fn world_state(&self) -> Result<Arc<solidcraft_doc::ModelState>> {
+    /// An error when the model cannot be placed (see [`torno_doc::world_state`]).
+    pub fn world_state(&self) -> Result<Arc<torno_doc::ModelState>> {
         let st = self.model.state();
         if self.doc.occurrences.is_empty() {
             return Ok(st);
@@ -1180,7 +1180,7 @@ impl Session {
         let mut reuse = placed.lock().map(|mut p| std::mem::take(&mut *p)).unwrap_or_default();
         let w = {
             if self.pending_moves.is_empty() {
-                solidcraft_doc::world_state_reusing(&self.doc, &st, &mut reuse)
+                torno_doc::world_state_reusing(&self.doc, &st, &mut reuse)
             } else {
                 let mut d = (*self.doc).clone();
                 for o in &mut d.occurrences {
@@ -1188,7 +1188,7 @@ impl Session {
                         o.transform = *m;
                     }
                 }
-                solidcraft_doc::world_state_reusing(&d, &st, &mut reuse)
+                torno_doc::world_state_reusing(&d, &st, &mut reuse)
             }
         };
         if let Ok(mut p) = placed.lock() {
@@ -1211,26 +1211,26 @@ impl Session {
     }
 
     /// `w` with the active component's sketches shown at the placement being authored.
-    fn authored_sketches(&self, mut w: solidcraft_doc::ModelState) -> Result<solidcraft_doc::ModelState> {
+    fn authored_sketches(&self, mut w: torno_doc::ModelState) -> Result<torno_doc::ModelState> {
         // Sketch definitions are displayed once, at the placement currently being authored.
         if self.active_occurrence_path.is_some() && self.active_component != 0 {
-            let first = self.occurrence_placement(&self.doc.first_path(self.active_component)).map(|p| p.world).unwrap_or(solidcraft_doc::IDENTITY);
-            let inverse = solidcraft_doc::mat_inverse(&first)
+            let first = self.occurrence_placement(&self.doc.first_path(self.active_component)).map(|p| p.world).unwrap_or(torno_doc::IDENTITY);
+            let inverse = torno_doc::mat_inverse(&first)
                 .ok_or_else(|| EngineError::Other(format!("the placement of component {} cannot be inverted", self.active_component)))?;
             {
-                let delta = solidcraft_doc::mat_mul(&self.active_component_frame(), &inverse);
+                let delta = torno_doc::mat_mul(&self.active_component_frame(), &inverse);
                 for sketch in w.sketches.iter_mut().filter(|sk| self.doc.feature(sk.feature).is_some_and(|f| f.component == self.active_component)) {
                     let sketch = Arc::make_mut(sketch);
                     let plane = sketch.plane;
                     sketch.plane = solidcore_record::Plane::new(
-                        solidcraft_doc::apply_point(&delta, plane.origin),
-                        solidcraft_doc::apply_vector(&delta, plane.x),
-                        solidcraft_doc::apply_vector(&delta, plane.y),
+                        torno_doc::apply_point(&delta, plane.origin),
+                        torno_doc::apply_vector(&delta, plane.x),
+                        torno_doc::apply_vector(&delta, plane.y),
                     )
                     .ok_or_else(|| EngineError::Other("a sketch plane cannot be placed at the authored placement".into()))?;
                     for wire in &mut sketch.sketch.wires {
-                        if wire.space == solidcraft_doc::sketch::WireSpace::Component {
-                            solidcraft_doc::map_wire(wire, &delta);
+                        if wire.space == torno_doc::sketch::WireSpace::Component {
+                            torno_doc::map_wire(wire, &delta);
                         }
                     }
                 }
@@ -1256,14 +1256,14 @@ impl Session {
     /// When SMLib's check runs on the features evaluated: after every sweep, boolean and blend,
     /// once on the bodies each feature keeps (the default), or not at all. A user's setting,
     /// kept when another design is opened (`diagnostics.validation`, the app's preference).
-    pub fn validation(&self) -> solidcraft_kernel::Validation {
+    pub fn validation(&self) -> torno_kernel::Validation {
         self.model.validation()
     }
 
     /// Evaluate the features computed from now on under `validation` ([`Session::validation`]);
     /// the results already there stand until their features are computed again
     /// (`timeline.compute_all` computes every one).
-    pub fn set_validation(&mut self, validation: solidcraft_kernel::Validation) {
+    pub fn set_validation(&mut self, validation: torno_kernel::Validation) {
         self.model.set_validation(validation);
     }
 
@@ -1279,7 +1279,7 @@ impl Session {
 
     /// A component by its id or name, or by the name of one of its placements (`K:2`); never the
     /// root.
-    pub(crate) fn component_or_placement(&self, key: &str) -> solidcraft_doc::Result<Option<u64>> {
+    pub(crate) fn component_or_placement(&self, key: &str) -> torno_doc::Result<Option<u64>> {
         Ok(self
             .doc
             .resolve_component(key)?
@@ -1408,7 +1408,7 @@ impl Session {
         let mut known = std::mem::take(&mut self.made_bodies);
         let mut made_bodies = MadeBodies::with_capacity(known.len());
         for (i, f) in self.doc.features.iter().enumerate() {
-            if matches!(f.kind, solidcraft_doc::FeatureKind::FrameMember { .. }) {
+            if matches!(f.kind, torno_doc::FeatureKind::FrameMember { .. }) {
                 continue;
             }
             // Results are in timeline order: the feature's own index first, the search only when not.
@@ -1423,7 +1423,7 @@ impl Session {
             };
             let made: Vec<&str> = made.1.iter().map(String::as_str).collect();
             reserve.extend(
-                made.iter().filter(|n| solidcraft_doc::is_counted_body_name(n) && !self.doc.reserved_body_names.contains(**n)).map(|n| n.to_string()),
+                made.iter().filter(|n| torno_doc::is_counted_body_name(n) && !self.doc.reserved_body_names.contains(**n)).map(|n| n.to_string()),
             );
             // Nothing to pin when every slot the bodies take already holds a name.
             if made.len() <= f.body_names.len() && f.body_names.iter().take(made.len()).all(|slot| !slot.trim().is_empty()) {
@@ -1467,7 +1467,7 @@ impl Session {
         let before: std::collections::HashMap<u64, &str> = previous
             .features
             .iter()
-            .filter(|f| matches!(f.kind, solidcraft_doc::FeatureKind::ConstructionPlane { .. }))
+            .filter(|f| matches!(f.kind, torno_doc::FeatureKind::ConstructionPlane { .. }))
             .map(|f| (f.id, f.name.as_str()))
             .collect();
         for f in &self.doc.features {
@@ -1592,7 +1592,7 @@ impl Session {
     pub(crate) fn settle_value_edit(&mut self, solved_before: &SketchValues) -> Result<()> {
         // The solved geometry each sketch had before the edit, for the shrink/fling checks
         // after the refresh below (the same checks `settle` runs on an edit's own solve).
-        let solved_geometry: std::collections::BTreeMap<u64, solidcraft_sketch::Sketch> =
+        let solved_geometry: std::collections::BTreeMap<u64, torno_sketch::Sketch> =
             self.model.results.iter().filter_map(|r| r.state.sketch(r.id).map(|k| (r.id, k.sketch.clone()))).collect();
         // Quantity changes alter topology, so store the regenerated instances in the same
         // transaction as the parameter edit. Later picks and undo must see those same ids.
@@ -1601,7 +1601,7 @@ impl Session {
             .features
             .iter()
             .filter_map(|feature| match &feature.kind {
-                solidcraft_doc::FeatureKind::Sketch { sketch, .. }
+                torno_doc::FeatureKind::Sketch { sketch, .. }
                     if sketch.patterns.iter().any(|p| p.count_expression.is_some() || !p.expressions.is_empty()) =>
                 {
                     Some((feature.id, sketch.clone()))
@@ -1670,7 +1670,7 @@ impl Session {
             return Err(EngineError::Panel(panels::error(panels::Rule::Capability, "application layout backend was not injected")));
         }
         // The command, the evaluation it causes and the refresh after it: one profiler span.
-        let _span = solidcraft_profile::span("command", spec.id);
+        let _span = torno_profile::span("command", spec.id);
         let host_viewport = self.render_viewport.clone();
         let host_jobs = self.render_jobs.host.clone();
         let additional_jobs = self.render_jobs.additional.clone();
@@ -2271,7 +2271,7 @@ impl Session {
 
     /// World preview with each session's visibility applied, including new body placements.
     pub fn preview_visible_world(&self, commands: &[(String, Value)]) -> Result<Preview> {
-        let visible = |session: &Session| -> Result<Arc<solidcraft_doc::ModelState>> {
+        let visible = |session: &Session| -> Result<Arc<torno_doc::ModelState>> {
             let world = session.world_state()?;
             let mut shown = (*world).clone();
             shown.bodies.retain(|body| session.body_visible(&body.name));
@@ -2456,11 +2456,11 @@ pub(crate) type SketchValues = std::collections::BTreeMap<u64, std::collections:
 
 /// The values of a sketch's driving dimensions that come from parameters: what a value edit
 /// changes in it (as opposed to geometry it projects or links from upstream).
-fn own_values(sk: &solidcraft_sketch::Sketch) -> std::collections::BTreeMap<String, f64> {
+fn own_values(sk: &torno_sketch::Sketch) -> std::collections::BTreeMap<String, f64> {
     let mut values: std::collections::BTreeMap<_, _> =
         sk.constraints.iter().filter(|c| c.param.is_some() && !c.driven).filter_map(|c| Some((c.id.clone(), c.kind.value()?))).collect();
     for p in &sk.patterns {
-        use solidcraft_sketch::SketchPatternKind;
+        use torno_sketch::SketchPatternKind;
         let inputs = match p.kind {
             SketchPatternKind::Circular { count, angle, .. } => vec![("count", count as f64), ("angle", angle)],
             SketchPatternKind::Rectangular { count, spacing, count2, spacing2, .. } => {

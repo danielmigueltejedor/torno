@@ -19,7 +19,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::SolveApp;
 use crate::ui_kit::{Container, Surface};
-use solidcraft_theme::Tokens;
+use torno_theme::Tokens;
 
 /// Where command dialogs open (Preferences › Interface › Dialogs).
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]

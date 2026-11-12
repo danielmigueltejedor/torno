@@ -18,9 +18,9 @@
 
 use solidcore_record::Vec3;
 use solidcore_record::brep::Brep;
-use solidcraft_geom::brep::eval::{CurveEval, SurfaceEval};
-use solidcraft_geom::bspline::{CurveN, HPoint, NurbsSurface};
-use solidcraft_geom::prelude::*;
+use torno_geom::brep::eval::{CurveEval, SurfaceEval};
+use torno_geom::bspline::{CurveN, HPoint, NurbsSurface};
+use torno_geom::prelude::*;
 
 use crate::body::Body;
 use crate::continuity_order::Construction;
@@ -645,7 +645,7 @@ pub fn bridge(a: &[Frame], b: &[Frame], orders: [Continuity; 2], crown: [f64; 2]
     }
     let stations = a.len();
     let n = orders[0].conditions() + orders[1].conditions() - 1;
-    if n == 0 || n > solidcraft_geom::bspline::MAX_SPLINE_DEGREE {
+    if n == 0 || n > torno_geom::bspline::MAX_SPLINE_DEGREE {
         return Err(KernelError::Failed("bridge: degree".into()));
     }
     let mut layers: Vec<Vec<Vec3>> = vec![Vec::with_capacity(stations); n + 1];

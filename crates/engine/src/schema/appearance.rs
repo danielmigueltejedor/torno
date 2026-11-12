@@ -8,8 +8,8 @@ use schemars::{JsonSchema, Schema, SchemaGenerator, json_schema};
 use serde::de::Error as _;
 use serde::{Deserialize, Deserializer, Serialize};
 use serde_json::{Value, json};
-use solidcraft_doc::appearance::Look;
-use solidcraft_doc::pbr_appearance::PbrParameters;
+use torno_doc::appearance::Look;
+use torno_doc::pbr_appearance::PbrParameters;
 
 use super::check::whole;
 use super::types::{Point3, StringList};

@@ -1,7 +1,7 @@
 //! Assignment tools share the existing look parser, chain and atomic assignment command.
 use crate::{Result, Session, params::bad};
 use serde_json::{Value, json};
-use solidcraft_doc::appearance::Look;
+use torno_doc::appearance::Look;
 
 pub(in crate::cmd) fn paint(_s: &mut Session, p: &Value) -> Result<Value> {
     if p.get("done").and_then(Value::as_bool) == Some(true) {

@@ -1,12 +1,12 @@
 //! Physical properties of an assembly placement, with original body material assignments.
-use solidcraft_geom::prelude::*;
 use std::collections::{BTreeMap, BTreeSet};
+use torno_geom::prelude::*;
 
 use serde_json::Value;
 use solidcore_record::Vec3;
-use solidcraft_doc::{Document, Mat};
-use solidcraft_geom::Aabb3;
-use solidcraft_geom::inertia::{self, Tensor3};
+use torno_doc::{Document, Mat};
+use torno_geom::Aabb3;
+use torno_geom::inertia::{self, Tensor3};
 
 use crate::params::bad;
 use crate::schema::component::{
@@ -46,7 +46,7 @@ fn placed_doc(s: &Session) -> Document {
 /// A property total must cover the entire assembly. The display traversal intentionally
 /// truncates hostile designs, so use an explicit error instead of accepting its prefix.
 pub(in crate::cmd) fn placements(doc: &Document, cmd: &str) -> Result<Vec<(u64, Vec<u64>, Mat)>> {
-    subtree(doc, (0, Vec::new(), solidcraft_doc::IDENTITY), true, cmd)
+    subtree(doc, (0, Vec::new(), torno_doc::IDENTITY), true, cmd)
 }
 
 /// `root` and, with `descendants`, every placement under it, each with its world transform.
@@ -69,7 +69,7 @@ fn subtree(doc: &Document, root: (u64, Vec<u64>, Mat), descendants: bool, cmd: &
             }
             let mut child_path = path.clone();
             child_path.push(occurrence.id);
-            let world = solidcraft_doc::mat_mul(&transform, &occurrence.transform);
+            let world = torno_doc::mat_mul(&transform, &occurrence.transform);
             out.push((occurrence.component, child_path.clone(), world));
             stack.push((occurrence.component, child_path, world));
         }
@@ -136,7 +136,7 @@ fn placed_box(m: &Mat, b: &Aabb3) -> Aabb3 {
     }
     for i in 0..8 {
         let pick = |bit: usize, lo: f64, hi: f64| if i & bit == 0 { lo } else { hi };
-        out.add(solidcraft_doc::apply_point(m, Vec3::new(pick(1, b.min.x, b.max.x), pick(2, b.min.y, b.max.y), pick(4, b.min.z, b.max.z))));
+        out.add(torno_doc::apply_point(m, Vec3::new(pick(1, b.min.x, b.max.x), pick(2, b.min.y, b.max.y), pick(4, b.min.z, b.max.z))));
     }
     out
 }
@@ -155,12 +155,12 @@ struct Placed {
 
 /// `body` measured where `transform` places it. A rigid placement moves nothing but the centre
 /// and the box: the body's own measurement (worked out once and shared by every placement of it,
-/// [`solidcraft_doc::ModelBody::measure`]) is reused, where measuring each placed copy again took
+/// [`torno_doc::ModelBody::measure`]) is reused, where measuring each placed copy again took
 /// three fine tessellations per copy and made Properties of a large assembly take minutes
 /// (#8706). A placement that turns the body off the axes takes its box from the body's mesh
 /// placed there (shared with the display). Any other placement (scaled or mirrored) is measured
 /// as placed, as before.
-fn measure_placed(body: &solidcraft_doc::ModelBody, transform: Mat) -> Result<Placed> {
+fn measure_placed(body: &torno_doc::ModelBody, transform: Mat) -> Result<Placed> {
     if proper_rotation(&transform) {
         let m = body.measure()?;
         let bbox = if square_to_axes(&transform) {
@@ -169,14 +169,14 @@ fn measure_placed(body: &solidcraft_doc::ModelBody, transform: Mat) -> Result<Pl
             let mesh = body.mesh();
             let mut b = Aabb3::EMPTY;
             for p in &mesh.positions {
-                b.add(solidcraft_doc::apply_point(&transform, *p));
+                b.add(torno_doc::apply_point(&transform, *p));
             }
             if b.is_empty() { placed_box(&transform, &m.bbox) } else { b }
         };
         return Ok(Placed {
             volume: m.volume,
             area: m.area,
-            centroid: solidcraft_doc::apply_point(&transform, m.centroid),
+            centroid: torno_doc::apply_point(&transform, m.centroid),
             bbox,
             closed: crate::cmd::inspect::encloses_volume(&body.body),
             faces: m.merged.faces,
@@ -186,8 +186,8 @@ fn measure_placed(body: &solidcraft_doc::ModelBody, transform: Mat) -> Result<Pl
     }
     #[cfg(test)]
     work::count(|w| w.placed_measures += 1);
-    let placed = solidcraft_kernel::transform_matrix(&body.body, transform)?;
-    let m = solidcraft_kernel::measure(&placed)?;
+    let placed = torno_kernel::transform_matrix(&body.body, transform)?;
+    let m = torno_kernel::measure(&placed)?;
     Ok(Placed {
         volume: m.volume,
         area: m.area,
@@ -210,14 +210,14 @@ fn measure(s: &Session, doc: &Document, selected: &[u64], descendants: bool, abo
     let mut placement_count = 0;
     let mut skipped = 0;
     let selected_placements = if selected.is_empty() {
-        subtree(doc, (0, Vec::new(), solidcraft_doc::IDENTITY), descendants, cmd)?
+        subtree(doc, (0, Vec::new(), torno_doc::IDENTITY), descendants, cmd)?
     } else {
         let placement = s.occurrence_placement_with(selected, &s.uncaptured_moves()).map_err(|e| bad(cmd, e.to_string()))?;
         subtree(doc, (placement.component, selected.to_vec(), placement.world), descendants, cmd)?
     };
     // Each component's bodies (with their index in the model), the timeline looked up once rather
     // than for every body at every placement.
-    let mut by_component: std::collections::HashMap<u64, Vec<(usize, &solidcraft_doc::ModelBody)>> = std::collections::HashMap::new();
+    let mut by_component: std::collections::HashMap<u64, Vec<(usize, &torno_doc::ModelBody)>> = std::collections::HashMap::new();
     for (index, (body, component)) in state.bodies.iter().zip(doc.model_body_components(&state)).enumerate() {
         by_component.entry(component).or_default().push((index, body));
     }
@@ -233,17 +233,17 @@ fn measure(s: &Session, doc: &Document, selected: &[u64], descendants: bool, abo
         .collect();
     #[cfg(test)]
     work::count(|w| w.spreads += spread_bodies.len());
-    let spreads = solidcraft_kernel::map_on_threads(&spread_bodies, 16, |&i| {
+    let spreads = torno_kernel::map_on_threads(&spread_bodies, 16, |&i| {
         let body = state.bodies.get(i)?;
-        let mut measured = solidcraft_io::mass_properties(&body.body).ok().flatten()?;
+        let mut measured = torno_io::mass_properties(&body.body).ok().flatten()?;
         if let Some(sheet) = state.sheets.iter().find(|sheet| sheet.body == body.definition_name()) {
-            sheet.correct_perforation_mass_properties(&mut measured, &solidcraft_doc::IDENTITY).ok()?;
+            sheet.correct_perforation_mass_properties(&mut measured, &torno_doc::IDENTITY).ok()?;
         }
         measured.gyration()
     });
     let spread: BTreeMap<usize, Tensor3> = spread_bodies.into_iter().zip(spreads).filter_map(|(i, g)| Some((i, g.flatten()?))).collect();
     // A window waiting for the result (the Properties window) sees how far it is and can stop it.
-    let watch = solidcraft_kernel::watch::current();
+    let watch = torno_kernel::watch::current();
     let total_bodies: usize = selected_placements.iter().map(|(c, _, _)| by_component.get(c).map_or(0, Vec::len)).sum();
     let mut done = 0;
     // Closed bodies' (mass, centre of mass, inertia about it), all in world axes.
@@ -258,7 +258,7 @@ fn measure(s: &Session, doc: &Document, selected: &[u64], descendants: bool, abo
                 w.progress("measuring", done, total_bodies);
             }
             done += 1;
-            let transform: Mat = doc.model_body_offset(body).map(|offset| solidcraft_doc::mat_mul(&transform, offset)).unwrap_or(transform);
+            let transform: Mat = doc.model_body_offset(body).map(|offset| torno_doc::mat_mul(&transform, offset)).unwrap_or(transform);
             let mut measured = measure_placed(body, transform)?;
             if let Some(sheet) = state.sheets.iter().find(|sheet| sheet.body == body.definition_name() && !sheet.perforations.is_empty()) {
                 let mut corrected = body.measure()?;

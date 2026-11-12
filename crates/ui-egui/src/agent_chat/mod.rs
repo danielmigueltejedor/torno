@@ -1,9 +1,9 @@
 //! Agent chat: a side panel that talks to a coding agent the user already has (Claude Code,
 //! Codex, Antigravity, OpenCode, …) over the Agent Client Protocol, and gives that agent
-//! SolidCraft's MCP server, bridged to this window, as its way to read and change the open design
+//! Torno's MCP server, bridged to this window, as its way to read and change the open design
 //! (docs/agent-chat.md, docs/design/in-app-agent-chat.md).
 //!
-//! Desktop only: the agent is a child process. Off unless turned on in Preferences. SolidCraft
+//! Desktop only: the agent is a child process. Off unless turned on in Preferences. Torno
 //! never handles the agent's credentials: an agent that needs a login says so, and the panel
 //! shows the agent's own login command for the user to run.
 //!
@@ -49,7 +49,7 @@ use context::Context;
 
 use crate::{ControlRequest, SolveApp};
 use backend::{ChatBackend, Event, PermissionOption, PromptPart, ToolStatus};
-use solidcraft_ui_text::{format as trf, tr};
+use torno_ui_text::{format as trf, tr};
 
 pub(crate) use panel::{finish_shared, left_inset, owns_keyboard_input, prepare_shared, request_new_chat, shared_content, tool_space};
 pub use panel::{show, tip as panel_tip, toggle, toggle_shortcut};
@@ -287,7 +287,7 @@ pub enum Item {
         options: Vec<PermissionOption>,
         answer: Option<String>,
     },
-    /// A request of the agent's that SolidCraft holds for the user (files, replacing the design,
+    /// A request of the agent's that Torno holds for the user (files, replacing the design,
     /// or any change while the mode is "ask"); `tool`: what "Always allow" remembers.
     Approval {
         id: u64,
@@ -412,15 +412,15 @@ pub struct AgentChat {
     pub attach_selection: bool,
     /// How many things the current selection is by clicks, kept while the selection and the design
     /// stay as they are: (the selection, the design's address, the count).
-    selected_count: Option<(Vec<solidcraft_engine::Sel>, usize, usize)>,
+    selected_count: Option<(Vec<torno_engine::Sel>, usize, usize)>,
     /// What the chip under the pointer stands for, lit up in the model while the pointer is on it.
-    pub hover: Vec<solidcraft_engine::Sel>,
+    pub hover: Vec<torno_engine::Sel>,
     /// The pill or chip the pointer is on, as the panel saw it while drawing; the host lights what
     /// it stands for after the draw ([`light_hovered`]).
     pub hovered: Option<panel::Hovered>,
     /// What was lit last, and for which entries in which design (a hash): the pointer resting on a
     /// pill asks every frame.
-    lit_cache: Option<(u64, Vec<solidcraft_engine::Sel>)>,
+    lit_cache: Option<(u64, Vec<torno_engine::Sel>)>,
     pub gone: Gone,
     /// Counts up whenever chips are added, removed or the conversation shifts: the flags in
     /// [`Gone`] are worked out again.
@@ -524,7 +524,7 @@ pub struct AgentChat {
     /// in. The next message tells it when the design is no longer that one (#10854).
     seen: Option<Revision>,
     tools_available: Option<bool>,
-    /// The agent was started with SolidCraft's tools (solidcraft-cli and the control port were
+    /// The agent was started with Torno's tools (torno-cli and the control port were
     /// both there): if they are still unavailable, they failed to start, not to be found.
     tools_bridged: bool,
     /// The latest completed turn's notice; older notices remain in the transcript.
@@ -632,7 +632,7 @@ impl AgentChat {
         self.drop_rect = None;
     }
 
-    pub(crate) fn disconnect_document(&mut self, session: &mut solidcraft_engine::Session, wait: bool) {
+    pub(crate) fn disconnect_document(&mut self, session: &mut torno_engine::Session, wait: bool) {
         finish_turn(self, session);
         self.clear_config();
         self.stop_backend(wait);
@@ -641,7 +641,7 @@ impl AgentChat {
         }
     }
 
-    pub(crate) fn disconnect_endpoint(&mut self, session: &mut solidcraft_engine::Session, id: &str) {
+    pub(crate) fn disconnect_endpoint(&mut self, session: &mut torno_engine::Session, id: &str) {
         #[cfg(not(target_arch = "wasm32"))]
         settings::forget_card_listing(&mut self.settings, id);
         if self.running_id == id {
@@ -707,11 +707,11 @@ impl AgentChat {
         job: impl FnOnce() -> std::result::Result<attach::Attachment, String> + Send + 'static,
     ) -> std::result::Result<String, String> {
         let (tx, rx) = std::sync::mpsc::channel();
-        let language = solidcraft_ui_text::language();
+        let language = torno_ui_text::language();
         std::thread::Builder::new()
             .name("chat-file".into())
             .spawn(move || {
-                let _language = solidcraft_ui_text::scope(language);
+                let _language = torno_ui_text::scope(language);
                 let _ = tx.send(job());
             })
             .map_err(|e| trf("ui.agent_chat_file_error", &[("name", &name), ("error", &e.to_string())]))?;
@@ -729,13 +729,13 @@ impl AgentChat {
     pub fn state(&self) -> State {
         self.state.unwrap_or(State::Off)
     }
-    /// The agent is ready but was started without SolidCraft's tools (no `solidcraft-cli` was
+    /// The agent is ready but was started without Torno's tools (no `torno-cli` was
     /// found, or no control port), so no reply can read or change the design (#12283).
     pub(crate) fn without_design(&self) -> bool {
         self.state() == State::Ready && self.tools_available == Some(false)
     }
     /// Why [`Self::without_design`], and what to do about it: the chat's endpoint did not start,
-    /// `solidcraft-cli` was not found (as the notice `connect` posts says), or it was found but
+    /// `torno-cli` was not found (as the notice `connect` posts says), or it was found but
     /// its tools did not start (an endpoint agent whose MCP start failed; the error is in the chat).
     pub(crate) fn no_design_hint(&self) -> &'static str {
         if self.tools_port.is_none() {
@@ -1058,7 +1058,7 @@ pub(crate) enum AssistantMark {
     NeedsAuth,
     Stopped,
     Waiting(usize),
-    /// The agent runs, but without SolidCraft's tools: it can't read or change the design (#12283).
+    /// The agent runs, but without Torno's tools: it can't read or change the design (#12283).
     NoDesign,
 }
 
@@ -1116,26 +1116,26 @@ pub(crate) fn assistant_tip(app: &SolveApp, mark: AssistantMark) -> String {
     }
 }
 
-/// `solidcraft-cli` next to this program, else on the search path.
+/// `torno-cli` next to this program, else on the search path.
 #[cfg(not(target_arch = "wasm32"))]
 pub(crate) fn find_cli() -> Option<std::path::PathBuf> {
-    let name = if cfg!(windows) { "solidcraft-cli.exe" } else { "solidcraft-cli" };
-    if let Some(p) = solidcraft_engine::geom::env::var("CLI").map(std::path::PathBuf::from).filter(|p| p.is_file()) {
+    let name = if cfg!(windows) { "torno-cli.exe" } else { "torno-cli" };
+    if let Some(p) = torno_engine::geom::env::var("CLI").map(std::path::PathBuf::from).filter(|p| p.is_file()) {
         return Some(p);
     }
     std::env::current_exe()
         .ok()
         .and_then(|e| e.parent().map(|d| d.join(name)))
         .filter(|p| p.is_file())
-        .or_else(|| discover::find_in("solidcraft-cli", &discover::search_dirs()))
+        .or_else(|| discover::find_in("torno-cli", &discover::search_dirs()))
 }
 
-/// The agent's working folder: an empty folder of SolidCraft's own, so an agent's own file tools
+/// The agent's working folder: an empty folder of Torno's own, so an agent's own file tools
 /// (where it has them) see nothing of the user's.
 fn working_dir() -> std::path::PathBuf {
-    let d = solidcraft_engine::recovery::data_dir()
+    let d = torno_engine::recovery::data_dir()
         .map(|d| d.join("agent-chat").join("work"))
-        .unwrap_or_else(|| std::env::temp_dir().join("solidcraft-agent-chat"));
+        .unwrap_or_else(|| std::env::temp_dir().join("torno-agent-chat"));
     #[cfg(not(target_arch = "wasm32"))]
     let _ = std::fs::create_dir_all(&d);
     d
@@ -1367,7 +1367,7 @@ pub(crate) fn follow_new_tab(app: &mut SolveApp, switch: impl FnOnce(&mut SolveA
         return;
     }
     if let Some(turn) = app.agent_chat.turn.as_ref() {
-        let steps = turn.start.get::<solidcraft_engine::doc::Document>().map_or(0, |start| {
+        let steps = turn.start.get::<torno_engine::doc::Document>().map_or(0, |start| {
             merge_undo(&mut app.session.undo, &start, turn.start_undo, &trf("ui.agent_chat_undo_label", &[("message", &turn.label)]))
         });
         if steps > 0 {
@@ -1417,9 +1417,9 @@ const CHANGED_ITEMS: usize = 12;
 /// changed it by hand in between (#10854). Names the parameters and features that changed and
 /// where the History marker went, so the agent reads the design again instead of reusing
 /// positions and picks from before.
-fn changed_note(seen: &solidcraft_engine::doc::Document, now: &solidcraft_engine::doc::Document) -> Option<String> {
-    use solidcraft_engine::doc::Feature;
+fn changed_note(seen: &torno_engine::doc::Document, now: &torno_engine::doc::Document) -> Option<String> {
     use std::collections::HashMap;
+    use torno_engine::doc::Feature;
     if seen == now {
         return None;
     }
@@ -1497,7 +1497,7 @@ pub fn refresh_gone(app: &mut SolveApp) {
 }
 
 /// What the chip under the pointer stands for, to light up in the model.
-pub fn hovered_chip(app: &SolveApp) -> &[solidcraft_engine::Sel] {
+pub fn hovered_chip(app: &SolveApp) -> &[torno_engine::Sel] {
     &app.agent_chat.hover
 }
 
@@ -1538,10 +1538,10 @@ pub fn light_hovered(app: &mut SolveApp) {
 /// Worked out again only when the design or the entries change (`cache` keeps the last answer):
 /// while the pointer rests on a pill this is asked every frame.
 pub(crate) fn lit<'a>(
-    cache: &mut Option<(u64, Vec<solidcraft_engine::Sel>)>,
-    session: &solidcraft_engine::Session,
+    cache: &mut Option<(u64, Vec<torno_engine::Sel>)>,
+    session: &torno_engine::Session,
     entries: impl Iterator<Item = &'a context::Entry>,
-) -> Vec<solidcraft_engine::Sel> {
+) -> Vec<torno_engine::Sel> {
     use std::hash::{Hash, Hasher};
     let entries: Vec<&context::Entry> = entries.collect();
     let mut hasher = std::collections::hash_map::DefaultHasher::new();
@@ -1559,7 +1559,7 @@ pub(crate) fn lit<'a>(
         return sels.clone();
     }
     let mut names = context::NameCache::new();
-    let sels: Vec<solidcraft_engine::Sel> = entries.iter().flat_map(|e| context::current_sels(session, e, &mut names)).collect();
+    let sels: Vec<torno_engine::Sel> = entries.iter().flat_map(|e| context::current_sels(session, e, &mut names)).collect();
     *cache = Some((key, sels.clone()));
     sels
 }
@@ -1590,7 +1590,7 @@ pub fn start_pick(app: &mut SolveApp, at: Option<usize>) {
 /// The picker's OK: what its inputs hold becomes a pill in the box, where the pick was started.
 /// Nothing picked, nothing added.
 pub(crate) fn pick_done(app: &mut SolveApp, d: &crate::dialogs::Dialog) -> Result<(), String> {
-    let mut picked: Vec<solidcraft_engine::Sel> = Vec::new();
+    let mut picked: Vec<torno_engine::Sel> = Vec::new();
     for sel in d.inputs.iter().flat_map(|i| i.items.iter()) {
         if !picked.contains(sel) {
             picked.push(sel.clone());
@@ -1854,7 +1854,7 @@ fn start_turn(app: &mut SolveApp, text: String, image: bool, at: Option<usize>, 
 /// that takes them. `at` is the message's place in the conversation, where its picture is kept.
 fn start_turn_with(app: &mut SolveApp, text: String, image: bool, at: Option<usize>, files: Vec<attach::Attachment>, note: Option<&str>) {
     let (pictures, documents) = (app.agent_chat.images, app.agent_chat.documents);
-    let seen = app.agent_chat.seen.as_ref().and_then(Revision::get::<solidcraft_engine::doc::Document>);
+    let seen = app.agent_chat.seen.as_ref().and_then(Revision::get::<torno_engine::doc::Document>);
     let changed = seen.and_then(|seen| changed_note(&seen, &app.session.doc));
     let notes: Vec<&str> = note.into_iter().chain(changed.as_deref()).collect();
     let lead = if notes.is_empty() { text.clone() } else { format!("{}\n\n{text}", notes.join("\n")) };
@@ -2056,7 +2056,7 @@ pub fn answer_permission(app: &mut SolveApp, index: usize, option: Option<&str>)
 }
 
 /// The agent asks before running something of its own. The chat's own MCP tools are checked by
-/// SolidCraft's gate, so they're allowed here (no double question, see [`acp::is_bridge_tool`]);
+/// Torno's gate, so they're allowed here (no double question, see [`acp::is_bridge_tool`]);
 /// otherwise the mode or an earlier "always allow" may answer, and the chat says so; otherwise the
 /// user is asked.
 fn on_permission(app: &mut SolveApp, key: u64, title: String, kind: Option<&str>, options: Vec<PermissionOption>) {
@@ -2128,13 +2128,13 @@ fn end_turn(app: &mut SolveApp) {
     finish_turn(&mut app.agent_chat, &mut app.session);
 }
 
-fn finish_turn(chat: &mut AgentChat, session: &mut solidcraft_engine::Session) {
+fn finish_turn(chat: &mut AgentChat, session: &mut torno_engine::Session) {
     let Some(turn) = chat.turn.take() else { return };
     turn.active.store(false, std::sync::atomic::Ordering::Relaxed);
     // The host keeps the designs: the one the turn began on comes back from its revision.
     let steps = turn
         .start
-        .get::<solidcraft_engine::doc::Document>()
+        .get::<torno_engine::doc::Document>()
         .map_or(0, |start| merge_undo(&mut session.undo, &start, turn.start_undo, &trf("ui.agent_chat_undo_label", &[("message", &turn.label)])));
     // A turn the agent never answered (a sign-in, an error before its reply) showed it nothing.
     if turn.replied || turn.tool_called || turn.requests > 0 {
@@ -2161,12 +2161,7 @@ fn finish_turn(chat: &mut AgentChat, session: &mut solidcraft_engine::Session) {
 
 /// Merge the undo steps made since `start_doc` (at depth `start_undo`) into one, labelled `label`;
 /// how many steps it took in (0: none were made, or the history no longer reaches that far).
-fn merge_undo(
-    undo: &mut Vec<solidcraft_engine::Snapshot>,
-    start_doc: &Arc<solidcraft_engine::doc::Document>,
-    start_undo: usize,
-    label: &str,
-) -> usize {
+fn merge_undo(undo: &mut Vec<torno_engine::Snapshot>, start_doc: &Arc<torno_engine::doc::Document>, start_undo: usize, label: &str) -> usize {
     // The first change of the turn saved the design as it was when the turn began. When the
     // history is full its oldest steps go, so look for it at or below where it was put.
     let Some(first) = (0..undo.len().min(start_undo + 1)).rev().find(|&i| undo.get(i).is_some_and(|s| Arc::ptr_eq(&s.doc, start_doc))) else {
@@ -2323,7 +2318,7 @@ pub fn poll(app: &mut SolveApp, ctx: &egui::Context) {
     }
     // AI features turned off: nothing keeps running, nothing is looked for.
     if !shown(app) {
-        // Turned back on later, AI features don't connect as if SolidCraft were starting.
+        // Turned back on later, AI features don't connect as if Torno were starting.
         app.agent_chat.connect_at_start = false;
         crate::documents::disconnect_background_chats(app, false);
         if app.agent_chat.backend.is_some() || app.agent_chat.open {

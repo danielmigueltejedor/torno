@@ -1,4 +1,4 @@
-//! tangency-labs/solidcore#1476: shelling a swept bar failed with 1001. SolidCraft rig
+//! tangency-labs/solidcore#1476: shelling a swept bar failed with 1001. Torno rig
 //! case shell/566: an 8 x 5 rectangle swept (by the C++ sweep) along a 30 mm line, a
 //! quarter arc of r 30 and a 30 mm line (14 faces: 12 B-spline or extrusion walls, two
 //! planar caps), shelled 0.5 inward open at its start cap (z = 0). The operand is the
@@ -8,7 +8,7 @@
 //! - `OffsetExecutive::replace_implicit_offsets` took only a plain B-spline base;
 //!   upstream's `SM_CAST_PTR(SmBSplineSurface, pBase)` takes every subclass, here a
 //!   straight wall's `SmSurfOfExtrusion`. Both tests fail with 1001 without it.
-//! - With SolidCraft's opt-in fixes on (the issue's configuration), the bend walls'
+//! - With Torno's opt-in fixes on (the issue's configuration), the bend walls'
 //!   offset curves (125 and 127 cubic segments) need 37 625 and 38 227 samples at
 //!   1e-5, above the former fixed HANG-44 cap of 16 384; the bound is now
 //!   input-scaled (`nurbs::crv_offset::offset_sample_bound`). The second test fails
@@ -16,11 +16,11 @@
 //!   samples that many.
 //!
 //! Expected: one solid, V = 40 L - 28 (L - 0.5) = 1299.48668 with L = 60 + 15 pi. The
-//! port gives 1299.48768 (defaults, 7.7e-7 relative above) and 1299.48231 (SolidCraft's
-//! fixes, 3.4e-6 below; SolidCraft measured 1299.48275 on an older main); the
+//! port gives 1299.48768 (defaults, 7.7e-7 relative above) and 1299.48231 (Torno's
+//! fixes, 3.4e-6 below; Torno measured 1299.48275 on an older main); the
 //! operand's own volume is 1.2e-2 below its closed form. Both are pinned to 1e-9.
 //!
-//! With `shell_edges_on_analytics_exact` (WR-545) on as well, as the SolidCraft rig runs
+//! With `shell_edges_on_analytics_exact` (WR-545) on as well, as the Torno rig runs
 //! it, `make_edges_on_analytics_exact` intersected the walls' face-owned surfaces without
 //! their faces and the shell failed with `Unported(topology.face_p2)`; it now goes through
 //! the result's face services. Two marched edges between the inner planar walls become
@@ -71,9 +71,9 @@ fn operand(k: &mut Kernel) -> Brep {
     b
 }
 
-/// SolidCraft's `core::fixes()`: every opt-in `UpstreamFixes` flag it runs with (the
+/// Torno's `core::fixes()`: every opt-in `UpstreamFixes` flag it runs with (the
 /// issue's configuration).
-fn solidcraft_fixes() -> UpstreamFixes {
+fn torno_fixes() -> UpstreamFixes {
     let mut f = UpstreamFixes::default();
     f.fillet_retry_radius_as_first = true;
     f.fillet_rail_rim_on_face = true;
@@ -226,15 +226,15 @@ fn issue_1476_swept_bar_shells() {
 /// bound live.
 #[test]
 #[ignore = "slow in debug builds (two 38 000-sample curve offsets)"]
-fn issue_1476_swept_bar_shells_with_solidcraft_fixes() {
-    assert_eq!(check(&solidcraft_fixes(), 1299.482314966473), 16);
+fn issue_1476_swept_bar_shells_with_torno_fixes() {
+    assert_eq!(check(&torno_fixes(), 1299.482314966473), 16);
 }
 
 /// `shell_edges_on_analytics_exact` (WR-545) alone: `make_edges_on_analytics_exact`
 /// intersects the result's face-owned surfaces (the extrusion walls) with their faces'
 /// trimmed caches, as the fork's `GlobalSurfaceIntersect` reaches them through
 /// `SmSurface::GetFace`; without the face context it failed with
-/// `Unported(topology.face_p2)` (SolidCraft rig case shell/566). Two marched edges
+/// `Unported(topology.face_p2)` (Torno rig case shell/566). Two marched edges
 /// between the inner planar walls become lines; the volume does not change. The two
 /// inner straight walls are certified nets (WR-718), bicubic and not recognised as
 /// extrusions when merged, so their edges with the end cap stay marched (`N_SrfOffset`'s
@@ -247,14 +247,14 @@ fn issue_1476_swept_bar_shells_with_edges_on_analytics_exact() {
     assert_eq!(check(&fixes, 1299.4876808844865), 18);
 }
 
-/// SolidCraft's configuration with `shell_edges_on_analytics_exact` on as well (the
+/// Torno's configuration with `shell_edges_on_analytics_exact` on as well (the
 /// rig's run of shell/566, which failed with `Unported(topology.face_p2)`): two edges
 /// become lines. The fork (tangency-labs/smlib 68fb9162) gives V = 1299.4823. Slow in
 /// debug builds, as above.
 #[test]
 #[ignore = "slow in debug builds (two 38 000-sample curve offsets)"]
-fn issue_1476_swept_bar_shells_with_solidcraft_fixes_and_edges_on_analytics_exact() {
-    let mut fixes = solidcraft_fixes();
+fn issue_1476_swept_bar_shells_with_torno_fixes_and_edges_on_analytics_exact() {
+    let mut fixes = torno_fixes();
     fixes.shell_edges_on_analytics_exact = true;
     assert_eq!(check(&fixes, 1299.482314966473), 18);
 }

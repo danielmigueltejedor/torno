@@ -30,8 +30,8 @@
 
 use egui::Pos2;
 use serde_json::{Value, json};
-use solidcraft_engine::Sel;
-use solidcraft_engine::geom::prelude::*;
+use torno_engine::Sel;
+use torno_engine::geom::prelude::*;
 
 use crate::SolveApp;
 
@@ -106,12 +106,12 @@ pub fn something_to_copy(app: &SolveApp) -> bool {
 
 /// What another design copied or cut last, when that is what pastes here (this design's own
 /// clipboard is older).
-fn foreign(app: &SolveApp) -> Option<&std::sync::Arc<solidcraft_engine::ForeignCopy>> {
+fn foreign(app: &SolveApp) -> Option<&std::sync::Arc<torno_engine::ForeignCopy>> {
     app.foreign_copy.as_ref().filter(|_| app.own_clipboard_stamp != app.clipboard_stamp)
 }
 
 /// Sketch geometry another design copied or cut last, when that is what pastes here.
-fn foreign_sketch(app: &SolveApp) -> Option<&solidcraft_engine::cmd::sketch_clipboard::SketchClip> {
+fn foreign_sketch(app: &SolveApp) -> Option<&torno_engine::cmd::sketch_clipboard::SketchClip> {
     app.foreign_sketch_clip.as_ref().filter(|_| app.own_clipboard_stamp != app.clipboard_stamp)
 }
 
@@ -206,7 +206,7 @@ pub fn paste_into_group(app: &mut SolveApp, at: Option<Pos2>, into: Option<(u64,
             .into_iter()
             .flatten()
             .filter_map(|m| m.get("id").and_then(Value::as_u64))
-            .filter(|id| app.session.doc.feature(*id).is_some_and(|f| matches!(f.kind, solidcraft_engine::doc::FeatureKind::Sketch { .. })))
+            .filter(|id| app.session.doc.feature(*id).is_some_and(|f| matches!(f.kind, torno_engine::doc::FeatureKind::Sketch { .. })))
             .map(|id| id.to_string())
             .collect();
         if !items.is_empty() {
@@ -288,7 +288,7 @@ pub fn copy_design(app: &mut SolveApp) -> bool {
     };
     replace_clipboard(app);
     app.linked_design_clipboard = Some(path);
-    leave_text(app, format!("SolidCraft linked design: {}", app.session.doc.name));
+    leave_text(app, format!("Torno linked design: {}", app.session.doc.name));
     app.set_status("Copied design: switch to the assembly and paste to insert a linked component", false);
     true
 }
@@ -309,7 +309,7 @@ pub fn copy(app: &mut SolveApp) -> bool {
         app.foreign_sketch_clip = app.session.sketch_clipboard.clone();
         let n = out.get("curves").and_then(Value::as_u64).unwrap_or(0) + out.get("points").and_then(Value::as_u64).unwrap_or(0);
         let k = out.get("constraints").and_then(Value::as_u64).unwrap_or(0);
-        let text = format!("SolidCraft sketch geometry: {n} entities, {k} constraints and dimensions");
+        let text = format!("Torno sketch geometry: {n} entities, {k} constraints and dimensions");
         app.set_status(format!("Copied {n} sketch entities with {k} constraints and dimensions"), false);
         leave_text(app, text);
         return true;
@@ -324,8 +324,8 @@ pub fn copy(app: &mut SolveApp) -> bool {
         replace_clipboard(app);
         let names: Vec<String> = placements.iter().filter_map(|p| app.session.occurrence_placement(p).ok()).map(|p| p.name).collect();
         app.set_status(format!("Copied {} (Ctrl+V pastes an instance, Ctrl+Shift+V a new copy)", names.join(", ")), false);
-        leave_text(app, format!("SolidCraft components: {}", names.join(", ")));
-        app.foreign_copy = solidcraft_engine::ForeignCopy::of(&app.session, Vec::new(), placements.clone()).ok().map(std::sync::Arc::new);
+        leave_text(app, format!("Torno components: {}", names.join(", ")));
+        app.foreign_copy = torno_engine::ForeignCopy::of(&app.session, Vec::new(), placements.clone()).ok().map(std::sync::Arc::new);
         app.copied_placements = placements;
         return true;
     }
@@ -334,8 +334,8 @@ pub fn copy(app: &mut SolveApp) -> bool {
         app.session.clipboard.clear();
         replace_clipboard(app);
         app.set_status(format!("Copied {}", bodies.join(", ")), false);
-        leave_text(app, format!("SolidCraft bodies: {}", bodies.join(", ")));
-        app.foreign_copy = solidcraft_engine::ForeignCopy::of(&app.session, bodies.clone(), Vec::new()).ok().map(std::sync::Arc::new);
+        leave_text(app, format!("Torno bodies: {}", bodies.join(", ")));
+        app.foreign_copy = torno_engine::ForeignCopy::of(&app.session, bodies.clone(), Vec::new()).ok().map(std::sync::Arc::new);
         app.copied_bodies = bodies;
         return true;
     }
@@ -347,7 +347,7 @@ pub fn copy(app: &mut SolveApp) -> bool {
     app.foreign_copy = app.session.foreign_copy.clone();
     let names: Vec<&str> = out.get("copied").and_then(Value::as_array).map(|a| a.iter().filter_map(Value::as_str).collect()).unwrap_or_default();
     app.set_status(format!("Copied {}", names.join(", ")), false);
-    leave_text(app, format!("SolidCraft features: {}", names.join(", ")));
+    leave_text(app, format!("Torno features: {}", names.join(", ")));
     true
 }
 
@@ -459,12 +459,11 @@ pub fn cut(app: &mut SolveApp) -> bool {
         clear_clipboard(app);
         let names = cut_names(app, &set);
         app.set_status(cut_summary(&set), false);
-        leave_text(app, format!("SolidCraft cut: {}", names.join(", ")));
+        leave_text(app, format!("Torno cut: {}", names.join(", ")));
         // Another design pastes copies of the bodies and components cut, but features never leave their
         // design: a cut that holds any feature leaves another design nothing to paste.
         if set.features.is_empty() {
-            app.foreign_copy =
-                solidcraft_engine::ForeignCopy::of(&app.session, set.bodies.clone(), set.placements.clone()).ok().map(std::sync::Arc::new);
+            app.foreign_copy = torno_engine::ForeignCopy::of(&app.session, set.bodies.clone(), set.placements.clone()).ok().map(std::sync::Arc::new);
         }
         app.cut = set;
         // What is cut is the faded set; the selection that chose it would only muddy which that is.
@@ -480,7 +479,7 @@ pub fn cut(app: &mut SolveApp) -> bool {
     app.foreign_sketch_clip = app.session.sketch_clipboard.clone();
     let n = out.get("curves").and_then(Value::as_u64).unwrap_or(0) + out.get("points").and_then(Value::as_u64).unwrap_or(0);
     app.set_status(format!("Cut {n} sketch entities"), false);
-    leave_text(app, format!("SolidCraft sketch geometry: {n} entities"));
+    leave_text(app, format!("Torno sketch geometry: {n} entities"));
     true
 }
 
@@ -543,8 +542,8 @@ pub fn paste_into(app: &mut SolveApp, at: Option<Pos2>, new_copy: bool, into: Op
     if let Some(path) = app.linked_design_clipboard.clone() {
         let (parent_path, translate) = paste_placement(app, at);
         // The copied design is one the user opened: its server is the user's choice.
-        let hosts: Vec<String> = solidcraft_engine::io::vfs::network_host(&path).into_iter().collect();
-        let pasted = solidcraft_engine::io::vfs::allowing_hosts(&hosts, || {
+        let hosts: Vec<String> = torno_engine::io::vfs::network_host(&path).into_iter().collect();
+        let pasted = torno_engine::io::vfs::allowing_hosts(&hosts, || {
             app.run("component.insert_design", json!({"path": path, "reuse": true, "translate":translate}))
         });
         let Ok(out) = pasted else { return false };
@@ -592,7 +591,7 @@ pub fn paste_into(app: &mut SolveApp, at: Option<Pos2>, new_copy: bool, into: Op
 /// XY plane. With no viewport point or a parallel/behind-camera ray, use the parent origin.
 fn paste_placement(app: &SolveApp, at: Option<Pos2>) -> (Vec<u64>, [f64; 3]) {
     use solidcore_record::Vec3;
-    use solidcraft_engine::doc;
+    use torno_engine::doc;
     let path = app.session.active_occurrence_path.clone().unwrap_or_else(|| app.session.doc.first_path(app.session.active_component));
     let frame = app.session.occurrence_placement(&path).map(|p| p.world).unwrap_or(doc::IDENTITY);
     let origin = doc::apply_point(&frame, Vec3::ZERO);
@@ -624,7 +623,7 @@ fn paste_placement(app: &SolveApp, at: Option<Pos2>) -> (Vec<u64>, [f64; 3]) {
 /// The bodies another design copied or cut, into `into` (a component, placed by its placement)
 /// as imported bodies, or its components as independent copies, where they were in the world;
 /// they are selected.
-fn paste_from_design(app: &mut SolveApp, copy: std::sync::Arc<solidcraft_engine::ForeignCopy>, (component, path): (u64, Vec<u64>)) -> bool {
+fn paste_from_design(app: &mut SolveApp, copy: std::sync::Arc<torno_engine::ForeignCopy>, (component, path): (u64, Vec<u64>)) -> bool {
     if !copy.features.is_empty() {
         return paste_features(app, component, path).is_ok();
     }

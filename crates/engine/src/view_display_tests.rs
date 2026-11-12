@@ -1,7 +1,7 @@
 use super::*;
 use serde_json::json;
 use solidcore_record::Vec2;
-use solidcraft_sketch::{LinkGeom, LinkKind, LinkSource};
+use torno_sketch::{LinkGeom, LinkKind, LinkSource};
 
 fn line(sk: &mut Sketch, y: f64) -> usize {
     sk.add_line(Vec2::new(0., y), Vec2::new(2., y), None, None, None).unwrap()
@@ -258,7 +258,7 @@ fn cycling_component_color_is_saved_undoable_and_shared_by_instances() {
     assert_ne!(custom, automatic);
     assert_eq!(result["color"], json!(custom));
     assert_eq!(s.doc.appearances, appearances);
-    let loaded = Session::new(solidcraft_doc::Document::from_json(&s.doc.to_json()).unwrap());
+    let loaded = Session::new(torno_doc::Document::from_json(&s.doc.to_json()).unwrap());
     assert_eq!(loaded.doc.component_identification_color(component), custom);
     let copies: Vec<_> = s.world_state().unwrap().bodies.iter().map(|b| b.component).collect();
     assert_eq!(copies, [component, component]);

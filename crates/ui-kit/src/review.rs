@@ -1,6 +1,6 @@
 //! Shared review composition for operations that replace saved rendering state.
 use super::{Action, Confirm, Sphere, Text, checkbox, list_frame, sphere_thumbnail, text};
-use solidcraft_ui_text::tr;
+use torno_ui_text::tr;
 
 /// Content varies; the card, impact rows, acknowledgement and modal actions do not.
 pub struct ReviewAndApply<'a> {
@@ -35,7 +35,7 @@ impl ReviewAndApply<'_> {
                 sphere_thumbnail(
                     ui,
                     "review:sphere",
-                    Sphere { color: solidcraft_theme::Tokens::get().body, kind: super::FinishKind::Satin, opacity: None },
+                    Sphere { color: torno_theme::Tokens::get().body, kind: super::FinishKind::Satin, opacity: None },
                     40.0,
                 );
                 ui.vertical(|ui| {
@@ -45,7 +45,7 @@ impl ReviewAndApply<'_> {
             });
         });
         if let Some(notice) = self.notice {
-            let t = solidcraft_theme::Tokens::get();
+            let t = torno_theme::Tokens::get();
             crate::Container::show_backing(
                 ui,
                 egui::Frame::NONE.fill(t.accent_soft).corner_radius(t.control_radius).inner_margin(egui::Margin::same(t.space_8 as i8)),
@@ -59,7 +59,7 @@ impl ReviewAndApply<'_> {
             // Impact text wraps independently of ordinary one-line form rows.
             ui.horizontal_top(|ui| {
                 ui.vertical(|ui| {
-                    ui.set_width(solidcraft_theme::Tokens::get().space_16 * 4.0);
+                    ui.set_width(torno_theme::Tokens::get().space_16 * 4.0);
                     text(ui, label, Text::Inline);
                 });
                 ui.vertical(|ui| {
@@ -69,6 +69,6 @@ impl ReviewAndApply<'_> {
             });
         }
         let ack = checkbox(ui, self.acknowledgement, acknowledged);
-        solidcraft_ui_registry::publish_target(self.acknowledge_handle, ack.rect);
+        torno_ui_registry::publish_target(self.acknowledge_handle, ack.rect);
     }
 }

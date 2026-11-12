@@ -1,22 +1,22 @@
 //! Headless test fixtures. Callers retain frame counts, input and command parameters.
 use crate::{Services, SolveApp, scenario::Harness};
 use serde_json::{Value, json};
-use solidcraft_engine::{Sel, Session};
+use torno_engine::{Sel, Session};
 
-// The generic frame and event helpers are the kit's; SolidCraft's tests use them under these names.
+// The generic frame and event helpers are the kit's; Torno's tests use them under these names.
 pub(crate) use crate::ui_kit::test_support::{each_shape, key, pointer, raw_frame as frame, text_shapes};
 
-/// What SolidCraft installs into the shared crates before its first frame: its catalogs, its
+/// What Torno installs into the shared crates before its first frame: its catalogs, its
 /// icons, its tab table, its navigation slots and its built-in themes. A test that reads theme files or draws icons without an app or a
 /// test context ([`crate::fonts::test_context`]) calls it first.
-/// The UI kit crate's sources (`crates/ui-kit/src`), which SolidCraft's source guards read beside
+/// The UI kit crate's sources (`crates/ui-kit/src`), which Torno's source guards read beside
 /// its own.
 pub(crate) fn kit_src() -> std::path::PathBuf {
     std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../ui-kit/src")
 }
 
 /// The kit's components and their tests, as paths in [`kit_src`]. The source guards hold them to
-/// the rules of SolidCraft's own UI code (they are drawn from the kit's controls), not to the
+/// the rules of Torno's own UI code (they are drawn from the kit's controls), not to the
 /// kit's.
 pub(crate) const KIT_COMPONENTS: &[&str] = &[
     "app_bar.rs",
@@ -72,7 +72,7 @@ pub(crate) fn kit_files() -> Vec<(std::path::PathBuf, String)> {
         .collect()
 }
 
-/// The file a source guard names (`ui_kit/<path>`, a component, or a SolidCraft file).
+/// The file a source guard names (`ui_kit/<path>`, a component, or a Torno file).
 pub(crate) fn guard_file(name: &str) -> std::path::PathBuf {
     if let Some(kit) = name.strip_prefix("ui_kit/") {
         return kit_src().join(if kit == "mod.rs" { "lib.rs" } else { kit });
@@ -85,7 +85,7 @@ pub(crate) fn guard_file(name: &str) -> std::path::PathBuf {
 
 pub(crate) fn host_data() {
     crate::i18n::install();
-    solidcraft_look::install_tables();
+    torno_look::install_tables();
     crate::workspace::install_tabs();
     crate::navigation_slots::install();
 }
@@ -97,7 +97,7 @@ pub(crate) fn app_with_script(script: Value) -> SolveApp {
 }
 
 pub(crate) fn sample_app() -> SolveApp {
-    app_with_script(solidcraft_engine::sample::script())
+    app_with_script(torno_engine::sample::script())
 }
 
 pub(crate) fn run_all(app: &mut SolveApp, commands: Vec<(String, Value)>) {
@@ -153,13 +153,13 @@ pub(crate) fn selected_text(text: &str, at: [i32; 2]) -> (Harness, String, Strin
     (h, link, curve)
 }
 
-/// SolidCraft's two-colour built-in themes (1-bit and 1-bit Dark): pure black and white, so a few
+/// Torno's two-colour built-in themes (1-bit and 1-bit Dark): pure black and white, so a few
 /// looks other themes tell apart by colour are told apart by text or shape instead.
 pub(crate) fn is_two_colour(id: &str) -> bool {
     matches!(id, "1-bit" | "1-bit-dark")
 }
 
-/// A theme file with per-tab tables for SolidCraft's tabs (`tests/fixtures/theme-tabs.json`).
+/// A theme file with per-tab tables for Torno's tabs (`tests/fixtures/theme-tabs.json`).
 pub(crate) fn tab_fixture(base: &str) -> crate::theme_files::ThemeFile {
     let catalog: serde_json::Value = serde_json::from_str(include_str!("../tests/fixtures/theme-tabs.json")).unwrap();
     crate::theme_files::from_value(&catalog[base]).unwrap()

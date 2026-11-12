@@ -52,11 +52,11 @@
     "extrude"
   ],
   "ungraded": [
-    "results: SolidCraft computes it"
+    "results: Torno computes it"
   ],
   "what": "component.move_sketches.to_parts moves a sketch drawn on a part's top face into that part, and the pin built from it stays",
   "why_not": [
-    "body \"Body1\" is no kernel operation's output nor an operand: SolidCraft built it or changed the kernel's record",
-    "body \"Plate\" is no kernel operation's output nor an operand: SolidCraft built it or changed the kernel's record"
+    "body \"Body1\" is no kernel operation's output nor an operand: Torno built it or changed the kernel's record",
+    "body \"Plate\" is no kernel operation's output nor an operand: Torno built it or changed the kernel's record"
   ]
 }

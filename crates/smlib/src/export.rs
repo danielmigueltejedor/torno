@@ -1,4 +1,4 @@
-//! SMLib B-reps out to SolidCraft's schema 4 B-rep (`solidcraft_geom::brep`, docs/native-brep.md),
+//! SMLib B-reps out to Torno's schema 4 B-rep (`torno_geom::brep`, docs/native-brep.md),
 //! and the primitive solids beyond the box.
 //!
 //! The C API hands out SMLib's B-rep as flat arrays (`smlib_brep_export`, laid out like USD's
@@ -35,8 +35,8 @@
 //!   `VERTEX_TOLERANCE`), never below a floor of 10⁻⁶ of the body's size (at least 10⁻⁵ mm),
 //!   which is the body's; from a library without them, SMLib's intersection tolerance (or the
 //!   floor where larger) for the body, every edge and every vertex.
-use solidcraft_geom::prelude::*;
 use std::f64::consts::TAU;
+use torno_geom::prelude::*;
 
 use std::collections::HashMap;
 
@@ -376,7 +376,7 @@ fn surfaces(flat: View, n_faces: usize) -> Res<Vec<(b::Surface, Option<b::Surfac
 /// `form`, the NURBS the edge runs on over `range`: what [`b::Edge::curve_interval`] reads (an
 /// ellipse's radii scale its axes, not the way its angle turns).
 fn along(f: b::Frame, form: &b::Curve, range: [f64; 2]) -> Res<b::Frame> {
-    let eval = solidcraft_geom::brep::eval::CurveEval::new(form).map_err(|e| invalid(format!("circle NURBS form: {e}")))?;
+    let eval = torno_geom::brep::eval::CurveEval::new(form).map_err(|e| invalid(format!("circle NURBS form: {e}")))?;
     let [t0, t1] = range;
     let (p, q) = (eval.point(t0), eval.point(t0 + 1e-3 * (t1 - t0)));
     let (Some(p), Some(q)) = (p, q) else { return Err(invalid("circle NURBS form")) };
@@ -565,7 +565,7 @@ fn mapped(trim: &b::Curve2, same: bool, [scale, offset]: [f64; 2], [t0, t1]: [f6
     // dropped with their control points (on an edgeuse against its edge the trim is reversed
     // first, so the issue's dead span sits inside the start as a run a rounding after it). SMLib can hand over a trim whose domain runs a rounding
     // past the edge's interval with a dead span there (knots `5 x4, 5.00000000003 x5` on an edge
-    // ending at 5: the slot of a sloped bar, solidcraft#12365), or whose last interior knots lie
+    // ending at 5: the slot of a sloped bar, torno#12365), or whose last interior knots lie
     // one ulp past its end knots. Moving the ends alone left a run of 9 knots at 5, or an
     // unordered vector, which the record refuses, and the body was lost. A basis function whose
     // support has no length is zero on the domain, so dropping its knot and point leaves the

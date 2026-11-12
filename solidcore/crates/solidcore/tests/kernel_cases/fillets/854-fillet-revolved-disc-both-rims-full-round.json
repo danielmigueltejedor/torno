@@ -161,8 +161,8 @@
     "blend_dropping"
   ],
   "ungraded": [
-    "continuity: SolidCraft computes it",
-    "watertight: SolidCraft computes it"
+    "continuity: Torno computes it",
+    "watertight: Torno computes it"
   ],
   "what": "a disc r15 x 5 revolved from a sketch, both rims rounded R2.5 in one fillet: a full round of its 5 mm wall (robustness seed 33)",
   "why_not": []

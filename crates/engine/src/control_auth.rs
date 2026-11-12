@@ -1,19 +1,19 @@
-//! SolidCraft's control channel identity for the shared token files (`solidcraft_control::auth`):
-//! its name, data folder, `SOLIDCRAFT_` environment and default port (docs/control-protocol.md).
+//! Torno's control channel identity for the shared token files (`torno_control::auth`):
+//! its name, data folder, `TORNO_` environment and default port (docs/control-protocol.md).
 
-use solidcraft_control::auth::App;
+use torno_control::auth::App;
 
-/// SolidCraft's control channel: token files in `<data folder>/control` (`SOLIDCRAFT_CONTROL_DIR`
-/// replaces it), `SOLIDCRAFT_CONTROL_TOKEN`, and 27878 first when the launch names no port.
+/// Torno's control channel: token files in `<data folder>/control` (`TORNO_CONTROL_DIR`
+/// replaces it), `TORNO_CONTROL_TOKEN`, and 27878 first when the launch names no port.
 pub const APP: App =
-    App { name: "SolidCraft", data_dir: crate::recovery::data_dir, env: solidcraft_geom::env::var_os, utc: crate::crash::utc, default_port: 27878 };
+    App { name: "Torno", data_dir: crate::recovery::data_dir, env: torno_geom::env::var_os, utc: crate::crash::utc, default_port: 27878 };
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use solidcraft_control::auth::{ClientToken, TokenSource};
     use std::path::PathBuf;
     use std::time::UNIX_EPOCH;
+    use torno_control::auth::{ClientToken, TokenSource};
 
     /// A refused token names its file and when it was written, never the token.
     #[test]

@@ -2,13 +2,13 @@
 //! point of it reaches a target (and an axis of it points a given way), every value within its
 //! limits, motion links followed, and the closed loops those values are in kept closed.
 
-use solidcraft_geom::prelude::*;
 use std::cell::Cell;
 use std::collections::BTreeSet;
 use std::f64::consts::{PI, TAU};
+use torno_geom::prelude::*;
 
 use solidcore_record::Vec3;
-use solidcraft_sketch::linalg;
+use torno_sketch::linalg;
 
 use super::{
     Assembly, Held, JointKind, MAX_LOOP_VALUES, MAX_LOOP_WORK, MAX_LOOPS, Solution, Tree, Values, apply_links, build, close_within, jacobian,

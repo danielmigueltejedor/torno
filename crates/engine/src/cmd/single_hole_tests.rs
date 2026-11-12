@@ -1,8 +1,8 @@
 //! A Single hole at a sketch point follows the point when the sketch changes (#2110), drilled
 //! into the face it was placed on, and keeps doing so after the design is saved and reopened.
 
-use solidcraft_geom::prelude::*;
 use std::f64::consts::PI;
+use torno_geom::prelude::*;
 
 use serde_json::{Value, json};
 use solidcore_record::Vec3;
@@ -21,7 +21,7 @@ fn volume(s: &mut Session) -> f64 {
 }
 
 fn solid_at(s: &Session, p: Vec3) -> bool {
-    s.model.state().bodies.iter().any(|b| b.body.classify_point(p).unwrap() == solidcraft_kernel::PointClass::Inside)
+    s.model.state().bodies.iter().any(|b| b.body.classify_point(p).unwrap() == torno_kernel::PointClass::Inside)
 }
 
 /// The circle `c1`'s centre: its point id and where it is in the world.
@@ -32,7 +32,7 @@ fn centre(s: &Session) -> (String, Vec3) {
         .curves
         .iter()
         .find_map(|c| match c.kind {
-            solidcraft_sketch::CurveKind::Circle { c, .. } => Some((ss.sketch.points[c].id.clone(), ss.plane.to_world(ss.sketch.points[c].pos))),
+            torno_sketch::CurveKind::Circle { c, .. } => Some((ss.sketch.points[c].id.clone(), ss.plane.to_world(ss.sketch.points[c].pos))),
             _ => None,
         })
         .unwrap()
@@ -74,11 +74,11 @@ fn a_single_hole_follows_its_sketch_point() {
     assert!(solid_at(&s, before - Vec3::new(0.0, 0.0, 5.0)), "the old spot is filled again");
 
     // Saved and reopened, the hole is still a Single one at the point.
-    let mut t = Session::new(solidcraft_doc::Document::from_json(&s.doc.to_json()).unwrap());
+    let mut t = Session::new(torno_doc::Document::from_json(&s.doc.to_json()).unwrap());
     t.refresh();
     bore_at(&t, after);
     let f = t.doc.find_feature("H").unwrap();
-    assert!(matches!(&f.kind, solidcraft_doc::FeatureKind::Hole { points: Some(sp), .. } if sp.single && sp.ids == [id.clone()]), "{:?}", f.kind);
+    assert!(matches!(&f.kind, torno_doc::FeatureKind::Hole { points: Some(sp), .. } if sp.single && sp.ids == [id.clone()]), "{:?}", f.kind);
     assert!((block - volume(&mut t) - bore).abs() < 1e-3 * bore);
 }
 

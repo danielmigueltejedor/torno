@@ -1,6 +1,6 @@
 use crate::test_support::run_all;
 use serde_json::json;
-use solidcraft_engine::Session;
+use torno_engine::Session;
 
 use super::*;
 use crate::Services;
@@ -371,7 +371,7 @@ fn bend_table_picker_writes_the_current_body() {
         app.run("sheet.flange", json!({"sketch": "Base"})).unwrap();
         app.run("sheet.flange", json!({"edges": [[50, 0, 2.5]], "height": 20})).unwrap();
         let body = app.session.model.state().sheets[0].body.clone();
-        let path = std::env::temp_dir().join(format!("solidcraft-bend-table-{}.csv", std::process::id()));
+        let path = std::env::temp_dir().join(format!("torno-bend-table-{}.csv", std::process::id()));
         let output = path.to_string_lossy().into_owned();
         let chosen = output.clone();
         app.services.pick_save = Some(Box::new(move |_, extensions| {
@@ -963,7 +963,7 @@ fn flat_app(preset: &str, mode: crate::ui_kit::LayoutMode) -> SolveApp {
 
 /// Same view in the flat plane: the Design viewport may anchor a zoom on the model's surface
 /// (a little out of the plane), the flat view anchors on its plane.
-fn same_view(a: &solidcraft_viewport::Camera, b: &solidcraft_viewport::Camera) -> bool {
+fn same_view(a: &torno_viewport::Camera, b: &torno_viewport::Camera) -> bool {
     (a.target.x - b.target.x).abs() < 1e-3
         && (a.target.y - b.target.y).abs() < 1e-3
         && (a.distance - b.distance).abs() < 1e-9
@@ -1746,7 +1746,7 @@ fn then_with_segments_is_refused_with_a_message() {
     );
     // The guide says the same, so an agent meets the words here and there.
     assert!(
-        include_str!("../../../skills/solidcraft-sheetmetal/reference.md")
+        include_str!("../../../skills/torno-sheetmetal/reference.md")
             .contains("a split edge takes no `then`; bend each segment's far edge in its own feature"),
         "the guide carries the refusal"
     );

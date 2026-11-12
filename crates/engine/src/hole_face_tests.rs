@@ -24,7 +24,7 @@ fn volume(s: &mut Session) -> f64 {
 
 /// Whether the model holds material at (x, y, z).
 fn solid_at(s: &Session, x: f64, y: f64, z: f64) -> bool {
-    s.model.state().bodies.iter().any(|b| b.body.classify_point(Vec3::new(x, y, z)).unwrap() == solidcraft_kernel::PointClass::Inside)
+    s.model.state().bodies.iter().any(|b| b.body.classify_point(Vec3::new(x, y, z)).unwrap() == torno_kernel::PointClass::Inside)
 }
 
 /// What the hole feature says (its error and its warning); empty when it is silent.
@@ -243,7 +243,7 @@ fn pattern_of_a_flipped_hole_and_round_trip() {
     run(&mut s, "solid.pattern.rectangular", json!({"features": ["H"], "dir1": [1, 0, 0], "count1": 3, "spacing1": 12, "name": "Row"}));
     near(removed(&mut s), 3.0 * 628.3);
     let before = volume(&mut s);
-    let doc = solidcraft_doc::Document::from_json(&s.doc.to_json()).unwrap();
+    let doc = torno_doc::Document::from_json(&s.doc.to_json()).unwrap();
     let mut again = Session::new(doc);
     near(volume(&mut again), before);
 }
@@ -369,7 +369,7 @@ fn drilled_sketch_points_break_through_a_sloping_back_face() {
     run(&mut s, "edit.redo", json!({}));
     assert_eq!(s.doc.to_json(), saved);
     near(volume(&mut s), left);
-    let mut reopened = Session::new(solidcraft_doc::Document::from_json(&saved).unwrap());
+    let mut reopened = Session::new(torno_doc::Document::from_json(&saved).unwrap());
     assert!(reopened.model.result(id).unwrap().error.is_none());
     near(volume(&mut reopened), left);
 }
@@ -399,7 +399,7 @@ fn holes_from_a_sketch_on_a_face_drill_that_body_only() {
     for (x, y) in [(5.0, 5.0), (35.0, 35.0), (20.0, 20.0)] {
         assert!(solid_at(&s, x, y, 5.5) && solid_at(&s, x, y, 3.0), "Back is not drilled at ({x}, {y})");
     }
-    let mut reopened = Session::new(solidcraft_doc::Document::from_json(&s.doc.to_json()).unwrap());
+    let mut reopened = Session::new(torno_doc::Document::from_json(&s.doc.to_json()).unwrap());
     near(base - volume(&mut reopened), pi() * 6.25 * 4.0);
 }
 
@@ -540,7 +540,7 @@ fn a_saved_hole_turned_towards_a_touching_part_drills_its_own_part_when_opened()
     let mut saved: Value = serde_json::from_str(&s.doc.to_json()).unwrap();
     let hole = saved["features"].as_array_mut().unwrap().iter_mut().find(|f| f["name"] == "H").unwrap();
     hole["direction"] = json!([1.0, 0.0, 0.0]);
-    let mut opened = Session::new(solidcraft_doc::Document::from_json(&saved.to_string()).unwrap());
+    let mut opened = Session::new(torno_doc::Document::from_json(&saved.to_string()).unwrap());
     assert!((hole_direction(&opened, "H").x - 1.0).abs() < 1e-9, "the design keeps the direction it was saved with");
     assert_eq!(said(&opened, "H"), "");
     plate_drilled_through(&mut opened);
@@ -548,7 +548,7 @@ fn a_saved_hole_turned_towards_a_touching_part_drills_its_own_part_when_opened()
 
 fn hole_direction(s: &Session, name: &str) -> Vec3 {
     match &s.doc.find_feature(name).unwrap().kind {
-        solidcraft_doc::FeatureKind::Hole { direction, .. } => direction.0,
+        torno_doc::FeatureKind::Hole { direction, .. } => direction.0,
         other => panic!("{name} is not a hole: {}", other.type_name()),
     }
 }
@@ -572,7 +572,7 @@ fn a_hole_placed_on_another_parts_face_drills_its_own_part_behind_it() {
     let mut saved: Value = serde_json::from_str(&s.doc.to_json()).unwrap();
     let hole = saved["features"].as_array_mut().unwrap().iter_mut().find(|f| f["name"] == "H").unwrap();
     hole["direction"] = json!([0.0, 0.0, 1.0]);
-    let mut opened = Session::new(solidcraft_doc::Document::from_json(&saved.to_string()).unwrap());
+    let mut opened = Session::new(torno_doc::Document::from_json(&saved.to_string()).unwrap());
     assert!(hole_direction(&opened, "H").z > 0.999);
     drilled_base_only(&mut opened);
 }

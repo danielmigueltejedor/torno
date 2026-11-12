@@ -1,9 +1,9 @@
-//! SolidCraft's `report-drafted-peg-front-and-concave-rounds-together-r2` (#2368's PR rig):
+//! Torno's `report-drafted-peg-front-and-concave-rounds-together-r2` (#2368's PR rig):
 //! the drafted peg (a bar 40 x 16 whose far end is a half disc R8 about (40, 8), extruded
 //! 10 with a 5 degree inward taper, its top's end circle extruded 10 more up with the same
 //! taper and joined), its front top edge and the top's concave arc, which meet tangentially,
-//! rounded r 2 in one fillet. The input is the body SolidCraft passed to the fillet
-//! (`data/issue_2368_solidcraft_together_r2.smb`, the rig's dump of that call).
+//! rounded r 2 in one fillet. The input is the body Torno passed to the fillet
+//! (`data/issue_2368_torno_together_r2.smb`, the rig's dump of that call).
 //!
 //! The corner at the arc's vertex refuses itself in `MakeCornerTopology`, noting
 //! `SM_FILERR_NO_ROOM`: the blends continue each other across more than one edge on a side.
@@ -35,9 +35,9 @@ use solidcore::topology::topology::NotifyRecords;
 use solidcore::topology::{loopuse, EdgeId};
 use solidcore::Brep;
 
-const INPUT: &[u8] = include_bytes!("data/issue_2368_solidcraft_together_r2.smb");
+const INPUT: &[u8] = include_bytes!("data/issue_2368_torno_together_r2.smb");
 
-/// SolidCraft's rig set: every fix on but the one it holds back
+/// Torno's rig set: every fix on but the one it holds back
 /// (`fillet_refuse_rounds_breaking_through`).
 fn kernel() -> Kernel {
     let mut k = Kernel {
@@ -48,7 +48,7 @@ fn kernel() -> Kernel {
     k
 }
 
-/// A SolidCraft file, read under the notification naming as SolidCraft reads it.
+/// A Torno file, read under the notification naming as Torno reads it.
 fn read(k: &mut Kernel, bytes: &[u8]) -> Brep {
     let mut attributes = AttributeStore::default();
     let mut records = NotifyRecords::new();
@@ -78,7 +78,7 @@ fn pick(k: &Kernel, b: &Brep, p: [f64; 3]) -> EdgeId {
     best.1.unwrap()
 }
 
-/// The two edges rounded r 2 together as SolidCraft drives the session: the kernel and the
+/// The two edges rounded r 2 together as Torno drives the session: the kernel and the
 /// body, or the error info's code, comment and fit on failure.
 fn round() -> Result<(Kernel, Brep), (i32, String, Option<f64>)> {
     let mut k = kernel();

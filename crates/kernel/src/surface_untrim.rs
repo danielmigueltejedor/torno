@@ -11,8 +11,8 @@
 //! SMLib's tags: the untrimmed face is the face it was, trimmed differently.
 
 use solidcore_record::Vec3;
-use solidcraft_geom::prelude::*;
-use solidcraft_smlib::trim::Holes;
+use torno_geom::prelude::*;
+use torno_smlib::trim::Holes;
 
 use crate::body::Body;
 use crate::history::{Change, FaceOrigin};
@@ -81,8 +81,8 @@ pub fn untrim(body: &Body, face: usize, holes: UntrimHoles, outer: bool, in_plac
     // inside it.
     let reach = size * 0.05 + 1e-6;
     let r = tagged.untrim_face([at.x, at.y, at.z], reach, which, outer, in_place).map_err(|e| match e {
-        solidcraft_smlib::Error::NoMatch { .. } => KernelError::Invalid("no hole of the face at a picked point".into()),
-        solidcraft_smlib::Error::Unsupported => {
+        torno_smlib::Error::NoMatch { .. } => KernelError::Invalid("no hole of the face at a picked point".into()),
+        torno_smlib::Error::Unsupported => {
             KernelError::Failed("not supported yet: untrimming this face in place (another face uses its hole's edges)".into())
         }
         e => failed("untrim", e),

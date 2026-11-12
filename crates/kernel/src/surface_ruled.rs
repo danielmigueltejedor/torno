@@ -20,13 +20,13 @@
 //! edge's own curve as a NURBS where it stands on the body), and the faces are stitched by SMLib
 //! along the side edges they share.
 
-use solidcraft_geom::prelude::*;
 use std::collections::HashMap;
+use torno_geom::prelude::*;
 
 use solidcore_record::Vec3;
 use solidcore_record::brep::{self as b, Brep};
-use solidcraft_geom::brep::eval::SurfaceEval;
-use solidcraft_geom::bspline::{CurveN, HPoint, NurbsSurface};
+use torno_geom::brep::eval::SurfaceEval;
+use torno_geom::bspline::{CurveN, HPoint, NurbsSurface};
 
 use crate::body::Body;
 use crate::history::FaceOrigin;
@@ -580,7 +580,7 @@ fn end_directions(a: Vec3, b: Vec3) -> Option<(Vec3, Vec3)> {
 /// derivative there (by its parameter), as (control point index, [R, R', R'']).
 fn rational_basis(c: &CurveN<4>, t: f64) -> Option<Vec<(usize, [f64; 3])>> {
     let [t0, t1] = range(c);
-    let (first, n) = solidcraft_geom::bspline::basis_derivatives(&c.knots, c.degree, c.ctrl.len(), t.clamp(t0, t1), 2)?;
+    let (first, n) = torno_geom::bspline::basis_derivatives(&c.knots, c.degree, c.ctrl.len(), t.clamp(t0, t1), 2)?;
     let w: Vec<f64> = (0..=c.degree).map(|j| c.ctrl.get(first + j).map_or(1.0, |h| h[3])).collect();
     let nd = |j: usize, k: usize| n.get(j).and_then(|d| d.get(k)).copied().unwrap_or(0.0);
     let weight = |k: usize| (0..=c.degree).map(|j| nd(j, k) * w[j]).sum::<f64>();
@@ -1372,7 +1372,7 @@ mod tests {
             .edges
             .iter()
             .filter(|e| {
-                let c = solidcraft_geom::brep::eval::CurveEval::new(e.parameters()).unwrap();
+                let c = torno_geom::brep::eval::CurveEval::new(e.parameters()).unwrap();
                 on(c.point(0.5 * (e.interval[0] + e.interval[1])).unwrap())
             })
             .count()

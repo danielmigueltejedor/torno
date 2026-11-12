@@ -1,7 +1,7 @@
 //! A planar region extruded along its frame's normal between two levels: the prism the planar
 //! extrusion of `solidcore-ops` joins its pieces from.
 //!
-//! Not upstream: the placement SolidCraft's extrusion of planar regions made (`crate::extrude`
+//! Not upstream: the placement Torno's extrusion of planar regions made (`crate::extrude`
 //! for one region), moved into the kernel (docs/layers.md §1). The solid is the kernel's linear
 //! sweep (`SmApiCreateLinearSweep`) of the region's curves.
 //!

@@ -237,7 +237,7 @@ fn interior_sections_hold_a_cubic_s_third_derivative() {
     let s =
         Surface::from(section_blend(&sections, [EndOrder::G0, EndOrder::G0], [0.0, 0.0]).unwrap());
     // each stencil at its own section: the forward one at the second (u = 1/4), the central one
-    // at the middle (1/2), and the backward one at the last-but-one (3/4), where SolidCraft's sign
+    // at the middle (1/2), and the backward one at the last-but-one (3/4), where Torno's sign
     // gave (0, 0, -6)
     let stencils = [(0.25, "forward"), (0.5, "central"), (0.75, "backward")];
     for (u, stencil) in stencils {

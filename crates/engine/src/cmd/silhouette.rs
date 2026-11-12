@@ -2,14 +2,14 @@
 
 use serde_json::Value;
 use solidcore_record::Vec3;
-use solidcraft_geom::prelude::*;
+use torno_geom::prelude::*;
 
 use super::CommandSpec;
 use crate::params::bad;
 use crate::schema::silhouette::{SilhouetteParams, SilhouetteProjection, SilhouetteResult};
 use crate::schema::{TypedContract, output_schema_for};
 use crate::{Result, Session};
-use solidcraft_viewport::{Camera, StandardView};
+use torno_viewport::{Camera, StandardView};
 
 const CMD: &str = "inspect.silhouette";
 const CONTRACT: TypedContract<SilhouetteParams> = TypedContract::new();
@@ -195,7 +195,7 @@ pub(crate) fn camera(p: &Value) -> Result<Camera> {
         return Err(bad(CMD, "give `view` or `camera`, not both"));
     }
     let camera = if let Some(value) = p.get("camera") {
-        let named: solidcraft_doc::NamedView = serde_json::from_value(value.clone()).map_err(|e| bad(CMD, format!("bad camera: {e}")))?;
+        let named: torno_doc::NamedView = serde_json::from_value(value.clone()).map_err(|e| bad(CMD, format!("bad camera: {e}")))?;
         Camera { target: named.target, yaw: named.yaw, pitch: named.pitch, distance: named.distance, fov: named.fov, ..Default::default() }
     } else {
         let name = match p.get("view") {

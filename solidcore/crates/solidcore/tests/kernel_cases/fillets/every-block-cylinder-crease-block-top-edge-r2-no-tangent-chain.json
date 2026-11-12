@@ -143,7 +143,7 @@
     "blend_dropping"
   ],
   "ungraded": [
-    "continuity: SolidCraft computes it"
+    "continuity: Torno computes it"
   ],
   "what": "a block's long top edge rounded r2 (Tangent chain off), running from the block's end face into the cylinder the block is joined to",
   "why_not": []

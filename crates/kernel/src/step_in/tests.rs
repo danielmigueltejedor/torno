@@ -1,6 +1,6 @@
 use solidcore_record::{Loop2, Plane, Region2, Vec2, Vec3};
-use solidcraft_geom::prelude::*;
-use solidcraft_geom::tess::EvaluateMesh as _;
+use torno_geom::prelude::*;
+use torno_geom::tess::EvaluateMesh as _;
 
 use super::*;
 use crate::{BoolOp, boolean, box_solid, cylinder, extrude, fillet, measure, revolve, sphere, step_export, torus};
@@ -113,7 +113,7 @@ fn seam_only_sphere_void_is_turned_inside_out() {
     assert!(rel(m.area, area) < 1e-3, "area {} vs {area}", m.area);
 }
 
-/// A block with a closed cavity, written as BREP_WITH_VOIDS. SolidCraft writes the void's
+/// A block with a closed cavity, written as BREP_WITH_VOIDS. Torno writes the void's
 /// shell facing into the cavity with ORIENTED_CLOSED_SHELL `.T.`; some exporters write the
 /// same faces with `.F.` (#3730), which turned the void inside out and added its volume. Either
 /// way the cavity is taken out.
@@ -197,8 +197,8 @@ fn seam_only_torus_imports_as_a_whole_ring() {
 #[test]
 #[ignore = "manual STEP import timing; run without concurrent builds"]
 fn benchmark_independent_step_solids() {
-    let count = solidcraft_geom::env::var("STEP_BENCH_COUNT").map(|s| s.parse::<usize>().unwrap().clamp(1, 512)).unwrap_or(48);
-    let kind = solidcraft_geom::env::var("STEP_BENCH_KIND").unwrap_or_else(|| "cylinder".into());
+    let count = torno_geom::env::var("STEP_BENCH_COUNT").map(|s| s.parse::<usize>().unwrap().clamp(1, 512)).unwrap_or(48);
+    let kind = torno_geom::env::var("STEP_BENCH_KIND").unwrap_or_else(|| "cylinder".into());
     let bodies: Vec<_> = (0..count)
         .map(|i| {
             let at = Vec3::new((i % 8) as f64 * 60.0, (i / 8) as f64 * 60.0, 0.0);
@@ -210,7 +210,7 @@ fn benchmark_independent_step_solids() {
         })
         .collect();
     let text = step_export(&bodies.iter().collect::<Vec<_>>(), "independent bodies").unwrap();
-    if let Ok(path) = solidcraft_geom::env::var("STEP_BENCH_FIXTURE").ok_or(()) {
+    if let Ok(path) = torno_geom::env::var("STEP_BENCH_FIXTURE").ok_or(()) {
         std::fs::write(path, &text).unwrap();
     }
     let start = std::time::Instant::now();
@@ -2103,7 +2103,7 @@ fn step_conformance_parts_read_back_their_exact_shape() {
         assert_eq!(added, Some(seams), "{name}: {:?}", imp.warnings);
         assert_eq!(imp.bodies.len(), bodies, "{name}");
         let (mut v, mut n) = (0.0, 0);
-        let mut b = solidcraft_geom::Aabb3::EMPTY;
+        let mut b = torno_geom::Aabb3::EMPTY;
         for body in &imp.bodies {
             let m = measure(&body.body).unwrap_or_else(|e| panic!("{name}: {e}"));
             v += m.volume;
@@ -2124,7 +2124,7 @@ fn step_conformance_parts_read_back_their_exact_shape() {
 /// measured as the body of that record.
 pub(super) fn schema_4_volume(text: &str) -> f64 {
     let ex = solidcore_step::p21::parse(text).unwrap();
-    let r = solidcore_step::topology::read_solids_with(&ex, &solidcraft_smlib::pcurves::SmlibTrims);
+    let r = solidcore_step::topology::read_solids_with(&ex, &torno_smlib::pcurves::SmlibTrims);
     assert!(r.failures.is_empty() && r.solids.len() == 1, "{:?}", r.failures);
     measure(&Body::from_record(r.solids[0].brep.clone()).unwrap()).unwrap().volume
 }

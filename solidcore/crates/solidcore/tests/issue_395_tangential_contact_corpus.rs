@@ -6,7 +6,7 @@
 //! other surface along a known line, circle or point. Each pair runs through
 //! `GlobalSurfaceIntersect` at the ssi corpus tolerance (1e-6) with the default kernel
 //! (upstream behaviour, which difftest holds at parity with the C++) and with
-//! `Kernel::fixes.ssi_tangent_curve_tracer` (the SolidCraft fork's tracer, #1663), and
+//! `Kernel::fixes.ssi_tangent_curve_tracer` (the Torno fork's tracer, #1663), and
 //! the result is measured against the closed form: the share of the contact that a
 //! returned curve covers, whether every returned curve lies on the contact, and the
 //! touching points.

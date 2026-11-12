@@ -141,16 +141,16 @@ pub(crate) struct Unchecked {
     /// The step, as its own refusal names it (`SMLib fillet`).
     what: String,
     how: Checked,
-    result: std::sync::Mutex<Option<solidcraft_smlib::Brep>>,
+    result: std::sync::Mutex<Option<torno_smlib::Brep>>,
 }
 
 impl Unchecked {
-    pub(crate) fn new(record: &Arc<solidcore_record::brep::Brep>, what: &str, how: Checked, result: solidcraft_smlib::Brep) -> Unchecked {
+    pub(crate) fn new(record: &Arc<solidcore_record::brep::Brep>, what: &str, how: Checked, result: torno_smlib::Brep) -> Unchecked {
         Unchecked { record: Arc::downgrade(record), what: what.to_string(), how, result: std::sync::Mutex::new(Some(result)) }
     }
 
     /// The step's result, taken (once), when this is `record`'s.
-    fn take(&self, record: &Arc<solidcore_record::brep::Brep>) -> Option<solidcraft_smlib::Brep> {
+    fn take(&self, record: &Arc<solidcore_record::brep::Brep>) -> Option<torno_smlib::Brep> {
         if !std::ptr::eq(self.record.as_ptr(), Arc::as_ptr(record)) {
             return None;
         }
@@ -159,17 +159,17 @@ impl Unchecked {
 }
 
 /// SMLib's full check of `r` as a step takes it (`how`): the check's report.
-pub(crate) fn check_result(r: &solidcraft_smlib::Brep, how: Checked) -> std::result::Result<solidcraft_smlib::CheckReport, String> {
+pub(crate) fn check_result(r: &torno_smlib::Brep, how: Checked) -> std::result::Result<torno_smlib::CheckReport, String> {
     fn failed(what: &'static str) -> impl Fn(&dyn std::fmt::Display) -> String {
         move |e| format!("{what}: {e}")
     }
     match how {
         Checked::Combined if !r.is_manifold_solid().map_err(|e| failed("check")(&e))? => {
             let record = r.to_native().map_err(|e| failed("export")(&e))?;
-            let split = solidcraft_smlib::Brep::from_record(&record, true).map_err(|e| failed("the separate solids")(&e))?;
-            split.check(solidcraft_smlib::CheckLevel::All).map_err(|e| failed("check")(&e))
+            let split = torno_smlib::Brep::from_record(&record, true).map_err(|e| failed("the separate solids")(&e))?;
+            split.check(torno_smlib::CheckLevel::All).map_err(|e| failed("check")(&e))
         }
-        _ => r.check(solidcraft_smlib::CheckLevel::All).map_err(|e| failed("check")(&e)),
+        _ => r.check(torno_smlib::CheckLevel::All).map_err(|e| failed("check")(&e)),
     }
 }
 
@@ -185,13 +185,13 @@ pub fn check_kept(body: &Body) -> Result<()> {
     let step = body.unchecked.as_deref().and_then(|u| u.take(&body.record).map(|r| (u, r)));
     let (what, check) = match &step {
         Some((u, r)) => (u.what.as_str(), check_result(r, u.how)),
-        None => ("SMLib", body.smlib()?.check(solidcraft_smlib::CheckLevel::All).map_err(|e| format!("check: {e}"))),
+        None => ("SMLib", body.smlib()?.check(torno_smlib::CheckLevel::All).map_err(|e| format!("check: {e}"))),
     };
     verdict(what, check)
 }
 
 /// What [`check_kept`] makes of SMLib's check of what it read (`what` names the step).
-fn verdict(what: &str, check: std::result::Result<solidcraft_smlib::CheckReport, String>) -> Result<()> {
+fn verdict(what: &str, check: std::result::Result<torno_smlib::CheckReport, String>) -> Result<()> {
     match check {
         Ok(c) if c.is_valid() => Ok(()),
         Ok(c) => Err(KernelError::Failed(format!("{what}: SMLib's check refuses the result: {c}"))),
@@ -206,9 +206,9 @@ enum Kept {
     /// A mesh body: nothing to check.
     Nothing,
     /// The step's own result, taken from the body.
-    Step { what: String, how: Checked, result: solidcraft_smlib::Brep },
+    Step { what: String, how: Checked, result: torno_smlib::Brep },
     /// A copy of the body's SMLib form, made when the check was detached.
-    Copy(Result<solidcraft_smlib::Brep>),
+    Copy(Result<torno_smlib::Brep>),
 }
 
 /// [`check_kept`] of `body`, detached from it: the step's result is taken now, or the body's SMLib
@@ -230,7 +230,7 @@ impl KeptCheck {
         match self.0 {
             Kept::Nothing => Ok(()),
             Kept::Step { what, how, result } => verdict(&what, check_result(&result, how)),
-            Kept::Copy(copy) => verdict("SMLib", copy?.check(solidcraft_smlib::CheckLevel::All).map_err(|e| format!("check: {e}"))),
+            Kept::Copy(copy) => verdict("SMLib", copy?.check(torno_smlib::CheckLevel::All).map_err(|e| format!("check: {e}"))),
         }
     }
 }

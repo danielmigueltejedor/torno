@@ -2,16 +2,16 @@
 //! placed, for a path of lines, circular arcs and helices, with the profile's orientation,
 //! twist, end scale and up to two guide rails.
 //!
-//! Upstream: none (not in SMLib). The laws are SolidCraft's (`crates/kernel/src/sweep_path.rs`
+//! Upstream: none (not in SMLib). The laws are Torno's (`crates/kernel/src/sweep_path.rs`
 //! at 52afe21, `SweepControl`, `controlled_stations`, `rail_frame`), moved into the kernel so
 //! no application computes a frame.
 //!
 //! | Rust              | Upstream |
 //! |-------------------|----------|
 //! | [`Path`], [`Piece`] | (none) |
-//! | [`Laws`], [`Orientation`], [`RailFit`] | (none; SolidCraft's `SweepControl`) |
-//! | [`Station`]       | (none; SolidCraft's `Station`) |
-//! | [`stations`]      | (none; SolidCraft's `controlled_stations`) |
+//! | [`Laws`], [`Orientation`], [`RailFit`] | (none; Torno's `SweepControl`) |
+//! | [`Station`]       | (none; Torno's `Station`) |
+//! | [`stations`]      | (none; Torno's `controlled_stations`) |
 //!
 //! **A station** is a point `at` of the path and a linear map `m` (its columns the images of
 //! the axes): a point `q` of the profile at the first station is placed at
@@ -48,9 +48,9 @@
 //! rounding: its defect, the largest of `| |c_i|^2 - 1 |` and `|c_i . c_j|` over its columns,
 //! is `O(k eps)` for `k` composed rotations.
 //!
-//! **The laws (SolidCraft's conventions, carried over, not derived here).** Only geometric
+//! **The laws (Torno's conventions, carried over, not derived here).** Only geometric
 //! limits are refused here (a scale not positive, a path not crossing a parallel profile's
-//! plane or running along the orientation direction, a corner doubling back); SolidCraft's
+//! plane or running along the orientation direction, a corner doubling back); Torno's
 //! limits on them (four turns of twist, scales 0.01 to 100, 5 degrees and `1e-3`) are the
 //! ops entry's, labelled there, and reach this module as the caller's limits
 //! [`Laws::max_twist`], [`Laws::end_scale_within`], [`Laws::min_crossing`] and
@@ -325,7 +325,7 @@ struct Corner {
     turn: Map,
     /// Half of it.
     half: Map,
-    /// The mitre's stretch direction and factor (SolidCraft's).
+    /// The mitre's stretch direction and factor (Torno's).
     mitre: Option<(Vec3, f64)>,
 }
 
@@ -479,7 +479,7 @@ pub enum RailFit {
     Stretch,
 }
 
-/// A sweep's laws (SolidCraft's conventions; module docs). The default is a plain sweep.
+/// A sweep's laws (Torno's conventions; module docs). The default is a plain sweep.
 #[derive(Debug, Clone)]
 pub struct Laws<'a> {
     /// How the profile turns.
@@ -493,17 +493,17 @@ pub struct Laws<'a> {
     /// How the rails size the profile (ignored without rails).
     pub rail_fit: RailFit,
     /// With [`Orientation::Parallel`], the least angle (radians, `[0, pi / 2)`) between the
-    /// path's tangent and the profile's plane at a station: the caller's limit (SolidCraft's is
+    /// path's tangent and the profile's plane at a station: the caller's limit (Torno's is
     /// 5 degrees). At 0, only a path that does not cross the plane is refused.
     pub min_crossing: f64,
     /// With [`Orientation::Direction`], the least sine (`[0, 1)`) of the angle between the
-    /// path's tangent and the direction at a station: the caller's limit (SolidCraft's is
+    /// path's tangent and the direction at a station: the caller's limit (Torno's is
     /// `1e-3`). At 0, only a path along the direction is refused.
     pub min_across: f64,
-    /// The most twist (radians, either way) the caller takes: its limit (SolidCraft's is four
+    /// The most twist (radians, either way) the caller takes: its limit (Torno's is four
     /// turns). At infinity, any finite twist.
     pub max_twist: f64,
-    /// The end scales the caller takes, `[least, most]`: its limits (SolidCraft's are 0.01 and
+    /// The end scales the caller takes, `[least, most]`: its limits (Torno's are 0.01 and
     /// 100). At `[0, infinity]`, any finite positive scale.
     pub end_scale_within: [f64; 2],
 }
@@ -526,7 +526,7 @@ impl Default for Laws<'_> {
 
 impl Laws<'_> {
     fn check(&self) -> Result<()> {
-        // the geometric limits only: the caller's conventions (SolidCraft's four turns of
+        // the geometric limits only: the caller's conventions (Torno's four turns of
         // twist, its 0.01 to 100 end scale) are the caller's to check
         if !self.twist.is_finite() {
             return Err(invalid("a twist not finite"));
@@ -603,16 +603,16 @@ impl Station {
     }
 }
 
-/// The smallest number of stations [`fractions`] gives (SolidCraft's).
+/// The smallest number of stations [`fractions`] gives (Torno's).
 pub const MIN_SKIN_STATIONS: usize = 16;
-/// The largest number of stations [`fractions`] gives (SolidCraft's).
+/// The largest number of stations [`fractions`] gives (Torno's).
 pub const MAX_SKIN_STATIONS: usize = 2048;
 
-/// Where a skin through a sweep's stations puts them: SolidCraft's fit convention, carried
+/// Where a skin through a sweep's stations puts them: Torno's fit convention, carried
 /// over, not derived here. One station per degree of the path's tangent turn plus the twist
 /// (corners' turns included), at least as many as a rail's control points less one, between
 /// [`MIN_SKIN_STATIONS`] and [`MAX_SKIN_STATIONS`], evenly in arc length, with every joint's
-/// fraction ([`Path::joints`]) included exactly. SolidCraft measured the cubic skin's error
+/// fraction ([`Path::joints`]) included exactly. Torno measured the cubic skin's error
 /// near its ends falling as the step squared (a square of reach 7.1 twisted a quarter turn
 /// over 40 is 2e-7 off in volume at 1.4 degree steps); nothing here bounds the skin's distance
 /// from the law surface between the stations (tangency-labs/solidcore#3193).
@@ -858,7 +858,7 @@ pub(crate) fn rail_crossing(k: &Kernel, rail: &Curve, p: Point3, t: Vec3) -> Res
     }
 }
 
-/// How guide rails turn and size a section (SolidCraft's `rail_frame`): `along` (unit) turns
+/// How guide rails turn and size a section (Torno's `rail_frame`): `along` (unit) turns
 /// onto `along_to`, `across` (unit, square to `along`) onto `across_to` sized by `k`, and the
 /// third way follows, sized by `k` ([`RailFit::Scale`]) or kept ([`RailFit::Stretch`]).
 pub(crate) fn rail_frame(

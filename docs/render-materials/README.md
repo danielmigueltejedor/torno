@@ -62,7 +62,7 @@ The first shipped pack should be smaller than the full inventory: select approxi
 
 ## Repository placement
 
-The requested integration base is `0xlillith/solidcraft`, branch `lab/render-materials`, inspected at `93a2922c5ee272fb605703ae84c05825b4a74607`. The catalog work is isolated in `docs/render-catalog-selene`, tracked by [issue #2](https://github.com/0xlillith/solidcraft/issues/2) and [PR #3](https://github.com/0xlillith/solidcraft/pull/3). The native SELENE continuation is isolated in `showcase/selene-functional`, based on catalog commit `10ada1b45a4eb285ce752ac72f9aaa968ff8b5c4`.
+The requested integration base is `0xlillith/torno`, branch `lab/render-materials`, inspected at `93a2922c5ee272fb605703ae84c05825b4a74607`. The catalog work is isolated in `docs/render-catalog-selene`, tracked by [issue #2](https://github.com/0xlillith/solidcraft/issues/2) and [PR #3](https://github.com/0xlillith/solidcraft/pull/3). The native SELENE continuation is isolated in `showcase/selene-functional`, based on catalog commit `10ada1b45a4eb285ce752ac72f9aaa968ff8b5c4`.
 
 The implementation already under way in the other thread remains the authority for runtime behavior. Resolve this specification against the code that actually lands there; do not infer support from the existence of a catalog row.
 

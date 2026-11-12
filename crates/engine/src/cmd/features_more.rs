@@ -2,11 +2,11 @@
 
 use serde_json::Value;
 use solidcore_record::Vec3;
-use solidcraft_doc::expr::Kind;
-use solidcraft_doc::{AlignFrame, FeatureKind};
-use solidcraft_doc::{BodyName, SketchId};
-use solidcraft_doc::{Dir, FacePick, Position};
-use solidcraft_geom::prelude::*;
+use torno_doc::expr::Kind;
+use torno_doc::{AlignFrame, FeatureKind};
+use torno_doc::{BodyName, SketchId};
+use torno_doc::{Dir, FacePick, Position};
+use torno_geom::prelude::*;
 
 use super::CommandSpec;
 use super::features::{
@@ -92,9 +92,9 @@ fn coil(s: &mut Session, p: &Value) -> Result<Value> {
     } else if given("profiles") {
         return Err(bad(cmd, "`profiles` needs `sketch`"));
     }
-    let sketch = if profile_mode { Some(solidcraft_doc::SketchId(super::features::sketch_id(s, p.get("sketch"), cmd, "sketch")?)) } else { None };
-    let profiles = if profile_mode { super::features::profiles(p, cmd)? } else { solidcraft_doc::ProfileSel::All };
-    let base = point_param(s, p, "base", cmd)?.unwrap_or_else(|| solidcraft_doc::point_expr(Vec3::ZERO));
+    let sketch = if profile_mode { Some(torno_doc::SketchId(super::features::sketch_id(s, p.get("sketch"), cmd, "sketch")?)) } else { None };
+    let profiles = if profile_mode { super::features::profiles(p, cmd)? } else { torno_doc::ProfileSel::All };
+    let base = point_param(s, p, "base", cmd)?.unwrap_or_else(|| torno_doc::point_expr(Vec3::ZERO));
     let axis = axis_dir_param(p, cmd)?;
     let diameter = if profile_mode {
         None
@@ -129,8 +129,8 @@ fn coil(s: &mut Session, p: &Value) -> Result<Value> {
         Some(size)
     };
     let section = match str_(p, "section").map(str::to_ascii_lowercase).as_deref() {
-        None | Some("circular" | "circle") => solidcraft_doc::CoilSection::Circular,
-        Some("square") => solidcraft_doc::CoilSection::Square,
+        None | Some("circular" | "circle") => torno_doc::CoilSection::Circular,
+        Some("square") => torno_doc::CoilSection::Square,
         Some(o) => return Err(bad(cmd, format!("unknown section `{o}` (circular or square)"))),
     };
     let position = match str_(p, "section_position").map(str::to_ascii_lowercase).as_deref() {
@@ -222,7 +222,7 @@ fn emboss(s: &mut Session, p: &Value) -> Result<Value> {
     let mut targets = string_list(cmd, p, "targets")?;
     let face = if let Some(value) = p.get("face") {
         let local = vec3(value).ok_or_else(|| bad(cmd, "`face` must be a finite point [x,y,z]"))?;
-        let at = solidcraft_doc::apply_point(&s.active_component_frame(), local);
+        let at = torno_doc::apply_point(&s.active_component_frame(), local);
         let state = s.world_state()?;
         let mut candidates = Vec::new();
         // The nearest face off the point: (distance, body), for the error when none holds it.
@@ -273,19 +273,19 @@ fn emboss(s: &mut Session, p: &Value) -> Result<Value> {
         let (selected, index) = candidates.first().copied().ok_or_else(|| bad(cmd, "no target face"))?;
         let name = selected.definition_name();
         let body = &selected.body;
-        match solidcraft_kernel::face_surface(body, index) {
-            Some(solidcraft_kernel::FaceSurface::Plane { .. }) => {
+        match torno_kernel::face_surface(body, index) {
+            Some(torno_kernel::FaceSurface::Plane { .. }) => {
                 targets = vec![name.to_owned()];
                 None
             }
-            Some(solidcraft_kernel::FaceSurface::Cylinder { .. }) => {
+            Some(torno_kernel::FaceSurface::Cylinder { .. }) => {
                 if targets.len() > 1 {
                     return Err(bad(cmd, "cylinder emboss needs one selected target body"));
                 }
                 // Viewport picks lie on tessellated chords. Keep their axial and
                 // angular position, and certify their distance before storing an
                 // exact surface anchor for later replay.
-                let at = solidcraft_kernel::cylinder_emboss_anchor(body, index, at).map_err(|e| bad(cmd, e.to_string()))?;
+                let at = torno_kernel::cylinder_emboss_anchor(body, index, at).map_err(|e| bad(cmd, e.to_string()))?;
                 let face = emboss_selection(s, selected, at)?;
                 check_emboss_positions(s, sketch, selected, &face)?;
                 targets = vec![name.to_owned()];
@@ -307,7 +307,7 @@ fn emboss(s: &mut Session, p: &Value) -> Result<Value> {
     )
 }
 
-fn emboss_selection(s: &Session, selected: &solidcraft_doc::ModelBody, at: Vec3) -> Result<solidcraft_doc::EmbossFace> {
+fn emboss_selection(s: &Session, selected: &torno_doc::ModelBody, at: Vec3) -> Result<torno_doc::EmbossFace> {
     let cmd = "solid.emboss";
     let name = selected.definition_name();
     let original = s.model.state();
@@ -327,11 +327,11 @@ fn emboss_selection(s: &Session, selected: &solidcraft_doc::ModelBody, at: Vec3)
     if path.len() > 64 || author_path.len() > 64 {
         return Err(bad(cmd, "cylinder placement is too deep"));
     }
-    let inverse = solidcraft_doc::mat_inverse(&s.active_component_frame()).ok_or_else(|| bad(cmd, "invalid active frame"))?;
-    Ok(solidcraft_doc::EmbossFace { body: name.into(), at: FacePick(solidcraft_doc::apply_point(&inverse, at)), path, author_path })
+    let inverse = torno_doc::mat_inverse(&s.active_component_frame()).ok_or_else(|| bad(cmd, "invalid active frame"))?;
+    Ok(torno_doc::EmbossFace { body: name.into(), at: FacePick(torno_doc::apply_point(&inverse, at)), path, author_path })
 }
 
-fn check_emboss_positions(s: &Session, sketch: u64, body: &solidcraft_doc::ModelBody, face: &solidcraft_doc::EmbossFace) -> Result<()> {
+fn check_emboss_positions(s: &Session, sketch: u64, body: &torno_doc::ModelBody, face: &torno_doc::EmbossFace) -> Result<()> {
     let cmd = "solid.emboss";
     let owner = s.doc.model_body_component(body);
     let sketch_owner = s.doc.feature(sketch).map(|f| f.component).ok_or_else(|| bad(cmd, "profile sketch no longer exists"))?;
@@ -351,15 +351,15 @@ fn check_emboss_positions(s: &Session, sketch: u64, body: &solidcraft_doc::Model
 fn infer_emboss_selection(
     s: &Session,
     sketch: u64,
-    profiles: &solidcraft_doc::ProfileSel,
+    profiles: &torno_doc::ProfileSel,
     depth: &str,
     deboss: bool,
     targets: &[String],
-) -> Result<Option<solidcraft_doc::EmbossFace>> {
+) -> Result<Option<torno_doc::EmbossFace>> {
     let cmd = "solid.emboss";
     let original = s.model.state();
     let ss = original.sketch(sketch).ok_or_else(|| bad(cmd, "the sketch is not evaluated"))?;
-    let regions = solidcraft_doc::select_profiles(ss, profiles).map_err(|e| bad(cmd, e.to_string()))?;
+    let regions = torno_doc::select_profiles(ss, profiles).map_err(|e| bad(cmd, e.to_string()))?;
     let sketch_owner = s.doc.feature(sketch).map(|f| f.component).ok_or_else(|| bad(cmd, "profile sketch no longer exists"))?;
     let d = s.doc.eval(&s.doc.with_design_unit(depth, Kind::Length), Kind::Length).map_err(|e| bad(cmd, e.to_string()))?;
     let world = s.world_state()?;
@@ -376,26 +376,26 @@ fn infer_emboss_selection(
         if faces > 50_000 {
             return Err(bad(cmd, "cylinder target search exceeds face work limit"));
         }
-        if !solidcraft_kernel::has_cylinder_emboss_wall(&raw.body).map_err(|e| bad(cmd, e.to_string()))? {
+        if !torno_kernel::has_cylinder_emboss_wall(&raw.body).map_err(|e| bad(cmd, e.to_string()))? {
             continue;
         }
         let mut face = emboss_selection(s, selected, Vec3::ZERO)?;
         let body_frame = face.body_frame(&placed, raw).map_err(|e| bad(cmd, e.to_string()))?;
-        let inverse = solidcraft_doc::mat_inverse(&body_frame).ok_or_else(|| bad(cmd, "invalid cylinder body frame"))?;
+        let inverse = torno_doc::mat_inverse(&body_frame).ok_or_else(|| bad(cmd, "invalid cylinder body frame"))?;
         let displayed = world.sketch(sketch).ok_or_else(|| bad(cmd, "the profile sketch is not displayed"))?;
         let plane = solidcore_record::Plane::new(
-            solidcraft_doc::apply_point(&inverse, displayed.plane.origin),
-            solidcraft_doc::apply_vector(&inverse, displayed.plane.x),
-            solidcraft_doc::apply_vector(&inverse, displayed.plane.y),
+            torno_doc::apply_point(&inverse, displayed.plane.origin),
+            torno_doc::apply_vector(&inverse, displayed.plane.x),
+            torno_doc::apply_vector(&inverse, displayed.plane.y),
         )
         .ok_or_else(|| bad(cmd, "invalid cylinder sketch frame"))?;
         if let Some((_, at)) =
-            solidcraft_kernel::infer_cylinder_emboss(&raw.body, &plane, &regions, if deboss { -d } else { d }).map_err(|e| bad(cmd, e.to_string()))?
+            torno_kernel::infer_cylinder_emboss(&raw.body, &plane, &regions, if deboss { -d } else { d }).map_err(|e| bad(cmd, e.to_string()))?
         {
             face.sketch_frame(&placed, s.active_component, sketch_owner, raw).map_err(|e| bad(cmd, e.to_string()))?;
             check_emboss_positions(s, sketch, selected, &face)?;
-            let author_inverse = solidcraft_doc::mat_inverse(&s.active_component_frame()).ok_or_else(|| bad(cmd, "invalid author frame"))?;
-            face.at = FacePick(solidcraft_doc::apply_point(&solidcraft_doc::mat_mul(&author_inverse, &body_frame), at));
+            let author_inverse = torno_doc::mat_inverse(&s.active_component_frame()).ok_or_else(|| bad(cmd, "invalid author frame"))?;
+            face.at = FacePick(torno_doc::apply_point(&torno_doc::mat_mul(&author_inverse, &body_frame), at));
             if chosen.is_some() {
                 return Err(bad(cmd, "multiple tangent cylinders match the selected profiles; select a target face or body"));
             }
@@ -427,7 +427,7 @@ fn replace_face(s: &mut Session, p: &Value) -> Result<Value> {
         Some(tp) => {
             let n = super::face::face_normal(s, tp).ok_or_else(|| bad(cmd, "the target face must be planar"))?;
             let plane = solidcore_record::Plane::from_normal(tp, n).ok_or_else(|| bad(cmd, "the target face's plane"))?;
-            solidcraft_doc::PlaneRef::Custom { plane }
+            torno_doc::PlaneRef::Custom { plane }
         }
         None => plane_param(s, p.get("target"), cmd)?,
     };
@@ -509,11 +509,11 @@ fn align(s: &mut Session, p: &Value) -> Result<Value> {
         .into_iter()
         .find(|(world, own, ..)| *world == bodies[0] || *own == bodies[0])
         .map(|(.., m)| m);
-    let inverse = frame.and_then(|m| solidcraft_doc::mat_inverse(&m)).unwrap_or(solidcraft_doc::IDENTITY);
+    let inverse = frame.and_then(|m| torno_doc::mat_inverse(&m)).unwrap_or(torno_doc::IDENTITY);
     // A side is a plane (`from_plane`/`to_plane`: XY|XZ|YZ, a construction or offset plane, or
     // {origin, normal}), kept as a plane so the bodies follow it when it moves; or a point and, for
     // a face, its normal.
-    let plane = |s: &Session, key: &str| -> Result<Option<solidcraft_doc::PlaneRef>> {
+    let plane = |s: &Session, key: &str| -> Result<Option<torno_doc::PlaneRef>> {
         p.get(key).map(|_| super::features::plane_param(s, p.get(key), cmd)).transpose()
     };
     let (from_plane, to_plane) = (plane(s, "from_plane")?, plane(s, "to_plane")?);
@@ -531,7 +531,7 @@ fn align(s: &mut Session, p: &Value) -> Result<Value> {
         }
     }
     // Worked out from the plane or the frame when the feature is evaluated.
-    let held = |plane: &Option<solidcraft_doc::PlaneRef>, frame: &Option<AlignFrame>| plane.is_some() || frame.is_some();
+    let held = |plane: &Option<torno_doc::PlaneRef>, frame: &Option<AlignFrame>| plane.is_some() || frame.is_some();
     let world_pick = |s: &Session, pk: &str, fk: &str, held: bool| -> Result<(Vec3, Option<Vec3>)> {
         if held {
             if p.get(pk).is_some() || p.get(fk).is_some() {
@@ -556,7 +556,7 @@ fn align(s: &mut Session, p: &Value) -> Result<Value> {
         if held {
             return Ok((at, n));
         }
-        Ok((solidcraft_doc::apply_point(&inverse, at), n.and_then(|n| solidcraft_doc::apply_vector(&inverse, n).normalized())))
+        Ok((torno_doc::apply_point(&inverse, at), n.and_then(|n| torno_doc::apply_vector(&inverse, n).normalized())))
     };
     let (from, from_normal) = pick(s, "from", "from_face", held(&from_plane, &from_frame))?;
     let (to, to_normal) = pick(s, "to", "to_face", held(&to_plane, &to_frame))?;
@@ -587,7 +587,7 @@ fn align(s: &mut Session, p: &Value) -> Result<Value> {
         mask.into_iter()
             .zip([Vec3::X, Vec3::Y, Vec3::Z])
             .filter(|&(on, _)| on)
-            .map(|(_, world)| Dir(solidcraft_doc::apply_vector(&inverse, world).normalized().unwrap_or(world)))
+            .map(|(_, world)| Dir(torno_doc::apply_vector(&inverse, world).normalized().unwrap_or(world)))
             .collect::<Vec<_>>()
     });
     let flip = bool_(p, "flip").unwrap_or(false);
@@ -657,7 +657,7 @@ fn align_frame(s: &Session, p: &Value, key: &str, bodies: &[String]) -> Result<O
             // On its part, in the part's own coordinates: the same in every copy of a
             // sub-assembly the part is in, wherever it was picked.
             let picked = super::joints::origin_param(s, Some(v), cmd)?;
-            let origin = solidcraft_doc::joints::JointOrigin::new(picked.part(), picked.snap);
+            let origin = torno_doc::joints::JointOrigin::new(picked.part(), picked.snap);
             let on = super::joints::component_of(s, origin.occurrence);
             (AlignFrame::Origin { origin: Box::new(origin) }, on)
         }
@@ -693,7 +693,7 @@ mod tests;
 
 /// A snap point near `at` on the model: the nearest vertex, edge midpoint, planar face's centre
 /// or circular edge's centre (the end of a cylindrical face) of the placed model `st`.
-pub(crate) fn snap_point(st: &solidcraft_doc::ModelState, kind: &str, at: Vec3) -> Option<Vec3> {
+pub(crate) fn snap_point(st: &torno_doc::ModelState, kind: &str, at: Vec3) -> Option<Vec3> {
     let near = |pts: Vec<Vec3>| pts.into_iter().min_by(|a, b| a.dist(at).total_cmp(&b.dist(at)));
     match kind {
         "vertex" => near(
@@ -703,7 +703,7 @@ pub(crate) fn snap_point(st: &solidcraft_doc::ModelState, kind: &str, at: Vec3) 
                 .collect(),
         ),
         "edge_mid" => {
-            let d = |e: &solidcraft_doc::kernel::EdgeInfo| e.points.windows(2).map(|w| at.dist_to_segment(w[0], w[1])).fold(f64::MAX, f64::min);
+            let d = |e: &torno_doc::kernel::EdgeInfo| e.points.windows(2).map(|w| at.dist_to_segment(w[0], w[1])).fold(f64::MAX, f64::min);
             st.bodies
                 .iter()
                 .filter_map(|b| b.body.edges((b.body.size() * 2e-3).max(1e-3)).ok())
@@ -712,11 +712,11 @@ pub(crate) fn snap_point(st: &solidcraft_doc::ModelState, kind: &str, at: Vec3) 
                 .map(|e| e.mid)
         }
         "face_center" => st.bodies.iter().find_map(|b| {
-            let i = solidcraft_doc::appearance::face_index_at(b, at)?;
+            let i = torno_doc::appearance::face_index_at(b, at)?;
             b.body.faces((b.body.size() * 2e-3).max(1e-3)).ok()?.into_iter().find(|f| f.index == i).map(|f| f.centroid)
         }),
         "circle_center" => st.bodies.iter().find_map(|b| {
-            let c = solidcraft_doc::kernel::cylinder_face_at(&b.body, at)?;
+            let c = torno_doc::kernel::cylinder_face_at(&b.body, at)?;
             let along = (at - c.axis_point).dot(c.axis);
             let end = if (along - c.start).abs() <= (c.end - along).abs() { c.start } else { c.end };
             Some(c.axis_point + c.axis * end)

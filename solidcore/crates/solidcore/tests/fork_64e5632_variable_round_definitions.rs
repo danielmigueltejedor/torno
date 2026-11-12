@@ -1,4 +1,4 @@
-//! The SolidCraft fork's tangency-labs/smlib@64e5632 and 8f145ee (#2273, smlib#79 step 7):
+//! The Torno fork's tangency-labs/smlib@64e5632 and 8f145ee (#2273, smlib#79 step 7):
 //! a variable round whose balls exist over the variable radius solver's stations is its
 //! definition (`fillet_round_as_definition`, WR-698).
 //!
@@ -436,8 +436,8 @@ fn grade(k: &mut Kernel, law: &Law, size: f64, off: Option<&dyn Fn(Point3) -> f6
     g
 }
 
-/// The kernel SolidCraft runs: every fix on but `geometric_g2_continuity`.
-fn solidcraft_kernel() -> Kernel {
+/// The kernel Torno runs: every fix on but `geometric_g2_continuity`.
+fn torno_kernel() -> Kernel {
     let mut k = Kernel::new(&KernelOptions::default());
     let mut f = UpstreamFixes::default();
     for &name in UpstreamFixes::NAMES {
@@ -531,7 +531,7 @@ fn assert_definition(
 /// cone to 1.2e-13 and the volume the closed form's to 4.2e-10.
 #[test]
 fn the_variable_round_on_a_cone_is_its_definition() {
-    for mut k in [fork_kernel(), solidcraft_kernel()] {
+    for mut k in [fork_kernel(), torno_kernel()] {
         let g = assert_definition(&mut k, &LINEAR, Some(&off_the_cone), 2, (9100, 5250));
         let want = 11_930.126_816_310_3;
         assert!(
@@ -547,7 +547,7 @@ fn the_variable_round_on_a_cone_is_its_definition() {
 /// #14405), 9.4e-8 off the definition under the bound 2.8e-6.
 #[test]
 fn the_variable_round_of_a_quadratic_law_is_its_definition() {
-    for mut k in [fork_kernel(), solidcraft_kernel()] {
+    for mut k in [fork_kernel(), torno_kernel()] {
         assert_definition(&mut k, &QUADRATIC, None, 11, (9600, 5450));
     }
 }
@@ -563,7 +563,7 @@ fn a_variable_round_whose_law_reaches_zero_over_the_stations_is_not_its_definiti
         knots: &[0.0, 0.0, 1.0, 1.0],
         radii: &[1.0, 5.0],
     };
-    for mut k in [fork_kernel(), solidcraft_kernel()] {
+    for mut k in [fork_kernel(), torno_kernel()] {
         let off_tol = 100.0
             * create_box(&mut k, Point3::new(0.0, 0.0, 0.0), 20.0, 30.0, 20.0)
                 .unwrap()

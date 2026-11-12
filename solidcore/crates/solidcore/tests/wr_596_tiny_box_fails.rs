@@ -1,5 +1,5 @@
 //! Regression test for WR-596 (the fork's tangency-labs/smlib@0df62c8, @35008b1 and
-//! @449c81c; SolidCraft's capi smoke test `smlib_make_box`): `SmApiCreateBox` of a box
+//! @449c81c; Torno's capi smoke test `smlib_make_box`): `SmApiCreateBox` of a box
 //! far smaller than the tolerance (`smlib_fuzz` leak-000bffce). Pinned `CreateBox` drops
 //! every face and stitch status and returns success with a 4-face body that fails its
 //! own check; the fork returns the failing status (1001). With

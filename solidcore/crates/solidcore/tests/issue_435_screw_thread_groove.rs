@@ -1,13 +1,13 @@
 //! tangency-labs/solidcore#435: a cylinder minus a helical thread groove fails SMLib's
 //! own check with `SmFace` test #34 ("Face has partially Coincident Edges"), the
-//! SolidCraft rig's case 1250: an M10x1.5 groove along the whole 12 mm of a 10 mm shaft.
+//! Torno rig's case 1250: an M10x1.5 groove along the whole 12 mm of a 10 mm shaft.
 //!
 //! The groove is the external thread's ISO 965 minor-diameter profile (17H/24 deep, as
 //! the rig's M33 and M44 cases in `issue_410_435_thread_groove.rs`; p/4 at the root, flanks
 //! at 30 degrees, carried 0.05 past the crest) under a screw motion: sections in meridian planes,
 //! sixteen a turn, skinned cubically from a pitch below the shaft to a pitch above it.
 //! (`create_curve_sweep` along a helix is not a thread: its frame twists about 21 degrees a
-//! turn, so the profile runs into the shaft's core.) The SolidCraft rig cuts its groove
+//! turn, so the profile runs into the shaft's core.) The Torno rig cuts its groove
 //! with the fork's screw sweep, which SMLib does not have.
 //!
 //! Upstream (the C++ reference gives the same reports on the same body): the flank/end-face

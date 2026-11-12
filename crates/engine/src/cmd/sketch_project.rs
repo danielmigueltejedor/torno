@@ -5,10 +5,10 @@
 
 use serde_json::{Value, json};
 use solidcore_record::{Plane, Vec2, Vec3};
-use solidcraft_doc::project::{resolve, resolve_at};
-use solidcraft_doc::{Document, FeatureKind};
-use solidcraft_geom::prelude::*;
-use solidcraft_sketch::{ConstraintKind, LinkKind, LinkSource, Sketch};
+use torno_doc::project::{resolve, resolve_at};
+use torno_doc::{Document, FeatureKind};
+use torno_geom::prelude::*;
+use torno_sketch::{ConstraintKind, LinkKind, LinkSource, Sketch};
 
 use super::sketch_store;
 use super::{CommandSpec, in_sketch};
@@ -211,7 +211,7 @@ fn axis_source(s: &Session, name: &str, cmd: &str) -> Result<LinkSource> {
 /// The plane of a sketch feature, resolved against `st`: the model before the sketch as its
 /// component sees it, which is what evaluation resolves it against. A construction plane built
 /// from the model (through a sketch line, three points, between two faces…) exists only there.
-fn sketch_plane(doc: &Document, id: u64, st: &solidcraft_doc::ModelState) -> Result<Plane> {
+fn sketch_plane(doc: &Document, id: u64, st: &torno_doc::ModelState) -> Result<Plane> {
     let (vals, _) = doc.param_values();
     match doc.feature(id).map(|f| &f.kind) {
         Some(FeatureKind::Sketch { plane, .. }) => {
@@ -229,35 +229,35 @@ fn state_for_sketch<'a>(
     s: &Session,
     doc: &Document,
     id: u64,
-    st: &'a solidcraft_doc::ModelState,
+    st: &'a torno_doc::ModelState,
     named: &[&str],
-) -> std::result::Result<std::borrow::Cow<'a, solidcraft_doc::ModelState>, solidcraft_doc::DocError> {
+) -> std::result::Result<std::borrow::Cow<'a, torno_doc::ModelState>, torno_doc::DocError> {
     let comp = doc.feature(id).map(|f| f.component).unwrap_or(0);
     let attachment = doc.feature(id).and_then(|feature| match &feature.kind {
-        solidcraft_doc::FeatureKind::Sketch { plane, .. } => super::sketch::face::anchor(plane),
+        torno_doc::FeatureKind::Sketch { plane, .. } => super::sketch::face::anchor(plane),
         _ => None,
     });
     let (framed, frame) = match attachment {
-        Some(anchor) => (solidcraft_doc::state_in_face_anchor_frame(doc, st, anchor, comp)?, anchor.author_frame(doc, comp)?),
+        Some(anchor) => (torno_doc::state_in_face_anchor_frame(doc, st, anchor, comp)?, anchor.author_frame(doc, comp)?),
         None => {
             let frame = owner_frame(s, doc, comp);
-            (solidcraft_doc::state_in_frame_at(doc, st, comp, frame)?, frame)
+            (torno_doc::state_in_frame_at(doc, st, comp, frame)?, frame)
         }
     };
-    Ok(solidcraft_doc::with_placed_copies(doc, st, framed, &frame, named))
+    Ok(torno_doc::with_placed_copies(doc, st, framed, &frame, named))
 }
 
 /// The placed bodies of a design (`Document::body_frames_with_source`): world name, definition
 /// name, component, occurrence path and frame.
-pub(super) type PlacedBodies = Vec<(String, String, u64, Vec<u64>, solidcraft_doc::Mat)>;
+pub(super) type PlacedBodies = Vec<(String, String, u64, Vec<u64>, torno_doc::Mat)>;
 
 /// Sketch links keep a further placement's body by the name the world gives it (`Block (Part:2)`,
 /// #9957), which a rename of the body or of its component changes: each link naming one of
 /// `before` (the placed bodies before the rename) now names what that body is called in `doc`.
 /// `renamed` is the body renamed (old name, new name), if one was.
-pub(super) fn follow_placed_renames(doc: &mut Document, st: &solidcraft_doc::ModelState, before: &PlacedBodies, renamed: Option<(&str, &str)>) {
+pub(super) fn follow_placed_renames(doc: &mut Document, st: &torno_doc::ModelState, before: &PlacedBodies, renamed: Option<(&str, &str)>) {
     let renames: std::collections::HashMap<String, String> = {
-        let names = solidcraft_doc::WorldNames::new(doc, st);
+        let names = torno_doc::WorldNames::new(doc, st);
         before
             .iter()
             .filter(|(world, own, ..)| world != own)
@@ -318,13 +318,13 @@ fn placed_candidate<'a>(s: &Session, doc: &'a Document) -> std::borrow::Cow<'a, 
     std::borrow::Cow::Owned(placed)
 }
 
-fn owner_frame(s: &Session, doc: &Document, comp: u64) -> solidcraft_doc::Mat {
+fn owner_frame(s: &Session, doc: &Document, comp: u64) -> torno_doc::Mat {
     if comp == s.active_component { s.active_component_frame() } else { doc.component_transform(comp) }
 }
 
 /// The author component and its placement used by [`state_for_sketch`], including a face
 /// attachment's explicit author path. `None` when that placement is gone.
-fn sketch_frame(s: &Session, doc: &Document, id: u64) -> Option<(u64, solidcraft_doc::Mat)> {
+fn sketch_frame(s: &Session, doc: &Document, id: u64) -> Option<(u64, torno_doc::Mat)> {
     let comp = doc.feature(id).map(|f| f.component).unwrap_or(0);
     let attachment = doc.feature(id).and_then(|feature| match &feature.kind {
         FeatureKind::Sketch { plane, .. } => super::sketch::face::anchor(plane),
@@ -357,7 +357,7 @@ pub(super) fn refresh(s: &Session, doc: &Document, id: u64, sk: &mut Sketch) -> 
     let _ = doc.apply_text_values(&vals, sk);
     let st = s.model.state_before(id);
     let attachment = doc.feature(id).and_then(|feature| match &feature.kind {
-        solidcraft_doc::FeatureKind::Sketch { plane, .. } => super::sketch::face::anchor(plane),
+        torno_doc::FeatureKind::Sketch { plane, .. } => super::sketch::face::anchor(plane),
         _ => None,
     });
     let named: Vec<&str> = sk.links.iter().flat_map(|l| l.source.bodies()).collect();
@@ -366,7 +366,7 @@ pub(super) fn refresh(s: &Session, doc: &Document, id: u64, sk: &mut Sketch) -> 
     };
     let Ok(plane) = sketch_plane(&doc, id, &st) else { return Vec::new() };
     let frame = sketch_frame(s, &doc, id);
-    let refreshed = solidcraft_doc::project::refresh_links_at(&doc, &vals, &st, &plane, sk, attachment, frame.as_ref());
+    let refreshed = torno_doc::project::refresh_links_at(&doc, &vals, &st, &plane, sk, attachment, frame.as_ref());
     // A link whose named face or edge is gone fails the sketch when it is evaluated; while it is
     // edited, that is what the refresh says.
     let warnings = match refreshed {
@@ -407,7 +407,7 @@ pub(super) mod refresh_count {
 
 /// Resolve an origin axis as a mirror line: the axis's projection into the sketch plane, kept
 /// linked and fixed. An axis perpendicular to the plane has no line in it and is refused.
-pub(super) fn origin_axis_line(s: &Session, p: &Value, line: &Value, cmd: &str) -> Result<(LinkSource, Vec<solidcraft_sketch::LinkGeom>)> {
+pub(super) fn origin_axis_line(s: &Session, p: &Value, line: &Value, cmd: &str) -> Result<(LinkSource, Vec<torno_sketch::LinkGeom>)> {
     let id = sketch_store::target(s, p, cmd)?;
     let doc = placed_candidate(s, &s.doc);
     let st = s.model.state_before(id);
@@ -467,16 +467,16 @@ fn add_link_unless_present(
     let name = if let LinkSource::Face { body, at } = &r.source {
         st.body(body).filter(|body| !body.body.is_mesh()).and_then(|body| {
             if let Some(index) = r.face_index {
-                solidcraft_doc::naming::face_names(body).get(index).filter(|name| !name.is_empty()).cloned()
+                torno_doc::naming::face_names(body).get(index).filter(|name| !name.is_empty()).cloned()
             } else {
-                solidcraft_doc::naming::face_name_at_body(body, *at)
+                torno_doc::naming::face_name_at_body(body, *at)
             }
         })
     } else {
         None
     };
     // The link is the edge that was picked, not whichever is nearest the picked point later.
-    let edge_name = solidcraft_doc::project::resolved_edge_name(&st, &r);
+    let edge_name = torno_doc::project::resolved_edge_name(&st, &r);
     let link = sk.add_link_with_wires(kind, r.source, &r.geom, &r.wires)?;
     // The wires' exact curves, as a refresh of the link gives them (an included edge's record
     // curve): a link made now is the one its sketch would resolve.
@@ -736,7 +736,7 @@ fn spun_profile(s: &mut Session, p: &Value) -> Result<Value> {
             let st = s.model.state();
             let ss = st.sketch(id).ok_or_else(|| EngineError::Other("the sketch is not evaluated".into()))?;
             let ci = ss.sketch.curve_index(axis).ok_or_else(|| bad(cmd, format!("unknown curve `{axis}`")))?;
-            let Some(solidcraft_sketch::Shape::Line { a, b }) = ss.sketch.shape(ci) else { return Err(bad(cmd, "the axis must be a line")) };
+            let Some(torno_sketch::Shape::Line { a, b }) = ss.sketch.shape(ci) else { return Err(bad(cmd, "the axis must be a line")) };
             let (wa, wb) = (ss.plane.to_world(a), ss.plane.to_world(b));
             (wa, wb - wa)
         }
@@ -910,7 +910,7 @@ pub(super) fn snap_points(s: &mut Session, p: &Value, cmd: &str) -> Result<Value
         } else if let Some(line) = mid {
             // "mid:<line>": a new point at the line's midpoint, kept there.
             let l = sk.curve_index(&line).ok_or_else(|| bad(cmd, format!("unknown curve `{line}`")))?;
-            let Some(solidcraft_sketch::Shape::Line { a, b }) = sk.shape(l) else { return Err(bad(cmd, format!("`{line}` is not a line"))) };
+            let Some(torno_sketch::Shape::Line { a, b }) = sk.shape(l) else { return Err(bad(cmd, format!("`{line}` is not a line"))) };
             let pi = sk.add_point((a + b) * 0.5, None)?;
             sk.add_constraint(ConstraintKind::Midpoint { p: pi, l }, None)?;
             sk.points.get(pi).map(|q| q.id.clone()).unwrap_or_default()
@@ -967,14 +967,14 @@ pub(super) fn project_internal_faces(s: &mut Session, id: u64, body: &str, indic
     let mut doc = (*s.doc).clone();
     let raw = s.model.state_before(id);
     let component = doc.feature(id).map(|feature| feature.component).unwrap_or(0);
-    let state = solidcraft_doc::state_in_frame_at(&doc, &raw, component, owner_frame(s, &doc, component))?;
+    let state = torno_doc::state_in_frame_at(&doc, &raw, component, owner_frame(s, &doc, component))?;
     let plane = sketch_plane(&doc, id, &state)?;
-    let names = state.body(body).map(solidcraft_doc::naming::face_names).unwrap_or_default();
+    let names = state.body(body).map(torno_doc::naming::face_names).unwrap_or_default();
 
     let mut sk = sketch_store::read(&doc, id)?.clone();
     let mut links = Vec::with_capacity(indices.len());
     for &index in indices {
-        let resolved = solidcraft_doc::project::resolve_face_indices(&state, &plane, LinkKind::Project, body, &[index])?;
+        let resolved = torno_doc::project::resolve_face_indices(&state, &plane, LinkKind::Project, body, &[index])?;
         let link = sk.add_link_with_wires(LinkKind::Project, resolved.source, &resolved.geom, &resolved.wires)?;
         if let Some(entry) = sk.links.iter_mut().find(|entry| entry.id == link) {
             entry.face_name = names.get(index).cloned();
@@ -992,7 +992,7 @@ pub(super) fn auto_project_face(s: &mut Session, id: u64, _at: Vec3) -> Result<O
     let Some(anchor) = doc
         .feature(id)
         .and_then(|feature| match &feature.kind {
-            solidcraft_doc::FeatureKind::Sketch { plane, .. } => super::sketch::face::anchor(plane),
+            torno_doc::FeatureKind::Sketch { plane, .. } => super::sketch::face::anchor(plane),
             _ => None,
         })
         .cloned()
@@ -1001,9 +1001,9 @@ pub(super) fn auto_project_face(s: &mut Session, id: u64, _at: Vec3) -> Result<O
     };
     let raw = s.model.state_before(id);
     let author = doc.feature(id).map(|feature| feature.component).unwrap_or(0);
-    let state = solidcraft_doc::state_in_face_anchor_frame(&doc, &raw, &anchor, author)?;
+    let state = torno_doc::state_in_face_anchor_frame(&doc, &raw, &anchor, author)?;
     let plane = doc.resolve_face_anchor(&anchor, author, &raw)?;
-    let resolved = solidcraft_doc::project::resolve_anchored_face(&doc, &state, &plane, LinkKind::Project, &anchor)?;
+    let resolved = torno_doc::project::resolve_anchored_face(&doc, &state, &plane, LinkKind::Project, &anchor)?;
     let mut sk = sketch_store::read(&doc, id)?.clone();
     let link = sk.add_link_with_wires(LinkKind::Project, resolved.source, &resolved.geom, &resolved.wires)?;
     if let Some(link) = sk.links.iter_mut().find(|entry| entry.id == link) {

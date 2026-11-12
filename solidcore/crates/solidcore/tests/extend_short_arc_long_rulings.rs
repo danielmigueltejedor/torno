@@ -37,7 +37,7 @@ fn line(a: Point3, b: Point3) -> Curve {
 }
 
 /// A ring sector outside the arc from 90 to 99 degrees, swept 94 up, its ends cut off by a
-/// box: the cut wall carries its cylinder, with SolidCraft's fix list.
+/// box: the cut wall carries its cylinder, with Torno's fix list.
 fn wedge(k: &mut Kernel) -> Brep {
     let c = p(CENTRE.0, CENTRE.1);
     let at = |r: f64, deg: f64| {

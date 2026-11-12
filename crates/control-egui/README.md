@@ -1,8 +1,8 @@
-# solidcraft-control-egui
+# torno-control-egui
 
 The window's own control requests (docs/control-protocol.md), which any egui app answers the same
 way: `ui.screenshot` and `ui.resize`. The token files, the loopback server and the request types
-are `solidcraft-control`, which has no UI toolkit, so a headless engine, CLI or MCP bridge uses the
+are `torno-control`, which has no UI toolkit, so a headless engine, CLI or MCP bridge uses the
 control channel without compiling egui. No app types and no engine.
 
 ## API

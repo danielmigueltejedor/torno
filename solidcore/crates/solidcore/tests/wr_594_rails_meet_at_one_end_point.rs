@@ -1,7 +1,7 @@
 //! WR-594 (tangency-labs/smlib@5fdefb9): a circular round ending at a degenerate
 //! corner, whose cross section there is a point, kept a near pole instead of an exact
 //! one. Each rail is lifted from its own surface, so at the corner's vertex the rails'
-//! ends differ by the model's accuracy (6.5e-12 mm on SolidCraft's test-peg part).
+//! ends differ by the model's accuracy (6.5e-12 mm on Torno's test-peg part).
 //! `SmCircularCrossSectionFSG::CreateSurfaceFromCurves` makes the point section at
 //! the first rail's end, but the second rail, a boundary of the skinned surface, kept
 //! its own end, so the result's check refused the surface as close to singular at its

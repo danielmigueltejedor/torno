@@ -10,8 +10,8 @@ use crate::{
     job::{CancelToken, DielectricBoundary, ImageRequest, RaytraceOptions},
 };
 use solidcore_record::Vec3;
-use solidcraft_geom::prelude::*;
 use std::mem::size_of;
+use torno_geom::prelude::*;
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 enum Stage {

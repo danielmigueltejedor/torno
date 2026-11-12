@@ -1,5 +1,5 @@
 use super::*;
-use solidcraft_render::job::adaptive::AdaptiveSampling;
+use torno_render::job::adaptive::AdaptiveSampling;
 
 #[test]
 fn independent_pilots_never_enter_the_final_master_and_admission_counts_auxiliary_storage() {
@@ -21,7 +21,7 @@ fn independent_pilots_never_enter_the_final_master_and_admission_counts_auxiliar
     // The sphere's geometry preparation can dominate both peak estimates, hiding
     // a larger pixel stage beneath that already prepaid peak. With no geometry,
     // pixel storage determines the peak and must include the normalized plane too.
-    let empty = ProductScene { meshes: Vec::new(), bounds: solidcraft_geom::Aabb3::EMPTY };
+    let empty = ProductScene { meshes: Vec::new(), bounds: torno_geom::Aabb3::EMPTY };
     let old_pixel_peak = admission(&empty, &req, JobOptions { denoise: true, ..fixed }).unwrap();
     let new_pixel_peak = admission(&empty, &req, JobOptions { denoise: true, ..adaptive }).unwrap();
     assert_eq!(new_pixel_peak.estimated_total_bytes - old_pixel_peak.estimated_total_bytes, 16 * 16 * 64);
@@ -85,9 +85,9 @@ fn transmission_strata_preserve_opaque_stream_and_reduce_absorbing_sheet_error_a
     let b = image::load_from_memory(&b).unwrap().into_rgba8();
     assert!(a.as_raw().iter().zip(b.as_raw()).all(|(a, b)| a.abs_diff(*b) <= 1), "strata preserve opaque radiance within accumulation rounding");
     let mut source = glass_slab(true);
-    let transmission = solidcraft_render::transmission::Transmission::new(Vec3::new(3.0, 3.0, 3.0), Some(1.0)).unwrap();
+    let transmission = torno_render::transmission::Transmission::new(Vec3::new(3.0, 3.0, 3.0), Some(1.0)).unwrap();
     source.meshes[0].transmission = Some(transmission);
-    let (_, oracle) = solidcraft_render::transmission::slab(transmission, 1.0, 1.0, 1.0, 1.5).unwrap();
+    let (_, oracle) = torno_render::transmission::slab(transmission, 1.0, 1.0, 1.0, 1.5).unwrap();
     let mut squared_error = [0.0; 2];
     let mut mean = [0.0; 2];
     for seed in 0..32 {
@@ -124,7 +124,7 @@ fn adaptive_report_refuses_retired_device_before_readback() {
     let Some(executor) = executor() else { return };
     let options = JobOptions {
         samples: 16,
-        adaptive: Some(solidcraft_render::job::adaptive::AdaptiveSampling {
+        adaptive: Some(torno_render::job::adaptive::AdaptiveSampling {
             pilot_samples: 16,
             min_samples: 16,
             relative_error: 0.1,
@@ -224,11 +224,11 @@ fn every_adaptive_prefix_is_displayed_and_preview_work_keeps_final_png_exr_ident
             linear_exr: true,
             denoise,
             adaptive: Some(AdaptiveSampling { pilot_samples: 16, min_samples: 16, ..Default::default() }),
-            finishing: solidcraft_render::job::finishing::Finishing {
+            finishing: torno_render::job::finishing::Finishing {
                 rgb_gain: [1.2, 0.9, 1.1],
                 contrast: 1.1,
-                bloom: Some(solidcraft_render::job::bloom::Bloom { strength: 0.2, threshold: 0.1, radius: 1 }),
-                photographic: solidcraft_render::job::photographic::Photographic { grain: 0.01, seed: 17, ..Default::default() },
+                bloom: Some(torno_render::job::bloom::Bloom { strength: 0.2, threshold: 0.1, radius: 1 }),
+                photographic: torno_render::job::photographic::Photographic { grain: 0.01, seed: 17, ..Default::default() },
                 ..Default::default()
             },
             ..Default::default()

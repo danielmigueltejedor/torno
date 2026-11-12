@@ -1,7 +1,7 @@
 //! Modal confirmations share the Panel/Window frame and the single kit footer.
 use super::{Action, Footer, Window, actions::footer_with_left, text::paint_text};
 use egui::{Ui, vec2};
-use solidcraft_theme::Tokens;
+use torno_theme::Tokens;
 
 #[derive(Clone, Copy)]
 pub enum Tone {
@@ -104,7 +104,7 @@ impl<'a> Confirm<'a> {
                         } else {
                             crate::icons::paint_accented(ui.painter(), disc.shrink(t.space_8), self.icon, accent, 1.0);
                         }
-                        solidcraft_ui_registry::publish_rect("confirm:disc", disc);
+                        torno_ui_registry::publish_rect("confirm:disc", disc);
                         ui.vertical(|ui| {
                             ui.set_width(ui.available_width().max(0.0));
                             let (heading, _) = ui.allocate_exact_size(vec2(ui.available_width().max(0.0), t.form_close_size), egui::Sense::hover());
@@ -118,8 +118,8 @@ impl<'a> Confirm<'a> {
                                 .widget_info(|| egui::WidgetInfo::labeled(egui::Role::Label, ui.is_enabled(), self.title));
                             let response = super::icon_button_at(ui, close, "close", "Close");
                             closed = response.clicked();
-                            solidcraft_ui_registry::publish_target("dialog:close", response.rect);
-                            solidcraft_ui_registry::publish_rect("dialog:header", heading);
+                            torno_ui_registry::publish_target("dialog:close", response.rect);
+                            torno_ui_registry::publish_rect("dialog:header", heading);
                             message(ui);
                             if let Some(detail) = self.detail {
                                 super::list_frame(ui, "confirm_detail", |ui| {

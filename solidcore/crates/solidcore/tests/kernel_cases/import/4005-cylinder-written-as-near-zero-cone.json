@@ -49,6 +49,6 @@
   "ungraded": [],
   "what": "a cylinder r=5 h=10 whose side is a CONICAL_SURFACE with a semi-angle of 8e-12 rad (a cylinder to within rounding, as the exporter wrote it): the face must be read, not refused as a 'bad cone'",
   "why_not": [
-    "body \"pin\" is no kernel operation's output nor an operand: SolidCraft built it or changed the kernel's record"
+    "body \"pin\" is no kernel operation's output nor an operand: Torno built it or changed the kernel's record"
   ]
 }

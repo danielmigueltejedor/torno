@@ -3,7 +3,7 @@
 //! new geometry right away; ids are never reused after a delete.
 
 use serde_json::{Value, json};
-use solidcraft_sketch::{CurveKind, Sketch};
+use torno_sketch::{CurveKind, Sketch};
 
 use crate::Session;
 
@@ -383,8 +383,8 @@ fn a_curve_id_that_cannot_be_written_into_a_name_is_refused() {
     // seam, on a kernel that keeps the side whole). The id is never cut.
     let world = s.world_state().unwrap();
     let body = world.body("Body1").unwrap();
-    let faces = solidcraft_doc::naming::face_names(body);
-    let names = solidcraft_doc::naming::edge_names(body);
+    let faces = torno_doc::naming::face_names(body);
+    let names = torno_doc::naming::edge_names(body);
     let mesh = body.mesh();
     assert_eq!(names.len(), mesh.edge_faces.len());
     let mut sorted = names.clone();

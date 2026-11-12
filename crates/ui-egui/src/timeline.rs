@@ -3,18 +3,18 @@
 use crate::ui_kit::{Container, Edge, Status, Surface};
 use egui::{Rect, UiBuilder, pos2};
 use serde_json::{Value, json};
-use solidcraft_engine::doc::{
+use torno_engine::doc::{
     FeatureKind, FeatureResult, PlaneRef, SketchId,
     construct::{AxisDef, PointDef},
     kernel::{ImportReport, IssueKind},
 };
 
-use solidcraft_engine::schema::edit::PlaybackAction;
+use torno_engine::schema::edit::PlaybackAction;
 
 use crate::SolveApp;
 use crate::history_bar;
 use crate::ui_kit::Item;
-use solidcraft_theme::Tokens;
+use torno_theme::Tokens;
 
 /// Apply transport actions from the current marker; endpoints stay bounded, including an
 /// empty design. All orientations reach the same rollback command.
@@ -113,7 +113,7 @@ pub(crate) fn transport_availability(app: &SolveApp, control: crate::ui_kit::His
         }
         return playback_ready(app);
     }
-    let command = solidcraft_engine::find_command("timeline.roll_to").ok_or_else(|| solidcraft_ui_text::tr("cmd.timeline_roll_to").to_owned())?;
+    let command = torno_engine::find_command("timeline.roll_to").ok_or_else(|| torno_ui_text::tr("cmd.timeline_roll_to").to_owned())?;
     let info = command.info(&app.session);
     if info.enabled { Ok(()) } else { Err(info.disabled_reason.unwrap_or_else(|| info.label.to_owned())) }
 }
@@ -164,11 +164,11 @@ fn run_control_action(app: &mut SolveApp, action: history_bar::Action) {
 /// component out of the bar — shows or hides those components' entries (#10393).
 pub(crate) fn transport_items(app: &SolveApp) -> Vec<crate::ui_kit::Item> {
     let show = !app.preferences.history_play_button;
-    let label = solidcraft_ui_text::tr(if show { "ui.history_play_button_show" } else { "ui.history_play_button_hide" });
+    let label = torno_ui_text::tr(if show { "ui.history_play_button_show" } else { "ui.history_play_button_hide" });
     let mut items = vec![crate::ui_kit::Item::action("ui.historyPlayButton", label, "timeline_play").with(json!({ "show": show }))];
     if app.session.doc.components.iter().any(|c| c.history_hidden) {
         let show_hidden = !app.tree.history_show_hidden;
-        let label = solidcraft_ui_text::tr(if show_hidden { "ui.history_show_hidden" } else { "ui.history_hide_hidden" });
+        let label = torno_ui_text::tr(if show_hidden { "ui.history_show_hidden" } else { "ui.history_hide_hidden" });
         items.push(crate::ui_kit::Item::action("ui.historyShowHidden", label, "eye").with(json!({ "show": show_hidden })));
     }
     items
@@ -195,8 +195,8 @@ pub(crate) fn hovered_feature(app: &SolveApp) -> Option<u64> {
 /// The feature of the first face or edge picked in the view.
 pub(crate) fn picked_feature(app: &SolveApp) -> Option<u64> {
     app.session.selection.iter().find_map(|selection| match selection {
-        solidcraft_engine::Sel::Face { body, index, .. } => geometry_feature(app, body, Some(*index)),
-        solidcraft_engine::Sel::Edge { body, .. } => geometry_feature(app, body, None),
+        torno_engine::Sel::Face { body, index, .. } => geometry_feature(app, body, Some(*index)),
+        torno_engine::Sel::Edge { body, .. } => geometry_feature(app, body, None),
         _ => None,
     })
 }
@@ -269,8 +269,8 @@ pub(crate) fn icon_of(k: &FeatureKind) -> &'static str {
         FeatureKind::Torus { .. } => "torus",
         FeatureKind::Cone { .. } => "cone",
         FeatureKind::Combine { .. } => "combine",
-        FeatureKind::Pattern { pattern: solidcraft_engine::doc::PatternKind::Rectangular { .. }, .. } => "pattern_rect",
-        FeatureKind::Pattern { pattern: solidcraft_engine::doc::PatternKind::Path { .. }, .. } => "pattern_path",
+        FeatureKind::Pattern { pattern: torno_engine::doc::PatternKind::Rectangular { .. }, .. } => "pattern_rect",
+        FeatureKind::Pattern { pattern: torno_engine::doc::PatternKind::Path { .. }, .. } => "pattern_path",
         FeatureKind::Pattern { .. } => "pattern_circ",
         FeatureKind::Mirror { .. } => "mirror",
         FeatureKind::ConstructionPlane { plane } => construction_plane_icon(plane),
@@ -431,9 +431,7 @@ pub(crate) fn selected_feature_ids(app: &SolveApp) -> Vec<u64> {
         .doc
         .features
         .iter()
-        .filter(|feature| {
-            app.session.selection.iter().any(|selection| matches!(selection, solidcraft_engine::Sel::Feature { id } if *id == feature.id))
-        })
+        .filter(|feature| app.session.selection.iter().any(|selection| matches!(selection, torno_engine::Sel::Feature { id } if *id == feature.id)))
         .map(|feature| feature.id)
         .collect()
 }
@@ -448,8 +446,8 @@ pub(crate) fn menu_targets(app: &SolveApp, id: u64) -> Vec<u64> {
 /// Delete's label in a feature's menu: how many features it deletes when that is more than one.
 fn delete_label(count: usize) -> String {
     match count {
-        1 => solidcraft_ui_text::tr_label("Delete").to_string(),
-        n => solidcraft_ui_text::format("timeline.delete_many", &[("count", &n.to_string())]),
+        1 => torno_ui_text::tr_label("Delete").to_string(),
+        n => torno_ui_text::format("timeline.delete_many", &[("count", &n.to_string())]),
     }
 }
 
@@ -486,7 +484,7 @@ fn after_marker(app: &SolveApp, id: u64, index: usize, marker: usize, shown: Opt
         return None;
     }
     let key = if ids.len() == 1 { "timeline.delete_after_marker_one" } else { "timeline.delete_after_marker_other" };
-    Some((solidcraft_ui_text::format(key, &[("count", &ids.len().to_string())]), ids))
+    Some((torno_ui_text::format(key, &[("count", &ids.len().to_string())]), ids))
 }
 
 /// The [`after_marker`] entry as a button.
@@ -523,7 +521,7 @@ pub(crate) fn feature_items(app: &SolveApp, id: u64) -> Vec<Item> {
         Item::action("ui.groupFeatures", "Group Features", "feature_group")
             .with(json!({ "features": targets, "parent": parent }))
             .off_because(app.session.group_refusal(&targets, parent)),
-        Item::action("timeline.suppress", solidcraft_ui_text::tr(suppress), "suppress").with(json!({ "feature": id })),
+        Item::action("timeline.suppress", torno_ui_text::tr(suppress), "suppress").with(json!({ "feature": id })),
         Item::action("timeline.roll_to", "Roll History Marker Here", "rollback").with(json!({ "feature": id })),
         Item::action("ui.findBrowser", "Find in Browser", "list").with(json!({ "feature": id })),
         Item::sep(),
@@ -555,12 +553,12 @@ pub(crate) fn anchor_key(id: u64) -> String {
 
 /// Copy and Paste in a feature's timeline menu. Paste puts the copies at the history marker.
 pub(crate) fn clipboard_buttons(app: &mut SolveApp, ui: &mut egui::Ui, id: u64) {
-    if crate::ui_kit::menu::button(ui, solidcraft_ui_text::tr_label("Copy"), "copy").clicked() {
+    if crate::ui_kit::menu::button(ui, torno_ui_text::tr_label("Copy"), "copy").clicked() {
         let features = menu_targets(app, id);
         let _ = app.run("timeline.copy", json!({ "features": features }));
         ui.close();
     }
-    if crate::ui_kit::menu::button_enabled(ui, solidcraft_ui_text::tr_label("Paste"), "paste", !app.session.clipboard.is_empty()).clicked() {
+    if crate::ui_kit::menu::button_enabled(ui, torno_ui_text::tr_label("Paste"), "paste", !app.session.clipboard.is_empty()).clicked() {
         let _ = app.run("timeline.paste", json!({}));
         ui.close();
     }
@@ -583,7 +581,7 @@ pub(crate) fn feature_status_text(name: &str, ty: &str, result: Option<&FeatureR
 
 /// Where each feature's result is in `results`, by feature id: the first result of an id, as
 /// `Model::result` finds it.
-pub(crate) fn result_index(results: &[solidcraft_engine::doc::FeatureResult]) -> std::collections::HashMap<u64, usize> {
+pub(crate) fn result_index(results: &[torno_engine::doc::FeatureResult]) -> std::collections::HashMap<u64, usize> {
     results.iter().enumerate().rev().map(|(k, r)| (r.id, k)).collect()
 }
 
@@ -592,11 +590,11 @@ pub(crate) fn status_text(name: &str, ty: &str, error: Option<&str>, warning: Op
     let mut text = format!("{name}  ({ty})");
     if let Some(error) = error {
         text.push('\n');
-        text.push_str(&solidcraft_ui_text::format("timeline.feature_error", &[("message", &crate::i18n::tr_diagnostic(error))]));
+        text.push_str(&torno_ui_text::format("timeline.feature_error", &[("message", &crate::i18n::tr_diagnostic(error))]));
     }
     if let Some(warning) = warning {
         text.push('\n');
-        text.push_str(&solidcraft_ui_text::format("timeline.feature_warning", &[("message", &crate::i18n::tr_diagnostic(warning))]));
+        text.push_str(&torno_ui_text::format("timeline.feature_warning", &[("message", &crate::i18n::tr_diagnostic(warning))]));
     }
     text
 }
@@ -609,7 +607,7 @@ pub(crate) fn feature_status(app: &SolveApp, id: u64) -> Option<Status> {
 }
 
 /// The mark of the feature at `index` in the history, given how to find its result.
-fn status_at<'a>(app: &SolveApp, index: usize, result: impl FnOnce() -> Option<&'a solidcraft_engine::doc::FeatureResult>) -> Option<Status> {
+fn status_at<'a>(app: &SolveApp, index: usize, result: impl FnOnce() -> Option<&'a torno_engine::doc::FeatureResult>) -> Option<Status> {
     let feature = app.session.doc.features.get(index)?;
     if feature.suppressed || app.session.doc.marker.is_some_and(|marker| index >= marker) {
         return None;
@@ -654,7 +652,7 @@ pub(crate) fn feature_message(app: &SolveApp, id: u64) -> Option<String> {
     let mut text = feature_status_text(&feature.name, feature.kind.type_name(), Some(result));
     if let Some(report) = result.import_report.as_ref().filter(|r| !r.issues.is_empty()) {
         text.push_str("\n\n");
-        text.push_str(solidcraft_ui_text::tr("import_report.details"));
+        text.push_str(torno_ui_text::tr("import_report.details"));
         for issue in &report.issues {
             text.push('\n');
             text.push_str(&issue.detail);
@@ -711,10 +709,10 @@ pub(crate) fn import_summary(report: &ImportReport) -> String {
     let parts_of = |kind| parts.get(&kind).map_or(0, std::collections::BTreeSet::len);
     let faces_of = |kind| faces.get(&kind).copied().unwrap_or(0);
     let counted =
-        |key: &str, n: usize| solidcraft_ui_text::format(&format!("{key}_{}", if n == 1 { "one" } else { "other" }), &[("count", &n.to_string())]);
+        |key: &str, n: usize| torno_ui_text::format(&format!("{key}_{}", if n == 1 { "one" } else { "other" }), &[("count", &n.to_string())]);
     let mut out = Vec::new();
     if report.parts > 1 && report.solids < report.parts {
-        out.push(solidcraft_ui_text::format("import_report.solids", &[("solids", &report.solids.to_string()), ("parts", &report.parts.to_string())]));
+        out.push(torno_ui_text::format("import_report.solids", &[("solids", &report.solids.to_string()), ("parts", &report.parts.to_string())]));
     }
     let sentences = [
         ("import_report.not_imported", parts_of(IssueKind::NotImported)),
@@ -730,7 +728,7 @@ pub(crate) fn import_summary(report: &ImportReport) -> String {
     out.extend(sentences.iter().filter(|(_, n)| *n > 0).map(|(key, n)| counted(key, *n)));
     let lost = [IssueKind::NotImported, IssueKind::Refused, IssueKind::ImportedAsSurfaces, IssueKind::FaceLeftOut, IssueKind::OpenBody];
     if lost.iter().any(|k| parts.contains_key(k)) {
-        out.push(solidcraft_ui_text::tr("import_report.hint").to_string());
+        out.push(torno_ui_text::tr("import_report.hint").to_string());
     }
     out.join(" ")
 }
@@ -740,7 +738,7 @@ pub(crate) fn message_button(app: &SolveApp, ui: &mut egui::Ui, id: u64) {
     let Some(text) = feature_message(app, id) else { return };
     let failed = app.session.model.result(id).is_some_and(|r| r.error.is_some());
     let label = if failed { "Copy Error Message" } else { "Copy Warning Message" };
-    if crate::ui_kit::menu::button(ui, solidcraft_ui_text::tr_label(label), "copy").clicked() {
+    if crate::ui_kit::menu::button(ui, torno_ui_text::tr_label(label), "copy").clicked() {
         ui.ctx().copy_text(text);
         ui.close();
     }
@@ -792,7 +790,7 @@ pub(crate) fn pick_feature_into_dialog(app: &mut SolveApp, id: u64, modifiers: e
     let Some(d) = app.dialog.as_mut().filter(|d| d.active_input().is_some_and(|i| i.accept & crate::selection::FEATURES != 0)) else {
         return false;
     };
-    let feature = solidcraft_engine::Sel::Feature { id };
+    let feature = torno_engine::Sel::Feature { id };
     // The chat's picker takes a picked step out on a plain click too, as the model view does.
     let toggle = modifiers.command || modifiers.ctrl || matches!(d.kind, crate::dialogs::Kind::ChatContext);
     if toggle || !d.active_input().is_some_and(|i| i.items.contains(&feature)) {
@@ -814,8 +812,7 @@ fn toggle_feature(app: &mut SolveApp, id: u64) {
     app.tree.timeline_anchor = Some(anchor_key(id));
     let selected = selected_feature_ids(app);
     if selected.contains(&id) {
-        let rest: Vec<_> =
-            app.session.selection.iter().filter(|s| !matches!(s, solidcraft_engine::Sel::Feature { id: f } if *f == id)).cloned().collect();
+        let rest: Vec<_> = app.session.selection.iter().filter(|s| !matches!(s, torno_engine::Sel::Feature { id: f } if *f == id)).cloned().collect();
         let _ = app.run("select.set", json!({ "items": rest }));
     } else {
         let _ = app.run("select.set", json!({ "items": [{"type": "feature", "id": id}], "add": true }));
@@ -841,7 +838,7 @@ pub(crate) fn stop_playback(app: &mut SolveApp) {
     }
 }
 
-pub(crate) fn playback_command_info(app: &SolveApp, command: &solidcraft_engine::CommandSpec) -> solidcraft_engine::CommandInfo {
+pub(crate) fn playback_command_info(app: &SolveApp, command: &torno_engine::CommandSpec) -> torno_engine::CommandInfo {
     let mut info = command.info(&app.session);
     if app.timeline_playback.is_some() {
         info.label = "Stop History";
@@ -870,11 +867,11 @@ fn playback_blocked(app: &SolveApp) -> bool {
 
 fn playback_ready(app: &SolveApp) -> Result<(), String> {
     if app.computing_since().is_some() || playback_blocked(app) {
-        return Err(solidcraft_ui_text::tr("ui.history_play_finish_action").into());
+        return Err(torno_ui_text::tr("ui.history_play_finish_action").into());
     }
     let n = app.session.doc.features.len();
     if app.session.doc.marker.unwrap_or(n) >= n {
-        return Err(solidcraft_ui_text::tr("ui.history_play_roll_back").into());
+        return Err(torno_ui_text::tr("ui.history_play_roll_back").into());
     }
     Ok(())
 }
@@ -999,17 +996,17 @@ const BAR_HANDLES: history_bar::Handles<'static> =
 /// A feature as the bar draws it: id, name, icon, suppressed, type name, kind.
 type BarFeature = (u64, String, &'static str, bool, &'static str, TimelineKind);
 
-/// The History Play control's names: SolidCraft's commands that play and stop History.
+/// The History Play control's names: Torno's commands that play and stop History.
 pub(crate) fn play_labels() -> crate::ui_kit::PlayLabels<'static> {
-    crate::ui_kit::PlayLabels { play: solidcraft_ui_text::tr("cmd.timeline_play"), stop: solidcraft_ui_text::tr("cmd.timeline_stop") }
+    crate::ui_kit::PlayLabels { play: torno_ui_text::tr("cmd.timeline_play"), stop: torno_ui_text::tr("cmd.timeline_stop") }
 }
 
-/// The bar as SolidCraft describes it; the strip sets the marker's slot and the step count.
+/// The bar as Torno describes it; the strip sets the marker's slot and the step count.
 fn bar(app: &SolveApp, floating: bool) -> history_bar::Bar<'static> {
     let t = Tokens::get();
     history_bar::Bar {
-        title: solidcraft_ui_text::tr("ui.history_title"),
-        marker_tip: solidcraft_ui_text::tr("ui.history_marker_tip"),
+        title: torno_ui_text::tr("ui.history_title"),
+        marker_tip: torno_ui_text::tr("ui.history_marker_tip"),
         play: app.preferences.history_play_button,
         playing: app.timeline_playback.is_some(),
         play_labels: play_labels(),
@@ -1126,7 +1123,7 @@ fn click_feature(app: &mut SolveApp, order: &[u64], id: u64, modifiers: egui::Mo
     }
 }
 
-/// SolidCraft's entries of the bar: its features, and its folded runs, folders, joints and trays.
+/// Torno's entries of the bar: its features, and its folded runs, folders, joints and trays.
 struct BarSteps<'a> {
     app: &'a mut SolveApp,
     history: &'a crate::timeline_fold::History,
@@ -1151,8 +1148,8 @@ impl history_bar::Contents for BarSteps<'_> {
         let results = result_index(&app.session.model.results);
         // The features picked in the design or in the open dialog, collected once for the
         // strip: the dialog built its item list again for every chip.
-        let feature_of = |selection: &solidcraft_engine::Sel| match selection {
-            solidcraft_engine::Sel::Feature { id } => Some(*id),
+        let feature_of = |selection: &torno_engine::Sel| match selection {
+            torno_engine::Sel::Feature { id } => Some(*id),
             _ => None,
         };
         let picked: std::collections::HashSet<u64> = app
@@ -1213,7 +1210,7 @@ impl history_bar::Contents for BarSteps<'_> {
                 // Greyed out says only "not shown": say why (#8100).
                 if rolled {
                     tip.push('\n');
-                    tip.push_str(solidcraft_ui_text::tr("timeline.feature_rolled_back"));
+                    tip.push_str(torno_ui_text::tr("timeline.feature_rolled_back"));
                 }
                 if let Some(state) = sketch_state {
                     tip.push('\n');
@@ -1223,7 +1220,7 @@ impl history_bar::Contents for BarSteps<'_> {
                     tip += &format!("\n{ms:.1} ms");
                 }
                 tip.push('\n');
-                tip.push_str(solidcraft_ui_text::tr("timeline.feature_hint"));
+                tip.push_str(torno_ui_text::tr("timeline.feature_hint"));
                 tip
             };
             let rect = s.step(&history_bar::Step {
@@ -1284,7 +1281,7 @@ pub(crate) fn find_in_browser(app: &mut SolveApp, id: u64) {
 #[cfg(test)]
 mod tests {
     use serde_json::json;
-    use solidcraft_engine::doc::{FeatureKind, PlaneRef};
+    use torno_engine::doc::{FeatureKind, PlaneRef};
 
     use crate::scenario::Harness;
 
@@ -1438,7 +1435,7 @@ mod tests {
     fn history_status_translates_prefixes_and_both_diagnostics() {
         crate::i18n::install();
         let diagnostic = "there is no body to cut or intersect in component 'Mount'; the tool may overlap 'Plate' in component 'Base' — activate that component or pick the body as a target";
-        let _language = solidcraft_ui_text::scope("ja");
+        let _language = torno_ui_text::scope("ja");
         let translated = crate::i18n::tr_diagnostic(diagnostic);
         assert_ne!(translated, diagnostic);
         assert_eq!(
@@ -1451,7 +1448,7 @@ mod tests {
             super::status_text("My feature", "ExtrudeFeature", None, Some("Custom part: 1.25 mm")),
             "My feature  (ExtrudeFeature)\n警告: Custom part: 1.25 mm"
         );
-        let _english = solidcraft_ui_text::scope("en");
+        let _english = torno_ui_text::scope("en");
         assert_eq!(super::status_text("Box", "BoxFeature", Some("error"), Some("warning")), "Box  (BoxFeature)\nError: error\nWarning: warning");
     }
 
@@ -1460,8 +1457,8 @@ mod tests {
     #[test]
     fn an_import_summary_counts_parts_and_faces_in_plain_words() {
         crate::i18n::install();
-        use solidcraft_engine::doc::kernel::{ImportIssue, ImportReport, IssueKind};
-        let _english = solidcraft_ui_text::scope("en");
+        use torno_engine::doc::kernel::{ImportIssue, ImportReport, IssueKind};
+        let _english = torno_ui_text::scope("en");
         let issue =
             |kind, item: Option<u64>, faces, detail: &str| ImportIssue { kind, item, part: String::new(), faces, times: 1, detail: detail.into() };
         let report = ImportReport {
@@ -1515,7 +1512,7 @@ mod tests {
             let marker = crate::scenario::rect_of("history:marker").unwrap().center();
             h.call("ui.move", json!({"x": marker.x, "y": marker.y}));
             h.frames(90);
-            let expected = solidcraft_ui_text::Locale::for_language("ja").text("ui.history_marker_tip");
+            let expected = torno_ui_text::Locale::for_language("ja").text("ui.history_marker_tip");
             let output = egui::FullOutput { shapes: h.shapes.clone(), ..Default::default() };
             let texts: Vec<_> = crate::test_support::text_shapes(&output).map(|t| t.galley.text()).collect();
             assert!(texts.contains(&expected), "left={left}: {texts:?}");
@@ -1538,8 +1535,8 @@ mod tests {
         h.step(&json!({"click": {"handle": "timeline:First"}, "button": "right"})).unwrap();
         let texts = painted(&h);
         assert!(!texts.iter().any(|t| t == "Suppress Features"), "the English literal is painted in the Japanese UI: {texts:?}");
-        let ja = solidcraft_ui_text::Locale::for_language("ja").text("timeline.suppress_features").to_string();
-        let ja_unsuppress = solidcraft_ui_text::Locale::for_language("ja").text("timeline.unsuppress_features").to_string();
+        let ja = torno_ui_text::Locale::for_language("ja").text("timeline.suppress_features").to_string();
+        let ja_unsuppress = torno_ui_text::Locale::for_language("ja").text("timeline.unsuppress_features").to_string();
         assert!(texts.contains(&ja), "the item must read {ja}: {texts:?}");
         h.step(&json!({"key": "Escape"})).unwrap();
         // A suppressed feature offers the other way round.
@@ -1553,14 +1550,14 @@ mod tests {
         h.step(&json!({"key": "Escape"})).unwrap();
         // The English wording is the one the menu always showed: the change adds messages, it
         // does not reword the item.
-        assert_eq!(solidcraft_ui_text::Locale::for_language("en").text("timeline.suppress_features"), "Suppress Features");
-        assert_eq!(solidcraft_ui_text::Locale::for_language("en").text("timeline.unsuppress_features"), "Unsuppress Features");
+        assert_eq!(torno_ui_text::Locale::for_language("en").text("timeline.suppress_features"), "Suppress Features");
+        assert_eq!(torno_ui_text::Locale::for_language("en").text("timeline.unsuppress_features"), "Unsuppress Features");
     }
 
     #[test]
     fn construction_history_matches_the_tool_that_created_it() {
         use solidcore_record::Vec3;
-        use solidcraft_engine::doc::{
+        use torno_engine::doc::{
             FeatureKind, PlaneRef,
             construct::{AxisDef, GeoRef, PointDef},
         };
@@ -1598,7 +1595,7 @@ mod tests {
             cases.push((format!("construct.plane.{id}"), FeatureKind::ConstructionPlane { plane }));
         }
         for (id, feature) in cases {
-            let command = solidcraft_engine::find_command(&id).unwrap();
+            let command = torno_engine::find_command(&id).unwrap();
             let icon = super::icon_of(&feature);
             assert_eq!(icon, command.icon, "{id}: history and toolbar disagree");
             assert!(!crate::icon_svg::resolve(icon).placeholder, "{id}");
@@ -1621,20 +1618,20 @@ mod tests {
             ("solid.web", json!({"type":"rib", "sketch":0, "curves":[], "thickness":"2", "web":true})),
         ];
         for (id, definition) in cases {
-            let feature: solidcraft_engine::doc::FeatureKind = serde_json::from_value(definition).unwrap();
-            let command = solidcraft_engine::find_command(id).unwrap();
+            let feature: torno_engine::doc::FeatureKind = serde_json::from_value(definition).unwrap();
+            let command = torno_engine::find_command(id).unwrap();
             assert_eq!(super::icon_of(&feature), command.icon, "{id}: history and toolbar disagree");
         }
     }
 
     #[test]
     fn a_path_pattern_keeps_its_path_icon_in_history() {
-        use solidcraft_engine::doc::{FeatureKind, PatternKind};
+        use torno_engine::doc::{FeatureKind, PatternKind};
         let feature = FeatureKind::Pattern {
             features: Vec::new(),
             bodies: Vec::new(),
             pattern: PatternKind::Path {
-                path_sketch: solidcraft_engine::doc::SketchId(0),
+                path_sketch: torno_engine::doc::SketchId(0),
                 path: Vec::new(),
                 count: "2".into(),
                 spacing: "10".into(),
@@ -1643,7 +1640,7 @@ mod tests {
                 orient: false,
             },
         };
-        assert_eq!(super::icon_of(&feature), solidcraft_engine::find_command("solid.pattern.path").unwrap().icon);
+        assert_eq!(super::icon_of(&feature), torno_engine::find_command("solid.pattern.path").unwrap().icon);
     }
 
     fn two_boxes(left: bool) -> Harness {
@@ -1683,19 +1680,19 @@ mod tests {
         // At the end: only the steps back are on, and Play has nothing left to play.
         assert_eq!(enabled(&h), state([("first", true), ("back", true), ("play", false), ("forward", false), ("last", false)]));
         let play = crate::context_menu::items(&h.app, &folder).into_iter().find(|i| i.id == "ui.historyTransport" && i.label == "Play History");
-        assert_eq!(play.and_then(|i| i.tip).as_deref(), Some(solidcraft_ui_text::tr("ui.history_play_roll_back")), "Play says why it is off");
+        assert_eq!(play.and_then(|i| i.tip).as_deref(), Some(torno_ui_text::tr("ui.history_play_roll_back")), "Play says why it is off");
         // The bar's controls menu follows a separator.
         let items = crate::context_menu::items(&h.app, &folder);
         assert!(items.iter().any(|i| i.is_sep()) && items.iter().any(|i| i.id == "ui.historyPlayButton"));
         // A right-click on the folder opens the menu; Go to beginning rolls to the start.
-        h.step(&json!({"click": {"browser": solidcraft_ui_text::tr("ui.history_title")}, "button": "right"})).unwrap();
+        h.step(&json!({"click": {"browser": torno_ui_text::tr("ui.history_title")}, "button": "right"})).unwrap();
         assert_eq!(h.app.menu.target, folder);
-        h.call("ui.menuPick", json!({"item": solidcraft_ui_text::tr("ui.history_first")}));
+        h.call("ui.menuPick", json!({"item": torno_ui_text::tr("ui.history_first")}));
         h.frames(4);
         assert_eq!(h.app.session.doc.marker, Some(0));
         assert_eq!(enabled(&h), state([("first", false), ("back", false), ("play", true), ("forward", true), ("last", true)]));
         // One step forward leaves every control something to do.
-        let forward = crate::context_menu::items(&h.app, &folder).into_iter().find(|i| i.label == solidcraft_ui_text::tr("ui.history_forward"));
+        let forward = crate::context_menu::items(&h.app, &folder).into_iter().find(|i| i.label == torno_ui_text::tr("ui.history_forward"));
         crate::context_menu::run_item(&mut h.app, &forward.unwrap(), egui::Pos2::ZERO);
         h.frames(4);
         assert_eq!(h.app.session.doc.marker, Some(1));
@@ -1712,7 +1709,7 @@ mod tests {
         h.app.ui.tab = "INSPECT".into();
         h.frames(3);
         assert!(crate::scenario::handle_at("history:play").is_some(), "Play sits in the History controls by default");
-        let command = solidcraft_engine::find_command("timeline.play").unwrap();
+        let command = torno_engine::find_command("timeline.play").unwrap();
         let info = crate::render_workspace::interactive_command_info(&h.app, command);
         assert!(info.enabled);
         assert_eq!((info.label, info.icon), ("Play History", "timeline_play"));
@@ -1911,14 +1908,14 @@ mod tests {
             right_click(&mut h, "history:back");
             assert!(h.app.viewport.context_menu.is_some() && h.app.menu.target == Target::HistoryControls, "{dock} {width}");
             let items = crate::context_menu::items(&h.app, &Target::HistoryControls);
-            assert_eq!(items[0].label, solidcraft_ui_text::tr("ui.history_play_button_hide"));
+            assert_eq!(items[0].label, torno_ui_text::tr("ui.history_play_button_hide"));
             crate::context_menu::run_item(&mut h.app, &items[0], egui::Pos2::ZERO);
             assert!(!h.app.preferences.history_play_button);
             h.frames(2);
             assert!(crate::scenario::handle_at("history:play").is_none(), "the four controls again; {dock} {width}");
 
             let items = crate::context_menu::items(&h.app, &Target::HistoryControls);
-            assert_eq!(items[0].label, solidcraft_ui_text::tr("ui.history_play_button_show"));
+            assert_eq!(items[0].label, torno_ui_text::tr("ui.history_play_button_show"));
             crate::context_menu::run_item(&mut h.app, &items[0], egui::Pos2::ZERO);
             h.frames(2);
             assert!(crate::scenario::handle_at("history:play").is_some(), "and Play back; {dock} {width}");
@@ -2017,7 +2014,7 @@ mod tests {
         assert!(h.app.shell.history.unwrap().contains(last), "the last chip scrolled into view: {last:?}");
         h.step(&json!({"click": {"handle": "timeline:S199"}})).unwrap();
         h.frames(2);
-        assert_eq!(h.app.session.selection, [solidcraft_engine::Sel::Feature { id: found }], "the drawn chip is the one clicked");
+        assert_eq!(h.app.session.selection, [torno_engine::Sel::Feature { id: found }], "the drawn chip is the one clicked");
 
         // Scrolled to the end, the chips out of view on the left still hold their slots.
         let target = crate::scenario::handle_at("timeline:S180").unwrap();
@@ -2483,8 +2480,8 @@ mod tests {
         assert_eq!(h.call("ui.prefs", json!({}))["result"]["history_steps_component"], true, "a second click turns it on again");
         for locale in ["ar", "de", "he", "ja", "ko", "vi", "zh"] {
             for id in ["prefs.history_steps_component", "prefs.history_steps_component_note"] {
-                let text = solidcraft_ui_text::Locale::for_language(locale).text(id);
-                assert_ne!(text, solidcraft_ui_text::Locale::for_language("en").text(id), "{locale} translates {id}");
+                let text = torno_ui_text::Locale::for_language(locale).text(id);
+                assert_ne!(text, torno_ui_text::Locale::for_language("en").text(id), "{locale} translates {id}");
             }
         }
     }
@@ -2515,7 +2512,7 @@ mod tests {
             crate::context_menu::run_item(&mut h.app, &item, egui::pos2(0.0, 0.0));
             h.frames(30);
             let last = h.app.session.doc.find_feature("Last").unwrap().id;
-            assert_eq!(h.app.session.selection, [solidcraft_engine::Sel::Feature { id: last }], "left={left}");
+            assert_eq!(h.app.session.selection, [torno_engine::Sel::Feature { id: last }], "left={left}");
             assert!(shown(&h), "left={left}: Find in Timeline scrolled the found feature into the timeline");
             assert!(h.app.tree.timeline_reveal.is_none(), "left={left}: the request is done once drawn");
         }
@@ -2549,8 +2546,8 @@ mod tests {
 
             let state = crate::open_meshing::session_world(&h.app.session);
             let body = state.bodies.first().unwrap();
-            let names = solidcraft_engine::doc::naming::face_names(body);
-            let index = names.iter().position(|name| solidcraft_engine::doc::persistent_name::made_by(name) == Some(hole)).unwrap();
+            let names = torno_engine::doc::naming::face_names(body);
+            let index = names.iter().position(|name| torno_engine::doc::persistent_name::made_by(name) == Some(hole)).unwrap();
             let plate = body.name.clone();
             h.app.viewport.hover = Some(crate::viewport::Hit::Face { body: plate.clone(), index, point: solidcore_record::Vec3::ZERO });
             assert_eq!(crate::timeline::hovered_feature(&h.app), Some(hole), "left={left}: hovering the hole's face finds the hole");
@@ -3001,14 +2998,13 @@ mod tests {
     fn floating_strip_has_only_history_text_and_accents_the_last_done_chip_and_marker() {
         let mut h = two_boxes(false);
         h.app.ui.tab = "SURFACE".into();
-        let t = solidcraft_theme::Tokens::get();
+        let t = torno_theme::Tokens::get();
         let accent = crate::workspace::tab_accent(&t, "SURFACE");
         for marker_position in [None, Some(1), Some(0)] {
             h.app.session.doc_mut().marker = marker_position;
             let marker_index = marker_position.unwrap_or(2);
             for selected in [None, Some(0), Some(1)] {
-                h.app.session.selection =
-                    selected.map(|i| solidcraft_engine::Sel::Feature { id: h.app.session.doc.features[i].id }).into_iter().collect();
+                h.app.session.selection = selected.map(|i| torno_engine::Sel::Feature { id: h.app.session.doc.features[i].id }).into_iter().collect();
                 let ctx = crate::fonts::test_context();
                 let mut out = ctx.run_ui(egui::RawInput::default(), |ui| super::timeline(&mut h.app, ui));
                 out.textures_delta.clear();

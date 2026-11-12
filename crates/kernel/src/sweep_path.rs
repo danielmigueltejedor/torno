@@ -5,7 +5,7 @@
 //! SMLib's sweep along the lines between them ([`sweep_path_with`]).
 
 use solidcore_record::{Plane, Region2, Seg2, Vec2, Vec3};
-use solidcraft_geom::prelude::*;
+use torno_geom::prelude::*;
 
 use crate::body::Body;
 use crate::numbered::NumberedLoop;
@@ -260,7 +260,7 @@ pub(crate) fn controlled_stations(
     };
     let f0 = *f.first().ok_or_else(bad)?;
     // Twist and scale act about the path where it leaves the profile (its start tangent): the
-    // same axis whatever plane the profile was drawn on (solidcraft#12337). Where the profile is
+    // same axis whatever plane the profile was drawn on (torno#12337). Where the profile is
     // square to the path this is its normal, pointing the way the path leaves it.
     let axis = t0.normalized().ok_or_else(|| KernelError::Invalid("sweep frame".into()))?;
     if ctl.orientation == SweepOrientation::Parallel {
@@ -416,13 +416,13 @@ pub(crate) fn rail_frame(along: Vec3, across: Vec3, along_to: Vec3, across_to: V
 /// Sweep a planar region along a 3D polyline path. The profile keeps its relation to the path
 /// (it need not touch it); the path should start near the profile.
 pub fn sweep_path(plane: &Plane, region: &Region2, path: &[Vec3]) -> Result<Body> {
-    let _span = solidcraft_profile::span("kernel", "sweep_path");
+    let _span = torno_profile::span("kernel", "sweep_path");
     sweep_path_with(plane, region, path, &SweepControl::default())
 }
 
 /// [`sweep_path`] with sweep options: orientation, twist and end scale.
 pub fn sweep_path_with(plane: &Plane, region: &Region2, path: &[Vec3], ctl: &SweepControl) -> Result<Body> {
-    let _span = solidcraft_profile::span("kernel", "sweep_path_with");
+    let _span = torno_profile::span("kernel", "sweep_path_with");
     ctl.check()?;
     smlib_sweep_points(plane, region, &crate::PointPath::polyline(path.to_vec()), ctl)
 }
@@ -442,8 +442,8 @@ pub(crate) fn smlib_sweep_points(plane: &Plane, region: &Region2, path: &crate::
 
 #[cfg(test)]
 mod tests {
-    use solidcraft_geom::prelude::*;
     use std::f64::consts::{FRAC_PI_2, FRAC_PI_4, PI};
+    use torno_geom::prelude::*;
 
     use solidcore_record::{Loop2, Plane, Region2, Vec2, Vec3};
 
@@ -596,7 +596,7 @@ mod tests {
     }
 
     /// The twist turns the profile about the path, whichever plane it was drawn on
-    /// (solidcraft#12337): a line along Y swept 40 along X with a quarter turn is the same
+    /// (torno#12337): a line along Y swept 40 along X with a quarter turn is the same
     /// helicoid strip drawn on the XY plane (the path's plane) as on the YZ plane (square to the
     /// path): its far end stands along Z, and its area is the strip's,
     /// 40 ∫₀²⁰ √(1 + (kr)²) dr with k = (π/2)/40, which is 875.9.

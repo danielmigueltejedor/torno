@@ -47,7 +47,7 @@ const L: f64 = 100.0;
 const T: f64 = 10.0;
 const W: f64 = 100.0;
 
-/// Every flag on, as SolidCraft's backend runs blends (`fillet_refuse_rounds_breaking_through`
+/// Every flag on, as Torno's backend runs blends (`fillet_refuse_rounds_breaking_through`
 /// off, its preset), with `outline` as this construction's flag.
 fn kernel(outline: bool) -> Kernel {
     let mut k = Kernel::default();
@@ -73,7 +73,7 @@ fn pick(k: &Kernel, b: &Brep, q: [f64; 3]) -> EdgeId {
         .0
 }
 
-/// A round (`fillet_edges` with SolidCraft's arguments: G1, thumbweight 1) of the edge
+/// A round (`fillet_edges` with Torno's arguments: G1, thumbweight 1) of the edge
 /// through `at`.
 fn round(k: &mut Kernel, b: &mut Brep, at: [f64; 3], r: f64) -> solidcore::Result<()> {
     let e = pick(k, b, at);

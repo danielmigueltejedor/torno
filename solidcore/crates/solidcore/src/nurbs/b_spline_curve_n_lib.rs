@@ -71,7 +71,7 @@
 //!   `short`), so on its unchecked one-vector path a degree of 32768 or more wraps; the
 //!   port takes a `usize` (no wrap), and the difftest FFI caps the degree at
 //!   `NL_MAXDEG` (17).
-//! - **Given parameters (SolidCraft fork `0cc8cd4`; `68f6913` in tangency-labs/smlib#76,
+//! - **Given parameters (Torno fork `0cc8cd4`; `68f6913` in tangency-labs/smlib#76,
 //!   the same patch).** The fork's optional last
 //!   argument `cpOptParams` of `CreateInterpolatingCurve` is
 //!   [`BSplineCurve::create_interpolating_curve_with_params`];
@@ -834,7 +834,7 @@ impl BSplineCurve {
     }
 
     /// [`BSplineCurve::create_interpolating_curve`] with optional parameters of the
-    /// points (SolidCraft fork `cpOptParams` of `CreateInterpolatingCurve`). With
+    /// points (Torno fork `cpOptParams` of `CreateInterpolatingCurve`). With
     /// `params`, one per point and strictly increasing, the end-derivative branches
     /// (no vectors, a start vector, start and end vectors, with their higher
     /// derivatives) interpolate at them in place of `par`, the end derivatives taken
@@ -875,7 +875,7 @@ impl BSplineCurve {
 
         let more = more_vectors.unwrap_or(&[]);
 
-        // SolidCraft change: the given parameters, one per point, strictly increasing
+        // Torno change: the given parameters, one per point, strictly increasing
         if let Some(u) = params {
             if u.len() != points.len() || (vectors.len() == points.len() && points.len() > 2) {
                 return Err(SolidError::invalid_input(

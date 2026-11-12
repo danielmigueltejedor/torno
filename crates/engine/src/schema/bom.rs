@@ -14,7 +14,7 @@ use schemars::{JsonSchema, Schema, SchemaGenerator, json_schema};
 use serde::de::Error as _;
 use serde::{Deserialize, Deserializer, Serialize};
 use serde_json::{Map, Value};
-use solidcraft_doc::metadata::MAX_KEYS;
+use torno_doc::metadata::MAX_KEYS;
 
 use super::check::whole;
 use super::motion::require;
@@ -101,7 +101,7 @@ fn free_properties<'de, D: Deserializer<'de>>(d: D) -> Result<Option<Entries>, D
 
 fn values_schema(_: &mut SchemaGenerator) -> Schema {
     json_schema!({
-        "description": "Several properties at once, {key: value, …}, at most 256 keys: SolidCraft's keys (the ones `document.metadata`'s `properties` lists) and `bom_type`, which take text, or a reverse-DNS key such as `com.example.tool`, which takes an object. Each key reads its value as the parameter of the same name does (`part_number`, `bom_type`, …): for a text key, empty text or null removes it; for `bom_type` it means `normal`.",
+        "description": "Several properties at once, {key: value, …}, at most 256 keys: Torno's keys (the ones `document.metadata`'s `properties` lists) and `bom_type`, which take text, or a reverse-DNS key such as `com.example.tool`, which takes an object. Each key reads its value as the parameter of the same name does (`part_number`, `bom_type`, …): for a text key, empty text or null removes it; for `bom_type` it means `normal`.",
         "type": "object",
         "maxProperties": MAX_KEYS
     })

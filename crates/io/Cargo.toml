@@ -1,6 +1,6 @@
 [package]
-name = "solidcraft-io"
-description = "SolidCraft file formats: designs (JSON), STL, OBJ, STEP, IGES, 3MF and glTF, and FreeCAD/Rhino import"
+name = "torno-io"
+description = "Torno file formats: designs (JSON), STL, OBJ, STEP, IGES, 3MF and glTF, and FreeCAD/Rhino import"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
@@ -14,11 +14,11 @@ trust-unknown-source = []
 
 [dependencies]
 solidcore-record = { workspace = true }
-solidcraft-color = { workspace = true }
-solidcraft-geom = { workspace = true }
-solidcraft-kernel = { workspace = true }
-solidcraft-doc = { workspace = true }
-solidcraft-profile = { workspace = true }
+torno-color = { workspace = true }
+torno-geom = { workspace = true }
+torno-kernel = { workspace = true }
+torno-doc = { workspace = true }
+torno-profile = { workspace = true }
 thiserror = { workspace = true }
 log = { workspace = true }
 zip = { workspace = true }
@@ -48,4 +48,4 @@ rustix = { version = "1", default-features = false, features = ["std", "fs"] }
 gethostname = { workspace = true }
 
 [dev-dependencies]
-solidcraft-testkit = { workspace = true }
+torno-testkit = { workspace = true }

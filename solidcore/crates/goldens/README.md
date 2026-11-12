@@ -47,7 +47,7 @@ nice -n 10 cargo test -p goldens              # the harness's and the runners' o
 | `--report-dir D` / `--no-report` | where `--jobs` keeps each unit's wall time (`times.tsv`, default `reports/goldens/`), which orders the next run's queue / keep none |
 | `--digest-dir D` | Rust outputs as digests, no golden ([below](#digests-native-against-wasm32)) |
 | `--list` | registered units and their case counts |
-| `--ssi-corpus`, `--solidcraft-cases`, `--step-corpus` | correctness reports, not the gate ([below](#--ssi-corpus-exact-ground-truth-ssi-corpus)) |
+| `--ssi-corpus`, `--torno-cases`, `--step-corpus` | correctness reports, not the gate ([below](#--ssi-corpus-exact-ground-truth-ssi-corpus)) |
 
 Output: one line per unit,
 
@@ -293,10 +293,10 @@ for harness errors; verdicts never fail the run.
     SSI_ENGINE=solidcore-rust python3 -I corpus/ssi/scoring/score.py gsi 1e-6
   ```
 
-## `--solidcraft-cases`: Torno regression cases
+## `--torno-cases`: Torno regression cases
 
 A correctness report, separate from the gate like `--ssi-corpus`: it never changes a
-unit's status and verdicts never fail the run. `fixtures/solidcraft/` holds one file per
+unit's status and verdicts never fail the run. `fixtures/torno/` holds one file per
 Torno issue reproduced on Torno's earlier kernel (the issue, the fixing PR if
 any, and the test or issue reproduction the cases come from). Omit `pr` for an unresolved
 issue; its report records `pr: null`. Each case is a list of `SM_API`-level steps
@@ -305,8 +305,8 @@ fixed once the operations run end to end here. Geometry and tolerances are those
 Torno PR's own test wherever it has one.
 
 ```sh
-nice -n 10 cargo run -p goldens -- --solidcraft-cases                 # all cases (Rust only)
-nice -n 10 cargo run -p goldens -- --solidcraft-cases '3526-*'        # ids (<file stem>/<name>) matching a glob
+nice -n 10 cargo run -p goldens -- --torno-cases                 # all cases (Rust only)
+nice -n 10 cargo run -p goldens -- --torno-cases '3526-*'        # ids (<file stem>/<name>) matching a glob
 ```
 
 * **Steps** (`"op"`): `box`, `sphere`, `cylinder` (`axis`, default +Z), `rotate` (a copy of a
@@ -366,23 +366,23 @@ nice -n 10 cargo run -p goldens -- --solidcraft-cases '3526-*'        # ids (<fi
 * **Output.** One line per case, then
 
   ```
-  SOLIDCRAFT-CASES rust: PASS=… FAIL=… UNCHECKED=… ERROR=… DEFERRED=… (cases=…)
-  SOLIDCRAFT-CASES rust: blocked_by=<unit>(<cases>),…
+  TORNO-CASES rust: PASS=… FAIL=… UNCHECKED=… ERROR=… DEFERRED=… (cases=…)
+  TORNO-CASES rust: blocked_by=<unit>(<cases>),…
   ```
 
-  and `reports/solidcraft-cases.json` (`reports/solidcraft-cases_<glob>.json` for a
+  and `reports/torno-cases.json` (`reports/torno-cases_<glob>.json` for a
   glob): per case its source links, verdict, deferral, measured values and checks.
   With no matching cases, the report still contains an empty case list and zero
   verdict counts, replacing any earlier report at that path. `--no-report` writes nothing.
-* `cargo test -p goldens --lib solidcraft` checks that every case file loads, every
+* `cargo test -p goldens --lib torno` checks that every case file loads, every
   case runs to a verdict, and every deferral names a plan unit.
-* **Adding cases:** add a new `fixtures/solidcraft/<issue>-<slug>.json`. Files load in
+* **Adding cases:** add a new `fixtures/torno/<issue>-<slug>.json`. Files load in
   sorted order and nothing counts them, so no Rust file changes unless the case needs
   a new step kind.
 
 ### Sheet flange corner overlap (Torno #3170, PR #3472)
 
-`fixtures/solidcraft/3170-sheet-corner-overlap.json` ports
+`fixtures/torno/3170-sheet-corner-overlap.json` ports
 `overlapping_corners_keep_surface_clearance_and_flat_material` from Torno
 PR #3472 (published revision `0420e385`). The 16 original combinations are signed
 90/72 degree bends, Partial/Full overlap (1/2 mm), and front/left covering choices.
@@ -410,8 +410,8 @@ already implements the sheet feature. Butt/standalone joins, per-corner expressi
 and UI behavior are outside this original 16-case port.
 
 ```sh
-nice -n 10 cargo test -p goldens --lib solidcraft
-nice -n 10 cargo run -p goldens -- --solidcraft-cases '3170-*' --no-report
+nice -n 10 cargo test -p goldens --lib torno
+nice -n 10 cargo run -p goldens -- --torno-cases '3170-*' --no-report
 ```
 
 This case builds on the whole-operation harness in solidcore PR #345; it does not

@@ -1,5 +1,5 @@
 use serde_json::{Value, json};
-use solidcraft_geom::prelude::*;
+use torno_geom::prelude::*;
 
 use crate::Session;
 
@@ -34,13 +34,13 @@ fn manual_projection_captures_the_requested_coincident_body_producer() {
         let sk = &state.sketch(id).unwrap().sketch;
         assert!(!sk.links[0].lost);
         assert_eq!(sk.links[0].face_name, Some(format!("F{producer}:+z")));
-        assert!(matches!(&sk.links[0].source,solidcraft_sketch::LinkSource::Face{body,at} if body=="Target" && (at.z-20.).abs()<1e-6));
+        assert!(matches!(&sk.links[0].source,torno_sketch::LinkSource::Face{body,at} if body=="Target" && (at.z-20.).abs()<1e-6));
         assert!(sk.points.iter().any(|point| point.pos.x > 19.));
         assert!(sk.points.iter().any(|point| point.pos.y > 19.));
         assert!((session.world_state().unwrap().body("Control").unwrap().mesh().bounds().max.z - 10.).abs() < 1e-6);
     };
     verify(&s);
-    verify(&Session::new(solidcraft_doc::Document::from_json(&s.doc.to_json()).unwrap()));
+    verify(&Session::new(torno_doc::Document::from_json(&s.doc.to_json()).unwrap()));
 }
 
 #[test]
@@ -49,19 +49,19 @@ fn initial_projection_retains_selected_face_when_closest_point_lands_on_shared_e
     run(&mut s, "solid.box", json!({"length":20,"width":20,"height":10,"body_name":"Target"}));
     let state = s.model.state();
     let body = state.body("Target").unwrap();
-    let source = solidcraft_sketch::LinkSource::Face { body: "Target".into(), at: solidcore_record::Vec3::new(-0.1, 5., 10.5) };
-    let resolved = solidcraft_doc::project::resolve(
+    let source = torno_sketch::LinkSource::Face { body: "Target".into(), at: solidcore_record::Vec3::new(-0.1, 5., 10.5) };
+    let resolved = torno_doc::project::resolve(
         &s.doc,
         &std::collections::BTreeMap::new(),
         &state,
         &solidcore_record::Plane::XY,
-        solidcraft_sketch::LinkKind::Project,
+        torno_sketch::LinkKind::Project,
         &source,
     )
     .unwrap();
     let index = resolved.face_index.unwrap();
-    let expected = solidcraft_doc::naming::face_names(body)[index].clone();
-    let solidcraft_sketch::LinkSource::Face { at, .. } = resolved.source else { panic!("not face") };
+    let expected = torno_doc::naming::face_names(body)[index].clone();
+    let torno_sketch::LinkSource::Face { at, .. } = resolved.source else { panic!("not face") };
     assert!(at.x.abs() < 1e-6 && (at.z - 10.).abs() < 1e-6, "closestpoint must be on shared top/wall edge: {at:?}");
     let plane = body.body.face_plane(index).unwrap();
     let id = run(&mut s, "sketch.create", json!({"plane":{"origin":plane.origin,"x_dir":plane.x,"y_dir":plane.y}}))["sketch"].as_u64().unwrap();
@@ -72,7 +72,7 @@ fn initial_projection_retains_selected_face_when_closest_point_lands_on_shared_e
     assert_eq!(sk.links[0].face_name, Some(expected));
     assert!(!sk.links[0].lost);
     assert_eq!(sk.curves.len(), 4);
-    let reopened = Session::new(solidcraft_doc::Document::from_json(&s.doc.to_json()).unwrap());
+    let reopened = Session::new(torno_doc::Document::from_json(&s.doc.to_json()).unwrap());
     assert_eq!(reopened.model.state().sketch(id).unwrap().sketch.curves, sk.curves);
 }
 
@@ -84,7 +84,7 @@ fn box_part(s: &mut Session) {
     let l = ids(&r["curves"]);
     let sk = s.doc.sketch(s.active_sketch.unwrap()).unwrap();
     let start = match sk.curves[0].kind {
-        solidcraft_sketch::CurveKind::Line { a, .. } => sk.points[a].id.clone(),
+        torno_sketch::CurveKind::Line { a, .. } => sk.points[a].id.clone(),
         _ => panic!(),
     };
     run(s, "sketch.constraint.coincident", json!({"a": start, "b": "origin"}));
@@ -198,7 +198,7 @@ fn auto_project_can_be_turned_off() {
 /// next design started or opened in the session (`doc.recover` replaces the session the same way).
 #[test]
 fn auto_project_off_holds_for_designs_started_and_opened() {
-    let dir = std::env::temp_dir().join(format!("solidcraft-auto-project-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("torno-auto-project-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&dir);
     std::fs::create_dir_all(&dir).unwrap();
     let file = dir.join("box.solidcraft");
@@ -294,12 +294,12 @@ fn a_construction_axis_projects_and_stays_linked() {
     run(&mut s, "timeline.rename", json!({"feature": "Axis1", "name": "Hinge axis"}));
     let state = s.model.state();
     let link = &state.sketch(sketch).unwrap().sketch.links[0];
-    assert_eq!(link.source, solidcraft_sketch::LinkSource::Axis { name: "Hinge axis".into() });
+    assert_eq!(link.source, torno_sketch::LinkSource::Axis { name: "Hinge axis".into() });
     assert!(!link.lost, "renamed, the axis is still found");
     // Moved after the sketch, the axis can't be found from it: the link is lost, saying why, at
     // once and when the design is opened again (#9544). Moved back, it is found again.
     run(&mut s, "timeline.reorder", json!({"feature": "Hinge axis", "position": 1}));
-    let opened = Session::new(solidcraft_doc::Document::from_json(&s.doc.to_json()).unwrap());
+    let opened = Session::new(torno_doc::Document::from_json(&s.doc.to_json()).unwrap());
     for session in [&s, &opened] {
         assert!(session.model.state().sketch(sketch).unwrap().sketch.links[0].lost);
         let warnings = session.model.result(sketch).and_then(|r| r.warning.clone()).unwrap_or_default();
@@ -341,11 +341,11 @@ fn a_construction_point_projects_and_stays_linked() {
     run(&mut s, "timeline.redefine", json!({"feature": "Point1", "command": "construct.point.vertex", "params": point(10.0, 35.0)}));
     check(&mut s, solidcore_record::Vec3::new(10.0, 5.0, 35.0));
     run(&mut s, "timeline.rename", json!({"feature": "Point1", "name": "Pivot"}));
-    let opened = Session::new(solidcraft_doc::Document::from_json(&s.doc.to_json()).unwrap());
+    let opened = Session::new(torno_doc::Document::from_json(&s.doc.to_json()).unwrap());
     for session in [&s, &opened] {
         let state = session.model.state();
         let link = &state.sketch(sketch).unwrap().sketch.links[0];
-        assert_eq!(link.source, solidcraft_sketch::LinkSource::ConstructionPoint { name: "Pivot".into() });
+        assert_eq!(link.source, torno_sketch::LinkSource::ConstructionPoint { name: "Pivot".into() });
         assert!(!link.lost, "renamed, the point is still found");
     }
     // A name that is no construction point is refused, by its name.
@@ -384,7 +384,7 @@ fn a_construction_point_of_a_moved_component_projects_where_it_is_placed() {
     let placement = s.doc.occurrences.iter().find(|o| o.component == part).map(|o| o.id).unwrap();
     run(&mut s, "occurrence.ground", json!({"occurrence": placement, "grounded": false}));
     run(&mut s, "occurrence.move", json!({"occurrence": placement, "translate": [100, 0, 0], "capture": true}));
-    let opened = Session::new(solidcraft_doc::Document::from_json(&s.doc.to_json()).unwrap());
+    let opened = Session::new(torno_doc::Document::from_json(&s.doc.to_json()).unwrap());
     for session in [&s, &opened] {
         assert!(near(at(session, root), (110.0, 5.0)), "the root's projection moves with the part: {:?}", at(session, root));
         assert!(near(at(session, own), (10.0, 5.0)), "the part's own projection stays: {:?}", at(session, own));
@@ -410,8 +410,8 @@ fn a_construction_point_of_the_second_author_occurrence_stays_in_its_own_frame()
     };
     let id = run(&mut s, "sketch.create", json!({"plane":pick,"project_edges":false}))["sketch"].as_u64().unwrap();
     let feature = s.doc.feature(id).unwrap();
-    let solidcraft_doc::FeatureKind::Sketch { plane, .. } = &feature.kind else { panic!("not a sketch") };
-    assert_eq!(solidcraft_doc::face_anchor::plane_face_anchor(plane).unwrap().author_path, vec![second]);
+    let torno_doc::FeatureKind::Sketch { plane, .. } = &feature.kind else { panic!("not a sketch") };
+    assert_eq!(torno_doc::face_anchor::plane_face_anchor(plane).unwrap().author_path, vec![second]);
     run(&mut s, "sketch.project", json!({"refs":[{"point":"Pivot"}]}));
     // Check the immediate creation path as well as the later model refresh.
     let check = |s: &Session| {
@@ -431,7 +431,7 @@ fn a_construction_point_of_the_second_author_occurrence_stays_in_its_own_frame()
     run(&mut s, "occurrence.ground", json!({"occurrence":second,"grounded":false}));
     run(&mut s, "occurrence.move", json!({"occurrence":second,"translate":[0,15,0],"capture":true}));
     check(&s);
-    let mut reopened = Session::new(solidcraft_doc::Document::from_json(&s.doc.to_json()).unwrap());
+    let mut reopened = Session::new(torno_doc::Document::from_json(&s.doc.to_json()).unwrap());
     check(&reopened);
     run(&mut reopened, "sketch.edit", json!({"sketch":id}));
     check(&reopened);
@@ -529,7 +529,7 @@ fn deleting_part_of_an_intersection_does_not_bring_it_back() {
     xs.sort_by(f64::total_cmp);
     assert!(xs.len() == 2 && (xs[0] + 10.0).abs() < 1e-6 && (xs[1] - 10.0).abs() < 1e-6, "{xs:?}");
     // Reopened, the same.
-    let reopened = Session::new(solidcraft_doc::Document::from_json(&s.doc.to_json()).unwrap());
+    let reopened = Session::new(torno_doc::Document::from_json(&s.doc.to_json()).unwrap());
     assert_eq!(evaluated_curves(&reopened, id), [("l1".to_string(), true)]);
 }
 
@@ -569,7 +569,7 @@ fn a_reference_whose_body_is_gone_fails_its_sketch_asking_for_it_again() {
     let name = s.doc.sketch(s.doc.features.last().unwrap().id).unwrap().links[0].edge_name.clone().unwrap();
     run(&mut s, "timeline.suppress", json!({"feature": boxf, "suppressed": true}));
     let r = s.model.results.last().unwrap();
-    assert_eq!(r.error.as_deref().and_then(solidcraft_doc::reselect_parts), Some((r.name.as_str(), name.as_str())), "{r:?}");
+    assert_eq!(r.error.as_deref().and_then(torno_doc::reselect_parts), Some((r.name.as_str(), name.as_str())), "{r:?}");
 }
 
 #[test]
@@ -647,7 +647,7 @@ fn three_d_sketch_curves() {
     assert!((ends[0].x + ends[1].x).abs() < tol, "{ends:?}");
     // Along its exact curves (the wire's points are its spans' polygon), on the sphere's top.
     for c in &w.exact {
-        let eval = solidcraft_geom::brep::eval::CurveEval::new(&c.curve).unwrap();
+        let eval = torno_geom::brep::eval::CurveEval::new(&c.curve).unwrap();
         for k in 0..=32 {
             let p = eval.point(c.interval[0] + (c.interval[1] - c.interval[0]) * f64::from(k) / 32.0).unwrap();
             assert!((p.len() - 20.0).abs() < tol && p.y.abs() < tol && p.z >= top - tol, "{p:?}");
@@ -694,9 +694,9 @@ fn three_d_sketch_curves() {
 #[test]
 fn intersection_curve_of_picked_faces_spans_the_whole_surface() {
     use solidcore_record::Plane;
-    use solidcraft_doc::project::resolve;
-    use solidcraft_sketch::{LinkKind, LinkSource};
     use std::collections::BTreeMap;
+    use torno_doc::project::resolve;
+    use torno_sketch::{LinkKind, LinkSource};
 
     let mut s = Session::default();
     run(&mut s, "parameters.add", json!({"name": "wall_h", "expression": "20 mm"}));
@@ -1040,18 +1040,17 @@ fn project_and_include_from_other_bodies() {
     run(&mut s, "sketch.finish", json!({}));
     // Widen the second box: the projection follows (its far edge is at 70).
     run(&mut s, "parameters.change", json!({"name": "w", "expression": "20 mm"}));
-    let id = s.doc.features.iter().find(|f| matches!(f.kind, solidcraft_doc::FeatureKind::Sketch { .. })).unwrap().id;
+    let id = s.doc.features.iter().find(|f| matches!(f.kind, torno_doc::FeatureKind::Sketch { .. })).unwrap().id;
     let si = run(&mut s, "sketch.inspect", json!({"sketch": id}));
     assert!(xs(&si).iter().any(|x| (x - 70.0).abs() < 1e-6), "{:?}", xs(&si));
     // Remove the cylinder: the edge included from it is gone, and the sketch asks for it again.
-    let cyl = s.doc.features.iter().find(|f| matches!(f.kind, solidcraft_doc::FeatureKind::Cylinder { .. })).unwrap().id;
+    let cyl = s.doc.features.iter().find(|f| matches!(f.kind, torno_doc::FeatureKind::Cylinder { .. })).unwrap().id;
     run(&mut s, "timeline.delete", json!({"feature": cyl}));
     let t = run(&mut s, "document.inspect", json!({}));
     let row = t["timeline"].as_array().unwrap().iter().find(|r| r["id"] == json!(id)).cloned().unwrap();
     let error = row["error"].as_str().unwrap_or_default();
     assert!(
-        solidcraft_doc::reselect_parts(error)
-            .is_some_and(|(feature, reference)| feature == row["name"] && reference.starts_with(&format!("F{cyl}:"))),
+        torno_doc::reselect_parts(error).is_some_and(|(feature, reference)| feature == row["name"] && reference.starts_with(&format!("F{cyl}:"))),
         "{row}"
     );
 }
@@ -1135,12 +1134,11 @@ fn a_rectangle_put_onto_a_projected_edge_stays_a_closed_profile() {
     // Picked by a point inside, it extrudes to a 20 x 15 x 10 block of its own.
     run(&mut s, "sketch.finish", json!({}));
     run(&mut s, "solid.extrude", json!({"sketch": id, "profiles": [{"point": [15, 7.5]}], "distance": 10, "operation": "new", "body_name": "Pad"}));
-    let volume = |s: &Session, name: &str| {
-        s.model.state().body(name).unwrap().body.mesh(&solidcraft_kernel::MeshTolerance::chord(1e-4)).unwrap().measure().volume
-    };
+    let volume =
+        |s: &Session, name: &str| s.model.state().body(name).unwrap().body.mesh(&torno_kernel::MeshTolerance::chord(1e-4)).unwrap().measure().volume;
     assert!((volume(&s, "Pad") - 3000.0).abs() < 1e-6, "{}", volume(&s, "Pad"));
     assert!((volume(&s, &block) - 24000.0).abs() < 1e-6, "{}", volume(&s, &block));
-    let reopened = Session::new(solidcraft_doc::Document::from_json(&s.doc.to_json()).unwrap());
+    let reopened = Session::new(torno_doc::Document::from_json(&s.doc.to_json()).unwrap());
     assert!((volume(&reopened, "Pad") - 3000.0).abs() < 1e-6, "{}", volume(&reopened, "Pad"));
 }
 
@@ -1189,8 +1187,7 @@ fn a_face_engraved_with_text_projects_its_letters_exactly_and_extrudes() {
         .curves
         .iter()
         .filter(|c| {
-            c.link.is_some()
-                && matches!(c.kind, solidcraft_sketch::CurveKind::Spline { control: true, .. } | solidcraft_sketch::CurveKind::Conic { .. })
+            c.link.is_some() && matches!(c.kind, torno_sketch::CurveKind::Spline { control: true, .. } | torno_sketch::CurveKind::Conic { .. })
         })
         .count();
     assert!(pieces > 100, "{pieces}");
@@ -1203,7 +1200,7 @@ fn a_face_engraved_with_text_projects_its_letters_exactly_and_extrudes() {
 #[test]
 fn a_face_sketch_saved_with_fitted_letters_reopens_and_builds_the_same() {
     let text = include_str!("../../../../tests/projection/before-1508/engraved_face_sketched.json");
-    let mut s = Session::new(solidcraft_doc::Document::from_json(text).unwrap());
+    let mut s = Session::new(torno_doc::Document::from_json(text).unwrap());
     let volume = run(&mut s, "inspect.measure", json!({}))["total"]["volume_mm3"].as_f64().unwrap();
     for name in ["Extrude2", "Sketch3", "Extrude3"] {
         let id = s.doc.find_feature(name).unwrap().id;
@@ -1223,8 +1220,7 @@ fn a_face_sketch_saved_with_fitted_letters_reopens_and_builds_the_same() {
         .curves
         .iter()
         .filter(|c| {
-            c.link.is_some()
-                && matches!(c.kind, solidcraft_sketch::CurveKind::Spline { control: true, .. } | solidcraft_sketch::CurveKind::Conic { .. })
+            c.link.is_some() && matches!(c.kind, torno_sketch::CurveKind::Spline { control: true, .. } | torno_sketch::CurveKind::Conic { .. })
         })
         .count();
     assert!(pieces > 0, "{pieces}");
@@ -1258,7 +1254,7 @@ fn a_face_seen_edge_on_projects_as_its_silhouette_and_follows_edits() {
     let st = s.model.state();
     let sk = &st.sketch(sketch).unwrap().sketch;
     let ci = sk.link_curves(&link)[0];
-    let solidcraft_sketch::CurveKind::Line { a, b } = sk.curves[ci].kind else { panic!("not a line") };
+    let torno_sketch::CurveKind::Line { a, b } = sk.curves[ci].kind else { panic!("not a line") };
     assert!((sk.point(a).unwrap().x - 50.0).abs() < 1e-6 && (sk.point(b).unwrap().x - 50.0).abs() < 1e-6);
 }
 
@@ -1447,8 +1443,8 @@ fn intersect_on_a_top_face_gives_its_outline() {
 /// The profile they bound, extruded the box's height, is the box: its sides are upright.
 #[test]
 fn a_free_form_edge_projects_as_one_spline_with_its_own_knots() {
-    use solidcraft_sketch::CurveKind;
-    let volume = |s: &Session, body: &str| solidcraft_kernel::measure(&s.world_state().unwrap().body(body).unwrap().body).unwrap().volume;
+    use torno_sketch::CurveKind;
+    let volume = |s: &Session, body: &str| torno_kernel::measure(&s.world_state().unwrap().body(body).unwrap().body).unwrap().volume;
     let mut s = Session::default();
     run(&mut s, "solid.box", json!({"corner":[0,0,0],"length":40,"width":20,"height":10,"body_name":"B"}));
     run(&mut s, "solid.fillet", json!({"body":"B","edges":[[0,0,5],[40,0,5],[40,20,5],[0,20,5]],"radius":5,"type":"g2"}));
@@ -1512,7 +1508,7 @@ fn whole_body_project_preserves_the_arc_of_a_chamfered_round_edge() {
     assert!(result.warning.is_none(), "a rebuilt projection nothing depends on needs no warning: {:?}", result.warning);
     assert!((solved.plane.origin.z - 20.).abs() < 1e-6);
     assert!(
-        sketch.curves.iter().any(|curve| matches!(curve.kind, solidcraft_sketch::CurveKind::Arc { .. })),
+        sketch.curves.iter().any(|curve| matches!(curve.kind, torno_sketch::CurveKind::Arc { .. })),
         "the rounded chamfer silhouette should contain an arc, not only line segments: {:?}",
         sketch.curves
     );
@@ -1520,7 +1516,7 @@ fn whole_body_project_preserves_the_arc_of_a_chamfered_round_edge() {
 
 #[test]
 fn whole_body_project_stays_on_the_body_outline_after_a_late_chamfer() {
-    use solidcraft_sketch::CurveKind;
+    use torno_sketch::CurveKind;
     let planes: [([i32; 3], &str); 3] = [([20, 15, 20], "top"), ([20, 0, 10], "front"), ([40, 15, 10], "side")];
     let chamfers: [[i32; 3]; 4] = [[40, 15, 20], [20, 0, 20], [40, 0, 10], [38, 2, 20]];
     for (face, plane) in planes {
@@ -1566,7 +1562,7 @@ fn whole_body_project_stays_on_the_body_outline_after_a_late_chamfer() {
 
 #[test]
 fn whole_body_project_of_a_filleted_plate_keeps_exact_lines_and_arcs() {
-    use solidcraft_sketch::CurveKind;
+    use torno_sketch::CurveKind;
     let mut s = Session::default();
     run(&mut s, "solid.box", json!({"length": 80, "width": 50, "height": 8, "body_name": "Plate"}));
     run(&mut s, "solid.fillet", json!({"edges": [[0, 0, 4], [80, 0, 4], [80, 50, 4], [0, 50, 4]], "radius": 6}));
@@ -1617,7 +1613,7 @@ fn whole_body_project_of_a_filleted_plate_keeps_exact_lines_and_arcs() {
 /// edge is a circle (the selection readout says so): it projects as an arc of that circle.
 #[test]
 fn a_rounded_slot_rim_projects_as_an_arc_of_its_circle() {
-    use solidcraft_sketch::CurveKind;
+    use torno_sketch::CurveKind;
     let mut s = Session::default();
     run(&mut s, "solid.box", json!({"length": 40, "width": 30, "height": 10, "body_name": "Plate"}));
     run(&mut s, "solid.cylinder", json!({"radius": 6.5, "height": 20, "base": [20, 2, -5], "operation": "cut", "targets": ["Plate"]}));
@@ -1666,7 +1662,7 @@ fn a_rounded_slot_rim_projects_as_an_arc_of_its_circle() {
 /// and came in as 74 short lines. Faces that lie edge-on are edge-on in every triangle.
 #[test]
 fn whole_body_project_of_a_chamfered_hook_keeps_its_arcs() {
-    use solidcraft_sketch::CurveKind;
+    use torno_sketch::CurveKind;
     let mut s = Session::default();
     run(&mut s, "sketch.create", json!({"plane": "XY"}));
     run(&mut s, "sketch.line", json!({"points": [[0, 60], [0, 0]]}));
@@ -1713,7 +1709,7 @@ fn whole_body_project_of_a_chamfered_hook_keeps_its_arcs() {
 
 #[test]
 fn whole_body_intersect_of_a_filleted_plate_keeps_exact_lines_and_arcs() {
-    use solidcraft_sketch::CurveKind;
+    use torno_sketch::CurveKind;
     let mut s = Session::default();
     run(&mut s, "solid.box", json!({"length": 80, "width": 50, "height": 8, "body_name": "Plate"}));
     let sketch = run(&mut s, "sketch.create", json!({"plane": "YZ", "offset": 36, "project_edges": false}))["sketch"].as_u64().unwrap();
@@ -1747,7 +1743,7 @@ fn whole_body_intersect_of_a_filleted_plate_keeps_exact_lines_and_arcs() {
 }
 #[test]
 fn whole_body_intersect_keeps_a_small_round_between_short_walls() {
-    use solidcraft_sketch::CurveKind;
+    use torno_sketch::CurveKind;
     // A tapered groove on each side stops 2 mm short of the R2 corner rounds: walls of 2 mm, a
     // round, walls of 2 mm, which a loose fit takes for one larger arc that misses the walls.
     let mut s = Session::default();
@@ -1862,7 +1858,7 @@ fn a_thicker_angle_moves_the_projected_face_of_the_sketch_on_it() {
         assert_eq!(ss.sketch.constraints.len(), 1);
     };
     check(&s);
-    check(&Session::new(solidcraft_doc::Document::from_json(&s.doc.to_json()).unwrap()));
+    check(&Session::new(torno_doc::Document::from_json(&s.doc.to_json()).unwrap()));
 }
 
 /// A sphere's outline from above is its equator: one circle and one profile. Flat triangles beside
@@ -1965,7 +1961,7 @@ fn a_second_placements_face_and_edge_project_where_it_is_placed() {
     };
     check(&s, 0.0);
     // A design opened again, so rebuilt from its features, finds the copy as well.
-    check(&Session::new(solidcraft_doc::Document::from_json(&s.doc.to_json()).unwrap()), 0.0);
+    check(&Session::new(torno_doc::Document::from_json(&s.doc.to_json()).unwrap()), 0.0);
     // Moving the copy moves what was projected from it.
     let first = s.doc.occurrences[0].id;
     let copy = s.doc.occurrences.iter().map(|o| o.id).find(|id| *id != first).unwrap();
@@ -1976,7 +1972,7 @@ fn a_second_placements_face_and_edge_project_where_it_is_placed() {
     run(&mut s, "body.rename", json!({"body":"Block","name":"Base"}));
     assert!(s.model.state().sketch(sketches[0]).unwrap().sketch.links.iter().all(|l| l.source.bodies() == ["Base (Housing:2)"]));
     check(&s, 15.0);
-    check(&Session::new(solidcraft_doc::Document::from_json(&s.doc.to_json()).unwrap()), 15.0);
+    check(&Session::new(torno_doc::Document::from_json(&s.doc.to_json()).unwrap()), 15.0);
 }
 
 /// #13142: projected references can start as construction geometry, asked for per call or for
@@ -2025,7 +2021,7 @@ fn projected_references_can_start_as_construction() {
 /// name says nothing of the patch), so the sketch still builds once finished.
 #[test]
 fn a_face_of_an_imported_mesh_projects_its_flat_patch() {
-    let dir = std::env::temp_dir().join(format!("solidcraft-project-mesh-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("torno-project-mesh-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
     let stl = dir.join("box.stl");
     let mut src = Session::default();
@@ -2065,7 +2061,7 @@ fn a_face_of_an_imported_mesh_projects_its_flat_patch() {
 /// not be taken for a circle seen at a slant (an ellipse); a tessellated circle still is one.
 #[test]
 fn a_mesh_face_keeps_its_straight_sides_on_a_slanted_plane() {
-    let dir = std::env::temp_dir().join(format!("solidcraft-project-mesh-slant-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("torno-project-mesh-slant-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
     let mut src = Session::default();
     run(&mut src, "solid.box", json!({"length": 20, "width": 10, "height": 5, "body_name": "box"}));

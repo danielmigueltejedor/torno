@@ -1,7 +1,7 @@
 //! Exact convex parallel boundaries with persistent extinct arc identities.
-use solidcraft_geom::prelude::*;
 use std::collections::{BTreeMap, BTreeSet};
 use std::f64::consts::TAU;
+use torno_geom::prelude::*;
 
 use serde::{Deserialize, Serialize};
 use solidcore_record::{Seg2, Vec2};

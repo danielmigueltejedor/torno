@@ -5,7 +5,7 @@
 //! attribute on each of its faces and edges into a body that owns its geometry: 6
 //! faces, 12 edges, 8 vertices, volume 6000, all 18 attributes, a clean Level2
 //! `check_brep`, and a union with another such copy that matches the union of two
-//! `api_brep_copy` copies under explicit, disjoint namings (SolidCraft's `copy_of`).
+//! `api_brep_copy` copies under explicit, disjoint namings (Torno's `copy_of`).
 
 #![allow(
     clippy::unwrap_used,
@@ -109,7 +109,7 @@ fn assert_close(v: f64, analytic: f64, what: &str) {
     );
 }
 
-/// SolidCraft's `copy_of`: `api_brep_copy` with copy `n` named in a key domain of its own.
+/// Torno's `copy_of`: `api_brep_copy` with copy `n` named in a key domain of its own.
 fn named_copy(k: &mut Kernel, b: &Brep, n: u64) -> Brep {
     fn named(e: EntityRef, domain: u64) -> ObjectRef {
         let r = topology_ref(0, e);

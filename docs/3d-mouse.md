@@ -79,7 +79,7 @@ retries every second while nothing answers, and shows **Connected** with the pro
 is. Only the window with focus moves, and not on the start page or while a file dialog is open.
 
 The program is the server; Torno connects and first sends one line,
-`{"t":"hello","app":"solidcraft","version":"<version>"}`. Then the program sends one JSON object per
+`{"t":"hello","app":"torno","version":"<version>"}`. Then the program sends one JSON object per
 line (UTF-8, `\n`-terminated, at most 4096 bytes); anything else, and any message Torno doesn't
 know, is ignored:
 

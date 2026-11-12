@@ -1,4 +1,4 @@
-//! #2844: the round and the chamfer of a ruled loft's circular rim (solidcraft#12034, the
+//! #2844: the round and the chamfer of a ruled loft's circular rim (torno#12034, the
 //! kernel case `fillets/12034-round-loft-square-to-circle-circular-rim`). The loft, degree 1,
 //! runs from the square of side 30 at z = 0 (four lines) to the circle r 10 at z = 30 (four
 //! quarter arcs, each centred on a side's direction): six faces, the top a plane disc. Each wall

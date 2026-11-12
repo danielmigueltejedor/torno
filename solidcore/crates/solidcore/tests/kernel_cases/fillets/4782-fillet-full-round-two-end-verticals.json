@@ -161,7 +161,7 @@
     "blend_dropping"
   ],
   "ungraded": [
-    "continuity: SolidCraft computes it",
+    "continuity: Torno computes it",
     "faces: graded merged across analytic surfaces (6), the records have 7"
   ],
   "what": "both vertical edges of a 20 mm wide box end rounded r10, half the width: the rounds meet tangent and use up the end face (a full round)",

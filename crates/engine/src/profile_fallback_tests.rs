@@ -5,7 +5,7 @@
 //! fails and takes its body (and everything after it) with it.
 
 use serde_json::{Value, json};
-use solidcraft_geom::MeshGeom;
+use torno_geom::MeshGeom;
 
 use crate::Session;
 
@@ -19,7 +19,7 @@ fn run(s: &mut Session, id: &str, p: Value) -> Value {
 }
 
 fn volume(s: &Session) -> f64 {
-    s.model.state().bodies.iter().map(|b| b.body.mesh(&solidcraft_kernel::MeshTolerance::chord(1e-3)).unwrap().measure().volume).sum()
+    s.model.state().bodies.iter().map(|b| b.body.mesh(&torno_kernel::MeshTolerance::chord(1e-3)).unwrap().measure().volume).sum()
 }
 
 fn result(s: &Session, name: &str) -> (Option<String>, Option<String>) {
@@ -246,6 +246,6 @@ fn a_picked_profile_and_the_sketch_on_its_cap_survive_together() {
     assert!(result(&s, "E1").1.is_some_and(|w| w.contains("`l2` no longer on it")));
     assert_hole_follows(&s, 8000.0, true);
     // Saved and opened again, it evaluates the same way.
-    let reopened = Session::new(solidcraft_doc::format::read(&s.doc.to_json()).unwrap());
+    let reopened = Session::new(torno_doc::format::read(&s.doc.to_json()).unwrap());
     assert_hole_follows(&reopened, 8000.0, true);
 }

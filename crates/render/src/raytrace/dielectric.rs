@@ -3,7 +3,7 @@
 use super::{Bounds, Result, TraceError, Triangle, unit};
 use crate::{ProductScene, job::DielectricOptions};
 use solidcore_record::Vec3;
-use solidcraft_geom::prelude::*;
+use torno_geom::prelude::*;
 
 pub const MAX_OVERRIDES: usize = 8;
 pub const MAX_BOUNDARIES: u8 = 8;
@@ -198,7 +198,7 @@ pub(super) fn certify_shape(scene: &ProductScene, input: &DielectricOptions) -> 
 
 /// The fixed two-triangle sheet proof, after captured identity was checked.
 /// This helper does not rescan the scene or allocate geometry scratch.
-pub(super) fn certify_sheet(mesh: &solidcraft_geom::Mesh) -> Result<Certificate> {
+pub(super) fn certify_sheet(mesh: &torno_geom::Mesh) -> Result<Certificate> {
     let unsupported = TraceError::InvalidInput("unsupported dielectric boundary tessellation");
     if !(1..=2).contains(&mesh.triangles.len()) || mesh.positions.len() > 36 {
         return Err(unsupported);
@@ -247,7 +247,7 @@ pub(super) fn certify_sheet(mesh: &solidcraft_geom::Mesh) -> Result<Certificate>
 }
 
 /// The mesh's triangle with these indices, refused where it is degenerate.
-pub(super) fn triangle(mesh: &solidcraft_geom::Mesh, indices: &[u32; 3]) -> Result<Triangle> {
+pub(super) fn triangle(mesh: &torno_geom::Mesh, indices: &[u32; 3]) -> Result<Triangle> {
     let mut vertices = [Vec3::ZERO; 3];
     for (v, index) in vertices.iter_mut().zip(indices) {
         *v = *mesh.positions.get(*index as usize).ok_or(TraceError::InvalidInput("dielectric vertex index"))?;
@@ -270,7 +270,7 @@ pub(super) fn triangle(mesh: &solidcraft_geom::Mesh, indices: &[u32; 3]) -> Resu
 /// boundary the same number of times k, with every triangle facing out (k ≥ 1), and its area is
 /// k times the boundary's. k is 1 when the triangles' area is under 1.5 times the boundary's.
 /// The count of triangles is no part of it: a face may come in any tiling.
-fn certify_box(mesh: &solidcraft_geom::Mesh) -> Result<Certificate> {
+fn certify_box(mesh: &torno_geom::Mesh) -> Result<Certificate> {
     let mut lo = Vec3::new(f64::INFINITY, f64::INFINITY, f64::INFINITY);
     let mut hi = -lo;
     let mut tris = Vec::new();

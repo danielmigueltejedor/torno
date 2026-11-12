@@ -40,6 +40,6 @@
   "ungraded": [],
   "what": "config.activate of a row with a block 0 long",
   "why_not": [
-    "the failure is SolidCraft's, not a kernel operation's: step 7 (config.activate): invalid parameters for `config.activate`: configuration `Zero` would fail to rebuild: Block: invalid input: box needs a positive size in x, y and z; Hole: Hole: the reference `F1:+z` no longer exists as it was picked; reselect it"
+    "the failure is Torno's, not a kernel operation's: step 7 (config.activate): invalid parameters for `config.activate`: configuration `Zero` would fail to rebuild: Block: invalid input: box needs a positive size in x, y and z; Hole: Hole: the reference `F1:+z` no longer exists as it was picked; reselect it"
   ]
 }

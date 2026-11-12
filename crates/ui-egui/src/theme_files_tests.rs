@@ -1,12 +1,12 @@
-//! SolidCraft's theme files through the kit's `theme_files`: its shipped themes, read against its
+//! Torno's theme files through the kit's `theme_files`: its shipped themes, read against its
 //! tab table and icon palette.
 use crate::test_support::{is_two_colour, tab_fixture};
 use crate::theme_files::fixtures::*;
 use crate::theme_files::*;
 use egui::Color32;
 use serde_json::{Value, json};
-use solidcraft_theme::Tokens;
 use std::collections::BTreeMap;
+use torno_theme::Tokens;
 
 #[test]
 fn tabs_import_is_strict_and_roundtrips_authored_surfaces() {
@@ -184,7 +184,7 @@ fn matching_overlays_apply_in_file_order_and_preserve_other_table_entries() {
 #[test]
 fn original_shipped_themes_keep_the_original_resolver_output_and_serialization() {
     crate::test_support::host_data();
-    assert_eq!(builtin().len(), solidcraft_look::themes::BUILTIN.len());
+    assert_eq!(builtin().len(), torno_look::themes::BUILTIN.len());
     for id in ORIGINAL_BUILTIN_IDS {
         let theme = find(id, &[]).unwrap();
         assert!(theme.tabs.is_empty(), "{}", theme.id);
@@ -205,7 +205,7 @@ fn original_shipped_themes_keep_the_original_resolver_output_and_serialization()
 #[test]
 fn shipped_theme_defaults_and_definition_roundtrips_preserve_all_tables() {
     crate::test_support::host_data();
-    assert_eq!(builtin().len(), solidcraft_look::themes::BUILTIN.len());
+    assert_eq!(builtin().len(), torno_look::themes::BUILTIN.len());
     for theme in builtin() {
         assert!(!theme.needs_newer(), "{}", theme.id);
         let (defaults, notices) = effective_values(theme, &BTreeMap::new());
@@ -246,11 +246,11 @@ fn malformed_border_settings_are_refused_and_saved_settings_are_safe() {
         assert!(from_value(&json!({"format":FORMAT,"name":"Bad","base":"dark","borders":settings})).is_err(), "{settings}");
     }
     let file = ThemeFile { borders: BTreeMap::from([("primary".into(), json!({"width":1e100,"color":"#ffffff"}))]), ..Default::default() };
-    assert_eq!(resolve(&file).borders, solidcraft_theme::Borders::LEGACY);
+    assert_eq!(resolve(&file).borders, torno_theme::Borders::LEGACY);
     assert!(parse_borders(&BTreeMap::from([("primary".into(), json!({"width":null,"color":"#ffffff"}))])).is_err());
     assert_eq!(resolve(find("blueprint", &[]).unwrap()).borders.primary.unwrap().color, Color32::WHITE);
     for id in ["gruvbox-dark", "gruvbox-light"] {
-        assert_eq!(resolve(find(id, &[]).unwrap()).borders, solidcraft_theme::Borders::LEGACY);
+        assert_eq!(resolve(find(id, &[]).unwrap()).borders, torno_theme::Borders::LEGACY);
     }
 }
 
@@ -279,7 +279,7 @@ fn bevel_settings_roundtrip_and_reject_invalid_values() {
         assert!(from_value(&bad).is_err());
     }
     for theme in builtin() {
-        assert_eq!(resolve(theme).borders.bevel.is_some(), theme.id == "solidcraft-95", "{}", theme.id);
+        assert_eq!(resolve(theme).borders.bevel.is_some(), theme.id == "torno-95", "{}", theme.id);
     }
 }
 
@@ -315,8 +315,8 @@ fn icon_palette_import_export_is_bounded_and_keeps_legacy_defaults() {
 #[test]
 fn shipped_themes_have_readable_distinct_workspace_colours_and_icon_palettes() {
     crate::test_support::host_data();
-    use solidcraft_theme::contrast_ratio;
-    assert_eq!(builtin().len(), solidcraft_look::themes::BUILTIN.len(), "all shipped themes must be valid");
+    use torno_theme::contrast_ratio;
+    assert_eq!(builtin().len(), torno_look::themes::BUILTIN.len(), "all shipped themes must be valid");
     for file in builtin() {
         let gruvbox = matches!(file.id.as_str(), "gruvbox-dark" | "gruvbox-light");
         let contrasts: &[&str] = if gruvbox { &["soft", "standard", "hard"] } else { &["standard"] };
@@ -387,7 +387,7 @@ fn gruvbox_contrast_choices_keep_six_appearances() {
             assert_eq!(tokens.viewport_top, parse_color(tops[index]).unwrap(), "{id}: {contrast}");
             assert_eq!(tokens.viewport_bottom, parse_color(bottoms[index]).unwrap(), "{id}: {contrast}");
             assert_eq!(export_icon_palette(resolve_icon_palette(file, &options))["ink"], inks[index], "{id}: {contrast}");
-            assert_eq!(tokens.borders, solidcraft_theme::Borders::LEGACY);
+            assert_eq!(tokens.borders, torno_theme::Borders::LEGACY);
             assert_eq!(resolve_with(&from_value(&export_file(file)).unwrap(), &options), tokens);
             assert_eq!(resolve_icon_palette(&from_value(&export_file(file)).unwrap(), &options), resolve_icon_palette(file, &options));
         }
@@ -461,7 +461,7 @@ fn onyx_defaults_offer_broad_subtle_blur_and_independent_material_choices() {
 #[test]
 fn onyx_options_compose_and_keep_small_text_readable() {
     crate::test_support::host_data();
-    use solidcraft_theme::{composite, contrast_ratio};
+    use torno_theme::{composite, contrast_ratio};
     let file = find("onyx", &[]).unwrap();
     let ordinary = resolve(file);
     for contrast in ["soft", "defined"] {
@@ -541,7 +541,7 @@ fn onyx_options_compose_and_keep_small_text_readable() {
 #[test]
 fn surface_brightness_is_explicit_continuous_and_precedes_opacity_protection() {
     crate::test_support::host_data();
-    use solidcraft_theme::{composite, contrast_ratio};
+    use torno_theme::{composite, contrast_ratio};
     let file = find("onyx", &[]).unwrap();
     let source = export_file(file);
     let index = file.options.iter().position(|option| option.id == "brightness").unwrap();
@@ -649,8 +649,8 @@ fn surface_brightness_preserves_alpha_and_semantics_and_scales_authored_layers()
         assert_eq!(tab.axis_x, original.axis_x);
         for tokens in [overlay, tab] {
             for background in [Color32::BLACK, Color32::WHITE] {
-                let ground = solidcraft_theme::composite(tokens.panel, background);
-                assert!(solidcraft_theme::contrast_ratio(solidcraft_theme::composite(tokens.text, ground), ground) >= 4.5);
+                let ground = torno_theme::composite(tokens.panel, background);
+                assert!(torno_theme::contrast_ratio(torno_theme::composite(tokens.text, ground), ground) >= 4.5);
             }
         }
     }
@@ -659,16 +659,16 @@ fn surface_brightness_preserves_alpha_and_semantics_and_scales_authored_layers()
 #[test]
 fn builtin_order_preserves_the_existing_picker_sequence() {
     crate::test_support::host_data();
-    let themes = read_builtin(solidcraft_look::themes::BUILTIN).unwrap();
+    let themes = read_builtin(torno_look::themes::BUILTIN).unwrap();
     let retained: Vec<_> = themes.iter().map(|t| t.id.as_str()).filter(|id| ORIGINAL_BUILTIN_IDS.contains(id)).collect();
     assert_eq!(retained, ORIGINAL_BUILTIN_IDS);
-    assert!(solidcraft_look::themes::BUILTIN.windows(2).all(|pair| pair[0].0 < pair[1].0), "source entries are sorted by id");
+    assert!(torno_look::themes::BUILTIN.windows(2).all(|pair| pair[0].0 < pair[1].0), "source entries are sorted by id");
 }
 
 #[test]
 fn built_in_themes_read_and_differ_from_their_base() {
     crate::test_support::host_data();
-    assert_eq!(builtin().len(), solidcraft_look::themes::BUILTIN.len(), "every built-in theme file reads");
+    assert_eq!(builtin().len(), torno_look::themes::BUILTIN.len(), "every built-in theme file reads");
     for t in builtin() {
         let base = if t.base.is_dark() { Tokens::dark() } else { Tokens::light() };
         assert_ne!(resolve(t), base, "{}", t.id);
@@ -695,7 +695,7 @@ fn cga_uses_only_the_sixteen_cga_colours() {
             _ => {}
         }
     }
-    let text = solidcraft_look::themes::BUILTIN.iter().find(|(id, _)| *id == "cga").map(|(_, text)| *text).unwrap();
+    let text = torno_look::themes::BUILTIN.iter().find(|(id, _)| *id == "cga").map(|(_, text)| *text).unwrap();
     let file: Value = serde_json::from_str(text).unwrap();
     let mut found = Vec::new();
     colours(&file, &mut found);
@@ -732,7 +732,7 @@ fn the_file_view_follows_a_theme_that_does_not_set_its_colours() {
         // (Solarized Light's text on its soft accent is 4.29:1): a derived colour can't do
         // better than the theme itself.
         let own = [t.text, t.form_ink, t.accent, t.on_accent];
-        let floor = |fill: Color32| own.iter().map(|i| solidcraft_theme::contrast_ratio(*i, fill)).fold(0.0, f64::max).min(4.5) - 1e-6;
+        let floor = |fill: Color32| own.iter().map(|i| torno_theme::contrast_ratio(*i, fill)).fold(0.0, f64::max).min(4.5) - 1e-6;
         for (ink, fill) in [
             (t.file_rail_ink, t.file_rail),
             (t.file_rail_ink, t.file_rail_hover),
@@ -741,7 +741,7 @@ fn the_file_view_follows_a_theme_that_does_not_set_its_colours() {
             (t.file_dim, t.file_surface),
             (t.file_dim, t.file_background),
         ] {
-            let ratio = solidcraft_theme::contrast_ratio(ink, fill);
+            let ratio = torno_theme::contrast_ratio(ink, fill);
             assert!(ratio >= floor(fill), "{}: {ink:?} on {fill:?} is {ratio:.2}:1 (floor {:.2})", theme.id, floor(fill));
         }
     }
@@ -814,7 +814,7 @@ fn built_in_shapes_match_their_character_and_light_dark_families_agree() {
     for id in ["platinum-9", "green-phosphor", "amber-phosphor"] {
         assert_eq!(values(id), [0; 6], "{id}");
     }
-    assert_eq!(values("solidcraft-95"), [3, 3, 4, 4, 3, 3]);
+    assert_eq!(values("torno-95"), [3, 3, 4, 4, 3, 3]);
     assert_eq!(values("blueprint"), [4, 6, 8, 10, 6, 7]);
     assert_eq!(values("cupertino"), [6, 8, 12, 16, 8, 9]);
     for id in ["clay", "clay-dark"] {
@@ -855,10 +855,10 @@ fn one_bit_is_complete_opaque_black_and_white(file: &ThemeFile) {
         }
     }
     check(&exported);
-    for role in solidcraft_look::icons::ROLE_NAMES.iter().filter(|role| **role != "gap") {
+    for role in torno_look::icons::ROLE_NAMES.iter().filter(|role| **role != "gap") {
         assert!(file.icon_palette.contains_key(*role), "{}: missing icon role {role}", file.id);
     }
-    for ramp in std::iter::once("solid").chain(solidcraft_look::icons::ACCENT_NAMES.iter().copied()) {
+    for ramp in std::iter::once("solid").chain(torno_look::icons::ACCENT_NAMES.iter().copied()) {
         assert!(file.icon_palette.contains_key(ramp), "{}: missing icon ramp {ramp}", file.id);
     }
     assert_eq!(radius_values(t), [0; 6]);
@@ -882,7 +882,7 @@ fn one_bit_has_full_contrast(t: &Tokens, id: &str, paper: Color32, ink: Color32)
         (t.glyph_text, t.glyph_bg),
         (t.dialog_label, t.dialog_body),
     ] {
-        assert_eq!(solidcraft_theme::contrast_ratio(fg, bg), 21.0, "{id}: {fg:?} on {bg:?}");
+        assert_eq!(torno_theme::contrast_ratio(fg, bg), 21.0, "{id}: {fg:?} on {bg:?}");
     }
     assert_eq!((t.viewport_top, t.viewport_bottom, t.body), (paper, paper, paper), "{id}");
     assert_eq!((t.selected_bg, t.body_selected), (ink, ink), "{id}");
@@ -898,7 +898,7 @@ fn one_bit_has_full_contrast(t: &Tokens, id: &str, paper: Color32, ink: Color32)
 const ORIGINAL_BUILTIN_IDS: &[&str] = &[
     "gruvbox-dark",
     "gruvbox-light",
-    "solidcraft-95",
+    "torno-95",
     "1-bit",
     "1-bit-dark",
     "platinum-9",

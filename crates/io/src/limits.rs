@@ -1,4 +1,4 @@
-//! The largest files SolidCraft reads (#4086). [`crate::MAX_STEP_BYTES`] and
+//! The largest files Torno reads (#4086). [`crate::MAX_STEP_BYTES`] and
 //! [`crate::MAX_DESIGN_BYTES`] are the defaults; the desktop app may raise them (Preferences ›
 //! General › Largest file to open, saved by the app) or for one run (`--max-file-size`), never
 //! past [`CEILING`]. Every read site asks [`max_step_bytes`] / [`max_design_bytes`] for the limit
@@ -57,7 +57,7 @@ impl Default for FileLimits {
 }
 
 impl FileLimits {
-    /// The limits SolidCraft has always had.
+    /// The limits Torno has always had.
     pub const DEFAULT: Self = Self { step: crate::MAX_STEP_BYTES as u64, design: crate::MAX_DESIGN_BYTES as u64 };
 
     /// Limits from whole megabytes, as the preference keeps them.
@@ -176,7 +176,7 @@ const BROWSER_NOTE: &str = "the web app can't open larger files: a browser tab c
 /// How to raise a limit, for the messages that refuse a file.
 pub fn how_to_raise() -> &'static str {
     if ADJUSTABLE {
-        "Raise the limit in Preferences > General > Largest file to open, or start SolidCraft with --max-file-size (for example --max-file-size 2GB)."
+        "Raise the limit in Preferences > General > Largest file to open, or start Torno with --max-file-size (for example --max-file-size 2GB)."
     } else {
         "The web app can't open larger files; the desktop app can raise the limit."
     }

@@ -267,7 +267,7 @@ through nvm or `~/.local/bin` can therefore work in a terminal while Torno repor
 that no agent was found. For Claude Code and its ACP adapter, run:
 
 ```sh
-flatpak override --user io.tangencylabs.solidcraft --filesystem=~/.nvm:ro --filesystem=~/.local/bin:ro --filesystem=~/.local/share/claude:ro --filesystem=~/.claude --filesystem=~/.claude.json --share=network
+flatpak override --user dev.danielmiguelt.Torno --filesystem=~/.nvm:ro --filesystem=~/.local/bin:ro --filesystem=~/.local/share/claude:ro --filesystem=~/.claude --filesystem=~/.claude.json --share=network
 ```
 
 These permissions apply to Torno for your user account:
@@ -396,7 +396,7 @@ wsl.exe -d Ubuntu -e bash -lc claude-agent-acp
 
 `bash -lc` runs your login shell's setup, so the agent is found where your `PATH` puts it (npm,
 nvm, Volta). When the command's program is `wsl` or `wsl.exe`, Torno gives the agent its
-working folder and the `solidcraft-app` server's program as WSL shows them (`C:\Users\…` becomes
+working folder and the `torno-app` server's program as WSL shows them (`C:\Users\…` becomes
 `/mnt/c/Users/…`). The server itself still runs on Windows and reaches the app at `127.0.0.1`, so
 this works with WSL's default networking. If you moved WSL's drive mounts away from `/mnt`
 (`automount.root` in `/etc/wsl.conf`), those paths won't match and the agent can't start the server.
@@ -418,7 +418,7 @@ Whatever you typed before signing in is sent once the agent is ready.
 
 The agent reaches the open design only through Torno's own tools (the
 [MCP server](mcp.md)), which Torno hands it when the chat starts. That server is named
-`solidcraft-app`, so an MCP server you set up yourself under the name `solidcraft` (as in
+`torno-app`, so an MCP server you set up yourself under the name `torno` (as in
 [client configuration](mcp.md#client-configuration)) doesn't take its place:
 
 - **Read the design:** list commands, inspect features, sketches and parameters, measure,
@@ -500,7 +500,7 @@ per agent, with **Reset**.
 These settings cover Torno's tools. A coding agent's own tools (its shell, its file edits)
 follow the agent's own mode, which you pick in the panel's header. When an agent asks before
 using one of the chat's own Torno tools and names it exactly as the Claude adapter does
-(`mcp__solidcraft-app__batch`), Torno answers for you, since its own gate checks the call,
+(`mcp__torno-app__batch`), Torno answers for you, since its own gate checks the call,
 and notes it in the chat as *Auto-allowed*. Any other question appears in the panel, including
 a Torno tool an agent words differently and a Torno MCP server you added to the agent
 yourself. With **Allow everything**, or after **Always allow**, those questions are answered the
@@ -550,7 +550,7 @@ A scripted test agent is in the source tree. It makes a block, rounds it and mea
 no model behind it:
 
 ```sh
-cargo build --release -p solidcraft-ui-egui --example acp_test_agent
+cargo build --release -p torno-ui-egui --example acp_test_agent
 ```
 
 Then add it under Preferences → AI → **Add agent… → Custom command** with the path of
@@ -559,15 +559,15 @@ or "ask" to see the agent ask its own permission.
 
 ## Benchmarking the Assistant
 
-`solidcraft-cli bench-assistant` runs the eleven tasks of the
+`torno-cli bench-assistant` runs the eleven tasks of the
 [standard model test (v1, #4851)](https://github.com/tangency-labs/solidcraft/issues/4851) against a
 desktop app that is already running with a control port, and checks each result on the design
 itself. Use it to see how well a local model drives Torno before you post its results.
 
 ```sh
-solidcraft --control 9271
+torno --control 9271
 # In another terminal:
-solidcraft-cli bench-assistant --connect 127.0.0.1:9271 \
+torno-cli bench-assistant --connect 127.0.0.1:9271 \
   --base-url http://localhost:11434/v1 --model qwen2.5:7b \
   --json results.json --markdown results.md
 ```
@@ -578,7 +578,7 @@ sends the prompt once, and waits for the turn to end. It runs only the setup the
 (the box some tasks start from) and does none of the modelling itself. When it finishes it stops
 the agent and puts your permission setting back.
 
-- The control token comes from `--token`, `SOLIDCRAFT_CONTROL_TOKEN`, or the app's
+- The control token comes from `--token`, `TORNO_CONTROL_TOKEN`, or the app's
   [token file](control-protocol.md#token), in that order.
 - `--tasks 1,2,5` runs only those tasks, `--repeat N` runs the test N times, and `--timeout-s`
   (default 300) is each turn's deadline; a turn that runs past it is stopped and fails as "timeout".

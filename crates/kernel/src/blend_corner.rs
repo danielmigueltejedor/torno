@@ -270,8 +270,8 @@ mod tests {
     use super::*;
     use crate::blend::Faces;
     use crate::{box_solid, fillet, measure};
-    use solidcraft_geom::brep::eval::CurveEval;
-    use solidcraft_geom::prelude::*;
+    use torno_geom::brep::eval::CurveEval;
+    use torno_geom::prelude::*;
 
     /// The 20 mm box and the three edges at its corner (20, 0, 20): `a` along y, `b` along x,
     /// `c` up.

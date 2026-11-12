@@ -8,7 +8,7 @@ The pictures live on the `pr-media-kernel-smlib` branch.
 ## Where it started (2026-10-21)
 
 ### Schema 4: a plain B-rep that mirrors SMLib's model
-`solidcraft_geom::brep` now holds:
+`torno_geom::brep` now holds:
 - regions and shells;
 - oriented faces, and faces with parameter domains;
 - edge and vertex loops;
@@ -35,13 +35,13 @@ Pcurves are exact on planes. Elsewhere they're a cubic 2D B-spline fitted within
 ![seam](https://raw.githubusercontent.com/tangency-labs/solidcraft/pr-media-kernel-smlib/pcurves-seam-cylinder.png)
 
 ### A naming guard for the move
-`apps/solidcraft-cli/tests/naming_corpus.rs` rebuilds 154 designs and checks every face and edge name, and every stored reference, against `tests/naming/`. Every operation that switches to SMLib must keep them. Re-record with `NAMING_CORPUS_BLESS=1`.
+`apps/torno-cli/tests/naming_corpus.rs` rebuilds 154 designs and checks every face and edge name, and every stored reference, against `tests/naming/`. Every operation that switches to SMLib must keep them. Re-record with `NAMING_CORPUS_BLESS=1`.
 
 ![names](https://raw.githubusercontent.com/tangency-labs/solidcraft/pr-media-kernel-smlib/naming-naming-split-pieces-face-names.png)
 ![diff](https://raw.githubusercontent.com/tangency-labs/solidcraft/pr-media-kernel-smlib/naming-test-failure-diff.png)
 
 ### Next, as planned then
-- SMLib linked statically behind C shims (`solidcraft-smlib`).
+- SMLib linked statically behind C shims (`torno-smlib`).
 - SMLib bodies exported to schema 4 and shown in Torno.
 - Booleans, fillet, chamfer and shell through SMLib, compared side by side with truck.
 
@@ -65,8 +65,8 @@ The torus's and the cylinder's loops in (u, v), from our pcurve routine:
 The SMLib volumes are SMLib's exact mass properties and match the closed form. "Decoded" is Torno's mesh-based measure of the decoded body, within 2e-4 relative. These pictures come from a first JSON export; the same path now goes through the fork's flat converter (`capi-flat`) and is being rebuilt there.
 
 Also on `kernel-smlib` since the last update:
-- the link crate (`solidcraft-smlib`);
-- the STEP geometry crate (`solidcraft-step`);
+- the link crate (`torno-smlib`);
+- the STEP geometry crate (`torno-step`);
 - history out of SMLib operations, and a side-by-side runner for truck and SMLib booleans;
 - `Brep::check_geometry`, run before any record is decoded;
 - cones that narrow along their axis.
@@ -108,7 +108,7 @@ SMLib's volumes equal the analytic values in every case. Truck's are mesh-measur
 
 ### truck and SMLib booleans, side by side (2026-10-21)
 
-(runner on `kernel-smlib` 8665746e: `cargo run --release -p solidcraft-kernel --features smlib --example smlib_booleans -- --seeds 128`). 411 operations: 128 random box/cylinder/sphere/torus pairs and 9 named cases, each as union, intersection and cut. Each kernel is timed on the boolean alone.
+(runner on `kernel-smlib` 8665746e: `cargo run --release -p torno-kernel --features smlib --example smlib_booleans -- --seeds 128`). 411 operations: 128 random box/cylinder/sphere/torus pairs and 9 named cases, each as union, intersection and cut. Each kernel is timed on the boolean alone.
 
 | | median | worst | total |
 |---|---|---|---|

@@ -6,7 +6,7 @@
 //! A file whose vertices fit keeps them all, with its edges and faces. One with more keeps every
 //! `stride`th vertex and leaves its edges and faces out, since thinning would cut them.
 
-use solidcraft_doc::point_cloud::{Column, Complex, Floats, Indices, MAX_CELLS, MAX_COLUMNS, Names, On};
+use torno_doc::point_cloud::{Column, Complex, Floats, Indices, MAX_CELLS, MAX_COLUMNS, Names, On};
 
 use crate::ply::{Element, Kind, Rows, Scalar, header};
 use crate::{IoError, Result};

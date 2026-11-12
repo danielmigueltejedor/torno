@@ -94,7 +94,7 @@ fn form(command: &str, labels: &[&str]) {
         let rect = scenario::rect_of(&format!("dialog:row:{label}")).unwrap_or_else(|| panic!("{command}: missing {label}"));
         assert_eq!(rect.height(), Tokens::get().control_height);
     }
-    let spec = solidcraft_engine::find_command(command).unwrap();
+    let spec = torno_engine::find_command(command).unwrap();
     assert!(h.widget(spec.label).is_some(), "header uses command label");
     assert!(!spec.icon.is_empty());
     h.step(&json!({"click":{"handle":"dialog:cancel"}})).unwrap();
@@ -160,7 +160,7 @@ fn equation_curve_window_draws_and_reopens_on_its_formulas() {
 /// window reopens with it ticked, and unticking it reaches the curve too.
 #[test]
 fn equation_curve_window_gives_the_variable_its_ranges_unit() {
-    use solidcraft_engine::sketch::VariableUnit;
+    use torno_engine::sketch::VariableUnit;
     let mut h = fixture();
     h.app.session.execute("parameters.add", &json!({"name": "a", "expression": "10 mm"})).unwrap();
     h.app.start("sketch.equation_curve");
@@ -174,7 +174,7 @@ fn equation_curve_window_gives_the_variable_its_ranges_unit() {
     *start = "a".into();
     *end = "3 * a".into();
     h.settle();
-    let handle = format!("dialog:{}", solidcraft_ui_text::tr("ui.equation_variable_unit"));
+    let handle = format!("dialog:{}", torno_ui_text::tr("ui.equation_variable_unit"));
     h.step(&json!({"click": {"handle": handle}})).unwrap();
     h.settle();
     let Some(Kind::SketchModify(Mod::Equation { range_unit, .. })) = h.app.dialog.as_ref().map(|d| &d.kind) else { panic!("no equation window") };
@@ -411,7 +411,7 @@ fn project_dialog_takes_a_construction_point() {
     let state = crate::open_meshing::session_world(&h.app.session);
     let sketch = &state.sketch(sketch).unwrap().sketch;
     assert_eq!(sketch.links.len(), 1);
-    assert_eq!(sketch.links[0].source, solidcraft_engine::sketch::LinkSource::ConstructionPoint { name: "Point1".into() });
+    assert_eq!(sketch.links[0].source, torno_engine::sketch::LinkSource::ConstructionPoint { name: "Point1".into() });
     assert_eq!(sketch.link_points(&sketch.links[0].id).len(), 1);
 }
 

@@ -6,14 +6,14 @@
 
 use serde_json::{Value, json};
 use solidcore_record::Vec3;
-use solidcraft_geom::Aabb3;
-use solidcraft_kernel::{ExportBody, ExportProduct, StepHeader, box_solid, step_export_products};
+use torno_geom::Aabb3;
+use torno_kernel::{ExportBody, ExportProduct, StepHeader, box_solid, step_export_products};
 
 use super::run;
 use crate::*;
 
 fn temp_dir(tag: &str) -> std::path::PathBuf {
-    let dir = std::env::temp_dir().join(format!("solidcraft-import-component-{tag}-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("torno-import-component-{tag}-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&dir);
     std::fs::create_dir_all(&dir).unwrap();
     dir
@@ -68,20 +68,20 @@ fn rig_file(dir: &std::path::Path) -> String {
 
 /// Where the file itself puts its bodies: their bounding boxes, sorted.
 fn file_boxes(path: &str) -> Vec<[i64; 6]> {
-    let imp = solidcraft_kernel::step_import(&std::fs::read_to_string(path).unwrap()).unwrap();
-    let mut out: Vec<[i64; 6]> = imp.bodies.iter().map(|b| key(solidcraft_kernel::measure(&b.body).unwrap().bbox)).collect();
+    let imp = torno_kernel::step_import(&std::fs::read_to_string(path).unwrap()).unwrap();
+    let mut out: Vec<[i64; 6]> = imp.bodies.iter().map(|b| key(torno_kernel::measure(&b.body).unwrap().bbox)).collect();
     out.sort();
     out
 }
 
-fn key(b: solidcraft_geom::Aabb3) -> [i64; 6] {
+fn key(b: torno_geom::Aabb3) -> [i64; 6] {
     let r = |v: f64| (v * 1000.0).round() as i64;
     [r(b.min.x), r(b.min.y), r(b.min.z), r(b.max.x), r(b.max.y), r(b.max.z)]
 }
 
 /// Where the design shows its bodies, sorted.
 fn shown_boxes(s: &Session) -> Vec<[i64; 6]> {
-    let mut out: Vec<[i64; 6]> = s.world_state().unwrap().bodies.iter().map(|b| key(solidcraft_kernel::measure(&b.body).unwrap().bbox)).collect();
+    let mut out: Vec<[i64; 6]> = s.world_state().unwrap().bodies.iter().map(|b| key(torno_kernel::measure(&b.body).unwrap().bbox)).collect();
     out.sort();
     out
 }
@@ -114,7 +114,7 @@ fn corner_of(s: &Session, occurrence: &str) -> Vec3 {
     let names = s.occurrence_bodies(&path, true).unwrap();
     assert!(!names.is_empty());
     let world = s.world_state().unwrap();
-    world.bodies.iter().filter(|b| names.contains(&b.name)).fold(Aabb3::EMPTY, |a, b| a.union(&solidcraft_kernel::measure(&b.body).unwrap().bbox)).min
+    world.bodies.iter().filter(|b| names.contains(&b.name)).fold(Aabb3::EMPTY, |a, b| a.union(&torno_kernel::measure(&b.body).unwrap().bbox)).min
 }
 
 fn close(a: Vec3, b: Vec3) -> bool {
@@ -404,8 +404,8 @@ fn undo_takes_the_whole_import_away() {
 fn a_design_with_a_loose_import_rebuilds_unchanged() {
     let dir = temp_dir("loose");
     let path = rig_file(&dir);
-    let sf = solidcraft_io::step_import_feature(&std::fs::read(&path).unwrap(), &path).unwrap();
-    let mut doc = solidcraft_doc::Document::new("Old");
+    let sf = torno_io::step_import_feature(&std::fs::read(&path).unwrap(), &path).unwrap();
+    let mut doc = torno_doc::Document::new("Old");
     let id = doc.add_feature(sf.kind, Some(&sf.name)).unwrap();
     doc.feature_mut(id).unwrap().body_names = sf.body_names;
     // As a format 21 file (0.12.0) has it.
@@ -512,7 +512,7 @@ fn a_multi_object_step_insert_is_one_history_folder() {
     let r = run(&mut s, "file.insert_step", json!({"path": path, "folder": true}));
     let folder = s.doc.timeline_groups.iter().find(|f| json!(f.id) == r["group"]).unwrap();
     assert_eq!(folder.name, "Group #2", "{r}");
-    assert!(solidcraft_doc::non_contiguous_timeline_group(&s.doc.features, &s.doc.timeline_groups).is_none());
+    assert!(torno_doc::non_contiguous_timeline_group(&s.doc.features, &s.doc.timeline_groups).is_none());
     // Opening a file as a design folds it the same way.
     let r = run(&mut s, "doc.open", json!({"path": corpus("cylinder_twice"), "folder": true}));
     assert_eq!(s.doc.timeline_groups.len(), 1, "{r}");
@@ -610,15 +610,15 @@ fn a_joint_on_an_imported_part_takes_its_own_hole() {
     let o = s.doc.assembly.joints.iter().find(|j| j.name == "Into B").unwrap().b.clone();
     let st = s.model.state();
     // A's hole has the very name B's has (the case this is about).
-    let solidcraft_doc::joints::Snap::CircleCenter { face: Some(name), .. } = &o.snap else { panic!("{:?}", o.snap) };
+    let torno_doc::joints::Snap::CircleCenter { face: Some(name), .. } = &o.snap else { panic!("{:?}", o.snap) };
     let a_comp = s.doc.occurrences.iter().find(|x| x.id == occurrence_named(&s, "A:1")).unwrap().component;
     let a_body = st.bodies.iter().find(|x| s.doc.model_body_component(x) == a_comp).unwrap();
-    assert!(solidcraft_doc::naming::face_names(a_body).iter().any(|n| n == name), "{name}");
-    let f = solidcraft_doc::joints::resolve_origin(&s.doc, &st, &o).unwrap();
-    let at = solidcraft_doc::apply_point(&solidcraft_doc::joints::occurrence_world(&s.doc, on_b), Vec3::new(f[3][0], f[3][1], f[3][2]));
+    assert!(torno_doc::naming::face_names(a_body).iter().any(|n| n == name), "{name}");
+    let f = torno_doc::joints::resolve_origin(&s.doc, &st, &o).unwrap();
+    let at = torno_doc::apply_point(&torno_doc::joints::occurrence_world(&s.doc, on_b), Vec3::new(f[3][0], f[3][1], f[3][2]));
     assert!(Vec3::new(at.x, at.y, 0.0).dist(Vec3::new(70.0, 10.0, 0.0)) < 1e-6, "B's hole is at (70, 10), the joint at {at:?}");
     // And the pin stands in it.
-    let pin_at = solidcraft_doc::apply_point(&solidcraft_doc::joints::occurrence_world(&s.doc, pin), Vec3::new(0.0, -40.0, 0.0));
+    let pin_at = torno_doc::apply_point(&torno_doc::joints::occurrence_world(&s.doc, pin), Vec3::new(0.0, -40.0, 0.0));
     assert!(Vec3::new(pin_at.x, pin_at.y, 0.0).dist(Vec3::new(70.0, 10.0, 0.0)) < 1e-6, "the pin's base is at {pin_at:?}");
 }
 
@@ -660,7 +660,7 @@ fn renaming_an_imported_body_after_a_repeated_part_keeps_every_body_in_its_compo
     let mut s = Session::default();
     run(&mut s, "file.insert_step", json!({"path": path}));
     let f = &s.doc.features[0];
-    assert!(matches!(&f.kind, solidcraft_doc::FeatureKind::Import { skip, .. } if *skip == [2, 3]), "{:?}", f.body_names);
+    assert!(matches!(&f.kind, torno_doc::FeatureKind::Import { skip, .. } if *skip == [2, 3]), "{:?}", f.body_names);
     let names = |s: &Session| s.model.state().bodies.iter().map(|b| b.name.clone()).collect::<Vec<_>>();
     assert_eq!(names(&s), ["Bracket", "Pin", "Plate", "Knob"]);
     let mut expected = bodies_by_component(&mut s);

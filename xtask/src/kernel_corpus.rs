@@ -1,5 +1,5 @@
 //! `cargo xtask kernel-cases [--ladder] --export DIR`: the kernel rig as a corpus for solidcore's
-//! own rig. Each case's process writes its entry (`solidcraft-cli kernel-cases --export`,
+//! own rig. Each case's process writes its entry (`torno-cli kernel-cases --export`,
 //! `DIR/<area>/<case>.json`: the kernel operations that made its result, their operand records,
 //! the fix set, its expected values and the rig's result). This writes what that leaves out:
 //! an entry for each case whose process left none (a hang or a crash, so no trace), each ladder
@@ -18,12 +18,12 @@ use crate::root;
 
 /// The kind of reason a case is not expressible, for the counts per area.
 fn reason_kind(why: &str) -> &'static str {
-    if why.starts_with("SolidCraft has no command") {
-        "SolidCraft has no command for it yet"
-    } else if why.starts_with("no kernel operation ran before the failure") || why.starts_with("the failure is SolidCraft's") {
-        "refused or failed in SolidCraft, not in a kernel operation"
+    if why.starts_with("Torno has no command") {
+        "Torno has no command for it yet"
+    } else if why.starts_with("no kernel operation ran before the failure") || why.starts_with("the failure is Torno's") {
+        "refused or failed in Torno, not in a kernel operation"
     } else if why.contains("is no kernel operation's output nor an operand") {
-        "a final body built or changed by SolidCraft (its own geometry or a change to the kernel's record)"
+        "a final body built or changed by Torno (its own geometry or a change to the kernel's record)"
     } else if why.starts_with("no kernel operation made a body") || why.starts_with("the case ends with no body") {
         "no kernel operation makes the result"
     } else if why.starts_with("the rig's run") {
@@ -173,7 +173,7 @@ pub(crate) fn manifest(dir: &Path, results: &[Value], golden: Option<&Value>) ->
     }
     let m = json!({
         // A copy without git (synced to a build machine) names no commit: say so, never "".
-        "solidcraft": Some(git(&["rev-parse", "HEAD"])).filter(|c| !c.is_empty()),
+        "torno": Some(git(&["rev-parse", "HEAD"])).filter(|c| !c.is_empty()),
         "solidcore": solidcore_pin(),
         "fixes": "fixes.json",
         "areas": areas,
@@ -210,8 +210,8 @@ mod tests {
     #[test]
     fn every_reason_the_export_gives_has_its_kind() {
         for (why, kind) in [
-            ("the failure is SolidCraft's, not a kernel operation's: x", "refused or failed in SolidCraft"),
-            ("body \"Body1\" is no kernel operation's output nor an operand: SolidCraft built it", "a final body built or changed"),
+            ("the failure is Torno's, not a kernel operation's: x", "refused or failed in Torno"),
+            ("body \"Body1\" is no kernel operation's output nor an operand: Torno built it", "a final body built or changed"),
             ("the rig's run hang: no result", "the rig's run hung"),
         ] {
             assert!(reason_kind(why).starts_with(kind), "{why}: {}", reason_kind(why));

@@ -2,9 +2,9 @@
 //! Relative linear radiance, not a calibrated illuminance or an HDRI environment.
 
 use solidcore_record::Vec3;
-use solidcraft_geom::prelude::*;
+use torno_geom::prelude::*;
 
-use solidcraft_viewport::surface::{OpaqueSurface, SurfaceError, unit_direction};
+use torno_viewport::surface::{OpaqueSurface, SurfaceError, unit_direction};
 
 /// Fixed, neutral directional lights in the project's world frame (Z up).
 /// Directions point towards each light and are analytically unit length.

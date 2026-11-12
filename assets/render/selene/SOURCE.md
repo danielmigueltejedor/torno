@@ -8,7 +8,7 @@ The functional showcase is a new derivative of this file. The older `Rover-v7.so
 
 | Field | Verified value |
 |---|---|
-| Author repository | `SychPL/solidcraft` |
+| Author repository | `SychPL/torno` |
 | Source branch | `media/selene-showcase` |
 | Commit | `32ec1720447e3fcc6bb6cc53a63fb5b39cfa21b9` |
 | Published timestamp | `2026-10-21T20:00:01Z` |
@@ -54,7 +54,7 @@ New procedural geometry, English documentation and command generators in this de
 
 ## Authoring runtime and format compatibility
 
-The reconstruction workflow selects the official **Torno v0.18.2 Linux x86_64 CLI**. Its [published release](https://github.com/tangency-labs/solidcraft/releases/tag/v0.18.2) identifies source commit `4927214976ff20758fde35af03bd6b2d6cf73e18`. The release archive SHA-256 is `9d0c922ac72204f34ad22ca7a171be78016ab002e304ace3c07d34d187d830ff`; the extracted CLI SHA-256 is `e50fe78292d569c36052b24f46f1732bc4e43d1ecdac6a64092aa1cee3b97086`. The executor is an external development dependency and is not bundled as a model asset.
+The reconstruction workflow selects the official **Torno v0.18.2 Linux x86_64 CLI**. Its [published release](https://github.com/getnodalia/torno/releases/tag/v0.18.2) identifies source commit `4927214976ff20758fde35af03bd6b2d6cf73e18`. The release archive SHA-256 is `9d0c922ac72204f34ad22ca7a171be78016ab002e304ace3c07d34d187d830ff`; the extracted CLI SHA-256 is `e50fe78292d569c36052b24f46f1732bc4e43d1ecdac6a64092aa1cee3b97086`. The executor is an external development dependency and is not bundled as a model asset.
 
 This runtime writes **`solidcraft/28`**, which the personal render branch's format-29 reader can migrate. The unchanged source remains in format 23. The newer official v0.19.0 writes format 30, beyond that render branch's reader, so its isolated component fixtures remain development evidence rather than the authoritative final build. Final acceptance must name the actual executor and final model hash; success in a different runtime does not replace that run. No native format marker is rewritten by these tools.
 

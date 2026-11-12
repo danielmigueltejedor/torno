@@ -4,12 +4,12 @@ mod four_bar;
 
 use serde_json::json;
 use solidcore_record::Vec2;
-use solidcraft_geom::prelude::*;
+use torno_geom::prelude::*;
 
 #[test]
 fn angular_drag_keeps_the_horizontal_construction_line() {
     for live in [false, true] {
-        let mut s = solidcraft_engine::Session::default();
+        let mut s = torno_engine::Session::default();
         for (id, params) in [
             ("sketch.create", json!({"plane":"XY"})),
             ("sketch.line", json!({"points":[[0,0],[20,0]],"ids":["reference"],"construction":true})),
@@ -48,7 +48,7 @@ fn an_end_dragged_off_a_horizontal_construction_line_leaves_it_whole() {
     ];
     for construction in through_origin {
         for live in [false, true] {
-            let mut s = solidcraft_engine::Session::default();
+            let mut s = torno_engine::Session::default();
             s.execute("sketch.create", &json!({"plane":"XY"})).unwrap();
             for (id, params) in construction.iter().cloned().chain([
                 ("sketch.line", json!({"points":[[10,0],[10,10]],"ids":["l"],"infer":false})),
@@ -56,8 +56,8 @@ fn an_end_dragged_off_a_horizontal_construction_line_leaves_it_whole() {
             ]) {
                 s.execute(id, &params).unwrap();
             }
-            let point = |s: &solidcraft_engine::Session, id| four_bar::point(s, id).unwrap();
-            let length = |s: &solidcraft_engine::Session| point(s, "c.start").dist(point(s, "c.end"));
+            let point = |s: &torno_engine::Session, id| four_bar::point(s, id).unwrap();
+            let length = |s: &torno_engine::Session| point(s, "c.start").dist(point(s, "c.end"));
             let before = length(&s);
             let mut at = point(&s, "l.start");
             for _ in 0..10 {
@@ -87,7 +87,7 @@ fn a_midpoint_line_dragged_off_its_angle_leaves_the_horizontal_line_alone() {
         for (end, to, reached) in
             [("l1.end", [14.0, 3.0], [11.617647, 6.970588]), ("l1.end", [5.0, 12.0], [8.970588, 5.382353]), ("l1.start", [-3.0, -12.0], [-7.5, -4.5])]
         {
-            let mut s = solidcraft_engine::Session::default();
+            let mut s = torno_engine::Session::default();
             for (id, params) in [
                 ("sketch.create", json!({"plane":"XY"})),
                 ("sketch.line", json!({"points":[[-10,-6],[10,6]],"infer":false})),
@@ -112,7 +112,7 @@ fn a_midpoint_line_dragged_off_its_angle_leaves_the_horizontal_line_alone() {
     }
 }
 
-fn drag(s: &mut solidcraft_engine::Session, target: Vec2) {
+fn drag(s: &mut torno_engine::Session, target: Vec2) {
     let from = four_bar::point(s, "crank.end").unwrap();
     s.execute("sketch.drag", &json!({"entity":"crank.end","from":[from.x,from.y],"to":[target.x,target.y],"live":true})).unwrap();
 }
@@ -213,7 +213,7 @@ fn four_bar_other_joint_follows_the_rocker_arc_and_its_limits() {
     }
 }
 
-fn grab(s: &solidcraft_engine::Session, line: &str, fraction: f64) -> Vec2 {
+fn grab(s: &torno_engine::Session, line: &str, fraction: f64) -> Vec2 {
     let a = four_bar::point(s, &format!("{line}.start")).unwrap();
     let b = four_bar::point(s, &format!("{line}.end")).unwrap();
     a + (b - a) * fraction
@@ -221,7 +221,7 @@ fn grab(s: &solidcraft_engine::Session, line: &str, fraction: f64) -> Vec2 {
 
 #[test]
 fn a_live_line_grab_can_move_in_a_large_staircase() {
-    let mut s = solidcraft_engine::Session::default();
+    let mut s = torno_engine::Session::default();
     s.execute("sketch.create", &json!({"plane":"XY"})).unwrap();
     let mut points = vec![[10, 0], [10, 20]];
     for i in 0..43 {
@@ -252,7 +252,7 @@ fn a_live_line_grab_can_move_in_a_large_staircase() {
 #[test]
 fn a_free_line_grabbed_slightly_off_its_edge_still_translates_rigidly() {
     for from in [Vec2::new(15.0, 12.0), Vec2::new(32.0, 11.0)] {
-        let mut s = solidcraft_engine::Session::default();
+        let mut s = torno_engine::Session::default();
         s.execute("sketch.create", &json!({"plane":"XZ"})).unwrap();
         s.execute("sketch.line", &json!({"points":[[10,10],[30,10]],"ids":["free"],"infer":false})).unwrap();
         let to = from + Vec2::new(3.0, 5.0);
@@ -270,7 +270,7 @@ fn an_offset_edge_grab_rotates_with_the_link_and_does_not_drift() {
         let mut s = four_bar::session().unwrap();
         let target = Vec2::new(-7.0, 11.2);
         let closest = target * (10.0 * local.len() / target.len());
-        let attached = |s: &solidcraft_engine::Session| {
+        let attached = |s: &torno_engine::Session| {
             let a = four_bar::point(s, "crank.start").unwrap();
             let d = four_bar::point(s, "crank.end").unwrap() - a;
             a + d * local.x + Vec2::new(-d.y, d.x) * local.y
@@ -403,9 +403,9 @@ fn the_coupler_edge_follows_with_both_ends_free_to_rotate() {
 /// Two parallelogram linkages, each held parallel and equal on both pairs of sides (two
 /// redundant constraints each), the upper one hanging off the lower one's moving side and tied
 /// to a fixed pivot by a 30 mm rod: one degree of freedom (#4585).
-fn parallelograms() -> solidcraft_engine::Session {
-    let mut s = solidcraft_engine::Session::default();
-    let run = |s: &mut solidcraft_engine::Session, id: &str, p: serde_json::Value| {
+fn parallelograms() -> torno_engine::Session {
+    let mut s = torno_engine::Session::default();
+    let run = |s: &mut torno_engine::Session, id: &str, p: serde_json::Value| {
         s.execute(id, &p).unwrap_or_else(|e| panic!("{id} {p}: {e}"));
     };
     run(&mut s, "sketch.create", json!({"plane":"XY"}));
@@ -434,7 +434,7 @@ fn parallelograms() -> solidcraft_engine::Session {
 }
 
 /// The parallelograms' lengths, directions and fixed points, as the largest error.
-fn parallelogram_error(s: &solidcraft_engine::Session) -> f64 {
+fn parallelogram_error(s: &torno_engine::Session) -> f64 {
     let p = |name: &str| four_bar::point(s, name).unwrap();
     let side = |line: &str| p(&format!("{line}.end")) - p(&format!("{line}.start"));
     let mut error = p("bot.start").len().max(p("right.start").dist(Vec2::new(0.0, 20.0)));
@@ -480,7 +480,7 @@ fn a_linkage_held_by_redundant_parallelograms_follows_the_cursor() {
 
 #[test]
 fn a_drag_that_would_fling_points_far_away_leaves_them_near_the_sketch() {
-    let mut s = solidcraft_engine::Session::default();
+    let mut s = torno_engine::Session::default();
     for (id, params) in [
         ("sketch.create", json!({"plane":"XY"})),
         ("sketch.line", json!({"points":[[2,-27],[-2,22],[-10,-10],[2,13]]})),
@@ -506,7 +506,7 @@ fn a_drag_that_would_fling_points_far_away_leaves_them_near_the_sketch() {
 #[test]
 fn an_end_dragged_past_its_lines_midpoint_leaves_the_line_a_length() {
     for live in [false, true] {
-        let mut s = solidcraft_engine::Session::default();
+        let mut s = torno_engine::Session::default();
         for (id, params) in [
             ("sketch.create", json!({"plane":"XY"})),
             ("sketch.line", json!({"points":[[-10,-6],[10,6]],"infer":false})),

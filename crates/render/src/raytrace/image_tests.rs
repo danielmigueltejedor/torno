@@ -1,10 +1,10 @@
 use super::*;
-use solidcraft_geom::Aabb3;
+use torno_geom::Aabb3;
 fn emission_fixture(reverse: bool) -> (ProductScene, ImageRequest, RaytraceOptions) {
     use std::sync::Arc;
     let mut meshes = Vec::new();
     for (name, lo, hi) in [("emitter", -20.0, 0.0), ("receiver", 0.0, 20.0)] {
-        let mesh = solidcraft_geom::Mesh {
+        let mesh = torno_geom::Mesh {
             positions: vec![Vec3::new(lo, -10.0, 0.0), Vec3::new(hi, -10.0, 0.0), Vec3::new(hi, 10.0, 0.0), Vec3::new(lo, 10.0, 0.0)],
             normals: vec![Vec3::Z; 4],
             triangles: if reverse { vec![[0, 2, 1], [0, 3, 2]] } else { vec![[0, 1, 2], [0, 2, 3]] },
@@ -27,7 +27,7 @@ fn emission_fixture(reverse: bool) -> (ProductScene, ImageRequest, RaytraceOptio
     request.height = 1;
     request.camera.distance = 25.0;
     request.camera.fov = 0.0;
-    request.camera.set_view(solidcraft_viewport::StandardView::Top);
+    request.camera.set_view(torno_viewport::StandardView::Top);
     let options = RaytraceOptions {
         threads: 1,
         lights: Some(Vec::new()),
@@ -330,7 +330,7 @@ fn thin_shadow_occluder_survives_large_unrelated_translation() {
 #[test]
 fn primary_intervals_follow_camera_clip_planes_for_both_projections_and_up_axes() {
     for fov in [0.0, 0.7] {
-        for up in [solidcraft_viewport::UpAxis::Z, solidcraft_viewport::UpAxis::Y] {
+        for up in [torno_viewport::UpAxis::Z, torno_viewport::UpAxis::Y] {
             let mut request = request();
             request.camera.fov = fov;
             request.camera.up = up;
@@ -369,8 +369,8 @@ fn resumable_cursor_matches_original_visibility_and_charges_each_unit() {
 #[test]
 fn actual_png_has_analytic_lit_and_cast_shadow_pixels() {
     use crate::ProductMesh;
-    use solidcraft_geom::Mesh;
     use std::sync::Arc;
+    use torno_geom::Mesh;
     fn plane(z: f64, x0: f64, x1: f64) -> ProductMesh {
         let mesh = Mesh {
             positions: vec![Vec3::new(x0, -10.0, z), Vec3::new(x1, -10.0, z), Vec3::new(x1, 10.0, z), Vec3::new(x0, 10.0, z)],
@@ -396,7 +396,7 @@ fn actual_png_has_analytic_lit_and_cast_shadow_pixels() {
     request.width = 40;
     request.height = 40;
     request.camera.distance = 50.0;
-    request.camera.set_view(solidcraft_viewport::StandardView::Top);
+    request.camera.set_view(torno_viewport::StandardView::Top);
     let options = RaytraceOptions {
         threads: 1,
         lights: Some(vec![job::DirectionalLightOptions { direction: [-1.0, 0.0, 1.0], color: [1.0; 3], intensity: 1.0 }]),
@@ -429,7 +429,7 @@ fn actual_png_has_analytic_lit_and_cast_shadow_pixels() {
 }
 fn triangle_task(cancel: CancelToken) -> ImageTask {
     use std::sync::Arc;
-    let mesh = solidcraft_geom::Mesh {
+    let mesh = torno_geom::Mesh {
         positions: vec![Vec3::new(-20.0, -20.0, 0.0), Vec3::new(20.0, -20.0, 0.0), Vec3::new(0.0, 20.0, 0.0)],
         normals: vec![Vec3::Z; 3],
         triangles: vec![[0, 1, 2]],
@@ -451,7 +451,7 @@ fn triangle_task(cancel: CancelToken) -> ImageTask {
     };
     let mut request = request();
     request.camera.distance = 50.0;
-    request.camera.set_view(solidcraft_viewport::StandardView::Top);
+    request.camera.set_view(torno_viewport::StandardView::Top);
     // These fixtures inspect owner-local continuations between serial work quanta.
     let options = RaytraceOptions { threads: 1, ..Default::default() };
     request.raytrace = Some(options.clone());
@@ -476,7 +476,7 @@ fn face_looks_cost_one_unit_per_triangle_and_the_first_entry_wins() {
         }
     }
     let count = positions.len();
-    let mesh = solidcraft_geom::Mesh { positions, normals: vec![Vec3::Z; count], triangles, tri_face, ..Default::default() };
+    let mesh = torno_geom::Mesh { positions, normals: vec![Vec3::Z; count], triangles, tri_face, ..Default::default() };
     let look = |face: u32, color: [u8; 3]| crate::FaceAppearance { face, color, opacity: 1.0, surface: None, transmission: None };
     let mut faces: Vec<_> = (0..columns * rows).step_by(2).map(|face| look(face, [face as u8 * 8, 100, 200])).collect();
     // Later duplicates never replace the first entry for a face.
@@ -497,7 +497,7 @@ fn face_looks_cost_one_unit_per_triangle_and_the_first_entry_wins() {
     };
     let mut request = request();
     request.camera.distance = 60.0;
-    request.camera.set_view(solidcraft_viewport::StandardView::Top);
+    request.camera.set_view(torno_viewport::StandardView::Top);
     let mut task = ImageTask::new(scene, request, CancelToken::default(), Default::default()).unwrap();
     let before = task.work.used();
     for _ in 0..10_000 {
@@ -669,14 +669,14 @@ fn emission_and_directional_point_area_terms_share_one_linear_output_transform()
 fn reflected_hit_adds_surface_emission_with_the_current_path_throughput() {
     use std::sync::Arc;
     let normal = Vec3::new(1.0, 0.0, 1.0) / 2.0_f64.sqrt();
-    let mirror_mesh = solidcraft_geom::Mesh {
+    let mirror_mesh = torno_geom::Mesh {
         positions: vec![Vec3::new(-20.0, -20.0, 20.0), Vec3::new(20.0, -20.0, -20.0), Vec3::new(20.0, 20.0, -20.0), Vec3::new(-20.0, 20.0, 20.0)],
         normals: vec![normal; 4],
         triangles: vec![[0, 1, 2], [0, 2, 3]],
         tri_face: vec![0; 2],
         ..Default::default()
     };
-    let emitter_mesh = solidcraft_geom::Mesh {
+    let emitter_mesh = torno_geom::Mesh {
         positions: vec![Vec3::new(10.0, -4.0, -2.0), Vec3::new(10.0, -4.0, 2.0), Vec3::new(10.0, 4.0, 2.0), Vec3::new(10.0, 4.0, -2.0)],
         normals: vec![-Vec3::X; 4],
         triangles: vec![[0, 1, 2], [0, 2, 3]],
@@ -710,7 +710,7 @@ fn reflected_hit_adds_surface_emission_with_the_current_path_throughput() {
     request.height = 1;
     request.camera.distance = 50.0;
     request.camera.fov = 0.0;
-    request.camera.set_view(solidcraft_viewport::StandardView::Top);
+    request.camera.set_view(torno_viewport::StandardView::Top);
     let options = RaytraceOptions {
         threads: 1,
         lights: Some(Vec::new()),
@@ -741,8 +741,8 @@ fn reflected_hit_adds_surface_emission_with_the_current_path_throughput() {
 #[test]
 fn procedural_effects_change_completed_pngs_independently_and_zero_is_byte_identical() {
     use crate::{ProductMesh, surface_patterns::SurfaceEffect};
-    use solidcraft_geom::Mesh;
     use std::sync::Arc;
+    use torno_geom::Mesh;
     let mesh = Arc::new(Mesh {
         positions: vec![Vec3::new(-10.0, -10.0, 0.0), Vec3::new(10.0, -10.0, 0.0), Vec3::new(10.0, 10.0, 0.0), Vec3::new(-10.0, 10.0, 0.0)],
         normals: vec![Vec3::Z; 4],
@@ -775,7 +775,7 @@ fn procedural_effects_change_completed_pngs_independently_and_zero_is_byte_ident
         request.width = 32;
         request.height = 32;
         request.camera.distance = 40.0;
-        request.camera.set_view(solidcraft_viewport::StandardView::Top);
+        request.camera.set_view(torno_viewport::StandardView::Top);
         let options = RaytraceOptions { threads: 1, surface_effects: effect.map(|e| vec![e]), shadows: false, ..Default::default() };
         request.raytrace = Some(options.clone());
         let mut task = ImageTask::new(scene.clone(), request, CancelToken::default(), options).unwrap();
@@ -819,8 +819,8 @@ fn surface_target_refusals_are_atomic_before_pixels_or_bvh_allocation() {
 
 fn surface_consumer_fixture() -> (ProductScene, ImageRequest, RaytraceOptions) {
     use crate::{ProductMesh, surface_patterns::SurfaceEffect};
-    use solidcraft_geom::Mesh;
     use std::sync::Arc;
+    use torno_geom::Mesh;
     let mesh = Arc::new(Mesh {
         positions: vec![Vec3::new(-20.0, -20.0, 0.0), Vec3::new(20.0, -20.0, 0.0), Vec3::new(20.0, 20.0, 0.0), Vec3::new(-20.0, 20.0, 0.0)],
         normals: vec![Vec3::Z; 4],
@@ -857,7 +857,7 @@ fn surface_consumer_fixture() -> (ProductScene, ImageRequest, RaytraceOptions) {
     request.width = 1;
     request.height = 1;
     request.camera.distance = 40.0;
-    request.camera.set_view(solidcraft_viewport::StandardView::Top);
+    request.camera.set_view(torno_viewport::StandardView::Top);
     request.raytrace = Some(options.clone());
     (scene, request, options)
 }
@@ -944,8 +944,8 @@ fn surface_effect_shared_hit_reaches_directional_point_area_and_hdr_consumers() 
 
 fn surface_at_thirty_two_binding_scan() -> ImageTask {
     use crate::{ProductMesh, surface_patterns::SurfaceEffect};
-    use solidcraft_geom::Mesh;
     use std::sync::Arc;
+    use torno_geom::Mesh;
     let (mut scene, mut request, mut options) = surface_consumer_fixture();
     let visible = scene.meshes.pop().unwrap();
     let mut effects = Vec::with_capacity(32);
@@ -1036,14 +1036,14 @@ fn reflected_surface_effect_uses_changed_shading_and_resets_before_emitting_seco
     use crate::surface_patterns::SurfaceEffect;
     use std::sync::Arc;
     let normal = Vec3::new(1.0, 0.0, 1.0) / 2.0_f64.sqrt();
-    let mirror_mesh = solidcraft_geom::Mesh {
+    let mirror_mesh = torno_geom::Mesh {
         positions: vec![Vec3::new(-20.0, -20.0, 20.0), Vec3::new(20.0, -20.0, -20.0), Vec3::new(20.0, 20.0, -20.0), Vec3::new(-20.0, 20.0, 20.0)],
         normals: vec![normal; 4],
         triangles: vec![[0, 1, 2], [0, 2, 3]],
         tri_face: vec![0; 2],
         ..Default::default()
     };
-    let emitter_mesh = solidcraft_geom::Mesh {
+    let emitter_mesh = torno_geom::Mesh {
         positions: vec![Vec3::new(10.0, -20.0, -20.0), Vec3::new(10.0, -20.0, 20.0), Vec3::new(10.0, 20.0, 20.0), Vec3::new(10.0, 20.0, -20.0)],
         normals: vec![-Vec3::X; 4],
         triangles: vec![[0, 1, 2], [0, 2, 3]],
@@ -1088,7 +1088,7 @@ fn reflected_surface_effect_uses_changed_shading_and_resets_before_emitting_seco
     request.height = 1;
     request.camera.distance = 50.0;
     request.camera.fov = 0.0;
-    request.camera.set_view(solidcraft_viewport::StandardView::Top);
+    request.camera.set_view(torno_viewport::StandardView::Top);
     for mode in [job::ReflectionMode::Mirror, job::ReflectionMode::RoughSpecular] {
         let options = RaytraceOptions {
             threads: 1,
@@ -1227,7 +1227,7 @@ fn optical_sheet(name: &str, x: f64, z: f64) -> crate::ProductMesh {
     crate::ProductMesh {
         transmission: None,
         name: name.into(),
-        mesh: Arc::new(solidcraft_geom::Mesh {
+        mesh: Arc::new(torno_geom::Mesh {
             positions: vec![Vec3::new(x - 20.0, -20.0, z), Vec3::new(x + 20.0, -20.0, z), Vec3::new(x + 20.0, 20.0, z), Vec3::new(x - 20.0, 20.0, z)],
             normals: vec![Vec3::Z; 4],
             triangles: vec![[0, 1, 2], [0, 2, 3]],
@@ -1556,7 +1556,7 @@ fn optical_admission_bills_capacity_and_refuses_ambiguous_effect_and_environment
 #[test]
 fn captured_clear_coat_keeps_direct_shading_but_refuses_unmatched_cpu_transport() {
     let (mut scene, mut request, mut options) = emission_fixture(false);
-    let coat = solidcraft_viewport::clear_coat::ClearCoat::new(0.8, 0.2, 1.5).unwrap();
+    let coat = torno_viewport::clear_coat::ClearCoat::new(0.8, 0.2, 1.5).unwrap();
     let surface = OpaqueSurface::new(Vec3::new(0.4, 0.3, 0.2), 0.0, 0.4, 1.5).unwrap().with_clear_coat(coat);
     scene.meshes[0].surface = Some(surface);
     request.raytrace = Some(options.clone());
@@ -2147,10 +2147,11 @@ fn cpu_denoise_production_guides_use_exact_body_and_material_bypass_policy() {
             }
             2 | 3 => {
                 for body in &mut source.meshes {
-                    body.surface =
-                        Some(OpaqueSurface::new(Vec3::new(0.4, 0.6, 0.8), 0.0, 0.5, 1.5).unwrap().with_clear_coat(
-                            solidcraft_viewport::clear_coat::ClearCoat::new(1.0, if case == 2 { 0.045 } else { 0.1 }, 1.5).unwrap(),
-                        ));
+                    body.surface = Some(
+                        OpaqueSurface::new(Vec3::new(0.4, 0.6, 0.8), 0.0, 0.5, 1.5)
+                            .unwrap()
+                            .with_clear_coat(torno_viewport::clear_coat::ClearCoat::new(1.0, if case == 2 { 0.045 } else { 0.1 }, 1.5).unwrap()),
+                    );
                 }
             }
             4 => {
@@ -2211,7 +2212,7 @@ fn cpu_denoise_production_guides_use_exact_body_and_material_bypass_policy() {
 }
 
 fn denoise_optical_plane(name: &str, z: f64, color: Vec3) -> crate::ProductMesh {
-    let mesh = solidcraft_geom::Mesh {
+    let mesh = torno_geom::Mesh {
         positions: vec![Vec3::new(-10.0, -10.0, z), Vec3::new(10.0, -10.0, z), Vec3::new(10.0, 10.0, z), Vec3::new(-10.0, 10.0, z)],
         triangles: vec![[0, 1, 2], [0, 2, 3]],
         ..Default::default()
@@ -2233,7 +2234,7 @@ fn denoise_optical_fixture(boundary: Option<job::DielectricBoundary>, path: bool
     request.camera.target = Vec3::ZERO;
     request.camera.distance = 3.0;
     request.camera.fov = 0.5;
-    request.camera.set_view(solidcraft_viewport::StandardView::Top);
+    request.camera.set_view(torno_viewport::StandardView::Top);
     let mut options = RaytraceOptions {
         threads: 1,
         denoise: true,
@@ -2293,9 +2294,8 @@ fn cpu_denoise_optical_guides_follow_explicit_mirror_and_near_perfect_metal() {
 fn cpu_denoise_optical_guides_bypass_every_active_coat_on_metal() {
     for roughness in [0.045, 0.1, 0.5] {
         let (mut scene, request, options) = denoise_optical_fixture(None, true);
-        scene.meshes[0].surface = scene.meshes[0]
-            .surface
-            .map(|surface| surface.with_clear_coat(solidcraft_viewport::clear_coat::ClearCoat::new(0.8, roughness, 1.5).unwrap()));
+        scene.meshes[0].surface =
+            scene.meshes[0].surface.map(|surface| surface.with_clear_coat(torno_viewport::clear_coat::ClearCoat::new(0.8, roughness, 1.5).unwrap()));
         assert_eq!(optical_denoise_guide(scene, request, options).body, 0);
     }
 }
@@ -2564,7 +2564,7 @@ fn mapped_wood_fixture() -> (ProductScene, ImageRequest, RaytraceOptions) {
     use crate::job::textures::{BaseColorMode, PlanarFrame, RuntimeTextures, TextureBinding, TextureMap};
     use image::ImageEncoder;
     use std::sync::Arc;
-    let mesh = solidcraft_geom::Mesh {
+    let mesh = torno_geom::Mesh {
         positions: vec![Vec3::new(-40., -40., 0.), Vec3::new(40., -40., 0.), Vec3::new(40., 40., 0.), Vec3::new(-40., 40., 0.)],
         normals: vec![Vec3::Z; 4],
         triangles: vec![[0, 1, 2], [0, 2, 3]],
@@ -2608,7 +2608,7 @@ fn mapped_wood_fixture() -> (ProductScene, ImageRequest, RaytraceOptions) {
     }])
     .unwrap();
     let mut request = request();
-    request.camera.set_view(solidcraft_viewport::StandardView::Top);
+    request.camera.set_view(torno_viewport::StandardView::Top);
     request.camera.distance = 1.25;
     request.textures = Some(Arc::new(textures));
     let options = RaytraceOptions {

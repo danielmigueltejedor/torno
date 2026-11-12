@@ -1,6 +1,6 @@
 # Automated Build & Deployment Pipeline
 
-Torno includes automated build and deployment scripts for Windows (`update-solidcraft.ps1`) and Linux (`update-solidcraft.sh`).
+Torno includes automated build and deployment scripts for Windows (`update-torno.ps1`) and Linux (`update-torno.sh`).
 
 The scripts check the selected Git branch for updates, build native GUI and CLI executables, optionally build the WebAssembly target, and deploy successful binaries. Builds run in an isolated Git worktree so the user's original checkout, current branch, and uncommitted changes remain untouched.
 
@@ -37,9 +37,9 @@ The original checkout remains on its original branch throughout the process.
 
 | Target | Cargo Package | Output | Supported Host |
 |---|---|---|---|
-| GUI | `solidcraft` | Native executable (`solidcraft` / `solidcraft.exe`) | Windows / Linux |
-| CLI | `solidcraft-cli` | Native executable (`solidcraft-cli` / `solidcraft-cli.exe`) | Windows / Linux |
-| Web | `solidcraft-web` | WebAssembly | Windows / Linux |
+| GUI | `torno` | Native executable (`torno` / `torno.exe`) | Windows / Linux |
+| CLI | `torno-cli` | Native executable (`torno-cli` / `torno-cli.exe`) | Windows / Linux |
+| Web | `torno-web` | WebAssembly | Windows / Linux |
 
 ### Deployment Locations
 
@@ -47,8 +47,8 @@ Native executables are deployed to the repository root:
 
 | Platform | GUI | CLI |
 |---|---|---|
-| Linux | `solidcraft` | `solidcraft-cli` |
-| Windows | `solidcraft.exe` | `solidcraft-cli.exe` |
+| Linux | `torno` | `torno-cli` |
+| Windows | `torno.exe` | `torno-cli.exe` |
 
 Before replacing an existing executable, the script creates a timestamped backup under:
 
@@ -63,8 +63,8 @@ The WebAssembly target uses a separate installation directory configured through
 
 The scripts maintain build-state information in:
 
-- Linux: `target/.solidcraft-build-state`
-- Windows: `target\.solidcraft-build-state`
+- Linux: `target/.torno-build-state`
+- Windows: `target\.torno-build-state`
 
 The state records the selected revision and relevant build configuration. If the selected commit and configuration have already been built successfully, the script skips the build.
 
@@ -74,7 +74,7 @@ Force cleanup removes generated contents within the selected Cargo profile direc
 
 ---
 
-## Linux Setup (`update-solidcraft.sh`)
+## Linux Setup (`update-torno.sh`)
 
 ### Configuration
 
@@ -83,13 +83,13 @@ The script resolves the repository root automatically using Git. It uses the Car
 The WebAssembly deployment directory can be configured using:
 
 ```bash
-export WEB_INSTALL_DIR="/var/www/html/solidcraft/"
+export WEB_INSTALL_DIR="/var/www/html/torno/"
 ```
 
 The default is:
 
 ```text
-/var/www/html/solidcraft/
+/var/www/html/torno/
 ```
 
 Native executable deployment does not require a separate installation directory.
@@ -99,7 +99,7 @@ Native executable deployment does not require a separate installation directory.
 Run from the repository root:
 
 ```bash
-./scripts/update-solidcraft.sh
+./scripts/update-torno.sh
 ```
 
 The script can also be run from another working directory.
@@ -124,31 +124,31 @@ The script can also be run from another working directory.
 Build only the CLI in the current branch's configured upstream using the default settings:
 
 ```bash
-./scripts/update-solidcraft.sh --BuildGui false --BuildCli true
+./scripts/update-torno.sh --BuildGui false --BuildCli true
 ```
 
 Build the latest `main` branch using the release profile, skipping tests:
 
 ```bash
-./scripts/update-solidcraft.sh -s -r -b main
+./scripts/update-torno.sh -s -r -b main
 ```
 
 Force a clean release rebuild:
 
 ```bash
-./scripts/update-solidcraft.sh -f -r
+./scripts/update-torno.sh -f -r
 ```
 
 Build only the CLI:
 
 ```bash
-./scripts/update-solidcraft.sh --BuildGui false
+./scripts/update-torno.sh --BuildGui false
 ```
 
 Enable the WebAssembly target:
 
 ```bash
-./scripts/update-solidcraft.sh -w
+./scripts/update-torno.sh -w
 ```
 
 ### Web Deployment and Permissions
@@ -159,11 +159,11 @@ For scheduled execution as a standard user running via `cron`, the safest approa
 
 1. Create a web deployment directory within your user home path or in the webserver path:
 
-    mkdir -p "$HOME/public_html/solidcraft"
+    mkdir -p "$HOME/public_html/torno"
     - or
-    mkdir -p "/var/www/html/solidcraft"
+    mkdir -p "/var/www/html/torno"
     - or
-    mkdir C:\inetpub\wwwroot\solidcraft
+    mkdir C:\inetpub\wwwroot\torno
 
 2. Configure your web server (such as Nginx or Apache) to serve static assets and WebAssembly files directly from your user directory, eliminating the need for any privileged file copying.
 
@@ -180,7 +180,7 @@ crontab -e
 For example, to check for updates hourly:
 
 ```cron
-0 * * * * /bin/bash "$HOME/solidcraft/scripts/update-solidcraft.sh" >/dev/null 2>&1
+0 * * * * /bin/bash "$HOME/torno/scripts/update-torno.sh" >/dev/null 2>&1
 ```
 
 The script checks for new commits and skips the build when the selected revision and configuration have already been built.
@@ -188,12 +188,12 @@ The script checks for new commits and skips the build when the selected revision
 If using a system-wide crontab, specify the executing user and load the Cargo environment:
 
 ```cron
-0 * * * * username /bin/bash -c 'source "$HOME/.cargo/env" && "$HOME/solidcraft/scripts/update-solidcraft.sh"' >/dev/null 2>&1
+0 * * * * username /bin/bash -c 'source "$HOME/.cargo/env" && "$HOME/torno/scripts/update-torno.sh"' >/dev/null 2>&1
 ```
 
 ---
 
-## Windows Setup (`update-solidcraft.ps1`)
+## Windows Setup (`update-torno.ps1`)
 
 ### Configuration
 
@@ -204,7 +204,7 @@ The WebAssembly deployment directory can be configured through the `WEB_INSTALL_
 The default is:
 
 ```text
-C:\inetpub\wwwroot\solidcraft
+C:\inetpub\wwwroot\torno
 ```
 
 Native GUI and CLI executables are deployed to the repository root.
@@ -214,7 +214,7 @@ Native GUI and CLI executables are deployed to the repository root.
 Run from PowerShell:
 
 ```powershell
-.\scripts\update-solidcraft.ps1
+.\scripts\update-torno.ps1
 ```
 
 ### Parameters
@@ -236,31 +236,31 @@ Run from PowerShell:
 Build the current branch's configured upstream:
 
 ```powershell
-.\scripts\update-solidcraft.ps1
+.\scripts\update-torno.ps1
 ```
 
 Build `main` using the release profile, skipping tests:
 
 ```powershell
-.\scripts\update-solidcraft.ps1 -Branch main -ReleaseMode -SkipTests
+.\scripts\update-torno.ps1 -Branch main -ReleaseMode -SkipTests
 ```
 
 Force a clean release rebuild:
 
 ```powershell
-.\scripts\update-solidcraft.ps1 -ForceBuild -ReleaseMode
+.\scripts\update-torno.ps1 -ForceBuild -ReleaseMode
 ```
 
 Build only the CLI:
 
 ```powershell
-.\scripts\update-solidcraft.ps1 -BuildGui $false
+.\scripts\update-torno.ps1 -BuildGui $false
 ```
 
 Enable building the WebAssembly target:
 
 ```powershell
-.\scripts\update-solidcraft.ps1 -BuildWeb
+.\scripts\update-torno.ps1 -BuildWeb
 ```
 
 ### Setting Up Windows Task Scheduler
@@ -275,9 +275,9 @@ To execute the build pipeline automatically:
    - **Program/script:** `powershell.exe`
    - **Add arguments:**
      ```text
-     -ExecutionPolicy Bypass -File "C:\solidcraft\scripts\update-solidcraft.ps1"
+     -ExecutionPolicy Bypass -File "C:\torno\scripts\update-torno.ps1"
      ```
-   - **Start in:** `C:\solidcraft`
+   - **Start in:** `C:\torno`
 
 The scheduled task should run under an account with access to the repository, Git, Rust/Cargo, and the configured deployment directory.
 

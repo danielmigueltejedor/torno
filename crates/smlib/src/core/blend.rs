@@ -65,7 +65,7 @@ pub(crate) const MIXED_CORNER_UNSUPPORTED: &str = "a fillet corner where a conve
 tangent, so that their contact lines cross before the corner (https://github.com/tangency-labs/solidcore/issues/2256)";
 use solidcore::topology::brep::p3::brep_copy;
 
-/// The capi's statuses as SolidCraft errors: an operation's own result.
+/// The capi's statuses as Torno errors: an operation's own result.
 type Out<T> = std::result::Result<T, Error>;
 
 /// `SM_ERR_INVALID_INPUT`.
@@ -343,7 +343,7 @@ fn blend_failure(s: &FilletSession<'_>, e: SolidError, corner: bool) -> (Error, 
     }
 }
 
-/// solidcore's reason for a blend too large, as SolidCraft words it; `None` for the reasons it
+/// solidcore's reason for a blend too large, as Torno words it; `None` for the reasons it
 /// does not name (the cliff overflow's own refusals).
 fn room_reason(r: NoRoomReason) -> Option<crate::RoomReason> {
     use crate::RoomReason as R;

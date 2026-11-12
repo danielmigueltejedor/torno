@@ -10,14 +10,14 @@
 //! the record curve's own points. A point that settles off its face (past the
 //! face's boundary) is dropped: the face's edges, offered too, then carry the minimum.
 
-use solidcraft_geom::prelude::*;
 use std::collections::HashMap;
 use std::sync::OnceLock;
+use torno_geom::prelude::*;
 
 use solidcore_record::Vec3;
-use solidcraft_geom::brep::eval::{CurveEval, SurfaceEval};
-use solidcraft_geom::mesh_distance::{MeshClosest, TriangleSet};
-use solidcraft_geom::{Aabb3, Mesh};
+use torno_geom::brep::eval::{CurveEval, SurfaceEval};
+use torno_geom::mesh_distance::{MeshClosest, TriangleSet};
+use torno_geom::{Aabb3, Mesh};
 
 use crate::body::Body;
 use crate::surface_kind::{FaceSurface, surface_of};
@@ -141,7 +141,7 @@ impl<'a> DistanceShape<'a> {
             let sides: Vec<Vec3> = tris
                 .iter()
                 .filter_map(|&k| self.set.triangle(k))
-                .filter(|[a, b, c]| solidcraft_geom::compare::closest_on_triangle(at, *a, *b, *c).dist(at) <= reach)
+                .filter(|[a, b, c]| torno_geom::compare::closest_on_triangle(at, *a, *b, *c).dist(at) <= reach)
                 .map(|[a, b, c]| across((a + b + c) / 3.0))
                 .filter(|w| w.len() > tiny)
                 .collect();

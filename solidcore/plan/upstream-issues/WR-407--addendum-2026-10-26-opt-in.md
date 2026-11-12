@@ -17,6 +17,6 @@
   `issue_434_cover_refuses_a_continuation_that_folds` (fix on; each fails with its gate
   forced off), `issue_434_default_keeps_the_upstream_sweep_frame` and
   `issue_434_default_covers_across_the_fold` (default pin). The Torno fixture
-  `fixtures/solidcraft/434-two-overlapping-swept-arc-walls.json` turns both fields on
+  `fixtures/torno/434-two-overlapping-swept-arc-walls.json` turns both fields on
   (`fixes`).
 - Callers that want the fork's behaviour (Torno) set both fields.

@@ -336,8 +336,8 @@ mod tests {
     #[test]
     fn it_stays_away_from_a_calibrated_device_and_navigation_off() {
         let axes =
-            std::array::from_fn(|source| solidcraft_space_mouse::AxisCalibration { source, reversed: false, rest: 0, dead_zone: 0, full: [350; 2] });
-        let calibration = solidcraft_space_mouse::Calibration { dead_zone_share: 0.0, kind: solidcraft_space_mouse::Kind::ReturnToCenter, axes };
+            std::array::from_fn(|source| torno_space_mouse::AxisCalibration { source, reversed: false, rest: 0, dead_zone: 0, full: [350; 2] });
+        let calibration = torno_space_mouse::Calibration { dead_zone_share: 0.0, kind: torno_space_mouse::Kind::ReturnToCenter, axes };
         for (enabled, calibrated) in [(false, false), (true, true)] {
             let mut h = crate::scenario::Harness::new();
             h.app.home.open = false;
@@ -557,7 +557,7 @@ mod preferences_tests {
         let button = |i: usize| crate::scenario::rect_of(&format!("toast:space_mouse_offer:button:{i}")).unwrap();
         let (calibrate, direct, never) = (button(0), button(1), button(2));
         assert!((calibrate.right() - (card.right() - 12.0)).abs() < 0.5, "flush right: {calibrate:?} in {card:?}");
-        let gap = solidcraft_theme::Tokens::get().space_8;
+        let gap = torno_theme::Tokens::get().space_8;
         assert!((calibrate.left() - direct.right() - gap).abs() < 0.5, "{direct:?} then {calibrate:?}");
         assert!((direct.left() - never.right() - gap).abs() < 0.5, "{never:?} then {direct:?}");
         assert!(never.left() >= card.left() + 28.0 - 0.5, "inside the row: {never:?} in {card:?}");
@@ -880,8 +880,8 @@ mod preferences_tests {
     #[test]
     fn an_unplugged_and_replugged_device_keeps_its_calibration_and_is_not_offered_again() {
         let axes =
-            std::array::from_fn(|source| solidcraft_space_mouse::AxisCalibration { source, reversed: false, rest: 0, dead_zone: 0, full: [350; 2] });
-        let calibration = solidcraft_space_mouse::Calibration { dead_zone_share: 0.0, kind: solidcraft_space_mouse::Kind::ReturnToCenter, axes };
+            std::array::from_fn(|source| torno_space_mouse::AxisCalibration { source, reversed: false, rest: 0, dead_zone: 0, full: [350; 2] });
+        let calibration = torno_space_mouse::Calibration { dead_zone_share: 0.0, kind: torno_space_mouse::Kind::ReturnToCenter, axes };
         for prefs_open in [false, true] {
             let mut h = crate::scenario::Harness::new();
             h.app.home.open = false;
@@ -951,8 +951,8 @@ mod preferences_tests {
     #[test]
     fn a_driver_fallback_round_trip_keeps_the_calibration_and_the_driver_choice() {
         let axes =
-            std::array::from_fn(|source| solidcraft_space_mouse::AxisCalibration { source, reversed: false, rest: 0, dead_zone: 0, full: [350; 2] });
-        let calibration = solidcraft_space_mouse::Calibration { dead_zone_share: 0.0, kind: solidcraft_space_mouse::Kind::ReturnToCenter, axes };
+            std::array::from_fn(|source| torno_space_mouse::AxisCalibration { source, reversed: false, rest: 0, dead_zone: 0, full: [350; 2] });
+        let calibration = torno_space_mouse::Calibration { dead_zone_share: 0.0, kind: torno_space_mouse::Kind::ReturnToCenter, axes };
         let mut h = crate::scenario::Harness::new();
         h.app.home.open = false;
         h.app.preferences.space_mouse_driver = crate::prefs::SpaceMouseDriver::Direct;

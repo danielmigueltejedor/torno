@@ -54,7 +54,7 @@ fn model_faces_gives_a_point_on_each_face_and_the_hole_axis_and_radius() {
     let body = st.body("Plate").unwrap();
     for f in &all {
         let (at, index) = (vec(&f["point"]), f["index"].as_u64().unwrap() as usize);
-        let (distance, nearest) = solidcraft_doc::appearance::nearest_face(body, at).unwrap();
+        let (distance, nearest) = torno_doc::appearance::nearest_face(body, at).unwrap();
         assert_eq!(nearest, index, "a pick at the point finds the face: {f}");
         match f.get("cylinder") {
             // On the cylinder itself, not only on its facets (which lie inside it).
@@ -293,7 +293,7 @@ fn a_join_that_makes_the_body_bigger_leaves_round_walls_it_never_touched_alone()
     let mut s = Session::default();
     let (plate, tab) = plate_and_notched_tab(&mut s);
     let tab_name = format!("F{}", tab.unwrap_or_default());
-    let made_by = |face: &Value| face["name"].as_str().and_then(solidcraft_doc::persistent_name::made_by);
+    let made_by = |face: &Value| face["name"].as_str().and_then(torno_doc::persistent_name::made_by);
     let all = faces(&mut s, "Body1");
     let round: Vec<&Value> = all.iter().filter(|f| f.get("plane_normal").is_none_or(Value::is_null)).collect();
     let walls: Vec<&&Value> = round.iter().filter(|f| vec(&f["point"]).x < 15.0).collect();

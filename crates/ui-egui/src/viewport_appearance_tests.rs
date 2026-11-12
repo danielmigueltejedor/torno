@@ -2,11 +2,11 @@ use super::build_scene;
 use crate::{Services, SolveApp};
 use serde_json::json;
 use solidcore_record::Vec3;
-use solidcraft_engine::{Session, doc, kernel};
+use torno_engine::{Session, doc, kernel};
 
 #[test]
 fn a_finished_sketch_on_a_face_draws_a_halo_under_its_own_curves_only() {
-    use solidcraft_theme::{ColorVision, Tokens};
+    use torno_theme::{ColorVision, Tokens};
 
     let mut app = SolveApp::new(Session::default(), Services::default());
     app.run("solid.box", json!({"length":40,"width":30,"height":20})).unwrap();
@@ -15,16 +15,16 @@ fn a_finished_sketch_on_a_face_draws_a_halo_under_its_own_curves_only() {
     app.run("sketch.circle.center", json!({"center":[0,0],"radius":3})).unwrap();
     app.run("sketch.line", json!({"points":[[-4,0],[4,0]]})).unwrap();
     let rect = egui::Rect::from_min_size(egui::Pos2::ZERO, egui::vec2(800.0, 600.0));
-    let original_dark = solidcraft_theme::is_dark();
-    let original_vision = solidcraft_theme::vision();
+    let original_dark = torno_theme::is_dark();
+    let original_vision = torno_theme::vision();
     for finished in [false, true] {
         if finished {
             app.run("sketch.finish", json!({})).unwrap();
         }
         for dark in [false, true] {
             for vision in ColorVision::ALL {
-                solidcraft_theme::set_dark(dark);
-                solidcraft_theme::set_vision(vision);
+                torno_theme::set_dark(dark);
+                torno_theme::set_vision(vision);
                 let tokens = Tokens::get();
                 crate::prefs::set(&mut app, &json!({"sketch_halo": true})).unwrap();
                 let projection = super::projection(&app, rect);
@@ -74,8 +74,8 @@ fn a_finished_sketch_on_a_face_draws_a_halo_under_its_own_curves_only() {
             }
         }
     }
-    solidcraft_theme::set_dark(original_dark);
-    solidcraft_theme::set_vision(original_vision);
+    torno_theme::set_dark(original_dark);
+    torno_theme::set_vision(original_vision);
 }
 
 #[test]
@@ -101,7 +101,7 @@ fn placed_step_body_uses_imported_opacity_until_a_design_look_overrides_it() {
     app.ui.ground_shadow = false;
     app.set_origin_shown(false);
     let placed = app.session.world_state().unwrap().bodies.iter().find(|b| b.name != source).unwrap().name.clone();
-    app.session.selection = vec![solidcraft_engine::Sel::Body { name: placed }];
+    app.session.selection = vec![torno_engine::Sel::Body { name: placed }];
     app.start("appearance.assign");
     let crate::dialogs::Kind::Appearance(appearance) = &app.dialog.as_ref().unwrap().kind else { panic!("appearance dialog") };
     assert!((appearance.opacity - 0.4).abs() < 1e-6);
@@ -163,7 +163,7 @@ fn selection_does_not_rebuild_the_model_scene() {
     // Clear the scene the first frame uploaded; an untouched model must not upload another.
     let _ = h.app.viewport.slot.lock().unwrap().take();
     let name = h.app.session.world_state().unwrap().bodies[0].name.clone();
-    h.app.session.selection = vec![solidcraft_engine::Sel::Body { name }];
+    h.app.session.selection = vec![torno_engine::Sel::Body { name }];
     h.frame();
     assert_eq!(h.app.viewport.key, key, "a selection does not change the model scene key");
     assert!(h.app.viewport.slot.lock().unwrap().is_none(), "and does not rebuild it");
@@ -347,12 +347,12 @@ fn theme_switches_refresh_cached_viewport_colours_without_remeshing() {
     h.app.viewport.gpu =
         Some(super::GpuTarget { format: egui_wgpu::wgpu::TextureFormat::Rgba8Unorm, depth: None, samples: 1, tess: false, oit: false });
     let body = crate::open_meshing::session_world(&h.app.session).bodies[0].name.clone();
-    h.app.session.selection = vec![solidcraft_engine::Sel::Body { name: body.clone() }];
+    h.app.session.selection = vec![torno_engine::Sel::Body { name: body.clone() }];
     h.frame();
     let revision = h.app.session.revision;
     let mesh = crate::open_meshing::session_world(&h.app.session).bodies[0].cached_mesh().unwrap();
     let mut previous: Option<(u64, u64, u64)> = None;
-    for theme in ["dark", "gruvbox-dark", "blueprint", "dark", "light", "solidcraft-95", "cupertino", "light"] {
+    for theme in ["dark", "gruvbox-dark", "blueprint", "dark", "light", "torno-95", "cupertino", "light"] {
         let result = h.call("ui.prefs", json!({"theme": theme}));
         assert!(result.get("error").is_none(), "{result}");
         h.frame();
@@ -366,7 +366,7 @@ fn theme_switches_refresh_cached_viewport_colours_without_remeshing() {
         let scene = h.app.viewport.slot.lock().unwrap().take().expect("new model colours uploaded").merged();
         let (vertices, remainder) = scene.tris.as_chunks::<{ crate::gpu::TRI_SIZE }>();
         assert!(remainder.is_empty() && !vertices.is_empty());
-        let colour = super::c4(solidcraft_theme::Tokens::get().body);
+        let colour = super::c4(torno_theme::Tokens::get().body);
         assert!(vertices.iter().all(|v| vertex_color(&scene, v) == colour), "{theme}: stale body colour");
         assert_eq!(h.app.session.revision, revision, "theme changes must not edit the design");
         assert!(std::sync::Arc::ptr_eq(&mesh, &crate::open_meshing::session_world(&h.app.session).bodies[0].cached_mesh().unwrap()));
@@ -375,7 +375,7 @@ fn theme_switches_refresh_cached_viewport_colours_without_remeshing() {
         assert!(h.app.viewport.slot.lock().unwrap().is_none(), "an unchanged theme reuses its scene");
     }
     h.app.run("appearance.assign", json!({"bodies": [body], "color": "#336699"})).unwrap();
-    for theme in ["gruvbox-dark", "blueprint", "solidcraft-95"] {
+    for theme in ["gruvbox-dark", "blueprint", "torno-95"] {
         h.call("ui.prefs", json!({"theme": theme}));
         h.frame();
         let scene = h.app.viewport.slot.lock().unwrap().take().unwrap().merged();
@@ -422,7 +422,7 @@ fn inspect_menu_toggles_component_colors_without_a_dialog_and_refreshes_scene() 
     let mut h = crate::scenario::Harness::new();
     h.app.preferences.language = "en".into();
     h.frames(3);
-    let command = solidcraft_engine::find_command("inspect.colored_components").unwrap();
+    let command = torno_engine::find_command("inspect.colored_components").unwrap();
     let info = command.info(&h.app.session);
     assert_eq!((info.label, info.icon), ("Component Colors", "colored_components"));
     h.step(&json!({"click": {"handle": "tab:INSPECT"}})).unwrap();
@@ -478,7 +478,7 @@ fn conflicting_curves_points_glyphs_and_dimensions_take_the_conflict_colour_unti
         json!({"theme_import": {"format":"solidcraft-theme/1","name":"Conflict marker","base":"light","colors":{"sketch_conflict":"#12ab34"}}}),
     );
     h.frame();
-    assert_eq!(solidcraft_theme::Tokens::get().sketch_conflict, marker);
+    assert_eq!(torno_theme::Tokens::get().sketch_conflict, marker);
     // `w` places a guide line; a second sketch ends a 12 mm line on it. Moving the guide out of
     // reach makes the second sketch's constraints conflict (#7244).
     let app = &mut h.app;
@@ -547,7 +547,7 @@ fn conflicting_curves_points_glyphs_and_dimensions_take_the_conflict_colour_unti
             assert_eq!((lines, shapes), (0, 0), "w = {w}, preference {preference}: nothing in the conflict colour");
         }
         if conflicting && !preference {
-            let error = solidcraft_theme::Tokens::get().error;
+            let error = torno_theme::Tokens::get().error;
             assert!(painted_in(&h.shapes, error) > 0, "the failing glyphs and dimensions stay red");
         }
     }
@@ -596,7 +596,7 @@ fn vertex_markers_follow_the_edges_display_mode() {
 /// floor that left the depth map's precision to show as specks; nothing drawn, or AO off, is off.
 #[test]
 fn the_ambient_occlusion_radius_follows_what_is_drawn() {
-    use solidcraft_engine::geom::Aabb3;
+    use torno_engine::geom::Aabb3;
 
     let mut app = SolveApp::new(Session::default(), Services::default());
     app.preferences.ambient_occlusion = true;

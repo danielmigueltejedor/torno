@@ -32,6 +32,6 @@
   "ungraded": [],
   "what": "a ruled strip of width 0: refused, it would have no area",
   "why_not": [
-    "the failure is SolidCraft's, not a kernel operation's: step 2 (surface.ruled): invalid input: the ruled surface distance must be positive and finite"
+    "the failure is Torno's, not a kernel operation's: step 2 (surface.ruled): invalid input: the ruled surface distance must be positive and finite"
   ]
 }

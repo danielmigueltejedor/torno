@@ -357,7 +357,7 @@ their size in pixels (800 × 500 by default, at most 4096 a side), and `fps` the
 by default); `grid: false` and `axes: false` leave out the ground grid and the origin's axes.
 `camera` takes the reply of the control channel's `ui.camera` (or any of its fields;
 the rest come from the view `view.apply` chose, or the home view framing the model). The frames
-are drawn by the same renderer as `solidcraft-cli snapshot`, on a copy of the design, which is not
+are drawn by the same renderer as `torno-cli snapshot`, on a copy of the design, which is not
 changed. A GIF keeps one palette for all its frames, so colours don't flicker, and stores only
 what changed from one frame to the next. Frames are capped: at most 1000, and a GIF holds at most
 2^26 pixels of frames (about 160 frames of 800 × 500).
@@ -575,7 +575,7 @@ spreadsheet shows it as text; children follow their row) or a `.json` file. A fo
 starts with `=`, `+`, `-` or `@`, their full-width forms, a tab or a line break, after any spaces and
 `'`; a plain number such as `-5` is not one. A script that reads the CSV sees the `'` too: a part number
 `=1+1` is `'=1+1` in the file, and `'=1+1` is `''=1+1`. To get the value back, take off one leading `'`
-when what follows starts a formula, as `solidcraft_doc::csv::unguard` does, or read the `.json` file,
+when what follows starts a formula, as `torno_doc::csv::unguard` does, or read the `.json` file,
 which holds the values unchanged. The `'` holds only while the file is as Torno wrote it: a
 spreadsheet that saves the file again as CSV can drop it (Excel does), and the formula then runs the next
 time that file opens. Export again from Torno instead of passing on a CSV a spreadsheet has saved.

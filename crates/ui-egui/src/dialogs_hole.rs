@@ -5,11 +5,11 @@
 //! Hovering a field, or typing in it, lights its dimension.
 
 use egui::{Color32, Pos2, Rect, Shape, Stroke, pos2, vec2};
-use solidcraft_engine::doc::expr::Kind as ValueKind;
+use torno_engine::doc::expr::Kind as ValueKind;
 
 use crate::dialogs::{HoleOpts, Kind};
 use crate::ui_kit::FigureSlot;
-use solidcraft_theme::Tokens;
+use torno_theme::Tokens;
 
 /// A size the section shows.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -73,7 +73,7 @@ pub(crate) fn bore_diameter(diameter: &str, opts: &HoleOpts, eval: &dyn Fn(&str,
         }
         match opts.drill.as_deref().map(str::trim).filter(|d| !d.is_empty()) {
             Some(drill) => eval(drill, ValueKind::Length).filter(|v| v.is_finite() && *v > 0.0),
-            None => solidcraft_engine::doc::parse_tapped_thread(&opts.thread).map(|size| size.tap_drill),
+            None => torno_engine::doc::parse_tapped_thread(&opts.thread).map(|size| size.tap_drill),
         }
     } else {
         eval(diameter, ValueKind::Length).filter(|v| v.is_finite() && *v > 0.0)
@@ -529,7 +529,7 @@ mod tests {
 
     #[test]
     fn every_dropdown_option_previews_a_different_hole() {
-        let app = crate::SolveApp::new(solidcraft_engine::Session::default(), crate::Services::default());
+        let app = crate::SolveApp::new(torno_engine::Session::default(), crate::Services::default());
         let form = crate::dialogs::Dialog::for_command(&app, "solid.hole").unwrap().kind;
         let ctx = crate::fonts::test_context();
         let drawn = |choice: Choice| {
@@ -564,7 +564,7 @@ mod tests {
     fn partial_tapping_fields_do_not_overlap_on_narrow_forms() {
         for width in [220.0, 280.0, 360.0] {
             let ctx = crate::fonts::test_context();
-            let app = crate::SolveApp::new(solidcraft_engine::Session::default(), crate::Services::default());
+            let app = crate::SolveApp::new(torno_engine::Session::default(), crate::Services::default());
             let mut kind = crate::dialogs::Dialog::for_command(&app, "solid.hole").unwrap().kind;
             if let Kind::Hole { kind, opts, .. } = &mut kind {
                 *kind = 1;

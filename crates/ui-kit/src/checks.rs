@@ -1,7 +1,7 @@
 //! The only checkbox box and check glyph, shared by inline, palette, grid and menu rows.
 use crate::BackingTooltipExt as _;
 use egui::{Rect, Response, Ui, pos2, vec2};
-use solidcraft_theme::Tokens;
+use torno_theme::Tokens;
 
 /// Fixed logical size and pixel-aligned origin, independent of a caller's fonts or spacing.
 pub(super) fn box_at(ui: &Ui, center: egui::Pos2) -> Rect {
@@ -109,7 +109,7 @@ fn check_row(ui: &mut Ui, label: &str, icon: &str, value: &mut bool, mixed: bool
         super::text::paint_text(ui, text_rect, label, font, t.form_ink, false);
     }
     response.widget_info(|| {
-        let accessible = if label.is_empty() { solidcraft_ui_text::tr_label(super::row_label(ui)) } else { label };
+        let accessible = if label.is_empty() { torno_ui_text::tr_label(super::row_label(ui)) } else { label };
         let mut info = egui::WidgetInfo::selected(egui::Role::CheckBox, ui.is_enabled(), *value, accessible);
         if mixed && !response.changed() {
             info.selected = None;

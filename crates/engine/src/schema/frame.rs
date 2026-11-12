@@ -22,8 +22,8 @@ use serde::de::Error as _;
 use serde::{Deserialize, Deserializer, Serialize};
 use serde_json::{Map, Value, json};
 use solidcore_record::Vec2;
-use solidcraft_doc::Expr;
-use solidcraft_doc::frame::{self, Anchor, MAX_MEMBERS, Profile, ProfileSpec};
+use torno_doc::Expr;
+use torno_doc::frame::{self, Anchor, MAX_MEMBERS, Profile, ProfileSpec};
 
 use super::check::{keyed, located, whole};
 use super::motion::require;
@@ -181,7 +181,7 @@ impl From<&frame::ProfileKind> for ProfileKindInfo {
     }
 }
 
-/// What `frame.profile.list` returns: the built-in profiles, each SolidCraft's own parametric
+/// What `frame.profile.list` returns: the built-in profiles, each Torno's own parametric
 /// definition.
 #[derive(Debug, Serialize, JsonSchema)]
 pub struct ProfileListResult {

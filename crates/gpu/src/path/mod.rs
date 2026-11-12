@@ -1,23 +1,23 @@
 //! Native progressive product rendering. Software BVH traversal needs no ray-query
 //! features. Small measured quanta adapt to the device, then check cancellation.
 use solidcore_record::Vec3;
-use solidcraft_geom::Vec3Geom;
-#[cfg(test)]
-use solidcraft_render::job::ToneMap;
-use solidcraft_render::{
-    Availability, ExecutorDescriptor, ExecutorId, ProductScene, RenderFeature, RenderFormat, RenderMode, RenderOperation, RenderProfile,
-    ScratchLayout,
-    job::{
-        Admission, CancelToken, ErrorCode, GPU_PATH_LIMITS, ImageExecutor, ImageHost, ImageRequest, ImageWork, JobError, JobOptions,
-        MAX_GPU_PATH_BODIES, MAX_GPU_PATH_TRIANGLES, Phase, PngTask, Progress, Result, TaskPoll, admit_geometry_with_limits,
-    },
-};
 use std::{
     sync::{
         Arc,
         atomic::{AtomicBool, Ordering},
     },
     time::{Duration, Instant},
+};
+use torno_geom::Vec3Geom;
+#[cfg(test)]
+use torno_render::job::ToneMap;
+use torno_render::{
+    Availability, ExecutorDescriptor, ExecutorId, ProductScene, RenderFeature, RenderFormat, RenderMode, RenderOperation, RenderProfile,
+    ScratchLayout,
+    job::{
+        Admission, CancelToken, ErrorCode, GPU_PATH_LIMITS, ImageExecutor, ImageHost, ImageRequest, ImageWork, JobError, JobOptions,
+        MAX_GPU_PATH_BODIES, MAX_GPU_PATH_TRIANGLES, Phase, PngTask, Progress, Result, TaskPoll, admit_geometry_with_limits,
+    },
 };
 use wgpu::util::DeviceExt;
 
@@ -114,7 +114,7 @@ fn checked_creation<T>(device: &wgpu::Device, create: impl FnOnce() -> Result<T>
 }
 
 /// Open and validate a native device before advertising the executor. Failure leaves the
-/// caller's CPU host usable. Respects SOLIDCRAFT_GPU, including the software adapter policy.
+/// caller's CPU host usable. Respects TORNO_GPU, including the software adapter policy.
 pub fn host() -> Result<ImageHost> {
     let (adapter, device, queue) = open_headless()?;
     log::info!("gpu-path adapter: {} ({:?})", adapter.get_info().name, adapter.get_info().device_type);
@@ -123,7 +123,7 @@ pub fn host() -> Result<ImageHost> {
 
 /// Open an independent job device on the viewport's selected adapter. In particular,
 /// software fallback and safe mode must not rediscover a failing hardware driver.
-/// An explicit incompatible SOLIDCRAFT_GPU policy leaves this executor unavailable.
+/// An explicit incompatible TORNO_GPU policy leaves this executor unavailable.
 /// The path tracer runs on Vulkan, or Metal on macOS. On Windows it must keep the viewport's
 /// backend: opening Vulkan drivers that startup avoided can crash inside native driver code.
 /// Elsewhere a viewport on another backend is reopened on the same GPU through one of them.
@@ -131,20 +131,20 @@ pub fn host() -> Result<ImageHost> {
 pub fn host_on_adapter(adapter: &wgpu::Adapter) -> Result<ImageHost> {
     let policy = crate::env::policy().map_err(gpu)?;
     let info = adapter.get_info();
-    if !viewport_path_backends(info.backend, cfg!(target_os = "windows")).intersects(solidcraft_viewport_gpu::select::path_backends()) {
+    if !viewport_path_backends(info.backend, cfg!(target_os = "windows")).intersects(torno_viewport_gpu::select::path_backends()) {
         if cfg!(target_os = "windows") {
             return Err(gpu(format!(
-                "GPU path tracing needs a Vulkan session on Windows; the window uses {:?}. Select Vulkan in Preferences > Graphics > Graphics API and restart SolidCraft, or select a CPU image method",
+                "GPU path tracing needs a Vulkan session on Windows; the window uses {:?}. Select Vulkan in Preferences > Graphics > Graphics API and restart Torno, or select a CPU image method",
                 info.backend
             )));
         }
         return Err(gpu(format!("{VULKAN_ONLY}; the viewport uses {:?}", info.backend)));
     }
-    if !policy.admits(solidcraft_viewport_gpu::select::tier_of(info.device_type)) {
-        return Err(gpu(format!("viewport adapter does not satisfy SOLIDCRAFT_GPU={}", policy.name())));
+    if !policy.admits(torno_viewport_gpu::select::tier_of(info.device_type)) {
+        return Err(gpu(format!("viewport adapter does not satisfy TORNO_GPU={}", policy.name())));
     }
     if !matches!(info.backend, wgpu::Backend::Vulkan | wgpu::Backend::Metal) {
-        let (picked, _) = solidcraft_viewport_gpu::select::pick_path(policy, |i| i.vendor == info.vendor && i.device == info.device)
+        let (picked, _) = torno_viewport_gpu::select::pick_path(policy, |i| i.vendor == info.vendor && i.device == info.device)
             .ok_or_else(|| gpu(format!("{VULKAN_ONLY}; the viewport uses {:?}", info.backend)))?;
         let (device, queue) = open_device(&picked)?;
         log::info!("gpu-path viewport GPU: {} through Vulkan or Metal", info.name);
@@ -160,7 +160,7 @@ const VULKAN_ONLY: &str = "the GPU path tracer requires a Vulkan driver (Metal o
 
 /// Backends a viewport's path device may open, before any driver is loaded.
 fn viewport_path_backends(backend: wgpu::Backend, windows: bool) -> wgpu::Backends {
-    if windows { wgpu::Backends::from(backend) } else { solidcraft_viewport_gpu::select::path_backends() }
+    if windows { wgpu::Backends::from(backend) } else { torno_viewport_gpu::select::path_backends() }
 }
 
 // Path resources need six storage buffers (geometry, BVH, accumulation, HDRI,
@@ -186,8 +186,8 @@ fn device_limits(supported: wgpu::Limits) -> Result<wgpu::Limits> {
 fn open_device(adapter: &wgpu::Adapter) -> Result<(wgpu::Device, wgpu::Queue)> {
     let required_limits = device_limits(adapter.limits())?;
     pollster::block_on(adapter.request_device(&wgpu::DeviceDescriptor {
-        label: Some("solidcraft progressive path"),
-        required_features: solidcraft_viewport_gpu::depth_features(adapter),
+        label: Some("torno progressive path"),
+        required_features: torno_viewport_gpu::depth_features(adapter),
         required_limits,
         ..Default::default()
     }))
@@ -195,8 +195,8 @@ fn open_device(adapter: &wgpu::Adapter) -> Result<(wgpu::Device, wgpu::Queue)> {
 }
 fn open_headless() -> Result<(wgpu::Adapter, wgpu::Device, wgpu::Queue)> {
     let policy = crate::env::policy().map_err(gpu)?;
-    let (adapter, _) = solidcraft_viewport_gpu::select::pick_path(policy, |_| true)
-        .ok_or_else(|| gpu(format!("{VULKAN_ONLY}; no Vulkan or Metal adapter satisfies SOLIDCRAFT_GPU={}", policy.name())))?;
+    let (adapter, _) = torno_viewport_gpu::select::pick_path(policy, |_| true)
+        .ok_or_else(|| gpu(format!("{VULKAN_ONLY}; no Vulkan or Metal adapter satisfies TORNO_GPU={}", policy.name())))?;
     let (device, queue) = open_device(&adapter)?;
     Ok((adapter, device, queue))
 }
@@ -397,7 +397,7 @@ impl Executor {
 const CLAMP_INDIRECT: &[(&str, f64)] = &[("clamp_indirect", 1.0)];
 
 fn needs_glass_lighting(scene: &ProductScene) -> bool {
-    let active = |transmission: Option<solidcraft_render::transmission::Transmission>| {
+    let active = |transmission: Option<torno_render::transmission::Transmission>| {
         transmission.is_some_and(|material| {
             material.model().is_some_and(|model| model.roughness > 0.0) || material.subsurface().is_some_and(|medium| medium.active())
         })
@@ -563,7 +563,7 @@ fn use_opaque_pipeline(scene: &ProductScene, options: JobOptions) -> bool {
 
 fn trace_request(request: &ImageRequest, options: JobOptions) -> Result<ImageRequest> {
     let mut trace = request.clone();
-    (trace.width, trace.height) = solidcraft_render::job::supersampled_dimensions(request.width, request.height, options.supersampling)?;
+    (trace.width, trace.height) = torno_render::job::supersampled_dimensions(request.width, request.height, options.supersampling)?;
     Ok(trace)
 }
 
@@ -576,7 +576,7 @@ fn admission(scene: &ProductScene, request: &ImageRequest, options: JobOptions) 
 }
 
 fn admission_with_device_limits(scene: &ProductScene, request: &ImageRequest, options: JobOptions, limits: &wgpu::Limits) -> Result<Admission> {
-    if request.integrator != solidcraft_render::job::Integrator::Raster || request.raytrace.is_some() {
+    if request.integrator != torno_render::job::Integrator::Raster || request.raytrace.is_some() {
         return Err(JobError::new(ErrorCode::InvalidRequest, "GPU path rendering does not accept CPU raytrace options"));
     }
     options.validate()?;
@@ -615,7 +615,7 @@ fn admission_with_device_limits(scene: &ProductScene, request: &ImageRequest, op
     if let Some(environment) = &request.environment {
         environment.validate()?;
     }
-    let scattering = |t: Option<solidcraft_render::transmission::Transmission>| t.and_then(|v| v.subsurface()).is_some_and(|s| s.active());
+    let scattering = |t: Option<torno_render::transmission::Transmission>| t.and_then(|v| v.subsurface()).is_some_and(|s| s.active());
     if scene.meshes.iter().any(|b| scattering(b.transmission) || b.faces.iter().any(|f| scattering(f.transmission)))
         && (options.denoise || options.transmission_samples != 1 || options.volume.is_some_and(|v| v.active()))
     {
@@ -644,9 +644,9 @@ fn admission_with_device_limits(scene: &ProductScene, request: &ImageRequest, op
     }
     // Public output admission remains 8K. Only the bounded internal trace grid
     // may double both dimensions; device and complete job byte caps still apply.
-    let trace_limits = solidcraft_render::RenderLimits {
-        max_dimension: u64::from(solidcraft_render::job::MAX_TRACE_DIMENSION),
-        max_pixels: solidcraft_render::job::MAX_TRACE_PIXELS,
+    let trace_limits = torno_render::RenderLimits {
+        max_dimension: u64::from(torno_render::job::MAX_TRACE_DIMENSION),
+        max_pixels: torno_render::job::MAX_TRACE_PIXELS,
         ..GPU_PATH_LIMITS
     };
     let mut admission = admit_geometry_with_limits(scene, request, MAX_TRIANGLES, MAX_GPU_PATH_BODIES, 2 * 1024 * 1024 * 1024, trace_limits)?;
@@ -681,7 +681,7 @@ fn admission_with_device_limits(scene: &ProductScene, request: &ImageRequest, op
         .try_fold(0_usize, |n, body| {
             n.checked_add(body.mesh.triangles.len()).ok_or_else(|| JobError::new(ErrorCode::LimitExceeded, "optical triangle count overflow"))
         })?;
-    let optical_contact_bytes = solidcraft_render::optical_boundary::ContactIndex::required_bytes(optical_triangles)?
+    let optical_contact_bytes = torno_render::optical_boundary::ContactIndex::required_bytes(optical_triangles)?
         .checked_add(optical_triangles as u64 * std::mem::size_of::<usize>() as u64)
         .ok_or_else(|| JobError::new(ErrorCode::LimitExceeded, "optical contact byte overflow"))?;
     admission.preparation_bytes = (triangle_preparation + vertex_bytes * 2 + admission.face_appearances * 8 + optical_contact_bytes)
@@ -705,7 +705,7 @@ fn admission_with_device_limits(scene: &ProductScene, request: &ImageRequest, op
     if options.linear_exr {
         admission.preparation_bytes = admission
             .preparation_bytes
-            .checked_add(solidcraft_render::job::linear_exr::encoded_limit(output.width, output.height)?)
+            .checked_add(torno_render::job::linear_exr::encoded_limit(output.width, output.height)?)
             .ok_or_else(|| JobError::new(ErrorCode::LimitExceeded, "linear master admission overflow"))?;
     }
     let bloom_bytes = options.finishing.bloom.map_or(Ok(0), |b| b.scratch_bytes(output.width, output.height))?;
@@ -949,7 +949,7 @@ fn prepare_environment(request: &ImageRequest, cancel: &CancelToken) -> Result<(
     Ok((environment_bytes, luminance_integral))
 }
 
-fn punctual_parameters(light: &solidcraft_render::job::PunctualLightOptions, origin: Vec3) -> [[f32; 4]; 5] {
+fn punctual_parameters(light: &torno_render::job::PunctualLightOptions, origin: Vec3) -> [[f32; 4]; 5] {
     let p = Vec3::new(light.position_mm[0], light.position_mm[1], light.position_mm[2]) - origin;
     let hi = [p.x as f32, p.y as f32, p.z as f32];
     let lo = [(p.x - f64::from(hi[0])) as f32, (p.y - f64::from(hi[1])) as f32, (p.z - f64::from(hi[2])) as f32];
@@ -1004,24 +1004,24 @@ struct Task {
     optical_resolve: Option<wgpu::ComputePipeline>,
     photons: Option<photons::Resources>,
     denoiser: Option<denoise::Resources>,
-    denoise_diagnostics: Option<solidcraft_render::job::DenoiseDiagnostics>,
+    denoise_diagnostics: Option<torno_render::job::DenoiseDiagnostics>,
     denoise_mask_png: Option<PngTask>,
     denoise_mask: Option<Vec<u8>>,
     sample: u32,
     lane: u32,
-    sampling_report: Option<solidcraft_render::job::adaptive::SamplingReport>,
-    punctual_diagnostics: std::cell::Cell<solidcraft_render::job::PunctualDiagnostics>,
+    sampling_report: Option<torno_render::job::adaptive::SamplingReport>,
+    punctual_diagnostics: std::cell::Cell<torno_render::job::PunctualDiagnostics>,
     volume: [[f32; 4]; 3],
     aging: [[f32; 20]; 8],
-    photographic: Option<solidcraft_render::job::photographic::PhotographicTask>,
+    photographic: Option<torno_render::job::photographic::PhotographicTask>,
     offset: u32,
     epsilon: f32,
     png: Option<PngTask>,
     encoding_preview: bool,
     preview_enabled: bool,
-    preview: Option<solidcraft_render::job::ImageWorkPreview>,
-    exr_work: Option<solidcraft_render::job::linear_exr::ExrTask>,
-    bloom_work: Option<solidcraft_render::job::bloom::BloomTask>,
+    preview: Option<torno_render::job::ImageWorkPreview>,
+    exr_work: Option<torno_render::job::linear_exr::ExrTask>,
+    bloom_work: Option<torno_render::job::bloom::BloomTask>,
     exr: Option<Vec<u8>>,
     started: Instant,
     // Uniform environment is used only by the numerical furnace test, never advertised as HDRI.
@@ -1652,7 +1652,7 @@ impl Task {
                 if word(7) != 0 {
                     return Err(JobError::new(ErrorCode::Internal, "nonfinite or negative pilot/production path radiance"));
                 }
-                self.punctual_diagnostics.set(solidcraft_render::job::PunctualDiagnostics {
+                self.punctual_diagnostics.set(torno_render::job::PunctualDiagnostics {
                     near_source: u64::from(word(8)) | (u64::from(word(9)) << 32),
                     radiance_limit: u64::from(word(10)) | (u64::from(word(11)) << 32),
                     shadow_offset_crossed: u64::from(word(12)) | (u64::from(word(13)) << 32),
@@ -1686,23 +1686,23 @@ impl Task {
         )
     }
 }
-use solidcraft_render::job::presentation::Display;
+use torno_render::job::presentation::Display;
 
 impl ImageWork for Task {
-    fn denoise_diagnostics(&self) -> Option<solidcraft_render::job::DenoiseDiagnostics> {
+    fn denoise_diagnostics(&self) -> Option<torno_render::job::DenoiseDiagnostics> {
         self.denoise_diagnostics
     }
     fn take_denoise_mask(&mut self) -> Option<Vec<u8>> {
         self.denoise_mask.take()
     }
-    fn punctual_diagnostics(&self) -> Option<solidcraft_render::job::PunctualDiagnostics> {
+    fn punctual_diagnostics(&self) -> Option<torno_render::job::PunctualDiagnostics> {
         self.options.lighting.filter(|l| !l.punctual_lights.is_empty()).map(|_| self.punctual_diagnostics.get())
     }
 
-    fn take_preview(&mut self) -> Option<solidcraft_render::job::ImageWorkPreview> {
+    fn take_preview(&mut self) -> Option<torno_render::job::ImageWorkPreview> {
         self.preview.take()
     }
-    fn sampling_report(&self) -> Option<solidcraft_render::job::adaptive::SamplingReport> {
+    fn sampling_report(&self) -> Option<torno_render::job::adaptive::SamplingReport> {
         self.sampling_report.clone()
     }
     fn take_linear_exr(&mut self) -> Option<Vec<u8>> {
@@ -1729,7 +1729,7 @@ impl ImageWork for Task {
             {
                 self.png = None;
                 self.encoding_preview = false;
-                self.preview = Some(solidcraft_render::job::ImageWorkPreview { png, samples_per_pixel: self.sample });
+                self.preview = Some(torno_render::job::ImageWorkPreview { png, samples_per_pixel: self.sample });
                 return Ok(TaskPoll::Pending(Progress {
                     phase: Phase::Running,
                     done: u64::from(self.sample),
@@ -1801,7 +1801,7 @@ impl ImageWork for Task {
         } else {
             let pixels = self.resolve_output(self.read_linear()?)?;
             if self.options.linear_exr {
-                self.exr_work = Some(solidcraft_render::job::linear_exr::ExrTask::new(
+                self.exr_work = Some(torno_render::job::linear_exr::ExrTask::new(
                     self.output_request.width,
                     self.output_request.height,
                     pixels,
@@ -1819,7 +1819,7 @@ impl Task {
         if self.options.supersampling == 1 {
             return Ok(linear);
         }
-        solidcraft_render::job::resolve_supersampling(
+        torno_render::job::resolve_supersampling(
             self.output_request.width,
             self.output_request.height,
             self.options.supersampling,
@@ -1836,7 +1836,7 @@ impl Task {
             linear = self.resolve_output(denoiser.read_filtered(self, self.encoding_preview && self.options.adaptive.is_some())?)?;
         }
         if let Some(options) = self.options.finishing.bloom.filter(|options| options.active()) {
-            self.bloom_work = Some(solidcraft_render::job::bloom::BloomTask::new(
+            self.bloom_work = Some(torno_render::job::bloom::BloomTask::new(
                 self.output_request.width,
                 self.output_request.height,
                 linear,
@@ -1865,7 +1865,7 @@ impl Task {
             height: self.output_request.height,
             exposure: 2.0f64.powf(self.options.exposure_ev),
             tone_map: self.options.tone_map,
-            background: self.request.background.map(solidcraft_viewport::surface::srgb8_to_linear),
+            background: self.request.background.map(torno_viewport::surface::srgb8_to_linear),
             transparent: self.request.transparent_background,
         };
         // Pixels are independent: encode contiguous chunks on every core.
@@ -1891,7 +1891,7 @@ impl Task {
                 .try_for_each(|job| job.join().unwrap_or_else(|_| Err(JobError::new(ErrorCode::Internal, "display encoding worker failed"))))
         })?;
         if self.options.finishing.photographic.active() {
-            self.photographic = Some(solidcraft_render::job::photographic::PhotographicTask::new(
+            self.photographic = Some(torno_render::job::photographic::PhotographicTask::new(
                 self.output_request.width,
                 self.output_request.height,
                 rgba,

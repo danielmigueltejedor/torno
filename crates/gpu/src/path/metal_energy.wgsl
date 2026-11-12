@@ -1,4 +1,4 @@
-// Original directional-loss fit for SolidCraft's separable Smith GGX. Keep the
+// Original directional-loss fit for Torno's separable Smith GGX. Keep the
 // coefficients and cosine moments in sync with render/src/surface.rs.
 struct MetalPolynomial { low: vec4<f32>, high: vec4<f32> };
 fn metal_chebyshev(x: f32) -> MetalPolynomial {

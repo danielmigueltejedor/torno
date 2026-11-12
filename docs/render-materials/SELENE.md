@@ -10,7 +10,7 @@ The [native showcase package](../../assets/render/selene/README.md) now contains
 
 The selected base is **`SELENE-showcase.solidcraft`**, the improved rover documented by SychPL in Tangency Labs' [mechanism showcase](https://github.com/tangency-labs/solidcraft/pull/1540#issuecomment-6205857321), [motion export PR](https://github.com/tangency-labs/solidcraft/pull/1680) and [motion analysis PR](https://github.com/tangency-labs/solidcraft/pull/1712). It adds grounded modules, split actuator loops, linked wheels, a rack/pinion track, a geared dish, a screw-driven vial cap, inverse-kinematic arm movement and a combined motion study. Those source mechanisms are retained or deliberately adapted in the derivative, with the distinction between source facts and current runtime checks recorded in the native package.
 
-On 2026-10-22 the owner supplied that native file. It matches the author-published blob at `SychPL/solidcraft@32ec1720447e3fcc6bb6cc53a63fb5b39cfa21b9` byte for byte: SHA-256 `1b0df486f30da157db27a33e0b5ed67f13d527d4dfdc6c334717a1df4e5b8677`, 314,452 bytes, native format 23. The [source lock](../../assets/render/selene/source-lock.json) is now `pinned_native`. The earlier unsuccessful search is historical evidence, superseded by this attachment and the author's subsequent commit. [SOURCE.md](../../assets/render/selene/SOURCE.md) preserves the exact lineage and notices.
+On 2026-10-22 the owner supplied that native file. It matches the author-published blob at `SychPL/torno@32ec1720447e3fcc6bb6cc53a63fb5b39cfa21b9` byte for byte: SHA-256 `1b0df486f30da157db27a33e0b5ed67f13d527d4dfdc6c334717a1df4e5b8677`, 314,452 bytes, native format 23. The [source lock](../../assets/render/selene/source-lock.json) is now `pinned_native`. The earlier unsuccessful search is historical evidence, superseded by this attachment and the author's subsequent commit. [SOURCE.md](../../assets/render/selene/SOURCE.md) preserves the exact lineage and notices.
 
 All ten SELENE catalog scenes now require this improved source or its explicitly reviewed derivative. The original v7 is ineligible as a fallback. The [prepared demo package](../../assets/render/selene/README.md) supplies original appearance recipes, swatches, semantic roles, stage and camera recipes, mechanism acceptance requirements, a future dynamics sequence and developer preparation tools.
 
@@ -20,7 +20,7 @@ The following inventory is retained only to explain the previous planning baseli
 
 | Field | Inspected value |
 |---|---|
-| Repository | [0xlillith/solidcraft-rover](https://github.com/0xlillith/solidcraft-rover) |
+| Repository | [0xlillith/torno-rover](https://github.com/0xlillith/solidcraft-rover) |
 | Revision | `b32437915372d32b71419dc8f5143fe22ff1e869` |
 | Native file | `models/Rover-v7.solidcraft` |
 | File SHA-256 | `fcb08540b1db08325f366fd0ff235f84f66d96406961482736bc097d7248c6d6` |

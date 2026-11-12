@@ -1,4 +1,4 @@
-//! Fillets and chamfers against closed forms (the cases of SolidCraft's `core/blend_tests.rs`,
+//! Fillets and chamfers against closed forms (the cases of Torno's `core/blend_tests.rs`,
 //! on edge, face and vertex indices). Their own test binary: each holds the process kernel for
 //! seconds.
 #![allow(
@@ -416,7 +416,7 @@ fn a_variable_round_s_net_is_certified_on_wide_pieces() {
 /// A law with a corner rounds its edge as the union of its balls (`docs/generic-blend.md` §3.2,
 /// "Corners in a radius law"): at a peak the two sides' rounds cross and end on their crossing,
 /// at a dip the corner ball's zone lies between them. Each removes its balls' union, integrated
-/// numerically (SolidCraft's `variable_radius_with_a_corner_through_a_middle_point` for the
+/// numerically (Torno's `variable_radius_with_a_corner_through_a_middle_point` for the
 /// peak, the fork's capi cases for the others, as `wr685_law_corners` holds them), to that
 /// test's 1e-4 relative; each keeps the law's radius at its start and is one sound body.
 #[test]

@@ -12,7 +12,7 @@ use egui::vec2;
 
 pub use crate::Icon;
 use crate::{FileView, RecoveryMessage};
-use solidcraft_theme::Tokens;
+use torno_theme::Tokens;
 
 /// Text the host gives: borrowed when it has it, owned when it formatted it this frame.
 pub type Label<'a> = Cow<'a, str>;
@@ -155,7 +155,7 @@ pub fn show<A>(ui: &mut egui::Ui, page: Page<'_, A>) -> Option<A> {
     FileView::page(ui, |ui| {
         ui.add_enabled_ui(interactive, |ui| {
             let full = ui.available_rect_before_wrap();
-            solidcraft_ui_registry::publish_rect(&format!("{id}:page"), full);
+            torno_ui_registry::publish_rect(&format!("{id}:page"), full);
             let narrow = full.width() < t.file_nav_width + FileView::tile_min_width() + t.file_content_inset_x * 2.0;
             let navigation_id = format!("{id}_navigation");
             if narrow {
@@ -218,8 +218,8 @@ fn navigation<A>(ui: &mut egui::Ui, id: &str, back: Back<'_, A>, rail: Vec<RailI
 }
 
 fn publish(id: &str, response: &egui::Response) {
-    solidcraft_ui_registry::publish_handle(id, response.rect.center());
-    solidcraft_ui_registry::publish_rect(id, response.rect);
+    torno_ui_registry::publish_handle(id, response.rect.center());
+    torno_ui_registry::publish_rect(id, response.rect);
 }
 
 fn content<A>(ui: &mut egui::Ui, id: &str, heading: (&str, &str, Option<&str>), body: Body<'_, A>, narrow: bool, chosen: &mut Option<A>) {
@@ -472,7 +472,7 @@ mod tests {
         }
 
         fn frame(&mut self, events: Vec<egui::Event>) -> egui::FullOutput {
-            solidcraft_ui_registry::clear_handles();
+            torno_ui_registry::clear_handles();
             let input = egui::RawInput { screen_rect: Some(self.screen), focused: true, events, ..Default::default() };
             let recent = self.recent;
             let chosen = &mut self.chosen;
@@ -480,7 +480,7 @@ mod tests {
         }
 
         fn at(name: &str) -> egui::Pos2 {
-            solidcraft_ui_registry::handle_at(name).unwrap_or_else(|| panic!("{name} was not drawn"))
+            torno_ui_registry::handle_at(name).unwrap_or_else(|| panic!("{name} was not drawn"))
         }
 
         /// Press and release at what `name` published last frame.
@@ -538,7 +538,7 @@ mod tests {
     fn start_page_tile_draws_the_hosts_texture_icon() {
         let mut drive = Drive::new(egui::vec2(1400.0, 900.0), 0);
         let output = drive.frame(Vec::new());
-        let tile = solidcraft_ui_registry::rect_of("start:second").unwrap();
+        let tile = torno_ui_registry::rect_of("start:second").unwrap();
         let mut drawn = false;
         for clipped in &output.shapes {
             crate::test_support::each_shape(&clipped.shape, &mut |shape| {
@@ -553,8 +553,8 @@ mod tests {
     #[test]
     fn start_page_lays_out_inside_a_narrow_window_and_keeps_its_tiles() {
         assert_eq!(click(egui::vec2(420.0, 800.0), "start:first", 0), [Picked::Tile("start:first")]);
-        let page = solidcraft_ui_registry::rect_of("start:page").unwrap();
-        assert!(page.contains_rect(solidcraft_ui_registry::rect_of("start:second").unwrap()));
-        assert!(solidcraft_ui_registry::handle_at("start:back").is_none(), "the rail folds into the page's menu");
+        let page = torno_ui_registry::rect_of("start:page").unwrap();
+        assert!(page.contains_rect(torno_ui_registry::rect_of("start:second").unwrap()));
+        assert!(torno_ui_registry::handle_at("start:back").is_none(), "the rail folds into the page's menu");
     }
 }

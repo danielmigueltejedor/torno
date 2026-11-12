@@ -4,9 +4,9 @@
 
 use serde_json::{Value, json};
 use solidcore_record::{Vec2, Vec3};
-use solidcraft_doc::{EmbossFace, apply_point, mat_inverse, mat_mul};
-use solidcraft_geom::Mesh;
-use solidcraft_geom::prelude::*;
+use torno_doc::{EmbossFace, apply_point, mat_inverse, mat_mul};
+use torno_geom::Mesh;
+use torno_geom::prelude::*;
 
 use crate::params::{bad, str_, vec3};
 use crate::{Result, Session};
@@ -152,7 +152,7 @@ pub(super) fn face_ref(s: &Session, v: &Value, body: Option<&str>, cmd: &str) ->
         FaceRefForm::Point(p) => Ok(p),
         FaceRefForm::Name(name) => {
             let st = if crate::frames::mapped() { s.model.state() } else { s.world_state()? };
-            solidcraft_doc::naming::named_face_point(&st, body, name).map_err(|why| bad(cmd, why))
+            torno_doc::naming::named_face_point(&st, body, name).map_err(|why| bad(cmd, why))
         }
     }
 }
@@ -198,7 +198,7 @@ pub(super) fn faces_body(s: &Session, p: &Value, refs: &[Value], points: &[Vec3]
 /// that was resolved against the placed model names its bodies, as for [`face_at_in`] (#419).
 /// A body's exact box, grown by a micrometre, skips bodies away from the point before the
 /// kernel's exact classification decides.
-fn bodies_on_boundary(st: &solidcraft_doc::ModelState, p: Vec3) -> Vec<String> {
+fn bodies_on_boundary(st: &torno_doc::ModelState, p: Vec3) -> Vec<String> {
     if let Some(names) = crate::frames::picked(p).filter(|n| !n.is_empty()) {
         return model_names(st, &names);
     }
@@ -209,7 +209,7 @@ fn bodies_on_boundary(st: &solidcraft_doc::ModelState, p: Vec3) -> Vec<String> {
             let (lo, hi, grow) = (bounds.min, bounds.max, 1e-3);
             p.x >= lo.x - grow && p.x <= hi.x + grow && p.y >= lo.y - grow && p.y <= hi.y + grow && p.z >= lo.z - grow && p.z <= hi.z + grow
         })
-        .filter(|b| matches!(b.body.classify_point(p), Ok(solidcraft_kernel::PointClass::OnBoundary)))
+        .filter(|b| matches!(b.body.classify_point(p), Ok(torno_kernel::PointClass::OnBoundary)))
         .map(|b| b.name.clone())
         .collect()
 }
@@ -309,11 +309,11 @@ fn face_at_in(s: &Session, p: Vec3, only: Option<&str>) -> std::result::Result<O
 }
 
 /// The names the model gives the bodies a pick met.
-fn model_names(st: &solidcraft_doc::ModelState, names: &[String]) -> Vec<String> {
+fn model_names(st: &torno_doc::ModelState, names: &[String]) -> Vec<String> {
     names.iter().map(|n| st.bodies.iter().find(|b| b.definition_name() == n.as_str()).map(|b| b.name.clone()).unwrap_or_else(|| n.clone())).collect()
 }
 
-pub(super) fn face_at_state(st: &solidcraft_doc::ModelState, p: Vec3, only: Option<&str>) -> std::result::Result<Option<FacePick>, Vec<String>> {
+pub(super) fn face_at_state(st: &torno_doc::ModelState, p: Vec3, only: Option<&str>) -> std::result::Result<Option<FacePick>, Vec<String>> {
     let mut best: Option<FacePick> = None;
     let mut tied: Vec<String> = Vec::new();
     for b in st.bodies.iter().filter(|b| only.is_none_or(|n| b.name == n)) {

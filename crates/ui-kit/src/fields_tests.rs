@@ -2,7 +2,7 @@ use crate::test_support::*;
 use crate::*;
 
 use egui::Ui;
-use solidcraft_ui_registry as registry;
+use torno_ui_registry as registry;
 
 #[test]
 fn combo_backing_zero_preserves_stock_shapes_and_semantics() {
@@ -73,16 +73,16 @@ fn every_text_input_centres_its_galley_for_mono_and_proportional_fonts() {
         let center = galley.pos.y + galley.galley.rect.center().y;
         assert!((center - rect.center().y).abs() < 0.01, "{case}: galley centre {center} differs from field {rect:?}");
         if case == "search" {
-            assert!(galley.pos.x >= rect.left() + solidcraft_theme::Tokens::get().space_24, "search text leaves room for its icon");
+            assert!(galley.pos.x >= rect.left() + torno_theme::Tokens::get().space_24, "search text leaves room for its icon");
         }
         if case == "placement" {
-            let font = egui::FontId::proportional(solidcraft_theme::Tokens::get().font_body);
+            let font = egui::FontId::proportional(torno_theme::Tokens::get().font_body);
             let native = ctx.fonts_mut(|fonts| fonts.row_height(&font))
                 + ctx.style_of(egui::Theme::Light).spacing.extra_text_line_spacing
-                + solidcraft_theme::Tokens::get().space_4;
+                + torno_theme::Tokens::get().space_4;
             assert_eq!(rect.height(), native, "canvas editor retains its native hit target");
         } else if !matches!(case, "multiline" | "area" | "message") {
-            assert_eq!(rect.height(), solidcraft_theme::Tokens::get().control_height, "{case}");
+            assert_eq!(rect.height(), torno_theme::Tokens::get().control_height, "{case}");
         }
     }
 }
@@ -120,7 +120,7 @@ fn multiline_text_retains_focus_id_and_three_line_geometry() {
     };
     frame(&ctx, vec![], &mut draw);
     let row = registry::rect_of("dialog:row:Text").unwrap();
-    assert_eq!(row.height(), 3.0 * solidcraft_theme::Tokens::get().control_height);
+    assert_eq!(row.height(), 3.0 * torno_theme::Tokens::get().control_height);
     let at = registry::handle_at("dialog:Text").unwrap();
     frame(&ctx, pointer(at, true), &mut draw);
     frame(&ctx, pointer(at, false), &mut draw);
@@ -1107,7 +1107,7 @@ fn bounded_dropdown_focus_announces_full_selected_source_with_a_nonempty_accessi
             let info = event.widget_info();
             assert_eq!(info.role, egui::Role::ComboBox);
             assert!(info.enabled);
-            let expected = if labelled { solidcraft_ui_text::tr_label("Retained source") } else { current };
+            let expected = if labelled { torno_ui_text::tr_label("Retained source") } else { current };
             assert_eq!(info.label.as_deref(), Some(expected));
             assert!(!info.label.as_deref().unwrap().trim().is_empty());
             assert_eq!(

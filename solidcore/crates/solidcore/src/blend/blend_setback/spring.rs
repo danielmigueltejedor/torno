@@ -1,6 +1,6 @@
 //! The spring curve on a face at a setback corner: the curve from one round's rail end to the
 //! next one's, exactly on the face and tangent to both rails, built in the face's rational
-//! parameter plane (solidcore#2343, built in solidcore from the SolidCraft fork's work in
+//! parameter plane (solidcore#2343, built in solidcore from the Torno fork's work in
 //! progress on smlib#85 part C, `SmBlendSetback::SpringCurve` at tangency-labs/smlib
 //! 37c9e1d; no fork commit).
 //!

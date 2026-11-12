@@ -1,4 +1,4 @@
-//! SolidCraft's product rendering on top of the shared viewport renderer (`solidcraft-viewport`):
+//! Torno's product rendering on top of the shared viewport renderer (`torno-viewport`):
 //! render jobs and their backends, the path tracer's materials, lighting, studio, film and
 //! textures, and the model's bounds as the viewport's.
 #![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic, clippy::unimplemented, clippy::todo, clippy::unreachable)]

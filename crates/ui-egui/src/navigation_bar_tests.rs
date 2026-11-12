@@ -1,4 +1,4 @@
-//! SolidCraft's navigation slots on the kit's navigation bar: its catalogue, icons and commands,
+//! Torno's navigation slots on the kit's navigation bar: its catalogue, icons and commands,
 //! and bars measured in its viewport.
 use crate::navigation::NavCaps;
 use crate::navigation_bar::*;
@@ -43,7 +43,7 @@ fn slot_catalogue_uses_registered_commands_and_existing_icons() {
     for slot in CATALOGUE {
         assert!(ids.insert(slot.id), "duplicate catalogue id {}", slot.id);
         match slot.command {
-            Some(command) => assert!(solidcraft_engine::find_command(command).is_some(), "{}", slot.id),
+            Some(command) => assert!(torno_engine::find_command(command).is_some(), "{}", slot.id),
             None => assert!(["projection", "display", "separator"].contains(&slot.id)),
         }
         if slot.kind != NavigationKind::Separator {
@@ -187,7 +187,7 @@ fn navigation_slot_pointer_clicks_release_focus_and_leave_no_fill() {
     crate::navigation_slots::install();
     use crate::ui_kit::{NavigationButton, navigation_button};
     use egui::{Color32, Event, RawInput, Shape};
-    use solidcraft_theme::Tokens;
+    use torno_theme::Tokens;
 
     fn fill(output: &egui::FullOutput, bounds: Rect) -> Option<Color32> {
         let mut fill = None;
@@ -383,8 +383,8 @@ fn navigation_board_metrics_and_state_colors_are_shared_in_both_themes() {
         (NAV_MARKER_HEIGHT, NAV_GHOST_OPACITY, NAV_TILE_DRAG_OPACITY, NAV_IDLE_OPACITY, NAV_FADE_SECONDS, NAV_TOOLTIP_DELAY),
         (24.0, 0.7, 0.55, 0.45, 0.12, 0.8)
     );
-    for tokens in [solidcraft_theme::Tokens::light(), solidcraft_theme::Tokens::dark()] {
-        let _theme = solidcraft_theme::scoped_tokens(tokens);
+    for tokens in [torno_theme::Tokens::light(), torno_theme::Tokens::dark()] {
+        let _theme = torno_theme::scoped_tokens(tokens);
         assert_eq!(navigation_fill(&tokens, NavigationFill::None), None);
         assert_eq!(navigation_fill(&tokens, NavigationFill::Hover), Some(tokens.nav_hover));
         assert_eq!(navigation_fill(&tokens, NavigationFill::Press), Some(tokens.nav_press));
@@ -408,8 +408,8 @@ fn navigation_board_popup_width_includes_its_border_and_padding() {
     crate::navigation_slots::install();
     use crate::ui_kit::*;
     let ctx = crate::ui_kit::test_support::context();
-    for tokens in [solidcraft_theme::Tokens::light(), solidcraft_theme::Tokens::dark()] {
-        let _theme = solidcraft_theme::scoped_tokens(tokens);
+    for tokens in [torno_theme::Tokens::light(), torno_theme::Tokens::dark()] {
+        let _theme = torno_theme::scoped_tokens(tokens);
         for width in [NAV_POPUP_WIDTH, NAV_CONTEXT_WIDTH, NAV_MORE_WIDTH] {
             let mut outer = Rect::NOTHING;
             let mut row = Rect::NOTHING;
@@ -454,7 +454,7 @@ fn a_long_menu_row_label_ends_in_an_ellipsis_inside_its_row() {
         });
         let text = crate::ui_kit::test_support::text_shapes(&output).find(|t| t.galley.text() == label).unwrap_or_else(|| panic!("{label} is drawn"));
         assert_eq!(text.galley.elided, cut, "{label}");
-        let end = row.right() - NAV_MENU_INSET - if selected { solidcraft_theme::Tokens::get().space_14 } else { 0.0 };
+        let end = row.right() - NAV_MENU_INSET - if selected { torno_theme::Tokens::get().space_14 } else { 0.0 };
         let drawn = text.pos.x + text.galley.size().x;
         assert!(drawn <= end, "{label}: ends at {drawn}, past {end}");
     }

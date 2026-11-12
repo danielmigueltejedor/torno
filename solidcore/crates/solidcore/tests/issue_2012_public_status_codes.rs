@@ -4,7 +4,7 @@
 //! The expected numbers are copied from the pinned upstream `SmMessages.h` (`SM_SUCCESS`
 //! to `SM_ERR_TESS_FAIL_FACE`, lines 45-70) and `SmTypes.h` (`TRUE`, `FALSE`, `UNSURE`),
 //! and for the two fork statuses from tangency-labs/smlib's `SmMessages.h` (a759622 and
-//! 34318f4). SolidCraft maps these numbers to its own errors, so a moved number must fail
+//! 34318f4). Torno maps these numbers to its own errors, so a moved number must fail
 //! here rather than silently change a refusal.
 #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)] // test helpers
 

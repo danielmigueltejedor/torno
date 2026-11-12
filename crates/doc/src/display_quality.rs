@@ -150,7 +150,7 @@ mod tests {
         let n = DisplayQuality::Normal;
         assert_eq!(n.chord(200.0), 0.2);
         assert_eq!(n.chord(0.5), 1e-3);
-        assert!((n.angle() - solidcraft_kernel::DISPLAY_ANGLE).abs() < 1e-12);
+        assert!((n.angle() - torno_kernel::DISPLAY_ANGLE).abs() < 1e-12);
         for w in DisplayQuality::ALL.windows(2) {
             assert!(w[1].chord(100.0) < w[0].chord(100.0) && w[1].angle() < w[0].angle());
         }
@@ -165,7 +165,7 @@ mod tests {
     #[test]
     fn each_level_has_its_own_plan_and_the_reference_mesh_stays() {
         use solidcore_record::Vec3;
-        let body = solidcraft_kernel::cylinder(Vec3::ZERO, Vec3::Z, 20.0, 50.0).unwrap();
+        let body = torno_kernel::cylinder(Vec3::ZERO, Vec3::Z, 20.0, 50.0).unwrap();
         let mb = crate::ModelBody::new("Body1".into(), body, 1);
         let reference = mb.mesh();
         let mut last = 0;
@@ -178,9 +178,7 @@ mod tests {
                 .iter()
                 .zip(&mesh.tri_face)
                 // The side wall's own triangles: the flat caps have corners on the rim too.
-                .filter(|(_, f)| {
-                    matches!(solidcraft_kernel::face_surface(&mb.body, **f as usize), Some(solidcraft_kernel::FaceSurface::Cylinder { .. }))
-                })
+                .filter(|(_, f)| matches!(torno_kernel::face_surface(&mb.body, **f as usize), Some(torno_kernel::FaceSurface::Cylinder { .. })))
                 .map(|(t, _)| t.map(|i| mesh.positions[i as usize]))
                 .filter(|t| t.iter().all(|p| (r(*p) - 20.0).abs() < 1e-9))
                 .map(|[a, b, c]| 20.0 - r((a + b + c) * (1.0 / 3.0)))
@@ -194,10 +192,7 @@ mod tests {
         assert_eq!(mb.display_plan_at(DisplayQuality::Normal).unwrap().vertex_count(), {
             let plan = mb
                 .body
-                .mesh_plan(&solidcraft_kernel::MeshTolerance {
-                    chord: (mb.body.size() * 1e-3).max(1e-3),
-                    angle: Some(solidcraft_kernel::DISPLAY_ANGLE),
-                })
+                .mesh_plan(&torno_kernel::MeshTolerance { chord: (mb.body.size() * 1e-3).max(1e-3), angle: Some(torno_kernel::DISPLAY_ANGLE) })
                 .unwrap();
             plan.vertex_count()
         });

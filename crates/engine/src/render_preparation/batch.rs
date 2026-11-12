@@ -6,10 +6,10 @@ use super::{
 };
 use crate::{EngineError, Result, Session};
 use serde_json::{Value, json};
-use solidcraft_io::vfs::PathScope;
-use solidcraft_render::job::{CancelToken, Phase, RetainedMetadata};
-use solidcraft_viewport::Camera;
 use std::mem::size_of;
+use torno_io::vfs::PathScope;
+use torno_render::job::{CancelToken, Phase, RetainedMetadata};
+use torno_viewport::Camera;
 
 fn bad(message: &str) -> EngineError {
     EngineError::Other(message.into())
@@ -110,7 +110,7 @@ impl Prepared {
 pub fn claim(s: &mut Session, params: &mut Option<Value>, scope: &mut Option<PathScope>, cancel: CancelToken) -> Result<Claim> {
     check(&cancel)?;
     let input = params.as_ref().ok_or_else(|| bad("batch request was already claimed"))?;
-    solidcraft_io::vfs::scoped(scope.clone(), || super::validate_command_id(s, "render.batch", input))?;
+    torno_io::vfs::scoped(scope.clone(), || super::validate_command_id(s, "render.batch", input))?;
     s.render_batch_ready().map_err(EngineError::Other)?;
     if s.model.is_stale() {
         return Err(bad("finish the modelling gesture before rendering shots"));
@@ -295,7 +295,7 @@ pub fn prepare(claim: Claim) -> Prepared {
     };
     let scope = claim.scope.clone().or_else(|| claim.plan.as_ref().and_then(|p| p.scope.clone()));
     let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
-        solidcraft_io::vfs::scoped(scope, || {
+        torno_io::vfs::scoped(scope, || {
             check(&claim.cancel)?;
             if claim.first { first(claim, &mut out) } else { next(claim, &mut out) }
         })
@@ -343,7 +343,7 @@ pub fn finish_retained(s: &mut Session, out: &mut Prepared) -> Result<Value> {
         }
         let scope = out.plan.as_ref().and_then(|p| p.scope.clone());
         let inner = out.inner.as_mut().ok_or_else(|| bad("batch preparation has no proved job"))?;
-        let reply = solidcraft_io::vfs::scoped(scope, || {
+        let reply = torno_io::vfs::scoped(scope, || {
             if out.first {
                 let input = out.first_params.as_ref().ok_or_else(|| bad("first batch guard input missing"))?;
                 let spec = crate::find_command("render.batch").ok_or_else(|| EngineError::UnknownCommand("render.batch".into()))?;
@@ -405,19 +405,19 @@ pub fn cancel_plan(s: &mut Session, plan: &Plan) -> Result<bool> {
 /// itself still owns/funds exactly one persistent scope between jobs.
 pub fn with_scope<T>(claim: Claim, f: impl FnOnce(Claim) -> T) -> T {
     let scope = claim.scope.clone().or_else(|| claim.plan.as_ref().and_then(|p| p.scope.clone()));
-    solidcraft_io::vfs::scoped(scope, || f(claim))
+    torno_io::vfs::scoped(scope, || f(claim))
 }
 /// Idle, closed or rejected plan-only messages need no second stored scope.
 /// Hold the lease until original scope storage and all backing have dropped.
 pub fn retire_plan(plan: Plan) {
     let Plan { payload, rows, scope, lease, .. } = plan;
-    solidcraft_io::vfs::scoped(scope, || drop((payload, rows)));
+    torno_io::vfs::scoped(scope, || drop((payload, rows)));
     drop(lease);
 }
 /// Pure ordinary cancellation enablement/policy/typed-argument check. A pending
 /// UI input has no invented job: None may cancel that input; Some must follow
 /// the ordinary actual-job cancellation route, including ownership validation.
-pub fn check_cancel(s: &Session, params: &Value) -> Result<Option<solidcraft_render::job::JobId>> {
+pub fn check_cancel(s: &Session, params: &Value) -> Result<Option<torno_render::job::JobId>> {
     super::validate_command_id(s, "render.cancel", params)?;
     let job = crate::cmd::render_cancel_params(params)?;
     if let Some(job) = job {

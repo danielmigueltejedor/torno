@@ -98,6 +98,6 @@
   "ungraded": [],
   "what": "a 5 mm hole drilled square to the face of a 45 degree flange: the drill cap's certificate refused it by 1e-11 mm",
   "why_not": [
-    "body \"Body1\" is no kernel operation's output nor an operand: SolidCraft built it or changed the kernel's record"
+    "body \"Body1\" is no kernel operation's output nor an operand: Torno built it or changed the kernel's record"
   ]
 }

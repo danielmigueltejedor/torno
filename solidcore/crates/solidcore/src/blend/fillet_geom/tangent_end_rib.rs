@@ -1,6 +1,6 @@
 //! The end rib of a fillet at a tangent end, solved from the tangent end outward.
 //!
-//! Upstream: the SolidCraft fork's `source/SMLib/src/SmFilletGeom.cpp`
+//! Upstream: the Torno fork's `source/SMLib/src/SmFilletGeom.cpp`
 //! (tangency-labs/smlib@856b54e; the zero-speed rib in `t` of an odd order past 1,
 //! tangency-labs/smlib@cd47efd; WR-600).
 //!

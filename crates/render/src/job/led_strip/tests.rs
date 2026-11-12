@@ -128,9 +128,9 @@ mod consumer {
     use crate::job::{CancelToken, ImageRequest, Integrator, TaskPoll};
     use crate::raytrace::{area::RectangleLight, image::ImageTask};
     use crate::{ProductMesh, ProductScene};
-    use solidcraft_geom::{Aabb3, Mesh};
-    use solidcraft_viewport::{Camera, StandardView, surface::OpaqueSurface};
     use std::sync::Arc;
+    use torno_geom::{Aabb3, Mesh};
+    use torno_viewport::{Camera, StandardView, surface::OpaqueSurface};
 
     fn light(input: LedStripOptions) -> RectangleLight {
         let r = input.rectangle().unwrap();

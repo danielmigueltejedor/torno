@@ -68,6 +68,6 @@
   "ungraded": [],
   "what": "two collinear tabs folded in two features on the same line; the second fold used to be refused as crossing a slanted edge",
   "why_not": [
-    "body \"Body1\" is no kernel operation's output nor an operand: SolidCraft built it or changed the kernel's record"
+    "body \"Body1\" is no kernel operation's output nor an operand: Torno built it or changed the kernel's record"
   ]
 }

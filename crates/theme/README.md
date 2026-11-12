@@ -1,4 +1,4 @@
-# solidcraft-theme
+# torno-theme
 
 The token contract every UI component draws with. A component reads its colours and sizes from
 `Tokens::get()` and its tab colours from `TabAccent::current(ctx)`; with nothing set, it draws with

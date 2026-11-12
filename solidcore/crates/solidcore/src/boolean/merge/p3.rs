@@ -22,7 +22,7 @@
 //! drawing and the compile-time false IO experiment are omitted. No recursion;
 //! connected-component extraction is bounded by the initial face count, with an
 //! error if removal fails to make progress.
-//! `PiecewiseMerge` ends on an error of its first `IntersectInsertRelate` (SolidCraft
+//! `PiecewiseMerge` ends on an error of its first `IntersectInsertRelate` (Torno
 //! fix, tangency-labs/smlib af8db37, UB-242), where upstream ignores the status and
 //! goes on with half-imprinted B-reps.
 //! `BooleanLists` copies its surface operands with the base copy constructor, which slices
@@ -552,7 +552,7 @@ pub trait PiecewiseAccess: BooleanDriver {
     fn set_operands(&mut self, primary: Option<Self::Operand>, other: Option<Self::Operand>);
     /// `GetSurfaces`, in B-rep list order.
     fn surfaces(&self, brep: Self::Operand) -> Result<Vec<Self::Surface>>;
-    /// `IntersectInsertRelate()`. Its error ends the merge (SolidCraft fix
+    /// `IntersectInsertRelate()`. Its error ends the merge (Torno fix
     /// tangency-labs/smlib af8db37; upstream ignores the status).
     fn intersect_insert_relate(&mut self, k: &mut Kernel) -> Result<()>;
     /// `m_pBToO->RemoveAll(); m_pOToB->RemoveAll()`.
@@ -610,7 +610,7 @@ where
     // The first surface query is observable even though upstream overwrites it.
     let _ = driver.surfaces(original_other)?;
     // SER: a failed IntersectInsertRelate (a failed imprint leaves both B-reps
-    // half edited) ends the merge (SolidCraft change, tangency-labs/smlib af8db37;
+    // half edited) ends the merge (Torno change, tangency-labs/smlib af8db37;
     // upstream ignores its status).
     driver.intersect_insert_relate(k)?;
     piecewise_merge_related(

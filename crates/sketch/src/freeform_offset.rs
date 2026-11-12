@@ -7,7 +7,7 @@
 use crate::{CurveKind, Sketch, SketchError, fit_beziers_mode};
 use serde::{Deserialize, Serialize};
 use solidcore_record::{Seg2, Vec2};
-use solidcraft_geom::prelude::*;
+use torno_geom::prelude::*;
 
 mod trim;
 pub use trim::FreeformOffsetOutput;

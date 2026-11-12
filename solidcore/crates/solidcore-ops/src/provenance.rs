@@ -153,7 +153,7 @@ impl<P: Provenance> AttributeHandlers for Carried<P> {
     /// The store runs one merge per attribute id over both sources (`MergeInBrep`'s
     /// `Merge(data1, data2, data1)`, `geom::a_object`), so `self` is only the first source's
     /// value: each source other than the survivor is read from the view and joined onto what
-    /// the survivor carries, by the application's rule (as SolidCraft's history `Tag`
+    /// the survivor carries, by the application's rule (as Torno's history `Tag`
     /// unites both sources' origins).
     fn merge(
         &self,

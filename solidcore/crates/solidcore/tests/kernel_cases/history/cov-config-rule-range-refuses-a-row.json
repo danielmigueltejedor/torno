@@ -40,6 +40,6 @@
   "ungraded": [],
   "what": "config.rule limiting W to 30..50 while the row Long has W = 60",
   "why_not": [
-    "the failure is SolidCraft's, not a kernel operation's: step 7 (config.rule): invalid parameters for `config.rule`: row `Long`: invalid parameters for `config.activate`: configuration rules: rule `Range` restricts the final value"
+    "the failure is Torno's, not a kernel operation's: step 7 (config.rule): invalid parameters for `config.rule`: row `Long`: invalid parameters for `config.activate`: configuration rules: rule `Range` restricts the final value"
   ]
 }

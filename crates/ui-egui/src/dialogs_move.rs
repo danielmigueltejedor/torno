@@ -8,10 +8,10 @@ use crate::selection::SelectionExt as _;
 use crate::ui_kit::{choice_row, expr_row};
 use serde_json::{Value, json};
 use solidcore_record::Vec3;
-use solidcraft_engine::Sel;
-use solidcraft_engine::doc::expr::Kind as ValueKind;
-use solidcraft_engine::doc::{Mat, apply_point, apply_vector, is_identity, mat_inverse, mat_mul, rigid};
-use solidcraft_engine::geom::prelude::*;
+use torno_engine::Sel;
+use torno_engine::doc::expr::Kind as ValueKind;
+use torno_engine::doc::{Mat, apply_point, apply_vector, is_identity, mat_inverse, mat_mul, rigid};
+use torno_engine::geom::prelude::*;
 
 use crate::SolveApp;
 use crate::dialogs::{Dialog, Kind};
@@ -27,7 +27,7 @@ pub const POINT_TO_POSITION: usize = 4;
 const POINTS: u16 = VERTICES | FACES | EDGES | ORIGIN;
 
 /// A fresh Move dialog of a type (all values zero).
-pub fn kind(mode: usize, doc: &solidcraft_engine::doc::Document) -> Kind {
+pub fn kind(mode: usize, doc: &torno_engine::doc::Document) -> Kind {
     let z = || crate::length_input::default(doc, "0");
     let a = || "0 deg".to_string();
     Kind::Move { mode, x: z(), y: z(), z: z(), rx: a(), ry: a(), rz: a(), angle: a() }
@@ -291,9 +291,9 @@ fn sel_point(app: &SolveApp, d: &Dialog, s: Option<&Sel>) -> Option<Vec3> {
         Sel::Edge { body, index, point } => {
             // As every pick reads the placed model: one that cannot be placed has no bodies here.
             let st = match d.editing {
-                Some((id, _)) => std::sync::Arc::new(
-                    solidcraft_engine::doc::world_state(&app.session.doc, &app.session.model.state_before(id)).unwrap_or_default(),
-                ),
+                Some((id, _)) => {
+                    std::sync::Arc::new(torno_engine::doc::world_state(&app.session.doc, &app.session.model.state_before(id)).unwrap_or_default())
+                }
                 None => crate::open_meshing::session_world(&app.session),
             };
             // The centre is found where the body was modelled; the picked point is where it stands.
@@ -633,12 +633,12 @@ pub(crate) fn euler_from_axis_angle(axis: Vec3, angle: f64) -> (f64, f64, f64) {
 /// through the origin, its angle (another axis is shown as the Free Move angles that make
 /// the same turn, or kept as it is when the angle does not evaluate to a number).
 pub fn for_feature(
-    doc: &solidcraft_engine::doc::Document,
+    doc: &torno_engine::doc::Document,
     d: &mut Dialog,
     bodies: &[String],
-    translate: &[solidcraft_engine::doc::Expr; 3],
+    translate: &[torno_engine::doc::Expr; 3],
     axis: Option<Vec3>,
-    angle: Option<&solidcraft_engine::doc::Expr>,
+    angle: Option<&torno_engine::doc::Expr>,
     copy: bool,
 ) {
     let [x, y, z] = translate.clone().map(String::from);

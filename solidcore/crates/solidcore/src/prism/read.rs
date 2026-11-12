@@ -16,7 +16,7 @@
 //!   conic, a Bézier), its ends the edge's; with `each_span`, a curve of several spans is read
 //!   span by span.
 //!
-//! Not upstream: SolidCraft's planar prism boundary reading (`prism_curve.rs`), moved into the
+//! Not upstream: Torno's planar prism boundary reading (`prism_curve.rs`), moved into the
 //! kernel and read off the kernel's curves (docs/layers.md §1).
 //!
 //! References: Farin, *Curves and Surfaces for CAGD* (5th ed.), §5.2 (Bernstein products and

@@ -19,7 +19,7 @@ use crate::ui_kit::{Container, Surface};
 use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex};
 
-use solidcraft_engine::doc::ModelState;
+use torno_engine::doc::ModelState;
 
 use crate::SolveApp;
 
@@ -46,7 +46,7 @@ pub(crate) struct Meshing {
     framed: Option<crate::Camera>,
     /// Draw the design's Home picture when all is meshed.
     remember: Option<String>,
-    /// When it started, and whether the first bodies have been shown (`SOLIDCRAFT_PROFILE_OPEN`).
+    /// When it started, and whether the first bodies have been shown (`TORNO_PROFILE_OPEN`).
     began: Option<f64>,
     first_shown: bool,
 }
@@ -71,7 +71,7 @@ impl Meshing {
                 .name("open-meshing".into())
                 .spawn(move || {
                     let (world, ready, done, stop) = job;
-                    solidcraft_engine::kernel::for_each_on_threads(&first, 16, |&i| {
+                    torno_engine::kernel::for_each_on_threads(&first, 16, |&i| {
                         if stop.load(Ordering::Relaxed) {
                             return;
                         }
@@ -84,8 +84,8 @@ impl Meshing {
                                 crate::viewport::warm_shared_tris(&mesh);
                             }
                             if plans {
-                                let _ = b.gpu_plan_at(solidcraft_engine::doc::display_quality::current());
-                                let _ = b.plan_mesh_in_place_at(solidcraft_engine::doc::display_quality::current());
+                                let _ = b.gpu_plan_at(torno_engine::doc::display_quality::current());
+                                let _ = b.plan_mesh_in_place_at(torno_engine::doc::display_quality::current());
                             }
                         }
                         if let Ok(mut r) = ready.lock() {
@@ -166,7 +166,7 @@ pub(crate) fn show(app: &SolveApp, ctx: &egui::Context) {
         return;
     }
     let (Some((done, total)), Some(view)) = (progress(app), app.viewport.rect) else { return };
-    let t = solidcraft_theme::Tokens::get();
+    let t = torno_theme::Tokens::get();
     let at = egui::pos2(view.left() + 12.0, view.bottom() - 12.0);
     Container::new(ctx, Surface::Toast)
         .area(egui::Id::unique("open_meshing"))
@@ -221,7 +221,7 @@ pub(crate) fn tick(app: &mut SolveApp, ctx: &egui::Context) {
         }
         if profiling() {
             let ms = began.map_or(0.0, |t| (ctx.input(|i| i.time) - t) * 1000.0);
-            solidcraft_engine::note!("SolidCraft open meshing: all {} bodies shown after {ms:.0} ms", world.bodies.len());
+            torno_engine::note!("Torno open meshing: all {} bodies shown after {ms:.0} ms", world.bodies.len());
         }
         // Framed from outlines and not moved since: frame the meshes.
         if framed == Some(app.cam) {
@@ -240,12 +240,12 @@ pub(crate) fn tick(app: &mut SolveApp, ctx: &egui::Context) {
 /// The session's placed model, as every panel, pick and hover reads it. A model that cannot be
 /// placed shows no placed bodies, and the viewport says why ([`placement_error`]); the session
 /// keeps the failure, so it is not placed again on every read.
-pub(crate) fn session_world(s: &solidcraft_engine::Session) -> Arc<ModelState> {
+pub(crate) fn session_world(s: &torno_engine::Session) -> Arc<ModelState> {
     s.world_state().unwrap_or_default()
 }
 
 /// Why the session's model cannot be placed, if it cannot.
-pub(crate) fn placement_error(s: &solidcraft_engine::Session) -> Option<String> {
+pub(crate) fn placement_error(s: &torno_engine::Session) -> Option<String> {
     s.world_state().err().map(|e| e.to_string())
 }
 
@@ -283,7 +283,7 @@ pub(crate) fn refresh(app: &mut SolveApp, now: f64) {
     if !m.first_shown && !st.bodies.is_empty() {
         m.first_shown = true;
         if profiling() {
-            solidcraft_engine::note!("SolidCraft open meshing: first {} bodies shown after {:.0} ms", st.bodies.len(), (now - began) * 1000.0);
+            torno_engine::note!("Torno open meshing: first {} bodies shown after {:.0} ms", st.bodies.len(), (now - began) * 1000.0);
         }
     }
     m.shown = Some((done, Arc::new(st)));
@@ -315,5 +315,5 @@ pub(crate) fn without_threads<R>(f: impl FnOnce() -> R) -> R {
 }
 
 fn profiling() -> bool {
-    solidcraft_engine::geom::env::var_os("PROFILE_OPEN").is_some()
+    torno_engine::geom::env::var_os("PROFILE_OPEN").is_some()
 }

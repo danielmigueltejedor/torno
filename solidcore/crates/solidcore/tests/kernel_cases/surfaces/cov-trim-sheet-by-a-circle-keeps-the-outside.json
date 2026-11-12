@@ -66,6 +66,6 @@
   "ungraded": [],
   "what": "a 20 x 20 sheet trimmed by a circle r 4 drawn on it, keeping the outside: a sheet with a hole",
   "why_not": [
-    "body \"Sheet\" is no kernel operation's output nor an operand: SolidCraft built it or changed the kernel's record"
+    "body \"Sheet\" is no kernel operation's output nor an operand: Torno built it or changed the kernel's record"
   ]
 }

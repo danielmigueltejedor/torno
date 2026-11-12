@@ -8,12 +8,12 @@ use crate::{
     texture_sampling::{TextureView, mips},
 };
 use solidcore_record::Vec3;
-use solidcraft_geom::prelude::*;
-use solidcraft_viewport::surface::{MIN_ROUGHNESS, srgb8_to_linear};
 use std::{
     io::{self, BufRead, Read, Seek, SeekFrom},
     sync::Arc,
 };
+use torno_geom::prelude::*;
+use torno_viewport::surface::{MIN_ROUGHNESS, srgb8_to_linear};
 
 /// The existing whole-image texture decoder's bounded workspace, not a raised host cap.
 const CODEC_BYTES: usize = crate::texture_input::MAX_CODEC_BYTES as usize;
@@ -429,7 +429,7 @@ impl PreparedMap {
         size_of::<Level>() as u64
     }
     pub fn identity(&self) -> (([u8; 32], u8), &'static str) {
-        let recipe = if self.normal_variance { "solidcraft.unit-normal-area-mips/1" } else { mips::MIP_RECIPE_ID };
+        let recipe = if self.normal_variance { "torno.unit-normal-area-mips/1" } else { mips::MIP_RECIPE_ID };
         (self.identity, recipe)
     }
     pub fn level_count(&self) -> usize {
@@ -530,9 +530,9 @@ impl PreparedMap {
         rgb: [f64; 3],
         minification: f64,
     ) -> Result<ShadingSurface> {
-        let shading = solidcraft_viewport::surface::unit_direction(original.shading_normal).map_err(|error| invalid(error.to_string()))?;
-        let geometric = solidcraft_viewport::surface::unit_direction(point.geometric_normal).map_err(|error| invalid(error.to_string()))?;
-        let view = solidcraft_viewport::surface::unit_direction(point.view_direction).map_err(|error| invalid(error.to_string()))?;
+        let shading = torno_viewport::surface::unit_direction(original.shading_normal).map_err(|error| invalid(error.to_string()))?;
+        let geometric = torno_viewport::surface::unit_direction(point.geometric_normal).map_err(|error| invalid(error.to_string()))?;
+        let view = torno_viewport::surface::unit_direction(point.view_direction).map_err(|error| invalid(error.to_string()))?;
         if geometric.dot(view) <= 0.0 {
             return Err(invalid("CPU mapped surface view crosses its oriented geometric surface"));
         }

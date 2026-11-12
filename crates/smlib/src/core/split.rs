@@ -65,7 +65,7 @@ pub(crate) const MAX_TOOLS: usize = 4096;
 /// `SM_ERR`.
 const SM_ERR: i32 = 1001;
 
-/// The capi's statuses as SolidCraft errors: an operation's own result.
+/// The capi's statuses as Torno errors: an operation's own result.
 type Out<T> = std::result::Result<T, Error>;
 
 /// A tool surface as solidcore holds it: the surface over its natural UV domain (`smlib_surface`'s

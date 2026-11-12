@@ -4,8 +4,8 @@
 //! projected references, points, dimensions and constraints are viewport overlays and are left
 //! out. The active sketch is drawn on top, as the viewport draws it.
 use solidcore_record::{Plane, Vec3};
-use solidcraft_geom::prelude::*;
-use solidcraft_sketch::Sketch;
+use torno_geom::prelude::*;
+use torno_sketch::Sketch;
 
 use crate::Session;
 use crate::mesh_lines::{Part, Stage};

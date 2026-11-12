@@ -1,5 +1,5 @@
 //! #2009 group C: the analytic `STEPInversion` answers told apart from its failures,
-//! behind `UpstreamFixes::analytic_inversion_answers_apart` (WR-662; the SolidCraft fork's
+//! behind `UpstreamFixes::analytic_inversion_answers_apart` (WR-662; the Torno fork's
 //! tangency-labs/smlib dfc7cb6). The fork's own test: the statuses and locations for
 //! points on, off and outside a quarter cylinder and a sphere.
 

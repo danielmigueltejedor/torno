@@ -65,6 +65,6 @@
   "ungraded": [],
   "what": "a STEP cone 20 mm across coming to a point 30 mm up (no vertex at the apex): the cone face was meshed flat at its base, so the measured shape was far off",
   "why_not": [
-    "body \"cone_point\" is no kernel operation's output nor an operand: SolidCraft built it or changed the kernel's record"
+    "body \"cone_point\" is no kernel operation's output nor an operand: Torno built it or changed the kernel's record"
   ]
 }

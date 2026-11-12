@@ -2,7 +2,7 @@
 //! dimension line (or arc) with arrowheads, and the value centred on it; radius and diameter
 //! leaders with R / Ø, angles as an arc between the two lines, arc lengths with the arc mark,
 //! driven (reference) dimensions in parentheses in a muted colour. The geometry comes from
-//! `solidcraft_sketch::dim_layout`.
+//! `torno_sketch::dim_layout`.
 //!
 //! A click selects a dimension (Delete removes it), a drag moves its text (and so the offset of
 //! its dimension line), a double-click (or one click with the Dimension tool) edits its value
@@ -15,21 +15,19 @@
 
 use crate::ui_kit::BackingTooltipExt as _;
 use crate::ui_kit::{Container, Surface};
-use solidcraft_engine::geom::prelude::*;
 use std::cell::RefCell;
 use std::sync::Arc;
+use torno_engine::geom::prelude::*;
 
 use egui::{FontId, Pos2, Rect, Shape, Stroke, vec2};
 use serde_json::json;
 use solidcore_record::Vec2;
-use solidcraft_engine::Sel;
-use solidcraft_engine::sketch::{
-    ConstraintKind, DimFrame, chain_centres, default_text, default_text_offset, dim_frame, dim_layout_reaching, dim_reach,
-};
+use torno_engine::Sel;
+use torno_engine::sketch::{ConstraintKind, DimFrame, chain_centres, default_text, default_text_offset, dim_frame, dim_layout_reaching, dim_reach};
 
 use crate::SolveApp;
 use crate::viewport::Proj;
-use solidcraft_theme::Tokens;
+use torno_theme::Tokens;
 
 pub(crate) mod window;
 
@@ -95,17 +93,17 @@ struct Live {
 /// document also makes the editor's identity check safe across document replacements.
 #[derive(Clone, Debug)]
 struct DimensionDraft {
-    baseline: Arc<solidcraft_engine::doc::Document>,
+    baseline: Arc<torno_engine::doc::Document>,
     sketch: u64,
     component: u64,
     path: Option<Vec<u64>>,
-    pending: std::collections::BTreeMap<u64, solidcraft_engine::doc::Mat>,
+    pending: std::collections::BTreeMap<u64, torno_engine::doc::Mat>,
     entities: Vec<String>,
     /// Where the text goes (None: the dimension's default place).
     at: Option<Vec2>,
     checked_expr: String,
-    preview_doc: Arc<solidcraft_engine::doc::Document>,
-    preview: Arc<solidcraft_engine::doc::ModelState>,
+    preview_doc: Arc<torno_engine::doc::Document>,
+    preview: Arc<torno_engine::doc::ModelState>,
     /// Which solve `preview` is (see [`next_solve`]).
     solve: u64,
     error: Option<String>,
@@ -146,7 +144,7 @@ impl DimensionDraft {
         ellipse_as_before(self.half_axes, &mut params);
         params
     }
-    fn evaluate(&self, app: &SolveApp, expr: &str) -> Result<solidcraft_engine::Session, String> {
+    fn evaluate(&self, app: &SolveApp, expr: &str) -> Result<torno_engine::Session, String> {
         let mut scratch = app.session.scratch();
         let params = self.params(expr);
         let result = scratch.execute("sketch.dimension", &params).map_err(|e| shown_error("sketch.dimension", &e.to_string()))?;
@@ -171,7 +169,7 @@ impl DimensionDraft {
 /// of its id, and without the `value:` field tag, since the box is the value
 /// ("Sketch Dimension: `mm` is a unit name, so it cannot be a parameter name").
 fn shown_error(id: &str, e: &str) -> String {
-    let label = solidcraft_ui_text::tr_label(crate::command_label(id));
+    let label = torno_ui_text::tr_label(crate::command_label(id));
     crate::friendly_error(id, e).replacen(&format!("{label}: value: "), &format!("{label}: "), 1)
 }
 
@@ -192,7 +190,7 @@ pub(crate) fn ellipse_as_before(half_axes: bool, params: &mut serde_json::Value)
 
 /// How a dimension is drawn: with Draw ellipses with their axes off, a radius on an ellipse
 /// is drawn as a radius, as before, instead of to its minor axis end.
-pub(crate) fn shown_frame(half_axes: bool, sk: &solidcraft_engine::sketch::Sketch, k: &ConstraintKind) -> Option<DimFrame> {
+pub(crate) fn shown_frame(half_axes: bool, sk: &torno_engine::sketch::Sketch, k: &ConstraintKind) -> Option<DimFrame> {
     match dim_frame(sk, k)? {
         DimFrame::HalfAxis { center, len, .. } if !half_axes => Some(DimFrame::Radial { center, radius: len, diameter: false, arc: None }),
         frame => Some(frame),
@@ -234,7 +232,7 @@ pub fn begin_dimension(app: &mut SolveApp, entities: Vec<String>, at: Vec2) -> R
         ellipse_as_before(draft.half_axes, &mut params);
         AXIS.with(|axis| *axis.borrow_mut() = None);
         app.run("sketch.dimension", params)?;
-        app.set_status(solidcraft_ui_text::tr("sketch.dimension_added_driven"), false);
+        app.set_status(torno_ui_text::tr("sketch.dimension_added_driven"), false);
         return Ok(());
     }
     EDIT.with(|edit| {
@@ -428,11 +426,11 @@ fn draft_of(app: &SolveApp, sketch: u64, entities: &[String], at: Option<Vec2>, 
 /// Cache inference at a stationary pointer, including incomplete/unsupported picks.
 #[derive(Clone)]
 struct Placement {
-    baseline: Arc<solidcraft_engine::doc::Document>,
+    baseline: Arc<torno_engine::doc::Document>,
     sketch: Option<u64>,
     component: u64,
     path: Option<Vec<u64>>,
-    pending: std::collections::BTreeMap<u64, solidcraft_engine::doc::Mat>,
+    pending: std::collections::BTreeMap<u64, torno_engine::doc::Mat>,
     entities: Vec<String>,
     at: Vec2,
     draft: Option<(String, DimensionDraft)>,
@@ -697,9 +695,9 @@ fn change_value(app: &mut SolveApp, param: &str, typed: &str) -> Result<serde_js
         .session
         .doc
         .param(param)
-        .and_then(|p| solidcraft_engine::doc::expr::unit_info(&p.unit))
+        .and_then(|p| torno_engine::doc::expr::unit_info(&p.unit))
         .map(|(k, _)| k)
-        .unwrap_or(solidcraft_engine::doc::expr::Kind::Unitless);
+        .unwrap_or(torno_engine::doc::expr::Kind::Unitless);
     let expression = crate::length_input::expression(&app.session.doc, typed, kind);
     app.run("parameters.change", json!({"name": param, "expression": expression})).map_err(|err| shown_error("parameters.change", &err))
 }
@@ -850,12 +848,12 @@ pub fn show(app: &mut SolveApp, ui: &egui::Ui, painter: &egui::Painter, proj: &P
     let tk = Tokens::get();
     let is_sel = |id: &str| app.session.selection.iter().any(|s| matches!(s, Sel::SketchConstraint { id: x } if x == id));
     let hover = ui.input(|i| i.pointer.hover_pos()).filter(|_| ui.rect_contains_pointer(proj.rect)).and_then(hit);
-    let font = FontId::monospace(solidcraft_theme::Tokens::get().font_body);
+    let font = FontId::monospace(torno_theme::Tokens::get().font_body);
     let centres = chain_centres(sk);
     let draft_sketch = draft.as_ref().and_then(|(_, d)| d.preview.sketch(d.sketch));
     let draft_centres = draft_sketch.map(|solved| chain_centres(&solved.sketch));
     // A driven draft is keyed by its constraint id (it has no parameter).
-    let ours = |c: &solidcraft_engine::sketch::Constraint| {
+    let ours = |c: &torno_engine::sketch::Constraint| {
         draft.as_ref().is_some_and(|(param, _)| c.param.as_deref() == Some(param.as_str()) || (c.driven && c.id == *param))
     };
     // Drawn from the typed value's solve, the sketch already holds the draft: it is told apart
@@ -976,7 +974,7 @@ pub fn show(app: &mut SolveApp, ui: &egui::Ui, painter: &egui::Painter, proj: &P
 }
 
 /// A point a dimension measures (for the shape it belongs to).
-fn first_point(sk: &solidcraft_engine::sketch::Sketch, k: &ConstraintKind) -> Option<usize> {
+fn first_point(sk: &torno_engine::sketch::Sketch, k: &ConstraintKind) -> Option<usize> {
     use ConstraintKind::*;
     match *k {
         Length { l, .. } => sk.curves.get(l).and_then(|c| c.kind.point_ids().first().copied()),
@@ -1186,8 +1184,8 @@ fn edit_box(app: &mut SolveApp, ctx: &egui::Context) {
             Container::show_backing(ui, frame, |ui| {
                 crate::ui_kit::scope(ui, |ui| {
                     ui.set_max_width(popup_width);
-                    crate::ui_kit::text(ui, &solidcraft_ui_text::format("dialog.dimension_name", &[("name", &e.param)]), crate::ui_kit::Text::Inline)
-                        .backing_on_hover_text(solidcraft_ui_text::tr("dialog.dimension_insert_hint"));
+                    crate::ui_kit::text(ui, &torno_ui_text::format("dialog.dimension_name", &[("name", &e.param)]), crate::ui_kit::Text::Inline)
+                        .backing_on_hover_text(torno_ui_text::tr("dialog.dimension_insert_hint"));
                     if !e.owned {
                         // The whole value is selected before the field reads its state, every frame
                         // until the person takes it over, so typing replaces it (#11204). Only on the
@@ -1209,7 +1207,7 @@ fn edit_box(app: &mut SolveApp, ctx: &egui::Context) {
                     // or pinned the value, which began before the box sat there.
                     let settled = e.shown == Some(anchor);
                     e.owned |= settled && r.hovered() && ui.input(|i| i.pointer.any_pressed());
-                    solidcraft_theme::TabAccent::number_focus(ui, &r);
+                    torno_theme::TabAccent::number_focus(ui, &r);
                     if r.has_focus() {
                         e.selection = egui::TextEdit::load_state(ctx, id).and_then(|s| s.cursor.char_range());
                     }
@@ -1286,9 +1284,9 @@ fn settle(app: &mut SolveApp, mut e: Edit, done: Option<bool>, escaped: bool) {
                     // The sentence comes from the catalog, so it reads in the interface language (#8863).
                     let named = reply.get("renamed").and_then(|r| r.get("to")).and_then(serde_json::Value::as_str);
                     let status = match (reply.get("defined").and_then(serde_json::Value::as_str), named) {
-                        (Some(name), _) => solidcraft_ui_text::format("sketch.dimension_applied_defined", &[("name", name)]),
-                        (None, Some(name)) => solidcraft_ui_text::format("sketch.dimension_applied_renamed", &[("name", name)]),
-                        (None, None) => solidcraft_ui_text::tr("sketch.dimension_applied").to_string(),
+                        (Some(name), _) => torno_ui_text::format("sketch.dimension_applied_defined", &[("name", name)]),
+                        (None, Some(name)) => torno_ui_text::format("sketch.dimension_applied_renamed", &[("name", name)]),
+                        (None, None) => torno_ui_text::tr("sketch.dimension_applied").to_string(),
                     };
                     app.set_status(status, false);
                 }
@@ -1311,7 +1309,7 @@ fn clear_picks(app: &mut SolveApp) {
 
 /// While a new dimension's value is typed: the design solved with that value (the last value
 /// that solved), so the open sketch is drawn as Enter would leave it. None otherwise.
-pub fn preview_world(app: &SolveApp) -> Option<Arc<solidcraft_engine::doc::ModelState>> {
+pub fn preview_world(app: &SolveApp) -> Option<Arc<torno_engine::doc::ModelState>> {
     EDIT.with(|e| e.try_borrow().ok()?.as_ref().filter(|e| e.typed)?.draft.as_ref().filter(|d| !d.driven && d.valid(app)).map(|d| d.preview.clone()))
 }
 
@@ -1362,7 +1360,7 @@ pub fn resolve(app: &SolveApp, expr: &str) {
 
 /// The open draft: its expression, the dimension it adds and the sketch it previews (tests).
 #[cfg(test)]
-pub fn draft_preview() -> Option<(String, solidcraft_engine::sketch::Constraint, solidcraft_engine::sketch::Sketch)> {
+pub fn draft_preview() -> Option<(String, torno_engine::sketch::Constraint, torno_engine::sketch::Sketch)> {
     EDIT.with(|edit| {
         let edit = edit.borrow();
         let e = edit.as_ref()?;
@@ -1375,7 +1373,7 @@ pub fn draft_preview() -> Option<(String, solidcraft_engine::sketch::Constraint,
 
 /// A place-first draft, including a driven dimension, for creation tests.
 #[cfg(test)]
-pub fn placement_dimension_preview(app: &SolveApp) -> Option<solidcraft_engine::sketch::Constraint> {
+pub fn placement_dimension_preview(app: &SolveApp) -> Option<torno_engine::sketch::Constraint> {
     let (id, draft) = placement_preview(app)?;
     draft
         .preview

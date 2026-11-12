@@ -3,10 +3,10 @@ use super::{ImageMethod, RenderSelection, cpu, setups, studio};
 use crate::ui_kit::BackingTooltipExt as _;
 use crate::{SolveApp, ui_kit};
 use serde_json::{Value, json};
-use solidcraft_engine::doc::render_settings::{CpuJob, GpuJob, RenderJob, RenderSetup, SkyEnvironment};
-use solidcraft_engine::geom::prelude::*;
-use solidcraft_engine::render::job::{AreaLights, StudioLighting};
-use solidcraft_engine::schema::render_lights::{Geometry, Light, LightIdRemap, Visibility};
+use torno_engine::doc::render_settings::{CpuJob, GpuJob, RenderJob, RenderSetup, SkyEnvironment};
+use torno_engine::geom::prelude::*;
+use torno_engine::render::job::{AreaLights, StudioLighting};
+use torno_engine::schema::render_lights::{Geometry, Light, LightIdRemap, Visibility};
 
 #[derive(Clone, Debug, Default)]
 pub(super) struct View {
@@ -21,13 +21,13 @@ pub(super) struct View {
 
 #[derive(Clone, Debug)]
 struct Source {
-    settings: std::sync::Weak<solidcraft_engine::doc::render_settings::RenderSettings>,
+    settings: std::sync::Weak<torno_engine::doc::render_settings::RenderSettings>,
     method: ImageMethod,
 }
 #[derive(Clone, Debug)]
 struct NumericHistory {
-    before: std::sync::Weak<solidcraft_engine::doc::render_settings::RenderSettings>,
-    after: std::sync::Weak<solidcraft_engine::doc::render_settings::RenderSettings>,
+    before: std::sync::Weak<torno_engine::doc::render_settings::RenderSettings>,
+    after: std::sync::Weak<torno_engine::doc::render_settings::RenderSettings>,
 }
 impl NumericHistory {
     fn connects(&self, a: &Source, b: &Source) -> bool {
@@ -43,7 +43,7 @@ struct Review {
     source: RenderSetup,
     setup: RenderSetup,
     revision: u64,
-    document: std::sync::Weak<solidcraft_engine::doc::Document>,
+    document: std::sync::Weak<torno_engine::doc::Document>,
     consent: bool,
 }
 
@@ -152,8 +152,8 @@ pub(super) fn celestial_method(app: &SolveApp, next: &mut super::ViewState, meth
         }),
         ..Default::default()
     };
-    solidcraft_engine::render_lights::write(&mut setup, &sources)?;
-    let converted = solidcraft_engine::render_lights::inspect(&setup)?;
+    torno_engine::render_lights::write(&mut setup, &sources)?;
+    let converted = torno_engine::render_lights::inspect(&setup)?;
     if sources.len() != converted.len()
         || sources.iter().any(|source| {
             !converted.iter().any(|target| {
@@ -200,7 +200,7 @@ pub(super) fn celestial_method(app: &SolveApp, next: &mut super::ViewState, meth
 /// equal row values or counts alone never establish identity.
 pub(super) fn celestial_method_applied(
     app: &mut SolveApp,
-    before: &std::sync::Weak<solidcraft_engine::doc::render_settings::RenderSettings>,
+    before: &std::sync::Weak<torno_engine::doc::render_settings::RenderSettings>,
     method: ImageMethod,
 ) {
     let valid = app.render_workspace.view.lights.scope == app.render_workspace.view.name
@@ -221,15 +221,11 @@ pub(super) fn celestial_method_applied(
 }
 
 pub(super) fn rows(app: &SolveApp) -> Result<Vec<Light>, String> {
-    solidcraft_engine::render_lights::inspect(&settings(app)?)
+    torno_engine::render_lights::inspect(&settings(app)?)
 }
 
 pub(super) fn name(app: &SolveApp, light: &Light) -> String {
-    if light.number <= 3 {
-        app.tr(&light.name_key).into()
-    } else {
-        solidcraft_ui_text::format(&light.name_key, &[("number", &light.number.to_string())])
-    }
+    if light.number <= 3 { app.tr(&light.name_key).into() } else { torno_ui_text::format(&light.name_key, &[("number", &light.number.to_string())]) }
 }
 
 /// A known volume-only/transport adoption preserves the analytic rig's addresses.
@@ -237,7 +233,7 @@ pub(super) fn name(app: &SolveApp, light: &Light) -> String {
 /// and its saved rows, then retain only this one exact Undo/Redo edge.
 pub(super) fn volume_edited(
     app: &mut SolveApp,
-    before: &std::sync::Weak<solidcraft_engine::doc::render_settings::RenderSettings>,
+    before: &std::sync::Weak<torno_engine::doc::render_settings::RenderSettings>,
     method: ImageMethod,
     draft: &RenderSetup,
     rig: &[Light],
@@ -251,7 +247,7 @@ pub(super) fn volume_edited(
                 // A first numerical edit creates the setup from this exact
                 // controller draft; no unknown source replacement is inferred.
                 let setup = settings.setups.get(&app.render_workspace.view.name).unwrap_or(draft);
-                solidcraft_engine::render_lights::inspect(setup).ok()
+                torno_engine::render_lights::inspect(setup).ok()
             })
             .as_deref()
             == Some(rig)
@@ -346,11 +342,11 @@ pub(crate) fn edited(app: &mut SolveApp, command: &str, params: &Value, reply: &
             return None;
         }
         let previous = app.session.undo.last()?;
-        if previous.label != solidcraft_engine::find_command(command)?.label {
+        if previous.label != torno_engine::find_command(command)?.label {
             return None;
         }
         let saved = previous.doc.render.setups.get(name)?;
-        if solidcraft_engine::render_lights::inspect(saved).ok()? != before {
+        if torno_engine::render_lights::inspect(saved).ok()? != before {
             return None;
         }
         let cached = app.render_workspace.view.lights.source.as_ref()?;
@@ -358,7 +354,7 @@ pub(crate) fn edited(app: &mut SolveApp, command: &str, params: &Value, reply: &
         if !cached.settings.ptr_eq(&source) {
             return None;
         }
-        let after = solidcraft_engine::render_lights::inspect(app.session.doc.render.setups.get(name)?).ok()?;
+        let after = torno_engine::render_lights::inspect(app.session.doc.render.setups.get(name)?).ok()?;
         let kind = |light: &Light| (light.geometry.kind(), matches!(light.geometry, Geometry::Directional { angular_radius_rad: Some(_), .. }));
         if before.iter().any(|light| {
             !remap.iter().any(|entry| {
@@ -394,7 +390,7 @@ pub(crate) fn edited(app: &mut SolveApp, command: &str, params: &Value, reply: &
 }
 
 fn product_centre(app: &SolveApp) -> [f64; 3] {
-    let bounds = solidcraft_engine::view::bounds(&app.session).unwrap_or(solidcraft_engine::geom::Aabb3::EMPTY);
+    let bounds = torno_engine::view::bounds(&app.session).unwrap_or(torno_engine::geom::Aabb3::EMPTY);
     let point = if bounds.is_empty() { app.cam.target } else { bounds.center() };
     [point.x, point.y, point.z]
 }
@@ -441,7 +437,7 @@ pub(crate) fn filter_request(app: &SolveApp, mut request: Value) -> Result<Value
         RenderSetup::default()
     };
     if setup.job.is_some() {
-        if let Some(weights) = solidcraft_engine::render_lights::filter(&mut setup, visibility)? {
+        if let Some(weights) = torno_engine::render_lights::filter(&mut setup, visibility)? {
             request["studio_weights"] = json!(weights);
         }
         if let Some(object) = request.as_object_mut() {
@@ -466,14 +462,14 @@ pub(crate) fn filter_request(app: &SolveApp, mut request: Value) -> Result<Value
             }),
             ..Default::default()
         };
-        if let Some(weights) = solidcraft_engine::render_lights::filter(&mut lighting, visibility)? {
+        if let Some(weights) = torno_engine::render_lights::filter(&mut lighting, visibility)? {
             request["studio_weights"] = json!(weights);
         }
         if let Some(RenderJob::GpuPath { options, .. }) = lighting.job {
             request["lighting"] = json!(options.lighting);
         }
     } else if request.get("integrator").and_then(Value::as_str) == Some("raytrace") {
-        let options: solidcraft_engine::render::job::RaytraceOptions =
+        let options: torno_engine::render::job::RaytraceOptions =
             serde_json::from_value(request.get("raytrace").filter(|value| !value.is_null()).cloned().unwrap_or_else(|| json!({})))
                 .map_err(|e| e.to_string())?;
         let mut lighting = RenderSetup {
@@ -494,7 +490,7 @@ pub(crate) fn filter_request(app: &SolveApp, mut request: Value) -> Result<Value
             }),
             ..Default::default()
         };
-        solidcraft_engine::render_lights::filter(&mut lighting, visibility)?;
+        torno_engine::render_lights::filter(&mut lighting, visibility)?;
         if let Some(RenderJob::CpuRaytrace { options: filtered, .. }) = lighting.job {
             let mut options = options;
             options.sun = filtered.sun.map(Box::new);
@@ -504,7 +500,7 @@ pub(crate) fn filter_request(app: &SolveApp, mut request: Value) -> Result<Value
             options.area_lights = filtered.area_lights;
             request["raytrace"] = json!(options);
         }
-    } else if let Some(weights) = solidcraft_engine::render_lights::filter(&mut setup, visibility)? {
+    } else if let Some(weights) = torno_engine::render_lights::filter(&mut setup, visibility)? {
         request["studio_weights"] = json!(weights);
     }
     Ok(request)
@@ -544,7 +540,7 @@ pub(super) fn preview(app: &SolveApp) -> Result<Vec<[f32; 16]>, String> {
             Geometry::Area { edge_u_mm: [ux, uy, uz], edge_v_mm: [vx, vy, vz], .. } => {
                 let normal = solidcore_record::Vec3::new(ux, uy, uz).cross(solidcore_record::Vec3::new(vx, vy, vz));
                 let area = normal.len();
-                let n = solidcraft_viewport::surface::unit_direction(normal).unwrap_or(-solidcore_record::Vec3::Z);
+                let n = torno_viewport::surface::unit_direction(normal).unwrap_or(-solidcore_record::Vec3::Z);
                 ([n.x, n.y, n.z], 0.0, 0.0, area, 0.001)
             }
             _ => ([0.0; 3], 0.0, 0.0, 1.0, 0.001),
@@ -622,7 +618,7 @@ pub(super) fn lighting(app: &mut SolveApp, ui: &mut egui::Ui) {
                         if chosen == 1 {
                             let result = (|| {
                                 let mut snapshot = setups::snapshot(app)?;
-                                solidcraft_engine::render_lights::write(&mut snapshot, &lights)?;
+                                torno_engine::render_lights::write(&mut snapshot, &lights)?;
                                 save_lighting(app, snapshot)
                             })();
                             if let Err(error) = result {
@@ -631,18 +627,18 @@ pub(super) fn lighting(app: &mut SolveApp, ui: &mut egui::Ui) {
                         } else {
                             review_preset(
                                 app,
-                                app.render_workspace.view.raytrace.preset.unwrap_or(solidcraft_engine::render::job::LightingPreset::Neutral),
+                                app.render_workspace.view.raytrace.preset.unwrap_or(torno_engine::render::job::LightingPreset::Neutral),
                             );
                         }
                     }
                 });
             });
             let presets = [
-                (solidcraft_engine::render::job::LightingPreset::Neutral, "render.cpu_neutral"),
-                (solidcraft_engine::render::job::LightingPreset::KeyRim, "render.cpu_key_rim"),
-                (solidcraft_engine::render::job::LightingPreset::WarmCool, "render.cpu_warm_cool"),
+                (torno_engine::render::job::LightingPreset::Neutral, "render.cpu_neutral"),
+                (torno_engine::render::job::LightingPreset::KeyRim, "render.cpu_key_rim"),
+                (torno_engine::render::job::LightingPreset::WarmCool, "render.cpu_warm_cool"),
             ];
-            let selected = app.render_workspace.view.raytrace.preset.unwrap_or(solidcraft_engine::render::job::LightingPreset::Neutral);
+            let selected = app.render_workspace.view.raytrace.preset.unwrap_or(torno_engine::render::job::LightingPreset::Neutral);
             let selected_label = presets.iter().find(|(p, _)| *p == selected).map(|(_, key)| *key).unwrap_or("render.cpu_neutral");
             ui.add_enabled_ui(cpu && !custom, |ui| {
                 let label = app.tr("render.lighting_preset_row").to_string();
@@ -728,10 +724,7 @@ pub(super) fn lighting(app: &mut SolveApp, ui: &mut egui::Ui) {
                                     let readout = if unsupported {
                                         app.tr("render.lighting_unsupported").to_string()
                                     } else {
-                                        solidcraft_ui_text::format(
-                                            "render.lighting_used",
-                                            &[("used", &count.to_string()), ("limit", &limit.to_string())],
-                                        )
+                                        torno_ui_text::format("render.lighting_used", &[("used", &count.to_string()), ("limit", &limit.to_string())])
                                     };
                                     column.add_enabled_ui(!unsupported, |ui| ui_kit::text(ui, &readout, ui_kit::Text::Inline));
                                 }
@@ -796,7 +789,7 @@ pub(super) fn add_menu(app: &mut SolveApp, ui: &mut egui::Ui) {
     });
 }
 
-fn review_preset(app: &mut SolveApp, preset: solidcraft_engine::render::job::LightingPreset) {
+fn review_preset(app: &mut SolveApp, preset: torno_engine::render::job::LightingPreset) {
     match setups::snapshot(app) {
         Ok(mut setup) => {
             let source = setup.clone();
@@ -906,7 +899,7 @@ pub(super) fn editor(app: &mut SolveApp, ui: &mut egui::Ui, id: &str) {
     };
     let aim = app.render_workspace.view.lights.aim.unwrap_or_else(|| product_centre(app));
     let subject_size = subject_size(app);
-    let (azimuth, elevation, distance) = solidcraft_engine::render_lights::position(light, aim, app.cam.distance);
+    let (azimuth, elevation, distance) = torno_engine::render_lights::position(light, aim, app.cam.distance);
     let (position, direction, u, v, reference, minimum) = match light.geometry {
         Geometry::Directional { direction, .. } => ([0.0; 3], direction, [0.0; 3], [0.0; 3], 1.0, 0.001),
         Geometry::Area { position_mm, edge_u_mm, edge_v_mm } => (position_mm, [0.0; 3], edge_u_mm, edge_v_mm, 1.0, 0.001),
@@ -932,7 +925,7 @@ pub(super) fn editor(app: &mut SolveApp, ui: &mut egui::Ui, id: &str) {
             id: id.into(),
             revision: app.session.revision,
             ev: bounded(light.intensity.max(2.0_f64.powi(-20)).log2(), -20.0, maximum_ev),
-            temperature: solidcraft_engine::render_lights::colour_temperature(light.colour),
+            temperature: torno_engine::render_lights::colour_temperature(light.colour),
             softness: bounded(softness, 0.0, if kind == "directional" { 90.0 } else { 1.0 }),
             azimuth,
             elevation,
@@ -1054,7 +1047,7 @@ pub(super) fn editor(app: &mut SolveApp, ui: &mut egui::Ui, id: &str) {
                         let label =
                             app.tr(if aim == product_centre(app) { "render.light_product_centre" } else { "render.lighting_point" }).to_string();
                         ui_kit::dropdown_menu(ui, "render:light:aim", &label, |ui| {
-                            let bounds = solidcraft_engine::view::bounds(&app.session).unwrap_or(solidcraft_engine::geom::Aabb3::EMPTY);
+                            let bounds = torno_engine::view::bounds(&app.session).unwrap_or(torno_engine::geom::Aabb3::EMPTY);
                             let mut targets = vec![
                                 (app.tr("render.light_product_centre").to_string(), product_centre(app)),
                                 (app.tr("render.light_world_origin").to_string(), [0.0; 3]),
@@ -1209,7 +1202,7 @@ fn length([x, y, z]: [f64; 3]) -> f64 {
     x.hypot(y).hypot(z)
 }
 fn subject_size(app: &SolveApp) -> f64 {
-    bounded(solidcraft_engine::view::bounds(&app.session).unwrap_or(solidcraft_engine::geom::Aabb3::EMPTY).diagonal(), 1.0, 1e6)
+    bounded(torno_engine::view::bounds(&app.session).unwrap_or(torno_engine::geom::Aabb3::EMPTY).diagonal(), 1.0, 1e6)
 }
 fn note(app: &SolveApp, ui: &mut egui::Ui, key: &'static str) {
     ui_kit::text(ui, app.tr(key), ui_kit::Text::Note(key));

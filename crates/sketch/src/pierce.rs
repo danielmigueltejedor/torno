@@ -25,7 +25,7 @@
 //!   touches the plane at its end pierces there.
 
 use solidcore_record::{Plane, Vec2, Vec3};
-use solidcraft_geom::prelude::*;
+use torno_geom::prelude::*;
 
 /// A point counts as lying on the plane when it is this close to it, as a fraction of how
 /// far the curve reaches from the plane's origin: a curve far from the origin is not judged
@@ -106,7 +106,7 @@ fn tolerance(plane: &Plane, curve: &[Vec3]) -> f64 {
 mod tests {
     use super::{pierce_point, pierce_point_world, pierce_points, pierce_points_world};
     use solidcore_record::{Plane, Vec2, Vec3};
-    use solidcraft_geom::prelude::*;
+    use torno_geom::prelude::*;
 
     fn v(x: f64, y: f64) -> Vec2 {
         Vec2::new(x, y)

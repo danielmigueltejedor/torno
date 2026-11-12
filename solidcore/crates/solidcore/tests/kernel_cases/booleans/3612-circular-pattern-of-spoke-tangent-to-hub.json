@@ -115,6 +115,6 @@
   "ungraded": [],
   "what": "a spoke whose inner face x=12 is exactly tangent to the hub cylinder r=12 (line contact), joined to the rim, patterned 5 times around the hub's axis",
   "why_not": [
-    "body \"Wheel\" is no kernel operation's output nor an operand: SolidCraft built it or changed the kernel's record"
+    "body \"Wheel\" is no kernel operation's output nor an operand: Torno built it or changed the kernel's record"
   ]
 }

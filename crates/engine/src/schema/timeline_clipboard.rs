@@ -273,7 +273,7 @@ impl JsonSchema for RecordedFeature {
 
 /// The model parameters of `timeline.add`: read by the handler's own reader.
 #[derive(Clone, Debug)]
-pub struct StepParams(pub Vec<solidcraft_doc::Param>);
+pub struct StepParams(pub Vec<torno_doc::Param>);
 
 impl<'de> Deserialize<'de> for StepParams {
     fn deserialize<D: Deserializer<'de>>(d: D) -> Result<Self, D::Error> {
@@ -291,7 +291,7 @@ impl JsonSchema for StepParams {
         json_schema!({
             "description": "Model parameters the feature's sketch dimensions use.",
             "type": "array",
-            "maxItems": solidcraft_sketch::MAX_CONSTRAINTS,
+            "maxItems": torno_sketch::MAX_CONSTRAINTS,
             "items": {
                 "type": "object",
                 "properties": {
@@ -361,7 +361,7 @@ fn script_path<'de, D: Deserializer<'de>>(d: D) -> Result<Option<String>, D::Err
     }
 }
 
-/// Write the design's history as a command script that rebuilds it (`solidcraft-cli eval` and
+/// Write the design's history as a command script that rebuilds it (`torno-cli eval` and
 /// `run` replay it): one step per setting and feature, and a list of what the script leaves out.
 /// A design with components or joints is refused for now. The design is not changed.
 #[derive(Debug, Deserialize, JsonSchema)]
@@ -391,7 +391,7 @@ pub struct ScriptAbout {
     pub format: String,
     /// How to replay the script.
     pub replay: String,
-    /// The version of SolidCraft that wrote it.
+    /// The version of Torno that wrote it.
     pub version: String,
 }
 

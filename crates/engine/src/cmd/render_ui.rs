@@ -161,7 +161,7 @@ pub(crate) fn batch_request(s: &Session, params: &Value) -> Result<Value> {
         return Err(bad("render.batch", "finish the modelling gesture before rendering shots"));
     }
     for name in s.doc.render.setups.keys() {
-        solidcraft_doc::render_settings::RenderSettings::validate_name(name).map_err(|error| bad("render.batch", error.to_string()))?;
+        torno_doc::render_settings::RenderSettings::validate_name(name).map_err(|error| bad("render.batch", error.to_string()))?;
     }
     let common = if let Some(request) = input.request {
         Value::Object(request.into_iter().collect())
@@ -367,7 +367,7 @@ fn output_sections_copy_report_validates_without_design_history_or_job_changes()
 }
 
 #[cfg(test)]
-fn complete_result(s: &mut Session, shot: &str) -> solidcraft_render::job::JobId {
+fn complete_result(s: &mut Session, shot: &str) -> torno_render::job::JobId {
     let reply = s.execute("render.start", &json!({"setup":shot})).unwrap();
     let job = serde_json::from_value(reply["job"].clone()).unwrap();
     let host = s.render_job_host().unwrap().clone();
@@ -384,7 +384,7 @@ fn complete_result(s: &mut Session, shot: &str) -> solidcraft_render::job::JobId
 #[test]
 fn retained_results_cap_order_metadata_and_selection_never_edit_a_design() {
     let mut s = Session::default();
-    s.set_render_job_host(Some(solidcraft_render::job::CpuHost::cooperative())).unwrap();
+    s.set_render_job_host(Some(torno_render::job::CpuHost::cooperative())).unwrap();
     s.execute("render.settings.set", &json!({"name":"Hero","set":{"width":16,"height":8}})).unwrap();
     s.execute("render.settings.set", &json!({"name":"Hero","set":{"width":32}})).unwrap();
     s.execute("edit.undo", &json!({})).unwrap();
@@ -428,7 +428,7 @@ fn retained_results_cap_order_metadata_and_selection_never_edit_a_design() {
 #[test]
 fn retained_result_requests_refuse_hostile_and_missing_indices_atomically() {
     let mut s = Session::default();
-    s.set_render_job_host(Some(solidcraft_render::job::CpuHost::cooperative())).unwrap();
+    s.set_render_job_host(Some(torno_render::job::CpuHost::cooperative())).unwrap();
     s.execute("render.settings.set", &json!({"name":"Front","set":{"width":8,"height":8}})).unwrap();
     let job = complete_result(&mut s, "Front");
     let document = s.doc.clone();
@@ -478,7 +478,7 @@ fn retained_result_requests_refuse_hostile_and_missing_indices_atomically() {
 #[test]
 fn render_results_compare_validates_both_sides_and_clamps_only_finite_dividers_without_mutation() {
     let mut s = Session::default();
-    s.set_render_job_host(Some(solidcraft_render::job::CpuHost::cooperative())).unwrap();
+    s.set_render_job_host(Some(torno_render::job::CpuHost::cooperative())).unwrap();
     s.execute("render.settings.set", &json!({"name":"Hero","set":{"width":8,"height":8}})).unwrap();
     complete_result(&mut s, "Hero");
     complete_result(&mut s, "Hero");
@@ -536,9 +536,9 @@ fn render_results_compare_validates_both_sides_and_clamps_only_finite_dividers_w
 #[cfg(test)]
 fn batch_fixture(count: usize) -> Session {
     let mut s = Session::default();
-    s.set_render_job_host(Some(solidcraft_render::job::CpuHost::cooperative())).unwrap();
+    s.set_render_job_host(Some(torno_render::job::CpuHost::cooperative())).unwrap();
     for index in 0..count {
-        let camera = solidcraft_viewport::Camera { yaw: index as f64 * 0.2, roll: index as f64 * 0.01, ..Default::default() };
+        let camera = torno_viewport::Camera { yaw: index as f64 * 0.2, roll: index as f64 * 0.01, ..Default::default() };
         s.execute("render.settings.set", &json!({"name":format!("Shot {index:02}"),"set":{"camera":camera,"width":8+index,"height":8}})).unwrap();
     }
     s
@@ -660,7 +660,7 @@ fn render_results_batch_cameras_and_common_setup_are_captured_before_later_shot_
     let original = s.doc.render.setups.get("Shot 01").unwrap().camera;
     s.execute("render.batch", &json!({"request":{"setup":"Shot 00"}})).unwrap();
     let first = s.render_queue_state().job.unwrap();
-    let changed = solidcraft_viewport::Camera { yaw: 2.0, ..Default::default() };
+    let changed = torno_viewport::Camera { yaw: 2.0, ..Default::default() };
     s.execute("render.settings.set", &json!({"name":"Shot 01","set":{"camera":changed}})).unwrap();
     s.execute("render.settings.set", &json!({"name":"Shot 00","set":{"width":64}})).unwrap();
     let document = s.doc.clone();
@@ -672,7 +672,7 @@ fn render_results_batch_cameras_and_common_setup_are_captured_before_later_shot_
         }
     }
     let reply = s.execute("render.status", &json!({})).unwrap();
-    let next: solidcraft_render::job::JobId = serde_json::from_value(reply["queue"]["job"].clone()).unwrap();
+    let next: torno_render::job::JobId = serde_json::from_value(reply["queue"]["job"].clone()).unwrap();
     assert_ne!(next, first);
     let request = s.render_job_handle(next).unwrap().status().unwrap().request;
     assert_eq!(request.camera, original);

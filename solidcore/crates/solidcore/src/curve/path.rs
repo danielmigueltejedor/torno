@@ -9,7 +9,7 @@
 //! within it of the first arc's circle where the run has turned to; so the sweep that
 //! follows the reading ends where the path does.
 //!
-//! Not upstream: SolidCraft's sweep dispatch (`straight`, `circular`, `segmented`).
+//! Not upstream: Torno's sweep dispatch (`straight`, `circular`, `segmented`).
 //! Deviations: none (no upstream counterpart). No recursion.
 
 use std::f64::consts::TAU;

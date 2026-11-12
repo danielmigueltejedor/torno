@@ -1379,7 +1379,7 @@ impl<'s, 't, O: SolutionObject + 't, G: Clone> FilletIntersector<'s, 't, O, G> {
         // rescaled and every later use below sees the new value.
         let mut step_size = step_size;
 
-        // SolidCraft (the fork's 6eecf04): where the radius has a corner the curves turn. A
+        // Torno (the fork's 6eecf04): where the radius has a corner the curves turn. A
         // step from a point at a corner starts along the tangents after it
         // (ComputePointValues averages the two sides).
         if solver.is_at_radius_corner(tsect) {
@@ -1405,7 +1405,7 @@ impl<'s, 't, O: SolutionObject + 't, G: Clone> FilletIntersector<'s, 't, O, G> {
             step.found_answer = false;
         }
 
-        // SolidCraft (the fork's 6eecf04): a step across a radius corner is shortened to
+        // Torno (the fork's 6eecf04): a step across a radius corner is shortened to
         // end at the corner (a span across it can't follow the turn, and the trace would
         // creep up to it in tiny steps).
         if step.found_answer {
@@ -1442,7 +1442,7 @@ impl<'s, 't, O: SolutionObject + 't, G: Clone> FilletIntersector<'s, 't, O, G> {
             return Ok(out);
         }
 
-        // SolidCraft (the fork's 6eecf04): a step that ends at a radius corner arrives
+        // Torno (the fork's 6eecf04): a step that ends at a radius corner arrives
         // along the tangents before it
         if solver.is_at_radius_corner(next_tsp) {
             let mut before = next_tsp.clone();
@@ -1905,7 +1905,7 @@ impl<'s, 't, O: SolutionObject + 't, G: Clone> FilletIntersector<'s, 't, O, G> {
             }
         }
 
-        // 5b. SolidCraft (the fork's 6eecf04): where the fillet radius has a corner, the
+        // 5b. Torno (the fork's 6eecf04): where the fillet radius has a corner, the
         //     center curve and rails turn. A point there carries the average of the
         //     tangents of the two sides; the span that ends there takes the tangents from
         //     before the corner (`incoming`), the span that starts there those from after

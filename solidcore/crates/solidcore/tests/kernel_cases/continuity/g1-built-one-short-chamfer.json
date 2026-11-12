@@ -149,7 +149,7 @@
     "blend_dropping"
   ],
   "ungraded": [
-    "continuity: SolidCraft computes it"
+    "continuity: Torno computes it"
   ],
   "what": "the G1 case's edge cut by a chamfer instead of rounded: the chamfer meets each plane at 45 degrees, one order short of G1",
   "why_not": []

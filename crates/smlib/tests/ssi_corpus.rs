@@ -8,11 +8,11 @@
 //! SSI_PARITY_RAW=<corpus>/results/raw/gsi_1e-6 \
 //! SSI_PARITY_SCORES=<corpus>/results/score_gsi_1e-6.json \
 //! SSI_PARITY_TOL=1e-6 SSI_SM_MESSAGES=<smlib>/source/SMLib/inc/SmMessages.h \
-//!   cargo test -p solidcraft-smlib --test ssi_corpus -- --ignored --nocapture
+//!   cargo test -p torno-smlib --test ssi_corpus -- --ignored --nocapture
 //! ```
 //!
 //! [`solidcore_global_intersect_at_1e_6`] runs every case through solidcore's
-//! GlobalSurfaceIntersect (via `solidcraft_smlib::ssi`, as the corpus runner calls it) and checks
+//! GlobalSurfaceIntersect (via `torno_smlib::ssi`, as the corpus runner calls it) and checks
 //! that every case SMLib passed passes.
 
 mod ssi_score;
@@ -484,8 +484,8 @@ const GSI_1E6_PASS: &[&str] = &[
 /// The corpus runner's samples per curve.
 const RUNNER_SAMPLES: usize = 4001;
 
-fn surface(s: &Value) -> Result<solidcraft_smlib::ssi::Surface, String> {
-    use solidcraft_smlib::ssi::Surface;
+fn surface(s: &Value) -> Result<torno_smlib::ssi::Surface, String> {
+    use torno_smlib::ssi::Surface;
     let f = |k: &str| s.get(k).map(ssi_score::geom::num).ok_or(format!("{k}: missing"));
     let v3 = |k: &str| -> Result<[f64; 3], String> {
         let a = s.get(k).and_then(Value::as_array).filter(|a| a.len() == 3).ok_or(format!("{k}: not 3 numbers"))?;
@@ -533,17 +533,17 @@ fn surface(s: &Value) -> Result<solidcraft_smlib::ssi::Surface, String> {
 /// evaluated dropped, empty UV arrays for a UV curve the method did not return, the runner's type
 /// names, and no isolated points (the runner only reports those in face mode).
 fn runner_output(
-    r: solidcraft_smlib::Result<solidcraft_smlib::ssi::SsiResult>,
-    a: &solidcraft_smlib::ssi::Surface,
-    b: &solidcraft_smlib::ssi::Surface,
+    r: torno_smlib::Result<torno_smlib::ssi::SsiResult>,
+    a: &torno_smlib::ssi::Surface,
+    b: &torno_smlib::ssi::Surface,
     ms: f64,
 ) -> Outcome {
     use solidcore_record::brep::Curve2;
-    use solidcraft_geom::brep::eval::CurveEval;
-    use solidcraft_smlib::ssi::{CurveType, Surface};
+    use torno_geom::brep::eval::CurveEval;
+    use torno_smlib::ssi::{CurveType, Surface};
     let r = match r {
         Ok(r) => r,
-        Err(solidcraft_smlib::Error::Status(s)) => {
+        Err(torno_smlib::Error::Status(s)) => {
             return Outcome::Ran(EngineResult { status: i64::from(s), status_name: None, time_ms: ms, curves: Vec::new(), points: Vec::new() });
         }
         Err(e) => return Outcome::Crashed(e.to_string()),
@@ -580,7 +580,7 @@ fn runner_output(
 /// Every case through GlobalSurfaceIntersect at approximation tolerance 1e-6, scored as score.py
 /// scores the corpus runner's `gsi 1e-6` run. Prints each case that does not pass.
 fn global_intersect_scores() -> Vec<Score> {
-    use solidcraft_smlib::ssi::{Method, intersect};
+    use torno_smlib::ssi::{Method, intersect};
     let t0 = std::time::Instant::now();
     let cases = all_cases();
     // The kernel serialises its calls, so the cases run one after another; only the scoring is parallel.
