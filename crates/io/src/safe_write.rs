@@ -419,7 +419,7 @@ mod tests {
         let d = dir("design-lock");
         let design = d.join("Bracket.solidcraft");
         std::fs::write(&design, b"one").unwrap();
-        assert_eq!(lock::lock_path(&design), d.join(".~Bracket.torno.lock"));
+        assert_eq!(lock::lock_path(&design), d.join(".~Bracket.solidcraft.lock")); // rebrand: keep
         assert!(!crate::is_design_path(&lock::lock_path(&design).to_string_lossy()), "never listed as a design");
 
         let now = lock::now_secs();

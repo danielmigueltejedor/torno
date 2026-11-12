@@ -57,13 +57,17 @@
     <binary>torno-cli</binary>
     <mediatype>application/x-torno</mediatype>
     <!-- The app and desktop ids of earlier releases (docs/compatibility.md). -->
+    <id>io.tangencylabs.solidcraft</id> <!-- rebrand: keep -->
+    <id>io.tangencylabs.solidcraft.desktop</id> <!-- rebrand: keep -->
     <id>ai.storyteller.solidcraft</id>
     <id>ai.storyteller.solidcraft.desktop</id>
     <id>ai.storyteller.solvecraft.desktop</id>
   </provides>
-  <!-- Earlier app ids (docs/compatibility.md): ai.storyteller.solidcraft from 0.8 until the move
+  <!-- Earlier app ids (docs/compatibility.md): Torno's own releases before the rename, then
+       upstream's: ai.storyteller.solidcraft from 0.8 until the move
        to Tangency Labs, ai.storyteller.solvecraft before 0.8. -->
   <replaces>
+    <id>io.tangencylabs.solidcraft</id> <!-- rebrand: keep -->
     <id>ai.storyteller.solidcraft</id>
     <id>ai.storyteller.solvecraft</id>
   </replaces>

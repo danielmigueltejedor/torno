@@ -110,7 +110,11 @@ mod tests {
         let id = std::ffi::OsStr::new(APP_ID);
         assert_eq!(
             flatpak_twins(&ours, id, home),
-            [home.join(".var/app/ai.storyteller.solidcraft/data/torno"), home.join(".var/app/ai.storyteller.solvecraft/data/torno")]
+            [
+                home.join(".var/app/io.tangencylabs.solidcraft/data/torno"), // rebrand: keep
+                home.join(".var/app/ai.storyteller.solidcraft/data/torno"),
+                home.join(".var/app/ai.storyteller.solvecraft/data/torno")
+            ]
         );
         // Outside our sandbox folder, or in another app's sandbox, there is nothing to map.
         assert!(flatpak_twins(&home.join(".local/share/torno"), id, home).is_empty());

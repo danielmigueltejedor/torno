@@ -63,7 +63,7 @@ fn pinned_v1_bytes_revisions_and_scalar_material_canonical_fields_are_preserved(
     };
     let provenance = Provenance {
         license: "MIT OR Apache-2.0".into(),
-        author: Some("Torno contributors".into()),
+        author: Some("SolidCraft contributors".into()), // rebrand: keep
         source_url: Some("https://example.invalid/original".into()),
     };
     let entry = Entry::new("user.test", Definition::Material(material), provenance).unwrap();

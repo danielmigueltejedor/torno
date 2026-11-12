@@ -480,7 +480,7 @@ mod tests {
 
     #[test]
     fn paths_resolve_to_the_canonical_rows() {
-        assert_eq!(for_path("a.Torno").map(|f| f.id), Some("design"));
+        assert_eq!(for_path("a.SolidCraft").map(|f| f.id), Some("design")); // rebrand: keep
         assert_eq!(for_path("a.json").map(|f| f.id), Some("design"));
         assert_eq!(for_path("a.STEP").map(|f| f.id), Some("step"));
         assert_eq!(for_path("a.3mf").map(|f| f.id), Some("3mf"));

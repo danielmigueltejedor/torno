@@ -1580,8 +1580,8 @@ mod tests {
             "",
             "solidcraft-drawing/",
             "torno-drawing",
-            "torno-drawing/x",
-            "torno-drawing/-1",
+            "solidcraft-drawing/x",
+            "solidcraft-drawing/-1",
             "solidcraft-drawing/4294967296",
             "Torno-drawing/1",
             "solidcraft-drawing/1 ",
@@ -1591,7 +1591,7 @@ mod tests {
             assert_eq!(DRAWING.version_of(tag), None, "{tag:?}");
         }
         // The number reads as Rust reads a `u32`, a leading `+` included, as in a design's tag.
-        assert_eq!(DRAWING.version_of("torno-drawing/+1"), Some(1));
+        assert_eq!(DRAWING.version_of("solidcraft-drawing/+1"), Some(1));
         let error = DRAWING.take_version(&mut serde_json::json!({"format": format_string(FORMAT)})).unwrap_err().to_string();
         assert_eq!(error, format!("not a Torno drawing (format `solidcraft/{FORMAT}`)"));
         let error = read(&serde_json::json!({"format": DRAWING.format_string(1)}).to_string()).unwrap_err().to_string();
@@ -2385,7 +2385,7 @@ mod tests {
     #[test]
     fn versions() {
         assert_eq!(version_of("solidcraft/1"), Some(1));
-        assert_eq!(version_of("torno/x"), None);
+        assert_eq!(version_of("solidcraft/x"), None);
         // Compatibility shim: files saved before the rename carry the legacy tag.
         assert_eq!(version_of("solvecraft/13"), Some(13));
         assert_eq!(version_of("solvecraftx/13"), None);
@@ -2430,7 +2430,7 @@ mod tests {
         assert!(read(&v.to_string()).is_ok(), "a file without a format is format 1");
         v["format"] = Value::from(format_string(FORMAT + 1));
         assert_eq!(read(&v.to_string()).unwrap().newer_file.unwrap().format, FORMAT + 1);
-        for bad in ["solidcraft/0", "acad/3", "torno/-1", "solidcraft/99999999999999999999"] {
+        for bad in ["solidcraft/0", "acad/3", "solidcraft/-1", "solidcraft/99999999999999999999"] {
             v["format"] = Value::from(bad);
             assert!(read(&v.to_string()).is_err(), "{bad}");
         }

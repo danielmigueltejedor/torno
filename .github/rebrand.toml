@@ -25,7 +25,9 @@ keep = [
     # File format tags (`solidcraft/40`, `solidcraft-theme/1`...): they are written into designs,
     # themes, libraries and profiles, so changing them would stop Torno opening its own earlier
     # files and upstream's. A format tag is a file signature, not a name anyone reads.
-    "(?<=[\"'`])solidcraft(-(theme|library|profile|container|shortcuts|crash|drawing|preview))?/(?=\\d|N\\b|\\{|[\"'`])",
+    "(?<=[\"'`])solidcraft(-(theme|library|profile|container|shortcuts|crash|drawing|preview))?/(?=[\\d+\\-{\\[\"'`]|N\\b|x\"|$)",
+    # Torno's own earlier desktop id, in a .desktop line that can't carry a marker comment.
+    "(?<=X-Flatpak-RenamedFrom=)io\\.tangencylabs\\.solidcraft\\.desktop;",
     # Credit for work done upstream.
     "SolidCraft contributors(?=\\.|,|$| and)",
 ]

@@ -123,7 +123,7 @@ fn a_file_may_leave_out_what_has_a_default() {
     assert_eq!((sheet.border, sheet.dpi, sheet.documents, sheet.excluded), (None, DEFAULT_DPI, None, Excluded::default()));
     // The format as this build writes it, however the file spelt it.
     let mut spelt = minimal.clone();
-    spelt["format"] = json!("torno-drawing/+1");
+    spelt["format"] = json!("solidcraft-drawing/+1");
     assert_eq!(read(&spelt).unwrap().format, DRAWING.format_string(DRAWING.current()));
     for key in ["name", "sources", "language", "sheets"] {
         let mut v = minimal.clone();
