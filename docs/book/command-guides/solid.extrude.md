@@ -59,7 +59,7 @@ the two holes. Its dimensions are controlled by design parameters.
 
 | Resource | What to explore | Author and licence |
 | --- | --- | --- |
-| [Editable bracket recipe](https://github.com/tangency-labs/solidcraft/blob/main/examples/bracket.json) | A complete SolidCraft example using an extrusion, a fillet and a cut. | SolidCraft contributors; MIT OR Apache-2.0. |
+| [Editable bracket recipe](https://github.com/tangency-labs/solidcraft/blob/main/examples/bracket.json) | A complete Torno example using an extrusion, a fillet and a cut. | Torno contributors; MIT OR Apache-2.0. |
 
 [Contribute a tip, demo, model or screenshot](../dev/command-guides.md) to add a
 reviewed resource beside this explanation.

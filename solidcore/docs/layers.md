@@ -19,7 +19,7 @@ layer that needs another layer's job calls that layer; it never carries its own 
 | Convert | `solidcore-convert` | The one record ↔ kernel conversion, used by ops and tess | record `Surface`, `Curve`, `Curve2`, `Frame`, `Plane`, `Vec3` to the kernel's values and back, field by field | any maths |
 | Ops | `solidcore-ops` | The modelling API both apps call: every workflow operation as a sequence of kernel calls, converting through `solidcore-convert` | the align command (picks the edges and the order, calls the kernel's constrained fit); the edge-continuity check (picks sample parameters and tolerances, calls the kernel's continuity measure, compares and reports); CV-curve editing (defaults, calls the kernel's constructor); comb values (calls curvature and normal, scales for display); importing a file (parses into the record, then calls the kernel to build, sew and heal) | any geometric quantity computed itself (see below) |
 | Tess | `solidcore-tess` | Geometry made drawable | display meshes; isoparm and curve polylines | modelling or measurement decisions |
-| Apps | the applications built on solidcore (SolidCraft and others) | State, and mapping input to commands | document, selection, command ids, settings, construction history and replay; their own interface and drawing crates, which are not solidcore's | any geometry computation |
+| Apps | the applications built on solidcore (Torno and others) | State, and mapping input to commands | document, selection, command ids, settings, construction history and replay; their own interface and drawing crates, which are not solidcore's | any geometry computation |
 
 ### The line between kernel and ops
 
@@ -45,14 +45,14 @@ A job in both rows is a mistake: a primitive has one name, in the kernel. An ops
 These are computed today in an app or in ops-shaped code. Each becomes a kernel primitive before its caller moves:
 - **A constrained fit:** an edge row of a surface matched to a target edge at G0, G1 or G2. Its internals: the solve at the Greville parameters, rows moved along the target normal, the clamped end-derivative formulas.
 - **A continuity measure across an edge** at given parameters: the gap, the normal angle and the curvature difference.
-- **Ray/body intersection** for picking (SolidCraft's pickers).
-- **Classification of a face's surface for offsetting, distances, and sheet-metal bounds** (SolidCraft's `crates/kernel`), each where it is a computation and not a recipe.
-- **Evaluation and exact NURBS forms of analytic surfaces** (SolidCraft's record, `solidcraft_geom::brep::{eval, form}`).
+- **Ray/body intersection** for picking (Torno's pickers).
+- **Classification of a face's surface for offsetting, distances, and sheet-metal bounds** (Torno's `crates/kernel`), each where it is a computation and not a recipe.
+- **Evaluation and exact NURBS forms of analytic surfaces** (Torno's record, `solidcraft_geom::brep::{eval, form}`).
 
 ## 2. Meshing and Importers
 
-- **Meshing is solidcore's.** There is one mesher, `solidcore-tess`, and it is SolidCraft's tess. That tess meshes every face in its own (u, v): structured grids, Coons blends and cut grids first, with constrained Delaunay plus refinement as the general fallback. The `nurbs-grid-mesh` crate is a second (u, v) grid mesher, so it is a duplicate. Its ideas (grid lines sized from the second-derivative control points, refinement checked at edge and diagonal midpoints, row-at-a-time evaluation, the `deviation` measure) are taken into `solidcore-tess` only where they measure better than its own grid paths on the same faces. Then the crate is deleted. A comparison against SMLib's tessellator doesn't decide this, because SMLib's is constrained Delaunay only.
-- **Importers are solidcore's.** There is one STEP implementation. Its plain-data model is in `solidcore-record`, and building bodies from it is in `solidcore-ops`. SolidCraft's `crates/step` and solidcore's `step-*` crates merge into it; the others are deleted. Every other importer (IGES, STL and so on) follows the same split.
+- **Meshing is solidcore's.** There is one mesher, `solidcore-tess`, and it is Torno's tess. That tess meshes every face in its own (u, v): structured grids, Coons blends and cut grids first, with constrained Delaunay plus refinement as the general fallback. The `nurbs-grid-mesh` crate is a second (u, v) grid mesher, so it is a duplicate. Its ideas (grid lines sized from the second-derivative control points, refinement checked at edge and diagonal midpoints, row-at-a-time evaluation, the `deviation` measure) are taken into `solidcore-tess` only where they measure better than its own grid paths on the same faces. Then the crate is deleted. A comparison against SMLib's tessellator doesn't decide this, because SMLib's is constrained Delaunay only.
+- **Importers are solidcore's.** There is one STEP implementation. Its plain-data model is in `solidcore-record`, and building bodies from it is in `solidcore-ops`. Torno's `crates/step` and solidcore's `step-*` crates merge into it; the others are deleted. Every other importer (IGES, STL and so on) follows the same split.
 - **Surface/surface intersection is solidcore's.** There is one implementation, in the kernel. solidcore's `intersect` module and the `ssi` crate (with its `solidcore-ssi` bridge) merge into it; the other is deleted.
 
 Which copy survives in each merge is decided per job, from measurements: the rig and the SSI corpus. The decision is recorded on the job's tracking issue.
@@ -80,8 +80,8 @@ apps               -> solidcore-ops, solidcore-record, solidcore-tess
 |---|---|
 | The dependency edges in §3 | Review for now; `cargo xtask layers` is not yet implemented |
 | The record, the conversion and ops compute no geometric quantity | clippy `disallowed-methods` in `solidcore-record`, `solidcore-convert` and `solidcore-ops`: `f64::{sqrt, cbrt, hypot, sin, cos, tan, asin, acos, atan, atan2, powi, powf, exp, ln, mul_add}`, and the kernel's vector and matrix methods (`dot`, `cross`, `normalize`, `length`, `transform`, …). None of them depends on a maths crate. Comparing a returned number with a tolerance, and scaling it for display, stay allowed |
-| Apps compute no geometry | `cargo xtask app-geometry` in each app: a shrink-only allowlist of the remaining sites (as SolidCraft's `xtask/mesh-decisions.txt`). The list never grows; each refactor PR deletes its lines |
-| Display meshes decide nothing | SolidCraft's existing `cargo xtask mesh-decisions`, kept until the apps compute no geometry at all |
+| Apps compute no geometry | `cargo xtask app-geometry` in each app: a shrink-only allowlist of the remaining sites (as Torno's `xtask/mesh-decisions.txt`). The list never grows; each refactor PR deletes its lines |
+| Display meshes decide nothing | Torno's existing `cargo xtask mesh-decisions`, kept until the apps compute no geometry at all |
 | One implementation per job | `docs/jobs.toml`: each job names its one crate and module. `cargo xtask jobs` fails when a job's public entry point is defined anywhere else |
 
 ## 5. How the refactor proceeds
@@ -94,10 +94,10 @@ apps               -> solidcore-ops, solidcore-record, solidcore-tess
 
 ## 6. Order
 
-1. `solidcore-record`, data only: SolidCraft's `solidcraft_geom::brep` without its evaluator and NURBS-form construction, which move into the kernel.
+1. `solidcore-record`, data only: Torno's `solidcraft_geom::brep` without its evaluator and NURBS-form construction, which move into the kernel.
 2. `solidcore-tess`: the one mesher.
 3. The kernel's new primitives (§1, "Primitives the kernel gains"), each with its tests. Then `solidcore-ops` gets the workflows rebuilt on those primitives:
-   - SolidCraft's: tangent chains (the walk is ops; the tangency angle at each vertex is the kernel's measure), the offset and shell recipes, and pickers;
+   - Torno's: tangent chains (the walk is ops; the tangency angle at each vertex is the kernel's measure), the offset and shell recipes, and pickers;
    - the surface-modelling workflows: the skin, align and continuity-check commands, CV-curve editing, and combs.
 4. The intersection merge in the kernel.
 5. The STEP merge across record and ops.

@@ -9,9 +9,9 @@
   void flags on a manifold solid. That is not true of the port's implementation in
   general. The routine sets every region's void flag from the nesting walked from the
   infinite region. Where step 7 left flags that disagree with that nesting, the result's
-  void flags change too. Seen in the SolidCraft corpus: `451-hollow-shell-cut`
+  void flags change too. Seen in the Torno corpus: `451-hollow-shell-cut`
   `block_crossing_inner_sphere_join` gives volume 268082.57 without the field and
-  241446.07 with it (expected 242214.07, so it fails either way), and a scratch SolidCraft cup-and-lid case
+  241446.07 with it (expected 242214.07, so it fails either way), and a scratch Torno cup-and-lid case
   with the lid first gave -488000 with the field instead of 512000 (expected 488000). In
   both, the Rust result already diverged before the rewrite. The field's doc says so.
 - **Confirmed on the C++ build:** `boolean.api_brep` cases `wr265_cup_lid_cup_first`,
@@ -27,5 +27,5 @@
 - **Tests:** `issue_388_union_sealing_a_void_puts_the_outer_shell_first` (field on: outer
   shell first, either order) and `union_sealing_a_void_leaves_the_cavity_shell_first_by_default`
   (the cavity's shell first, as C++), in `crates/solidcore/src/boolean/merge/p4.rs`.
-- **Callers** that relied on the previous default (e.g. SolidCraft, #388) must set the
+- **Callers** that relied on the previous default (e.g. Torno, #388) must set the
   field.

@@ -2,7 +2,7 @@ Updates: WR-75
 
 #### WR-75 (update, 2026-10-29). Tangential curve tracing ported from the fork (opt-in)
 
-The SolidCraft fork's tangential curve tracer (tangency-labs/smlib ef4ab25, e9fde8f, d8c61db and 1693c9d, `SmTangentCurveTracer.cpp`) is ported as the opt-in `Kernel::fixes.ssi_tangent_curve_tracer` (default `false`, upstream behaviour).
+The Torno fork's tangential curve tracer (tangency-labs/smlib ef4ab25, e9fde8f, d8c61db and 1693c9d, `SmTangentCurveTracer.cpp`) is ported as the opt-in `Kernel::fixes.ssi_tangent_curve_tracer` (default `false`, upstream behaviour).
 
 - **What it changes:** `DoIntersection` runs a pass after `FindInteriorCurves` (`intersect::surface_intersector::tangent_curves::find_tangent_curves`). Its seeds are:
   - the curve ends where the normals are parallel;

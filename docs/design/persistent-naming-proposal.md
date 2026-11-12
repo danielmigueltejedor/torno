@@ -1,19 +1,19 @@
 # Persistent naming: what a second implementation suggests
 
-Status: proposal, not adopted. Nothing here is built in SolidCraft. Related: #4341, #5198, #5308,
+Status: proposal, not adopted. Nothing here is built in Torno. Related: #4341, #5198, #5308,
 #5857, #5858, #5860, #5861, #23.
 
 This note comes from building persistent naming for Form Studio, a T-spline modeling tool with its
 own feature timeline, rollback marker, suppression, and editing of earlier features. Its kernel is
 a control mesh, not a B-rep, so its entities are the vertices, edges and faces of a cage. A
-feature's picks still have to survive the same upstream edits SolidCraft's do.
+feature's picks still have to survive the same upstream edits Torno's do.
 
 Form Studio is LGPL-2.1. Rule 2 of CONTRIBUTING.md says not to read it, so this note links none of
 its code and contains none of it. What follows is method and measured results, written by the
 code's author and offered under MIT OR Apache-2.0. No commercial CAD was driven or read for any of
 it.
 
-## What SolidCraft already gets right
+## What Torno already gets right
 
 The hard parts are done. Names follow the history each kernel operation reports (#136), not
 sampled geometry. Faces are named by their role in the feature that made them (`F2:side:l4`).
@@ -26,7 +26,7 @@ written down, and where an ordinal comes from. Six changes follow, the most harm
 
 ## 1. When a name is gone, fall back by lineage, never by geometry alone
 
-SolidCraft already has this rule for one kind of reference. A sketch's link to a projected edge
+Torno already has this rule for one kind of reference. A sketch's link to a projected edge
 whose name is gone "keeps its last geometry ... it does not take whichever edge is nearest now"
 (`docs/book/src/dev/naming.md`). Blends don't follow it yet. Read at 49c0faa, not run:
 
@@ -55,7 +55,7 @@ Form Studio resolves a stored reference with the first of these four steps that 
    unchanged.
 
 What step 3 leaves out matters most: no entity made by another feature can stand in, however close
-it is. In SolidCraft terms, a stored reference keeps one level of what its name was made from
+it is. In Torno terms, a stored reference keeps one level of what its name was made from
 (feature, role, the names of its origins, ordinal). After the name is lost, the lookup searches the
 rebuilt faces that feature made. It doesn't search space. Change 3 describes where that recipe is
 kept.
@@ -100,7 +100,7 @@ in the stored recipe:
 - **Maker deleted.** The pick is shown as missing. The user can clear missing references or pick
   again.
 
-Neither case falls back to geometry. SolidCraft names already start with their maker (`F2:...`),
+Neither case falls back to geometry. Torno names already start with their maker (`F2:...`),
 so it can tell these cases apart with no new data. #4341's first repro (suppress Extrude1) is this
 case.
 
@@ -155,7 +155,7 @@ document and engine tests, not in `crates/kernel/`.
 
 ## 5. A split pick resolves to all its pieces
 
-When a named face or edge was split, SolidCraft takes the piece nearest the stored point
+When a named face or edge was split, Torno takes the piece nearest the stored point
 (`name_lookup.rs`; `locate_edge`: "the piece of it nearest `near`"). Form Studio takes every
 piece. The user picked the whole entity, and after a split the whole entity is its pieces:
 
@@ -233,6 +233,6 @@ Steps 3, 4 and 6 save something new in a design, so each adds a file under
 
 ## What was read and what was run
 
-SolidCraft was read at 49c0faa (2026-10-28 UTC). It was not built or run, so the mechanisms given for
+Torno was read at 49c0faa (2026-10-28 UTC). It was not built or run, so the mechanisms given for
 #4341 and for reordering come from reading the source. Form Studio's six rebuild tests were run on
 2026-10-27 and all pass. The insert measurement is from 2026-10-05, before names existed.

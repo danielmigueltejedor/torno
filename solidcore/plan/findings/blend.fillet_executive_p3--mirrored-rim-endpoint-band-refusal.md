@@ -1,6 +1,6 @@
 # blend.fillet_executive_p3: distant rim mistaken for endpoint band overlap (2026-11-06)
 
-Issue: #2903. PR: #2924. Ordinary SolidCraft operation from its kernel update #12413.
+Issue: #2903. PR: #2924. Ordinary Torno operation from its kernel update #12413.
 
 The captured 60×40×30 shelled box has wall 3, outer vertical rounds R6, inner rounds R3,
 and an inner floor round R1. The final inner-top-rim round/chamfer size is 0.47.

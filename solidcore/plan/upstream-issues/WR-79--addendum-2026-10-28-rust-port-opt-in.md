@@ -13,7 +13,7 @@
   `gap <= 0 || gap * (R + d) <= tol^2` for the plane, and for two spheres
   `(d+r1+r2)(r1+r2-d)(d-r1+r2)(d+r1-r2) <= 4 tol^2 d^2` (each factor formed from the
   gaps directly, so it stays accurate near tangency), choosing inside contact when the
-  inner gap is the smaller. This is the SolidCraft fork's tangency-labs/smlib@30d25bf
+  inner gap is the smaller. This is the Torno fork's tangency-labs/smlib@30d25bf
   (`SmSphere.cpp` part).
 - **Kind:** a result-changing fix (a wrong result, no crash, undefined behaviour, hang
   or nondeterminism), so it follows the opt-in rule; off by default the port matches the

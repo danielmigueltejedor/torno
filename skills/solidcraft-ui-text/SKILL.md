@@ -1,11 +1,11 @@
 ---
 name: solidcraft-ui-text
-description: "Use when adding or changing any user-visible text in SolidCraft: a label, tooltip, message, command label or a new language. Covers the message catalogs in assets/locales, sorted lists, which locales a new key needs, UK English and terminology."
+description: "Use when adding or changing any user-visible text in Torno: a label, tooltip, message, command label or a new language. Covers the message catalogs in assets/locales, sorted lists, which locales a new key needs, UK English and terminology."
 ---
 
 # UI text and translations
 
-SolidCraft embeds its translations and works offline. The long form is `docs/localization.md`.
+Torno embeds its translations and works offline. The long form is `docs/localization.md`.
 
 ## Adding a message
 1. Add the id and English text in a new pending file (next section); `assets/locales/en.json` itself is only edited to change an existing message. Ids are stable: keep them when you change wording.

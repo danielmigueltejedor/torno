@@ -2,7 +2,7 @@ Updates: WR-616
 
 #### WR-616 (update, 2026-11-02). The fork's setback corner fill, `SmBlendSetback`, ported (no flag: nothing calls it yet)
 
-The SolidCraft fork (tangency-labs/smlib PR #79: `870c970`, `beba428`, `3fdb76b`, `52da453`)
+The Torno fork (tangency-labs/smlib PR #79: `870c970`, `beba428`, `3fdb76b`, `52da453`)
 adds `SmBlendSetback`, a module for the setback corner whose fill meets both the eased rounds
 and the planar faces to G1 or G2, which is what this record says SMLib has no way to do:
 

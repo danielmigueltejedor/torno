@@ -1,11 +1,11 @@
 ---
 name: solidcraft-preferences
-description: "Use when a SolidCraft change alters a default behaviour, an existing shortcut or the look users already have, or adds a setting in Preferences. Covers keeping the old behaviour behind a preference and the PR's 'Changes a default' line."
+description: "Use when a Torno change alters a default behaviour, an existing shortcut or the look users already have, or adds a setting in Preferences. Covers keeping the old behaviour behind a preference and the PR's 'Changes a default' line."
 ---
 
 # Preferences and defaults
 
-People rely on how SolidCraft behaves today. A change that makes users see or do something different out of the box is a change of a default.
+People rely on how Torno behaves today. A change that makes users see or do something different out of the box is a change of a default.
 
 ## The rule
 - Keep the old behaviour reachable. Add a preference whose old value gives the old behaviour, and test that it still does.

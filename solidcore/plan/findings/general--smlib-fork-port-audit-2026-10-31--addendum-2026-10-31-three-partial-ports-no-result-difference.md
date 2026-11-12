@@ -15,4 +15,4 @@ The same bit-for-bit check also found three fork commits that solidcore's flags 
   - Same: the keep rule, at both sites.
   - Different: the condition. The fork applies it to every coincident pair in a slice. Ours applies it only when the primary face bounds material on exactly one side, and otherwise falls back to the difference rule.
   - 53i: a lamina face sliced by a coincident sheet, both sheet orientations. Ours gives an empty result both ways (0 faces). The fork's rule would keep the lamina face for exactly one orientation. The probe did not show that our run reaches the condition, so this is a prediction, not a measured difference.
-- **Status.** All three flags are in SolidCraft's preset (#8526 core.rs 0b627d63). No change. A case showing a result difference makes it a follow-up: the flag's body reworked to the fork's rule, keeping its name, with a WR addendum citing the sha.
+- **Status.** All three flags are in Torno's preset (#8526 core.rs 0b627d63). No change. A case showing a result difference makes it a follow-up: the flag's body reworked to the fork's rule, keeping its name, with a WR addendum citing the sha.

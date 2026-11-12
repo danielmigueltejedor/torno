@@ -1,4 +1,4 @@
-# SolidCraft brand kit
+# Torno brand kit
 
 Logo files for stickers, shirts, the web and social posts. Everything in `logo/` is drawn
 from the app icon (`assets/icons/app/macos/source/SolidCraft.icon/Assets/03-solid-blue-cutout.svg`),
@@ -63,17 +63,17 @@ If a printer can't do gradients, use the one-colour files, or fill every face wi
 
 ## Name and logo
 
-The SolidCraft code and these files are licensed MIT OR Apache-2.0 (see the [README](../../README.md#licence)),
-so you may copy and change them. The name SolidCraft and this logo identify the SolidCraft
+The Torno code and these files are licensed MIT OR Apache-2.0 (see the [README](../../README.md#licence)),
+so you may copy and change them. The name Torno and this logo identify the Torno
 project. Use them to refer to the project, for example in an article, a talk, or a sticker for a
 meetup. If you publish a fork or a modified build, give it its own name and logo so people
-don't mistake it for SolidCraft.
+don't mistake it for Torno.
 
 The wordmark is set in IBM Plex Sans Bold (SIL Open Font License 1.1, the interface font in
 `crates/look/fonts/ibm-plex-sans/`) and outlined, so you don't need the font to print it.
 
 ## Licence
 
-The SolidCraft name, logo and brand kit are under the SolidCraft Brand and Interface Licence
-([LICENSE-BRAND](../../LICENSE-BRAND)). Using them for anything other than SolidCraft needs the
+The Torno name, logo and brand kit are under the Torno Brand and Interface Licence
+([LICENSE-BRAND](../../LICENSE-BRAND)). Using them for anything other than Torno needs the
 maintainers' written permission first.

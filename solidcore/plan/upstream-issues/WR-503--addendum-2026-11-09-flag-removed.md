@@ -4,7 +4,7 @@ Updates: WR-503
 
 The guard in `FilletIntersector::compute_next_point` (an unclipped step that lands less than half a
 step from the previous point is another root of the equations, so the point is demoted and the
-trace stops) is now unconditional, and the flag is gone. SolidCraft already ran with it on.
+trace stops) is now unconditional, and the flag is gone. Torno already ran with it on.
 
 - **Results:** none change in the goldens. The default kernel now has the guard, so a rail no
   longer doubles back where `StepSolve` lands on another root.

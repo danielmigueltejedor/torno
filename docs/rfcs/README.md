@@ -6,6 +6,6 @@ A Draft is discussed in the pull request that adds it. Once accepted, the work i
 
 | RFC | Title | Status |
 |---|---|---|
-| [0001](0001-craft-bridge.md) | Craft bridge: handing work between Craft apps | Draft |
+| [0001](0001-craft-bridge.md) | Craft bridge: handing work between Nodalia apps | Draft |
 | [0002](0002-plugins.md) | Plugins: sandboxed WebAssembly extensions | Draft |
 | [0003](0003-solidcore-consolidation.md) | solidcore consolidation: one implementation per job | Draft |

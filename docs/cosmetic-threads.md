@@ -42,5 +42,5 @@ This prevents marking a later enlarged bore and keeps copied/rotated occurrences
 with their own walls. It adds no saved feature field. The schematic band's orientation can
 change after arbitrary rotations because its tilt seed uses world axes.
 
-The marking is an original Rust construction using SolidCraft's existing line and material
+The marking is an original Rust construction using Torno's existing line and material
 conventions. It introduces no artwork, texture assets or dependencies.

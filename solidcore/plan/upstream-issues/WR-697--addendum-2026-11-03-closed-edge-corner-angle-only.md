@@ -11,7 +11,7 @@ Updates: WR-697
   - That corner's topology runs the same test on the same edge, vertex and tolerance, so its G1 branches never run and `m_bG1Case` is always false. Its tangent solver, which answers only for a G1 edge, is always `NULL`.
   - Its tangent adjustment acts only where the edge's two end tangents are parallel within 2 degrees, which `Create` has already made a Join at any tangency tolerance of 2 degrees or more (10 by default, 2 in `SmApiFillets`): at most at the rounding of an angle of exactly 2 degrees.
   - `CalcCrossSection` runs on a corner's `CROSS_SECTION` edges. The closed corner now makes none and is never blending, so its clauses there never hold. The closed Join keeps them.
-- **How found:** the SolidCraft fork's smlib#113 (tangency-labs/smlib caa67d0 and 2ac7a17, merged at 2ac7a17). The fork deletes these branches: the closed corner keeps only its angle case, and its tangent solver and adjustment are the base class's (`NULL`, success).
+- **How found:** the Torno fork's smlib#113 (tangency-labs/smlib caa67d0 and 2ac7a17, merged at 2ac7a17). The fork deletes these branches: the closed corner keeps only its angle case, and its tangent solver and adjustment are the base class's (`NULL`, success).
 - **Rust port:** under the same opt-in `Kernel::fixes.fillet_blend_corner`, off by default.
   - `make_nx1_closed_corner_topology` doesn't test the edge for G1 and leaves `g1_case` false.
   - `tangent_fillet_solver_nx1_closed_with_lookup` returns `None`, and `adjust_tangent_corner_nx1_closed` does nothing.

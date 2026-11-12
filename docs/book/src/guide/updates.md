@@ -1,6 +1,6 @@
 # Updates and privacy
 
-SolidCraft tells you when a newer release is out. It never updates itself without asking, and
+Torno tells you when a newer release is out. It never updates itself without asking, and
 the check sends nothing about you or your designs.
 
 ## What you see
@@ -16,7 +16,7 @@ room, then to its icon alone.
 - **Skip this version** hides the pill until an even newer release comes out.
 - **Remind me later** hides it for three days.
 
-SolidCraft checks every time it starts, so a release that came out since you last opened it shows
+Torno checks every time it starts, so a release that came out since you last opened it shows
 up straight away, and again once a day while it stays open.
 
 **Preferences ▸ General ▸ Updates** has **Check for updates automatically** (on by default) and
@@ -24,27 +24,27 @@ up straight away, and again once a day while it stays open.
 
 **Help ▸ Check for updates** runs the same check, including from the macOS menu bar. The window
 shows progress, offers the installation or download when a newer version exists, or says
-**SolidCraft is up to date.** If the check fails, it shows the error instead. Manual checks work
+**Torno is up to date.** If the check fails, it shows the error instead. Manual checks work
 even when automatic checks are turned off; builds that cannot check explain that in the window.
 
 ## Updating in one click
 
-Where SolidCraft can replace itself safely, the window also has **Update now**:
+Where Torno can replace itself safely, the window also has **Update now**:
 
 | Installed as | Update now does |
 |---|---|
 | AppImage | Downloads the new AppImage next to the old one, verifies it, renames it over the old file and offers **Restart now**; a file named like a release (`solidcraft-<version>-linux-<arch>.AppImage`) takes the new release's name, so tools such as Gearlever keep finding its update data, and any other name is kept |
-| Windows installer (`.msi`) | **Install (closes SolidCraft)**: downloads and verifies the `.msi`, closes SolidCraft (asking about unsaved designs first) and starts the installer |
+| Windows installer (`.msi`) | **Install (closes Torno)**: downloads and verifies the `.msi`, closes Torno (asking about unsaved designs first) and starts the installer |
 | Windows portable `.zip` or `.exe` | Downloads and verifies the package, swaps in the new `solidcraft.exe` (and `solidcraft-cli.exe`) and offers **Restart now**; the old file is removed at the next start |
-| macOS | **Download and open**: downloads and verifies the `.dmg` and opens it; quit SolidCraft, then drag the new SolidCraft to Applications to replace the old copy (macOS won't replace an app that is running) |
+| macOS | **Download and open**: downloads and verifies the `.dmg` and opens it; quit Torno, then drag the new Torno to Applications to replace the old copy (macOS won't replace an app that is running) |
 | Flatpak, Snap, `.deb`, `.rpm`, `.tar.gz` | Nothing: your package manager updates these (the window shows the command), or you unpack the new archive |
 
 Every download is verified before anything changes: its SHA-256 must match the release's
 `SHA256SUMS.txt`, fetched over HTTPS from the same release, and, once the project signs its
-releases, that list must carry a valid signature by SolidCraft's release key that names the
+releases, that list must carry a valid signature by Torno's release key that names the
 release (see [releasing](https://github.com/tangency-labs/solidcraft/blob/main/docs/releasing.md#update-signing)).
 A download that doesn't verify is deleted and the installed copy is left as it was; **Download**
-still gets the package for a manual install. On macOS SolidCraft opens the disk image rather than
+still gets the package for a manual install. On macOS Torno opens the disk image rather than
 replacing the app itself: you drag the new app to Applications, as you did the first time. The
 app and the disk image are signed with a Developer ID and notarized by Apple, so macOS opens the
 new copy without a warning.
@@ -54,20 +54,20 @@ fails with a message, and **Download** is the way to update it.
 
 ## Updating from 0.11 to 0.14
 
-SolidCraft 0.11.0 to 0.14.0 only accept packages from the project's old GitHub address. Since
+Torno 0.11.0 to 0.14.0 only accept packages from the project's old GitHub address. Since
 the repository moved to `github.com/tangency-labs/solidcraft`, every release names the new address,
 so these versions see that a newer release is out but find no package in it: **Update now** can't
 install it, and **Download** opens the release page.
 
 Download 0.15.0 or later once yourself, from the release page or the
 [download links](https://github.com/tangency-labs/solidcraft#download), and install it over the old
-version as you first installed it. From 0.15.0 on, SolidCraft accepts either address, and
+version as you first installed it. From 0.15.0 on, Torno accepts either address, and
 **Update now** works again. Package managers (Flatpak, Snap, WinGet, `.deb`, `.rpm`) aren't
 affected.
 
 ## What is sent
 
-One HTTPS request each time SolidCraft starts, and once a day while it stays open:
+One HTTPS request each time Torno starts, and once a day while it stays open:
 
 ```text
 GET https://api.github.com/repos/tangency-labs/solidcraft/releases/latest
@@ -81,12 +81,12 @@ release's own `github.com/tangency-labs/solidcraft/releases/download/…` links,
 User-Agent. That's all: no version number, no machine or user identifier, no usage data, no cookies. GitHub
 sees the request like any other visit to the API (your IP address, the time); see
 [GitHub's privacy statement](https://docs.github.com/site-policy/privacy-policies/github-general-privacy-statement).
-SolidCraft compares the answer with its own version on your computer.
+Torno compares the answer with its own version on your computer.
 
 - Offline, or GitHub doesn't answer within 15 seconds: nothing is shown, and the check is tried
   again an hour later (or at the next start, whichever comes first).
 - GitHub's rate limit for anonymous requests (60 an hour per address) is respected: when GitHub
-  says to wait, SolidCraft waits that long, Check now and the check at start included.
+  says to wait, Torno waits that long, Check now and the check at start included.
 - Turning off **Check for updates automatically** stops the checks; only **Check now** asks.
 - Setting the environment variable `SOLIDCRAFT_UPDATE_CHECK=0` turns all checks off, for
   example on managed machines.
@@ -98,17 +98,17 @@ saved version opens instead, and the download continues for the next reload.
 
 ## Managed by a launcher
 
-When a launcher such as the ArtCraft Launcher installed SolidCraft, it also updates it. SolidCraft
+When a launcher such as the ArtCraft Launcher installed Torno, it also updates it. Torno
 notices this in two ways:
 
 - the environment variable `SOLIDCRAFT_MANAGED_BY` is set; its value is the launcher's name, for
   example `ArtCraft Launcher`, and
 - the ArtCraft Launcher's `installed.json` (in its per-user data folder, read-only) lists this
-  SolidCraft: its recorded path is this executable, this AppImage or `.app`, or the folder this
+  Torno: its recorded path is this executable, this AppImage or `.app`, or the folder this
   executable was unpacked into.
 
-SolidCraft then still checks for a newer release, and the pill and **Check now** work as before, but
-the window says **Update available: update SolidCraft in ArtCraft Launcher** and offers only
+Torno then still checks for a newer release, and the pill and **Check now** work as before, but
+the window says **Update available: update Torno in ArtCraft Launcher** and offers only
 **Skip this version** and **Remind me later**. There is no **Update now**, **Download** or
 AppImage replacement, so the launcher's record of what is installed stays right. Without the
 variable or a record, nothing changes. Setting `SOLIDCRAFT_UPDATE_CHECK=0` still turns the checks
@@ -117,7 +117,7 @@ off.
 ## Which file Download gets
 
 Releases attach the main packages under fixed names (see [releasing](https://github.com/tangency-labs/solidcraft/blob/main/docs/releasing.md)),
-and SolidCraft picks the one matching how it was installed:
+and Torno picks the one matching how it was installed:
 
 | Installed as | Detected by | Download | How to update |
 |---|---|---|---|
@@ -131,7 +131,7 @@ and SolidCraft picks the one matching how it was installed:
 | Windows installer | under Program Files, or in the folder the installer recorded | `solidcraft-windows-<arch>.msi` | Run the installer |
 | Windows portable | `solidcraft-cli.exe` beside it | `solidcraft-windows-<arch>-portable.zip` | Unzip over the old copy |
 | Windows `.exe` | anywhere else on Windows | `SolidCraft-<version>-windows-x64.exe` | Replace the old `.exe` |
-| macOS | inside `SolidCraft.app` | `solidcraft-macos-universal.dmg` | Quit SolidCraft, then drag the new app to Applications |
+| macOS | inside `SolidCraft.app` | `solidcraft-macos-universal.dmg` | Quit Torno, then drag the new app to Applications |
 
 The window shows the command for Snap, `.deb` and `.rpm` installations, with a Copy button. The
 Flatpak has no network permission and Flatpak itself (or your software center) offers its

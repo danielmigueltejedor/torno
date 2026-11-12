@@ -19,7 +19,7 @@ target/release/solidcraft-cli run examples/chebyshev-motion-trace.json --out tar
 ```
 
 On Windows the executable has the `.exe` extension. Open `target/chebyshev.sc`
-in SolidCraft. Open **Motion Study**, choose **Chebyshev cycle** and play it. The
+in Torno. Open **Motion Study**, choose **Chebyshev cycle** and play it. The
 red tip follows the retained **Chebyshev trajectory** sketch while the blue crank
 turns through 360°. Playback reuses the trace rather than sampling it again.
 
@@ -56,7 +56,7 @@ and checks resizing, uniform scaling, the half-turn range and playback reuse.
 ## Export a demonstration
 
 Save the following as `target/animate-chebyshev.json` and run it on the generated
-design. This uses SolidCraft's renderer and motion driver to export a looping GIF:
+design. This uses Torno's renderer and motion driver to export a looping GIF:
 
 ```json
 [

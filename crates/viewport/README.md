@@ -1,6 +1,6 @@
 # solidcraft-viewport
 
-The viewport renderer the Craft apps share, so each of them frames, projects, shades and draws a
+The viewport renderer the Nodalia apps share, so each of them frames, projects, shades and draws a
 picture the same way. It takes solidcore-tess's display meshes and plain data (colours, boxes,
 lines) and knows no app's geometry or document types, no GPU API and no UI toolkit, so an app's
 engine and command line can use it. Its only workspace dependency is `solidcraft-color`.

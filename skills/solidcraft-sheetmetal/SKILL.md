@@ -1,9 +1,9 @@
 ---
 name: solidcraft-sheetmetal
-description: Use when building or changing a sheet metal part in SolidCraft through its MCP server (flange, segments, hem, fold, unfold, flat pattern, DXF, bend table), or when a request describes bends in words.
+description: Use when building or changing a sheet metal part in Torno through its MCP server (flange, segments, hem, fold, unfold, flat pattern, DXF, bend table), or when a request describes bends in words.
 ---
 
-# SolidCraft sheet metal
+# Torno sheet metal
 
 ## Overview
 A sheet metal part is a flat sheet plus bends: base first, then flanges. Work the numbers first (rule, flat size, stock, angles, heights, segment boundaries), build in `batch` calls, then check with `measure`, `sheet.flat_pattern` and `sheet.export_bend_table`. Contract, bend arithmetic, recipes: `reference.md`.

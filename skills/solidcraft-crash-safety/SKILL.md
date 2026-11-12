@@ -1,11 +1,11 @@
 ---
 name: solidcraft-crash-safety
-description: "Use when writing or reviewing non-test Rust in SolidCraft, handling design files, command parameters or control-channel input, calling the kernel, or investigating a crash report. A crash loses someone's work, so this outranks feature work."
+description: "Use when writing or reviewing non-test Rust in Torno, handling design files, command parameters or control-channel input, calling the kernel, or investigating a crash report. A crash loses someone's work, so this outranks feature work."
 ---
 
 # Never crash
 
-People trust SolidCraft with their designs. This outranks feature work.
+People trust Torno with their designs. This outranks feature work.
 
 ## In non-test code
 - No `unwrap()`, `expect()`, `panic!`, `unreachable!`, `todo!` or `unimplemented!`. Every production crate root carries `#![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic, clippy::unimplemented, clippy::todo, clippy::unreachable)]`; `cargo xtask ci` runs clippy with `-D warnings`.

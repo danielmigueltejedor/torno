@@ -8,7 +8,7 @@ Updates: WR-685. Under the same flag, `fillet_gn_section_generator`, the G^n sec
 - **Solvers share the resolved value.** The fork's solvers share one generator, so the first blend's wedge sets the thumbweight for every edge of one `SetFilletParameters`. The port's solvers hold copies. The session gives a resolved thumbweight back to its generator and to every other copy after each solver's `CalcFilletGeom`.
 - **The ease keeps thumbweight 0.** `EaseSetBackSections` blends into the order-2 section at w = 0, not at the default (22d258a).
 - **Checked against fork d01d7b0** built locally:
-  - `EqualAreaThumbweight` for orders 2 to 4 over six wedge angles is bit-identical, including the refusals. At a square corner, order 2 gives -0.52521240458756147. The figure -0.5252123889 quoted from SolidCraft differs from it by 3e-8.
+  - `EqualAreaThumbweight` for orders 2 to 4 over six wedge angles is bit-identical, including the refusals. At a square corner, order 2 gives -0.52521240458756147. The figure -0.5252123889 quoted from Torno differs from it by 3e-8.
   - Volumes, Rust against the fork:
     - the box edge at equal area, n 2 to 4: max rel err 2.1e-10;
     - the box's three-edge corner at equal area and at w = 0: 9.8e-11;

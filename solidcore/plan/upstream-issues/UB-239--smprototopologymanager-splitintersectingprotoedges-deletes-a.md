@@ -4,7 +4,7 @@
 - **Location:** `source/SMLib/src/SmProtoTopology.cpp:6833` (`SplitIntersectingProtoEdges`, def. `:6656`: `CombineProtoEdge`, then `RemoveProtoEdge` and `delete pPE2ToCombine`); `:4346` `SmProtoTopologyManager::RemoveProtoEdge` unlists the edge from `m_sPEs` and its end proto vertices only; the stale entry is read in `GlueCoincidentBrepVertices` (`:5854`, the `GetCoincProtoEdges` walk at `:6245`).
 - **What happens:** The proto edge combined away stays in the coincident-proto-edge lists of the proto faces it bounded, and in the overlapping lists of other proto edges. `GlueCoincidentBrepVertices` then walks those proto-face lists and reads the freed proto edge (a comment there already notes that the proto faces would need updating).
 - **Trigger:** the inward shell of a 20 mm cube with a 10 mm wall (ASan heap-use-after-free; tangency-labs/solidcore#369).
-- **How found:** ASan run of the SolidCraft C API (tangency-labs/smlib `capi/`).
+- **How found:** ASan run of the Torno C API (tangency-labs/smlib `capi/`).
 - **Confirmed:** yes (ASan, in the fork's C API tests); not reproduced in the solidcore difftest.
 - **Severity:** crash/UB (use-after-free).
 - **Fix:** tangency-labs/smlib 93efd6d. `RemoveProtoEdge` drops every reference the listed proto faces and proto edges hold to the edge. `SplitIntersectingProtoEdges` first adds the surviving proto edge to the proto faces the removed one bounded. With the fix the shell above fails with `SM_ERR_NULL_POINTER` instead.

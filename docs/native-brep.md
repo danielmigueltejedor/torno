@@ -1,6 +1,6 @@
 # Native B-rep, schema 4
 
-This is SolidCraft's geometry data model in `solidcore_record::brep` (solidcore's
+This is Torno's geometry data model in `solidcore_record::brep` (solidcore's
 record crate: geometry as data, no maths). It has no modelling-backend dependency;
 its geometric checks and evaluation are the kernel's (`solidcraft_geom::brep`). It is the body encoding of a design's model cache
 ([the container format](design-container.md#model-cache)); it is not a STEP
@@ -270,7 +270,7 @@ history beside the B-rep. A backend that cannot report it returns none and never
 guesses. The saved form is the envelope's own records (below).
 
 Face-source certificates, operation history, appearances and persistent document
-identities belong to a versioned SolidCraft envelope around this geometry. They
+identities belong to a versioned Torno envelope around this geometry. They
 must be preserved by the cache codec, not reconstructed from face counts or
 floating-point comparisons. A decoded cache remains provisional until
 authoritative re-evaluation finishes. The document and original blobs remain

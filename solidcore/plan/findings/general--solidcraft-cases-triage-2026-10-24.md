@@ -1,4 +1,4 @@
-# SolidCraft cases triage (2026-10-24)
+# Torno cases triage (2026-10-24)
 
 The `--solidcraft-cases` expected values are closed forms, not C++ results. Every
 case that builds only from boxes, spheres, cylinders and Booleans was also run on the

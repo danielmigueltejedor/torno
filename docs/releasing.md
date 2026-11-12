@@ -1,4 +1,4 @@
-# Releasing SolidCraft
+# Releasing Torno
 
 Releases are deliberate operations that an agent can complete end to end. Development lands
 on `main`; pushing the selected commit to `release` builds all packages and creates a **draft**
@@ -8,7 +8,7 @@ version bump and no patch release for every merge.
 
 ## Names and deployment
 
-Every release asset, binary, installer product name and package uses the SolidCraft name
+Every release asset, binary, installer product name and package uses the Torno name
 (`solidcraft-<version>-linux-<arch>.AppImage`, `SolidCraft-<version>-windows-x64.exe`,
 `solidcraft-cli` archives, …). The old name survives only in the shims listed in
 [compatibility.md](compatibility.md) (the end-of-life Flatpak refs of the old Linux app ID, the legacy `.zsync` and `.flatpakrepo`
@@ -79,7 +79,7 @@ deployment. The stable Flatpak repository is not automatically updated with nigh
    `cargo update --workspace --offline` to refresh the workspace packages' versions in
    `Cargo.lock` (it changes only our own crates, never dependency versions, and needs no
    network). Inspect the diff: only `version = ` lines of workspace crates should change.
-   SolidCraft does not currently implement `cargo xtask version set`.
+   Torno does not currently implement `cargo xtask version set`.
 3. Fix the file format numbers: run `scripts/fold-format-pending.sh`. It moves the pending
    format changes of designs (`crates/doc/src/format/pending/*.rs`) and of drawings
    (`crates/doc/src/drawing/format/pending/*.rs`) into each one's next `v<N>/` folder, so the
@@ -250,7 +250,7 @@ connect with `sudo snap connect solidcraft:removable-media` (getting-started.md)
 
 ## WinGet (Windows Package Manager)
 
-SolidCraft is not in [winget-pkgs](https://github.com/microsoft/winget-pkgs) yet: its first
+Torno is not in [winget-pkgs](https://github.com/microsoft/winget-pkgs) yet: its first
 version, as `bherbruck.SolidCraft`, has to be submitted and merged there once (by hand, with
 Komac or `wingetcreate`) before `winget install bherbruck.SolidCraft` finds it. A first
 submission, for 0.21.0, is already open as

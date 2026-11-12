@@ -1,15 +1,15 @@
-# scx: a script-first "hybrid" MCP server for SolidCraft
+# scx: a script-first "hybrid" MCP server for Torno
 
-scx lets a language model build CAD parts in [SolidCraft](https://github.com/tangency-labs/solidcraft) by
-writing short Python scripts in SolidCraft's own words (`box`, `cylinder`, `sketch`, `hole`, `fillet`,
-`part`, ...) instead of calling dozens of separate tools. Every script runs at once in SolidCraft, and every
+scx lets a language model build CAD parts in [Torno](https://github.com/tangency-labs/solidcraft) by
+writing short Python scripts in Torno's own words (`box`, `cylinder`, `sketch`, `hole`, `fillet`,
+`part`, ...) instead of calling dozens of separate tools. Every script runs at once in Torno, and every
 reply ends with a short list of what changed, with volumes and bounding boxes, so the model can check its
 work without another call.
 
 On a 23-task benchmark with Claude Haiku 5.5 (3 runs per task, 69 runs per setup), compared with the plain
-SolidCraft MCP server:
+Torno MCP server:
 
-| | Plain SolidCraft MCP (21 tools) | scx v13 (3 tools) |
+| | Plain Torno MCP (21 tools) | scx v13 (3 tools) |
 |---|---:|---:|
 | Parts passing the check | 69 / 69 | 69 / 69 |
 | Tool calls per task | 6.8 | 2.8 (**-58%**) |
@@ -36,8 +36,8 @@ This is a prototype for benchmarking, not a product. See [Limits](#limits) befor
 | `design` | A compact outline: every body with volume, bounding box and face count, grouped by part. Identical parts are folded into one line. |
 | `look {view?}` | A small picture of the model. Left out with `--text-only`. |
 
-Other SolidCraft MCP tools (`execute`, `inspect_design`, `save`, ...) are not listed, but a client that
-calls one by name is forwarded to SolidCraft. Inside a script, `cmd()` reaches any SolidCraft command and
+Other Torno MCP tools (`execute`, `inspect_design`, `save`, ...) are not listed, but a client that
+calls one by name is forwarded to Torno. Inside a script, `cmd()` reaches any Torno command and
 `commands('word')` looks up command ids and their parameters.
 
 ### The vocabulary
@@ -100,10 +100,10 @@ already expects, one observed failure at a time:
 
 ## Setup
 
-You need Python 3.10+ and SolidCraft 0.40 (built and tested on 0.40.0-rc). `solidcraft-cli` must be on PATH,
+You need Python 3.10+ and Torno 0.40 (built and tested on 0.40.0-rc). `solidcraft-cli` must be on PATH,
 or set `SCX_CLI` to its path.
 
-Against a running SolidCraft window (you watch the model work):
+Against a running Torno window (you watch the model work):
 
 ```bash
 solidcraft --control 7879
@@ -113,7 +113,7 @@ solidcraft --control 7879
 { "mcpServers": { "solidcraft": { "command": "python", "args": ["-I", "/path/to/scx.py", "--port", "7879"] } } }
 ```
 
-Headless, for scripts and benchmarks (scx starts its own SolidCraft through `solidcraft-cli`):
+Headless, for scripts and benchmarks (scx starts its own Torno through `solidcraft-cli`):
 
 ```json
 { "mcpServers": { "solidcraft": { "command": "python", "args": ["-I", "/path/to/scx.py", "--headless"] } } }
@@ -181,13 +181,13 @@ The full table with numbers is in [CHANGELOG.md](CHANGELOG.md).
 | v13 | Instructions rewritten under 2,048 characters | complaints gone, steadier edits: **final for Haiku** |
 | v14 | `--text-only`, hint for unquoted body names | fixes text-only clients |
 | v15 | `loft()`, `move(rotate=)`, `commands()` lookup, sketch fix | ladder L7: 41% cheaper than the plain MCP, same passes |
-| v15.1 | bodies SolidCraft cannot measure no longer break every call | found on L8 (imported toolhead). Shipped as `scx.py` |
+| v15.1 | bodies Torno cannot measure no longer break every call | found on L8 (imported toolhead). Shipped as `scx.py` |
 
 ## Difficulty ladder
 
 After tuning stopped, we checked whether scx only saves money or also lets the model do harder work. New
 tasks, written before any run and never used for tuning, in levels of rising difficulty. Same checker, 3 runs
-per task, plain SolidCraft MCP against scx. L1-L6 used v14; v15 was made from what L5 and L6 showed, then
+per task, plain Torno MCP against scx. L1-L6 used v14; v15 was made from what L5 and L6 showed, then
 tested on L7. L8 and L9 used v15.1. L8 was repeated on Sonnet 5 and Opus 5.5; L9 ran on Sonnet 5.5.
 
 | Level | What it adds | Plain MCP | scx | Passes |
@@ -333,7 +333,7 @@ result):
 2. the cavity, floor, open top and rounded lip;
 3. the lofted relief on the -X face.
 
-SolidCraft cannot turn this mesh into a solid for them (`mesh.convert` only handles planar and cylindrical
+Torno cannot turn this mesh into a solid for them (`mesh.convert` only handles planar and cylindrical
 meshes), and the models had no file access, so there was no shortcut. The scorer exports the solid and
 compares it with the original mesh on a 0.5 mm voxel grid (intersection over union; step 1 against the
 mesh with its cavity filled), plus the mean distance between the two surfaces. For scale: a plain
@@ -365,7 +365,7 @@ distance: 0.92-1.39 mm on the plain MCP, 0.77-1.11 mm on scx (3.4 mm for the fai
 
 Two runs were thrown away and rerun: in one the model invoked an unrelated built-in Claude Code skill
 (`/init`) instead of working, and in the other a skill launched and loaded its instructions. The harness now
-blocks skills. The STEP export of the vessel was not usable as a scoring reference: SolidCraft imports it
+blocks skills. The STEP export of the vessel was not usable as a scoring reference: Torno imports it
 only as surfaces, because two of its faces have zero-area trim loops.
 
 ## Limits
@@ -378,14 +378,14 @@ only as surfaces, because two of its faces have zero-area trim loops.
   when something sticks up from that face.
 - Tuned on Claude Haiku 5.5 only. Larger models were measured on L8 (Sonnet 5, Opus 5.5) and L9
   (Sonnet 5.5), not tuned for.
-- `measure()` and replies show `bbox None..None` for a body SolidCraft cannot measure.
+- `measure()` and replies show `bbox None..None` for a body Torno cannot measure.
 
 ## License
 
-Like SolidCraft, dual-licensed under [MIT](../../LICENSE-MIT) or [Apache-2.0](../../LICENSE-APACHE), at your
+Like Torno, dual-licensed under [MIT](../../LICENSE-MIT) or [Apache-2.0](../../LICENSE-APACHE), at your
 option.
 
 ## Credits
 
-Built by Gabe ([@dudedagger42](https://github.com/dudedagger42)) with Claude, on top of SolidCraft's MCP
+Built by Gabe ([@dudedagger42](https://github.com/dudedagger42)) with Claude, on top of Torno's MCP
 bridge.

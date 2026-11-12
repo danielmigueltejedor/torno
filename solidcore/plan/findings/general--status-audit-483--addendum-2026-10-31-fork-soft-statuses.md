@@ -3,10 +3,10 @@ Updates: plan/findings/general--status-audit-483.md
 ## `offset_tangent_gap_statuses` now follows the fork (#2009 group A)
 
 The row for `HaveTangentGaps` said the first failed `NormalizedEvaluate` or
-`ClosestPoint` propagates. The SolidCraft fork of SMLib (tangency-labs/smlib 4803d6d)
+`ClosestPoint` propagates. The Torno fork of SMLib (tangency-labs/smlib 4803d6d)
 chose otherwise: `HaveTangentGaps` returns a boolean, so a sample it cannot evaluate is
 skipped (upstream measured the unset point), and `ClosestPoint`'s status stays dropped
-because its `bSuccess` says whether a closest point was found. SolidCraft held the flag
+because its `bSuccess` says whether a closest point was found. Torno held the flag
 off because it errored where the fork's C++ carries on.
 
 The flag was never turned on by a caller (no fix is shipped), so it changes meaning

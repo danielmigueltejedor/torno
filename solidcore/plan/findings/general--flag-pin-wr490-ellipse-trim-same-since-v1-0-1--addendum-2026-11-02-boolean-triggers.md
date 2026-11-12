@@ -74,7 +74,7 @@ This is the central probe's variant, not #868's recipe.
 - **Retiring the flag:** by the record's "Waits on", it can be retired. That is the maintainers' call. Retiring it means three things:
   - delete the field and its branch in `ellipse_trim_intervals`;
   - delete the flag-on unit test `seam_crossing_below_a_trimmed_domain_keeps_the_ellipse` (its default twin stays);
-  - SolidCraft's preset stops setting the field.
+  - Torno's preset stops setting the field.
 
   This addendum changes no code.
 

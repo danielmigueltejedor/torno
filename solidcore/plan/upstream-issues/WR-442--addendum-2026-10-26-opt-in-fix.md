@@ -1,7 +1,7 @@
 Updates: WR-442
 
 #### WR-442 addendum (2026-10-26): an opt-in fix in the Rust port
-- **Reported independently:** by jyviko (tangency-labs/solidcore#478). Fixed in the SolidCraft fork (branch r-booleans, 0993713).
+- **Reported independently:** by jyviko (tangency-labs/solidcore#478). Fixed in the Torno fork (branch r-booleans, 0993713).
 - **Fix:**
   1. After the stitch, take each solid region that has one shell whose mate lies in the infinite region.
   2. From a point of its outside shell, fire a ray (as `TestClosureSplitRegion`'s shell nesting does) at every other such solid's inside shell.

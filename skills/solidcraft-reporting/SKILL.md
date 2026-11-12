@@ -1,13 +1,13 @@
 ---
 name: solidcraft-reporting
-description: Use when a SolidCraft user says something went wrong - the app crashed or closed, a command failed or gave the wrong shape, a number is off, a design no longer rebuilds, something hangs - and wants it reported or fixed upstream. Turns the problem into a minimal, reproducible bug report with exact steps, a command script, expected and actual results and a screenshot.
+description: Use when a Torno user says something went wrong - the app crashed or closed, a command failed or gave the wrong shape, a number is off, a design no longer rebuilds, something hangs - and wants it reported or fixed upstream. Turns the problem into a minimal, reproducible bug report with exact steps, a command script, expected and actual results and a screenshot.
 ---
 
-# SolidCraft reporting
+# Torno reporting
 
 A report the maintainers can act on reproduces in a fresh design, in as few steps as possible, with the exact message and numbers. Build that here, so nobody has to rebuild the problem from a description. Use `reference.md` from `solidcraft-modeling` for command shapes, and `reference/report-template.md` (next to this file) for the report.
 
-Written against SolidCraft 0.18.2. Report what you observed, never a guessed cause: "the fillet fails with `…`", not "the kernel can't handle tangent edges".
+Written against Torno 0.18.2. Report what you observed, never a guessed cause: "the fillet fails with `…`", not "the kernel can't handle tangent edges".
 
 ## 1. Gather (ask only for what you cannot find)
 - **Version and OS.** Help → About in the app, `solidcraft --version` or `solidcraft-cli --version`; the MCP server reports its version in `initialize` (`serverInfo.version`). Note whether the user built from source.
@@ -41,7 +41,7 @@ Shrink while the same failure, with the same message, still happens. Re-run afte
 
 ## 5. Privacy
 - Never attach, upload or quote the user's design, a crash report's `design.sc`, or file contents without asking. The minimal synthetic script is the default attachment.
-- GitHub does not accept `.sc` attachments. A design the user agrees to share goes up as a `.zip`: a `.sc` file is a ZIP already, so copy or rename it to `name.sc.zip`, or zip it. SolidCraft opens either kind of `.zip`.
+- GitHub does not accept `.sc` attachments. A design the user agrees to share goes up as a `.zip`: a `.sc` file is a ZIP already, so copy or rename it to `name.sc.zip`, or zip it. Torno opens either kind of `.zip`.
 - Strip home folders, user names, part and project names and file paths from messages and logs (`/home/alice/clients/acme/bracket.sc` → `bracket.sc`).
 - Check screenshots for other windows, file names and anything personal.
 

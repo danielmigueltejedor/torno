@@ -4,7 +4,7 @@
 |---|---|
 | Status | Draft, open for comment |
 | Started | 2026-10-14 (when #1221 opened) |
-| Apps | SolidCraft |
+| Apps | Torno |
 | Discussion | [#1221](https://github.com/tangency-labs/solidcraft/issues/1221) |
 | Related | [#4980](https://github.com/tangency-labs/solidcraft/pull/4980) (draft WIT proposal, `solidcraft:plugin@0.1.0`), [#4933](https://github.com/tangency-labs/solidcraft/pull/4933) (plugin commands in Utilities) |
 
@@ -84,7 +84,7 @@ Rhai was proposed instead. The comments favour one runtime, WebAssembly, for iso
 
 **Parametric features** (from `docs/plugins.md`). A host-owned `FeatureKind::Plugin` row stores `plugin_id`, `api_version`, the plugin's JSON `params`, and a `PluginDisplay` (label, icon id from the app's registry, tooltip, type name), all recorded in the file. The timeline draws any such row through one code path. On rebuild the host calls `evaluate(params, ctx)`, which uses the same `run` import, and merges the result like a native feature. An optional `parameter_schema()` lets the host draw sliders and dimension rows.
 
-**SolidCraft never refuses to open a file.** Every parametric plugin declares a recorded fallback, so a design opens without the plugin:
+**Torno never refuses to open a file.** Every parametric plugin declares a recorded fallback, so a design opens without the plugin:
 
 | Fallback | Behaviour without the plugin |
 |---|---|

@@ -38,7 +38,7 @@ The standard `render.result.regrade` action can apply looks and photographic eff
 
 ## Showcase provenance
 
-The requested MP4 will contain only actual native application captures and actual SolidCraft-produced renders, with clearly labeled editorial transitions, captions and before/after comparisons. No generated illustration or repainted substitute can stand in for renderer output. Any edited video camera motion is a presentation move over a still frame, not evidence of real-time rendering or a simulated model animation. Final resolutions, sample counts, immutable PNG/EXR hashes, source revision and video checksum must be recorded after execution.
+The requested MP4 will contain only actual native application captures and actual Torno-produced renders, with clearly labeled editorial transitions, captions and before/after comparisons. No generated illustration or repainted substitute can stand in for renderer output. Any edited video camera motion is a presentation move over a still frame, not evidence of real-time rendering or a simulated model animation. Final resolutions, sample counts, immutable PNG/EXR hashes, source revision and video checksum must be recorded after execution.
 
 Video assembly tooling remains isolated outside the application dependency graph. No fonts, executable or video tool binaries are redistributed in the showcase package. The language-neutral renderer schemas and original English source remain unchanged by localized UI labels.
 

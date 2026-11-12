@@ -1,4 +1,4 @@
-> **solidcore is developed inside [SolidCraft](https://github.com/tangency-labs/solidcraft), at [`solidcore/`](https://github.com/tangency-labs/solidcraft/tree/main/solidcore).** The [tangency-labs/solidcore](https://github.com/tangency-labs/solidcore) repository is an automatic, read-only mirror of that folder. Open issues and pull requests in [tangency-labs/solidcraft](https://github.com/tangency-labs/solidcraft): kernel-only work against the `kernel` branch.
+> **solidcore is developed inside [Torno](https://github.com/tangency-labs/solidcraft), at [`solidcore/`](https://github.com/tangency-labs/solidcraft/tree/main/solidcore).** The [tangency-labs/solidcore](https://github.com/tangency-labs/solidcore) repository is an automatic, read-only mirror of that folder. Open issues and pull requests in [tangency-labs/solidcraft](https://github.com/tangency-labs/solidcraft): kernel-only work against the `kernel` branch.
 
 <p align="center"><img src="assets/logo.svg" width="140" alt="solidcore logo: an isometric solid with one filleted edge and a NURBS curve on its top face"></p>
 
@@ -15,7 +15,7 @@ here as clean, procedural constructions that replace the code they supersede. Co
 [`#solidcore-dev`](https://discord.com/channels/1560611394934673498/1560631619340214394) channel on Discord.
 
 Solids are exact: shells, faces, loops, edges and vertices bound to analytic and NURBS
-curves and surfaces. solidcore's first consumer is **SolidCraft**.
+curves and surfaces. solidcore's first consumer is **Torno**.
 
 ## Scope
 
@@ -29,7 +29,7 @@ See [ATTRIBUTION.md](ATTRIBUTION.md).
 
 Goals: no `unsafe` in the kernel, no panics on bad input, deterministic results, no
 global state (one `Kernel` per thread), builds for `wasm32-unknown-unknown`, and exact or
-certified geometry. The gate is its own tests, SolidCraft's operation cases and the goldens:
+certified geometry. The gate is its own tests, Torno's operation cases and the goldens:
 every unit's cases checked against their committed expected outputs (AGENTS.md §1).
 
 ## Status

@@ -18,7 +18,7 @@
   2.6e-9, owner `SmCylinder`, from a recognised cylinder of radius 216985 mm -- does not
   appear: `copy_and_add_analytics` on that span's extrusion net (degree 3 by 1) returns a
   surface of extrusion under every fix set the test runs -- `UpstreamFixes::default()`, the
-  pinned C++ behaviour; SolidCraft's own profile (`all()` without the two it holds back,
+  pinned C++ behaviour; Torno's own profile (`all()` without the two it holds back,
   `fillet_keep_features` and `fillet_refuse_rounds_breaking_through`), the set the issue was
   measured through; `all()`, every flag on; and each flag of `UpstreamFixes::NAMES` alone on
   top of the default, 323 of them at this head. That is 326 sets of the 2^323 the type can
@@ -29,8 +29,8 @@
   relative to the spline variant, the area of the 7.1e-7 mm bulge, and the 98.1307 the issue
   measures for its straight variant on both kernels.
 - **Where the cylinder can still come from (unmeasured):** the issue measured through
-  SolidCraft on an older solidcore pin (2dbd88b6e9 / 8ddce9016), so either that pin, or
-  SolidCraft's own composition -- the face recognition when a record is read back with
+  Torno on an older solidcore pin (2dbd88b6e9 / 8ddce9016), so either that pin, or
+  Torno's own composition -- the face recognition when a record is read back with
   `MakeTopologyOptions::add_analytics`, or a DXF fit that hands the kernel control points
   other than the four in the issue, or a flag combination outside the 326 sets measured
   above. Not determined here: no bisection over solidcore pins, and no sweep over

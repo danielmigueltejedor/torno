@@ -98,7 +98,7 @@ constraint status and **Finish Sketch** button remain visible.
 Hover over a circle or arc centre, or the midpoint of a straight sketch edge, then move
 horizontally or vertically to see a dotted alignment guide. The guide connects that reference
 to the cursor's projection on the sketch axis, within the viewport; it disappears when you
-move away from the axis. SolidCraft keeps the two most recent of these references and can
+move away from the axis. Torno keeps the two most recent of these references and can
 draw both guides. One guide on its own does not move the cursor. While a drawing tool (Line,
 Rectangle, Circle, Arc, Polygon, Slot, Point…) waits for a point, any sketch point is a
 reference too: the end of a line or arc, a rectangle's corner, or a free point. Preferences ›
@@ -394,7 +394,7 @@ Scripts use the same command, with a midpoint reference in the `points` array:
 
 `mode` can be `horizontal` or `vertical`; omitting it chooses from the current positions.
 
-The solver is SolidCraft's own (damped Gauss–Newton with degree-of-freedom analysis). Constraints:
+The solver is Torno's own (damped Gauss–Newton with degree-of-freedom analysis). Constraints:
 coincident, horizontal/vertical, parallel, perpendicular, tangent, equal, concentric, collinear,
 midpoint, symmetry, fix, curvature (G2) and polygon. **Sketch Dimension** (D) adds linear,
 aligned, horizontal, vertical, point-to-line, line-to-circle, point-to-circle, circle-to-circle,

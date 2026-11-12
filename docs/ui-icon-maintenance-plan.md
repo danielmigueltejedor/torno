@@ -14,7 +14,7 @@ The SVG masters and valid acceptance records must survive this work unchanged.
 - Remove the generated inventory CSV from the source collection; generate reports
   under ignored `target/`. Remove the empty proposal-era stand-in list.
 - Remove the unused historical macOS raster/SVG exports while preserving their
-  editable VectorCraft document. Keep a local recovery copy under `target/`.
+  editable Pluma document. Keep a local recovery copy under `target/`.
 - Update attribution alongside every resource addition, retirement and move.
 
 ## 2. Give future authors an unmissable specification

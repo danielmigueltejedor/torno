@@ -19,5 +19,5 @@
   coaxial cylinder r3) already reaches UB-175 (`~SmProtoTopologyManager` reads a freed
   proto edge), so the runner would reject the input. The unit
   `topology.proto_topology_p2` still compares the manager at its upstream default.
-- **Callers** that relied on the previous default (e.g. SolidCraft, #480) must set the
+- **Callers** that relied on the previous default (e.g. Torno, #480) must set the
   field.

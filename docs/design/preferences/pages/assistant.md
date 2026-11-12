@@ -1,6 +1,6 @@
 # Assistant
 
-Board: `Prefs2_Assistant` (1920x1339). Heading: Extend. Subtitle "AI agents in SolidCraft." No "In
+Board: `Prefs2_Assistant` (1920x1339). Heading: Extend. Subtitle "AI agents in Torno." No "In
 profile" tag. Source today: the AI page (`crates/ui-egui/src/agent_chat/settings.rs`, page
 `PAGE_AI`). The whole page dims when "Show AI features" is off (the hover says so).
 
@@ -42,7 +42,7 @@ One card per agent, with an "Add agent..." and a "Refresh" button at the end.
 
 | Label | Control | Edits | Default | Hover | Figure | Notes |
 |---|---|---|---|---|---|---|
-| Add SolidCraft to AI apps | Checkbox | `Prefs.connect_ai_apps` | `true` | "Off takes the entries out again." | none | |
+| Add Torno to AI apps | Checkbox | `Prefs.connect_ai_apps` | `true` | "Off takes the entries out again." | none | |
 | Run slow commands in the background | Checkbox | `Prefs.agent_off_thread` | `false` | none | none | |
 | Connect the last agent at start | Checkbox | `Prefs.agent_connect_at_start` | `false` | none | none | |
 | Open the chat at start | Checkbox | `Prefs.agent_chat_open_at_start` | `false` | none | none | |

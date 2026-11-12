@@ -293,16 +293,16 @@ for harness errors; verdicts never fail the run.
     SSI_ENGINE=solidcore-rust python3 -I corpus/ssi/scoring/score.py gsi 1e-6
   ```
 
-## `--solidcraft-cases`: SolidCraft regression cases
+## `--solidcraft-cases`: Torno regression cases
 
 A correctness report, separate from the gate like `--ssi-corpus`: it never changes a
 unit's status and verdicts never fail the run. `fixtures/solidcraft/` holds one file per
-SolidCraft issue reproduced on SolidCraft's earlier kernel (the issue, the fixing PR if
+Torno issue reproduced on Torno's earlier kernel (the issue, the fixing PR if
 any, and the test or issue reproduction the cases come from). Omit `pr` for an unresolved
 issue; its report records `pr: null`. Each case is a list of `SM_API`-level steps
 and the values its `result` body must have, known in closed form, so the bugs stay
 fixed once the operations run end to end here. Geometry and tolerances are those of the
-SolidCraft PR's own test wherever it has one.
+Torno PR's own test wherever it has one.
 
 ```sh
 nice -n 10 cargo run -p goldens -- --solidcraft-cases                 # all cases (Rust only)
@@ -321,7 +321,7 @@ nice -n 10 cargo run -p goldens -- --solidcraft-cases '3526-*'        # ids (<fi
   the rolling ball of the constant-radius solver, the leg on each face for a right-angle edge
   between planes (`distance * cot(α/2)` for an interior angle `α`, varying along curved
   faces); one distance for all edges; `SmApiChamferFillet` is not used, it chamfers every
-  edge of a body), `offset_faces` (faces by a point on each, moved by the SolidCraft fork's
+  edge of a body), `offset_faces` (faces by a point on each, moved by the Torno fork's
   `SmOffsetFacesExecutive`, `solidcore::offset::offset_faces`, the tangent blends on them
   following), `sweep_face` (the prism of a body's face: the face through the point `face`,
   the one whose surface holds it and which classifies it inside or on an edge bordering
@@ -380,10 +380,10 @@ nice -n 10 cargo run -p goldens -- --solidcraft-cases '3526-*'        # ids (<fi
   sorted order and nothing counts them, so no Rust file changes unless the case needs
   a new step kind.
 
-### Sheet flange corner overlap (SolidCraft #3170, PR #3472)
+### Sheet flange corner overlap (Torno #3170, PR #3472)
 
 `fixtures/solidcraft/3170-sheet-corner-overlap.json` ports
-`overlapping_corners_keep_surface_clearance_and_flat_material` from SolidCraft
+`overlapping_corners_keep_surface_clearance_and_flat_material` from Torno
 PR #3472 (published revision `0420e385`). The 16 original combinations are signed
 90/72 degree bends, Partial/Full overlap (1/2 mm), and front/left covering choices.
 Each starts with a 120 x 90 mm XY base, thickness 2 mm, radius 1 mm, K factor 0.5,
