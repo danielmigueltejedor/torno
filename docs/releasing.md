@@ -128,16 +128,17 @@ image, so the build needs no Finder session or AppleScript, which are unreliable
 
 The look lives in `assets/platforms/macos/dmg/`: `layout.json` (window size, icon size and
 positions, shared by both files below), `settings.py` (the dmgbuild settings) and `background.tiff`
-(a blueprint sheet, 540×360 pt, with a 1x and a 2x representation so Retina screens get the sharp one). Change the art with
-`make_background.py` (needs Pillow; its docstring has the commands), view the result by mounting the
-image, and commit the TIFF with the script. Rules the design follows:
+(the Nodalia installer window, 660×400 pt, with a 1x and a 2x representation so Retina screens get the sharp one).
+The art comes from `background.svg`, drawn by `tools/dmg-background/draw_background.py` in
+[nodalia-design](https://github.com/getnodalia/nodalia-design): change it there, regenerate the SVG,
+render the TIFF with `make_background.py` (needs Pillow and resvg; its docstring has the commands),
+view the result by mounting the image, and commit the SVG and the TIFF. Rules the design follows:
 
 - The title bar adds to the window rectangle (`title_bar` in `layout.json`, 32 pt on macOS 27); the
   content area must equal the background's size. Older macOS versions have a thinner title bar and
   were not checked.
-- Finder draws the icon names itself, black in Light and white in Dark appearance, and art cannot
-  change that. Each name therefore sits on a mid-tone plate that both colours read on. Keep the
-  plates under the icons if you move them.
+- Finder draws the icon names itself, in black, and art cannot change that. The icons and their
+  names therefore sit on the white island. Keep them there if you move them.
 - `README.txt` stays on the disk but is hidden (`SetFile -a V`), so the window stays calm.
 
 `package.sh` mounts the finished image and checks the layout files, the volume icon, the bundle and
