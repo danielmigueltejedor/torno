@@ -64,9 +64,11 @@ package() {
 }
 EOF
 
-docker run --rm -v "$work:/build" -e CARCH="$ARCH" "$IMAGE" bash -euo pipefail -c '
+docker run --rm -v "$work:/build" -e CARCH="$ARCH" -e OWNER="$(id -u):$(id -g)" "$IMAGE" bash -euo pipefail -c '
   useradd -m builder
   chown -R builder /build
+  # Hand the work directory back, or the caller can neither read the package nor delete it.
+  trap "chown -R \"\$OWNER\" /build" EXIT
   # makepkg checks the package architecture against CARCH from its config.
   sed "s/^CARCH=.*/CARCH=\"$CARCH\"/" /etc/makepkg.conf >/tmp/makepkg.conf
   su builder -c "cd /build && PKGEXT=.pkg.tar.zst makepkg --config /tmp/makepkg.conf --nodeps --noconfirm"
