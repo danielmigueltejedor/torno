@@ -248,38 +248,19 @@ jobs:
         with:
           name: release-linux-${{ matrix.arch }}
           path: dist/linux
-      # The Craft apps' shared Arch packaging (storytold/craft-common-actions, MIT OR Apache-2.0):
-      # makepkg in an archlinux:base-devel container. The package is named after the tarball's
-      # .desktop file (dev.danielmiguelt.Torno) and written as
-      # dist/release/torno-<version>-linux-<arch>.pkg.tar.zst.
-      # An Arch version can't hold a hyphen, and the action reads the version from the tarball's name
-      # (a hyphenated one comes out as 0.0.0): 0.40.0-rc.1 goes in as 0.40.0rc.1, which pacman sorts
-      # before 0.40.0, and the package keeps the release's name.
-      - id: pkgver
-        name: Arch version
-        run: |
-          pkgver="${VERSION//-/}"
-          echo "pkgver=$pkgver" >>"$GITHUB_OUTPUT"
-          if [ "$pkgver" != "$VERSION" ]; then
-            cp "dist/linux/torno-$VERSION-linux-$ARCH.tar.gz" "dist/linux/torno-$pkgver-linux-$ARCH.tar.gz"
-          fi
+      # packaging/linux/arch-package.sh: makepkg in an archlinux:base-devel container. The package
+      # is named after the tarball's .desktop file (dev.danielmiguelt.Torno) and written as
+      # dist/release/torno-<version>-linux-<arch>.pkg.tar.zst; a hyphenated version such as
+      # 0.40.0-rc.1 goes into the package as 0.40.0rc.1, which pacman sorts before 0.40.0.
+      - name: Arch package
         env:
           ARCH: ${{ matrix.arch }}
-      - uses: storytold/craft-common-actions/actions/arch-package@fa5ef18780cf5e7d5d3b8de068de56cffc83cac5 # main
-        with:
-          tarball: dist/linux/torno-${{ steps.pkgver.outputs.pkgver }}-linux-${{ matrix.arch }}.tar.gz
-          arch: ${{ matrix.arch }}
-      - name: The package under the release's version
-        if: steps.pkgver.outputs.pkgver != env.VERSION
-        env:
-          ARCH: ${{ matrix.arch }}
-          PKGVER: ${{ steps.pkgver.outputs.pkgver }}
-        run: sudo mv "dist/release/torno-$PKGVER-linux-$ARCH.pkg.tar.zst" "dist/release/torno-$VERSION-linux-$ARCH.pkg.tar.zst"
+        run: packaging/linux/arch-package.sh "dist/linux/torno-$VERSION-linux-$ARCH.tar.gz" "$ARCH" dist/release
       - name: Check the package
         env:
           PKG: dist/release/torno-${{ env.VERSION }}-linux-${{ matrix.arch }}.pkg.tar.zst
         run: |
-          tar --zstd -tf "$PKG" | grep -E '^usr/bin/torno$|^usr/bin/torno-cli$|^usr/share/applications/io\.tangencylabs\.solidcraft\.desktop$'
+          tar --zstd -tf "$PKG" | grep -E '^usr/bin/torno$|^usr/bin/torno-cli$|^usr/share/applications/dev\.danielmiguelt\.Torno\.desktop$'
           tar --zstd -xOf "$PKG" .PKGINFO | grep -E '^(pkgname|pkgver|arch) = '
           tar --zstd -xOf "$PKG" .PKGINFO | grep -qx 'pkgname = dev.danielmiguelt.Torno'
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
