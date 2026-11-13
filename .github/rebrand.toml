@@ -74,6 +74,12 @@ to = "getnodalia/torno/releases"
 from = "bherbruck/solidcraft"
 to = "getnodalia/torno"
 
+# The bots' tests name upstream's owner as a quoted login beside a `bherbruck/solidcraft` full
+# name; renaming one without the other makes the bots read their own repository as a stranger.
+[[replace]]
+from = "'bherbruck'"
+to = "'getnodalia'"
+
 [[replace]]
 from = '<developer id="io.github.bherbruck">'
 to = '<developer id="dev.danielmiguelt">'

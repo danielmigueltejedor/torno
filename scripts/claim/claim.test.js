@@ -66,7 +66,7 @@ const pr = (number, login = 'other', state = 'open', extra = {}) => ({
 
 function ctx(body, { assignees = [], labels = [], user = 'alice', extra = {} } = {}) {
   return {
-    repo: { owner: 'bherbruck', repo: 'torno' },
+    repo: { owner: 'getnodalia', repo: 'torno' },
     payload: {
       issue: {
         number: 7,
@@ -223,10 +223,10 @@ test('only the bot\'s latest claim reply, before any release or assignment, name
 
 test('unclaim on an owner-assigned issue works only for the owner', async () => {
   let w = fake();
-  await claim.handleComment({ github: w.github, context: ctx('/unclaim', { user: 'carol', assignees: ['bherbruck'], labels: ['in progress'] }), now: NOW });
+  await claim.handleComment({ github: w.github, context: ctx('/unclaim', { user: 'carol', assignees: ['getnodalia'], labels: ['in progress'] }), now: NOW });
   assert.equal(find(w.calls, 'removeLabel'), undefined);
   w = fake();
-  await claim.handleComment({ github: w.github, context: ctx('/unclaim', { user: 'bherbruck', assignees: ['bherbruck'], labels: ['in progress'] }), now: NOW });
+  await claim.handleComment({ github: w.github, context: ctx('/unclaim', { user: 'getnodalia', assignees: ['getnodalia'], labels: ['in progress'] }), now: NOW });
   assert.ok(find(w.calls, 'removeLabel'));
 });
 
@@ -237,7 +237,7 @@ const issue = (number, assignees = ['bob']) => ({
   assignees: assignees.map((login) => ({ login })),
   labels: [{ name: 'in progress' }],
 });
-const repo = { owner: 'bherbruck', repo: 'torno' };
+const repo = { owner: 'getnodalia', repo: 'torno' };
 
 test('sweep releases a claim older than 72 h with no PR', async () => {
   const { github, calls } = fake({ issues: [issue(7)], timeline: [labeled(ago(80 * H))] });
@@ -277,7 +277,7 @@ test('an incidental PR mention does not extend a claim past 72 hours', async () 
 
 test('sweep never touches owner- or maintainer-claimed issues', async () => {
   const w = fake({
-    issues: [issue(1, ['bherbruck']), issue(2, ['carol']), issue(3, ['bob', 'carol'])],
+    issues: [issue(1, ['getnodalia']), issue(2, ['carol']), issue(3, ['bob', 'carol'])],
     timeline: [labeled(ago(900 * H))],
     perms: { carol: 'write' },
   });

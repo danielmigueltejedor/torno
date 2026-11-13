@@ -30,7 +30,8 @@ const NOT_A_BUG = /^\s*\[(feat|feature|change|enhancement)|feature request|sugge
 const APP_TITLE = /^([A-Z][A-Z ]+|Modeling|Part|Sketch|Surface|Sheet Metal|Plastic|Mesh|Render):\s*\S/;
 // A report this long describes what it saw; only short ones are asked.
 const SHORT = 300;
-const ATTACHMENT = /user-attachments\/|\.(sc|torno)\b|repro\.json|\.(step|stp|3mf|stl)\b/i;
+// Designs saved as `.solidcraft` still open, so a report attaching one has its repro. rebrand: keep
+const ATTACHMENT = /user-attachments\/|\.(sc|torno|solidcraft)\b|repro\.json|\.(step|stp|3mf|stl)\b/i; // rebrand: keep
 const COMMAND = /["`][a-z_]+\.[a-z_][a-z_.]*["`]/;
 const VERSION = /\b\d+\.\d+\.\d+\b|\b[0-9a-f]{7,40}\b/i;
 
