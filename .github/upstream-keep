@@ -9,3 +9,6 @@ assets/icons/app/macos/exports/icon.icns
 docs/upstream.md
 docs/upstream-readme.md
 docs/nodalia/**
+packaging/linux/arch-package.sh
+.github/workflows/arch-package.yml
+.github/workflows/release.yml

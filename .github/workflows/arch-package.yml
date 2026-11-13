@@ -1,0 +1,53 @@
+name: Arch package
+
+# Builds an Arch package from a stand-in release tarball with packaging/linux/arch-package.sh, the
+# script the release's Arch job runs, and checks it the way the release does. Runs when the script
+# or this workflow changes, so a broken script shows up before a release needs it.
+on:
+  pull_request:
+    paths:
+      - packaging/linux/arch-package.sh
+      - .github/workflows/arch-package.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  arch:
+    name: Arch package ${{ matrix.arch }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: [x86_64, aarch64]
+    env:
+      VERSION: 0.0.1-rc.1
+      ARCH: ${{ matrix.arch }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Stand-in release tarball
+        run: |
+          root="stage/torno-$VERSION-linux-$ARCH"
+          mkdir -p "$root/bin" "$root/share/applications"
+          printf '#!/bin/sh\necho torno\n' >"$root/bin/torno"
+          printf '#!/bin/sh\necho torno-cli\n' >"$root/bin/torno-cli"
+          chmod 755 "$root/bin/torno" "$root/bin/torno-cli"
+          cp assets/platforms/linux/dev.danielmiguelt.Torno.desktop "$root/share/applications/"
+          mkdir -p dist/linux
+          tar -C stage -czf "dist/linux/torno-$VERSION-linux-$ARCH.tar.gz" "torno-$VERSION-linux-$ARCH"
+      - name: Arch package
+        run: packaging/linux/arch-package.sh "dist/linux/torno-$VERSION-linux-$ARCH.tar.gz" "$ARCH" dist/release
+      - name: Check the package
+        env:
+          PKG: dist/release/torno-${{ env.VERSION }}-linux-${{ matrix.arch }}.pkg.tar.zst
+        run: |
+          tar --zstd -tf "$PKG" | grep -x 'usr/bin/torno'
+          tar --zstd -tf "$PKG" | grep -x 'usr/bin/torno-cli'
+          tar --zstd -tf "$PKG" | grep -x 'usr/share/applications/dev.danielmiguelt.Torno.desktop'
+          tar --zstd -xOf "$PKG" .PKGINFO | grep -qx 'pkgname = dev.danielmiguelt.Torno'
+          tar --zstd -xOf "$PKG" .PKGINFO | grep -qx 'pkgver = 0.0.1rc.1-1'
+          tar --zstd -xOf "$PKG" .PKGINFO | grep -qx "arch = $ARCH"
