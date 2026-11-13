@@ -1,1 +1,0 @@
-| docs/nodalia/torno-icon.png | Torno contributors; source portrait: Wikimedia Commons | Torno app icon shown at the top of the README, made from the picture in assets/icons/app/shared/source/torno-portrait-512.rgba: portrait of Henry Maudslay over the app colour | MIT OR Apache-2.0; source portrait: public domain |
