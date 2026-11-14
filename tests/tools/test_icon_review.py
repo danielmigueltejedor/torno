@@ -101,8 +101,16 @@ class IconReviewTest(unittest.TestCase):
 
     def test_inline_clips_and_masks_are_scoped_to_each_preview_and_dashes_use_guides(self):
         with review_fixture() as (root, design, get, post):
+            # Artwork of its own with a clip, a mask and dashed guides: the shipped icons need none.
+            clipped = ('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">'
+                       '<defs><clipPath id="disc-env"><circle cx="32" cy="32" r="20"/></clipPath>'
+                       '<mask id="m"><path d="M0 0L64 0L64 64L0 64Z" fill="white"/>'
+                       '<path d="M8 32L56 32" stroke="black" stroke-width="4" stroke-dasharray="4 4"/></mask></defs>'
+                       '<g clip-path="url(#disc-env)" mask="url(#m)"><path d="M0 0L64 0L64 64L0 64Z" fill="#328bd3"/></g>'
+                       '<path d="M8 56L56 56" fill="none" stroke="#6f879c" stroke-width="2" stroke-dasharray="4 4"/>'
+                       '<path d="M8 8L56 8" fill="none" stroke="#236ead" stroke-width="2" stroke-dasharray="4 4"/></svg>\n')
             for name in ('environment_map', 'new', 'draft', 'bounding_solid', 'extend'):
-                shutil.copy2(TOOLS.parent / f'svg/model/{name}.svg', design / f'svg/model/{name}.svg')
+                (design / f'svg/model/{name}.svg').write_text(clipped)
             with (design / 'aliases.toml').open('a') as aliases:
                 aliases.write('surface_env={master="environment_map",accent="surface"}\n')
             page = get('/')
