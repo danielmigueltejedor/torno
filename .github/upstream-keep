@@ -12,3 +12,5 @@ docs/nodalia/**
 packaging/linux/arch-package.sh
 .github/workflows/arch-package.yml
 .github/workflows/release.yml
+.github/workflows/generated.yml
+CONTRIBUTING.md

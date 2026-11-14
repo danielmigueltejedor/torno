@@ -140,7 +140,7 @@ to commands, with no geometry math.
    open-source application to get reference values for a test is fine; reading its source is
    not.) Permissive
    dependencies are fine. Note which one you're adding and why in the PR. THIRD-PARTY-LICENSES.txt
-   lists it once the change lands: the Generated files workflow rewrites it on `main`.
+   lists it once the change lands. The Generated files workflow prepares the update for review.
    Nightly/manual CI also scans advisories, bans and sources with cargo-deny, and a PR that
    changes Cargo.lock or a Cargo.toml checks the advisories; see
    [the local command and coverage limits](docs/book/src/dev/testing.md#dependency-advisories).
@@ -339,13 +339,14 @@ and a fresh CI run:
   row.
 - **Languages** (`crates/ui-egui/src/i18n.rs`): one per line, English first, then by id (a test
   checks it).
-- **Generated files**: `THIRD-PARTY-LICENSES.txt` and `docs/features.md` are rewritten on `main`
-  after each merge by the Generated files workflow (`cargo xtask licences`, `cargo xtask
-  features`). Don't regenerate or edit them in a pull request.
+- **Generated files**: `THIRD-PARTY-LICENSES.txt` and `docs/features.md` are prepared nightly by
+  the Generated files workflow (`cargo xtask licences`, `cargo xtask features`). Open the update PR
+  from the link in the workflow summary and let it pass normal CI and review. Leave these files to
+  that PR when making other changes.
 - **Design format**: one file per change, never an edit to a shared number (above).
 - **New UI strings and attribution rows**: one new file per change, `assets/locales/pending/<slug>.json`
   and `attribution/pending/<slug>.md`, instead of editing the catalogs or the ATTRIBUTION.md table;
-  `cargo xtask fold-pending` folds them on `main` (see the README in each folder). A new English
+  `cargo xtask fold-pending` folds them in the generated files update (see the README in each folder). A new English
   message also needs every catalog delivered complete (`COMPLETE` in `crates/ui-egui/src/i18n.rs`:
   today ar, he, ja, vi, and zh) in the same pending file; `cargo xtask i18n --check` reports any gap.
 
