@@ -15,9 +15,9 @@ reporting, and check whether the problem is still on `main`.
 ## Reporting a vulnerability
 
 Please **don't open a public issue** for a security problem. Report it privately through GitHub:
-open the repository's [Security tab](https://github.com/tangency-labs/solidcraft/security) and choose
+open the repository's [Security tab](https://github.com/getnodalia/torno/security) and choose
 **Report a vulnerability**
-([direct link](https://github.com/tangency-labs/solidcraft/security/advisories/new)).
+([direct link](https://github.com/getnodalia/torno/security/advisories/new)).
 
 Please include what you found, the steps you ran to reproduce it (a design file, command or MCP
 request), the version and platform, and what an attacker gains. I'll acknowledge the report as soon
@@ -39,7 +39,7 @@ access to your computer or your account. For example:
 
 ## What to report as a normal bug
 
-Please [open an issue](https://github.com/tangency-labs/solidcraft/issues/new) for these. They're
+Please [open an issue](https://github.com/getnodalia/torno/issues/new) for these. They're
 still worth fixing, but they aren't security issues:
 
 - anything that needs a program already running on your computer, or the control token. A program

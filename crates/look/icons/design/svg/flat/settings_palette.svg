@@ -1,7 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-  <title>Interface palette</title>
-  <path d="M32 8C18.75 8 8 18.75 8 32C8 45.25 18.75 56 32 56C37 56 39 52.5 36.5 49C34 45.5 36 42 40 42L45 42C51.1 42 56 37.1 56 31C56 19 45 8 32 8Z" fill="none" stroke="currentColor" stroke-width="5.6" stroke-linejoin="round" stroke-linecap="round"/>
-  <circle cx="21" cy="29" r="2.8" fill="currentColor"/>
-  <circle cx="29" cy="20" r="2.8" fill="currentColor"/>
-  <circle cx="41" cy="23" r="2.8" fill="currentColor"/>
+  <title>Settings palette</title>
+  <path d="M32 9.33A22.67 22.67 0 1 0 32 54.67C35.2 54.67 37.33 52.53 37.33 49.87C37.33 48.53 36.8 47.47 36 46.4C35.2 45.6 34.67 44.27 34.67 43.2C34.67 40.53 36.8 38.67 39.47 38.67L45.33 38.67A9.33 9.33 0 0 0 54.67 29.33C54.67 18.4 44.53 9.33 32 9.33Z" fill="none" stroke="currentColor" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/>
+  <circle cx="20" cy="30.67" r="3.07" fill="currentColor"/>
+  <circle cx="26.67" cy="20" r="3.07" fill="currentColor"/>
+  <circle cx="38.67" cy="20" r="3.07" fill="currentColor"/>
 </svg>

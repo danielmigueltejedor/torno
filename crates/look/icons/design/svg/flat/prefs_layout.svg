@@ -1,4 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-  <title>Layout</title>
-  <path d="M14 10L50 10A6 6 0 0 1 56 16L56 48A6 6 0 0 1 50 54L14 54A6 6 0 0 1 8 48L8 16A6 6 0 0 1 14 10Z" fill="none" stroke="currentColor" stroke-width="6.8" stroke-linejoin="round" stroke-linecap="round"/><path d="M24 10L24 54M24 39L56 39" fill="none" stroke="currentColor" stroke-width="6.8" stroke-linejoin="round" stroke-linecap="round"/>
+  <title>Prefs layout</title>
+  <path d="M13.33 12L50.67 12A4 4 0 0 1 54.67 16L54.67 48A4 4 0 0 1 50.67 52L13.33 52A4 4 0 0 1 9.33 48L9.33 16A4 4 0 0 1 13.33 12Z" fill="none" stroke="currentColor" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M25.33 12L25.33 52" fill="none" stroke="currentColor" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/>
 </svg>

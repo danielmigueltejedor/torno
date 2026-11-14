@@ -1,11 +1,10 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-  <title>Point at vertex</title>
-  <path d="M12.25 20.6L32 32L32 54.8L12.25 43.4Z" fill="#b8c3cf"/>
-  <path d="M51.75 20.6L32 32L32 54.8L51.75 43.4Z" fill="#8e9faf"/>
-  <path d="M32 9.2L51.75 20.6L32 32L12.25 20.6Z" fill="#e2e8ef"/>
-  <path d="M32 9.2L51.75 20.6L51.75 43.4L32 54.8L12.25 43.4L12.25 20.6Z" fill="none" stroke="#34465b" stroke-width="2.55" stroke-linejoin="round" stroke-linecap="round"/>
-  <path d="M12.25 20.6L32 32L51.75 20.6" fill="none" stroke="#34465b" stroke-width="2.55" stroke-linejoin="round" stroke-linecap="round"/>
-  <path d="M32 32L32 54.8" fill="none" stroke="#34465b" stroke-width="2.55" stroke-linejoin="round" stroke-linecap="round"/>
-  <circle cx="32" cy="32" r="6.2" fill="#ffffff"/>
-  <circle cx="32" cy="32" r="4.5" fill="#236ead"/>
+  <title>Point vertex</title>
+  <path d="M32 20L52.78 32L32 44L11.22 32Z" fill="#e2e8ef" stroke="#e2e8ef" stroke-width="0.6" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M32 20L52.78 32M52.78 32L32 44M32 44L11.22 32M11.22 32L32 20" fill="none" stroke="#34465b" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M52.78 46L32 58L32 44L52.78 32Z" fill="#8e9faf" stroke="#8e9faf" stroke-width="0.6" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M52.78 46L32 58M52.78 32L32 44M32 58L32 44M52.78 46L52.78 32" fill="none" stroke="#34465b" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M32 58L11.22 46L11.22 32L32 44Z" fill="#b8c3cf" stroke="#b8c3cf" stroke-width="0.6" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M32 58L11.22 46M32 44L11.22 32M11.22 46L11.22 32M32 58L32 44" fill="none" stroke="#34465b" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>
+  <circle cx="32" cy="44" r="4" fill="#236ead" stroke="#34465b" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/>
 </svg>

@@ -1,12 +1,13 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-  <title>Centre-point arc</title>
-  <path d="M32 44L9.45 35.79" fill="none" stroke="#8e9faf" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
-  <path d="M32 44L54.55 35.79" fill="none" stroke="#8e9faf" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
-  <path d="M9.45 35.79A24 24 0 0 1 54.55 35.79" fill="none" stroke="#236ead" stroke-width="4.25" stroke-linejoin="round" stroke-linecap="round"/>
-  <circle cx="32" cy="44" r="5.8" fill="#ffffff"/>
-  <circle cx="32" cy="44" r="3.4" fill="#236ead"/>
-  <circle cx="9.45" cy="35.79" r="5.8" fill="#ffffff"/>
-  <circle cx="9.45" cy="35.79" r="3.4" fill="#236ead"/>
-  <circle cx="54.55" cy="35.79" r="5.8" fill="#ffffff"/>
-  <circle cx="54.55" cy="35.79" r="3.4" fill="#236ead"/>
+  <title>Arc center</title>
+  <path d="M20.26 6.55L59.65 20.05L43.74 53.45L4.35 39.95Z" fill="#e2e8ef" stroke="#e2e8ef" stroke-width="0.6" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M20.26 6.55L59.65 20.05M59.65 20.05L43.74 53.45M43.74 53.45L4.35 39.95M4.35 39.95L20.26 6.55" fill="none" stroke="#34465b" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M59.65 21.77L43.74 55.17L43.74 53.45L59.65 20.05Z" fill="#8e9faf" stroke="#8e9faf" stroke-width="0.6" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M59.65 21.77L43.74 55.17M59.65 20.05L43.74 53.45M43.74 55.17L43.74 53.45M59.65 21.77L59.65 20.05" fill="none" stroke="#34465b" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M43.74 55.17L4.35 41.67L4.35 39.95L43.74 53.45Z" fill="#b8c3cf" stroke="#b8c3cf" stroke-width="0.6" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M43.74 55.17L4.35 41.67M43.74 53.45L4.35 39.95M4.35 41.67L4.35 39.95M43.74 55.17L43.74 53.45" fill="none" stroke="#34465b" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M18.1 25.24L18.97 23.72L20.07 22.31L21.37 21.03L22.87 19.92L24.53 18.98L26.32 18.24L28.2 17.7L30.16 17.38L32.15 17.29L34.14 17.42L36.08 17.77L37.96 18.34L39.73 19.11L41.37 20.07L42.84 21.21L44.11 22.51L45.18 23.94L46.01 25.47L46.59 27.09L46.92 28.76L46.98 30.44" fill="none" stroke="#236ead" stroke-width="2.8" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M32 30L18.1 25.24" fill="none" stroke="#6f879c" stroke-width="1.7" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="3 3"/>
+  <path d="M32 30L47.01 30.46" fill="none" stroke="#6f879c" stroke-width="1.7" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="3 3"/>
+  <circle cx="32" cy="30" r="2.7" fill="#236ead" stroke="#34465b" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/>
 </svg>

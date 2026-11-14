@@ -1,17 +1,11 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
   <title>Update</title>
-  <path d="M24.38 27.6L32 32L32 40.8L24.38 36.4Z" fill="#b8c3cf"/>
-  <path d="M39.62 27.6L32 32L32 40.8L39.62 36.4Z" fill="#8e9faf"/>
-  <path d="M32 23.2L39.62 27.6L32 32L24.38 27.6Z" fill="#e2e8ef"/>
-  <path d="M32 23.2L39.62 27.6L39.62 36.4L32 40.8L24.38 36.4L24.38 27.6Z" fill="none" stroke="#34465b" stroke-width="2.55" stroke-linejoin="round" stroke-linecap="round"/>
-  <path d="M24.38 27.6L32 32L39.62 27.6" fill="none" stroke="#34465b" stroke-width="2.55" stroke-linejoin="round" stroke-linecap="round"/>
-  <path d="M32 32L32 40.8" fill="none" stroke="#34465b" stroke-width="2.55" stroke-linejoin="round" stroke-linecap="round"/>
-  <path d="M41.72 11.15A23 23 0 0 1 44.53 51.29" fill="none" stroke="#ffffff" stroke-width="6.45" stroke-linejoin="round" stroke-linecap="round"/>
-  <path d="M39.08 54.83L43.48 46.01L48.93 54.39Z" fill="#ffffff" stroke="#ffffff" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>
-  <path d="M41.72 11.15A23 23 0 0 1 44.53 51.29" fill="none" stroke="#236ead" stroke-width="4.25" stroke-linejoin="round" stroke-linecap="round"/>
-  <path d="M39.08 54.83L43.48 46.01L48.93 54.39Z" fill="#236ead"/>
-  <path d="M22.28 52.85A23 23 0 0 1 19.47 12.71" fill="none" stroke="#ffffff" stroke-width="6.45" stroke-linejoin="round" stroke-linecap="round"/>
-  <path d="M24.92 9.17L20.52 17.99L15.07 9.61Z" fill="#ffffff" stroke="#ffffff" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>
-  <path d="M22.28 52.85A23 23 0 0 1 19.47 12.71" fill="none" stroke="#236ead" stroke-width="4.25" stroke-linejoin="round" stroke-linecap="round"/>
-  <path d="M24.92 9.17L20.52 17.99L15.07 9.61Z" fill="#236ead"/>
+  <path d="M32 13L51.05 24L32 35L12.95 24Z" fill="#b9ddf8" stroke="#b9ddf8" stroke-width="0.6" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M32 13L51.05 24M51.05 24L32 35M32 35L12.95 24M12.95 24L32 13" fill="none" stroke="#34465b" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M51.05 42L32 53L32 35L51.05 24Z" fill="#236ead" stroke="#236ead" stroke-width="0.6" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M51.05 42L32 53M51.05 24L32 35M32 53L32 35M51.05 42L51.05 24" fill="none" stroke="#34465b" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M32 53L12.95 42L12.95 24L32 35Z" fill="#328bd3" stroke="#328bd3" stroke-width="0.6" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M32 53L12.95 42M32 35L12.95 24M12.95 42L12.95 24M32 53L32 35" fill="none" stroke="#34465b" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M40 50A10 10 0 1 0 60 50A10 10 0 1 0 40 50Z" fill="#236ead" stroke="#34465b" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M54.5 49A5 5 0 1 0 53 54M55 45L54.5 49L50.8 48.4" fill="none" stroke="#e2e8ef" stroke-width="2.6" stroke-linejoin="round" stroke-linecap="round"/>
 </svg>

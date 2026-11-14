@@ -1,4 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
   <title>Redo</title>
-  <path d="M14 47.5C14 34.5 22 24.5 35 24.5L50 24.5M42 16.5L50 24.5L42 32.5" fill="none" stroke="currentColor" stroke-width="4.25" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M42.67 13.33L54.67 25.33L42.67 37.33" fill="none" stroke="currentColor" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M54.67 25.33L25.33 25.33A14 14 0 0 0 25.33 53.33L34.67 53.33" fill="none" stroke="currentColor" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/>
 </svg>

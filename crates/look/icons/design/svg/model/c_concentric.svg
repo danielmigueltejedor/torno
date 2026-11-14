@@ -1,5 +1,12 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-  <title>Concentric</title>
-  <path d="M11.6 32A20.4 20.4 0 1 0 52.4 32A20.4 20.4 0 1 0 11.6 32Z" fill="none" stroke="#236ead" stroke-width="4.25" stroke-linejoin="round" stroke-linecap="round"/>
-  <path d="M22.4 32A9.6 9.6 0 1 0 41.6 32A9.6 9.6 0 1 0 22.4 32Z" fill="none" stroke="#236ead" stroke-width="4.25" stroke-linejoin="round" stroke-linecap="round"/>
+  <title>C concentric</title>
+  <path d="M20.26 6.55L59.65 20.05L43.74 53.45L4.35 39.95Z" fill="#e2e8ef" stroke="#e2e8ef" stroke-width="0.6" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M20.26 6.55L59.65 20.05M59.65 20.05L43.74 53.45M43.74 53.45L4.35 39.95M4.35 39.95L20.26 6.55" fill="none" stroke="#34465b" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M59.65 21.77L43.74 55.17L43.74 53.45L59.65 20.05Z" fill="#8e9faf" stroke="#8e9faf" stroke-width="0.6" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M59.65 21.77L43.74 55.17M59.65 20.05L43.74 53.45M43.74 55.17L43.74 53.45M59.65 21.77L59.65 20.05" fill="none" stroke="#34465b" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M43.74 55.17L4.35 41.67L4.35 39.95L43.74 53.45Z" fill="#b8c3cf" stroke="#b8c3cf" stroke-width="0.6" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M43.74 55.17L4.35 41.67M43.74 53.45L4.35 39.95M4.35 41.67L4.35 39.95M43.74 55.17L43.74 53.45" fill="none" stroke="#34465b" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M45.9 34.76L45.05 36.26L43.97 37.65L42.69 38.91L41.23 40.02L39.61 40.95L37.86 41.7L36.01 42.25L34.09 42.59L32.13 42.71L30.17 42.62L28.25 42.31L26.38 41.79L24.62 41.06L22.98 40.15L21.49 39.07L20.19 37.83L19.08 36.45L18.2 34.97L17.55 33.4L17.16 31.77L17.01 30.11L17.12 28.45L17.49 26.82L18.1 25.24L18.95 23.74L20.03 22.35L21.31 21.09L22.77 19.98L24.39 19.05L26.14 18.3L27.99 17.75L29.91 17.41L31.87 17.29L33.83 17.38L35.75 17.69L37.62 18.21L39.38 18.94L41.02 19.85L42.51 20.93L43.81 22.17L44.92 23.55L45.8 25.03L46.45 26.6L46.84 28.23L46.99 29.89L46.88 31.55L46.51 33.18L45.9 34.76Z" fill="none" stroke="#34465b" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M38.95 32.38L38.52 33.13L37.99 33.83L37.35 34.46L36.61 35.01L35.8 35.48L34.93 35.85L34 36.13L33.04 36.29L32.07 36.36L31.09 36.31L30.12 36.15L29.19 35.89L28.31 35.53L27.49 35.08L26.75 34.53L26.09 33.91L25.54 33.23L25.1 32.48L24.78 31.7L24.58 30.88L24.5 30.06L24.56 29.23L24.74 28.41L25.05 27.62L25.48 26.87L26.01 26.17L26.65 25.54L27.39 24.99L28.2 24.52L29.07 24.15L30 23.87L30.96 23.71L31.93 23.64L32.91 23.69L33.88 23.85L34.81 24.11L35.69 24.47L36.51 24.92L37.25 25.47L37.91 26.09L38.46 26.77L38.9 27.52L39.22 28.3L39.42 29.12L39.5 29.94L39.44 30.77L39.26 31.59L38.95 32.38Z" fill="none" stroke="#236ead" stroke-width="2.8" stroke-linejoin="round" stroke-linecap="round"/>
+  <circle cx="32" cy="30" r="2.7" fill="#236ead" stroke="#34465b" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/>
 </svg>

@@ -1,4 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-  <title>Plugins</title>
-  <path d="M24 8L24 21M40 8L40 21M16 21L48 21L48 29A16 16 0 0 1 16 29L16 21ZM32 45L32 56" fill="none" stroke="currentColor" stroke-width="5.6" stroke-linejoin="round" stroke-linecap="round"/>
+  <title>Settings plug</title>
+  <path d="M32 8L53.33 20L53.33 44L32 56L10.67 44L10.67 20Z" fill="none" stroke="currentColor" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M10.67 20L32 32L53.33 20M32 32L32 56" fill="none" stroke="currentColor" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M21.33 14L42.67 26L42.67 34" fill="none" stroke="currentColor" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/>
 </svg>

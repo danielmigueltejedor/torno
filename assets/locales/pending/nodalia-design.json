@@ -1,0 +1,38 @@
+{
+  "en": {
+    "ui.main_menu": "Main menu",
+    "ui.window_controls": "Window controls",
+    "ui.window_controls_app": "Nodalia",
+    "ui.window_controls_system": "Desktop's own"
+  },
+  "es": {
+    "ui.main_menu": "Menú principal",
+    "ui.window_controls": "Controles de ventana",
+    "ui.window_controls_app": "Nodalia",
+    "ui.window_controls_system": "Los del escritorio"
+  },
+  "de": {
+    "ui.main_menu": "Hauptmenü",
+    "ui.window_controls": "Fenstersteuerung",
+    "ui.window_controls_app": "Nodalia",
+    "ui.window_controls_system": "Die des Desktops"
+  },
+  "fr": {
+    "ui.main_menu": "Menu principal",
+    "ui.window_controls": "Boutons de fenêtre",
+    "ui.window_controls_app": "Nodalia",
+    "ui.window_controls_system": "Ceux du bureau"
+  },
+  "it": {
+    "ui.main_menu": "Menu principale",
+    "ui.window_controls": "Controlli della finestra",
+    "ui.window_controls_app": "Nodalia",
+    "ui.window_controls_system": "Quelli del desktop"
+  },
+  "pt-BR": {
+    "ui.main_menu": "Menu principal",
+    "ui.window_controls": "Controles da janela",
+    "ui.window_controls_app": "Nodalia",
+    "ui.window_controls_system": "Os da área de trabalho"
+  }
+}

@@ -1,11 +1,12 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-  <title>Circumscribed polygon</title>
-  <path d="M32 8L52.78 20L52.78 44L32 56L11.22 44L11.22 20Z" fill="#b9ddf8" stroke="#236ead" stroke-width="4.25" stroke-linejoin="round" stroke-linecap="round"/>
-  <path d="M49.5 32A17.5 17.5 0 1 0 14.5 32A17.5 17.5 0 1 0 49.5 32Z" fill="none" stroke="#ffffff" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"/>
-  <path d="M49.5 32A17.5 17.5 0 1 0 14.5 32A17.5 17.5 0 1 0 49.5 32Z" fill="none" stroke="#8e9faf" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="0.1 5"/>
-  <path d="M32 32L52.78 32" fill="none" stroke="#8e9faf" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
-  <circle cx="32" cy="32" r="5.8" fill="#ffffff"/>
-  <circle cx="32" cy="32" r="3.4" fill="#236ead"/>
-  <circle cx="52.78" cy="32" r="5.8" fill="#ffffff"/>
-  <circle cx="52.78" cy="32" r="3.4" fill="#236ead"/>
+  <title>Polygon circumscribed</title>
+  <path d="M20.26 6.55L59.65 20.05L43.74 53.45L4.35 39.95Z" fill="#e2e8ef" stroke="#e2e8ef" stroke-width="0.6" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M20.26 6.55L59.65 20.05M59.65 20.05L43.74 53.45M43.74 53.45L4.35 39.95M4.35 39.95L20.26 6.55" fill="none" stroke="#34465b" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M59.65 21.77L43.74 55.17L43.74 53.45L59.65 20.05Z" fill="#8e9faf" stroke="#8e9faf" stroke-width="0.6" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M59.65 21.77L43.74 55.17M59.65 20.05L43.74 53.45M43.74 55.17L43.74 53.45M59.65 21.77L59.65 20.05" fill="none" stroke="#34465b" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M43.74 55.17L4.35 41.67L4.35 39.95L43.74 53.45Z" fill="#b8c3cf" stroke="#b8c3cf" stroke-width="0.6" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M43.74 55.17L4.35 41.67M43.74 53.45L4.35 39.95M4.35 41.67L4.35 39.95M43.74 55.17L43.74 53.45" fill="none" stroke="#34465b" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M44.05 34.13L43.31 35.43L42.38 36.63L41.27 37.72L40 38.68L38.59 39.49L37.08 40.14L35.47 40.62L33.81 40.91L32.11 41.02L30.42 40.94L28.75 40.67L27.13 40.22L25.6 39.59L24.18 38.8L22.89 37.86L21.76 36.78L20.81 35.59L20.04 34.31L19.48 32.94L19.13 31.53L19.01 30.1L19.1 28.66L19.42 27.24L19.95 25.87L20.69 24.57L21.62 23.37L22.73 22.28L24 21.32L25.41 20.51L26.92 19.86L28.53 19.38L30.19 19.09L31.89 18.98L33.58 19.06L35.25 19.33L36.87 19.78L38.4 20.41L39.82 21.2L41.11 22.14L42.24 23.22L43.19 24.41L43.96 25.69L44.52 27.06L44.87 28.47L44.99 29.9L44.9 31.34L44.58 32.76L44.05 34.13Z" fill="none" stroke="#6f879c" stroke-width="1.7" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="3 3"/>
+  <path d="M41.23 40.02L26.38 41.79L17.16 31.77L22.77 19.98L37.62 18.21L46.84 28.23Z" fill="none" stroke="#236ead" stroke-width="2.8" stroke-linejoin="round" stroke-linecap="round"/>
+  <circle cx="32" cy="30" r="2.7" fill="#236ead" stroke="#34465b" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/>
 </svg>

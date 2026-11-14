@@ -1,6 +1,11 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
   <title>Construction</title>
-  <path d="M17 47L23 41M29 35L35 29M41 23L47 17" fill="none" stroke="#236ead" stroke-width="4.25" stroke-linejoin="round" stroke-linecap="round"/>
-  <circle cx="11" cy="53" r="3.07" fill="#236ead"/>
-  <circle cx="53" cy="11" r="3.07" fill="#236ead"/>
+  <path d="M20.26 6.55L59.65 20.05L43.74 53.45L4.35 39.95Z" fill="#e2e8ef" stroke="#e2e8ef" stroke-width="0.6" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M20.26 6.55L59.65 20.05M59.65 20.05L43.74 53.45M43.74 53.45L4.35 39.95M4.35 39.95L20.26 6.55" fill="none" stroke="#34465b" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M59.65 21.77L43.74 55.17L43.74 53.45L59.65 20.05Z" fill="#8e9faf" stroke="#8e9faf" stroke-width="0.6" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M59.65 21.77L43.74 55.17M59.65 20.05L43.74 53.45M43.74 55.17L43.74 53.45M59.65 21.77L59.65 20.05" fill="none" stroke="#34465b" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M43.74 55.17L4.35 41.67L4.35 39.95L43.74 53.45Z" fill="#b8c3cf" stroke="#b8c3cf" stroke-width="0.6" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M43.74 55.17L4.35 41.67M43.74 53.45L4.35 39.95M4.35 41.67L4.35 39.95M43.74 55.17L43.74 53.45" fill="none" stroke="#34465b" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M11.79 35.65L52.21 24.35" fill="none" stroke="#236ead" stroke-width="2.8" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="4 3"/>
+  <path d="M40.11 32.78L39.61 33.65L38.98 34.46L38.24 35.2L37.38 35.84L36.44 36.39L35.42 36.83L34.34 37.15L33.22 37.34L32.08 37.42L30.93 37.36L29.81 37.18L28.72 36.88L27.69 36.45L26.74 35.92L25.87 35.29L25.11 34.57L24.47 33.76L23.95 32.9L23.57 31.98L23.34 31.03L23.26 30.06L23.32 29.1L23.53 28.14L23.89 27.22L24.39 26.35L25.02 25.54L25.76 24.8L26.62 24.16L27.56 23.61L28.58 23.17L29.66 22.85L30.78 22.66L31.92 22.58L33.07 22.64L34.19 22.82L35.28 23.12L36.31 23.55L37.26 24.08L38.13 24.71L38.89 25.43L39.53 26.24L40.05 27.1L40.43 28.02L40.66 28.97L40.74 29.94L40.68 30.9L40.47 31.86L40.11 32.78Z" fill="none" stroke="#236ead" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="4 3"/>
 </svg>

@@ -796,96 +796,17 @@ fn no_env(_: &str) -> Option<String> {
     None
 }
 
-fn record(path: &str) -> Vec<u8> {
-    json!({"apps": {"torno": {"version": "0.25.1", "kind": "AppImage", "path": path, "installed_at": 1}}}).to_string().into_bytes()
-}
-
 #[test]
 fn the_variable_names_the_manager() {
-    let nothing = |_: &Path| None;
-    let kind = InstallKind::LinuxTarball;
     let with = |value: &'static str| {
         let env = move |k: &str| (k == MANAGED_ENV).then(|| value.to_string());
-        managed_by("linux", &env, Some(Path::new("/opt/sc/torno")), &kind, &nothing)
+        managed_by(&env)
     };
-    assert_eq!(with("ArtCraft Launcher").as_deref(), Some("ArtCraft Launcher"));
+    assert_eq!(with("Software").as_deref(), Some("Software"));
     assert_eq!(with("  Other \u{7}Manager\n").as_deref(), Some("Other Manager"), "padding and control characters are dropped");
     assert_eq!(with("   "), None, "an empty value is not a manager");
     assert_eq!(with(&"x".repeat(500).leak()[..]).map(|n| n.len()), Some(64), "a long name is cut");
-    assert_eq!(managed_by("linux", &no_env, Some(Path::new("/opt/sc/torno")), &kind, &nothing), None);
-}
-
-#[test]
-fn the_launchers_record_marks_the_install_it_made() {
-    let exe = Path::new("/home/me/Apps/Torno.AppImage");
-    let appimage = InstallKind::AppImage(exe.to_path_buf());
-    let env = |k: &str| (k == "HOME").then(|| "/home/me".to_string());
-    let seen = std::cell::RefCell::new(Vec::new());
-    let read = |bytes: Vec<u8>| {
-        let seen = &seen;
-        move |p: &Path| {
-            seen.borrow_mut().push(p.to_path_buf());
-            Some(bytes.clone())
-        }
-    };
-    // The AppImage the launcher recorded; the running executable is inside its mount.
-    let run = |path: &str| managed_by("linux", &env, Some(Path::new("/tmp/.mount_SolidXYZ/usr/bin/torno")), &appimage, &read(record(path)));
-    assert_eq!(run("/home/me/Apps/Torno.AppImage").as_deref(), Some("ArtCraft Launcher"));
-    assert_eq!(seen.borrow().as_slice(), [PathBuf::from("/home/me/.local/share/artcraft-launcher/installed.json")]);
-    // Another copy, a prefix that is not a folder of ours, the root and a relative path are not ours.
-    assert_eq!(run("/home/me/Apps/Other.AppImage"), None);
-    assert_eq!(run("/home/me/Apps/Torno.AppImage.old"), None);
-    assert_eq!(run("/"), None);
-    assert_eq!(run("Apps/Torno.AppImage"), None);
-    // No record, a damaged one, one without Torno, and a record file of any other shape.
-    let one = |bytes: &'static [u8]| managed_by("linux", &env, Some(exe), &appimage, &|_: &Path| Some(bytes.to_vec()));
-    assert_eq!(one(b"{not json"), None);
-    assert_eq!(one(br#"{"apps": {"photocraft": {"path": "/home/me/Apps/Torno.AppImage"}}}"#), None);
-    assert_eq!(one(br#"{"apps": {"torno": {"path": 7}}}"#), None);
-    assert_eq!(one(b"[]"), None);
-    assert_eq!(managed_by("linux", &env, Some(exe), &appimage, &|_: &Path| None), None);
-    // XDG_DATA_HOME moves the record.
-    let xdg = |k: &str| (k == "XDG_DATA_HOME").then(|| "/data".to_string());
-    let paths = std::cell::RefCell::new(Vec::new());
-    managed_by("linux", &xdg, Some(exe), &appimage, &|p: &Path| {
-        paths.borrow_mut().push(p.to_path_buf());
-        None
-    });
-    assert_eq!(paths.into_inner(), [PathBuf::from("/data/artcraft-launcher/installed.json")]);
-}
-
-#[test]
-fn the_record_matches_folders_bundles_and_windows_paths() {
-    let nothing_else = |bytes: Vec<u8>| move |_: &Path| Some(bytes.clone());
-    // An unpacked tarball: the record names the folder, and the launcher's own HOME is no help,
-    // so the record is found beside the `apps` folder the app runs from.
-    let exe = Path::new("/home/me/.local/share/artcraft-launcher/apps/torno/bin/torno");
-    let read = |p: &Path| {
-        (p == Path::new("/home/me/.local/share/artcraft-launcher/installed.json"))
-            .then(|| record("/home/me/.local/share/artcraft-launcher/apps/torno"))
-    };
-    let home = |k: &str| (k == "HOME").then(|| "/home/me/.local/share/artcraft-launcher/apps/torno/home".to_string());
-    assert_eq!(managed_by("linux", &home, Some(exe), &InstallKind::LinuxTarball, &read).as_deref(), Some("ArtCraft Launcher"));
-    // macOS: the bundle.
-    let bundle = PathBuf::from("/Applications/Torno.app");
-    let mac = InstallKind::MacApp(bundle.clone());
-    let exe = Path::new("/Applications/Torno.app/Contents/MacOS/torno");
-    let home = |k: &str| (k == "HOME").then(|| "/Users/me".to_string());
-    let read = |p: &Path| {
-        assert_eq!(p, Path::new("/Users/me/Library/Application Support/ArtCraft Launcher/installed.json"));
-        Some(record("/Applications/Torno.app"))
-    };
-    assert_eq!(managed_by("macos", &home, Some(exe), &mac, &read).as_deref(), Some("ArtCraft Launcher"));
-    // Windows: case and the verbatim prefix don't matter, and the record is under LOCALAPPDATA.
-    let local = |k: &str| (k == "LOCALAPPDATA").then(|| r"C:\Users\me\AppData\Local".to_string());
-    let exe = Path::new(r"C:\Users\me\AppData\Local\Programs\Torno\torno.exe");
-    let read = nothing_else(record(r"\\?\c:\users\me\appdata\local\programs\torno\TORNO.EXE"));
-    assert_eq!(managed_by("windows", &local, Some(exe), &InstallKind::WindowsExe, &read).as_deref(), Some("ArtCraft Launcher"));
-    let read = nothing_else(record(r"C:\Users\me\AppData\Local\Programs\Torno2"));
-    assert_eq!(managed_by("windows", &local, Some(exe), &InstallKind::WindowsExe, &read), None, "a folder whose name only starts the same");
-    // Linux paths are case-sensitive.
-    let read = nothing_else(record("/OPT/SC"));
-    assert_eq!(managed_by("linux", &no_env, Some(Path::new("/opt/sc/torno")), &InstallKind::LinuxTarball, &read), None);
+    assert_eq!(managed_by(&no_env), None);
 }
 
 /// A harness with a newer release found and the Update window open, on an AppImage that a
@@ -911,9 +832,9 @@ fn open_update_window(managed: Option<&str>) -> (crate::scenario::Harness, Scrat
 
 #[test]
 fn a_managed_install_points_to_its_manager_instead_of_updating_itself() {
-    let (mut h, _dir) = open_update_window(Some("ArtCraft Launcher"));
+    let (mut h, _dir) = open_update_window(Some("Software"));
     assert_eq!(install_method(&mut h.app), None, "no AppImage self-replace");
-    assert!(h.widget("Update available: update Torno in ArtCraft Launcher").is_some());
+    assert!(h.widget("Update available: update Torno in Software").is_some());
     for gone in ["Update now", "Download", "Open release page"] {
         assert!(h.widget(gone).is_none(), "{gone} is not offered");
     }
@@ -929,7 +850,7 @@ fn an_unmanaged_install_updates_itself_as_before() {
     assert_eq!(install_method(&mut h.app), Some(install::Method::AppImage("/home/me/Torno.AppImage".into())));
     assert!(h.widget("Update now").is_some());
     assert!(h.widget("Download").is_some());
-    assert!(h.widget("Update available: update Torno in ArtCraft Launcher").is_none());
+    assert!(h.widget("Update available: update Torno in Software").is_none());
 }
 
 #[test]

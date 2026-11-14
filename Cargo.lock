@@ -2620,6 +2620,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "nodalia-theme"
+version = "0.1.0-alpha.1"
+source = "git+https://github.com/danielmigueltejedor/nodalia-design?rev=3b6e6a9fb2da8b8ad3c1f31ebf27c1257c69542c#3b6e6a9fb2da8b8ad3c1f31ebf27c1257c69542c"
+dependencies = [
+ "egui",
+]
+
+[[package]]
 name = "nohash-hasher"
 version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4899,6 +4907,7 @@ name = "torno-theme"
 version = "0.40.0-rc.3"
 dependencies = [
  "egui",
+ "nodalia-theme",
  "serde",
  "serde_json",
  "torno-color",
@@ -4956,6 +4965,7 @@ dependencies = [
  "image",
  "log",
  "muda",
+ "nodalia-theme",
  "serde",
  "serde_json",
  "syn 2.0.119",

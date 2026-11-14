@@ -130,6 +130,12 @@ enum Mirror {
 
 fn paint_with_ink(p: &Painter, r: Rect, name: &str, dark: Option<bool>, opacity: f32, ink: Option<Color32>, mirror: Mirror) {
     let ctx = p.ctx();
+    if let Some(ndl) = ndl_equivalent(name, mirror) {
+        let dark = dark.unwrap_or_else(|| ctx.global_style().visuals.dark_mode);
+        let ink = ink.unwrap_or(if dark { Color32::from_rgb(0xdf, 0xe2, 0xea) } else { Color32::from_rgb(0x44, 0x4a, 0x5c) });
+        nodalia_theme::icons::paint(p, r, ndl, nodalia_theme::icons::Style::bold(ink.gamma_multiply(opacity.clamp(0.0, 1.0))));
+        return;
+    }
     let resolved = resolve(name);
     let look = Look::themed(dark.unwrap_or_else(|| ctx.global_style().visuals.dark_mode), resolved.accent, torno_theme::vision());
     paint_resolved(p, r, resolved, look, opacity, ink.map_or(Finish::Artwork, Finish::Ink), mirror);
@@ -195,4 +201,93 @@ fn paint_resolved(p: &Painter, r: Rect, resolved: Resolved, look: Look, opacity:
         Mirror::Horizontal => Rect::from_min_max(pos2(1.0, 0.0), pos2(0.0, 1.0)),
     };
     p.image(tex.id(), Rect::from_min_size(min, egui::vec2(size, size)), uv, tint);
+}
+
+/// The Nodalia Design Language's own icon for one of the interface's single-colour icons (the
+/// application bar, menus, panels' chevrons, the window's controls), or for an `ndl:<name>`
+/// request: NDL's bold line icons, as every Nodalia app draws them. The modelling icons are
+/// Torno's volumetric masters (`crates/look/icons/design/svg`), drawn in NDL's neutrals and
+/// Torno's accent (`palette.toml`): they keep their depth, which line icons lose.
+fn ndl_equivalent(name: &str, mirror: Mirror) -> Option<&'static nodalia_theme::icons::Icon> {
+    nodalia_theme::icons::get(ndl_name(name, mirror)?)
+}
+
+fn ndl_name(name: &str, mirror: Mirror) -> Option<&str> {
+    Some(match (name, mirror) {
+        ("chevron", Mirror::Vertical) => "chevron-up",
+        ("chevron", _) | ("disclosure_open", _) => "chevron-down",
+        ("chevron_right", _) | ("disclosure_closed", _) => "chevron-right",
+        ("settings_keyboard", _) | ("prefs_shortcuts", _) => "keyboard",
+        ("settings_monitor", _) | ("prefs_graphics", _) | ("display", _) => "monitor",
+        ("settings_profile", _) => "user",
+        ("settings_palette", _) | ("prefs_appearance", _) => "palette",
+        ("prefs_general", _) | ("nav_settings", _) => "settings",
+        ("import_tray", _) => "import",
+        ("export_tray", _) => "export-image",
+        ("assistant", _) | ("agent_link", _) | ("prefs_assistant", _) => "sparkle",
+        ("eye", _) => "view",
+        ("suppress", _) => "eye-off",
+        ("bug_report", _) => "flag",
+        (
+            "home" | "save" | "undo" | "redo" | "help" | "settings" | "close" | "plus" | "folder" | "zoom" | "pan" | "orbit" | "fit" | "grid"
+            | "moon" | "stop" | "send" | "shield",
+            _,
+        ) => name,
+        _ => name.strip_prefix("ndl:")?,
+    })
+}
+
+#[cfg(test)]
+mod ndl_tests {
+    use super::*;
+
+    /// Every NDL name Torno asks for exists in Nodalia Design, so nothing falls back by accident,
+    /// and only the interface's flat icons are swapped: the modelling masters keep their depth.
+    #[test]
+    fn the_interface_icons_are_ndls_and_the_modelling_icons_keep_their_depth() {
+        let flat = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../look/icons/design/svg/flat");
+        for name in [
+            "chevron",
+            "disclosure_open",
+            "chevron_right",
+            "settings_keyboard",
+            "prefs_graphics",
+            "settings_profile",
+            "prefs_appearance",
+            "prefs_general",
+            "import_tray",
+            "export_tray",
+            "assistant",
+            "eye",
+            "suppress",
+            "bug_report",
+            "home",
+            "save",
+            "undo",
+            "redo",
+            "help",
+            "settings",
+            "close",
+            "plus",
+            "folder",
+            "zoom",
+            "pan",
+            "orbit",
+            "fit",
+            "grid",
+            "moon",
+            "stop",
+            "send",
+            "shield",
+            "display",
+            "nav_settings",
+        ] {
+            assert!(ndl_equivalent(name, Mirror::None).is_some(), "{name} -> {:?}", ndl_name(name, Mirror::None));
+            assert!(flat.join(format!("{name}.svg")).exists(), "{name} is a flat interface master");
+        }
+        assert_eq!(ndl_name("ndl:menu", Mirror::None), Some("menu"));
+        for model in ["extrude", "revolve", "fillet", "sketch", "shell", "presspull", "copy", "delete"] {
+            assert_eq!(ndl_name(model, Mirror::None), None, "{model} keeps its volumetric master");
+        }
+    }
 }

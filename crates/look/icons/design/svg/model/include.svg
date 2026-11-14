@@ -1,15 +1,16 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
   <title>Include</title>
-  <path d="M11.22 24L32 36L32 60L11.22 48Z" fill="#b8c3cf"/>
-  <path d="M52.78 24L32 36L32 60L52.78 48Z" fill="#8e9faf"/>
-  <path d="M32 12L52.78 24L32 36L11.22 24Z" fill="#e2e8ef"/>
-  <path d="M32 12L52.78 24L52.78 48L32 60L11.22 48L11.22 24Z" fill="none" stroke="#34465b" stroke-width="2.55" stroke-linejoin="round" stroke-linecap="round"/>
-  <path d="M11.22 24L32 36L52.78 24" fill="none" stroke="#34465b" stroke-width="2.55" stroke-linejoin="round" stroke-linecap="round"/>
-  <path d="M32 36L32 60" fill="none" stroke="#34465b" stroke-width="2.55" stroke-linejoin="round" stroke-linecap="round"/>
-  <path d="M11.22 24L32 36L52.78 24" fill="none" stroke="#ffffff" stroke-width="6.65" stroke-linejoin="round" stroke-linecap="round"/>
-  <circle cx="11.22" cy="24" r="4.27" fill="#ffffff"/>
-  <circle cx="52.78" cy="24" r="4.27" fill="#ffffff"/>
-  <path d="M11.22 24L32 36L52.78 24" fill="none" stroke="#236ead" stroke-width="4.25" stroke-linejoin="round" stroke-linecap="round"/>
-  <circle cx="11.22" cy="24" r="3.07" fill="#236ead"/>
-  <circle cx="52.78" cy="24" r="3.07" fill="#236ead"/>
+  <path d="M51.51 29.6L40.28 53.17L40.28 46.88L51.51 23.31Z" fill="#8e9faf" stroke="#8e9faf" stroke-width="0.6" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M51.51 29.6L40.28 53.17M51.51 23.31L40.28 46.88M40.28 53.17L40.28 46.88M51.51 29.6L51.51 23.31" fill="none" stroke="#34465b" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M23.72 13.78L51.51 23.31L40.28 46.88L12.49 37.36Z" fill="#e2e8ef" stroke="#e2e8ef" stroke-width="0.6" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M23.72 13.78L51.51 23.31M51.51 23.31L40.28 46.88M40.28 46.88L12.49 37.36M12.49 37.36L23.72 13.78" fill="none" stroke="#34465b" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M40.28 53.17L12.49 43.64L12.49 37.36L40.28 46.88Z" fill="#b8c3cf" stroke="#b8c3cf" stroke-width="0.6" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M40.28 53.17L12.49 43.64M40.28 46.88L12.49 37.36M12.49 43.64L12.49 37.36M40.28 53.17L40.28 46.88" fill="none" stroke="#34465b" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M20.26 6.55L59.65 20.05L43.74 53.45L4.35 39.95Z" fill="#e2e8ef" stroke="#e2e8ef" stroke-width="0.6" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M20.26 6.55L59.65 20.05M59.65 20.05L43.74 53.45M43.74 53.45L4.35 39.95M4.35 39.95L20.26 6.55" fill="none" stroke="#34465b" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M59.65 21.77L43.74 55.17L43.74 53.45L59.65 20.05Z" fill="#8e9faf" stroke="#8e9faf" stroke-width="0.6" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M59.65 21.77L43.74 55.17M59.65 20.05L43.74 53.45M43.74 55.17L43.74 53.45M59.65 21.77L59.65 20.05" fill="none" stroke="#34465b" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M43.74 55.17L4.35 41.67L4.35 39.95L43.74 53.45Z" fill="#b8c3cf" stroke="#b8c3cf" stroke-width="0.6" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M43.74 55.17L4.35 41.67M43.74 53.45L4.35 39.95M4.35 41.67L4.35 39.95M43.74 55.17L43.74 53.45" fill="none" stroke="#34465b" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M23.72 13.45L51.51 22.98L40.28 46.55L12.49 37.02Z" fill="none" stroke="#236ead" stroke-width="2.8" stroke-linejoin="round" stroke-linecap="round"/>
 </svg>

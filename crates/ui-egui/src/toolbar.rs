@@ -141,6 +141,9 @@ impl HeaderLayout {
     pub const DESKTOP: HeaderLayout = HeaderLayout { search: SearchPlace::Ribbon, report: ReportButton::Labelled, version: VersionPlace::Header };
     /// Search in the bar beside Settings, Report a bug as an icon, the version in the Help menu.
     pub const COMPACT: HeaderLayout = HeaderLayout { search: SearchPlace::Header, report: ReportButton::Icon, version: VersionPlace::HelpMenu };
+    /// The Nodalia Design Language's bar, the desktop app's: search in the ribbon, Preferences,
+    /// Keyboard Shortcuts, About, Report a bug and the version in the main menu (the hamburger).
+    pub const NODALIA: HeaderLayout = HeaderLayout { search: SearchPlace::Ribbon, report: ReportButton::Menu, version: VersionPlace::HelpMenu };
 }
 
 /// Where the closed command search field sits.
@@ -164,6 +167,10 @@ pub enum ReportButton {
     /// Always the icon alone, drawn like Settings and Help; its name stays the tooltip and the
     /// accessible label.
     Icon,
+    /// The Nodalia Design Language's layout: no Report a bug or Settings button in the bar. Both
+    /// are rows of the main menu, the hamburger by the window's controls, with Keyboard Shortcuts
+    /// and About.
+    Menu,
 }
 
 /// Where the version is shown.
@@ -226,10 +233,12 @@ pub fn app_bar(app: &mut SolveApp, ui: &mut egui::Ui) {
             let file_open = ui.ctx().data(|d| d.get_temp::<bool>(egui::Id::unique("sc_file_menu")).unwrap_or(false));
             let quick = app.toolbar_custom.quick_access.iter().filter(|id| torno_engine::find_command(id).is_some()).count();
             let action = |id, icon, tip, enabled, wide_only| app_bar::BarButton { id, icon, tip, enabled, narrow: true, wide_only };
+            let main_menu = app.header.report == ReportButton::Menu;
+            let menu_tip = app.tr("ui.main_menu");
             let palette_shortcut = crate::keymap::display_for(app, "ui.palette");
             // Narrow windows retain Save; Undo and Redo remain available from their shortcuts and menus.
             let bar = app_bar::AppBar {
-                mark: &|painter, at| torno_look::glyphs::brand_mark(painter, at),
+                mark: &|painter, at| app_mark(painter, at),
                 name: "Torno",
                 home: app_bar::BarButton { id: "home", icon: "home", tip: app.tr("ui.start_page"), enabled: idle, narrow: false, wide_only: false },
                 file: app.tr("ui.file"),
@@ -240,12 +249,23 @@ pub fn app_bar(app: &mut SolveApp, ui: &mut egui::Ui) {
                     action("redo", "redo", &redo_tip, shown, true),
                 ],
                 quick,
-                help: app_bar::BarButton { id: "help", icon: "help", tip: app.tr("ui.help"), enabled: true, narrow: false, wide_only: false },
-                settings: app_bar::BarButton { id: "settings", icon: "settings", tip: &prefs_tip, enabled: true, narrow: false, wide_only: false },
+                help: if main_menu {
+                    app_bar::BarButton { id: "help", icon: "ndl:menu", tip: menu_tip, enabled: true, narrow: false, wide_only: false }
+                } else {
+                    app_bar::BarButton { id: "help", icon: "help", tip: app.tr("ui.help"), enabled: true, narrow: false, wide_only: false }
+                },
+                settings: app_bar::BarButton {
+                    id: if main_menu { "" } else { "settings" },
+                    icon: "settings",
+                    tip: &prefs_tip,
+                    enabled: true,
+                    narrow: false,
+                    wide_only: false,
+                },
                 report: app_bar::Report {
-                    label: torno_ui_text::tr("ui.report_a_bug"),
+                    label: if main_menu { "" } else { torno_ui_text::tr("ui.report_a_bug") },
                     tip: torno_ui_text::tr_label("Report a bug — review a screenshot and open a GitHub draft"),
-                    icon_only: app.header.report == ReportButton::Icon,
+                    icon_only: matches!(app.header.report, ReportButton::Icon | ReportButton::Menu),
                 },
                 search: search_in_header(app) && design_shown(app),
                 search_shortcut: palette_shortcut.as_deref(),
@@ -316,6 +336,28 @@ pub fn app_bar(app: &mut SolveApp, ui: &mut egui::Ui) {
     let help_x = ui.ctx().data(|d| d.get_temp::<f32>(egui::Id::unique("sc_help_anchor")).unwrap_or(300.0));
     crate::help::show(app, &ui.ctx().clone(), pos2(help_x - 14.0, APP_BAR_HEIGHT));
 }
+
+/// The app's icon at the bar's left end, `at` its centre: the same picture as the window's and the
+/// packages' icons (`assets/icons/app/shared/source/app_icon.rs`), uploaded once.
+fn app_mark(painter: &egui::Painter, at: egui::Pos2) {
+    const SIDE: usize = 64;
+    let id = egui::Id::unique("torno_app_mark");
+    let ctx = painter.ctx();
+    let texture = ctx.data(|d| d.get_temp::<egui::TextureHandle>(id)).or_else(|| {
+        let rgba = app_icon::rgba(SIDE).ok()?;
+        let image = egui::ColorImage::from_rgba_unmultiplied([SIDE, SIDE], &rgba);
+        let texture = ctx.load_texture("torno_app_mark", image, egui::TextureOptions::LINEAR);
+        ctx.data_mut(|d| d.insert_temp(id, texture.clone()));
+        Some(texture)
+    });
+    if let Some(texture) = texture {
+        let rect = Rect::from_center_size(at, egui::vec2(22.0, 22.0));
+        painter.image(texture.id(), rect, Rect::from_min_max(pos2(0.0, 0.0), pos2(1.0, 1.0)), egui::Color32::WHITE);
+    }
+}
+
+#[path = "../../../assets/icons/app/shared/source/app_icon.rs"]
+mod app_icon;
 
 /// File, edit and application actions shared by the in-window and native menus.
 #[derive(Clone, Debug, PartialEq, Eq)]

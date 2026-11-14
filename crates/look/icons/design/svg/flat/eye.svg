@@ -1,5 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
   <title>Eye</title>
-  <path d="M6 32C16 18 48 18 58 32C48 46 16 46 6 32Z" fill="none" stroke="currentColor" stroke-width="5" stroke-linejoin="round" stroke-linecap="round"/>
-  <path d="M24 32A8 8 0 1 0 40 32A8 8 0 1 0 24 32Z" fill="currentColor"/>
+  <path d="M6.67 32C6.67 32 16 14.67 32 14.67C48 14.67 57.33 32 57.33 32C57.33 32 48 49.33 32 49.33C16 49.33 6.67 32 6.67 32Z" fill="none" stroke="currentColor" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/>
+  <circle cx="32" cy="32" r="8" fill="none" stroke="currentColor" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/>
 </svg>

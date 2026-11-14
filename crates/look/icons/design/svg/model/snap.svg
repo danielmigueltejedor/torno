@@ -1,7 +1,12 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
   <title>Snap</title>
-  <path d="M34.71 43.43L44.61 33.53A10 10 0 0 0 30.47 19.39L20.57 29.29" fill="none" stroke="#34465b" stroke-width="16.4" stroke-linejoin="round" stroke-linecap="round"/>
-  <path d="M34.71 43.43L44.61 33.53A10 10 0 0 0 30.47 19.39L20.57 29.29" fill="none" stroke="#328bd3" stroke-width="11.3" stroke-linejoin="round" stroke-linecap="round"/>
-  <path d="M35.29 52.64Q33.59 54.34 31.9 52.64L25.5 46.24Q23.8 44.55 25.5 42.85L28.82 39.53Q30.52 37.83 32.22 39.53L38.62 45.93Q40.31 47.62 38.62 49.32Z" fill="#e2e8ef" stroke="#34465b" stroke-width="2.55" stroke-linejoin="round" stroke-linecap="round"/>
-  <path d="M21.15 38.5Q19.45 40.2 17.76 38.5L11.36 32.1Q9.66 30.41 11.36 28.71L14.68 25.38Q16.38 23.69 18.07 25.38L24.47 31.78Q26.17 33.48 24.47 35.18Z" fill="#e2e8ef" stroke="#34465b" stroke-width="2.55" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M20.26 6.55L59.65 20.05L43.74 53.45L4.35 39.95Z" fill="#e2e8ef" stroke="#e2e8ef" stroke-width="0.6" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M20.26 6.55L59.65 20.05M59.65 20.05L43.74 53.45M43.74 53.45L4.35 39.95M4.35 39.95L20.26 6.55" fill="none" stroke="#34465b" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M59.65 21.77L43.74 55.17L43.74 53.45L59.65 20.05Z" fill="#8e9faf" stroke="#8e9faf" stroke-width="0.6" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M59.65 21.77L43.74 55.17M59.65 20.05L43.74 53.45M43.74 55.17L43.74 53.45M59.65 21.77L59.65 20.05" fill="none" stroke="#34465b" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M43.74 55.17L4.35 41.67L4.35 39.95L43.74 53.45Z" fill="#b8c3cf" stroke="#b8c3cf" stroke-width="0.6" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M43.74 55.17L4.35 41.67M43.74 53.45L4.35 39.95M4.35 41.67L4.35 39.95M43.74 55.17L43.74 53.45" fill="none" stroke="#34465b" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M11.1 34.27L52.9 25.73" fill="none" stroke="#34465b" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M36.19 26.86L35.76 27.61L35.22 28.31L34.58 28.94L33.85 29.49L33.04 29.96L32.17 30.33L31.24 30.61L30.28 30.78L29.3 30.84L28.33 30.79L27.36 30.64L26.43 30.38L25.55 30.02L24.73 29.56L23.99 29.02L23.33 28.4L22.78 27.71L22.34 26.97L22.02 26.18L21.82 25.37L21.74 24.54L21.8 23.71L21.98 22.89L22.29 22.1L22.72 21.35L23.25 20.66L23.89 20.03L24.62 19.47L25.43 19.01L26.31 18.63L27.24 18.36L28.2 18.19L29.17 18.13L30.15 18.17L31.12 18.33L32.05 18.59L32.93 18.95L33.75 19.41L34.49 19.95L35.15 20.57L35.7 21.26L36.14 22L36.46 22.78L36.66 23.6L36.73 24.43L36.68 25.26L36.5 26.07L36.19 26.86Z" fill="none" stroke="#34465b" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>
+  <circle cx="32" cy="30" r="3.4" fill="#236ead" stroke="#34465b" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/>
 </svg>

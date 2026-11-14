@@ -63,6 +63,10 @@ solidcore-tess = { path = "solidcore/crates/solidcore-tess" }
 # test tooling: a dev-dependency only (xtask/src/layers.rs)
 torno-testkit = { path = "crates/testkit" }
 
+# The Nodalia Design Language: its tokens, the egui style built from them and its icons
+# (danielmigueltejedor/nodalia-design, MIT).
+nodalia-theme = { git = "https://github.com/danielmigueltejedor/nodalia-design", rev = "3b6e6a9fb2da8b8ad3c1f31ebf27c1257c69542c", features = ["egui"] }
+
 # foundation
 thiserror = "2"
 serde = { version = "1", features = ["derive", "rc"] }

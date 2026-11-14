@@ -1,5 +1,12 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-  <title>Tangent</title>
-  <path d="M17.6 32A14.4 14.4 0 1 0 46.4 32A14.4 14.4 0 1 0 17.6 32Z" fill="none" stroke="currentColor" stroke-width="4.25" stroke-linejoin="round" stroke-linecap="round"/>
-  <path d="M10.4 17.6L53.6 17.6" fill="none" stroke="#236ead" stroke-width="4.25" stroke-linejoin="round" stroke-linecap="round"/>
+  <title>C tangent</title>
+  <path d="M20.26 6.55L59.65 20.05L43.74 53.45L4.35 39.95Z" fill="#e2e8ef" stroke="#e2e8ef" stroke-width="0.6" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M20.26 6.55L59.65 20.05M59.65 20.05L43.74 53.45M43.74 53.45L4.35 39.95M4.35 39.95L20.26 6.55" fill="none" stroke="#34465b" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M59.65 21.77L43.74 55.17L43.74 53.45L59.65 20.05Z" fill="#8e9faf" stroke="#8e9faf" stroke-width="0.6" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M59.65 21.77L43.74 55.17M59.65 20.05L43.74 53.45M43.74 55.17L43.74 53.45M59.65 21.77L59.65 20.05" fill="none" stroke="#34465b" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M43.74 55.17L4.35 41.67L4.35 39.95L43.74 53.45Z" fill="#b8c3cf" stroke="#b8c3cf" stroke-width="0.6" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M43.74 55.17L4.35 41.67M43.74 53.45L4.35 39.95M4.35 41.67L4.35 39.95M43.74 55.17L43.74 53.45" fill="none" stroke="#34465b" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M38.7 35.72L38.07 36.85L37.26 37.89L36.3 38.84L35.2 39.67L33.99 40.37L32.67 40.93L31.28 41.34L29.84 41.6L28.38 41.69L26.91 41.62L25.46 41.38L24.07 40.99L22.74 40.45L21.51 39.77L20.4 38.95L19.42 38.02L18.59 36.99L17.93 35.88L17.45 34.7L17.15 33.48L17.04 32.24L17.12 30.99L17.39 29.77L17.86 28.58L18.49 27.46L19.3 26.41L20.26 25.47L21.36 24.64L22.57 23.94L23.89 23.38L25.27 22.97L26.71 22.71L28.18 22.62L29.65 22.69L31.09 22.92L32.49 23.31L33.82 23.85L35.05 24.54L36.16 25.35L37.14 26.28L37.97 27.31L38.63 28.43L39.11 29.61L39.41 30.83L39.52 32.07L39.44 33.32L39.16 34.54L38.7 35.72Z" fill="none" stroke="#34465b" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M16.28 17.76L53.34 30.46" fill="none" stroke="#236ead" stroke-width="2.8" stroke-linejoin="round" stroke-linecap="round"/>
+  <circle cx="32.49" cy="23.31" r="2.7" fill="#236ead" stroke="#34465b" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/>
 </svg>

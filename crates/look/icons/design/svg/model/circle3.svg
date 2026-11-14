@@ -1,10 +1,13 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-  <title>Three-point circle</title>
-  <path d="M10 32A22 22 0 1 0 54 32A22 22 0 1 0 10 32Z" fill="#b9ddf8" stroke="#236ead" stroke-width="4.25" stroke-linejoin="round" stroke-linecap="round"/>
-  <circle cx="32" cy="10" r="5.8" fill="#ffffff"/>
-  <circle cx="32" cy="10" r="3.4" fill="#236ead"/>
-  <circle cx="51.05" cy="43" r="5.8" fill="#ffffff"/>
-  <circle cx="51.05" cy="43" r="3.4" fill="#236ead"/>
-  <circle cx="12.95" cy="43" r="5.8" fill="#ffffff"/>
-  <circle cx="12.95" cy="43" r="3.4" fill="#236ead"/>
+  <title>Circle3</title>
+  <path d="M20.26 6.55L59.65 20.05L43.74 53.45L4.35 39.95Z" fill="#e2e8ef" stroke="#e2e8ef" stroke-width="0.6" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M20.26 6.55L59.65 20.05M59.65 20.05L43.74 53.45M43.74 53.45L4.35 39.95M4.35 39.95L20.26 6.55" fill="none" stroke="#34465b" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M59.65 21.77L43.74 55.17L43.74 53.45L59.65 20.05Z" fill="#8e9faf" stroke="#8e9faf" stroke-width="0.6" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M59.65 21.77L43.74 55.17M59.65 20.05L43.74 53.45M43.74 55.17L43.74 53.45M59.65 21.77L59.65 20.05" fill="none" stroke="#34465b" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M43.74 55.17L4.35 41.67L4.35 39.95L43.74 53.45Z" fill="#b8c3cf" stroke="#b8c3cf" stroke-width="0.6" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M43.74 55.17L4.35 41.67M43.74 53.45L4.35 39.95M4.35 41.67L4.35 39.95M43.74 55.17L43.74 53.45" fill="none" stroke="#34465b" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M44.74 34.37L43.96 35.74L42.97 37.01L41.8 38.17L40.46 39.18L38.97 40.04L37.37 40.73L35.67 41.23L33.91 41.54L32.12 41.65L30.33 41.57L28.56 41.28L26.85 40.81L25.23 40.14L23.73 39.31L22.37 38.31L21.17 37.17L20.16 35.91L19.35 34.55L18.76 33.11L18.39 31.62L18.26 30.1L18.36 28.58L18.7 27.08L19.26 25.63L20.04 24.26L21.03 22.99L22.2 21.83L23.54 20.82L25.03 19.96L26.63 19.27L28.33 18.77L30.09 18.46L31.88 18.35L33.67 18.43L35.44 18.72L37.15 19.19L38.77 19.86L40.27 20.69L41.63 21.69L42.83 22.83L43.84 24.09L44.65 25.45L45.24 26.89L45.61 28.38L45.74 29.9L45.64 31.42L45.3 32.92L44.74 34.37Z" fill="none" stroke="#236ead" stroke-width="2.8" stroke-linejoin="round" stroke-linecap="round"/>
+  <circle cx="24.72" cy="39.88" r="2.7" fill="#236ead" stroke="#34465b" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/>
+  <circle cx="25.55" cy="19.71" r="2.7" fill="#236ead" stroke="#34465b" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/>
+  <circle cx="45.73" cy="30.41" r="2.7" fill="#236ead" stroke="#34465b" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/>
 </svg>

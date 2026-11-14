@@ -1,5 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
   <title>Ground shadow</title>
-  <path d="M32 4.8 L48.1 13.9 L48.1 32.1 L32 41.2 L15.9 32.1 L15.9 13.9Z" fill="currentColor" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round" stroke-linecap="round"/>
-  <path d="M9.34 31.35A25 11 0 1 0 54.66 31.35" fill="none" stroke="currentColor" stroke-width="5.2" stroke-linejoin="round" stroke-linecap="round"/>
+  <circle cx="32" cy="32" r="10.67" fill="none" stroke="currentColor" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M32 6.67L32 13.33M32 50.67L32 57.33M6.67 32L13.33 32M50.67 32L57.33 32M14.13 14.13L18.8 18.8M45.2 45.2L49.87 49.87M14.13 49.87L18.8 45.2M45.2 18.8L49.87 14.13" fill="none" stroke="currentColor" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/>
 </svg>

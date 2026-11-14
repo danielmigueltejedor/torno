@@ -1,7 +1,11 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-  <title>Warning</title>
-  <path d="M32 8L57 53L7 53Z" fill="#b9ddf8"/>
-  <path d="M32 8L57 53L7 53Z" fill="none" stroke="#236ead" stroke-width="4.25" stroke-linejoin="round" stroke-linecap="round"/>
-  <path d="M32 24L32 37" fill="none" stroke="#236ead" stroke-width="4.25" stroke-linejoin="round" stroke-linecap="round"/>
-  <circle cx="32" cy="45" r="3" fill="#236ead"/>
+  <title>Status warning</title>
+  <path d="M32 13L51.05 24L32 35L12.95 24Z" fill="#e2e8ef" stroke="#e2e8ef" stroke-width="0.6" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M32 13L51.05 24M51.05 24L32 35M32 35L12.95 24M12.95 24L32 13" fill="none" stroke="#34465b" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M51.05 42L32 53L32 35L51.05 24Z" fill="#8e9faf" stroke="#8e9faf" stroke-width="0.6" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M51.05 42L32 53M51.05 24L32 35M32 53L32 35M51.05 42L51.05 24" fill="none" stroke="#34465b" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M32 53L12.95 42L12.95 24L32 35Z" fill="#b8c3cf" stroke="#b8c3cf" stroke-width="0.6" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M32 53L12.95 42M32 35L12.95 24M12.95 42L12.95 24M32 53L32 35" fill="none" stroke="#34465b" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M40 50A10 10 0 1 0 60 50A10 10 0 1 0 40 50Z" fill="#236ead" stroke="#34465b" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M50 45L50 51M50 54.6L50 54.7" fill="none" stroke="#e2e8ef" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>
 </svg>

@@ -1,5 +1,8 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-  <title>Sun — source disc with short radial rays</title>
-  <circle cx="32" cy="32" r="15" fill="#e2e8ef" stroke="#34465b" stroke-width="2.55" stroke-linejoin="round" stroke-linecap="round"/>
-  <path d="M32 5.5L32 10.5M32 53.5L32 58.5M5.5 32L10.5 32M53.5 32L58.5 32M13.26 13.26L16.8 16.8M47.2 47.2L50.74 50.74M13.26 50.74L16.8 47.2M47.2 16.8L50.74 13.26" fill="none" stroke="#236ead" stroke-width="4.25" stroke-linejoin="round" stroke-linecap="round"/>
+  <title>Render sun</title>
+  <circle cx="32" cy="32" r="10" fill="#236ead"/>
+  <circle cx="30.8" cy="30.8" r="8.6" fill="#328bd3"/>
+  <circle cx="29" cy="29" r="4.8" fill="#b9ddf8"/>
+  <circle cx="32" cy="32" r="10" fill="none" stroke="#34465b" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M46.00 32.00L52.00 32.00M43.33 40.23L48.18 43.76M36.33 45.31L38.18 51.02M27.67 45.31L25.82 51.02M20.67 40.23L15.82 43.76M18.00 32.00L12.00 32.00M20.67 23.77L15.82 20.24M27.67 18.69L25.82 12.98M36.33 18.69L38.18 12.98M43.33 23.77L48.18 20.24" fill="none" stroke="#236ead" stroke-width="2.6" stroke-linejoin="round" stroke-linecap="round"/>
 </svg>

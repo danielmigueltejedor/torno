@@ -21,7 +21,19 @@ const fn icon_primary(rgb: [u8; 3]) -> Color32 {
     Color32::from_rgb(rgb[0], rgb[1], rgb[2])
 }
 impl Tokens {
+    /// The light tokens: Torno's own values with the Nodalia Design Language's interface colours
+    /// on top ([`crate::ndl`]).
     pub const fn light() -> Tokens {
+        crate::ndl::apply(Tokens::base_light(), false)
+    }
+
+    /// The dark tokens: Torno's own values with the Nodalia Design Language's interface colours
+    /// on top ([`crate::ndl`]).
+    pub const fn dark() -> Tokens {
+        crate::ndl::apply(Tokens::base_dark(), true)
+    }
+
+    const fn base_light() -> Tokens {
         Tokens {
             nav_hover: Color32::from_rgb(233, 237, 242),
             nav_press: Color32::from_rgb(220, 226, 234),
@@ -299,8 +311,8 @@ impl Tokens {
             logo: [Color32::from_rgb(96, 158, 236), Color32::from_rgb(58, 136, 238), Color32::from_rgb(55, 108, 197)],
         }
     }
-    pub const fn dark() -> Tokens {
-        let mut t = Tokens::light();
+    const fn base_dark() -> Tokens {
+        let mut t = Tokens::base_light();
         // Shared typography and dense form dimensions stay identical in both palettes.
         t.font_triad = 8.0;
         t.font_compass = 13.5;

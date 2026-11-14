@@ -1,8 +1,12 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
   <title>Move</title>
-  <path d="M32 14L32 50M14 32L50 32" fill="none" stroke="#236ead" stroke-width="4.25" stroke-linejoin="round" stroke-linecap="round"/>
-  <path d="M32 5L38 15L26 15Z" fill="#236ead"/>
-  <path d="M32 59L26 49L38 49Z" fill="#236ead"/>
-  <path d="M5 32L15 26L15 38Z" fill="#236ead"/>
-  <path d="M59 32L49 38L49 26Z" fill="#236ead"/>
+  <path d="M32 20L45.86 28L32 36L18.14 28Z" fill="#b9ddf8" stroke="#b9ddf8" stroke-width="0.6" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M32 20L45.86 28M45.86 28L32 36M32 36L18.14 28M18.14 28L32 20" fill="none" stroke="#34465b" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M45.86 40L32 48L32 36L45.86 28Z" fill="#236ead" stroke="#236ead" stroke-width="0.6" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M45.86 40L32 48M45.86 28L32 36M32 48L32 36M45.86 40L45.86 28" fill="none" stroke="#34465b" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M32 48L18.14 40L18.14 28L32 36Z" fill="#328bd3" stroke="#328bd3" stroke-width="0.6" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M32 48L18.14 40M32 36L18.14 28M18.14 40L18.14 28M32 48L32 36" fill="none" stroke="#34465b" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M39.73 36.61L44.49 39.36L46.33 36.18L50.19 44.5L41.05 45.32L42.89 42.14L38.13 39.39Z" fill="#236ead" stroke="#34465b" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M25.87 39.39L21.11 42.14L22.95 45.32L13.81 44.5L17.67 36.18L19.51 39.36L24.27 36.61Z" fill="#236ead" stroke="#34465b" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M30.4 28L30.4 22.5L26.72 22.5L32 15L37.28 22.5L33.6 22.5L33.6 28Z" fill="#236ead" stroke="#34465b" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/>
 </svg>

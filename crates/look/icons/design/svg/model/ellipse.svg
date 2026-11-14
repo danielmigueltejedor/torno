@@ -1,10 +1,11 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
   <title>Ellipse</title>
-  <path d="M6 32A26 17 0 1 0 58 32A26 17 0 1 0 6 32Z" fill="#b9ddf8" stroke="#236ead" stroke-width="4.25" stroke-linejoin="round" stroke-linecap="round"/>
-  <circle cx="32" cy="32" r="5.8" fill="#ffffff"/>
-  <circle cx="32" cy="32" r="3.4" fill="#236ead"/>
-  <circle cx="58" cy="32" r="5.8" fill="#ffffff"/>
-  <circle cx="58" cy="32" r="3.4" fill="#236ead"/>
-  <circle cx="32" cy="15" r="5.8" fill="#ffffff"/>
-  <circle cx="32" cy="15" r="3.4" fill="#236ead"/>
+  <path d="M20.26 6.55L59.65 20.05L43.74 53.45L4.35 39.95Z" fill="#e2e8ef" stroke="#e2e8ef" stroke-width="0.6" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M20.26 6.55L59.65 20.05M59.65 20.05L43.74 53.45M43.74 53.45L4.35 39.95M4.35 39.95L20.26 6.55" fill="none" stroke="#34465b" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M59.65 21.77L43.74 55.17L43.74 53.45L59.65 20.05Z" fill="#8e9faf" stroke="#8e9faf" stroke-width="0.6" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M59.65 21.77L43.74 55.17M59.65 20.05L43.74 53.45M43.74 55.17L43.74 53.45M59.65 21.77L59.65 20.05" fill="none" stroke="#34465b" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M43.74 55.17L4.35 41.67L4.35 39.95L43.74 53.45Z" fill="#b8c3cf" stroke="#b8c3cf" stroke-width="0.6" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M43.74 55.17L4.35 41.67M43.74 53.45L4.35 39.95M4.35 41.67L4.35 39.95M43.74 55.17L43.74 53.45" fill="none" stroke="#34465b" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M47.94 24.26L48.18 25.07L48.14 25.96L47.83 26.92L47.25 27.93L46.41 28.97L45.32 30.04L44 31.1L42.48 32.15L40.78 33.16L38.93 34.11L36.95 34.99L34.9 35.79L32.79 36.49L30.68 37.08L28.58 37.55L26.54 37.88L24.6 38.09L22.78 38.15L21.12 38.08L19.65 37.86L18.39 37.52L17.36 37.04L16.58 36.44L16.06 35.74L15.82 34.93L15.86 34.04L16.17 33.08L16.75 32.07L17.59 31.03L18.68 29.96L20 28.9L21.52 27.85L23.22 26.84L25.07 25.89L27.05 25.01L29.1 24.21L31.21 23.51L33.32 22.92L35.42 22.45L37.46 22.12L39.4 21.91L41.22 21.85L42.88 21.92L44.35 22.14L45.61 22.48L46.64 22.96L47.42 23.56L47.94 24.26" fill="none" stroke="#236ead" stroke-width="2.8" stroke-linejoin="round" stroke-linecap="round"/>
+  <circle cx="32" cy="30" r="2.7" fill="#236ead" stroke="#34465b" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/>
 </svg>

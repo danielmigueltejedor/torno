@@ -1,16 +1,9 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-  <title>Ground — the floor the product stands on, with its contact shadow</title>
-  <path d="M5.06 42L30 56.4L30 58.8L5.06 44.4Z" fill="#328bd3"/>
-  <path d="M54.94 42L30 56.4L30 58.8L54.94 44.4Z" fill="#236ead"/>
-  <path d="M30 27.6L54.94 42L30 56.4L5.06 42Z" fill="#b9ddf8"/>
-  <path d="M30 27.6L54.94 42L54.94 44.4L30 58.8L5.06 44.4L5.06 42Z" fill="none" stroke="#34465b" stroke-width="2.55" stroke-linejoin="round" stroke-linecap="round"/>
-  <path d="M5.06 42L30 56.4L54.94 42" fill="none" stroke="#34465b" stroke-width="2.55" stroke-linejoin="round" stroke-linecap="round"/>
-  <path d="M30 56.4L30 58.8" fill="none" stroke="#34465b" stroke-width="2.55" stroke-linejoin="round" stroke-linecap="round"/>
-  <path d="M30 35.6L45.93 44.8L34.85 51.2L18.91 42Z" fill="#328bd3"/>
-  <path d="M18.91 29.2L30 35.6L30 48.4L18.91 42Z" fill="#b8c3cf"/>
-  <path d="M41.09 29.2L30 35.6L30 48.4L41.09 42Z" fill="#8e9faf"/>
-  <path d="M30 22.8L41.09 29.2L30 35.6L18.91 29.2Z" fill="#e2e8ef"/>
-  <path d="M30 22.8L41.09 29.2L41.09 42L30 48.4L18.91 42L18.91 29.2Z" fill="none" stroke="#34465b" stroke-width="2.55" stroke-linejoin="round" stroke-linecap="round"/>
-  <path d="M18.91 29.2L30 35.6L41.09 29.2" fill="none" stroke="#34465b" stroke-width="2.55" stroke-linejoin="round" stroke-linecap="round"/>
-  <path d="M30 35.6L30 48.4" fill="none" stroke="#34465b" stroke-width="2.55" stroke-linejoin="round" stroke-linecap="round"/>
+  <title>Render ground</title>
+  <path d="M32 23L61.44 40L32 57L2.56 40Z" fill="#b9ddf8" stroke="#236ead" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M32 44.95L30.88 44.91L29.78 44.78L28.72 44.57L27.71 44.29L26.78 43.93L25.94 43.5L25.2 43.01L24.58 42.47L24.08 41.89L23.72 41.28L23.5 40.65L23.43 40L23.43 28L23.5 28.65L23.72 29.28L24.08 29.89L24.58 30.47L25.2 31.01L25.94 31.5L26.78 31.93L27.71 32.29L28.72 32.57L29.78 32.78L30.88 32.91L32 32.95Z" fill="#b8c3cf" stroke="#b8c3cf" stroke-width="0.6" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M40.57 40L40.5 40.65L40.28 41.28L39.92 41.89L39.42 42.47L38.8 43.01L38.06 43.5L37.22 43.93L36.29 44.29L35.28 44.57L34.22 44.78L33.12 44.91L32 44.95L32 32.95L33.12 32.91L34.22 32.78L35.28 32.57L36.29 32.29L37.22 31.93L38.06 31.5L38.8 31.01L39.42 30.47L39.92 29.89L40.28 29.28L40.5 28.65L40.57 28Z" fill="#8e9faf" stroke="#8e9faf" stroke-width="0.6" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M38.06 31.5L37.22 31.93L36.29 32.29L35.28 32.57L34.22 32.78L33.12 32.91L32 32.95L30.88 32.91L29.78 32.78L28.72 32.57L27.71 32.29L26.78 31.93L25.94 31.5L25.2 31.01L24.58 30.47L24.08 29.89L23.72 29.28L23.5 28.65L23.43 28L23.5 27.35L23.72 26.72L24.08 26.11L24.58 25.53L25.2 24.99L25.94 24.5L26.78 24.07L27.71 23.71L28.72 23.43L29.78 23.22L30.88 23.09L32 23.05L33.12 23.09L34.22 23.22L35.28 23.43L36.29 23.71L37.22 24.07L38.06 24.5L38.8 24.99L39.42 25.53L39.92 26.11L40.28 26.72L40.5 27.35L40.57 28L40.5 28.65L40.28 29.28L39.92 29.89L39.42 30.47L38.8 31.01Z" fill="#e2e8ef" stroke="#e2e8ef" stroke-width="0.6" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M23.43 28L23.5 27.35L23.72 26.72L24.08 26.11L24.58 25.53L25.2 24.99L25.94 24.5L26.78 24.07L27.71 23.71L28.72 23.43L29.78 23.22L30.88 23.09L32 23.05L33.12 23.09L34.22 23.22L35.28 23.43L36.29 23.71L37.22 24.07L38.06 24.5L38.8 24.99L39.42 25.53L39.92 26.11L40.28 26.72L40.5 27.35L40.57 28L40.57 40L40.5 40.65L40.28 41.28L39.92 41.89L39.42 42.47L38.8 43.01L38.06 43.5L37.22 43.93L36.29 44.29L35.28 44.57L34.22 44.78L33.12 44.91L32 44.95L30.88 44.91L29.78 44.78L28.72 44.57L27.71 44.29L26.78 43.93L25.94 43.5L25.2 43.01L24.58 42.47L24.08 41.89L23.72 41.28L23.5 40.65L23.43 40Z" fill="none" stroke="#34465b" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M38.06 31.5L37.22 31.93L36.29 32.29L35.28 32.57L34.22 32.78L33.12 32.91L32 32.95L30.88 32.91L29.78 32.78L28.72 32.57L27.71 32.29L26.78 31.93L25.94 31.5L25.2 31.01L24.58 30.47L24.08 29.89L23.72 29.28L23.5 28.65L23.43 28L23.5 27.35L23.72 26.72L24.08 26.11L24.58 25.53L25.2 24.99L25.94 24.5L26.78 24.07L27.71 23.71L28.72 23.43L29.78 23.22L30.88 23.09L32 23.05L33.12 23.09L34.22 23.22L35.28 23.43L36.29 23.71L37.22 24.07L38.06 24.5L38.8 24.99L39.42 25.53L39.92 26.11L40.28 26.72L40.5 27.35L40.57 28L40.5 28.65L40.28 29.28L39.92 29.89L39.42 30.47L38.8 31.01Z" fill="none" stroke="#34465b" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>
 </svg>

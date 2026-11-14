@@ -1,9 +1,12 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-  <title>Circle tangent to two lines</title>
-  <path d="M5 12L59 12M12 5L12 59" fill="none" stroke="#8e9faf" stroke-width="4.25" stroke-linejoin="round" stroke-linecap="round"/>
-  <path d="M12 32A20 20 0 1 0 52 32A20 20 0 1 0 12 32Z" fill="#b9ddf8" stroke="#236ead" stroke-width="4.25" stroke-linejoin="round" stroke-linecap="round"/>
-  <circle cx="32" cy="12" r="5.8" fill="#ffffff"/>
-  <circle cx="32" cy="12" r="3.4" fill="#236ead"/>
-  <circle cx="12" cy="32" r="5.8" fill="#ffffff"/>
-  <circle cx="12" cy="32" r="3.4" fill="#236ead"/>
+  <title>Circle tt</title>
+  <path d="M20.26 6.55L59.65 20.05L43.74 53.45L4.35 39.95Z" fill="#e2e8ef" stroke="#e2e8ef" stroke-width="0.6" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M20.26 6.55L59.65 20.05M59.65 20.05L43.74 53.45M43.74 53.45L4.35 39.95M4.35 39.95L20.26 6.55" fill="none" stroke="#34465b" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M59.65 21.77L43.74 55.17L43.74 53.45L59.65 20.05Z" fill="#8e9faf" stroke="#8e9faf" stroke-width="0.6" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M59.65 21.77L43.74 55.17M59.65 20.05L43.74 53.45M43.74 55.17L43.74 53.45M59.65 21.77L59.65 20.05" fill="none" stroke="#34465b" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M43.74 55.17L4.35 41.67L4.35 39.95L43.74 53.45Z" fill="#b8c3cf" stroke="#b8c3cf" stroke-width="0.6" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M43.74 55.17L4.35 41.67M43.74 53.45L4.35 39.95M4.35 41.67L4.35 39.95M43.74 55.17L43.74 53.45" fill="none" stroke="#34465b" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M19.08 11.86L6.92 37.4" fill="none" stroke="#34465b" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M6.92 37.4L41.66 49.31" fill="none" stroke="#34465b" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M31.98 35.71L31.34 36.83L30.53 37.87L29.57 38.82L28.47 39.65L27.26 40.35L25.95 40.91L24.56 41.32L23.12 41.58L21.65 41.67L20.18 41.6L18.74 41.36L17.34 40.97L16.02 40.43L14.79 39.75L13.67 38.93L12.69 38L11.86 36.97L11.2 35.86L10.72 34.68L10.42 33.46L10.31 32.22L10.39 30.97L10.67 29.75L11.13 28.56L11.77 27.44L12.57 26.4L13.53 25.45L14.63 24.62L15.85 23.92L17.16 23.36L18.55 22.95L19.99 22.69L21.45 22.6L22.92 22.67L24.37 22.9L25.76 23.29L27.09 23.83L28.32 24.52L29.43 25.33L30.41 26.26L31.24 27.29L31.9 28.41L32.39 29.59L32.69 30.81L32.79 32.05L32.71 33.3L32.44 34.52L31.98 35.71Z" fill="none" stroke="#236ead" stroke-width="2.8" stroke-linejoin="round" stroke-linecap="round"/>
 </svg>

@@ -1,4 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-  <title>Plugins</title>
-  <path d="M24 7L24 20M40 7L40 20M16 20L48 20L48 28A16 16 0 0 1 16 28ZM32 44L32 57" fill="none" stroke="currentColor" stroke-width="6.8" stroke-linejoin="round" stroke-linecap="round"/>
+  <title>Prefs plugins</title>
+  <path d="M32 8L53.33 20L53.33 44L32 56L10.67 44L10.67 20Z" fill="none" stroke="currentColor" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M10.67 20L32 32L53.33 20M32 32L32 56" fill="none" stroke="currentColor" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M21.33 14L42.67 26L42.67 34" fill="none" stroke="currentColor" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/>
 </svg>

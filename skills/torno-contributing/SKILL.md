@@ -14,12 +14,12 @@ not modelling a part through MCP.
 ## Rules for every PR
 
 - **Look at what is open first.** Pull the whole list, drafts included:
-  `gh pr list -R tangency-labs/solidcraft --state open --limit 500` and
-  `gh issue list -R tangency-labs/solidcraft --state open --limit 500`. Look for the same issue, the same
+  `gh pr list -R getnodalia/torno --state open --limit 500` and
+  `gh issue list -R getnodalia/torno --state open --limit 500`. Look for the same issue, the same
   feature under another number, and PRs that change the files you will change
   (`gh pr list ... --json number,title,files`). If someone has it, comment on their PR or issue
   instead of opening a second one: two PRs for one change cannot both land.
-- **Claim with a draft PR.** `gh pr list -R tangency-labs/solidcraft --state open --search "#N"`; if none,
+- **Claim with a draft PR.** `gh pr list -R getnodalia/torno --state open --search "#N"`; if none,
   branch from the latest `origin/main`, `git commit --allow-empty -m "claim: #N"`, push, and open a
   draft PR titled `<summary> (#N)`. The lowest-numbered open PR for an issue wins; close yours if it
   lost. The bot assigns you and labels the issue `in progress`. Do not claim by editing files; comment
@@ -47,7 +47,7 @@ not modelling a part through MCP.
   reference data; check `git ls-files` before pushing. Run `cargo xtask ci` before every commit.
   Commit after every feature arc that builds.
 - **Merge flow.** The heavy CI jobs start when a maintainer adds `approved-for-ci`; approved PRs go
-  through the merge queue (`gh pr merge N -R tangency-labs/solidcraft --squash --auto`), which runs the
+  through the merge queue (`gh pr merge N -R getnodalia/torno --squash --auto`), which runs the
   full suite on each group before it lands on `main`. Never force-push `main`.
 - **Do not push only to catch up with `main`** (no merge of `main`, no Update branch, no rebase for
   that alone): every push restarts the whole CI run, and `main`'s own run catches what lands in between.
@@ -132,7 +132,7 @@ at each step: what you found, what comes next, and what needs their decision.
 Explain that changes go to their own copy on GitHub. After approval, run:
 
 ```sh
-gh repo fork tangency-labs/solidcraft --clone --remote
+gh repo fork getnodalia/torno --clone --remote
 cd torno
 git remote -v
 ```
@@ -140,7 +140,7 @@ git remote -v
 Ensure `origin` points to the person's fork. If `upstream` is absent, add it:
 
 ```sh
-git remote add upstream https://github.com/tangency-labs/solidcraft.git
+git remote add upstream https://github.com/getnodalia/torno.git
 ```
 
 Never push to upstream. If cloning an existing fork instead, check the same remote
@@ -162,18 +162,18 @@ Kernel and geometry tasks are fine: they go in `solidcore/` (CONTRIBUTING.md, "K
 Fetch the whole open list, including drafts, before narrowing it:
 
 ```sh
-gh issue list -R tangency-labs/solidcraft --state open --limit 500
-gh pr list -R tangency-labs/solidcraft --state open --limit 500 --json number,title,files
-gh issue list -R tangency-labs/solidcraft --state open --label 'good first issue' --search '-label:"in progress"' --limit 100
-gh issue list -R tangency-labs/solidcraft --state open --label 'help wanted' --search '-label:"in progress"' --limit 100
+gh issue list -R getnodalia/torno --state open --limit 500
+gh pr list -R getnodalia/torno --state open --limit 500 --json number,title,files
+gh issue list -R getnodalia/torno --state open --label 'good first issue' --search '-label:"in progress"' --limit 100
+gh issue list -R getnodalia/torno --state open --label 'help wanted' --search '-label:"in progress"' --limit 100
 ```
 
 Let the person choose. Set `N` to that issue's number, then inspect its discussion,
 assignee and linked PRs; check similar work under other numbers and overlapping files:
 
 ```sh
-gh issue view "$N" -R tangency-labs/solidcraft --comments
-gh pr list -R tangency-labs/solidcraft --state open --search "#$N"
+gh issue view "$N" -R getnodalia/torno --comments
+gh pr list -R getnodalia/torno --state open --search "#$N"
 ```
 
 If it is already claimed, choose another task with the person. Do not open a
@@ -261,7 +261,7 @@ validation and any evidence or limitations. Show them to the person before
 updating the PR. After their approval, mark the draft ready:
 
 ```sh
-gh pr ready PR_NUMBER -R tangency-labs/solidcraft
+gh pr ready PR_NUMBER -R getnodalia/torno
 ```
 
 Explain that a maintainer reviews the change and adds `approved-for-ci` to start

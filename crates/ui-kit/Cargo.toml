@@ -16,6 +16,7 @@ test-support = ["dep:image"]
 [dependencies]
 # The token contract every control draws with.
 torno-theme = { workspace = true }
+nodalia-theme = { workspace = true }
 # The widget registry (handles, rects, counts) every control publishes into.
 torno-ui-registry = { workspace = true }
 torno-ui-text = { workspace = true }

@@ -1,6 +1,6 @@
 [package]
 name = "torno-viewport-gpu"
-description = "The viewport renderer's GPU work the Craft apps share, on wgpu: the viewport's pipelines, offscreen pictures, adapter selection and display plans evaluated in a compute shader"
+description = "The viewport renderer's GPU work the Nodalia apps share, on wgpu: the viewport's pipelines, offscreen pictures, adapter selection and display plans evaluated in a compute shader"
 version.workspace = true
 edition.workspace = true
 license.workspace = true

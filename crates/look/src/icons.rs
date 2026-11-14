@@ -116,32 +116,29 @@ mod tests {
     }
 
     #[test]
-    fn accepted_badges_and_environment_sun_have_transparent_holes() {
+    fn gap_paints_a_transparent_hole_in_both_themes() {
+        let doc = SET.parse("<svg><path d='M8 8L56 8L56 56L8 56Z' fill='#8e9faf'/><circle cx='32' cy='32' r='8' fill='#ffffff'/></svg>").unwrap();
         for dark in [false, true] {
             let look = Look { dark, accent: None, vision: torno_theme::ColorVision::Off, palette: None };
             assert_eq!(role_colour("gap", look), egui::Color32::TRANSPARENT);
-            for (id, x, y) in [("contact_new", 48, 48), ("environment_map", 45, 19), ("line_mid", 35, 28)] {
-                let pm = render(doc_for(id, 64).unwrap(), look, 64).unwrap();
-                assert_eq!(pm.pixel(x, y).unwrap().alpha(), 0, "{id}: GAP must not be a painted theme colour");
-            }
+            let pm = render(&doc, look, 64).unwrap();
+            assert_eq!(pm.pixel(32, 32).unwrap().alpha(), 0, "GAP must not be a painted theme colour");
+            assert_eq!(pm.pixel(12, 12).unwrap().alpha(), 255);
         }
     }
 
     #[test]
-    fn native_clip_paths_and_plus_mask_keep_the_artwork_inside_its_shape() {
+    fn native_clip_paths_keep_the_artwork_inside_their_shape() {
+        let doc = SET
+            .parse("<svg><defs><clipPath id='c'><circle cx='32' cy='32' r='20'/></clipPath></defs><g clip-path='url(#c)'><path d='M0 0L64 0L64 64L0 64Z' fill='#328bd3'/></g></svg>")
+            .unwrap();
         for dark in [false, true] {
             for px in [16, 24, 64] {
                 let look = Look { dark, accent: None, vision: torno_theme::ColorVision::Off, palette: None };
-                for id in ["environment_map", "curvature_map", "iso_analysis", "zebra"] {
-                    let doc = doc_for(id, px).unwrap();
-                    let pm = render(doc, look, px).unwrap();
-                    assert_eq!(pm.pixel(px - 2, px - 2).unwrap().alpha(), 0, "{id} escapes its native clip");
-                    assert!(pm.pixel(px / 2, px / 2).unwrap().alpha() > 0, "{id} lost its clipped contents");
-                }
+                let pm = render(&doc, look, px).unwrap();
+                assert_eq!(pm.pixel(px - 2, px - 2).unwrap().alpha(), 0, "the artwork escapes its clip");
+                assert!(pm.pixel(px / 2, px / 2).unwrap().alpha() > 0, "the clip lost its contents");
             }
-            let pm =
-                render(doc_for("new", 64).unwrap(), Look { dark, accent: None, vision: torno_theme::ColorVision::Off, palette: None }, 64).unwrap();
-            assert_eq!(pm.pixel(45, 45).unwrap().alpha(), 0, "the plus is genuinely punched out in the native renderer");
         }
     }
 

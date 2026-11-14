@@ -1,9 +1,14 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
   <title>Curvature comb</title>
-  <path d="M7 52.63Q26 12.63 54 42.63" fill="none" stroke="currentColor" stroke-width="3.8" stroke-linejoin="round" stroke-linecap="round"/>
-  <path d="M13 42.63L6 36.63" fill="none" stroke="#236ead" stroke-width="2.55" stroke-linejoin="round" stroke-linecap="round"/>
-  <path d="M20 32.63L15 20.63" fill="none" stroke="#236ead" stroke-width="2.55" stroke-linejoin="round" stroke-linecap="round"/>
-  <path d="M29 28.63L29 10.63" fill="none" stroke="#236ead" stroke-width="2.55" stroke-linejoin="round" stroke-linecap="round"/>
-  <path d="M39 29.63L44 13.63" fill="none" stroke="#236ead" stroke-width="2.55" stroke-linejoin="round" stroke-linecap="round"/>
-  <path d="M48 35.63L58 25.63" fill="none" stroke="#236ead" stroke-width="2.55" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M15.37 29.6L15.37 26.6" fill="none" stroke="#328bd3" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M19.53 35.44L19.53 28.2" fill="none" stroke="#328bd3" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M23.69 38.8L23.69 29.8" fill="none" stroke="#328bd3" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M27.84 38.64L27.84 31.4" fill="none" stroke="#328bd3" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M32 36L32 33" fill="none" stroke="#328bd3" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M36.16 33.36L36.16 26.11" fill="none" stroke="#328bd3" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M40.31 33.2L40.31 24.2" fill="none" stroke="#328bd3" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M44.47 36.56L44.47 29.31" fill="none" stroke="#328bd3" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M48.63 42.4L48.63 39.4" fill="none" stroke="#328bd3" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M15.37 26.6L17.45 27.4L19.53 28.2L21.61 29L23.69 29.8L25.76 30.6L27.84 31.4L29.92 32.2L32 33L34.08 29.21L36.16 26.11L38.24 24.31L40.31 24.2L42.39 25.91L44.47 29.31L46.55 34.01L48.63 39.4" fill="none" stroke="#236ead" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M15.37 29.6L17.45 32.7L19.53 35.44L21.61 37.54L23.69 38.8L25.76 39.14L27.84 38.64L29.92 37.5L32 36L34.08 34.5L36.16 33.36L38.24 32.86L40.31 33.2L42.39 34.46L44.47 36.56L46.55 39.3L48.63 42.4" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>
 </svg>

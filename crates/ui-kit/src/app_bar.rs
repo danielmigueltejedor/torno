@@ -321,19 +321,29 @@ pub fn show(ui: &mut egui::Ui, data: &AppBar, bar: Rect, content: Rect) -> BarOu
     let (report, report_label) = report_rect(r, captions, tabs_start, label_width, version_width, data.report.icon_only);
     // Settings' left edge; the search field, when the bar holds it, sits just before it and moves
     // the assistant and the end of the document tabs left by its width.
-    let gear_left = report.left() - 68.0;
+    // The Nodalia layout (no Settings button and no Report a bug button: both are rows of the main
+    // menu) puts the main menu where Report a bug would be, by the window's controls.
+    let ndl = data.settings.id.is_empty() && data.report.label.is_empty();
+    let gear_left = if ndl { report.left() } else { report.left() - 68.0 };
     let search =
         data.search.then(|| search_rect(ui.ctx(), data.search_shortcut, r, gear_left - SEARCH_GAP, report.left() - CLUSTER_BUTTONS - tabs_start));
     let search_shift = search.map_or(0.0, |s| s.width() + SEARCH_GAP);
     if let Some(search) = search {
         torno_ui_registry::publish_target(h.search, search);
     }
-    if icon_button(ui, r, help_x(report), &data.help, compact, h) {
-        actions.push(BarAction::Help { x: help_x(report) });
+    let menu_x = if ndl { report.center().x } else { help_x(report) };
+    if icon_button(ui, r, menu_x, &data.help, compact, h) {
+        actions.push(BarAction::Help { x: menu_x });
     }
     // An offer (a newer release) sits before the right cluster, in the space up to the file
     // actions; labelled where Report a bug is (an icon-only one leaves it to fit by room).
-    let controls_left = report.left() - CLUSTER_BUTTONS - search_shift;
+    let controls_left =
+        if ndl { report.left() - if data.assistant { 40.0 } else { 4.0 } - search_shift } else { report.left() - CLUSTER_BUTTONS - search_shift };
+    if ndl {
+        let assistant = data.assistant.then(|| Rect::from_center_size(pos2(report.left() - 20.0 - search_shift, r.center().y), vec2(32.0, 32.0)));
+        let offer = Rect::from_min_max(pos2(x, report.top()), pos2(controls_left - 2.0, report.bottom()));
+        return BarOut { actions, file, quick, offer, offer_labeled: r.width() >= COMPACT, tabs_start, controls_left, search, assistant };
+    }
     let offer = Rect::from_min_max(pos2(x, report.top()), pos2(controls_left - 2.0, report.bottom()));
     let offer_labeled = report_label || (data.report.icon_only && r.width() >= COMPACT);
     // Report a bug.

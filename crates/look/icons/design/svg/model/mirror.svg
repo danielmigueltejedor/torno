@@ -1,8 +1,16 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
   <title>Mirror</title>
-  <path d="M32 6L32 12M32 20L32 26M32 34L32 40M32 48L32 54" fill="none" stroke="#6f879c" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
-  <path d="M8 50L28 50L28 16Z" fill="#b8c3cf"/>
-  <path d="M56 50L36 50L36 16Z" fill="#328bd3"/>
-  <path d="M8 50L28 50L28 16Z" fill="none" stroke="#34465b" stroke-width="2.55" stroke-linejoin="round" stroke-linecap="round"/>
-  <path d="M56 50L36 50L36 16Z" fill="none" stroke="#34465b" stroke-width="2.55" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M16.41 37L42.39 52L42.39 28L16.41 13Z" fill="#e2e8ef" stroke="#6f879c" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="4 3"/>
+  <path d="M43.26 45.5L20.74 32.5L20.74 18.5L43.26 31.5Z" fill="#b8c3cf" stroke="#b8c3cf" stroke-width="0.6" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M43.26 45.5L20.74 32.5M43.26 31.5L20.74 18.5M20.74 32.5L20.74 18.5M43.26 45.5L43.26 31.5" fill="none" stroke="#34465b" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M31.13 12.5L53.65 25.5L43.26 31.5L20.74 18.5Z" fill="#e2e8ef" stroke="#e2e8ef" stroke-width="0.6" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M31.13 12.5L53.65 25.5M53.65 25.5L43.26 31.5M43.26 31.5L20.74 18.5M20.74 18.5L31.13 12.5" fill="none" stroke="#34465b" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M53.65 39.5L43.26 45.5L43.26 31.5L53.65 25.5Z" fill="#8e9faf" stroke="#8e9faf" stroke-width="0.6" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M53.65 39.5L43.26 45.5M53.65 25.5L43.26 31.5M43.26 45.5L43.26 31.5M53.65 39.5L53.65 25.5" fill="none" stroke="#34465b" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M27.67 54.5L5.15 41.5L5.15 27.5L27.67 40.5Z" fill="#328bd3" stroke="#328bd3" stroke-width="0.6" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M27.67 54.5L5.15 41.5M27.67 40.5L5.15 27.5M5.15 41.5L5.15 27.5M27.67 54.5L27.67 40.5" fill="none" stroke="#34465b" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M15.55 21.5L38.06 34.5L27.67 40.5L5.15 27.5Z" fill="#b9ddf8" stroke="#b9ddf8" stroke-width="0.6" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M15.55 21.5L38.06 34.5M38.06 34.5L27.67 40.5M27.67 40.5L5.15 27.5M5.15 27.5L15.55 21.5" fill="none" stroke="#34465b" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M38.06 48.5L27.67 54.5L27.67 40.5L38.06 34.5Z" fill="#236ead" stroke="#236ead" stroke-width="0.6" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M38.06 48.5L27.67 54.5M38.06 34.5L27.67 40.5M27.67 54.5L27.67 40.5M38.06 48.5L38.06 34.5" fill="none" stroke="#34465b" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>
 </svg>

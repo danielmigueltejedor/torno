@@ -1,10 +1,10 @@
-//! Window chrome any Craft app shares: the window's settings ([`viewport`]) and its title bar,
+//! Window chrome Torno's windows share: the window's settings ([`viewport`]) and its title bar,
 //! drawn from plain inputs ([`TitleBar`]) and answering with [`WindowAction`]s for the app to run.
 //!
 //! The OS window frame is kept. On macOS the OS title bar is hidden and the content extends under
 //! it, with room left for the traffic lights ([`TRAFFIC_LIGHTS`]). On Windows and Linux an app
-//! can drop the OS decorations: then empty space in the bar drags the window and a double-click
-//! there maximizes or restores it, caption buttons at the far right minimize, maximize/restore and
+//! can drop the OS decorations (Torno does on Linux only): then empty space in the bar drags the window and a double-click
+//! there maximizes or restores it, NDL's round caption buttons at the far right minimize, maximize/restore and
 //! close, and thin invisible zones along the window's edges resize it. Dragging uses the OS's own
 //! move loop, so Windows snapping (to the screen edges and corners) works as with a native title
 //! bar.
@@ -25,18 +25,20 @@
 //!
 //! Adapted from VectorCraft's `crates/ui-egui/src/titlebar.rs` (MIT OR Apache-2.0).
 
-use crate::BackingTooltipExt as _;
 use crate::icons::glyphs::paint_glyph;
 use egui::{
     Color32, CursorIcon, Id, LayerId, Order, PointerButton, Pos2, Rect, ResizeDirection, Sense, Stroke, Ui, ViewportBuilder, ViewportCommand, pos2,
     vec2,
 };
-use torno_theme::Tokens;
 
 pub mod native_menu;
 
-/// One caption button: as wide as the native Windows ones.
-pub const BUTTON_WIDTH: f32 = 46.0;
+/// One caption button's slot: NDL's 28 pt round control and the space around it.
+pub const BUTTON_WIDTH: f32 = 34.0;
+/// The diameter of NDL's round window controls.
+pub const CONTROL: f32 = 28.0;
+/// How far the controls sit in from the window's right edge, shared out across the three.
+pub const CONTROL_MARGIN: f32 = 6.0;
 /// The three caption buttons together.
 pub const WIDTH: f32 = 3.0 * BUTTON_WIDTH;
 /// Room for the macOS traffic lights at the bar's left end.
@@ -215,31 +217,53 @@ pub fn release_press_taken_by_os(ctx: &egui::Context, raw: &mut egui::RawInput) 
     }
 }
 
-/// Minimize, Maximize/Restore and Close at the right end of `bar`, full bar height, flush with
-/// the window's edge so a maximized window's corner hits Close. The one clicked, as the action
-/// for the app to run.
+/// Minimize, Maximize/Restore and Close at the right end of `bar`: the Nodalia Design Language's
+/// three round controls, each a 28 pt disc on its own. Under the pointer minimise takes an amber
+/// tint, maximise a cyan one and close turns coral, with NDL's own glyphs. The one clicked, as the
+/// action for the app to run. Only Linux draws them: macOS and Windows keep their native controls.
 pub fn caption_buttons(ui: &mut Ui, bar: Rect) -> Option<WindowAction> {
-    let t = Tokens::get();
     let max = maximized(ui.ctx());
+    let dark = torno_theme::is_dark();
+    let p = torno_theme::ndl::palette(dark);
+    let ink = torno_theme::ndl::c(p.text_secondary);
+    let rest = torno_theme::ndl::c(p.control_bg);
     let mut clicked = None;
     for (i, c) in CAPTIONS.into_iter().enumerate() {
         let r = Rect::from_min_size(pos2(bar.right() - WIDTH + i as f32 * BUTTON_WIDTH, bar.top()), vec2(BUTTON_WIDTH, bar.height()));
         let resp = ui.interact(r, caption_id(c), Sense::click());
-        let fill = match (resp.is_pointer_button_down_on(), resp.hovered()) {
-            (true, _) => t.app_bar_hover_subtle,
-            (_, true) => t.app_bar_hover_button,
-            _ if resp.has_focus() => t.app_bar_hover_button,
-            _ => Color32::TRANSPARENT,
+        let hot = resp.hovered() || resp.has_focus() || resp.is_pointer_button_down_on();
+        let (fill, glyph_ink) = match (c, hot) {
+            (_, false) => (rest, ink),
+            (Caption::Close, true) => (Color32::from_rgb(0xff, 0x5c, 0x4d), Color32::WHITE),
+            (Caption::Maximize, true) if dark => (Color32::from_rgb(0x08, 0x3a, 0x40), Color32::from_rgb(0x2c, 0xc5, 0xd3)),
+            (Caption::Maximize, true) => (Color32::from_rgb(0xd8, 0xf6, 0xf7), Color32::from_rgb(0x08, 0x67, 0x70)),
+            (Caption::Minimize, true) if dark => (Color32::from_rgb(0x33, 0x24, 0x0a), Color32::from_rgb(0xf2, 0xc1, 0x4e)),
+            (Caption::Minimize, true) => (Color32::from_rgb(0xfb, 0xef, 0xd0), Color32::from_rgb(0x7a, 0x4f, 0x00)),
         };
-        ui.painter().rect_filled(r, 0.0, fill);
-        paint_glyph(ui, c, max, r.center(), Stroke::new(1.0, t.app_bar_text));
+        let fill = if resp.is_pointer_button_down_on() { fill.lerp_to_gamma(Color32::BLACK, 0.12) } else { fill };
+        // The disc, centred in its slot: the last one sits a margin in from the window's edge.
+        let centre = pos2(r.center().x - CONTROL_MARGIN * (i as f32 / 2.0), r.center().y);
+        ui.painter().circle_filled(centre, CONTROL / 2.0, fill);
+        let glyph = match c {
+            Caption::Minimize => "window-minimize",
+            Caption::Maximize if max => "window-restore",
+            Caption::Maximize => "window-maximize",
+            Caption::Close => "window-close",
+        };
+        if let Some(icon) = nodalia_theme::icons::get(glyph) {
+            let at = Rect::from_center_size(centre, vec2(18.0, 18.0));
+            nodalia_theme::icons::paint(ui.painter(), at, icon, nodalia_theme::icons::Style::bold(glyph_ink));
+        } else {
+            paint_glyph(ui, c, max, centre, Stroke::new(1.5, glyph_ink));
+        }
         let tip = match c {
             Caption::Minimize => "Minimize",
             Caption::Maximize if max => "Restore",
             Caption::Maximize => "Maximize",
             Caption::Close => "Close",
         };
-        if resp.backing_on_hover_text(tip).clicked() {
+        resp.widget_info(|| egui::WidgetInfo::labeled(egui::Role::Button, true, tip));
+        if resp.on_hover_cursor(CursorIcon::PointingHand).clicked() {
             clicked = Some(match c {
                 Caption::Minimize => WindowAction::Minimize,
                 Caption::Maximize => WindowAction::Toggle,

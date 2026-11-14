@@ -1,4 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-  <title>Shortcuts</title>
-  <path d="M12 13L52 13A6 6 0 0 1 58 19L58 45A6 6 0 0 1 52 51L12 51A6 6 0 0 1 6 45L6 19A6 6 0 0 1 12 13Z" fill="none" stroke="currentColor" stroke-width="6.8" stroke-linejoin="round" stroke-linecap="round"/><circle cx="18" cy="26" r="3.6" fill="currentColor"/><circle cx="28" cy="26" r="3.6" fill="currentColor"/><circle cx="38" cy="26" r="3.6" fill="currentColor"/><circle cx="48" cy="26" r="3.6" fill="currentColor"/><path d="M20 40L44 40" fill="none" stroke="currentColor" stroke-width="6.8" stroke-linejoin="round" stroke-linecap="round"/>
+  <title>Prefs shortcuts</title>
+  <path d="M13.33 16L50.67 16A5.33 5.33 0 0 1 56 21.33L56 42.67A5.33 5.33 0 0 1 50.67 48L13.33 48A5.33 5.33 0 0 1 8 42.67L8 21.33A5.33 5.33 0 0 1 13.33 16Z" fill="none" stroke="currentColor" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M18.67 26.67L21.33 26.67M30.67 26.67L33.33 26.67M42.67 26.67L45.33 26.67M21.33 37.33L42.67 37.33" fill="none" stroke="currentColor" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/>
 </svg>

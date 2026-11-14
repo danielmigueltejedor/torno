@@ -953,9 +953,11 @@ fn msaa() -> Option<u16> {
         .filter(|m| [1, 2, 4, 8].contains(m))
 }
 
-/// Windows and Linux: no OS title bar; the application bar is the title bar
-/// (`torno_ui_egui::titlebar`). macOS keeps its traffic lights over the integrated bar.
-const CUSTOM_TITLEBAR: bool = !cfg!(target_os = "macos");
+/// Linux: no OS title bar; the application bar is the title bar, with the Nodalia Design
+/// Language's round window controls (`torno_ui_egui::titlebar`). macOS keeps its traffic lights
+/// over the integrated bar and Windows its own title bar and caption buttons: Nodalia apps draw
+/// their own window controls on Linux only.
+const CUSTOM_TITLEBAR: bool = cfg!(all(unix, not(target_os = "macos")));
 
 /// Linux: the window manager's own decorations (server-side, or the compositor's frame) can be
 /// asked for instead of the application bar ([`titlebar_choice`]). Elsewhere always `true`.
@@ -1242,6 +1244,9 @@ fn main() -> eframe::Result {
             let mut app = SolveApp::new(Session::default(), services(cc, &dialog_folder));
             app.apply_off_thread = Some(torno_ui_egui::dialogs::APPLY_AT_ONCE);
             app.custom_titlebar = custom_titlebar;
+            // The Nodalia Design Language's bar: Preferences, Keyboard Shortcuts, About and Report a
+            // bug in the main menu by the window's controls.
+            app.header = torno_ui_egui::toolbar::HeaderLayout::NODALIA;
             #[cfg(target_os = "windows")]
             {
                 // Windows: the taskbar button shows the mark even when slow first frames keep the

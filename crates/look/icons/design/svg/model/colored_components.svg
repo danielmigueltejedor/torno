@@ -1,21 +1,21 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
   <title>Colored components</title>
-  <path d="M9.235 17.706L15.059 20.882L15.059 48.941L9.235 44.926Z" fill="#c06f00"/>
-  <path d="M35.176 9.235L15.059 20.882L15.059 48.941L36.765 35.139Z" fill="#a45000"/>
-  <path d="M29.046 5L35.176 8.176L15.196 19.718L9.066 16.541Z" fill="#f1d2af"/>
-  <path d="M29.046 5.529L35.176 8.706L35.176 36.235L15.059 49.471L9.235 45.765L9.066 17.071Z" fill="none" stroke="#34465b" stroke-width="2.55" stroke-linecap="round" stroke-linejoin="round"/>
-  <path d="M9.066 17.6L15.059 20.882L34.647 9.235" fill="none" stroke="#34465b" stroke-width="2.55" stroke-linecap="round" stroke-linejoin="round"/>
-  <path d="M15.059 20.882L15.059 47.067" fill="none" stroke="#34465b" stroke-width="2.55" stroke-linecap="round" stroke-linejoin="round"/>
-  <path d="M32.222 18.595L44.949 25.944L44.949 51.122L32.222 43.774Z" fill="#328bd3"/>
-  <path d="M54.934 20.173L44.949 25.944L44.949 51.122L54.934 45.352Z" fill="#236ead"/>
-  <path d="M42.059 12.412L54.934 20.173L44.949 25.944L32 17.706Z" fill="#b9ddf8"/>
-  <path d="M41.159 11.766L54.934 20.173L54.934 45.352L44.949 51.122L31.164 42.715L31.164 17.536Z" fill="none" stroke="#34465b" stroke-width="2.55" stroke-linecap="round" stroke-linejoin="round"/>
-  <path d="M32.222 18.595L44.949 25.944L54.934 20.173" fill="none" stroke="#34465b" stroke-width="2.55" stroke-linecap="round" stroke-linejoin="round"/>
-  <path d="M44.949 25.944L44.949 51.122" fill="none" stroke="#34465b" stroke-width="2.55" stroke-linecap="round" stroke-linejoin="round"/>
-  <path d="M18.299 39.062L31.015 46.411L31.015 59L18.299 51.652Z" fill="#a28200"/>
-  <path d="M41.921 40.121L31.015 46.411L31.015 59L41.921 52.711Z" fill="#826700"/>
-  <path d="M29.194 32.773L41.921 40.121L31.015 46.411L18.299 39.062Z" fill="#e5d99b"/>
-  <path d="M29.194 32.773L41.921 40.121L41.921 52.711L31.015 59L18.299 51.652L18.299 39.062Z" fill="none" stroke="#34465b" stroke-width="2.55" stroke-linecap="round" stroke-linejoin="round"/>
-  <path d="M18.299 39.062L31.015 46.411L41.921 40.121" fill="none" stroke="#34465b" stroke-width="2.55" stroke-linecap="round" stroke-linejoin="round"/>
-  <path d="M31.015 46.411L31.015 59" fill="none" stroke="#34465b" stroke-width="2.55" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M44.12 37L32 44L32 30L44.12 23Z" fill="#236ead" stroke="#236ead" stroke-width="0.6" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M44.12 37L32 44M44.12 23L32 30M32 44L32 30M44.12 37L44.12 23" fill="none" stroke="#34465b" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M32 44L19.88 37L19.88 23L32 30Z" fill="#328bd3" stroke="#328bd3" stroke-width="0.6" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M32 44L19.88 37M32 30L19.88 23M19.88 37L19.88 23M32 44L32 30" fill="none" stroke="#34465b" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M32 16L44.12 23L32 30L19.88 23Z" fill="#b9ddf8" stroke="#b9ddf8" stroke-width="0.6" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M32 16L44.12 23M44.12 23L32 30M32 30L19.88 23M19.88 23L32 16" fill="none" stroke="#34465b" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M19.88 29L32 36L19.88 43L7.75 36Z" fill="#b9ddf8" stroke="#b9ddf8" stroke-width="0.6" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M19.88 29L32 36M32 36L19.88 43M19.88 43L7.75 36M7.75 36L19.88 29" fill="none" stroke="#34465b" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M32 44L19.88 51L19.88 43L32 36Z" fill="#236ead" stroke="#236ead" stroke-width="0.6" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M32 44L19.88 51M32 36L19.88 43M19.88 51L19.88 43M32 44L32 36" fill="none" stroke="#34465b" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M19.88 51L7.75 44L7.75 36L19.88 43Z" fill="#328bd3" stroke="#328bd3" stroke-width="0.6" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M19.88 51L7.75 44M19.88 43L7.75 36M7.75 44L7.75 36M19.88 51L19.88 43" fill="none" stroke="#34465b" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M44.12 51L32 58L32 44L44.12 37Z" fill="#8e9faf" stroke="#8e9faf" stroke-width="0.6" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M44.12 51L32 58M44.12 37L32 44M32 58L32 44M44.12 51L44.12 37" fill="none" stroke="#34465b" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M32 58L19.88 51L19.88 37L32 44Z" fill="#b8c3cf" stroke="#b8c3cf" stroke-width="0.6" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M32 58L19.88 51M32 44L19.88 37M19.88 51L19.88 37M32 58L32 44" fill="none" stroke="#34465b" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M32 30L44.12 37L32 44L19.88 37Z" fill="#e2e8ef" stroke="#e2e8ef" stroke-width="0.6" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M32 30L44.12 37M44.12 37L32 44M32 44L19.88 37M19.88 37L32 30" fill="none" stroke="#34465b" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>
 </svg>

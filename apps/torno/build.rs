@@ -20,7 +20,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 /// The Windows version resource (what Explorer's Details tab shows and what a launcher reads).
 /// `FileVersion` and `ProductVersion` are the package version verbatim (`0.25.1`, `0.26.0-rc.1`):
-/// ArtCraft's launcher parses the `ProductVersion` string as semver, so a fourth `.0` would not
+/// an updater may parse the `ProductVersion` string as semver, so a fourth `.0` would not
 /// read. The binary `FILEVERSION` fields need four numbers and take the leading `major.minor.patch`.
 fn version_resource(version: &str) -> String {
     let mut numbers = version.split(['-', '+']).next().unwrap_or("").split('.').map(|p| p.parse::<u16>().unwrap_or(0));
