@@ -1,43 +1,104 @@
 name: Bug report
-description: Something in Torno does the wrong thing
-labels: [bug]
+description: Report a reproducible problem in torno.
+labels:
+- bug
 body:
-  - type: markdown
-    attributes:
-      value: |
-        Thanks for taking the time to report this! Inside the app, **Report an Issue** fills most of this in for you, with the command, its settings and your environment.
-        Before reporting a boolean or modelling failure, please try to reproduce it on the latest nightly or a build from current `main`, and say which build you used.
-  - type: textarea
-    id: what
-    attributes:
-      label: What happened
-      description: What did you expect, and what happened instead?
-    validations:
+- type: markdown
+  attributes:
+    value: |
+      Thanks for taking the time to report this! Inside the app, **Report an Issue** fills most of this in for you, with the command, its settings and your environment.
+      Before reporting a boolean or modelling failure, please try to reproduce it on the latest nightly or a build from current `main`, and say which build you used.
+- type: dropdown
+  id: component
+  attributes:
+    label: Affected area
+    options:
+    - Sketching and constraints
+    - Solid modeling and booleans
+    - STEP and file formats
+    - Rendering and interaction
+    - Automation
+    - Other or unsure
+  validations:
+    required: true
+- type: dropdown
+  id: platform
+  attributes:
+    label: Platform or environment
+    options:
+    - Linux
+    - macOS
+    - Windows
+    - Web
+    - Other or unsure
+    multiple: true
+  validations:
+    required: true
+- type: textarea
+  id: what
+  attributes:
+    label: What happened
+    description: What did you expect, and what happened instead?
+  validations:
+    required: true
+- type: textarea
+  id: steps
+  attributes:
+    label: Steps to reproduce
+    description: |
+      What you clicked or typed, in order. For a problem on a particular design, `torno-cli script design.sc --out repro.json` turns its history into a script that `torno-cli eval repro.json` replays; attach it, trimmed to the failing step if you can.
+      Using an AI agent with Torno's MCP server? The `torno-reporting` skill in [`skills/`](https://github.com/tangency-labs/solidcraft/tree/main/skills) has it reproduce the problem in a fresh design and write these steps for you.
+    placeholder: |
+      1. Sketch a circle on the XY plane
+      2. Extrude it 10 mm
+      3. Fillet the top edge with 6 mm
+  validations:
+    required: true
+- type: input
+  id: version
+  attributes:
+    label: Torno version and OS
+    description: Help → About shows the version.
+    placeholder: 0.15.0, Windows 11
+  validations:
+    required: true
+- type: textarea
+  id: media
+  attributes:
+    label: Screenshots or recording
+    description: 'For anything you can see in the app, a screenshot or short recording
+      of a small example helps the most. Please leave out private designs and personal
+      details.
+
+'
+- type: dropdown
+  id: frequency
+  attributes:
+    label: How often does it happen?
+    options:
+    - Every time
+    - Intermittently
+    - Once so far
+    - Unknown
+  validations:
+    required: true
+- type: dropdown
+  id: impact
+  attributes:
+    label: What is affected?
+    options:
+    - Blocked from completing the task
+    - Task still possible with a workaround
+    - Visual or usability issue
+    - Other or unsure
+  validations:
+    required: true
+- type: checkboxes
+  id: report_checklist
+  attributes:
+    label: Before submitting
+    options:
+    - label: I searched for an existing report.
       required: true
-  - type: textarea
-    id: steps
-    attributes:
-      label: Steps to reproduce
-      description: |
-        What you clicked or typed, in order. For a problem on a particular design, `torno-cli script design.sc --out repro.json` turns its history into a script that `torno-cli eval repro.json` replays; attach it, trimmed to the failing step if you can.
-        Using an AI agent with Torno's MCP server? The `torno-reporting` skill in [`skills/`](https://github.com/tangency-labs/solidcraft/tree/main/skills) has it reproduce the problem in a fresh design and write these steps for you.
-      placeholder: |
-        1. Sketch a circle on the XY plane
-        2. Extrude it 10 mm
-        3. Fillet the top edge with 6 mm
-    validations:
+    - label: I removed private data and credentials from the report and attachments.
       required: true
-  - type: input
-    id: version
-    attributes:
-      label: Torno version and OS
-      description: Help → About shows the version.
-      placeholder: 0.15.0, Windows 11
-    validations:
-      required: true
-  - type: textarea
-    id: media
-    attributes:
-      label: Screenshots or recording
-      description: |
-        For anything you can see in the app, a screenshot or short recording of a small example helps the most. Please leave out private designs and personal details.
