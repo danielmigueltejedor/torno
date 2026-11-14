@@ -12,3 +12,6 @@ docs/nodalia/**
 packaging/linux/arch-package.sh
 .github/workflows/arch-package.yml
 .github/workflows/release.yml
+.github/ISSUE_TEMPLATE/**
+.github/pull_request_template.md
+.github/workflows/maintainer-triage.yml
