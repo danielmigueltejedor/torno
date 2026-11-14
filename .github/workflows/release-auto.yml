@@ -1,0 +1,78 @@
+name: Release from main
+
+# Releases Torno when a new version lands on main: bump the version and add
+# docs/release-notes/vX.Y.Z.md in the same pull request, then merge it. Foundation's release-tag
+# tags the merge and drafts the release with those notes, release.yml attaches every
+# package, and release-publish publishes it once all of them pass. A failed platform leaves the
+# release a draft. Any other push does nothing.
+#
+# If a platform fails and its fix lands after the tag, run this by hand on main with
+# retag-draft: while the release is still a draft, its tag moves to the fixed commit and every
+# platform builds again.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      retag-draft:
+        description: "Move an unpublished draft's tag to this commit and build it again"
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-auto
+  cancel-in-progress: false
+
+jobs:
+  tag:
+    permissions:
+      contents: write
+    uses: getnodalia/foundation/.github/workflows/release-tag.yml@7964f20499fbbe78c855fee7e90d182aff4aae89
+    with:
+      name: Torno
+      notes-check: scripts/check-release-notes.sh
+      retag-draft: ${{ inputs.retag-draft == true }}
+
+  # Torno builds every platform in one workflow (release.yml), which also signs the files when
+  # the signing secrets exist; it checks the tag against the manifest and attaches the files.
+  packages:
+    needs: tag
+    if: needs.tag.outputs.created == 'true'
+    permissions:
+      contents: write
+      actions: read
+    uses: ./.github/workflows/release.yml
+    secrets: inherit
+    with:
+      tag: ${{ needs.tag.outputs.tag }}
+
+  publish:
+    needs: [tag, packages]
+    permissions:
+      contents: write
+    uses: getnodalia/foundation/.github/workflows/release-publish.yml@7964f20499fbbe78c855fee7e90d182aff4aae89
+    with:
+      tag: ${{ needs.tag.outputs.tag }}
+
+  # A release published with GITHUB_TOKEN does not trigger `release` workflows, so start the ones
+  # that follow a publication here: the Flatpak repository and site, the Snap Store promotion and
+  # the WinGet submission (each skips what its secrets don't allow). Not for pre-releases.
+  after-publish:
+    needs: [tag, publish]
+    if: needs.tag.outputs.prerelease != 'true'
+    runs-on: ubuntu-24.04
+    permissions:
+      actions: write
+    steps:
+      - name: Start the publication workflows
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          TAG: ${{ needs.tag.outputs.tag }}
+        run: |
+          gh workflow run flatpak-pages.yml --ref main -f release_tag="$TAG"
+          gh workflow run snap-store.yml --ref main
+          gh workflow run winget.yml --ref main -f tag="$TAG"

@@ -5,20 +5,20 @@ description: "Use when preparing or shipping a Torno release, changing installer
 
 # Packaging and releases
 
-Development pushes are not application releases. Pushing to `main` or pushing a tag does not start a release. The full procedure is `docs/releasing.md`; follow it when asked to prepare or ship a release.
+A pull request that bumps the version and adds `docs/release-notes/vX.Y.Z.md` releases that version when it merges; any other push releases nothing. The full procedure is `docs/releasing.md`; follow it when asked to prepare or ship a release.
 
 ## Preparing
 1. Choose one version for the whole batch from the actual changes (patch, minor, major, `-rc.N`). Do not infer it from commit prefixes. Moving to `1.0` is the owner's decision.
 2. Update `[workspace.package] version` in `Cargo.toml`, then `cargo update --workspace --offline`; only our own crates' `version =` lines in `Cargo.lock` change.
 3. Fold the pending design-format changes with `scripts/fold-format-pending.sh` (`skills/torno-file-formats/SKILL.md`).
-4. Run `cargo xtask ci` and the packaging checks in `.github/workflows/packaging-lint.yml`. Land the version commit on `main` through the normal review flow; never use `[skip ci]`.
+4. Write `docs/release-notes/vX.Y.Z.md` (format in that folder's README; `scripts/check-release-notes.sh vX.Y.Z` checks it).
+5. Run `cargo xtask ci` and the packaging checks in `.github/workflows/packaging-lint.yml`. Land the version bump and notes on `main` in one pull request; never use `[skip ci]`.
 
 ## Building and publishing
-- Advance the `release` branch with fast-forwards only (`git merge --ff-only`); never force-push. `.github/workflows/release.yml` builds every package and creates a draft GitHub Release.
-- Verify the draft before publishing: the run succeeded for the intended SHA, every platform and architecture is present, `sha256sum --check SHA256SUMS.txt` passes, and the built CLI runs (`--version`, an example model).
-- Only when shipping is authorised, publish the verified draft with `gh release edit`, then confirm its tag resolves to the recorded SHA and the downstream deployment ran. A request to prepare a release is not a request to publish.
-- Never overwrite a published version, tag or asset; use a new version. Do not push the version tag yourself. Packages are unsigned unless `docs/releasing.md` says otherwise; do not claim they are signed.
-- Nightlies are prereleases built by the same workflow; they never become latest or advance `release`.
+- Merging is the release: `release-auto.yml` has Foundation's `release-tag` tag the merge and draft the release with the notes, `release.yml` builds, checks and attaches every package, and `release-publish` publishes it. Never push a tag or a release branch by hand.
+- A failed platform leaves a draft: land the fix, then run **Release from main** with `retag-draft`. Never overwrite a published version, tag or asset; use a new version.
+- After publication, check the release: its tag resolves to the merge commit, `sha256sum --check SHA256SUMS.txt` passes, and the built CLI runs (`--version`, an example model). Packages are unsigned unless the build summary says otherwise; do not claim they are signed.
+- Nightlies are prereleases built by the same workflow on a schedule; they never become latest.
 
 ## Names that must stay stable
 - Assets are `torno-<version>-...` and are also attached without the version (`torno-windows-x64.msi`). The README links and the in-app update check (`crates/ui-egui/src/update.rs`) pick them by name; renaming one breaks both.

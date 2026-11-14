@@ -1,10 +1,12 @@
 # Releasing Torno
 
-Releases are deliberate operations that an agent can complete end to end. Development lands
-on `main`; pushing the selected commit to `release` builds all packages and creates a **draft**
-GitHub Release. Publishing that verified draft is a separate operation. Pushing to `main` or
-pushing a tag does not start the release workflow. There is no automatic commit-message-based
-version bump and no patch release for every merge.
+Releases are deliberate, and automatic once decided: a pull request that bumps
+`[workspace.package] version` and adds the version's notes in `docs/release-notes/vX.Y.Z.md`
+releases it when it merges. **Release from main** (`release-auto.yml`) has Foundation's
+`release-tag` tag the merge and draft the release with those notes, `release.yml` builds and
+attaches every package, and Foundation's `release-publish` publishes the release once all of them
+pass. Nobody pushes a tag or a release branch by hand. Other pushes to `main` release nothing, and
+there is no commit-message-based version bump.
 
 ## Names and deployment
 
@@ -56,9 +58,8 @@ succeed, the workflow stages the assets in a draft and publishes a prerelease na
 `v<workspace-version>-nightly.<YYYYMMDD>.<run-number>.<run-attempt>` with checksums and generated
 notes. Any existing workspace prerelease suffix is replaced by the nightly suffix. Dates
 use Eastern time; package versions are overridden without changing Cargo.toml or Cargo.lock,
-so the binaries' embedded Cargo version remains the workspace version. Nightlies do not
-replace the latest stable release or advance the `release` branch. The normal deliberate
-release process below continues to create drafts for separate verification and publication.
+so the binaries' embedded Cargo version remains the workspace version. Nightlies never
+replace the latest stable release.
 
 Nightly publication uses `GITHUB_TOKEN`, so it does not trigger the downstream Flatpak Pages
 deployment. The stable Flatpak repository is not automatically updated with nightly builds.
@@ -86,38 +87,25 @@ deployment. The stable Flatpak repository is not automatically updated with nigh
    release writes and reads those numbers for good, and does nothing for a family with nothing
    pending. Commit the move with the version files. (CONTRIBUTING.md, "Changing the design
    file format".)
-4. Run `cargo xtask ci` and the packaging checks in `.github/workflows/packaging-lint.yml`.
-   Commit the version files through the normal review flow and land them on `main`.
-   Do not use `[skip ci]`. Record the exact commit SHA to release. If it changes, revalidate it.
+4. Write `docs/release-notes/vX.Y.Z.md` in the format of [its README](release-notes/README.md):
+   Spanish and English, what changed for users, and the downloads table with the real file names.
+   Carry over the items under "Notes for the next release" below. `scripts/check-release-notes.sh
+   vX.Y.Z` checks it, and the **Release notes are written** check runs it on the pull request.
+5. Run `cargo xtask ci` and the packaging checks in `.github/workflows/packaging-lint.yml`.
+   Before a large release, run the release gate (`release-gate.yml`) on the branch: it dry-runs
+   every package. Do not use `[skip ci]`.
 
-## Build the draft
+## Merge, and what follows
 
-Use an authenticated maintainer account or GitHub App with the repository's normal release
-permissions. Follow branch rules; never force-push or bypass required checks.
+Merging the pull request starts **Release from main** on the merge commit. `release.yml` builds
+Linux (both architectures, including Flatpak and Snap), macOS, Windows, FreeBSD and web packages,
+checks them, and attaches them with `SHA256SUMS.txt` to the draft `release-tag` created. When it
+passes, `release-publish` publishes the release; a pre-release version (`-rc.N`) is published as
+a pre-release and never becomes latest.
 
-```sh
-git fetch origin --tags
-git switch release
-git merge --ff-only origin/release
-git merge --ff-only origin/main
-git push origin release
-```
-
-For the first release, after this workflow has landed on `main`, create `release` from the
-validated `origin/main` commit (`git switch -c release origin/main`) and push it. If the branch
-already exists, use the commands above. Do not create the branch from unrelated work. If a
-fast-forward fails, inspect and resolve the divergence through the normal review flow.
-
-Find the `release.yml` Actions run for the recorded SHA and `release` branch, and monitor that
-specific run. The workflow builds Linux (both architectures, including Flatpak), macOS,
-Windows, FreeBSD, and web packages. Once every required job succeeds it creates a draft
-`Torno v<version>` with the artifacts, `SHA256SUMS.txt`, install notes, and generated changes.
-
-A second push with the same untagged version can rebuild and replace that draft's complete
-asset set. Existing release notes are preserved on rebuild; refresh their changes section if
-new commits were added. An existing tag or published release is never overwritten. Use a new
-version after publication. Do not push the version tag yourself: publishing the draft creates
-it at the draft's target commit.
+If a platform fails, the release stays a draft. Land the fix on `main`, then run **Release from
+main** by hand with `retag-draft`: while the release is still a draft its tag moves to the fixed
+commit and every package builds again. A published version is never rebuilt; use a new version.
 
 ## macOS disk image
 
@@ -147,53 +135,33 @@ later macOS removes it, dmgbuild needs a release that uses `diskutil image`.
 
 ## Notes for the next release
 
-Items to carry into the next release's notes (step 3 below), then remove from here:
+Items to carry into the next release's notes (step 4 above), then remove from here:
 
 - None yet.
 
-## Verify and publish
+## Check the published release
 
-When the task authorizes shipping a release, agents should complete these steps without
-requiring the owner to click through the GitHub UI. A request only to prepare a release or
-change release infrastructure does not itself request publication of the application.
-
-1. Confirm that the workflow run succeeded for the intended SHA and that the matching release
-   is still a draft targeting that SHA. Avoid publishing while another release build is active.
-2. Download all assets to a fresh directory. Run `sha256sum --check SHA256SUMS.txt` and check
-   that every expected platform/architecture is present. Smoke-test the built CLI's `--version`
-   and an example model on an available platform. Inspect the package-check job output for
-   other platforms; report any platform you could not exercise yourself.
-3. Review the generated notes. Add a concise description of features, fixes, breaking changes,
-   and known limitations. Keep the installation instructions. The macOS app is Developer ID
-   signed and notarized only when the build summary says so, and the Windows files are signed only
-   when it says which SignPath policy signed them (`test-signing` is a self-signed test certificate
-   that Windows does not trust); other packages are unsigned. Do not claim otherwise. Resolve failed checks or missing artifacts before publication.
-4. Publish the verified draft using `gh` or the equivalent GitHub release API. For example:
-
-   ```sh
-   # Substitute the version that was actually built and verified.
-   gh release edit v0.2.0 --draft=false --latest
-   # For a release candidate instead:
-   gh release edit v0.2.0-rc.1 --draft=false --prerelease --latest=false
-   ```
-
-5. Confirm that the release is public and its tag resolves to the recorded SHA. Report the
-   release URL, version, checks performed, and any remaining limitations.
+The pipeline publishes on its own, so checking comes after: confirm the release's tag resolves to
+the merge commit, download the files, run `sha256sum --check SHA256SUMS.txt`, and smoke-test the
+CLI's `--version` and an example model. The macOS app is Developer ID signed and notarized only
+when the build summary says so, and the Windows files are signed only when it says which SignPath
+policy signed them (`test-signing` is a self-signed test certificate that Windows does not trust);
+other packages are unsigned. Do not claim otherwise. Report the release URL and any platform you
+could not exercise yourself.
 
 ## Dry runs and retries
 
-`gh workflow run release.yml --ref <branch> -f draft=false` builds packages and uploads the
-`release-assets` Actions artifact without creating or publishing a release. For an explicit
-retry that creates/updates a draft, use `--ref release -f draft=true`. Draft creation from
-another branch is rejected. A rerun must still use an unpublished, untagged version.
+`gh workflow run release.yml --ref <branch>` builds and checks every package and uploads the
+`release-assets` Actions artifact without touching any release. `-f tag=vX.Y.Z` instead rebuilds
+that version's files into its draft (never a published release).
 
 ## Flatpak repository coordination
 
 The Flatpak repository proposed in PR #39 consumes **published** releases, not these drafts.
 Keep that deployment separate from building the application. A publication made with an
-Actions `GITHUB_TOKEN` does not trigger downstream `release: published` workflows; in that
-case explicitly dispatch the Flatpak workflow with the published tag, or use an appropriately
-authorized maintainer/App token for publication. Do not assume the repository updated: check
+Actions `GITHUB_TOKEN` does not trigger downstream `release: published` workflows, so
+`release-auto.yml` dispatches the Flatpak, Snap Store and WinGet workflows itself once a stable
+release is published. Do not assume the repository updated: check
 the deployment run. The Flatpak workflow requests the shared Pages workflow with that tag;
 Pages assembles the documentation, browser app, and Flatpak repository together. Ordinary
 docs updates include the latest stable Flatpak release too. Verify the resulting Pages run,
@@ -212,8 +180,8 @@ The Snap Store steps run only when the `SNAPCRAFT_STORE_CREDENTIALS` repository 
 without it they are skipped and the `.snap` files are still attached to the release:
 
 - nightlies are uploaded to `latest/edge`;
-- release drafts (pushes to `release`) are uploaded to `latest/candidate`, after every package
-  built and the draft was staged;
+- releases are uploaded to `latest/candidate`, after every package built and the draft was
+  staged;
 - publishing a non-prerelease GitHub release runs `snap-store.yml`, which promotes
   `latest/candidate` to `latest/stable`. As with the Flatpak repository, a publication made with
   `GITHUB_TOKEN` doesn't trigger it: then run `gh workflow run snap-store.yml`.
@@ -346,7 +314,7 @@ that every file came back signed. Without the secret (forks) the jobs build unsi
 - **Artifact configuration:** `packaging/windows/signpath-artifact-configuration.xml`. When it
   changes, paste the new version into the SignPath project's artifact configuration when it lands.
 - **Test-sign without publishing:** `gh workflow run release.yml -R tangency-labs/solidcraft --ref
-  <branch> -f draft=false`, then check the Windows jobs' summaries and the `release-assets`
+  <branch>`, then check the Windows jobs' summaries and the `release-assets`
   artifact.
 - SignPath only signs runs whose jobs all ran on GitHub-hosted runners, so keep the `version`,
   `icons` and `windows` jobs off self-hosted runners.
@@ -407,10 +375,9 @@ Older builds without the key keep updating with the SHA-256 check alone.
 
 ## Repository setup
 
-The `release` branch is advanced only for intentional release batches. Restrict its writers to
-maintainers/release agents through repository rules if required by the owner's policy. The
-workflow needs `contents: write` only in its draft-creation job. It does not push commits,
-calculate versions, or require a semantic-release bot to bypass `main` protections.
+Make **Release notes are written** a required check on `main`. The workflows need
+`contents: write` only in the jobs that tag, attach and publish. They push no commits and
+calculate no versions.
 
 This workflow replaces the every-push-to-main semantic-release proposal in PR #38; do not
 merge that automation alongside this release model without redesigning its triggers.
