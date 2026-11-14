@@ -196,13 +196,13 @@ mod web {
     /// distance from the eye (#1434). egui's own pass has none: the scene is drawn offscreen.
     const DEPTH_BITS: u8 = 32;
 
-    /// The loading animation (assets/styles/web/loading-logo.svg) settles into the finished mark
-    /// about 3.2 s after the page starts; this adds a short hold. The app doesn't land before it.
-    const LOADING_MIN_MS: f64 = 3600.0;
+    /// The loading screen's icon (assets/styles/web/loading-logo.svg) has faded in about 0.6 s
+    /// after the page starts; this adds a short hold. The app doesn't land before it.
+    const LOADING_MIN_MS: f64 = 1000.0;
     /// The fade from the loading screen into the app.
     const LOADING_FADE_MS: i32 = 300;
 
-    /// Take the loading screen away once the animation has played to the finished mark: wait out
+    /// Take the loading screen away once the icon has faded in: wait out
     /// what is left of `LOADING_MIN_MS`, fade it, then remove it.
     fn dismiss_loading(el: web_sys::Element) {
         let Some(window) = web_sys::window() else {

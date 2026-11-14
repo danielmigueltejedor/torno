@@ -8,7 +8,7 @@ Keep one editable master per resource and place shipped derivatives in `exports/
 assets/
   icons/
     app/
-      shared/source/                 # original Rust mark and executable ICO encoder
+      shared/source/                 # app icon picture, its resampler and the executable ICO encoder
       macos/exports/                 # icon.icns
       windows/exports/               # executable DIB ICO and installer PNG ICO
       linux/exports/hicolor/         # Linux/FreeBSD package images, 16–512 px
@@ -16,7 +16,6 @@ assets/
     ui/design/tools/                 # authoring bases, checks and included review app
     ui/source/                       # Rust viewport glyphs, markers and navigation
   branding/web/source/og.png          # shared social preview card
-  branding/logo/                     # print/web logo files; guide in branding/README.md
   styles/web/loading.css             # web loading/canvas styles
   appearances/library.rs             # built-in visual presets
   materials/library.rs               # physical defaults and colours
