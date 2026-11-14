@@ -1,7 +1,12 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-  <title>Output size — the picture size in pixels</title>
-  <path d="M9 12L55 12A5 5 0 0 1 60 17L60 47A5 5 0 0 1 55 52L9 52A5 5 0 0 1 4 47L4 17A5 5 0 0 1 9 12Z" fill="#e2e8ef" stroke="#34465b" stroke-width="2.55" stroke-linejoin="round" stroke-linecap="round"/>
-  <path d="M22.08 38.79L41.92 25.21" fill="none" stroke="#236ead" stroke-width="5.6" stroke-linejoin="round" stroke-linecap="round"/>
-  <path d="M51 19L45.33 31.97L36.86 19.59Z" fill="#236ead" stroke="#236ead" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
-  <path d="M13 45L18.67 32.03L27.14 44.41Z" fill="#236ead" stroke="#236ead" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+  <title>Render output size</title>
+  <path d="M45.16 35.6L20.91 49.6L20.91 25.6L45.16 11.6Z" fill="#8e9faf" stroke="#8e9faf" stroke-width="0.6" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M45.16 35.6L20.91 49.6M45.16 11.6L20.91 25.6M20.91 49.6L20.91 25.6M45.16 35.6L45.16 11.6" fill="none" stroke="#34465b" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M43.09 10.4L45.16 11.6L20.91 25.6L18.84 24.4Z" fill="#e2e8ef" stroke="#e2e8ef" stroke-width="0.6" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M43.09 10.4L45.16 11.6M45.16 11.6L20.91 25.6M20.91 25.6L18.84 24.4M18.84 24.4L43.09 10.4" fill="none" stroke="#34465b" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M20.91 49.6L18.84 48.4L18.84 24.4L20.91 25.6Z" fill="#b8c3cf" stroke="#b8c3cf" stroke-width="0.6" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M20.91 49.6L18.84 48.4M20.91 25.6L18.84 24.4M18.84 48.4L18.84 24.4M20.91 49.6L20.91 25.6" fill="none" stroke="#34465b" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M42.61 34.13L23.56 45.13L23.56 27.13L42.61 16.13Z" fill="#e2e8ef"/>
+  <path d="M24.83 40.28L36.09 33.78L34.64 31.27L40.92 32.15L38.54 38.03L37.09 35.52L25.83 42.02Z" fill="#236ead" stroke="#34465b" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M24.33 41.15L24.33 33.15L21.43 33.15L25.33 28.15L29.23 33.15L26.33 33.15L26.33 41.15Z" fill="#236ead" stroke="#34465b" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/>
 </svg>

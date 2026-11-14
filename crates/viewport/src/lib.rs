@@ -1,4 +1,4 @@
-//! The viewport renderer the Craft apps share. View math: an orbit camera with perspective or
+//! The viewport renderer the Nodalia apps share. View math: an orbit camera with perspective or
 //! orthographic projection, screen ↔ world mapping and picking rays. The description of a picture
 //! ([`Scene`]) and a small CPU rasterizer (z-buffer, shaded triangles, depth-tested lines) for
 //! pictures without a GPU. The opaque and clear-coat shading models and the section hatch. It

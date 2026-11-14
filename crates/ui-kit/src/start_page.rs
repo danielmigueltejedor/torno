@@ -8,8 +8,6 @@
 
 use std::borrow::Cow;
 
-use egui::vec2;
-
 pub use crate::Icon;
 use crate::{FileView, RecoveryMessage};
 use torno_theme::Tokens;
@@ -24,6 +22,9 @@ pub struct Page<'a, A> {
     pub name: Label<'a>,
     /// Whether the page takes input (not while a file picker or a load is up).
     pub interactive: bool,
+    /// The top of the start section: the app's icon, name and a caption (its version). The
+    /// other sections show their title and hint instead.
+    pub header: Option<Header<'a>>,
     pub back: Back<'a, A>,
     pub rail: Vec<RailItem<'a, A>>,
     pub title: Label<'a>,
@@ -31,6 +32,13 @@ pub struct Page<'a, A> {
     /// An error shown under the hint.
     pub error: Option<Label<'a>>,
     pub body: Body<'a, A>,
+}
+
+/// The top of Home, as every engineering app of the suite shows it.
+pub struct Header<'a> {
+    pub icon: Option<egui::TextureId>,
+    pub app: Label<'a>,
+    pub caption: Label<'a>,
 }
 
 /// The rail's first row, back to the open document.
@@ -50,7 +58,9 @@ pub enum RailItem<'a, A> {
 pub struct RailEntry<'a, A> {
     pub id: Label<'a>,
     pub label: Label<'a>,
-    /// The key hint drawn at the row's end (empty for none).
+    /// An NDL icon name for the row.
+    pub icon: &'a str,
+    /// The key hint drawn at the row's end in the narrow layout's menu (empty for none).
     pub shortcut: Label<'a>,
     pub selected: bool,
     pub enabled: bool,
@@ -148,7 +158,7 @@ pub struct Review<'a, A> {
 /// Draw the page; the entry chosen this frame, if any.
 pub fn show<A>(ui: &mut egui::Ui, page: Page<'_, A>) -> Option<A> {
     let t = Tokens::get();
-    let Page { id, name, interactive, back, rail, title, hint, error, body } = page;
+    let Page { id, name, interactive, header, back, rail, title, hint, error, body } = page;
     let mut chosen = None;
     let mut rail = Some((back, rail));
     let mut body = Some(body);
@@ -156,9 +166,14 @@ pub fn show<A>(ui: &mut egui::Ui, page: Page<'_, A>) -> Option<A> {
         ui.add_enabled_ui(interactive, |ui| {
             let full = ui.available_rect_before_wrap();
             torno_ui_registry::publish_rect(&format!("{id}:page"), full);
-            let narrow = full.width() < t.file_nav_width + FileView::tile_min_width() + t.file_content_inset_x * 2.0;
+            let narrow = full.width() < SHARED_MIN_WIDTH.max(t.file_nav_width + FileView::tile_min_width() + t.file_content_inset_x * 2.0);
             let navigation_id = format!("{id}_navigation");
-            if narrow {
+            if !narrow {
+                if let (Some((back, rail)), Some(body)) = (rail.take(), body.take()) {
+                    let heading = (title.as_ref(), hint.as_ref(), error.as_deref());
+                    chosen = shared_view(ui, id, header.as_ref(), heading, back, rail, body);
+                }
+            } else {
                 FileView::navigation(ui, |ui| {
                     crate::dropdown_menu(ui, navigation_id.as_str(), &name, |ui| {
                         ui.set_min_width(t.file_nav_width);
@@ -175,25 +190,230 @@ pub fn show<A>(ui: &mut egui::Ui, page: Page<'_, A>) -> Option<A> {
                 if let Some(body) = body.take() {
                     content(ui, id, (title.as_ref(), hint.as_ref(), error.as_deref()), body, true, &mut chosen);
                 }
-            } else {
-                let rail_rect = egui::Rect::from_min_size(full.min, vec2(t.file_nav_width, full.height()));
-                FileView::rail(ui, rail_rect, |ui| {
-                    egui::ScrollArea::vertical().id_salt(navigation_id.as_str()).auto_shrink([false, false]).show(ui, |ui| {
-                        if let Some((back, rail)) = rail.take() {
-                            navigation(ui, id, back, rail, &mut chosen);
-                        }
-                    });
-                });
-                let body_rect = egui::Rect::from_min_max(egui::pos2(rail_rect.right(), full.top()), full.max);
-                ui.scope_builder(egui::UiBuilder::new().max_rect(body_rect), |ui| {
-                    if let Some(body) = body.take() {
-                        content(ui, id, (title.as_ref(), hint.as_ref(), error.as_deref()), body, false, &mut chosen);
-                    }
-                });
             }
         });
     });
     chosen
+}
+
+/// Height of a start card in the shared Home.
+pub const CARD_HEIGHT: f32 = nodalia_theme::engineering::START_CARD.y;
+/// Below this width the rail folds into a menu over the page.
+const SHARED_MIN_WIDTH: f32 = 640.0;
+
+/// The engineering suite's Home (`nodalia_theme::engineering`): a navigation island beside a page
+/// island, the app's header, start cards and the recent documents. Every row, card and button is
+/// published under the same handle as in the narrow layout, so agents and tests reach it alike.
+fn shared_view<A>(
+    ui: &mut egui::Ui,
+    id: &str,
+    header: Option<&Header<'_>>,
+    heading: (&str, &str, Option<&str>),
+    back: Back<'_, A>,
+    rail: Vec<RailItem<'_, A>>,
+    body: Body<'_, A>,
+) -> Option<A> {
+    use nodalia_theme::{engineering as eng, office};
+    let look = eng::Look::new(torno_theme::ndl::palette(torno_theme::is_dark()));
+    let home = eng::home_look(&look);
+    let back_label = back.template.replace("{name}", &back.document);
+    // Entries after the last separator sit at the bottom of the island, as Preferences does in
+    // the suite; disabled entries (Save with no design) are left out rather than drawn dead.
+    let last_separator = rail.iter().rposition(|item| matches!(item, RailItem::Separator));
+    let mut entries: Vec<(bool, Option<RailEntry<'_, A>>)> = Vec::new();
+    let mut separators_before: Vec<usize> = Vec::new();
+    for (index, item) in rail.into_iter().enumerate() {
+        let bottom = last_separator.is_some_and(|last| index > last);
+        match item {
+            RailItem::Separator => {
+                if last_separator != Some(index) {
+                    separators_before.push(entries.len());
+                }
+            }
+            RailItem::Entry(entry) if entry.enabled => entries.push((bottom, Some(entry))),
+            RailItem::Entry(_) => {}
+        }
+    }
+    let selected = entries.iter().find_map(|(_, entry)| entry.as_ref().filter(|e| e.selected).map(|e| e.id.to_string()));
+    let mut nav = office::Nav { back: &back_label, top: Vec::new(), bottom: Vec::new(), selected: selected.as_deref() };
+    for (index, (bottom, entry)) in entries.iter().enumerate() {
+        let Some(entry) = entry else { continue };
+        if !*bottom && separators_before.contains(&index) && !nav.top.is_empty() {
+            nav.top.push(office::Entry::Separator);
+        }
+        let item = office::Entry::item(&entry.id, &entry.label, entry.icon);
+        if *bottom { nav.bottom.push(item) } else { nav.top.push(item) }
+    }
+    let back_id = format!("{id}:back");
+    let mut page_chosen = None;
+    let picked = office::file_view_with(
+        ui,
+        &home,
+        &nav,
+        |entry, response| publish(if entry == office::BACK { &back_id } else { entry }, response),
+        |ui| shared_page(ui, id, &look, header, heading, body, &mut page_chosen),
+    );
+    if page_chosen.is_some() {
+        return page_chosen;
+    }
+    let picked = picked?;
+    if picked == office::BACK {
+        return Some(back.chosen);
+    }
+    entries.into_iter().find_map(|(_, entry)| entry.filter(|e| e.id == picked.as_str()).map(|e| e.chosen))
+}
+
+fn shared_page<A>(
+    ui: &mut egui::Ui,
+    id: &str,
+    look: &nodalia_theme::engineering::Look,
+    header: Option<&Header<'_>>,
+    heading: (&str, &str, Option<&str>),
+    body: Body<'_, A>,
+    chosen: &mut Option<A>,
+) {
+    use nodalia_theme::{engineering as eng, office};
+    let (title, hint, error) = heading;
+    let home = eng::home_look(look);
+    match header {
+        Some(header) => eng::home_header(ui, look, header.icon, &header.app, &header.caption),
+        None => {
+            ui.label(egui::RichText::new(title).font(eng::page_title()).color(torno_theme::ndl::c(look.palette.text_primary)));
+            ui.add_space(4.0);
+            office::hint(ui, &home, hint);
+            ui.add_space(22.0);
+        }
+    }
+    if let Some(message) = error {
+        crate::text(ui, message, crate::Text::Error(&format!("{id}_status")));
+        ui.add_space(12.0);
+    }
+    match body {
+        Body::Start(start) => shared_start(ui, id, look, *start, chosen),
+        Body::Tiles(tiles) => shared_cards(ui, look, tiles, chosen),
+        Body::Reviews(reviews) => review_list(ui, id, reviews, chosen),
+    }
+}
+
+/// The NDL icon a kit tile icon stands for on a start card.
+fn card_icon(icon: &Icon<'_>) -> &'static str {
+    match icon {
+        Icon::Kit("open") => "open",
+        Icon::Kit("import") => "import",
+        Icon::Kit("export") => "export",
+        Icon::Kit("box") => "cube",
+        _ => "new",
+    }
+}
+
+fn shared_cards<A>(ui: &mut egui::Ui, look: &nodalia_theme::engineering::Look, tiles: Tiles<'_, A>, chosen: &mut Option<A>) {
+    use nodalia_theme::engineering as eng;
+    let cards: Vec<eng::StartCard<'_>> =
+        tiles.tiles.iter().map(|tile| eng::StartCard { icon: card_icon(&tile.icon), name: &tile.title, detail: &tile.hint }).collect();
+    let picked = eng::start_cards_with(ui, look, &cards, |index, response| {
+        if let Some(tile) = tiles.tiles.get(index) {
+            publish(&tile.id, response);
+        }
+    });
+    drop(cards);
+    if let Some(index) = picked
+        && let Some(tile) = tiles.tiles.into_iter().nth(index)
+    {
+        *chosen = Some(tile.chosen);
+    }
+}
+
+fn shared_start<A>(ui: &mut egui::Ui, id: &str, look: &nodalia_theme::engineering::Look, start: Start<'_, A>, chosen: &mut Option<A>) {
+    use nodalia_theme::{engineering as eng, office};
+    let t = Tokens::get();
+    let home = eng::home_look(look);
+    let Start { banner, actions_title, actions, recent_title, recent_empty, recent, samples_title, samples } = start;
+    if let Some(banner) = banner {
+        recovery_banner(ui, id, banner, chosen);
+        ui.add_space(t.file_section_gap);
+    }
+    office::section(ui, &home, &actions_title, |ui| shared_cards(ui, look, actions, chosen));
+    office::section(ui, &home, &recent_title, |ui| {
+        let folders: Vec<String> =
+            recent.iter().map(|row| if row.kind.is_empty() { row.path.to_string() } else { format!("{} · {}", row.path, row.kind) }).collect();
+        let docs: Vec<eng::RecentDocument<'_>> = recent
+            .iter()
+            .zip(&folders)
+            .map(|(row, folder)| eng::RecentDocument {
+                name: &row.title,
+                folder,
+                when: &row.when,
+                icon: if row.thumbnail_failed { "error" } else { "cube" },
+                thumbnail: row.thumbnail.map(|(texture, _)| texture),
+            })
+            .collect();
+        let mut menu_pick = None;
+        let picked = eng::recent_documents_with(ui, look, &docs, &recent_empty, |index, response| {
+            publish(&format!("{id}:recent:{index}"), response);
+            let Some(row) = recent.get(index) else { return };
+            crate::Menu::context(response, |ui| {
+                for (entry_index, entry) in row.menu.iter().enumerate() {
+                    if crate::MenuItem::new(&entry.label, &entry.label, entry.icon).show(ui).clicked() {
+                        menu_pick = Some((index, entry_index));
+                        ui.close();
+                    }
+                }
+            });
+        });
+        drop(docs);
+        let mut recent: Vec<Recent<'_, A>> = recent;
+        if let Some((index, entry_index)) = menu_pick
+            && index < recent.len()
+        {
+            let row = recent.swap_remove(index);
+            *chosen = row.menu.into_iter().nth(entry_index).map(|entry| entry.chosen);
+        } else if let Some(index) = picked
+            && index < recent.len()
+        {
+            *chosen = Some(recent.swap_remove(index).chosen);
+        }
+    });
+    office::section(ui, &home, &samples_title, |ui| sample_cards(ui, id, samples, chosen));
+}
+
+fn sample_cards<A>(ui: &mut egui::Ui, id: &str, samples: Vec<Sample<'_, A>>, chosen: &mut Option<A>) {
+    let (shown, picks): (Vec<_>, Vec<_>) =
+        samples.into_iter().map(|sample| ((sample.title, sample.description, sample.icon, sample.thumbnail), sample.chosen)).unzip();
+    let cards: Vec<_> = shown
+        .iter()
+        .map(|(title, description, icon, thumbnail)| crate::SampleCard { title, description, icon: *icon, thumbnail: *thumbnail })
+        .collect();
+    let sample_id = format!("{id}:sample");
+    let responses = FileView::sample_grid(ui, &sample_id, &cards);
+    for ((index, response), pick) in responses.into_iter().enumerate().zip(picks) {
+        publish(&format!("{sample_id}:{index}"), &response);
+        if response.clicked() {
+            *chosen = Some(pick);
+        }
+    }
+}
+
+fn recovery_banner<A>(ui: &mut egui::Ui, id: &str, banner: Banner<'_, A>, chosen: &mut Option<A>) {
+    let banner_id = format!("{id}:recovery");
+    let message = RecoveryMessage {
+        title: &banner.title,
+        before_filename: &banner.before_filename,
+        filename: &banner.filename,
+        after_filename: &banner.after_filename,
+    };
+    let (recover_label, recover_chosen) = banner.recover;
+    let (discard_label, discard_chosen) = banner.discard.map_or((None, None), |(label, chosen)| (Some(label), Some(chosen)));
+    let (recover, discard) = FileView::recovery_banner(ui, &banner_id, message, &recover_label, discard_label.as_deref());
+    publish(&format!("{banner_id}:recover"), &recover);
+    if recover.clicked() {
+        *chosen = Some(recover_chosen);
+    }
+    if let (Some(discard), Some(discard_chosen)) = (discard, discard_chosen) {
+        publish(&format!("{banner_id}:discard"), &discard);
+        if discard.clicked() {
+            *chosen = Some(discard_chosen);
+        }
+    }
 }
 
 fn navigation<A>(ui: &mut egui::Ui, id: &str, back: Back<'_, A>, rail: Vec<RailItem<'_, A>>, chosen: &mut Option<A>) {
@@ -263,26 +483,7 @@ fn start_content<A>(ui: &mut egui::Ui, id: &str, start: Start<'_, A>, chosen: &m
     let t = Tokens::get();
     let Start { banner, actions_title, actions, recent_title, recent_empty, recent, samples_title, samples } = start;
     if let Some(banner) = banner {
-        let banner_id = format!("{id}:recovery");
-        let message = RecoveryMessage {
-            title: &banner.title,
-            before_filename: &banner.before_filename,
-            filename: &banner.filename,
-            after_filename: &banner.after_filename,
-        };
-        let (recover_label, recover_chosen) = banner.recover;
-        let (discard_label, discard_chosen) = banner.discard.map_or((None, None), |(label, chosen)| (Some(label), Some(chosen)));
-        let (recover, discard) = FileView::recovery_banner(ui, &banner_id, message, &recover_label, discard_label.as_deref());
-        publish(&format!("{banner_id}:recover"), &recover);
-        if recover.clicked() {
-            *chosen = Some(recover_chosen);
-        }
-        if let (Some(discard), Some(discard_chosen)) = (discard, discard_chosen) {
-            publish(&format!("{banner_id}:discard"), &discard);
-            if discard.clicked() {
-                *chosen = Some(discard_chosen);
-            }
-        }
+        recovery_banner(ui, id, banner, chosen);
         ui.add_space(t.file_section_gap);
     }
     FileView::section(ui, &actions_title, t.space_12, |ui| tile_grid(ui, actions, chosen));
@@ -326,22 +527,7 @@ fn start_content<A>(ui: &mut egui::Ui, id: &str, start: Start<'_, A>, chosen: &m
         });
     });
     ui.add_space(t.file_section_gap);
-    FileView::section(ui, &samples_title, t.space_10, |ui| {
-        let (shown, picks): (Vec<_>, Vec<_>) =
-            samples.into_iter().map(|sample| ((sample.title, sample.description, sample.icon, sample.thumbnail), sample.chosen)).unzip();
-        let cards: Vec<_> = shown
-            .iter()
-            .map(|(title, description, icon, thumbnail)| crate::SampleCard { title, description, icon: *icon, thumbnail: *thumbnail })
-            .collect();
-        let sample_id = format!("{id}:sample");
-        let responses = FileView::sample_grid(ui, &sample_id, &cards);
-        for ((index, response), pick) in responses.into_iter().enumerate().zip(picks) {
-            publish(&format!("{sample_id}:{index}"), &response);
-            if response.clicked() {
-                *chosen = Some(pick);
-            }
-        }
-    });
+    FileView::section(ui, &samples_title, t.space_10, |ui| sample_cards(ui, id, samples, chosen));
 }
 
 fn review_list<A>(ui: &mut egui::Ui, id: &str, reviews: Reviews<'_, A>, chosen: &mut Option<A>) {
@@ -398,6 +584,7 @@ mod tests {
         let entry = |id: &'static str, selected, enabled| RailEntry {
             id: id.into(),
             label: id.into(),
+            icon: "home",
             shortcut: "".into(),
             selected,
             enabled,
@@ -407,6 +594,7 @@ mod tests {
             id: "start",
             name: "Start page".into(),
             interactive: true,
+            header: None,
             back: Back { template: "Back to {name}".into(), document: "Plate".into(), shortcut: "Esc".into(), chosen: Picked::Back },
             rail: vec![
                 RailItem::Entry(entry("start:home", true, true)),
@@ -520,7 +708,11 @@ mod tests {
 
     #[test]
     fn start_page_disabled_rail_entry_returns_nothing() {
-        assert_eq!(click(egui::vec2(1400.0, 900.0), "start:save", 0), []);
+        // The narrow menu draws it dimmed; the suite's navigation island leaves it out.
+        let drive = Drive::new(egui::vec2(1400.0, 900.0), 0);
+        assert!(torno_ui_registry::handle_at("start:save").is_none(), "no dead row in the island");
+        assert!(torno_ui_registry::handle_at("start:about").is_some());
+        assert!(drive.chosen.is_empty());
     }
 
     #[test]
@@ -536,7 +728,8 @@ mod tests {
 
     #[test]
     fn start_page_tile_draws_the_hosts_texture_icon() {
-        let mut drive = Drive::new(egui::vec2(1400.0, 900.0), 0);
+        // The narrow layout's tiles take any host icon; the suite's start cards draw NDL icons.
+        let mut drive = Drive::new(egui::vec2(560.0, 900.0), 0);
         let output = drive.frame(Vec::new());
         let tile = torno_ui_registry::rect_of("start:second").unwrap();
         let mut drawn = false;

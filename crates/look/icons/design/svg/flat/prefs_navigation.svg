@@ -1,4 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-  <title>Navigation</title>
-  <path d="M32 7A14 14 0 0 1 46 21L46 43A14 14 0 0 1 18 43L18 21A14 14 0 0 1 32 7Z" fill="none" stroke="currentColor" stroke-width="6.8" stroke-linejoin="round" stroke-linecap="round"/><path d="M18 38L46 38" fill="none" stroke="currentColor" stroke-width="6.8" stroke-linejoin="round" stroke-linecap="round"/><path d="M32 14L32 22" fill="none" stroke="currentColor" stroke-width="6.8" stroke-linejoin="round" stroke-linecap="round"/>
+  <title>Prefs navigation</title>
+  <path d="M13.33 13.33L50.67 13.33A4 4 0 0 1 54.67 17.33L54.67 46.67A4 4 0 0 1 50.67 50.67L13.33 50.67A4 4 0 0 1 9.33 46.67L9.33 17.33A4 4 0 0 1 13.33 13.33Z" fill="none" stroke="currentColor" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M25.33 24L41.33 24A1.33 1.33 0 0 1 42.67 25.33L42.67 38.67A1.33 1.33 0 0 1 41.33 40L25.33 40A1.33 1.33 0 0 1 24 38.67L24 25.33A1.33 1.33 0 0 1 25.33 24Z" fill="currentColor" stroke="currentColor" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/>
 </svg>

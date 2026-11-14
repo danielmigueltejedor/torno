@@ -1,10 +1,10 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
   <title>Arc slot</title>
-  <path d="M6.62 34.17A28 28 0 0 1 57.38 34.17A7 7 0 0 1 44.69 40.08A14 14 0 0 0 19.31 40.08A7 7 0 0 1 6.62 34.17Z" fill="#b9ddf8" stroke="#236ead" stroke-width="4.25" stroke-linejoin="round" stroke-linecap="round"/>
-  <circle cx="12.97" cy="37.13" r="5.8" fill="#ffffff"/>
-  <circle cx="12.97" cy="37.13" r="3.4" fill="#236ead"/>
-  <circle cx="51.03" cy="37.13" r="5.8" fill="#ffffff"/>
-  <circle cx="51.03" cy="37.13" r="3.4" fill="#236ead"/>
-  <circle cx="32" cy="25" r="5.8" fill="#ffffff"/>
-  <circle cx="32" cy="25" r="3.4" fill="#236ead"/>
+  <path d="M20.26 6.55L59.65 20.05L43.74 53.45L4.35 39.95Z" fill="#e2e8ef" stroke="#e2e8ef" stroke-width="0.6" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M20.26 6.55L59.65 20.05M59.65 20.05L43.74 53.45M43.74 53.45L4.35 39.95M4.35 39.95L20.26 6.55" fill="none" stroke="#34465b" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M59.65 21.77L43.74 55.17L43.74 53.45L59.65 20.05Z" fill="#8e9faf" stroke="#8e9faf" stroke-width="0.6" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M59.65 21.77L43.74 55.17M59.65 20.05L43.74 53.45M43.74 55.17L43.74 53.45M59.65 21.77L59.65 20.05" fill="none" stroke="#34465b" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M43.74 55.17L4.35 41.67L4.35 39.95L43.74 53.45Z" fill="#b8c3cf" stroke="#b8c3cf" stroke-width="0.6" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M43.74 55.17L4.35 41.67M43.74 53.45L4.35 39.95M4.35 41.67L4.35 39.95M43.74 55.17L43.74 53.45" fill="none" stroke="#34465b" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M15.01 26.47L16.43 25.61L17.94 24.86L19.51 24.22L21.14 23.7L22.82 23.31L24.54 23.04L26.27 22.9L28.02 22.88L29.76 23L31.48 23.24L33.16 23.61L34.81 24.11L36.39 24.72L37.91 25.45L39.35 26.29L40.69 27.23L41.94 28.26L43.07 29.39L44.08 30.59L44.97 31.86L45.72 33.2L46.33 34.58L46.8 36.01L47.11 37.46L47.11 37.46L47.08 38.79L46.57 40.04L45.63 41.1L44.35 41.86L42.86 42.25L41.29 42.23L39.82 41.79L38.57 41L37.67 39.91L37.21 38.64L37.22 38.64L37.06 37.92L36.83 37.2L36.52 36.51L36.14 35.84L35.7 35.21L35.2 34.6L34.63 34.04L34.01 33.52L33.33 33.05L32.62 32.64L31.86 32.27L31.06 31.96L30.24 31.72L29.4 31.53L28.54 31.41L27.67 31.35L26.8 31.36L25.93 31.43L25.07 31.56L24.23 31.76L23.42 32.02L22.63 32.34L21.88 32.71L21.17 33.14L21.17 33.14L19.8 33.79L18.27 34.04L16.72 33.88L15.3 33.32L14.16 32.41L13.4 31.26L13.1 29.95L13.29 28.64L13.95 27.44L15.02 26.47Z" fill="none" stroke="#236ead" stroke-width="2.8" stroke-linejoin="round" stroke-linecap="round"/>
 </svg>

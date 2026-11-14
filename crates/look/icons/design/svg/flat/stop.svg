@@ -1,4 +1,4 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-  <title>Stop response</title>
-  <path d="M20 17L44 17A3 3 0 0 1 47 20L47 44A3 3 0 0 1 44 47L20 47A3 3 0 0 1 17 44L17 20A3 3 0 0 1 20 17Z" fill="currentColor"/>
+  <title>Stop</title>
+  <path d="M20 14.67L44 14.67A5.33 5.33 0 0 1 49.33 20L49.33 44A5.33 5.33 0 0 1 44 49.33L20 49.33A5.33 5.33 0 0 1 14.67 44L14.67 20A5.33 5.33 0 0 1 20 14.67Z" fill="currentColor" stroke="currentColor" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/>
 </svg>

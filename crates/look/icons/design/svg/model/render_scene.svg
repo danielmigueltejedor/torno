@@ -1,10 +1,14 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
   <title>Render scene</title>
-  <path d="M10.16 30.74L24.12 38.8L24.12 54.92L10.16 46.86Z" fill="#b8c3cf"/>
-  <path d="M38.08 30.74L24.12 38.8L24.12 54.92L38.08 46.86Z" fill="#8e9faf"/>
-  <path d="M24.12 22.68L38.08 30.74L24.12 38.8L10.16 30.74Z" fill="#e2e8ef"/>
-  <path d="M24.12 22.68L38.08 30.74L38.08 46.86L24.12 54.92L10.16 46.86L10.16 30.74Z" fill="none" stroke="#34465b" stroke-width="2.55" stroke-linejoin="round" stroke-linecap="round"/>
-  <path d="M10.16 30.74L24.12 38.8L38.08 30.74" fill="none" stroke="#34465b" stroke-width="2.55" stroke-linejoin="round" stroke-linecap="round"/>
-  <path d="M24.12 38.8L24.12 54.92" fill="none" stroke="#34465b" stroke-width="2.55" stroke-linejoin="round" stroke-linecap="round"/>
-  <path d="M45.12 7.8Q46.32 16.6 55.12 17.8Q46.32 19 45.12 27.8Q43.92 19 35.12 17.8Q43.92 16.6 45.12 7.8Z" fill="#236ead"/>
+  <path d="M32 27L61.44 44L32 61L2.56 44Z" fill="#e2e8ef" stroke="#8e9faf" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/>
+  <circle cx="44.12" cy="37" r="6" fill="#236ead"/>
+  <circle cx="43.4" cy="36.28" r="5.16" fill="#328bd3"/>
+  <circle cx="42.32" cy="35.2" r="2.88" fill="#b9ddf8"/>
+  <circle cx="44.12" cy="37" r="6" fill="none" stroke="#34465b" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M35.46 44L25.07 50L25.07 38L35.46 32Z" fill="#8e9faf" stroke="#8e9faf" stroke-width="0.6" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M35.46 44L25.07 50M35.46 32L25.07 38M25.07 50L25.07 38M35.46 44L35.46 32" fill="none" stroke="#34465b" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M25.07 50L14.68 44L14.68 32L25.07 38Z" fill="#b8c3cf" stroke="#b8c3cf" stroke-width="0.6" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M25.07 50L14.68 44M25.07 38L14.68 32M14.68 44L14.68 32M25.07 50L25.07 38" fill="none" stroke="#34465b" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M25.07 26L35.46 32L25.07 38L14.68 32Z" fill="#e2e8ef" stroke="#e2e8ef" stroke-width="0.6" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M25.07 26L35.46 32M35.46 32L25.07 38M25.07 38L14.68 32M14.68 32L25.07 26" fill="none" stroke="#34465b" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>
 </svg>

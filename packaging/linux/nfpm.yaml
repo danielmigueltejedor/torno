@@ -19,7 +19,7 @@ release: 1
 section: graphics
 priority: optional
 maintainer: ${TORNO_MAINTAINER}
-vendor: SolidCraft contributors
+vendor: Nodalia
 homepage: https://getnodalia.github.io/torno/
 license: MIT OR Apache-2.0
 description: |-

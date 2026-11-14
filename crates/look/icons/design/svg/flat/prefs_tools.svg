@@ -1,4 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-  <title>Tools</title>
-  <path d="M56.86 18.45A16.5 16.5 0 0 1 37.12 39.04L22.33 53.83A8.6 8.6 0 0 1 10.17 41.67L24.96 26.88A16.5 16.5 0 0 1 45.55 7.14L37.55 15.14L39.94 24.06L48.86 26.45Z" fill="none" stroke="currentColor" stroke-width="6.8" stroke-linejoin="round" stroke-linecap="round"/>
+  <title>Prefs tools</title>
+  <path d="M10.67 41.33L41.33 10.67L53.33 22.67L22.67 53.33Z" fill="none" stroke="currentColor" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M21.33 34.67L25.33 38.67M29.33 26.67L33.33 30.67M37.33 18.67L41.33 22.67" fill="none" stroke="currentColor" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/>
 </svg>

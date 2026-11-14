@@ -1,9 +1,9 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
   <title>Loft</title>
-  <path d="M6 46L21.5 16.5L32 19L42.5 16.5L58 46L32 58Z" fill="#328bd3"/>
-  <path d="M6 46L21.5 16.5L24 18Q25 40 32 58Z" fill="#b9ddf8"/>
-  <path d="M58 46L42.5 16.5L40 18Q39 40 32 58Z" fill="#236ead"/>
-  <path d="M6 46L22 14M42 14L58 46L32 58L6 46" fill="none" stroke="#34465b" stroke-width="2.55" stroke-linejoin="round" stroke-linecap="round"/>
-  <path d="M22 14A10 5 0 1 0 42 14A10 5 0 1 0 22 14Z" fill="#b9ddf8"/>
-  <path d="M22 14A10 5 0 1 0 42 14A10 5 0 1 0 22 14Z" fill="none" stroke="#34465b" stroke-width="2.55" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M44.12 53L42.44 53.85L40.57 54.57L38.56 55.15L36.44 55.56L34.24 55.81L32 55.9L29.76 55.81L27.56 55.56L25.44 55.15L23.43 54.57L21.56 53.85L19.88 53L18.4 52.03L17.15 50.95L16.16 49.79L15.44 48.56L15 47.29L14.85 46L15 44.71L15.44 43.44L16.16 42.21L17.15 41.05L18.4 39.97L19.88 39L21.56 38.15L23.43 37.43L25.44 36.85L27.56 36.44L29.76 36.19L32 36.1L34.24 36.19L36.44 36.44L38.56 36.85L40.57 37.43L42.44 38.15L44.12 39L45.6 39.97L46.85 41.05L47.84 42.21L48.56 43.44L49 44.71L49.15 46L49 47.29L48.56 48.56L47.84 49.79L46.85 50.95L45.6 52.03L44.12 53Z" fill="none" stroke="#6f879c" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="3 3"/>
+  <path d="M44.12 53L19.88 53L19.88 39L25.94 22.5L25.94 29.5L38.06 29.5Z" fill="#328bd3" stroke="#328bd3" stroke-width="0.6" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M44.12 39L44.12 53L38.06 29.5L38.06 22.5Z" fill="#236ead" stroke="#236ead" stroke-width="0.6" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M38.06 29.5L25.94 29.5L25.94 22.5L38.06 22.5Z" fill="#b9ddf8" stroke="#b9ddf8" stroke-width="0.6" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M19.88 39L25.94 22.5L38.06 22.5L44.12 39L44.12 53L19.88 53Z" fill="none" stroke="#34465b" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M38.06 29.5L25.94 29.5L25.94 22.5L38.06 22.5Z" fill="none" stroke="#34465b" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>
 </svg>

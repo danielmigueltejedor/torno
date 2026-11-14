@@ -1,6 +1,12 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
   <title>Sketch mirror</title>
-  <path d="M32 6L32 12M32 20L32 26M32 34L32 40M32 48L32 54" fill="none" stroke="#6f879c" stroke-width="4.25" stroke-linejoin="round" stroke-linecap="round"/>
-  <path d="M7 50L25 50L25 16Z" fill="none" stroke="#8e9faf" stroke-width="4.25" stroke-linejoin="round" stroke-linecap="round"/>
-  <path d="M57 50L39 50L39 16Z" fill="none" stroke="#236ead" stroke-width="4.25" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M20.26 6.55L59.65 20.05L43.74 53.45L4.35 39.95Z" fill="#e2e8ef" stroke="#e2e8ef" stroke-width="0.6" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M20.26 6.55L59.65 20.05M59.65 20.05L43.74 53.45M43.74 53.45L4.35 39.95M4.35 39.95L20.26 6.55" fill="none" stroke="#34465b" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M59.65 21.77L43.74 55.17L43.74 53.45L59.65 20.05Z" fill="#8e9faf" stroke="#8e9faf" stroke-width="0.6" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M59.65 21.77L43.74 55.17M59.65 20.05L43.74 53.45M43.74 55.17L43.74 53.45M59.65 21.77L59.65 20.05" fill="none" stroke="#34465b" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M43.74 55.17L4.35 41.67L4.35 39.95L43.74 53.45Z" fill="#b8c3cf" stroke="#b8c3cf" stroke-width="0.6" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M43.74 55.17L4.35 41.67M43.74 53.45L4.35 39.95M4.35 41.67L4.35 39.95M43.74 55.17L43.74 53.45" fill="none" stroke="#34465b" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M5.98 39.37L58.02 20.63" fill="none" stroke="#6f879c" stroke-width="1.7" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="6 3 2 3"/>
+  <path d="M16.72 22.48L30.67 15.83L31.56 25.28" fill="none" stroke="#34465b" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M27.76 44.55L43.09 40.66L35.7 33.55" fill="none" stroke="#236ead" stroke-width="2.8" stroke-linejoin="round" stroke-linecap="round"/>
 </svg>

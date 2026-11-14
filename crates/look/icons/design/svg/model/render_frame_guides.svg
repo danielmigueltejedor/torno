@@ -1,9 +1,14 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-  <title>Frame guides — rule of thirds over the picture</title>
-  <path d="M10 14L54 14A4 4 0 0 1 58 18L58 46A4 4 0 0 1 54 50L10 50A4 4 0 0 1 6 46L6 18A4 4 0 0 1 10 14Z" fill="#e2e8ef" stroke="#34465b" stroke-width="2.55" stroke-linejoin="round" stroke-linecap="round"/>
-  <path d="M23.33 15.3L23.33 48.7M7.3 26L56.7 26M40.67 15.3L40.67 48.7M7.3 38L56.7 38" fill="none" stroke="#6f879c" stroke-width="2.55" stroke-linejoin="round" stroke-linecap="round"/>
-  <circle cx="23.33" cy="26" r="3.6" fill="#236ead"/>
-  <circle cx="23.33" cy="38" r="3.6" fill="#236ead"/>
-  <circle cx="40.67" cy="26" r="3.6" fill="#236ead"/>
-  <circle cx="40.67" cy="38" r="3.6" fill="#236ead"/>
+  <title>Render frame guides</title>
+  <path d="M45.16 37.6L20.91 51.6L20.91 27.6L45.16 13.6Z" fill="#8e9faf" stroke="#8e9faf" stroke-width="0.6" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M45.16 37.6L20.91 51.6M45.16 13.6L20.91 27.6M20.91 51.6L20.91 27.6M45.16 37.6L45.16 13.6" fill="none" stroke="#34465b" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M43.09 12.4L45.16 13.6L20.91 27.6L18.84 26.4Z" fill="#e2e8ef" stroke="#e2e8ef" stroke-width="0.6" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M43.09 12.4L45.16 13.6M45.16 13.6L20.91 27.6M20.91 27.6L18.84 26.4M18.84 26.4L43.09 12.4" fill="none" stroke="#34465b" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M20.91 51.6L18.84 50.4L18.84 26.4L20.91 27.6Z" fill="#b8c3cf" stroke="#b8c3cf" stroke-width="0.6" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M20.91 51.6L18.84 50.4M20.91 27.6L18.84 26.4M18.84 50.4L18.84 26.4M20.91 51.6L20.91 27.6" fill="none" stroke="#34465b" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M42.61 36.13L23.56 47.13L23.56 29.13L42.61 18.13Z" fill="#e2e8ef"/>
+  <path d="M36.59 39.65L36.59 21.65" fill="none" stroke="#236ead" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M29.66 43.65L29.66 25.65" fill="none" stroke="#236ead" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M42.65 30.15L23.6 41.15" fill="none" stroke="#236ead" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M42.65 24.15L23.6 35.15" fill="none" stroke="#236ead" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/>
 </svg>

@@ -1,19 +1,13 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-  <title>Print Face</title>
-  <path d="M9.72 26.17L4.5 20.95L4.5 40.85L9.72 46.07Z" fill="#b8c3cf"/>
-  <path d="M9.72 26.17L4.5 20.95L4.5 40.85L9.72 46.07Z" fill="none" stroke="#34465b" stroke-width="2.55" stroke-linejoin="round" stroke-linecap="round"/>
-  <path d="M18.77 23.15L9.72 26.17L9.72 46.07L18.77 43.05Z" fill="#328bd3"/>
-  <path d="M18.77 23.15L9.72 26.17L9.72 46.07L18.77 43.05Z" fill="none" stroke="#34465b" stroke-width="2.55" stroke-linejoin="round" stroke-linecap="round"/>
-  <path d="M13.55 17.93L18.77 23.15L9.72 26.17L4.5 20.95Z" fill="#e2e8ef"/>
-  <path d="M13.55 17.93L18.77 23.15L9.72 26.17L4.5 20.95Z" fill="none" stroke="#34465b" stroke-width="2.55" stroke-linejoin="round" stroke-linecap="round"/>
-  <path d="M50.45 37.54L38.27 25.35L38.27 33.88L50.45 46.07Z" fill="#b8c3cf"/>
-  <path d="M50.45 37.54L38.27 25.35L38.27 33.88L50.45 46.07Z" fill="none" stroke="#34465b" stroke-width="2.55" stroke-linejoin="round" stroke-linecap="round"/>
-  <path d="M59.5 34.53L50.45 37.54L50.45 46.07L59.5 43.05Z" fill="#8e9faf"/>
-  <path d="M59.5 34.53L50.45 37.54L50.45 46.07L59.5 43.05Z" fill="none" stroke="#34465b" stroke-width="2.55" stroke-linejoin="round" stroke-linecap="round"/>
-  <path d="M47.31 22.34L59.5 34.53L50.45 37.54L38.27 25.35Z" fill="#e2e8ef"/>
-  <path d="M47.31 22.34L59.5 34.53L50.45 37.54L38.27 25.35Z" fill="none" stroke="#34465b" stroke-width="2.55" stroke-linejoin="round" stroke-linecap="round"/>
-  <path d="M50.45 46.07L38.27 33.88" fill="none" stroke="#236ead" stroke-width="2.55" stroke-linejoin="round" stroke-linecap="round"/>
-  <path d="M59.5 43.05L50.45 46.07" fill="none" stroke="#236ead" stroke-width="2.55" stroke-linejoin="round" stroke-linecap="round"/>
-  <path d="M24.17 34.2L28.31 34.2" fill="none" stroke="#236ead" stroke-width="4.25" stroke-linejoin="round" stroke-linecap="round"/>
-  <path d="M35.31 34.2L27.31 38.7L27.31 29.7Z" fill="#236ead"/>
+  <title>Print face</title>
+  <path d="M32 20L56.25 34L32 48L7.75 34Z" fill="#e2e8ef" stroke="#e2e8ef" stroke-width="0.6" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M32 20L56.25 34M56.25 34L32 48M32 48L7.75 34M7.75 34L32 20" fill="none" stroke="#34465b" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M56.25 46L32 60L32 48L56.25 34Z" fill="#8e9faf" stroke="#8e9faf" stroke-width="0.6" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M56.25 46L32 60M56.25 34L32 48M32 60L32 48M56.25 46L56.25 34" fill="none" stroke="#34465b" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M32 60L7.75 46L7.75 34L32 48Z" fill="#b8c3cf" stroke="#b8c3cf" stroke-width="0.6" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M32 60L7.75 46M32 48L7.75 34M7.75 46L7.75 34M32 60L32 48" fill="none" stroke="#34465b" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M32 20L56.25 34L32 48L7.75 34Z" fill="#b9ddf8" stroke="#34465b" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M30.27 27L44.12 35" fill="none" stroke="#236ead" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M25.07 30L38.93 38" fill="none" stroke="#236ead" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M19.88 33L33.73 41" fill="none" stroke="#236ead" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/>
 </svg>

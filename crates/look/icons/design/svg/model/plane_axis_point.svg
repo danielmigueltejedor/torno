@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-  <title>Plane through axis and point</title>
-  <path d="M26 15L56 32.32L38 42.71L8 25.39Z" fill="#b9ddf8" stroke="#236ead" stroke-width="2.55" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="0.1 5"/>
-  <path d="M15 18.4L53 40.34" fill="none" stroke="currentColor" stroke-width="2.55" stroke-linejoin="round" stroke-linecap="round"/>
-  <circle cx="22" cy="29" r="3.1" fill="currentColor"/>
+  <title>Plane axis point</title>
+  <path d="M44.12 39L19.88 53L19.88 29L44.12 15Z" fill="#b9ddf8" stroke="#236ead" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M47.59 37L16.41 55" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>
+  <circle cx="28.54" cy="28" r="3" fill="#236ead" stroke="#34465b" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/>
 </svg>

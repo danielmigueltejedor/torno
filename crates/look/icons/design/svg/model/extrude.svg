@@ -1,13 +1,16 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
   <title>Extrude</title>
-  <path d="M9.36 38.84L32 52.04L32 59.58L9.36 46.38Z" fill="#b8c3cf"/>
-  <path d="M32 52.04L54.63 38.84L54.63 46.38L32 59.58Z" fill="#8e9faf"/>
-  <path d="M9.36 30.35L32 43.55L32 52.04L9.36 38.84Z" fill="#328bd3"/>
-  <path d="M32 43.55L54.63 30.35L54.63 38.84L32 52.04Z" fill="#236ead"/>
-  <path d="M9.36 30.35L32 17.15L54.63 30.35L32 43.55Z" fill="#b9ddf8"/>
-  <path d="M9.36 30.35L32 17.15L54.63 30.35L54.63 46.38L32 59.58L9.36 46.38Z" fill="none" stroke="#34465b" stroke-width="2.55" stroke-linejoin="round" stroke-linecap="round"/>
-  <path d="M9.36 30.35L32 43.55L54.63 30.35" fill="none" stroke="#34465b" stroke-width="2.55" stroke-linejoin="round" stroke-linecap="round"/>
-  <path d="M9.36 38.84L32 52.04L54.63 38.84" fill="none" stroke="#34465b" stroke-width="2.55" stroke-linejoin="round" stroke-linecap="round"/>
-  <path d="M32 43.55L32 59.58" fill="none" stroke="#34465b" stroke-width="2.55" stroke-linejoin="round" stroke-linecap="round"/>
-  <path d="M32 3L39.54 10.55L34.82 10.55L34.82 13.38L29.17 13.38L29.17 10.55L24.45 10.55Z" fill="#236ead"/>
+  <path d="M32 26L56.25 40L32 54L7.75 40Z" fill="#e2e8ef" stroke="#e2e8ef" stroke-width="0.6" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M32 26L56.25 40M56.25 40L32 54M32 54L7.75 40M7.75 40L32 26" fill="none" stroke="#34465b" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M56.25 47L32 61L32 54L56.25 40Z" fill="#8e9faf" stroke="#8e9faf" stroke-width="0.6" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M56.25 47L32 61M56.25 40L32 54M32 61L32 54M56.25 47L56.25 40" fill="none" stroke="#34465b" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M32 61L7.75 47L7.75 40L32 54Z" fill="#b8c3cf" stroke="#b8c3cf" stroke-width="0.6" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M32 61L7.75 47M32 54L7.75 40M7.75 47L7.75 40M32 61L32 54" fill="none" stroke="#34465b" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M32 18L56.25 32L32 46L7.75 32Z" fill="#b9ddf8" stroke="#b9ddf8" stroke-width="0.6" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M32 18L56.25 32M56.25 32L32 46M32 46L7.75 32M7.75 32L32 18" fill="none" stroke="#34465b" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M56.25 40L32 54L32 46L56.25 32Z" fill="#236ead" stroke="#236ead" stroke-width="0.6" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M56.25 40L32 54M56.25 32L32 46M32 54L32 46M56.25 40L56.25 32" fill="none" stroke="#34465b" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M32 54L7.75 40L7.75 32L32 46Z" fill="#328bd3" stroke="#328bd3" stroke-width="0.6" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M32 54L7.75 40M32 46L7.75 32M7.75 40L7.75 32M32 54L32 46" fill="none" stroke="#34465b" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M30.4 30L30.4 19.5L26.72 19.5L32 12L37.28 19.5L33.6 19.5L33.6 30Z" fill="#236ead" stroke="#34465b" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/>
 </svg>

@@ -1,1 +1,15 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><title>Stop History</title><path d="M11.22 20L32 32L32 56L11.22 44Z" fill="#b8c3cf"/><path d="M52.78 20L32 32L32 56L52.78 44Z" fill="#8e9faf"/><path d="M32 8L52.78 20L32 32L11.22 20Z" fill="#e2e8ef"/><path d="M32 8L52.78 20L52.78 44L32 56L11.22 44L11.22 20Z" fill="none" stroke="#34465b" stroke-width="2.55" stroke-linejoin="round" stroke-linecap="round"/><path d="M11.22 20L32 32L52.78 20" fill="none" stroke="#34465b" stroke-width="2.55" stroke-linejoin="round" stroke-linecap="round"/><path d="M32 32L32 56" fill="none" stroke="#34465b" stroke-width="2.55" stroke-linejoin="round" stroke-linecap="round"/><path d="M36 35L53 35A2 2 0 0 1 55 37L55 54A2 2 0 0 1 53 56L36 56A2 2 0 0 1 34 54L34 37A2 2 0 0 1 36 35Z" fill="#ffffff" stroke="#ffffff" stroke-width="4.55" stroke-linejoin="round" stroke-linecap="round"/><path d="M36 35L53 35A2 2 0 0 1 55 37L55 54A2 2 0 0 1 53 56L36 56A2 2 0 0 1 34 54L34 37A2 2 0 0 1 36 35Z" fill="#236ead" stroke="#236ead" stroke-width="2.55" stroke-linejoin="round" stroke-linecap="round"/></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <title>Timeline stop</title>
+  <path d="M21.61 28L49.32 44L42.39 48L14.68 32Z" fill="#e2e8ef" stroke="#e2e8ef" stroke-width="0.6" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M21.61 28L49.32 44M49.32 44L42.39 48M42.39 48L14.68 32M14.68 32L21.61 28" fill="none" stroke="#34465b" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M42.39 52L14.68 36L14.68 32L42.39 48Z" fill="#b8c3cf" stroke="#b8c3cf" stroke-width="0.6" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M42.39 52L14.68 36M42.39 48L14.68 32M14.68 36L14.68 32M42.39 52L42.39 48" fill="none" stroke="#34465b" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M49.32 48L42.39 52L42.39 48L49.32 44Z" fill="#8e9faf" stroke="#8e9faf" stroke-width="0.6" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M49.32 48L42.39 52M49.32 44L42.39 48M42.39 52L42.39 48M49.32 48L49.32 44" fill="none" stroke="#34465b" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M32 27L42.39 33L32 39L21.61 33Z" fill="#b9ddf8" stroke="#b9ddf8" stroke-width="0.6" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M32 27L42.39 33M42.39 33L32 39M32 39L21.61 33M21.61 33L32 27" fill="none" stroke="#34465b" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M42.39 38L32 44L32 39L42.39 33Z" fill="#236ead" stroke="#236ead" stroke-width="0.6" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M42.39 38L32 44M42.39 33L32 39M32 44L32 39M42.39 38L42.39 33" fill="none" stroke="#34465b" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M32 44L21.61 38L21.61 33L32 39Z" fill="#328bd3" stroke="#328bd3" stroke-width="0.6" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M32 44L21.61 38M32 39L21.61 33M21.61 38L21.61 33M32 44L32 39" fill="none" stroke="#34465b" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>
+</svg>

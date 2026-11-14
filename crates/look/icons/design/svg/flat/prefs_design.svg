@@ -1,4 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-  <title>Design</title>
-  <path d="M32 7.7L53.04 19.85L53.04 44.15L32 56.3L10.96 44.15L10.96 19.85Z" fill="none" stroke="currentColor" stroke-width="6.8" stroke-linejoin="round" stroke-linecap="round"/><path d="M10.96 19.85L32 32L53.04 19.85M32 32L32 56.3" fill="none" stroke="currentColor" stroke-width="6.8" stroke-linejoin="round" stroke-linecap="round"/>
+  <title>Prefs design</title>
+  <path d="M32 9.33L52 20.67L52 43.33L32 54.67L12 43.33L12 20.67Z" fill="none" stroke="currentColor" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M12 20.67L32 32L52 20.67M32 32L32 54.67" fill="none" stroke="currentColor" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/>
 </svg>

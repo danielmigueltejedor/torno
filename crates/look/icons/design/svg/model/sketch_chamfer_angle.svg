@@ -1,8 +1,13 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-  <title>Distance and angle sketch chamfer</title>
-  <path d="M12 36L12 12L42 12" fill="none" stroke="#6f879c" stroke-width="2.55" stroke-linejoin="round" stroke-linecap="round"/>
-  <path d="M12 54L12 36L42 12L54 12" fill="none" stroke="#236ead" stroke-width="4.25" stroke-linejoin="round" stroke-linecap="round"/>
-  <path d="M12 25A11 11 0 0 1 20.59 29.13" fill="none" stroke="currentColor" stroke-width="2.55" stroke-linejoin="round" stroke-linecap="round"/>
-  <circle cx="12" cy="54" r="3.07" fill="#236ead"/>
-  <circle cx="54" cy="12" r="3.07" fill="#236ead"/>
+  <title>Sketch chamfer angle</title>
+  <path d="M20.26 6.55L59.65 20.05L43.74 53.45L4.35 39.95Z" fill="#e2e8ef" stroke="#e2e8ef" stroke-width="0.6" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M20.26 6.55L59.65 20.05M59.65 20.05L43.74 53.45M43.74 53.45L4.35 39.95M4.35 39.95L20.26 6.55" fill="none" stroke="#34465b" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M59.65 21.77L43.74 55.17L43.74 53.45L59.65 20.05Z" fill="#8e9faf" stroke="#8e9faf" stroke-width="0.6" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M59.65 21.77L43.74 55.17M59.65 20.05L43.74 53.45M43.74 55.17L43.74 53.45M59.65 21.77L59.65 20.05" fill="none" stroke="#34465b" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M43.74 55.17L4.35 41.67L4.35 39.95L43.74 53.45Z" fill="#b8c3cf" stroke="#b8c3cf" stroke-width="0.6" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M43.74 55.17L4.35 41.67M43.74 53.45L4.35 39.95M4.35 41.67L4.35 39.95M43.74 55.17L43.74 53.45" fill="none" stroke="#34465b" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M10.17 36.23L17.66 20.51" fill="none" stroke="#34465b" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M40.87 17.04L54.77 21.8" fill="none" stroke="#34465b" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M17.66 20.51L40.87 17.04" fill="none" stroke="#236ead" stroke-width="2.8" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M33.45 17.93L33.39 17.51L33.37 17.1L33.38 16.68L33.43 16.27L33.5 15.86L33.61 15.45L33.75 15.05L33.92 14.66" fill="none" stroke="#34465b" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/>
 </svg>

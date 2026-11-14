@@ -1,9 +1,14 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
   <title>Measure</title>
-  <path d="M9 43.63L45 7.63L58 20.63L22 56.63Z" fill="#e2e8ef" stroke="#34465b" stroke-width="2.55" stroke-linejoin="round" stroke-linecap="round"/>
-  <path d="M15 41.63L21 47.63" fill="none" stroke="#34465b" stroke-width="2.55" stroke-linejoin="round" stroke-linecap="round"/>
-  <path d="M24 32.63L28 36.63" fill="none" stroke="#34465b" stroke-width="2.55" stroke-linejoin="round" stroke-linecap="round"/>
-  <path d="M33 23.63L39 29.63" fill="none" stroke="#34465b" stroke-width="2.55" stroke-linejoin="round" stroke-linecap="round"/>
-  <path d="M42 14.63L46 18.63" fill="none" stroke="#34465b" stroke-width="2.55" stroke-linejoin="round" stroke-linecap="round"/>
-  <path d="M6 40.63L42 4.63" fill="none" stroke="#236ead" stroke-width="2.55" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="0.1 5.1"/>
+  <path d="M32 22L56.25 36L32 50L7.75 36Z" fill="#e2e8ef" stroke="#e2e8ef" stroke-width="0.6" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M32 22L56.25 36M56.25 36L32 50M32 50L7.75 36M7.75 36L32 22" fill="none" stroke="#34465b" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M56.25 46L32 60L32 50L56.25 36Z" fill="#8e9faf" stroke="#8e9faf" stroke-width="0.6" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M56.25 46L32 60M56.25 36L32 50M32 60L32 50M56.25 46L56.25 36" fill="none" stroke="#34465b" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M32 60L7.75 46L7.75 36L32 50Z" fill="#b8c3cf" stroke="#b8c3cf" stroke-width="0.6" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M32 60L7.75 46M32 50L7.75 36M7.75 46L7.75 36M32 60L32 50" fill="none" stroke="#34465b" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M4.29 38L28.54 52" fill="none" stroke="#236ead" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M7.75 36L2.56 39" fill="none" stroke="#236ead" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M32 50L26.8 53" fill="none" stroke="#236ead" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/>
+  <circle cx="4.29" cy="38" r="2.2" fill="#236ead" stroke="#34465b" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/>
+  <circle cx="28.54" cy="52" r="2.2" fill="#236ead" stroke="#34465b" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/>
 </svg>

@@ -127,19 +127,17 @@ mod tests {
         v
     }
 
-    /// Torno's name leaves Home where it has always been: 88 pt right of the name's start
-    /// (Home centred at 124 from the bar's content edge, the name starting at 36), the kit's least
-    /// place for Home.
+    /// The bar starts with Torno's icon alone, as every engineering app of the suite does, and Home
+    /// follows it.
     #[test]
-    fn home_keeps_its_place_after_tornos_name() {
+    fn the_bar_starts_with_tornos_icon_and_home_follows() {
         let mut w = Win::new(1600.0);
         w.app.home.open = false;
         w.frame(vec![]);
         let out = w.frame(vec![]);
-        let name = texts(&out).into_iter().find(|(text, _)| text == "Torno").map(|(_, rect)| rect).expect("the name is drawn");
+        assert!(texts(&out).iter().all(|(text, _)| text != "Torno"), "no name beside the icon");
         let home = crate::scenario::rect_of("titlebar:home").expect("Home is drawn");
-        assert_eq!(home.center().x - name.left(), 88.0);
-        assert!(name.right() < home.left());
+        assert!(home.center().x < 80.0, "Home follows the icon, at {}", home.center().x);
     }
 
     #[test]
@@ -152,7 +150,7 @@ mod tests {
             w.frame(vec![]);
             w.frame(vec![]);
             let t = Tokens::get();
-            let mut controls: Vec<Rect> = [
+            let controls: Vec<Rect> = [
                 "titlebar:home",
                 "appbar:file",
                 "titlebar:save",
@@ -168,7 +166,21 @@ mod tests {
             .into_iter()
             .map(|name| crate::scenario::rect_of(name).unwrap_or_else(|| panic!("{name}")))
             .collect();
-            controls.extend(CAPTIONS.map(|c| w.caption(c)));
+            // NDL's round window controls tint their own disc on hover instead.
+            let rest = torno_theme::ndl::c(torno_theme::ndl::palette(dark).control_bg);
+            for rect in CAPTIONS.map(|c| w.caption(c)) {
+                w.frame(vec![Event::PointerMoved(rect.center())]);
+                let out = w.frame(vec![]);
+                let discs: Vec<_> = out
+                    .shapes
+                    .iter()
+                    .filter_map(|s| match &s.shape {
+                        egui::Shape::Circle(c) if rect.contains(c.center) => Some(c.fill),
+                        _ => None,
+                    })
+                    .collect();
+                assert!(discs.iter().any(|fill| *fill != rest), "dark={dark}: the window control at {rect:?} keeps its resting disc: {discs:?}");
+            }
             for rect in controls {
                 w.frame(vec![Event::PointerMoved(rect.center())]);
                 let out = w.frame(vec![]);

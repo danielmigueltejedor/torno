@@ -5,13 +5,13 @@ description: "Use when preparing or shipping a Torno release, changing installer
 
 # Packaging and releases
 
-A pull request that bumps the version and adds `docs/release-notes/vX.Y.Z.md` releases that version when it merges; any other push releases nothing. The full procedure is `docs/releasing.md`; follow it when asked to prepare or ship a release.
+A pull request that bumps the version and adds its notes (`vX.Y.Z.md` in `docs/release-notes/`) releases that version when it merges; any other push releases nothing. The full procedure is `docs/releasing.md`; follow it when asked to prepare or ship a release.
 
 ## Preparing
 1. Choose one version for the whole batch from the actual changes (patch, minor, major, `-rc.N`). Do not infer it from commit prefixes. Moving to `1.0` is the owner's decision.
 2. Update `[workspace.package] version` in `Cargo.toml`, then `cargo update --workspace --offline`; only our own crates' `version =` lines in `Cargo.lock` change.
 3. Fold the pending design-format changes with `scripts/fold-format-pending.sh` (`skills/torno-file-formats/SKILL.md`).
-4. Write `docs/release-notes/vX.Y.Z.md` (format in that folder's README; `scripts/check-release-notes.sh vX.Y.Z` checks it).
+4. Write the notes, `vX.Y.Z.md` in `docs/release-notes/` (format in that folder's README; `scripts/check-release-notes.sh vX.Y.Z` checks it).
 5. Run `cargo xtask ci` and the packaging checks in `.github/workflows/packaging-lint.yml`. Land the version bump and notes on `main` in one pull request; never use `[skip ci]`.
 
 ## Building and publishing

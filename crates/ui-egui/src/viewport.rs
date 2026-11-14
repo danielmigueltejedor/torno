@@ -1727,7 +1727,7 @@ fn body_scene(
         }
         let closed = b.is_closed();
         let class = plan_class(app, &face_classes);
-        let planned = class.and_then(|class| drawn_plan(app, b, true).map(|plan| (plan, class)));
+        let planned = drawn_plan(app, b, true).zip(class);
         let on_gpu = planned.is_some();
         if let Some((plan, class)) = planned {
             sc.planned.push(crate::gpu::PlannedBody { plan, face_colors: face_colors.clone(), class, closed });
@@ -8772,23 +8772,24 @@ mod tests {
     }
 
     /// Headless pictures of the view (`ui.render`, the agent's view image) are drawn in the
-    /// window's theme (#974) and colour vision mode (#778). The light theme's tokens are the engine's own colours, so a
-    /// light picture in Off is unchanged; otherwise each part takes the token the window draws it
-    /// with. Sketch states follow what the window does with them (`sketch_color`) and the axes the
+    /// window's theme (#974) and colour vision mode (#778): each part takes the token the window
+    /// draws it with, NDL's in both themes. Sketch states follow what the window does with them (`sketch_color`) and the axes the
     /// mode's axis colours, so the two can't drift apart.
     #[test]
     fn pictures_are_drawn_in_the_windows_theme() {
         use torno_engine::view::Palette;
         use torno_theme::ColorVision;
-        assert_eq!(scene_palette(false, ColorVision::Off), Palette::DEFAULT, "the light theme is the engine's colours");
         let rgb = |c: Color32| Rgb(c.r(), c.g(), c.b());
-        let (p, t) = (scene_palette(true, ColorVision::Off), Tokens::dark());
-        assert_eq!(p.background, (rgb(t.viewport_top), rgb(t.viewport_bottom)));
-        assert_eq!(
-            [p.grid, p.grid_major, p.edge, p.body, p.body_selected, p.cap],
-            [t.grid, t.grid_major, t.body_edge, t.body, t.body_selected, t.section_cap].map(rgb)
-        );
-        assert_ne!(p.background, Palette::DEFAULT.background);
+        for dark in [false, true] {
+            let (p, t) = (scene_palette(dark, ColorVision::Off), Tokens::themed(dark, ColorVision::Off));
+            assert_eq!(p.background, (rgb(t.viewport_top), rgb(t.viewport_bottom)), "dark {dark}: the background");
+            assert_eq!(
+                [p.grid, p.grid_major, p.edge, p.body, p.body_selected, p.cap, p.isocurve],
+                [t.grid, t.grid_major, t.body_edge, t.body, t.body_selected, t.section_cap, t.accent].map(rgb),
+                "dark {dark}: the view's parts"
+            );
+        }
+        assert_ne!(scene_palette(true, ColorVision::Off).background, Palette::DEFAULT.background);
         for (dark, mode) in [false, true].into_iter().flat_map(|d| ColorVision::ALL.map(|m| (d, m))) {
             let (p, t) = (scene_palette(dark, mode), Tokens::themed(dark, mode));
             assert_eq!(p.axes, t.axes().map(rgb), "dark {dark}, {mode:?}: the axes");

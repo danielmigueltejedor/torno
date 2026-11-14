@@ -172,9 +172,8 @@ cp "$WORK/bin/torno" "$APP/Contents/MacOS/Torno"
 # torno-cli next to the app, as every other package has it: the agent chat starts it as the
 # agent's MCP server (`torno-cli mcp --connect`) and looks for it beside the running program.
 cp "$WORK/bin/torno-cli" "$APP/Contents/MacOS/torno-cli"
-# Apple-compiled layered icon and older-macOS fallback (regeneration: assets/README.md).
-# Keep compiled resources so packaging also works on runners with older Xcode versions.
-cp "$ROOT/assets/icons/app/macos/exports/Assets.car" "$APP/Contents/Resources/Assets.car"
+# The app icon (regeneration: assets/README.md). No compiled Assets.car: the icon is the
+# portrait the other platforms show, which Icon Composer has no source for yet.
 cp "$ROOT/assets/icons/app/macos/exports/icon.icns" "$APP/Contents/Resources/Torno.icns"
 mkdir -p "$APP/Contents/Resources/Licenses"
 copy_docs "$APP/Contents/Resources/Licenses"
@@ -229,13 +228,13 @@ test -s "$MNT/.DS_Store" && test -s "$MNT/.VolumeIcon.icns"
 test -s "$MNT/.background.tiff"
 plutil -lint "$MNT/Torno.app/Contents/Info.plist"
 # Check the names Finder/LaunchServices actually use, and the bundle identity.
-for key in CFBundleName CFBundleDisplayName CFBundleExecutable CFBundleIconFile CFBundleIconName; do
+for key in CFBundleName CFBundleDisplayName CFBundleExecutable CFBundleIconFile; do
   test "$(/usr/libexec/PlistBuddy -c "Print :$key" "$MNT/Torno.app/Contents/Info.plist")" = Torno
 done
 test "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$MNT/Torno.app/Contents/Info.plist")" = "$MACOS_BUNDLE_ID"
 test -s "$MNT/Torno.app/Contents/Resources/Torno.icns"
 cmp "$ROOT/assets/icons/app/macos/exports/icon.icns" "$MNT/Torno.app/Contents/Resources/Torno.icns"
-cmp "$ROOT/assets/icons/app/macos/exports/Assets.car" "$MNT/Torno.app/Contents/Resources/Assets.car"
+test ! -e "$MNT/Torno.app/Contents/Resources/Assets.car"
 cmp "$ROOT/assets/platforms/macos/README.txt" "$MNT/README.txt"
 case "$ARCH" in universal) WANT=(arm64 x86_64) ;; aarch64) WANT=(arm64) ;; *) WANT=(x86_64) ;; esac
 for arch in "${WANT[@]}"; do

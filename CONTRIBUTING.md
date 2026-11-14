@@ -355,7 +355,7 @@ and a fresh CI run:
    by area (`area:kernel`, `area:sketch`, `area:doc`, `area:ui`, `area:infra`). For anything
    bigger than a bug fix that has no issue yet, open one first. **Claim the issue with a draft
    PR** before you start, so two people don't build the same thing:
-   - Check nobody has it: `gh pr list -R tangency-labs/solidcraft --state open --search "#N"`.
+   - Check nobody has it: `gh pr list -R getnodalia/torno --state open --search "#N"`.
    - Branch from the latest `main`, commit `git commit --allow-empty -m "claim: #N"`, push, and
      open a **draft** PR titled `<summary> (#N)`, e.g. `Fillet: variable radius along a chain (#123)`.
    - **The lowest-numbered open PR for an issue wins.** If yours lost, close it (or offer to help

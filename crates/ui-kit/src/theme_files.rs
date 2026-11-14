@@ -1967,8 +1967,8 @@ mod tests {
     #[test]
     fn navigation_board_colours_are_themeable_and_roundtrip_on_both_bases() {
         for (base, tokens, colours) in [
-            ("light", Tokens::light(), ["#e9edf2", "#dce2ea", "#8895a7", "#eef1f5", "#1b2430", "#ffffff", "#ffffff"]),
-            ("dark", Tokens::dark(), ["#3a4150", "#464e60", "#7c879a", "#262b35", "#eef1f5", "#1b2430", "#2f343e"]),
+            ("light", Tokens::light(), ["#e4e6eb", "#d5d8e1", "#636a7e", "#ffffff", "#15171e", "#eef0f4", "#ffffff"]),
+            ("dark", Tokens::dark(), ["#363b48", "#414757", "#989eb1", "#242730", "#eceef2", "#15171e", "#1e2028"]),
         ] {
             for (actual, hex) in
                 [tokens.nav_hover, tokens.nav_press, tokens.nav_dim, tokens.nav_viewport, tokens.nav_tip, tokens.nav_tip_ink, tokens.nav_field]

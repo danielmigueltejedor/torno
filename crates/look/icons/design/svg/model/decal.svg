@@ -1,9 +1,11 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
   <title>Decal</title>
-  <path d="M30.74 15.26L61 32.73L33.26 48.74L3 31.27Z" fill="#e2e8ef"/>
-  <path d="M30.74 15.26L61 32.73L33.26 48.74L3 31.27Z" fill="none" stroke="#34465b" stroke-width="2.55" stroke-linejoin="round" stroke-linecap="round"/>
-  <path d="M30.74 21.08L50.91 32.73L33.26 42.92L13.09 31.27Z" fill="#b9ddf8"/>
-  <path d="M30.74 21.08L50.91 32.73L33.26 42.92L13.09 31.27Z" fill="none" stroke="#34465b" stroke-width="2.55" stroke-linejoin="round" stroke-linecap="round"/>
-  <path d="M13.09 31.27L28.22 29.09L27.59 35.28L33.26 35.64L33.26 42.92Z" fill="#328bd3"/>
-  <path d="M30.74 21.08L50.91 32.73L33.26 42.92L13.09 31.27Z" fill="none" stroke="#34465b" stroke-width="2.55" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M32 20L59.71 36L32 52L4.29 36Z" fill="#e2e8ef" stroke="#e2e8ef" stroke-width="0.6" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M32 20L59.71 36M59.71 36L32 52M32 52L4.29 36M4.29 36L32 20" fill="none" stroke="#34465b" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M59.71 46L32 62L32 52L59.71 36Z" fill="#8e9faf" stroke="#8e9faf" stroke-width="0.6" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M59.71 46L32 62M59.71 36L32 52M32 62L32 52M59.71 46L59.71 36" fill="none" stroke="#34465b" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M32 62L4.29 46L4.29 36L32 52Z" fill="#b8c3cf" stroke="#b8c3cf" stroke-width="0.6" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M32 62L4.29 46M32 52L4.29 36M4.29 46L4.29 36M32 62L32 52" fill="none" stroke="#34465b" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M32 26.9L47.59 35.9L32 44.9L16.41 35.9Z" fill="#b9ddf8" stroke="#236ead" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M32 37.9L31.52 38.14L30.99 38.35L30.41 38.51L29.8 38.63L29.18 38.7L28.54 38.73L27.9 38.7L27.27 38.63L26.66 38.51L26.09 38.35L25.55 38.14L25.07 37.9L24.65 37.62L24.29 37.31L24.01 36.98L23.8 36.63L23.68 36.27L23.64 35.9L23.68 35.53L23.8 35.17L24.01 34.82L24.29 34.49L24.65 34.18L25.07 33.9L25.55 33.66L26.09 33.45L26.66 33.29L27.27 33.17L27.9 33.1L28.54 33.07L29.18 33.1L29.8 33.17L30.41 33.29L30.99 33.45L31.52 33.66L32 33.9L32.42 34.18L32.78 34.49L33.06 34.82L33.27 35.17L33.39 35.53L33.43 35.9L33.39 36.27L33.27 36.63L33.06 36.98L32.78 37.31L32.42 37.62L32 37.9Z" fill="none" stroke="#236ead" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
 </svg>

@@ -1,6 +1,11 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-  <title>Error</title>
-  <path d="M8 32A24 24 0 1 0 56 32A24 24 0 1 0 8 32Z" fill="#b9ddf8"/>
-  <path d="M8 32A24 24 0 1 0 56 32A24 24 0 1 0 8 32Z" fill="none" stroke="#236ead" stroke-width="4.25" stroke-linejoin="round" stroke-linecap="round"/>
-  <path d="M23 23L41 41M41 23L23 41" fill="none" stroke="#236ead" stroke-width="4.25" stroke-linejoin="round" stroke-linecap="round"/>
+  <title>Status error</title>
+  <path d="M32 13L51.05 24L32 35L12.95 24Z" fill="#e2e8ef" stroke="#e2e8ef" stroke-width="0.6" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M32 13L51.05 24M51.05 24L32 35M32 35L12.95 24M12.95 24L32 13" fill="none" stroke="#34465b" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M51.05 42L32 53L32 35L51.05 24Z" fill="#8e9faf" stroke="#8e9faf" stroke-width="0.6" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M51.05 42L32 53M51.05 24L32 35M32 53L32 35M51.05 42L51.05 24" fill="none" stroke="#34465b" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M32 53L12.95 42L12.95 24L32 35Z" fill="#b8c3cf" stroke="#b8c3cf" stroke-width="0.6" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M32 53L12.95 42M32 35L12.95 24M12.95 42L12.95 24M32 53L32 35" fill="none" stroke="#34465b" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M40 50A10 10 0 1 0 60 50A10 10 0 1 0 40 50Z" fill="#236ead" stroke="#34465b" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M46 46L54 54M54 46L46 54" fill="none" stroke="#e2e8ef" stroke-width="2.6" stroke-linejoin="round" stroke-linecap="round"/>
 </svg>

@@ -7,6 +7,7 @@
 
 use std::cell::Cell;
 
+pub mod ndl;
 mod palettes;
 
 pub use palettes::icon_strokes;
@@ -1861,8 +1862,8 @@ mod tests {
             let accent = super::TabAccent::for_ramp(&super::Tokens::light(), ramp);
             assert_eq!(accent.ink != accent.color, ramp == Mesh, "only light Mesh separates ink from fill");
         }
-        // These existing Model values intentionally take precedence over the board's proposal.
-        for (t, values) in [(super::Tokens::light(), [0x2678da, 0x1a507f, 0xd6e6fa]), (super::Tokens::dark(), [0x3a88ee, 0x9cc7f5, 0x2a466e])] {
+        // The Model tab takes Torno's NDL accent.
+        for (t, values) in [(super::Tokens::light(), [0x8b7319, 0x6f5b13, 0xf7f1db]), (super::Tokens::dark(), [0xd2b137, 0xd2b137, 0x3e330b])] {
             let [color, ink, soft] = values.map(rgb);
             assert_eq!(super::TabAccent::for_ramp(&t, super::AccentRamp::Main), super::TabAccent { color, ink, soft });
         }

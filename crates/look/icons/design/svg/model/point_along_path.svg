@@ -1,6 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
   <title>Point along path</title>
-  <path d="M8 48.8C16 48.8 17 19.8 32 19.8C47 19.8 48 44.8 56 44.8" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linejoin="round" stroke-linecap="round"/>
-  <circle cx="32" cy="19.8" r="6.2" fill="#ffffff"/>
-  <circle cx="32" cy="19.8" r="4.5" fill="#236ead"/>
+  <path d="M7.75 36L9.37 35.09L10.98 34.19L12.6 33.31L14.22 32.47L15.83 31.67L17.45 30.92L19.07 30.24L20.68 29.64L22.3 29.11L23.92 28.67L25.53 28.33L27.15 28.09L28.77 27.95L30.38 27.92L32 28L33.62 28.19L35.23 28.49L36.85 28.89L38.47 29.4L40.08 30.01L41.7 30.71L43.32 31.5L44.93 32.38L46.55 33.32L48.17 34.33L49.78 35.4L51.4 36.51L53.02 37.65L54.63 38.82L56.25 40" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linejoin="round" stroke-linecap="round"/>
+  <circle cx="36.85" cy="28.89" r="4" fill="#236ead" stroke="#34465b" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/>
 </svg>

@@ -1,11 +1,8 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
   <title>Plane angle</title>
-  <path d="M8 37.37L32 51.37L32 58.37L8 44.37Z" fill="#b8c3cf"/>
-  <path d="M32 51.37L56 37.37L56 44.37L32 58.37Z" fill="#8e9faf"/>
-  <path d="M8 37.37L32 23.37L56 37.37L32 51.37Z" fill="#e2e8ef"/>
-  <path d="M8 37.37L32 23.37L56 37.37L56 44.37L32 58.37L8 44.37Z" fill="none" stroke="#34465b" stroke-width="2.55" stroke-linejoin="round" stroke-linecap="round"/>
-  <path d="M32 51.37L8 37.37" fill="none" stroke="#34465b" stroke-width="2.55" stroke-linejoin="round" stroke-linecap="round"/>
-  <path d="M32 51.37L56 37.37" fill="none" stroke="#34465b" stroke-width="2.55" stroke-linejoin="round" stroke-linecap="round"/>
-  <path d="M32 51.37L32 58.37" fill="none" stroke="#34465b" stroke-width="2.55" stroke-linejoin="round" stroke-linecap="round"/>
-  <path d="M12 18.37L36 4.37L56 37.37L32 51.37Z" fill="#b9ddf8" stroke="#236ead" stroke-width="2.55" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="0.1 5"/>
+  <path d="M32 27L57.98 42L32 57L6.02 42Z" fill="#e2e8ef" stroke="#8e9faf" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M32 27L6.02 42L19.01 29.5L44.99 14.5Z" fill="#b9ddf8" stroke="#236ead" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M13.81 46.5L13.81 46.28L13.8 46.06L13.79 45.84L13.78 45.62L13.76 45.39L13.73 45.16L13.7 44.93L13.67 44.7L13.63 44.47L13.59 44.23L13.54 44L13.49 43.76L13.44 43.52L13.38 43.28L13.31 43.04L13.25 42.8L13.17 42.56L13.1 42.32L13.02 42.08L12.93 41.84L12.84 41.59L12.75 41.35L12.66 41.11L12.56 40.87" fill="none" stroke="#34465b" stroke-width="5.4" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M13.81 46.5L13.81 46.28L13.8 46.06L13.79 45.84L13.78 45.62L13.76 45.39L13.73 45.16L13.7 44.93L13.67 44.7L13.63 44.47L13.59 44.23L13.54 44L13.49 43.76L13.44 43.52L13.38 43.28L13.31 43.04L13.25 42.8L13.17 42.56L13.1 42.32L13.02 42.08L12.93 41.84L12.84 41.59L12.75 41.35L12.66 41.11L12.56 40.87" fill="none" stroke="#236ead" stroke-width="2.8" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M10.49 37.21L16.96 40.03L10.84 44.26Z" fill="#236ead" stroke="#34465b" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/>
 </svg>

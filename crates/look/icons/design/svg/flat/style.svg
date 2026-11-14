@@ -1,5 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
   <title>Style</title>
-  <path d="M32 6L55 19L55 45L32 58L9 45L9 19Z" fill="currentColor" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round" stroke-linecap="round"/>
-  <path d="M32 31L32 50M15 22L32 31L49 22" fill="none" stroke="#ffffff" stroke-width="3.6" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M13.33 12L21.33 12A2.67 2.67 0 0 1 24 14.67L24 22.67A2.67 2.67 0 0 1 21.33 25.33L13.33 25.33A2.67 2.67 0 0 1 10.67 22.67L10.67 14.67A2.67 2.67 0 0 1 13.33 12Z" fill="currentColor" stroke="currentColor" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M33.33 18.67L53.33 18.67" fill="none" stroke="currentColor" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M13.33 38.67L21.33 38.67A2.67 2.67 0 0 1 24 41.33L24 49.33A2.67 2.67 0 0 1 21.33 52L13.33 52A2.67 2.67 0 0 1 10.67 49.33L10.67 41.33A2.67 2.67 0 0 1 13.33 38.67Z" fill="none" stroke="currentColor" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M33.33 45.33L53.33 45.33" fill="none" stroke="currentColor" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/>
 </svg>

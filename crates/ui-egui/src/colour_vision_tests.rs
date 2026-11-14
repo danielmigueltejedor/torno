@@ -720,7 +720,12 @@ fn left_as_they_are(mode: ColorVision, dark: bool) -> BTreeSet<String> {
     let mut v = vec!["sketch lines: sketch_construction vs sketch_centerline"];
     if mode == ColorVision::Tritan {
         v.push("sketch lines: sketch_lost vs sketch_centerline");
-        v.push(if dark { "timeline: hover vs accent_soft" } else { "timeline: timeline_item vs accent_soft" });
+        // On the light theme NDL's cream accent wash sits next to the neutral rows for a
+        // blue-yellow loss.
+        if !dark {
+            v.push("timeline: hover vs accent_soft");
+            v.push("timeline: timeline_item vs accent_soft");
+        }
         v.push("selection: sel_face vs preview_add");
     }
     v.into_iter().map(String::from).collect()
@@ -870,12 +875,23 @@ fn each_mode_changes_only_its_table() {
     ];
     let mut red_green_light =
         red_green_both.into_iter().filter(|name| !["surface_accent", "mesh_accent", "form_accent"].contains(name)).collect::<Vec<_>>();
-    red_green_light.extend(["sketch_projected", "sketch_locked", "timeline_item_error", "construction_geom", "glyph_text", "form_success"]);
+    red_green_light.extend([
+        "sketch_projected",
+        "sketch_locked",
+        "timeline_item_error",
+        "construction_geom",
+        "glyph_text",
+        "form_success",
+        "error",
+        "figure_reference",
+    ]);
+    let mut red_green_dark = red_green_both.to_vec();
+    red_green_dark.extend(["form_success", "timeline_item_error"]);
     for (dark, mode, want) in [
         (false, ColorVision::Protan, set(&red_green_light)),
-        (true, ColorVision::Protan, set(&red_green_both)),
+        (true, ColorVision::Protan, set(&red_green_dark)),
         (false, ColorVision::Deutan, set(&red_green_light)),
-        (true, ColorVision::Deutan, set(&red_green_both)),
+        (true, ColorVision::Deutan, set(&red_green_dark)),
         (
             false,
             ColorVision::Tritan,
@@ -897,6 +913,9 @@ fn each_mode_changes_only_its_table() {
                 "preview_sketch",
                 "sketch_conflict",
                 "analysis.hatch",
+                "timeline_item_error",
+                "error",
+                "figure_reference",
             ]),
         ),
         (
@@ -920,6 +939,7 @@ fn each_mode_changes_only_its_table() {
                 "preview_sketch",
                 "sketch_conflict",
                 "analysis.hatch",
+                "warning",
             ]),
         ),
     ] {

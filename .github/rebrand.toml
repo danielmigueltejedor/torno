@@ -10,9 +10,9 @@
 keep = [
     # Links to upstream's issues, pull requests, files and other repositories (smlib,
     # solidcore...): history, not branding. Its release downloads are renamed below instead.
-    "(https?://)?(github\\.com|raw\\.githubusercontent\\.com)/tangency-labs/(?!solidcraft/releases)[^\\s)\\]\"'<>`]*",
+    "(https?://)?(github\\.com|raw\\.githubusercontent\\.com)/tangency-labs/(?!solidcraft/(releases|issues/new|security)|solidcraft\\.git)[^\\s)\\]\"'<>`]*",
     # Upstream's repository named without a link (the sync workflow, docs/upstream.md, `#123` refs).
-    "tangency-labs/solidcraft(?!/releases)[\\w.#-]*",
+    "(?<!-R )(?<!fork )tangency-labs/solidcraft(?!/releases|/issues/new|/security|\\.git)[\\w.#-]*",
     # Upstream's earlier home: links to its issues and pull requests.
     "(https?://)?github\\.com/bherbruck/solidcraft/(issues|pull|commit|blob|tree)/[^\\s)\\]\"'<>`]*",
     # Other people's repositories and forks.
@@ -31,7 +31,7 @@ keep = [
     # The name of upstream's brand licence (LICENSE-BRAND), which keeps its own text.
     "SolidCraft Brand and Interface Licence",
     # Credit for work done upstream.
-    "SolidCraft contributors(?=\\.|,|$| and)",
+    "(?<!vendor: )SolidCraft contributors(?=\\.|,|$| and)",
 ]
 
 # Files left alone entirely.
@@ -65,6 +65,28 @@ pattern = '^version = "[^"]*"'
 [[replace]]
 from = "io.tangencylabs.solidcraft"
 to = "dev.danielmiguelt.Torno"
+
+# Where people report problems, report vulnerabilities and send changes: Torno's own repository,
+# in the app, SECURITY.md and the contributor guides.
+[[replace]]
+from = "https://github.com/tangency-labs/solidcraft/issues/new"
+to = "https://github.com/getnodalia/torno/issues/new"
+
+[[replace]]
+from = "https://github.com/tangency-labs/solidcraft/security"
+to = "https://github.com/getnodalia/torno/security"
+
+[[replace]]
+from = "https://github.com/tangency-labs/solidcraft.git"
+to = "https://github.com/getnodalia/torno.git"
+
+[[replace]]
+from = "-R tangency-labs/solidcraft"
+to = "-R getnodalia/torno"
+
+[[replace]]
+from = "fork tangency-labs/solidcraft"
+to = "fork getnodalia/torno"
 
 [[replace]]
 from = "tangency-labs/solidcraft/releases"
@@ -141,3 +163,8 @@ to = "torno"
 [[replace]]
 from = "SOLIDCRAFT"
 to = "TORNO"
+
+# Upstream's family of apps: Torno's crates are shared with the other Nodalia apps instead.
+[[replace]]
+from = "the Craft apps"
+to = "the Nodalia apps"

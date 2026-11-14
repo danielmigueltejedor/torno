@@ -87,10 +87,9 @@ mod tests {
             let mut out = ctx.run_ui(egui::RawInput::default(), |ui| {
                 paint_app_bar(ui.painter(), Rect::from_min_size(egui::Pos2::ZERO, egui::vec2(32.0, 32.0)), "assistant", 1.0);
             });
+            // The assistant is NDL's sparkle, drawn as shapes in the bar's text colour.
             let ink = torno_theme::Tokens::get().app_bar_text;
-            assert!(out.textures_delta.set.iter().any(|(_, deltas)| deltas.iter().any(|delta| match &delta.image {
-                egui::ImageData::Color(image) => image.pixels.contains(&ink),
-            })));
+            assert!(format!("{:?}", out.shapes).contains(&format!("{ink:?}")), "dark={dark}: the sparkle is not in the bar's ink");
             out.textures_delta.clear();
         }
         torno_theme::set_dark(previous);
@@ -130,7 +129,10 @@ mod tests {
                                 _ => None,
                             })
                             .unwrap();
-                        assert_eq!(image.pixels.get(48 * 64 + 48), Some(&Color32::TRANSPARENT), "uploaded plus must stay transparent");
+                        // The plus is a light stroke across the badge's disc.
+                        let luma = |c: &Color32| u32::from(c.r()) + u32::from(c.g()) + u32::from(c.b());
+                        let (plus, disc) = (image.pixels.get(50 * 64 + 50), image.pixels.get(46 * 64 + 46));
+                        assert!(plus.zip(disc).is_some_and(|(p, d)| p.a() == 255 && luma(p) > luma(d)), "the badge's plus reads against its disc");
                     }
                     // This headless test inspects uploads instead of sending them
                     // to a GPU; acknowledge the deltas before they are dropped.

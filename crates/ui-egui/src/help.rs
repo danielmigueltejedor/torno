@@ -57,6 +57,7 @@ pub fn run(app: &mut SolveApp, ctx: &egui::Context, item: &str) {
         return;
     }
     match item {
+        "preferences" => crate::prefs::open_at(app, 0),
         "docs" => ctx.open_url(egui::OpenUrl::new_tab(DOCS_URL)),
         "about" => app.help.about = true,
         "version" => {
@@ -135,7 +136,15 @@ pub fn show(app: &mut SolveApp, ctx: &egui::Context, anchor: egui::Pos2) {
             .order(egui::Order::Foreground)
             .show(ctx, |ui| {
                 crate::ui_kit::menu::menu_frame(ui, |ui| {
-                    for (id, label, icon) in [
+                    // The Nodalia layout's main menu (the hamburger) leads with Preferences, Keyboard
+                    // Shortcuts and About, the rows every Nodalia app's menu has.
+                    let main_menu = app.header.report == crate::toolbar::ReportButton::Menu;
+                    let lead: &[(&str, &str, &str)] = if main_menu {
+                        &[("preferences", "Preferences…", "settings"), ("shortcuts", "Keyboard Shortcuts", "list"), ("about", "About Torno", "help")]
+                    } else {
+                        &[]
+                    };
+                    let rest = [
                         ("docs", "Documentation", "library"),
                         ("about", "About Torno", "help"),
                         ("updates", torno_ui_text::tr("update.check_for_updates"), "update"),
@@ -145,9 +154,12 @@ pub fn show(app: &mut SolveApp, ctx: &egui::Context, anchor: egui::Pos2) {
                         ("crashes", "Crash Reports…", "status_error"),
                         ("connect", "Connect AI assistants…", "settings"),
                         ("install_cli", "Install torno-cli command", "settings"),
-                    ]
-                    .into_iter()
-                    .filter(|(id, ..)| *id != "install_cli" || cfg!(target_os = "macos"))
+                    ];
+                    for (id, label, icon) in lead
+                        .iter()
+                        .copied()
+                        .chain(rest.into_iter().filter(|(id, ..)| !(main_menu && lead.iter().any(|(lead, ..)| lead == id))))
+                        .filter(|(id, ..)| *id != "install_cli" || cfg!(target_os = "macos"))
                     {
                         let item = crate::ui_kit::Item::action(id, label, icon).on_if(available(app, id));
                         if crate::ui_kit::menu::list_row(ui, &item).is_some() {

@@ -4,12 +4,13 @@ use ui_kit::PreferenceFigure;
 
 pub(super) fn show(app: &mut SolveApp, ui: &mut egui::Ui) {
     let t = Tokens::get();
-    let help_label_width = ["prefs.graphics_page.supersampling", "prefs.graphics_card", "prefs.graphics_api", "ui.window_system"]
-        .into_iter()
-        .map(|id| ui_kit::ContentWidth::label(ui, app.tr(id)))
-        .fold(0.0, f32::max)
-        + t.space_16
-        + t.space_4;
+    let help_label_width =
+        ["prefs.graphics_page.supersampling", "prefs.graphics_card", "prefs.graphics_api", "ui.window_system", "ui.window_controls"]
+            .into_iter()
+            .map(|id| ui_kit::ContentWidth::label(ui, app.tr(id)))
+            .fold(0.0, f32::max)
+            + t.space_16
+            + t.space_4;
     ui_kit::settings_page(ui, |ui| {
         ui_kit::settings_heading(ui, app.tr("prefs.graphics"), app.tr("prefs.graphics_page.subtitle"));
         ui_kit::settings_section(ui, "preset", app.tr("navbar.preset"), |ui| {
@@ -369,6 +370,8 @@ pub(super) fn show(app: &mut SolveApp, ui: &mut egui::Ui) {
                 }
                 #[cfg(target_os = "linux")]
                 window_system_row(app, ui, help_label_width);
+                #[cfg(target_os = "linux")]
+                window_controls_row(app, ui, help_label_width);
                 setting::render_previous_geometry_budget(app, ui).backing_on_hover_text(app.tr("prefs.render_previous_geometry_budget_help"));
                 setting::render_legacy_image_defaults(app, ui).backing_on_hover_text(app.tr("prefs.render_legacy_image_defaults_help"));
                 let memory =

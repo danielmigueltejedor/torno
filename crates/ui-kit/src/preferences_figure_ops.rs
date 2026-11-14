@@ -271,7 +271,7 @@ impl Ctx<'_> {
                 }
                 // Lettering has its own foreground role. Preserve the actual axis colour on
                 // discs and strokes, choosing a legible token only for the tiny glyph.
-                return [intended, t.cube_text, t.on_accent, t.tab_on_fill_dark]
+                return [intended, t.cube_text, t.on_accent, t.tab_on_fill_dark, t.figure_white]
                     .into_iter()
                     .max_by(|a, b| torno_theme::contrast_ratio(*a, ground).total_cmp(&torno_theme::contrast_ratio(*b, ground)))
                     .unwrap_or(intended);
@@ -806,7 +806,11 @@ mod tests {
             assert_eq!(ctx.ink(Ink::Text, 1.0), t.cube_text);
             for (ink, axis, label) in [(Ink::AxisX, t.axis_x, "X"), (Ink::AxisY, t.axis_y, "Y"), (Ink::AxisZ, t.axis_z, "Z")] {
                 assert_eq!(ctx.ink(ink, 1.0), axis, "the navigator's real axis palette");
-                assert!(torno_theme::contrast_ratio(ctx.text_ink(Ink::White, 1.0, label), axis) >= 4.5);
+                assert!(
+                    torno_theme::contrast_ratio(ctx.text_ink(Ink::White, 1.0, label), axis) >= 4.5,
+                    "{label} on {axis:?}: {:?}",
+                    ctx.text_ink(Ink::White, 1.0, label)
+                );
                 assert!(torno_theme::contrast_ratio(ctx.text_ink(ink, 1.0, label), t.cube_face) >= 4.5);
             }
             let ordinary = Ctx { palette: Palette::Figure, ..ctx };

@@ -1,12 +1,14 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-  <title>Render image — start rendering the picture</title>
-  <path d="M9 12L45 12A5 5 0 0 1 50 17L50 43A5 5 0 0 1 45 48L9 48A5 5 0 0 1 4 43L4 17A5 5 0 0 1 9 12Z" fill="#e2e8ef"/>
-  <defs><clipPath id="pic1"><path d="M9 12L45 12A5 5 0 0 1 50 17L50 43A5 5 0 0 1 45 48L9 48A5 5 0 0 1 4 43L4 17A5 5 0 0 1 9 12Z" fill="none"/></clipPath></defs>
-  <g clip-path="url(#pic1)">
-  <path d="M4 40.8L17.8 27.12L30.68 38.64L38.04 32.88L50 42.96L50 48L4 48Z" fill="#328bd3"/>
-  </g>
-  <path d="M9 12L45 12A5 5 0 0 1 50 17L50 43A5 5 0 0 1 45 48L9 48A5 5 0 0 1 4 43L4 17A5 5 0 0 1 9 12Z" fill="none" stroke="#34465b" stroke-width="2.55" stroke-linejoin="round" stroke-linecap="round"/>
-  <circle cx="47.5" cy="47.5" r="14" fill="#ffffff"/>
-  <circle cx="47.5" cy="47.5" r="12" fill="#236ead"/>
-  <path d="M43.9 41.7L53.3 47.5L43.9 53.3Z" fill="#ffffff" stroke="#ffffff" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/>
+  <title>Render execute</title>
+  <path d="M45.16 35.6L20.91 49.6L20.91 25.6L45.16 11.6Z" fill="#8e9faf" stroke="#8e9faf" stroke-width="0.6" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M45.16 35.6L20.91 49.6M45.16 11.6L20.91 25.6M20.91 49.6L20.91 25.6M45.16 35.6L45.16 11.6" fill="none" stroke="#34465b" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M43.09 10.4L45.16 11.6L20.91 25.6L18.84 24.4Z" fill="#e2e8ef" stroke="#e2e8ef" stroke-width="0.6" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M43.09 10.4L45.16 11.6M45.16 11.6L20.91 25.6M20.91 25.6L18.84 24.4M18.84 24.4L43.09 10.4" fill="none" stroke="#34465b" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M20.91 49.6L18.84 48.4L18.84 24.4L20.91 25.6Z" fill="#b8c3cf" stroke="#b8c3cf" stroke-width="0.6" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M20.91 49.6L18.84 48.4M20.91 25.6L18.84 24.4M18.84 48.4L18.84 24.4M20.91 49.6L20.91 25.6" fill="none" stroke="#34465b" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M42.61 34.13L23.56 45.13L23.56 27.13L42.61 16.13Z" fill="#b9ddf8"/>
+  <path d="M42.65 34.15L23.6 45.15L23.6 37.15L30.53 28.15L36.59 30.65L42.65 23.15Z" fill="#328bd3"/>
+  <circle cx="37.46" cy="23.15" r="2.6" fill="#236ead"/>
+  <path d="M40 50A10 10 0 1 0 60 50A10 10 0 1 0 40 50Z" fill="#236ead" stroke="#34465b" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M47 45L55 50L47 55Z" fill="#e2e8ef"/>
 </svg>

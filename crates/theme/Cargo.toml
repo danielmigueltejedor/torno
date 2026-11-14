@@ -13,3 +13,4 @@ egui = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
 torno-color = { workspace = true }
+nodalia-theme = { workspace = true }

@@ -1,4 +1,10 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
   <title>Select</title>
-  <path d="M18 7L18 50L28.5 40.5L35.5 56L43 52.5L36 37.5L50 37.5Z" fill="currentColor" stroke="currentColor" stroke-width="2.55" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M32 22L45.86 30L32 38L18.14 30Z" fill="#e2e8ef" stroke="#e2e8ef" stroke-width="0.6" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M32 22L45.86 30M45.86 30L32 38M32 38L18.14 30M18.14 30L32 22" fill="none" stroke="#34465b" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M45.86 42L32 50L32 38L45.86 30Z" fill="#8e9faf" stroke="#8e9faf" stroke-width="0.6" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M45.86 42L32 50M45.86 30L32 38M32 50L32 38M45.86 42L45.86 30" fill="none" stroke="#34465b" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M32 50L18.14 42L18.14 30L32 38Z" fill="#b8c3cf" stroke="#b8c3cf" stroke-width="0.6" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M32 50L18.14 42M32 38L18.14 30M18.14 42L18.14 30M32 50L32 38" fill="none" stroke="#34465b" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M30 18L30 44L36.5 38L41 48L45 46L40.5 36L49 36Z" fill="#328bd3" stroke="#34465b" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>
 </svg>

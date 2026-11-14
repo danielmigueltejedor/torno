@@ -1,11 +1,13 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-  <title>Circle tangent to three lines</title>
-  <path d="M32 6L5.5 51.5L58.5 51.5Z" fill="none" stroke="#8e9faf" stroke-width="4.25" stroke-linejoin="round" stroke-linecap="round"/>
-  <path d="M17.5 37A14.5 14.5 0 1 0 46.5 37A14.5 14.5 0 1 0 17.5 37Z" fill="#b9ddf8" stroke="#236ead" stroke-width="4.25" stroke-linejoin="round" stroke-linecap="round"/>
-  <circle cx="32" cy="51.5" r="5.8" fill="#ffffff"/>
-  <circle cx="32" cy="51.5" r="3.4" fill="#236ead"/>
-  <circle cx="18.8" cy="28.8" r="5.8" fill="#ffffff"/>
-  <circle cx="18.8" cy="28.8" r="3.4" fill="#236ead"/>
-  <circle cx="45.2" cy="28.8" r="5.8" fill="#ffffff"/>
-  <circle cx="45.2" cy="28.8" r="3.4" fill="#236ead"/>
+  <title>Circle ttt</title>
+  <path d="M20.26 6.55L59.65 20.05L43.74 53.45L4.35 39.95Z" fill="#e2e8ef" stroke="#e2e8ef" stroke-width="0.6" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M20.26 6.55L59.65 20.05M59.65 20.05L43.74 53.45M43.74 53.45L4.35 39.95M4.35 39.95L20.26 6.55" fill="none" stroke="#34465b" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M59.65 21.77L43.74 55.17L43.74 53.45L59.65 20.05Z" fill="#8e9faf" stroke="#8e9faf" stroke-width="0.6" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M59.65 21.77L43.74 55.17M59.65 20.05L43.74 53.45M43.74 55.17L43.74 53.45M59.65 21.77L59.65 20.05" fill="none" stroke="#34465b" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M43.74 55.17L4.35 41.67L4.35 39.95L43.74 53.45Z" fill="#b8c3cf" stroke="#b8c3cf" stroke-width="0.6" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M43.74 55.17L4.35 41.67M43.74 53.45L4.35 39.95M4.35 41.67L4.35 39.95M43.74 55.17L43.74 53.45" fill="none" stroke="#34465b" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M20.02 9.9L6.92 37.4" fill="none" stroke="#34465b" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M6.92 37.4L41.66 49.31" fill="none" stroke="#34465b" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M20.02 9.9L41.66 49.31" fill="none" stroke="#34465b" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M30.03 35.27L29.49 36.22L28.81 37.1L28 37.89L27.07 38.6L26.05 39.19L24.94 39.66L23.76 40.01L22.55 40.22L21.31 40.3L20.07 40.24L18.85 40.05L17.67 39.72L16.55 39.26L15.51 38.68L14.57 37.99L13.75 37.21L13.05 36.34L12.49 35.4L12.08 34.4L11.83 33.37L11.73 32.32L11.8 31.27L12.04 30.23L12.42 29.23L12.96 28.29L13.64 27.4L14.46 26.61L15.38 25.91L16.41 25.31L17.52 24.84L18.69 24.49L19.91 24.28L21.14 24.2L22.38 24.26L23.6 24.46L24.78 24.79L25.9 25.24L26.94 25.82L27.88 26.51L28.71 27.29L29.41 28.16L29.97 29.1L30.38 30.1L30.63 31.13L30.72 32.18L30.65 33.23L30.42 34.27L30.03 35.27Z" fill="none" stroke="#236ead" stroke-width="2.8" stroke-linejoin="round" stroke-linecap="round"/>
 </svg>

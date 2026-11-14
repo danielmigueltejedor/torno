@@ -1,6 +1,9 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-  <title>Pick Up — eyedropper with a look-coloured tube</title>
-  <path d="M8.96 52.22Q15.32 44.44 14.97 37.01L28.4 23.58L40.42 35.6L26.99 49.03Q19.56 48.68 11.78 55.04Z" fill="#328bd3" stroke="#34465b" stroke-width="2.55" stroke-linejoin="round" stroke-linecap="round"/>
-  <path d="M30.52 20.04L39.01 11.56A9.5 9.5 0 0 1 52.44 24.99L43.96 33.48Z" fill="#b8c3cf" stroke="#34465b" stroke-width="2.55" stroke-linejoin="round" stroke-linecap="round"/>
-  <path d="M25.22 18.98L29.46 14.74L49.26 34.54L45.02 38.78Z" fill="#e2e8ef" stroke="#34465b" stroke-width="2.55" stroke-linejoin="round" stroke-linecap="round"/>
+  <title>Render pick up</title>
+  <circle cx="21.61" cy="40" r="11" fill="#236ead"/>
+  <circle cx="20.29" cy="38.68" r="9.46" fill="#328bd3"/>
+  <circle cx="18.31" cy="36.7" r="5.28" fill="#b9ddf8"/>
+  <circle cx="21.61" cy="40" r="11" fill="none" stroke="#34465b" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M44 10L54 20L41 33L37 33L35 31L35 27Z" fill="#e2e8ef" stroke="#34465b" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M35 31L29 37" fill="none" stroke="#34465b" stroke-width="2.6" stroke-linejoin="round" stroke-linecap="round"/>
 </svg>

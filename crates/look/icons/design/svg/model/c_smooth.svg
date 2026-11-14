@@ -1,6 +1,12 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-  <title>Curvature</title>
-  <path d="M10.4 32L12.2 27.65L14 23.6L15.8 20.12L17.6 17.45L19.4 15.77L21.2 15.2L23 15.77L24.8 17.45L26.6 20.12L28.4 23.6L30.2 27.65L32 32" fill="none" stroke="currentColor" stroke-width="4.25" stroke-linejoin="round" stroke-linecap="round"/>
-  <path d="M32 32L33.8 36.35L35.6 40.4L37.4 43.88L39.2 46.55L41 48.23L42.8 48.8L44.6 48.23L46.4 46.55L48.2 43.88L50 40.4L51.8 36.35L53.6 32" fill="none" stroke="#236ead" stroke-width="4.25" stroke-linejoin="round" stroke-linecap="round"/>
-  <circle cx="32" cy="32" r="3.4" fill="currentColor"/>
+  <title>C smooth</title>
+  <path d="M20.26 6.55L59.65 20.05L43.74 53.45L4.35 39.95Z" fill="#e2e8ef" stroke="#e2e8ef" stroke-width="0.6" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M20.26 6.55L59.65 20.05M59.65 20.05L43.74 53.45M43.74 53.45L4.35 39.95M4.35 39.95L20.26 6.55" fill="none" stroke="#34465b" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M59.65 21.77L43.74 55.17L43.74 53.45L59.65 20.05Z" fill="#8e9faf" stroke="#8e9faf" stroke-width="0.6" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M59.65 21.77L43.74 55.17M59.65 20.05L43.74 53.45M43.74 55.17L43.74 53.45M59.65 21.77L59.65 20.05" fill="none" stroke="#34465b" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M43.74 55.17L4.35 41.67L4.35 39.95L43.74 53.45Z" fill="#b8c3cf" stroke="#b8c3cf" stroke-width="0.6" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M43.74 55.17L4.35 41.67M43.74 53.45L4.35 39.95M4.35 41.67L4.35 39.95M43.74 55.17L43.74 53.45" fill="none" stroke="#34465b" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M10.88 31.91L12.18 30.7L13.44 29.6L14.66 28.6L15.84 27.7L16.98 26.9L18.08 26.2L19.13 25.59L20.15 25.07L21.12 24.64L22.06 24.3L22.95 24.04L23.8 23.86L24.61 23.76L25.39 23.73L26.12 23.78L26.81 23.9L27.46 24.09L28.07 24.35L28.64 24.67L29.17 25.05L29.67 25.49L30.12 25.98L30.53 26.53L30.9 27.13L31.24 27.78L31.53 28.48L31.78 29.22L32 30" fill="none" stroke="#34465b" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M32 30L32.22 30.78L32.47 31.52L32.76 32.22L33.1 32.87L33.47 33.47L33.88 34.02L34.33 34.51L34.83 34.95L35.36 35.33L35.93 35.65L36.54 35.91L37.19 36.1L37.88 36.22L38.61 36.27L39.39 36.24L40.2 36.14L41.05 35.96L41.94 35.7L42.88 35.36L43.85 34.93L44.87 34.41L45.92 33.8L47.02 33.1L48.16 32.3L49.34 31.4L50.56 30.4L51.82 29.3L53.12 28.09" fill="none" stroke="#236ead" stroke-width="2.8" stroke-linejoin="round" stroke-linecap="round"/>
+  <circle cx="32" cy="30" r="2.7" fill="#236ead" stroke="#34465b" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/>
 </svg>

@@ -1,4 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
   <title>Pan</title>
-  <path d="M32 5L42 18L36 18L36 28L46 28L46 22L59 32L46 42L46 36L36 36L36 46L42 46L32 59L22 46L28 46L28 36L18 36L18 42L5 32L18 22L18 28L28 28L28 18L22 18Z" fill="currentColor" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M32 8L32 56M8 32L56 32" fill="none" stroke="currentColor" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M25.33 14.67L32 8L38.67 14.67M25.33 49.33L32 56L38.67 49.33M14.67 25.33L8 32L14.67 38.67M49.33 25.33L56 32L49.33 38.67" fill="none" stroke="currentColor" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/>
 </svg>

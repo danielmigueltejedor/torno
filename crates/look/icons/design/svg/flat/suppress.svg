@@ -1,12 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
   <title>Suppress</title>
-  <defs>
-    <mask id="suppress-slash" maskUnits="userSpaceOnUse" x="-32" y="-32" width="128" height="128">
-      <path d="M-32 -32L96 -32L96 96L-32 96Z" fill="white"/>
-      <path d="M13 51L51 13" fill="none" stroke="black" stroke-width="13" stroke-linejoin="round" stroke-linecap="round"/>
-    </mask>
-  </defs>
-  <path d="M6 32C16 18 48 18 58 32C48 46 16 46 6 32Z" fill="none" stroke="currentColor" stroke-width="5" stroke-linejoin="round" stroke-linecap="round" mask="url(#suppress-slash)"/>
-  <path d="M24 32A8 8 0 1 0 40 32A8 8 0 1 0 24 32Z" fill="currentColor" mask="url(#suppress-slash)"/>
-  <path d="M13 51L51 13" fill="none" stroke="currentColor" stroke-width="5" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M8 8L56 56" fill="none" stroke="currentColor" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M26.67 15.33A25.6 25.6 0 0 1 32 14.67C48 14.67 57.33 32 57.33 32A45.33 45.33 0 0 1 50.4 41.07" fill="none" stroke="currentColor" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M16.8 19.47A44 44 0 0 0 6.67 32C6.67 32 16 49.33 32 49.33A24 24 0 0 0 42.13 47.2" fill="none" stroke="currentColor" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M26.4 26.4A8 8 0 0 0 37.6 37.6" fill="none" stroke="currentColor" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/>
 </svg>

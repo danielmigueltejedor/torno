@@ -1048,6 +1048,9 @@ preference_settings! {
     /// Linux: the window system the app opens with at its next start (#3083): `auto` (XWayland
     /// whenever there is an X display, native Wayland on niri), `wayland` or `x11`.
     window_system: String = "auto".into(), PAGE_GRAPHICS;
+    /// Linux: the window controls the app opens with at its next start: `app` (the Nodalia Design
+    /// Language's round controls in the application bar) or `system` (the desktop's own title bar).
+    window_controls: String = "app".into(), PAGE_GRAPHICS;
     /// Graphics API for the next start; Automatic preserves the platform startup order.
     graphics_backend: String = "auto".into(), PAGE_GRAPHICS;
     /// Exact graphics adapter name; empty selects automatically on the next start.
@@ -1890,7 +1893,12 @@ impl Snapshot {
         if self.prefs.graphics_backend != app.preferences.graphics_backend && app.services.graphics_path.is_some() {
             save_graphics_backend(app, &self.prefs.graphics_backend)?;
         }
-        let graphics = (app.preferences.msaa, app.preferences.window_system.clone(), app.preferences.graphics_adapter.clone());
+        let graphics = (
+            app.preferences.msaa,
+            app.preferences.window_system.clone(),
+            app.preferences.window_controls.clone(),
+            app.preferences.graphics_adapter.clone(),
+        );
         let units_changed = app.preferences.default_units != self.prefs.default_units;
         // Update bookkeeping isn't a setting: a check that finished while the dialog was open stays.
         let update = std::mem::take(&mut app.preferences.update);
@@ -1919,7 +1927,13 @@ impl Snapshot {
         app.toolbar_custom.load(&self.toolbar);
         app.sbox.pinned = self.favourites;
         app.settings_profiles.active = self.profile.filter(|name| app.settings_profiles.names().contains(name));
-        if (app.preferences.msaa, app.preferences.window_system.clone(), app.preferences.graphics_adapter.clone()) != graphics {
+        if (
+            app.preferences.msaa,
+            app.preferences.window_system.clone(),
+            app.preferences.window_controls.clone(),
+            app.preferences.graphics_adapter.clone(),
+        ) != graphics
+        {
             save_graphics(app);
         }
         Ok(())
@@ -2178,6 +2192,7 @@ fn defaults(app: &mut SolveApp, page: usize) {
         return;
     }
     let (msaa, window_system, adapter) = (app.preferences.msaa, app.preferences.window_system.clone(), app.preferences.graphics_adapter.clone());
+    let window_controls = app.preferences.window_controls.clone();
     let units = app.preferences.default_units.clone();
     reset_preferences(&mut app.preferences, page);
     sync_surface_analysis(app);
@@ -2210,7 +2225,11 @@ fn defaults(app: &mut SolveApp, page: usize) {
             app.ui.show_grid = true;
             app.ui.ground_shadow = true;
             app.ui.perspective = false;
-            if app.preferences.msaa != msaa || app.preferences.window_system != window_system || app.preferences.graphics_adapter != adapter {
+            if app.preferences.msaa != msaa
+                || app.preferences.window_system != window_system
+                || app.preferences.window_controls != window_controls
+                || app.preferences.graphics_adapter != adapter
+            {
                 save_graphics(app);
             }
         }
@@ -2534,6 +2553,8 @@ pub fn graphics_backend_label(backend: &str) -> String {
 
 /// The window system choices (`Prefs::window_system`, #3083).
 pub const WINDOW_SYSTEMS: &[&str] = &["auto", "wayland", "x11"];
+/// The window controls choices (`Prefs::window_controls`): Nodalia's own, or the desktop's.
+pub const WINDOW_CONTROLS: &[&str] = &["app", "system"];
 /// winit's issue for dropping files onto a window on native Wayland, which the note links to.
 pub const WAYLAND_DROP_ISSUE: &str = "https://github.com/rust-windowing/winit/issues/1881";
 
@@ -2583,6 +2604,41 @@ fn window_system_row(app: &mut SolveApp, ui: &mut egui::Ui, label_width: f32) {
             ui.hyperlink_to(egui::RichText::new(app.tr("settings.window_system_details")).size(t.font_small), WAYLAND_DROP_ISSUE);
         });
     }
+}
+
+/// Linux: Graphics › Window controls. Nodalia's round controls in the application bar, or the
+/// desktop's own title bar and buttons (GNOME, KDE...). It applies at the next start.
+#[cfg(target_os = "linux")]
+fn window_controls_row(app: &mut SolveApp, ui: &mut egui::Ui, label_width: f32) {
+    let t = Tokens::get();
+    let labels: Vec<_> = WINDOW_CONTROLS.iter().map(|id| torno_ui_text::tr(&format!("ui.window_controls_{id}")).to_string()).collect();
+    let labels: Vec<_> = labels.iter().map(String::as_str).collect();
+    let text = app.tr("settings.msaa_applies_on_restart").to_string();
+    let row_width = (label_width + t.space_14 + t.space_24 * 10.0).min(ui.available_width());
+    ui.horizontal_wrapped(|ui| {
+        ui.allocate_ui_with_layout(egui::vec2(row_width, t.control_height), egui::Layout::top_down(egui::Align::Min), |ui| {
+            ui_kit::settings_form(ui, label_width, |ui| {
+                ui_kit::settings_row_help(ui, app.tr("ui.window_controls"), &text, |ui| {
+                    ui.allocate_ui_with_layout(
+                        egui::vec2((t.space_24 * 10.0).min(ui.available_width()), t.control_height),
+                        egui::Layout::top_down(egui::Align::Min),
+                        |ui| {
+                            let mut selected = WINDOW_CONTROLS.iter().position(|id| *id == app.preferences.window_controls).unwrap_or(0);
+                            let before = selected;
+                            let response = ui_kit::dropdown(ui, "window_controls", &mut selected, &labels);
+                            crate::scenario::publish_target("prefs:window_controls", response.rect);
+                            if selected != before
+                                && let Some(id) = WINDOW_CONTROLS.get(selected)
+                            {
+                                app.preferences.window_controls = (*id).into();
+                            }
+                        },
+                    );
+                });
+            });
+        });
+        ui_kit::settings_badge(ui, "Linux", false);
+    });
 }
 
 /// Read startup settings without replacing unreadable data with defaults during a UI edit.
@@ -2669,6 +2725,7 @@ fn save_graphics(app: &SolveApp) {
             let mut graphics = read_graphics_settings(path)?;
             graphics["msaa"] = json!(app.preferences.msaa);
             graphics["window_system"] = json!(app.preferences.window_system);
+            graphics["titlebar"] = json!(app.preferences.window_controls);
             graphics["adapter"] = json!(app.preferences.graphics_adapter);
             torno_engine::io::safe_write::write_atomic(path, graphics.to_string().as_bytes(), false).map_err(|error| error.to_string())
         })();
@@ -2805,6 +2862,7 @@ pub fn show(app: &mut SolveApp, ctx: &egui::Context) {
         crate::space_mouse_calibration::show(app, ctx);
         if app.preferences.msaa != before.msaa
             || app.preferences.window_system != before.window_system
+            || app.preferences.window_controls != before.window_controls
             || app.preferences.graphics_adapter != before.graphics_adapter
         {
             save_graphics(app);
@@ -4176,6 +4234,9 @@ fn prepare_preferences(
     if !WINDOW_SYSTEMS.contains(&new.window_system.as_str()) {
         return Err(format!("`window_system` must be one of {}", WINDOW_SYSTEMS.join(", ")));
     }
+    if !WINDOW_CONTROLS.contains(&new.window_controls.as_str()) {
+        return Err(format!("`window_controls` must be one of {}", WINDOW_CONTROLS.join(", ")));
+    }
     if !NAV_PRESETS.iter().any(|p| p.id == new.nav) || !MSAA.contains(&new.msaa) {
         return Err(format!("`nav` must be one of {} and `msaa` 1, 2, 4 or 8", NAV_PRESETS.iter().map(|p| p.id).collect::<Vec<_>>().join(", ")));
     }
@@ -4287,6 +4348,7 @@ fn apply_preferences(app: &mut SolveApp, new: Prefs, p: &serde_json::Value) -> R
     let up_changed = new.up_axis != app.preferences.up_axis;
     let graphics_changed = new.msaa != app.preferences.msaa
         || new.window_system != app.preferences.window_system
+        || new.window_controls != app.preferences.window_controls
         || new.graphics_adapter != app.preferences.graphics_adapter;
     if p.get("layout").is_some() {
         app.ui.layout = new.layout;

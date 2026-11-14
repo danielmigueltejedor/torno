@@ -1,7 +1,13 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-  <title>Lighting presets — a stack of ready-made light set-ups</title>
-  <path d="M24 5L54 5A5 5 0 0 1 59 10L59 40A5 5 0 0 1 54 45L24 45A5 5 0 0 1 19 40L19 10A5 5 0 0 1 24 5Z" fill="#b8c3cf" stroke="#34465b" stroke-width="2.55" stroke-linejoin="round" stroke-linecap="round"/>
-  <path d="M10 17L42 17A5 5 0 0 1 47 22L47 54A5 5 0 0 1 42 59L10 59A5 5 0 0 1 5 54L5 22A5 5 0 0 1 10 17Z" fill="#e2e8ef" stroke="#34465b" stroke-width="2.55" stroke-linejoin="round" stroke-linecap="round"/>
-  <path d="M18.3 41.55A11.5 11.5 0 1 1 33.7 41.55L33.2 45.55L18.8 45.55Z" fill="#b9ddf8" stroke="#34465b" stroke-width="2.55" stroke-linejoin="round" stroke-linecap="round"/>
-  <path d="M21.3 45.55L30.7 45.55A2.5 2.5 0 0 1 33.2 48.05L33.2 50.05A2.5 2.5 0 0 1 30.7 52.55L21.3 52.55A2.5 2.5 0 0 1 18.8 50.05L18.8 48.05A2.5 2.5 0 0 1 21.3 45.55Z" fill="#8e9faf" stroke="#34465b" stroke-width="2.55" stroke-linejoin="round" stroke-linecap="round"/>
+  <title>Render lighting presets</title>
+  <circle cx="16.41" cy="40" r="7" fill="#236ead"/>
+  <circle cx="15.57" cy="39.16" r="6.02" fill="#328bd3"/>
+  <circle cx="14.31" cy="37.9" r="3.36" fill="#b9ddf8"/>
+  <circle cx="16.41" cy="40" r="7" fill="none" stroke="#34465b" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>
+  <circle cx="47.59" cy="40" r="7" fill="#8e9faf"/>
+  <circle cx="46.75" cy="39.16" r="6.02" fill="#b8c3cf"/>
+  <circle cx="45.49" cy="37.9" r="3.36" fill="#e2e8ef"/>
+  <circle cx="47.59" cy="40" r="7" fill="none" stroke="#34465b" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M37.00 14.00L41.00 14.00M35.54 17.54L38.36 20.36M32.00 19.00L32.00 23.00M28.46 17.54L25.64 20.36M27.00 14.00L23.00 14.00M28.46 10.46L25.64 7.64M32.00 9.00L32.00 5.00M35.54 10.46L38.36 7.64" fill="none" stroke="#236ead" stroke-width="2.6" stroke-linejoin="round" stroke-linecap="round"/>
+  <circle cx="32" cy="20" r="3.6" fill="#328bd3" stroke="#34465b" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/>
 </svg>

@@ -9,14 +9,15 @@
 
 use egui::{FontDefinitions, FontFamily, FontId, RichText};
 
-/// Name of the medium (500) interface family, and of its face in a host's definitions.
-pub const MEDIUM_FAMILY: &str = "ui-medium";
+/// Name of the medium (500) interface family (the engineering suite's, so its shared widgets find
+/// it), and of its face in a host's definitions.
+pub const MEDIUM_FAMILY: &str = nodalia_theme::engineering::MEDIUM;
 
 /// Name of the semibold (600) interface family, and of its face in a host's definitions.
-pub const SEMIBOLD_FAMILY: &str = "ui-semibold";
+pub const SEMIBOLD_FAMILY: &str = nodalia_theme::engineering::SEMIBOLD;
 
 /// Name of the bold (700) interface family, and of its face in a host's definitions.
-pub const BOLD_FAMILY: &str = "ui-bold";
+pub const BOLD_FAMILY: &str = nodalia_theme::engineering::BOLD;
 
 fn medium_family() -> FontFamily {
     FontFamily::Name(MEDIUM_FAMILY.into())

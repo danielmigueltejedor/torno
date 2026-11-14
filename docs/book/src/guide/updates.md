@@ -96,27 +96,18 @@ no check controls for them. The browser app updates itself: reload the page to g
 version. When the network is unavailable, or the update can't finish downloading in time, the
 saved version opens instead, and the download continues for the next reload.
 
-## Managed by a launcher
+## Managed by something else
 
-When a launcher such as the ArtCraft Launcher installed Torno, it also updates it. Torno
-notices this in two ways:
-
-- the environment variable `TORNO_MANAGED_BY` is set; its value is the launcher's name, for
-  example `ArtCraft Launcher`, and
-- the ArtCraft Launcher's `installed.json` (in its per-user data folder, read-only) lists this
-  Torno: its recorded path is this executable, this AppImage or `.app`, or the folder this
-  executable was unpacked into.
-
-Torno then still checks for a newer release, and the pill and **Check now** work as before, but
-the window says **Update available: update Torno in ArtCraft Launcher** and offers only
-**Skip this version** and **Remind me later**. There is no **Update now**, **Download** or
-AppImage replacement, so the launcher's record of what is installed stays right. Without the
-variable or a record, nothing changes. Setting `TORNO_UPDATE_CHECK=0` still turns the checks
-off.
+When a package manager or software centre installed Torno and keeps it up to date, it can set the
+environment variable `TORNO_MANAGED_BY` to its name. Torno then still checks for a newer release,
+and the pill and **Check now** work as before, but the window says **Update available: update
+Torno in** that name and offers only **Skip this version** and **Remind me later**. There is no
+**Update now**, **Download** or AppImage replacement. Without the variable nothing changes.
+Setting `TORNO_UPDATE_CHECK=0` still turns the checks off.
 
 ## Which file Download gets
 
-Releases attach the main packages under fixed names (see [releasing](https://github.com/tangency-labs/solidcraft/blob/main/docs/releasing.md)),
+Releases attach the main packages under fixed names (see [releasing](https://github.com/getnodalia/torno/blob/main/docs/releasing.md)),
 and Torno picks the one matching how it was installed:
 
 | Installed as | Detected by | Download | How to update |

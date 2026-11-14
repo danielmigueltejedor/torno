@@ -21,7 +21,19 @@ const fn icon_primary(rgb: [u8; 3]) -> Color32 {
     Color32::from_rgb(rgb[0], rgb[1], rgb[2])
 }
 impl Tokens {
+    /// The light tokens: Torno's own values with the Nodalia Design Language's interface colours
+    /// on top ([`crate::ndl`]).
     pub const fn light() -> Tokens {
+        crate::ndl::apply(Tokens::base_light(), false)
+    }
+
+    /// The dark tokens: Torno's own values with the Nodalia Design Language's interface colours
+    /// on top ([`crate::ndl`]).
+    pub const fn dark() -> Tokens {
+        crate::ndl::apply(Tokens::base_dark(), true)
+    }
+
+    const fn base_light() -> Tokens {
         Tokens {
             nav_hover: Color32::from_rgb(233, 237, 242),
             nav_press: Color32::from_rgb(220, 226, 234),
@@ -299,8 +311,8 @@ impl Tokens {
             logo: [Color32::from_rgb(96, 158, 236), Color32::from_rgb(58, 136, 238), Color32::from_rgb(55, 108, 197)],
         }
     }
-    pub const fn dark() -> Tokens {
-        let mut t = Tokens::light();
+    const fn base_dark() -> Tokens {
+        let mut t = Tokens::base_light();
         // Shared typography and dense form dimensions stay identical in both palettes.
         t.font_triad = 8.0;
         t.font_compass = 13.5;
@@ -499,10 +511,18 @@ impl Tokens {
             t.bend_up = Color32::from_rgb(110, 165, 255);
             t.bend_down = Color32::from_rgb(240, 180, 70);
             t.sketch_accent = icon_primary(strokes::SKETCH_RED_GREEN[1]);
+            // NDL's green success and red error badges, and its brown accent wash against the
+            // error rows, merge for a red-green loss: a blue success and a violet error row.
+            t.form_success = Color32::from_rgb(120, 190, 240);
+            t.timeline_item_error = Color32::from_rgb(70, 60, 110);
         } else {
             t.sketch_projected = Color32::from_rgb(205, 120, 215);
             t.sketch_locked = Color32::from_rgb(60, 150, 120);
-            t.timeline_item_error = Color32::from_rgb(232, 196, 170);
+            // A lavender error row apart from NDL's cream accent wash, a crimson error apart
+            // from its amber warning, and a blue reference marker apart from its olive accent.
+            t.timeline_item_error = Color32::from_rgb(195, 190, 240);
+            t.error = Color32::from_rgb(164, 8, 72);
+            t.figure_reference = Color32::from_rgb(35, 110, 173);
             t.bend_up = Color32::from_rgb(30, 100, 210);
             t.bend_down = Color32::from_rgb(200, 120, 0);
             t.sketch_accent = icon_primary(strokes::SKETCH_RED_GREEN[0]);
@@ -528,9 +548,15 @@ impl Tokens {
         if dark {
             t.sketch_locked = Color32::from_rgb(140, 225, 110);
             t.box_crossing = Color32::from_rgb(240, 110, 170);
+            // NDL's salmon error and amber warning merge for a blue-yellow loss.
+            t.warning = Color32::from_rgb(250, 220, 100);
         } else {
             t.sketch_locked = Color32::from_rgb(20, 165, 70);
             t.box_crossing = Color32::from_rgb(200, 60, 120);
+            // Apart from NDL's cream accent wash, its plum dimensions and its olive accent marker.
+            t.timeline_item_error = Color32::from_rgb(240, 190, 210);
+            t.error = Color32::from_rgb(200, 40, 30);
+            t.figure_reference = Color32::from_rgb(35, 110, 173);
         }
         t
     }

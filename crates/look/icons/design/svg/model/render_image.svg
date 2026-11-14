@@ -1,7 +1,12 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
   <title>Render image</title>
-  <path d="M11 12L53 12A5 5 0 0 1 58 17L58 47A5 5 0 0 1 53 52L11 52A5 5 0 0 1 6 47L6 17A5 5 0 0 1 11 12Z" fill="#e2e8ef"/>
-  <path d="M7 46L7 44L22 28L33 40L40 33L57 49L57 47A5 5 0 0 1 52 52L12 52A5 5 0 0 1 7 46Z" fill="#328bd3"/>
-  <path d="M11 12L53 12A5 5 0 0 1 58 17L58 47A5 5 0 0 1 53 52L11 52A5 5 0 0 1 6 47L6 17A5 5 0 0 1 11 12Z" fill="none" stroke="#34465b" stroke-width="2.55" stroke-linejoin="round" stroke-linecap="round"/>
-  <path d="M46 14Q47.2 22.8 56 24Q47.2 25.2 46 34Q44.8 25.2 36 24Q44.8 22.8 46 14Z" fill="#236ead"/>
+  <path d="M45.16 37.6L20.91 51.6L20.91 27.6L45.16 13.6Z" fill="#8e9faf" stroke="#8e9faf" stroke-width="0.6" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M45.16 37.6L20.91 51.6M45.16 13.6L20.91 27.6M20.91 51.6L20.91 27.6M45.16 37.6L45.16 13.6" fill="none" stroke="#34465b" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M43.09 12.4L45.16 13.6L20.91 27.6L18.84 26.4Z" fill="#e2e8ef" stroke="#e2e8ef" stroke-width="0.6" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M43.09 12.4L45.16 13.6M45.16 13.6L20.91 27.6M20.91 27.6L18.84 26.4M18.84 26.4L43.09 12.4" fill="none" stroke="#34465b" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M20.91 51.6L18.84 50.4L18.84 26.4L20.91 27.6Z" fill="#b8c3cf" stroke="#b8c3cf" stroke-width="0.6" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M20.91 51.6L18.84 50.4M20.91 27.6L18.84 26.4M18.84 50.4L18.84 26.4M20.91 51.6L20.91 27.6" fill="none" stroke="#34465b" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M42.61 36.13L23.56 47.13L23.56 29.13L42.61 18.13Z" fill="#b9ddf8"/>
+  <path d="M42.65 36.15L23.6 47.15L23.6 39.15L30.53 30.15L36.59 32.65L42.65 25.15Z" fill="#328bd3"/>
+  <circle cx="37.46" cy="25.15" r="2.6" fill="#236ead"/>
 </svg>
