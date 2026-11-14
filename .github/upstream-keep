@@ -14,3 +14,4 @@ packaging/linux/arch-package.sh
 .github/workflows/release.yml
 .github/workflows/generated.yml
 CONTRIBUTING.md
+.github/CODEOWNERS

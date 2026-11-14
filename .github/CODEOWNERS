@@ -1,8 +1,5 @@
-# Code owners: a pull request that changes these paths needs an approving review from an owner
-# listed here when the branch ruleset requires review from Code Owners. Later lines take
-# precedence over earlier ones.
+# Nodalia maintainers with write access handle reviews in this repository.
+* @danielmigueltejedor @JonNovoa
 
-# The vendored SolidCore kernel, owned as in SolidCore's own CODEOWNERS
-# (solidcore/.github/CODEOWNERS, which GitHub reads only at a repository's root).
-# The team (jyviko and bherbruck) assigns one of them per pull request, so either one approves.
-/solidcore/ @tangency-labs/solidcore-owners
+# Consult the upstream SolidCore maintainers for changes under solidcore/.
+# Upstream's team ownership is recorded in solidcore/.github/CODEOWNERS.
