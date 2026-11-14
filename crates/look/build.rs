@@ -89,16 +89,14 @@ fn icon_data() -> Result<(), String> {
     let mut ids = std::collections::BTreeSet::new();
     let svg_dir = root.join("svg");
     println!("cargo:rerun-if-changed={}", root.display());
-    for fam in ["model", "small", "flat", "workspace"] {
+    for fam in ["model", "flat", "workspace"] {
         let dir = svg_dir.join(fam);
         let mut files: Vec<_> =
             std::fs::read_dir(&dir).map_err(|e| format!("{}: {e}", dir.display()))?.filter_map(Result::ok).map(|e| e.path()).collect();
         files.sort();
         for f in files.iter().filter(|f| f.extension().is_some_and(|e| e == "svg")) {
             let id = f.file_stem().and_then(|s| s.to_str()).ok_or("bad file name")?;
-            if fam != "small" {
-                ids.insert(id.to_owned());
-            }
+            ids.insert(id.to_owned());
             let abs = f.canonicalize().map_err(|e| e.to_string())?;
             println!("cargo:rerun-if-changed={}", abs.display());
             svgs.push(format!("({id:?}, {fam:?}, include_str!({:?}))", abs.display().to_string()));
