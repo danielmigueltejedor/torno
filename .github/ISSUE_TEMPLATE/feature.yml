@@ -1,16 +1,44 @@
 name: Feature request
-description: Something Torno should do
-labels: [enhancement]
+description: Propose a new capability or improvement for torno.
+labels:
+- enhancement
 body:
-  - type: textarea
-    id: goal
-    attributes:
-      label: What are you trying to do
-      description: The part or workflow you have in mind, and where Torno gets in the way today.
-    validations:
-      required: true
-  - type: textarea
-    id: idea
-    attributes:
-      label: How you imagine it working
-      description: Optional. Describe the behaviour in your own words; please don't paste another product's documentation.
+- type: dropdown
+  id: component
+  attributes:
+    label: Affected area
+    options:
+    - Sketching and constraints
+    - Solid modeling and booleans
+    - STEP and file formats
+    - Rendering and interaction
+    - Automation
+    - Other or unsure
+  validations:
+    required: true
+- type: dropdown
+  id: request_kind
+  attributes:
+    label: Type of improvement
+    options:
+    - New capability
+    - Improve an existing workflow
+    - Compatibility or interoperability
+    - Accessibility
+    - Other or unsure
+  validations:
+    required: true
+- type: textarea
+  id: goal
+  attributes:
+    label: What are you trying to do
+    description: The part or workflow you have in mind, and where Torno gets in the
+      way today.
+  validations:
+    required: true
+- type: textarea
+  id: idea
+  attributes:
+    label: How you imagine it working
+    description: Optional. Describe the behaviour in your own words; please don't
+      paste another product's documentation.

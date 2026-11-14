@@ -1,0 +1,42 @@
+name: Assign maintainers to pull requests
+
+on:
+  pull_request:
+    types: [opened, reopened, ready_for_review]
+
+permissions:
+  issues: write
+  pull-requests: write
+
+concurrency:
+  group: maintainer-triage-${{ github.event.pull_request.number }}
+  cancel-in-progress: false
+
+jobs:
+  triage:
+    name: Assign maintainers
+    # A fork's pull_request token cannot edit labels or assignees.
+    if: >-
+      !github.event.pull_request.draft &&
+      github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        with:
+          script: |
+            const maintainers = ['danielmigueltejedor', 'JonNovoa'];
+            // Torno's existing triage labels issues and PRs. Issue assignees track claims.
+            const pull_number = context.payload.pull_request.number;
+            const { data: pull } = await github.rest.pulls.get({ ...context.repo, pull_number });
+            if (pull.state !== 'open' || pull.draft || pull.locked) return;
+            const issueParams = { ...context.repo, issue_number: pull_number };
+            if (!pull.assignees.length) {
+              const { data: assigned } = await github.rest.issues.addAssignees({
+                ...issueParams, assignees: maintainers,
+              });
+              const logins = new Set(assigned.assignees.map(user => user.login.toLowerCase()));
+              if (maintainers.some(login => !logins.has(login.toLowerCase()))) {
+                throw new Error('GitHub did not assign both maintainers.');
+              }
+            }
