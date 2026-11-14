@@ -43,7 +43,7 @@ export CARGO_TARGET_DIR="${CARGO_TARGET_DIR:-$ROOT/target}"
 # rebases both to this one (packaging/flatpak-site.sh, docs/compatibility.md).
 APP_ID=dev.danielmiguelt.Torno
 # The .desktop's Icon=: the Nodalia name, so an icon theme can tell Torno from the Craft app
-# that shares the app ID. The icons are installed under both names.
+# that shares the app ID. Install an alias only when the names differ.
 ICON_NAME=dev.danielmiguelt.Torno
 export APP_ID
 
@@ -67,7 +67,9 @@ make_icons() {
   for s in 16 24 32 48 64 128 256 512; do
     mkdir -p "$out/hicolor/${s}x${s}/apps"
     cp "$ROOT/assets/icons/app/linux/exports/hicolor/${s}x${s}/apps/$APP_ID.png" "$out/hicolor/${s}x${s}/apps/$APP_ID.png" || return
-    cp "$out/hicolor/${s}x${s}/apps/$APP_ID.png" "$out/hicolor/${s}x${s}/apps/$ICON_NAME.png" || return
+    if [ "$ICON_NAME" != "$APP_ID" ]; then
+      cp "$out/hicolor/${s}x${s}/apps/$APP_ID.png" "$out/hicolor/${s}x${s}/apps/$ICON_NAME.png" || return
+    fi
   done
   cp "$ROOT/assets/icons/app/windows/exports/torno.ico" "$out/torno.ico"
 }
