@@ -23,13 +23,6 @@ const TABS_KEPT: f32 = 124.0;
 pub const REPORT_TEXT_X: f32 = 29.0;
 /// Space between the search field and Settings.
 pub const SEARCH_GAP: f32 = 4.0;
-/// Home's least place from the bar's left edge, and the least gap between the app's name and
-/// Home's button. 128 was Home's fixed place, sized for "Torno": the name starts at 36 and is
-/// 65.1 wide in Plex Sans semibold at the theme's heading size (14), so it ends at 101.1, and Home's
-/// button starts at 108 (20 before its place), 6.9 after it. A longer name moves Home right by
-/// the same gap, rounded down so Torno's bar stays put: 36 + 65.1 + 6 + 20 = 127.1, under 128.
-const HOME_MIN: f32 = 128.0;
-const NAME_GAP: f32 = 6.0;
 /// A bar narrower than this shows no product name, no Undo and Redo, and narrower file actions.
 const COMPACT: f32 = 640.0;
 
@@ -238,20 +231,12 @@ pub fn show(ui: &mut egui::Ui, data: &AppBar, bar: Rect, content: Rect) -> BarOu
     let compact = r.right() - left < COMPACT;
     let mut actions = Vec::new();
     (data.mark)(ui.painter(), pos2(left + 20.0, r.center().y));
-    // Home's place: after the name as drawn, and never before HOME_MIN.
-    let mut x = if compact {
-        left + 56.0
-    } else {
-        let name = ui.painter().text(
-            pos2(left + 36.0, r.center().y),
-            Align2::LEFT_CENTER,
-            data.name,
-            crate::type_face::semibold(t.font_heading),
-            t.app_bar_text,
-        );
-        // Home's button starts 20 before its place (32 wide, centred 4 before it).
-        (left + HOME_MIN).max(name.right() + NAME_GAP + 20.0)
-    };
+    // The suite's bars start with the app's icon alone (`nodalia_theme::engineering::TitleBar`):
+    // the name is the icon's accessible label, not text beside it.
+    let mark =
+        ui.interact(Rect::from_center_size(pos2(left + 20.0, r.center().y), vec2(24.0, 24.0)), ui.scope_id().with("appbar_mark"), Sense::hover());
+    mark.widget_info(|| egui::WidgetInfo::labeled(egui::Role::Image, true, data.name));
+    let mut x = left + 56.0;
     // Home.
     let home = Rect::from_center_size(pos2(x - 4.0, r.center().y), vec2(32.0, 32.0));
     let idle = data.home.enabled;

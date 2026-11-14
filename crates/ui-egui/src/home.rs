@@ -702,6 +702,11 @@ pub fn show(app: &mut SolveApp, ui: &mut egui::Ui) {
         id: "home",
         name: app.tr("ui.start_page").into(),
         interactive,
+        header: (app.home.section == Section::Start).then(|| start_page::Header {
+            icon: crate::toolbar::app_mark_texture(ui.ctx()),
+            app: "Torno".into(),
+            caption: torno_ui_text::format("help.version", &[("version", env!("CARGO_PKG_VERSION"))]).into(),
+        }),
         back: start_page::Back {
             template: app.tr("home.back").into(),
             document: app.session.doc.name.as_str().into(),
@@ -744,28 +749,29 @@ fn rail(app: &SolveApp) -> Vec<start_page::RailItem<'_, FileAction>> {
     } else {
         format!("{} ({})", app.tr_label("Recover"), app.recoverable.len()).into()
     };
-    let nav: [(&str, start_page::Label<'_>, String, Option<Section>, bool, FileAction); 12] = [
-        ("home:start", app.tr_label("Start").into(), String::new(), Some(Section::Start), true, FileAction::Section(Section::Start)),
-        ("home:new", app.tr_label("New").into(), format!("{primary}N"), None, true, FileAction::New("preferred")),
-        ("home:open", app.tr("ui.open").into(), format!("{primary}O"), None, true, FileAction::Open),
-        ("home:recover", recover, String::new(), Some(Section::Recovery), true, FileAction::Section(Section::Recovery)),
-        ("home:save", app.tr("ui.save").into(), format!("{primary}S"), None, design, FileAction::Save),
-        ("home:save_as", app.tr("ui.save_as").into(), format!("{primary}{shift}S"), None, design, FileAction::SaveAs),
-        ("home:export", app.tr("home.export").into(), String::new(), Some(Section::Export), design, FileAction::Section(Section::Export)),
-        ("home:properties", app.tr("home.properties").into(), String::new(), None, design, FileAction::Properties),
-        ("home:settings", app.tr("home.settings").into(), format!("{primary},"), None, true, FileAction::Settings),
-        ("home:shortcuts", app.tr("home.shortcuts").into(), String::new(), None, true, FileAction::Shortcuts),
-        ("home:crashes", app.tr("home.crashes").into(), String::new(), None, true, FileAction::Crashes),
-        ("home:about", app.tr_label("About Torno").into(), String::new(), None, true, FileAction::About),
+    let nav: [(&str, &str, start_page::Label<'_>, String, Option<Section>, bool, FileAction); 12] = [
+        ("home:start", "home", app.tr_label("Start").into(), String::new(), Some(Section::Start), true, FileAction::Section(Section::Start)),
+        ("home:new", "new", app.tr_label("New").into(), format!("{primary}N"), None, true, FileAction::New("preferred")),
+        ("home:open", "open", app.tr("ui.open").into(), format!("{primary}O"), None, true, FileAction::Open),
+        ("home:recover", "history", recover, String::new(), Some(Section::Recovery), true, FileAction::Section(Section::Recovery)),
+        ("home:save", "save", app.tr("ui.save").into(), format!("{primary}S"), None, design, FileAction::Save),
+        ("home:save_as", "save-as", app.tr("ui.save_as").into(), format!("{primary}{shift}S"), None, design, FileAction::SaveAs),
+        ("home:export", "export", app.tr("home.export").into(), String::new(), Some(Section::Export), design, FileAction::Section(Section::Export)),
+        ("home:properties", "properties", app.tr("home.properties").into(), String::new(), None, design, FileAction::Properties),
+        ("home:settings", "settings", app.tr("home.settings").into(), format!("{primary},"), None, true, FileAction::Settings),
+        ("home:shortcuts", "keyboard", app.tr("home.shortcuts").into(), String::new(), None, true, FileAction::Shortcuts),
+        ("home:crashes", "error", app.tr("home.crashes").into(), String::new(), None, true, FileAction::Crashes),
+        ("home:about", "info", app.tr_label("About Torno").into(), String::new(), None, true, FileAction::About),
     ];
     let mut rail = Vec::with_capacity(nav.len() + 2);
-    for (index, (id, label, shortcut, section, enabled, chosen)) in nav.into_iter().enumerate() {
+    for (index, (id, icon, label, shortcut, section, enabled, chosen)) in nav.into_iter().enumerate() {
         if index == 4 || index == 8 {
             rail.push(start_page::RailItem::Separator);
         }
         rail.push(start_page::RailItem::Entry(start_page::RailEntry {
             id: id.into(),
             label,
+            icon,
             shortcut: shortcut.into(),
             selected: section == Some(app.home.section),
             enabled: enabled && !busy,
@@ -1605,12 +1611,16 @@ mod tests {
             assert!((rect.top() - first.top()).abs() < 0.5, "{id}: action tiles must share a row");
             assert!(page.contains_rect(rect), "{id}: card is off screen");
         }
-        let first = crate::scenario::rect_of("home:sample:0").unwrap();
+        // The suite's page column is narrower than the window: the samples wrap into two rows.
+        let mut rows: Vec<f32> = Vec::new();
         for i in 0..6 {
             let rect = crate::scenario::rect_of(&format!("home:sample:{i}")).unwrap();
-            assert!((rect.top() - first.top()).abs() < 0.5, "sample {i}: thumbnails must share a row");
+            if !rows.iter().any(|top| (top - rect.top()).abs() < 0.5) {
+                rows.push(rect.top());
+            }
             assert!(page.contains_rect(rect), "sample {i}: card is off screen");
         }
+        assert!(rows.len() <= 2, "samples lie in at most two rows: {rows:?}");
     }
 
     #[test]

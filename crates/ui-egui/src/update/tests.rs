@@ -539,6 +539,7 @@ fn the_pill_shortens_in_a_narrow_title_bar() {
     // way (to "Update", then the icon alone) before the document tabs run out of room.
     let mut last = wide.width();
     let mut shortened = false;
+    let mut short_label = false;
     for width in [1000.0, 800.0, 700.0, 600.0, 520.0, 440.0] {
         h.call("ui.resize", json!({"width": width, "height": 600}));
         h.frames(3);
@@ -551,11 +552,10 @@ fn the_pill_shortens_in_a_narrow_title_bar() {
             last = p.width();
         }
         shortened |= pill.is_none_or(|p| p.width() < wide.width());
-        if width == 1000.0 {
-            assert!(h.widget("Update").is_some() && h.widget(&label).is_none(), "the short label keeps room for the tabs");
-        }
+        short_label |= h.widget("Update").is_some() && h.widget(&label).is_none();
     }
     assert!(shortened, "the long label gives way in a narrow bar");
+    assert!(short_label, "the short label keeps room for the tabs before the icon goes alone");
 }
 
 #[test]

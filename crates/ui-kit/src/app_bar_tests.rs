@@ -125,19 +125,17 @@ fn a_compact_bar_keeps_only_what_fits() {
     assert!(torno_ui_registry::handle_at("t:version").is_none(), "no version on a narrow bar");
 }
 
-/// A long app name ends before Home: Home follows the name as drawn, not a place sized for one
+/// The bar starts with the app's icon alone, as every engineering app of the suite does: the
+/// name is the icon's accessible label, not text beside it, so Home keeps its place whatever the
 /// name.
 #[test]
-fn home_follows_a_long_app_name() {
+fn the_bar_starts_with_the_icon_alone() {
     let name = "A Considerably Longer Application";
     let rig = BarRig::named(1200.0, name);
     let (_, output) = rig.frame_output(Vec::new());
-    let text = crate::test_support::text_shapes(&output)
-        .find(|shape| shape.galley.text() == name)
-        .map(|shape| shape.visual_bounding_rect())
-        .expect("the name is drawn");
+    assert!(crate::test_support::text_shapes(&output).all(|shape| shape.galley.text() != name), "no name beside the icon");
     let home = torno_ui_registry::rect_of("t:home").expect("Home is drawn");
-    assert!(text.right() < home.left(), "the name ends at {}, Home starts at {}", text.right(), home.left());
+    assert!(home.left() < 60.0, "Home follows the icon, at {}", home.left());
 }
 
 const TAB_HANDLES: TabHandles<'static> =

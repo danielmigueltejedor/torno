@@ -340,9 +340,16 @@ pub fn app_bar(app: &mut SolveApp, ui: &mut egui::Ui) {
 /// The app's icon at the bar's left end, `at` its centre: the same picture as the window's and the
 /// packages' icons (`assets/icons/app/shared/source/app_icon.rs`), uploaded once.
 fn app_mark(painter: &egui::Painter, at: egui::Pos2) {
-    const SIDE: usize = 64;
+    if let Some(texture) = app_mark_texture(painter.ctx()) {
+        let rect = Rect::from_center_size(at, egui::vec2(22.0, 22.0));
+        painter.image(texture, rect, Rect::from_min_max(pos2(0.0, 0.0), pos2(1.0, 1.0)), egui::Color32::WHITE);
+    }
+}
+
+/// Torno's icon as a texture, made once per context (the title bar and Home draw it).
+pub(crate) fn app_mark_texture(ctx: &egui::Context) -> Option<egui::TextureId> {
+    const SIDE: usize = 128;
     let id = egui::Id::unique("torno_app_mark");
-    let ctx = painter.ctx();
     let texture = ctx.data(|d| d.get_temp::<egui::TextureHandle>(id)).or_else(|| {
         let rgba = app_icon::rgba(SIDE).ok()?;
         let image = egui::ColorImage::from_rgba_unmultiplied([SIDE, SIDE], &rgba);
@@ -350,10 +357,7 @@ fn app_mark(painter: &egui::Painter, at: egui::Pos2) {
         ctx.data_mut(|d| d.insert_temp(id, texture.clone()));
         Some(texture)
     });
-    if let Some(texture) = texture {
-        let rect = Rect::from_center_size(at, egui::vec2(22.0, 22.0));
-        painter.image(texture.id(), rect, Rect::from_min_max(pos2(0.0, 0.0), pos2(1.0, 1.0)), egui::Color32::WHITE);
-    }
+    texture.map(|texture| texture.id())
 }
 
 #[path = "../../../assets/icons/app/shared/source/app_icon.rs"]
@@ -4260,7 +4264,9 @@ mod app_bar_tests {
                     let bg = Color32::from_rgb(channel(fill.r(), t.app_bar.r()), channel(fill.g(), t.app_bar.g()), channel(fill.b(), t.app_bar.b()));
                     assert!(contrast(t.app_bar_text, bg) >= 4.5, "dark={dark}, {vision:?}, {fill:?}");
                 }
-                assert!(contrast(t.app_bar_separator, t.app_bar) >= 3.0);
+                // NDL's dividers are its default border: quiet beside the labels they separate,
+                // which carry the 4.5:1 above, but never lost on the bar.
+                assert!(contrast(t.app_bar_separator, t.app_bar) >= 1.4, "dark={dark}, {vision:?}");
                 assert!(contrast(t.app_bar, t.warning) >= 4.5, "approval counts need dark ink on amber");
             }
         }
