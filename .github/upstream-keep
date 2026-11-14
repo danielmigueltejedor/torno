@@ -11,4 +11,5 @@ docs/upstream-readme.md
 docs/nodalia/**
 packaging/linux/arch-package.sh
 .github/workflows/arch-package.yml
+.github/workflows/request-maintainer-review.yml
 .github/workflows/release.yml
