@@ -132,8 +132,9 @@ fn paint_with_ink(p: &Painter, r: Rect, name: &str, dark: Option<bool>, opacity:
     let ctx = p.ctx();
     if let Some(ndl) = ndl_equivalent(name, mirror) {
         let dark = dark.unwrap_or_else(|| ctx.global_style().visuals.dark_mode);
-        let ink = ink.unwrap_or(if dark { Color32::from_rgb(0xdf, 0xe2, 0xea) } else { Color32::from_rgb(0x44, 0x4a, 0x5c) });
-        nodalia_theme::icons::paint(p, r, ndl, nodalia_theme::icons::Style::bold(ink.gamma_multiply(opacity.clamp(0.0, 1.0))));
+        let ink = ink.unwrap_or_else(|| torno_theme::ndl::c(torno_theme::ndl::palette(dark).text_primary));
+        let ink = ink.gamma_multiply(opacity.clamp(0.0, 1.0));
+        nodalia_theme::icons::paint(p, r, ndl, nodalia_theme::icons::Style::bold(ink));
         return;
     }
     let resolved = resolve(name);

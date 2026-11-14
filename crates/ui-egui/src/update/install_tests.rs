@@ -4,11 +4,11 @@ use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
-/// A key pair made with `minisign -G -W` for these tests, and its signature of [`SIGNED_SUMS`]
-/// with the trusted comment "Torno v9.9.9".
-const TEST_KEY: &str = "RWSnDqhIJ/zGKMSbsGUl4/prZLXqi3PwpEeY/D8gvdsEUeZRO9yWCoSM";
+/// A minisign key pair made for these tests (its secret key thrown away), and its prehashed
+/// signature of [`SIGNED_SUMS`] with the trusted comment "Torno v9.9.9".
+const TEST_KEY: &str = "RWQ2Yl1jScju4whecrqC/QuX364O1uxhy4ldTzK/dkKTCRpjwvFTGj4T";
 const SIGNED_SUMS: &str = "aaaa  torno-linux-x86_64.AppImage\n";
-const SIGNATURE: &str = "untrusted comment: signature from minisign secret key\nRUSnDqhIJ/zGKEyvbowsT8vEGvdv2OL9Rwv4bo2m7pJC54t2UQWXjU0+V7ayPB0Okk1teY53qZSTugz2Dnko35A3Xc1jdNFZCwU=\ntrusted comment: Torno v9.9.9\npCRA0RNYxyt4SSqLbfI3p00xsCE4Rt8ixJWAQfoyb226cz/XdS7A2PRdG7hFmRmfg4h6zmtIt3iRLSKjk6RsAQ==\n";
+const SIGNATURE: &str = "untrusted comment: signature from minisign secret key\nRUQ2Yl1jScju4/v94mf2ltr4JxxYF9w/KSbyh1SicE55g9Ti0xQ2xQ7unPHf00HtGZQRRoJvfPaIwLSlX6uq5bJNyf4yik1+XQs=\ntrusted comment: Torno v9.9.9\n9JdDdRt2m3PV6o/n+qJwRKM68IPtrnllZzf0Se7cpGum9jkDmZTOYe7Spm88vdBisO6ON+jCNsB5+AbYsIyIAg==\n";
 
 fn scratch(name: &str) -> PathBuf {
     let dir = std::env::temp_dir().join(format!("torno-update-test-{}-{name}", std::process::id()));

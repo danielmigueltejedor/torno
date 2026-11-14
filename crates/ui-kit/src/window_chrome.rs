@@ -27,8 +27,7 @@
 
 use crate::icons::glyphs::paint_glyph;
 use egui::{
-    Color32, CursorIcon, Id, LayerId, Order, PointerButton, Pos2, Rect, ResizeDirection, Sense, Stroke, Ui, ViewportBuilder, ViewportCommand, pos2,
-    vec2,
+    CursorIcon, Id, LayerId, Order, PointerButton, Pos2, Rect, ResizeDirection, Sense, Stroke, Ui, ViewportBuilder, ViewportCommand, pos2, vec2,
 };
 
 pub mod native_menu;
@@ -225,22 +224,21 @@ pub fn caption_buttons(ui: &mut Ui, bar: Rect) -> Option<WindowAction> {
     let max = maximized(ui.ctx());
     let dark = torno_theme::is_dark();
     let p = torno_theme::ndl::palette(dark);
-    let ink = torno_theme::ndl::c(p.text_secondary);
-    let rest = torno_theme::ndl::c(p.control_bg);
+    // NDL's window-control colours: Torno's palette, as NDL's own controls pick them.
+    use nodalia_theme::window_color as wc;
     let mut clicked = None;
     for (i, c) in CAPTIONS.into_iter().enumerate() {
         let r = Rect::from_min_size(pos2(bar.right() - WIDTH + i as f32 * BUTTON_WIDTH, bar.top()), vec2(BUTTON_WIDTH, bar.height()));
         let resp = ui.interact(r, caption_id(c), Sense::click());
         let hot = resp.hovered() || resp.has_focus() || resp.is_pointer_button_down_on();
         let (fill, glyph_ink) = match (c, hot) {
-            (_, false) => (rest, ink),
-            (Caption::Close, true) => (Color32::from_rgb(0xff, 0x5c, 0x4d), Color32::WHITE),
-            (Caption::Maximize, true) if dark => (Color32::from_rgb(0x08, 0x3a, 0x40), Color32::from_rgb(0x2c, 0xc5, 0xd3)),
-            (Caption::Maximize, true) => (Color32::from_rgb(0xd8, 0xf6, 0xf7), Color32::from_rgb(0x08, 0x67, 0x70)),
-            (Caption::Minimize, true) if dark => (Color32::from_rgb(0x33, 0x24, 0x0a), Color32::from_rgb(0xf2, 0xc1, 0x4e)),
-            (Caption::Minimize, true) => (Color32::from_rgb(0xfb, 0xef, 0xd0), Color32::from_rgb(0x7a, 0x4f, 0x00)),
+            (_, false) => (p.control_bg, p.text_secondary),
+            (Caption::Close, true) => (wc::CLOSE, wc::CLOSE_ICON),
+            (Caption::Maximize, true) => (p.accent_subtle, p.accent_text),
+            (Caption::Minimize, true) => (p.status_warning_bg, p.status_warning_fg),
         };
-        let fill = if resp.is_pointer_button_down_on() { fill.lerp_to_gamma(Color32::BLACK, 0.12) } else { fill };
+        let (fill, glyph_ink) = (nodalia_theme::for_egui::color(fill), nodalia_theme::for_egui::color(glyph_ink));
+        let fill = if resp.is_pointer_button_down_on() { torno_theme::ndl::c(p.control_bg_pressed) } else { fill };
         // The disc, centred in its slot: the last one sits a margin in from the window's edge.
         let centre = pos2(r.center().x - CONTROL_MARGIN * (i as f32 / 2.0), r.center().y);
         ui.painter().circle_filled(centre, CONTROL / 2.0, fill);

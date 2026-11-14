@@ -1124,53 +1124,55 @@ mod checkbox_in_use {
     }
 }
 
-/// The kit's disclosures draw Torno's chevron artwork (the host's icon set) at token size.
+/// The kit's disclosures draw NDL's chevrons at token size.
 mod disclosure_artwork {
-    use crate::{icon_svg, scenario, ui_kit::*};
-    use egui::{ColorImage, Pos2, Rect, vec2};
+    use crate::{scenario, ui_kit::*};
+    use egui::{Pos2, Rect, vec2};
     use torno_theme::Tokens;
 
-    fn assert_glyph(
-        ctx: &egui::Context,
-        mut output: egui::FullOutput,
-        textures: &std::collections::HashMap<egui::TextureId, ColorImage>,
-        at: Pos2,
-        open: bool,
-    ) {
+    #[derive(Debug, PartialEq, Clone, Copy)]
+    enum Points {
+        Down,
+        Up,
+        Right,
+        Left,
+    }
+
+    /// The chevrons drawn inside `bounds`: NDL's are an open three-point stroke, and which way
+    /// the middle point sits from the ends is where it points.
+    fn chevrons(shapes: &[egui::epaint::ClippedShape], bounds: Rect) -> Vec<(Points, egui::Color32)> {
+        shapes
+            .iter()
+            .filter_map(|clipped| {
+                let egui::Shape::Path(path) = &clipped.shape else { return None };
+                let [a, m, b] = path.points[..] else { return None };
+                if path.closed || !bounds.contains(a) || !bounds.contains(m) || !bounds.contains(b) {
+                    return None;
+                }
+                let (dx, dy) = (m.x - (a.x + b.x) / 2.0, m.y - (a.y + b.y) / 2.0);
+                let points = if dy.abs() > dx.abs() {
+                    if dy > 0.0 { Points::Down } else { Points::Up }
+                } else if dx > 0.0 {
+                    Points::Right
+                } else {
+                    Points::Left
+                };
+                let egui::epaint::ColorMode::Solid(ink) = path.stroke.color else { return None };
+                Some((points, ink))
+            })
+            .collect()
+    }
+
+    fn assert_glyph(output: &egui::FullOutput, at: Pos2, open: bool) {
         let t = Tokens::get();
         let size = t.form_section_icon_size;
-        let px = size.round() as u32;
-        // Compare the pixels actually uploaded by the widget against the specified SVG id,
-        // not a helper's return value or its state. Also check the mesh uses those pixels
-        // at the control's position without the former vertical flip.
-        let id = if open { "chevron" } else { "chevron_right" };
-        let master = icon_svg::resolve(id).master;
-        let image = icon_svg::render(
-            icon_svg::doc_for(master, px).unwrap(),
-            icon_svg::Look { dark: true, accent: None, vision: torno_theme::vision(), palette: None },
-            px,
-        )
-        .unwrap();
-        let mut expected = ColorImage::from_rgba_premultiplied([px as usize, px as usize], image.data());
-        for pixel in &mut expected.pixels {
-            *pixel = t.form_dim.gamma_multiply(f32::from(pixel.a()) / 255.0);
-        }
-        let texture = textures
-            .iter()
-            .find_map(|(id, image)| (image == &expected).then_some(*id))
-            .expect("widget must upload the specified disclosure SVG pixels at token size and ink");
-        let meshes = ctx.tessellate(std::mem::take(&mut output.shapes), output.pixels_per_point);
         let bounds = Rect::from_center_size(at, vec2(size + 2.0, size + 2.0));
+        let want = if open { Points::Down } else { Points::Right };
+        let found = chevrons(&output.shapes, bounds);
         assert!(
-            meshes.iter().any(|clipped| {
-                let egui::epaint::Primitive::Mesh(mesh) = &clipped.primitive else { return false };
-                mesh.texture_id == texture
-                    && bounds.contains_rect(mesh.calc_bounds())
-                    && mesh.vertices.iter().all(|v| (v.pos.y < at.y) == (v.uv.y < 0.5))
-            }),
-            "specified glyph must actually be drawn, without flipping, at {at:?}"
+            found.iter().any(|(points, ink)| *points == want && *ink == t.form_dim),
+            "the disclosure at {at:?} must point {want:?} in the dim form ink, found {found:?}"
         );
-        output.textures_delta.clear();
     }
 
     #[test]
@@ -1183,7 +1185,6 @@ mod disclosure_artwork {
                     let ctx = crate::fonts::test_context();
                     ctx.set_visuals(if dark { egui::Visuals::dark() } else { egui::Visuals::light() });
                     let viewport = Rect::from_min_size(Pos2::ZERO, vec2(700.0, 500.0));
-                    let mut textures = std::collections::HashMap::new();
                     // Windows need measuring passes before their first visible frame.
                     for pass in 0..3 {
                         let mut output = ctx.run_ui(egui::RawInput { screen_rect: Some(viewport), ..Default::default() }, |ui| {
@@ -1205,14 +1206,6 @@ mod disclosure_artwork {
                                 .show(ui.ctx(), |ui| collapsible_header(ui, "fillet", "Fillet", &mut !open, || {}));
                             }
                         });
-                        for (id, deltas) in &output.textures_delta.set {
-                            for delta in deltas {
-                                let egui::ImageData::Color(image) = &delta.image;
-                                if delta.pos.is_none() {
-                                    textures.insert(*id, image.as_ref().clone());
-                                }
-                            }
-                        }
                         output.textures_delta.clear();
                         if pass != 2 {
                             continue;
@@ -1223,7 +1216,7 @@ mod disclosure_artwork {
                         } else {
                             scenario::handle_at("dialog:collapse").unwrap()
                         };
-                        assert_glyph(&ctx, output, &textures, at, open);
+                        assert_glyph(&output, at, open);
                     }
                 }
             }
@@ -1232,7 +1225,7 @@ mod disclosure_artwork {
     }
 
     #[test]
-    fn strip_fold_and_restore_share_the_chevron_texture_with_opposite_orientation() {
+    fn strip_fold_and_restore_share_the_chevron_with_opposite_orientation() {
         for expanded in [true, false] {
             let ctx = crate::fonts::test_context();
             let mut rect = Rect::NOTHING;
@@ -1241,29 +1234,9 @@ mod disclosure_artwork {
             });
             let icon =
                 Rect::from_min_size(rect.min, vec2(Tokens::get().control_height, Tokens::get().control_height)).shrink(Tokens::get().form_icon_inset);
-            let size = icon.width().round() as u32;
-            let expected = icon_svg::render(
-                icon_svg::doc_for(icon_svg::resolve("chevron").master, size).unwrap(),
-                icon_svg::Look { dark: true, accent: None, vision: torno_theme::vision(), palette: None },
-                size,
-            )
-            .unwrap();
-            let mut expected = ColorImage::from_rgba_premultiplied([size as usize, size as usize], expected.data());
-            for pixel in &mut expected.pixels {
-                *pixel = Tokens::get().form_dim.gamma_multiply(f32::from(pixel.a()) / 255.0);
-            }
-            let mut textures = std::collections::HashMap::new();
-            crate::ui_kit::test_textures_update(&mut textures, &output.textures_delta);
-            let texture = textures.iter().find_map(|(id, image)| (image == &expected).then_some(*id)).expect("shared chevron artwork");
-            let primitives = ctx.tessellate(output.shapes.clone(), output.pixels_per_point);
-            assert!(
-                primitives.iter().any(|primitive| {
-                    let egui::epaint::Primitive::Mesh(mesh) = &primitive.primitive else { return false };
-                    mesh.texture_id == texture
-                        && mesh.vertices.iter().all(|vertex| ((vertex.pos.y < icon.center().y) == (vertex.uv.y < 0.5)) == expanded)
-                }),
-                "hide points down and restore points up"
-            );
+            let found = chevrons(&output.shapes, icon.expand(1.0));
+            let want = if expanded { Points::Down } else { Points::Up };
+            assert!(found.iter().any(|(points, _)| *points == want), "hide points down and restore points up: {found:?}");
             output.textures_delta.clear();
         }
     }
@@ -1294,7 +1267,7 @@ mod disclosure_artwork {
                     .1;
                 assert_eq!(node.is_expanded(), Some(!collapsed), "semantics commit before the paint transition");
                 assert!(output.shapes.iter().all(|shape| shape.clip_rect.contains_rect(bounds)), "paint keeps the inherited clip");
-                output.shapes.iter().filter(|shape| matches!(shape.shape, egui::Shape::Mesh(_))).count()
+                chevrons(&output.shapes, bounds).len()
             };
             assert_eq!(frame(0.0, true, false), 1);
             frame(1.0 / 60.0, false, false);

@@ -487,6 +487,18 @@ mod tests {
                     vertex.pos += delta;
                 }
                 assert_eq!(&shifted, preview.as_ref(), "menu padding changes no artwork, colour, UVs or other geometry");
+            } else if live.shape != preview.shape {
+                // NDL's vector chevrons (strokes and their round caps) move the same way and
+                // change nothing else.
+                let centre = live.shape.visual_bounding_rect().center();
+                assert!(bar.slots.iter().any(|(slot, rect)| slot.kind == NavigationKind::Menu && rect.contains(centre)), "{centre:?}");
+                let border = crate::ui_kit::NAV_BORDER;
+                let moved = [-border, border].into_iter().any(|dx| {
+                    let mut shifted = live.shape.clone();
+                    shifted.translate(vec2(dx, 0.0));
+                    shifted == preview.shape
+                });
+                assert!(moved, "editing menus include their CSS transparent border, and nothing else changes: {live:?} vs {preview:?}");
             } else {
                 assert_eq!(live, preview, "slot painting is identical in both callers");
             }
