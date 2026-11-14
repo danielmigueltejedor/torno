@@ -25,3 +25,7 @@ Flowcharts and Mermaid diagrams cannot substitute for evidence of visible behavi
 ## Integration status
 
 Record the upstream commit and PR status checked before handoff, any conflicts resolved, and validation after integration. Keep up with upstream merges and monitor this PR while the task is active; rebase before pushing and never force-push.
+
+## Compatibility and release impact
+
+<!-- Note affected platforms, migrations or distribution changes when applicable. -->
