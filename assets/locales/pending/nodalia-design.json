@@ -34,5 +34,35 @@
     "ui.window_controls": "Controles da janela",
     "ui.window_controls_app": "Nodalia",
     "ui.window_controls_system": "Os da área de trabalho"
+  },
+  "ar": {
+    "ui.main_menu": "القائمة الرئيسية",
+    "ui.window_controls": "أزرار التحكم في النافذة",
+    "ui.window_controls_app": "Nodalia",
+    "ui.window_controls_system": "أزرار سطح المكتب"
+  },
+  "he": {
+    "ui.main_menu": "תפריט ראשי",
+    "ui.window_controls": "פקדי חלון",
+    "ui.window_controls_app": "Nodalia",
+    "ui.window_controls_system": "של שולחן העבודה"
+  },
+  "ja": {
+    "ui.main_menu": "メインメニュー",
+    "ui.window_controls": "ウィンドウコントロール",
+    "ui.window_controls_app": "Nodalia",
+    "ui.window_controls_system": "デスクトップ標準"
+  },
+  "vi": {
+    "ui.main_menu": "Menu chính",
+    "ui.window_controls": "Nút điều khiển cửa sổ",
+    "ui.window_controls_app": "Nodalia",
+    "ui.window_controls_system": "Của màn hình nền"
+  },
+  "zh": {
+    "ui.main_menu": "主菜单",
+    "ui.window_controls": "窗口控件",
+    "ui.window_controls_app": "Nodalia",
+    "ui.window_controls_system": "桌面自带"
   }
 }
