@@ -12,3 +12,10 @@ docs/nodalia/**
 packaging/linux/arch-package.sh
 .github/workflows/arch-package.yml
 .github/workflows/release.yml
+.github/workflows/release-gate.yml
+.github/workflows/release-auto.yml
+.github/workflows/release-notes.yml
+scripts/check-release-notes.sh
+docs/release-notes/**
+docs/releasing.md
+skills/torno-packaging/SKILL.md
